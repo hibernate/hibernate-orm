@@ -15,18 +15,23 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A service loader bound to an {@link AggregatedClassLoader}.
  * @param <S> The type of the service contract.
  */
 abstract class AggregatedServiceLoader<S> {
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AggregatedServiceLoader.class );
 
 	private static final Method SERVICE_LOADER_STREAM_METHOD;
 	private static final Method PROVIDER_TYPE_METHOD;
@@ -145,17 +150,16 @@ abstract class AggregatedServiceLoader<S> {
 	 * @param <S> The type of loaded services.
 	 */
 	private static class ClassPathAndModulePathAggregatedServiceLoader<S> extends AggregatedServiceLoader<S> {
+		private final Class<S> serviceContract;
+		private final ServiceLoader<S> aggregatedClassLoaderServiceLoader;
 		private final List<ServiceLoader<S>> delegates;
 		private Collection<S> cache = null;
 
 		private ClassPathAndModulePathAggregatedServiceLoader(AggregatedClassLoader aggregatedClassLoader,
 				Class<S> serviceContract) {
+			this.serviceContract = serviceContract;
 			this.delegates = new ArrayList<>();
-			// Always try the aggregated class loader first
-			this.delegates.add( ServiceLoader.load( serviceContract, aggregatedClassLoader ) );
-
-			// Then also try the individual class loaders,
-			// because only them can instantiate services provided by jars in the module path
+			this.aggregatedClassLoaderServiceLoader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
 			final Iterator<ClassLoader> clIterator = aggregatedClassLoader.newClassLoaderIterator();
 			while ( clIterator.hasNext() ) {
 				this.delegates.add(
@@ -185,52 +189,92 @@ abstract class AggregatedServiceLoader<S> {
 			return cache;
 		}
 
-		@SuppressWarnings("unchecked")
 		private Collection<S> loadAll() {
 			Set<String> alreadyEncountered = new HashSet<>();
 			Set<S> result = new LinkedHashSet<>();
-			delegates.stream()
-					// Each loader's stream() method returns a stream of service providers: flatten these into a single stream
-					.flatMap( delegate -> {
-						try {
-							return (Stream<? extends Supplier<S>>) SERVICE_LOADER_STREAM_METHOD.invoke( delegate );
-						}
-						catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
-							throw new AssertionFailure( "Error calling ServiceLoader.stream()", e );
-						}
-					} )
-					// For each provider, check its type to be sure we don't use a provider twice, then get the service
-					.forEach( provider -> {
-						Class<?> type;
-						try {
-							type = (Class<?>) PROVIDER_TYPE_METHOD.invoke( provider );
-						}
-						catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
-							throw new AssertionFailure( "Error calling ServiceLoader.Provider.type()", e );
-						}
-						String typeName = type.getName();
-						/*
-						 * We may encounter the same service provider multiple times,
-						 * because the individual class loaders may give access to the same types
-						 * (at the very least a single class loader may be present twice in the aggregated class loader).
-						 * However, we only want to get the service from each provider once.
-						 *
-						 * ServiceLoader.stream() is useful in that regard,
-						 * since it allows us to check the type of the service provider
-						 * before the service is even instantiated.
-						 *
-						 * We could just instantiate every service and check their type afterwards,
-						 * but 1. it would lead to unnecessary instantiation which could have side effects,
-						 * in particular regarding class loading,
-						 * and 2. the type of the provider may not always be the type of the service,
-						 * and one provider may return different types of services
-						 * depending on conditions known only to itself.
-						 */
-						if ( alreadyEncountered.add( typeName ) ) {
-							result.add( provider.get() );
-						}
-					} );
+
+			// Always try the aggregated class loader first
+			Iterator<? extends Supplier<S>> providerIterator = providerStream( aggregatedClassLoaderServiceLoader )
+					.iterator();
+			while ( providerIterator.hasNext() ) {
+				Supplier<S> provider = providerIterator.next();
+				collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
+			}
+
+			/*
+			 * Then also try the individual class loaders,
+			 * because only them can instantiate services provided by jars in the module path.
+			 */
+			for ( ServiceLoader<S> delegate : delegates ) {
+				providerIterator = providerStream( delegate ).iterator();
+				/*
+				 * Note that advancing the stream itself can lead to (arguably) "legitimate" errors,
+				 * where we fail to load the service,
+				 * but only because individual classloader has its own definition of the service contract class,
+				 * which is different from ours.
+				 * In that case (still arguably), the error should be ignored.
+				 * That's why we wrap the call to hasNext in a method that catches an logs errors.
+				 * See https://hibernate.atlassian.net/browse/HHH-13551.
+				 */
+				while ( hasNextIgnoringServiceConfigurationError( providerIterator ) ) {
+					Supplier<S> provider = providerIterator.next();
+					collectServiceIfNotDuplicate( result, alreadyEncountered, provider );
+				}
+			}
+
 			return result;
+		}
+
+		@SuppressWarnings("unchecked")
+		private Stream<? extends Supplier<S>> providerStream(ServiceLoader<S> serviceLoader) {
+			try {
+				return ( (Stream<? extends Supplier<S>>) SERVICE_LOADER_STREAM_METHOD.invoke( serviceLoader ) );
+			}
+			catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
+				throw new AssertionFailure( "Error calling ServiceLoader.stream()", e );
+			}
+		}
+
+		private boolean hasNextIgnoringServiceConfigurationError(Iterator<?> iterator) {
+			while ( true ) {
+				try {
+					return iterator.hasNext();
+				}
+				catch (ServiceConfigurationError e) {
+					log.ignoringServiceConfigurationError( serviceContract, e );
+				}
+			}
+		}
+
+		/*
+		 * We may encounter the same service provider multiple times,
+		 * because the individual class loaders may give access to the same types
+		 * (at the very least a single class loader may be present twice in the aggregated class loader).
+		 * However, we only want to get the service from each provider once.
+		 *
+		 * ServiceLoader.stream() is useful in that regard,
+		 * since it allows us to check the type of the service provider
+		 * before the service is even instantiated.
+		 *
+		 * We could just instantiate every service and check their type afterwards,
+		 * but 1. it would lead to unnecessary instantiation which could have side effects,
+		 * in particular regarding class loading,
+		 * and 2. the type of the provider may not always be the type of the service,
+		 * and one provider may return different types of services
+		 * depending on conditions known only to itself.
+		 */
+		private void collectServiceIfNotDuplicate(Set<S> result, Set<String> alreadyEncountered, Supplier<S> provider) {
+			Class<?> type;
+			try {
+				type = (Class<?>) PROVIDER_TYPE_METHOD.invoke( provider );
+			}
+			catch (RuntimeException | IllegalAccessException | InvocationTargetException e) {
+				throw new AssertionFailure( "Error calling ServiceLoader.Provider.type()", e );
+			}
+			String typeName = type.getName();
+			if ( alreadyEncountered.add( typeName ) ) {
+				result.add( provider.get() );
+			}
 		}
 
 		@Override

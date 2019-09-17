@@ -8,8 +8,11 @@ package org.hibernate.boot.registry.classloading.internal;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -122,6 +125,28 @@ public class ClassLoaderServiceImplTest {
 		}
 		assertEquals( 0, icl.getAccessCount() );
 		csi.stop();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13551")
+	public void testServiceFromIncompatibleClassLoader() {
+		ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
+				Arrays.asList(
+						getClass().getClassLoader(),
+						/*
+						 * This classloader will return instances of MyService where MyService
+						 * is a different object than the one we manipulate in the current classloader.
+						 * This used to throw an exception that triggered a boot failure in ORM,
+						 * but should now be ignored.
+						 */
+						new IsolatedClassLoader( getClass().getClassLoader() )
+				),
+				TcclLookupPrecedence.AFTER
+		);
+
+		Collection<MyService> loadedServices = classLoaderService.loadJavaServices( MyService.class );
+
+		assertEquals( 1, loadedServices.size() );
 	}
 
 	private static class InternalClassLoader extends ClassLoader {

@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -154,7 +155,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal a where a.offspring.description = 'xyz'" );
 		assertTranslation( "from Animal a where a.offspring.father.description = 'xyz'" );
 	}
-	
+
 	@Test
 	@FailureExpected( jiraKey = "N/A", message = "Lacking ClassicQueryTranslatorFactory support" )
     public void testRowValueConstructorSyntaxInInList2() {
@@ -209,7 +210,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		AST inNode = whereNode.getFirstChild();
 		assertEquals( message, expected, inNode != null && inNode.getType() == HqlTokenTypes.IN );
 	}
-    
+
 	@Test
 	public void testSubComponentReferences() {
 		assertTranslation( "select c.address.zip.code from ComponentContainer c" );
@@ -227,7 +228,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testJoinFetchCollectionOfValues() {
 		assertTranslation( "select h from Human as h join fetch h.nickNames" );
 	}
-	
+
 	@Test
 	public void testCollectionMemberDeclarations2() {
 		assertTranslation( "from Customer c, in(c.orders) o" );
@@ -242,11 +243,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 		// IN asks an alias, but the difference is that the error message from AST
 		// contains the error token location (by lines and columns), which is hardly 
 		// to get from Classic query translator --stliu
-		assertTranslation( "from Customer c, in(c.orders)" ); 
+		assertTranslation( "from Customer c, in(c.orders)" );
 	}
 
 	@Test
 	public void testCollectionJoinsInSubselect() {
+		disableOmittingJoinOfSuperclassTables();
+
 		// caused by some goofiness in FromElementFactory that tries to
 		// handle correlated subqueries (but fails miserably) even though this
 		// is not a correlated subquery.  HHH-1248
@@ -340,10 +343,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testImplicitJoinsAlongWithCartesianProduct() {
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "select foo.foo from Foo foo, Foo foo2" );
-		assertTranslation( "select foo.foo.foo from Foo foo, Foo foo2" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("select foo.foo from Foo foo, Foo foo2");
+			assertTranslation("select foo.foo.foo from Foo foo, Foo foo2");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -545,18 +552,22 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testCrazyIdFieldNames() {
-		DotNode.useThetaStyleImplicitJoins = true;
-		// only regress against non-scalar forms as there appears to be a bug in the classic translator
-		// in regards to this issue also.  Specifically, it interprets the wrong return type, though it gets
-		// the sql "correct" :/
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			// only regress against non-scalar forms as there appears to be a bug in the classic translator
+			// in regards to this issue also.  Specifically, it interprets the wrong return type, though it gets
+			// the sql "correct" :/
 
-		String hql = "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null";
-		assertTranslation( hql, new HashMap(), false, null );
+			String hql = "select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null";
+			assertTranslation(hql, new HashMap(), false, null);
 
-	    hql = "select e.heresAnotherCrazyIdFieldName.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null";
-		assertTranslation( hql, new HashMap(), false, null );
+			hql = "select e.heresAnotherCrazyIdFieldName.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null";
+			assertTranslation(hql, new HashMap(), false, null);
 
-		DotNode.useThetaStyleImplicitJoins = false;
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -784,7 +795,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 				|| getDialect() instanceof Sybase11Dialect
 				|| getDialect() instanceof SybaseASE15Dialect
 				|| getDialect() instanceof SybaseAnywhereDialect
-				|| getDialect() instanceof SQLServerDialect 
+				|| getDialect() instanceof SQLServerDialect
 				|| getDialect() instanceof IngresDialect) {
 			// SybaseASE15Dialect and SybaseAnywhereDialect support '||'
 			// MySQL uses concat(x, y, z)
@@ -878,6 +889,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testGroupByFunction() {
+		disableOmittingJoinOfSuperclassTables();
+
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) return;
 		if ( getDialect() instanceof TeradataDialect) return;
@@ -1027,26 +1040,36 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Test
 	public void testImplicitJoinInSelect() {
 		assertTranslation( "select foo, foo.long from Foo foo" );
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "select foo.foo from Foo foo" );
-		assertTranslation( "select foo, foo.foo from Foo foo" );
-		assertTranslation( "select foo.foo from Foo foo where foo.foo is not null" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("select foo.foo from Foo foo");
+			assertTranslation("select foo, foo.foo from Foo foo");
+			assertTranslation("select foo.foo from Foo foo where foo.foo is not null");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
 	public void testSelectExpressions() {
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "select an.mother.mother from Animal an" );
-		assertTranslation( "select an.mother.mother.mother from Animal an" );
-		assertTranslation( "select an.mother.mother.bodyWeight from Animal an" );
-		assertTranslation( "select an.mother.zoo.id from Animal an" );
-		assertTranslation( "select user.human.zoo.id from User user" );
-		assertTranslation( "select u.userName, u.human.name.first from User u" );
-		assertTranslation( "select u.human.name.last, u.human.name.first from User u" );
-		assertTranslation( "select bar.baz.name from Bar bar" );
-		assertTranslation( "select bar.baz.name, bar.baz.count from Bar bar" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		disableOmittingJoinOfSuperclassTables();
+
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("select an.mother.mother from Animal an");
+			assertTranslation("select an.mother.mother.mother from Animal an");
+			assertTranslation("select an.mother.mother.bodyWeight from Animal an");
+			assertTranslation("select an.mother.zoo.id from Animal an");
+			assertTranslation("select user.human.zoo.id from User user");
+			assertTranslation("select u.userName, u.human.name.first from User u");
+			assertTranslation("select u.human.name.last, u.human.name.first from User u");
+			assertTranslation("select bar.baz.name from Bar bar");
+			assertTranslation("select bar.baz.name, bar.baz.count from Bar bar");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -1102,10 +1125,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testSelectEntityProperty() throws Exception {
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "select an.mother from Animal an" );
-		assertTranslation( "select an, an.mother from Animal an" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("select an.mother from Animal an");
+			assertTranslation("select an, an.mother from Animal an");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -1202,9 +1229,13 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testManyToManyJoinInSubselect() throws Exception {
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "select foo from Foo foo where foo in (select elt from Baz baz join baz.fooArray elt)" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("select foo from Foo foo where foo in (select elt from Baz baz join baz.fooArray elt)");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -1258,6 +1289,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testSelectDialectFunction() throws Exception {
+		disableOmittingJoinOfSuperclassTables();
+
 		// From SQLFunctionsTest.testDialectSQLFunctions...
 		if ( getDialect() instanceof HSQLDialect ) {
 			assertTranslation( "select mod(s.count, 2) from org.hibernate.test.legacy.Simple as s where s.id = 10" );
@@ -1358,12 +1391,16 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testOneToOne() throws Exception {
+		disableOmittingJoinOfSuperclassTables();
+
 		assertTranslation( "from User u where u.human.nickName='Steve'" );
 		assertTranslation( "from User u where u.human.name.first='Steve'" );
 	}
 
 	@Test
 	public void testSelectClauseImplicitJoin() throws Exception {
+		disableOmittingJoinOfSuperclassTables();
+
 		//assertTranslation( "select d.owner.mother from Dog d" ); //bug in old qt
 		assertTranslation( "select d.owner.mother.description from Dog d" );
 		//assertTranslation( "select d.owner.mother from Dog d, Dog h" );
@@ -1473,10 +1510,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Test
 	public void testJoinInSubselect() throws Exception {
 		//new parser uses ANSI-style inner join syntax
-		DotNode.useThetaStyleImplicitJoins = true;
-		assertTranslation( "from Animal a where a in (select m from Animal an join an.mother m)" );
-		assertTranslation( "from Animal a where a in (select o from Animal an join an.offspring o)" );
-		DotNode.useThetaStyleImplicitJoins = false;
+		boolean originalValue = DotNode.useThetaStyleImplicitJoins;
+		try {
+			DotNode.useThetaStyleImplicitJoins = true;
+			assertTranslation("from Animal a where a in (select m from Animal an join an.mother m)");
+			assertTranslation("from Animal a where a in (select o from Animal an join an.offspring o)");
+		} finally {
+			DotNode.useThetaStyleImplicitJoins = originalValue;
+		}
 	}
 
 	@Test
@@ -1519,12 +1560,16 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	public void testManyToManyInJoin() throws Exception {
+		disableOmittingJoinOfSuperclassTables();
+
 		assertTranslation( "select x.id from Human h1 join h1.family x" );
 		//assertTranslation("select index(h2) from Human h1 join h1.family h2");
 	}
 
 	@Test
 	public void testManyToManyInSubselect() throws Exception {
+		disableOmittingJoinOfSuperclassTables();
+
 		assertTranslation( "from Human h1, Human h2 where h2 in (select x.id from h1.family x)" );
 		assertTranslation( "from Human h1, Human h2 where 'father' in indices(h1.family)" );
 	}
@@ -1578,6 +1623,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testComponentNoAlias() throws Exception {
 		// The classic translator doesn't do this right, so don't bother asserting.
 		compileWithAstQueryTranslator( "from Human where name.first = 'Gavin'", false );
+	}
+
+	private void disableOmittingJoinOfSuperclassTables() {
+		// Disable this feature because of Lacking ClassicQueryTranslatorFactory support
+		rebuildSessionFactory( c -> c.setProperty(
+				AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES,
+				Boolean.FALSE.toString()
+		) );
 	}
 
 }

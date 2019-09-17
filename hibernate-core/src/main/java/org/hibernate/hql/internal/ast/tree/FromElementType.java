@@ -27,6 +27,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -370,6 +371,15 @@ class FromElementType {
 
 	public QueryableCollection getQueryableCollection() {
 		return queryableCollection;
+	}
+
+	public String getPropertyTableName(String propertyName) {
+		checkInitialized();
+		if ( this.persister != null ) {
+			AbstractEntityPersister aep = (AbstractEntityPersister) this.persister;
+			return aep.getPropertyTableName( propertyName );
+		}
+		return null;
 	}
 
 	/**

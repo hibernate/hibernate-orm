@@ -17,11 +17,14 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
@@ -84,14 +87,24 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private void checkNaturalId(
 			EntityPersister persister,
+			Object entity,
 			EntityEntry entry,
 			Object[] current,
 			Object[] loaded,
 			SessionImplementor session) {
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// EARLY EXIT!!!
+				// nothing to check - the entity is an un-initialized enhancement-as-proxy reference
+				return;
+			}
+		}
+
 		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
 			if ( !persister.getEntityMetamodel().hasImmutableNaturalId() ) {
-				// SHORT-CUT: if the natural id is mutable (!immutable), no need to do the below checks
 				// EARLY EXIT!!!
+				// the natural id is mutable (!immutable), no need to do the below checks
 				return;
 			}
 
@@ -115,7 +128,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				if ( !propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
 					throw new HibernateException(
 							String.format(
-									"An immutable natural identifier of entity %s was altered from %s to %s",
+									"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
 									persister.getEntityName(),
 									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
 											snapshot[i],
@@ -191,7 +204,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// grab its current state
 			values = persister.getPropertyValues( entity );
 
-			checkNaturalId( persister, entry, values, loadedState, session );
+			checkNaturalId( persister, entity, entry, values, loadedState, session );
 		}
 		return values;
 	}

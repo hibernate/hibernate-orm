@@ -8,14 +8,17 @@ package org.hibernate.hql.internal.ast.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -24,6 +27,7 @@ import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.hql.internal.ast.tree.FromReferenceNode;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
@@ -33,10 +37,15 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.Type;
+
+import antlr.collections.AST;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -94,8 +103,85 @@ public class JoinProcessor implements SqlTokenTypes {
 		}
 	}
 
+	private <T extends AST> List<T> findAllNodes(AST node, Class<T> clazz) {
+		ArrayList<T> found = new ArrayList<>();
+		doFindAllNodes( node, clazz, found );
+		return found;
+	}
+
+	private <T extends AST> void doFindAllNodes(AST node, Class<T> clazz, List<T> found) {
+		if ( clazz.isAssignableFrom( node.getClass() ) ) {
+			found.add( (T) node );
+		}
+		if ( node.getFirstChild() != null ) {
+			doFindAllNodes( node.getFirstChild(), clazz, found );
+		}
+		if ( node.getNextSibling() != null ) {
+			doFindAllNodes( node.getNextSibling(), clazz, found );
+		}
+	}
+
+	private Set<String> findQueryReferencedTables(QueryNode query) {
+		if ( !walker.getSessionFactoryHelper()
+				.getFactory()
+				.getSessionFactoryOptions()
+				.isOmitJoinOfSuperclassTablesEnabled() ) {
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( String.format(
+						"Finding of query referenced tables is skipped because the feature is disabled. See %s",
+						AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES
+				) );
+			}
+			return null;
+		}
+
+		if ( CollectionHelper.isNotEmpty( walker.getEnabledFilters() ) ) {
+			LOG.debug( "Finding of query referenced tables is skipped because filters are enabled." );
+			return null;
+		}
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( TokenPrinters.REFERENCED_TABLES_PRINTER.showAsString(
+					query,
+					"Tables referenced from query nodes:"
+			) );
+		}
+
+		Set<String> result = new HashSet<>();
+
+		// Find tables referenced by FromReferenceNodes
+		List<FromReferenceNode> fromReferenceNodes = findAllNodes( query, FromReferenceNode.class );
+		for ( FromReferenceNode node : fromReferenceNodes ) {
+			String[] tables = node.getReferencedTables();
+			if ( tables != null ) {
+				for ( String table : tables ) {
+					result.add( table );
+				}
+			}
+		}
+
+		// Find tables referenced by fromElementsForLoad
+		if ( query.getSelectClause() != null ) {
+			for ( Object element : query.getSelectClause().getFromElementsForLoad() ) {
+				FromElement fromElement = (FromElement) element;
+				EntityPersister entityPersister = fromElement.getEntityPersister();
+				if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
+					AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+					String[] tables = aep.getTableNames();
+					for ( String table : tables ) {
+						result.add( table );
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
 	public void processJoins(QueryNode query) {
 		final FromClause fromClause = query.getFromClause();
+
+		Set<String> queryReferencedTables = findQueryReferencedTables( query );
 
 		final List fromElements;
 		if ( DotNode.useThetaStyleImplicitJoins ) {
@@ -136,6 +222,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		while ( iter.hasNext() ) {
 			final FromElement fromElement = (FromElement) iter.next();
 			JoinSequence join = fromElement.getJoinSequence();
+			join.setQueryReferencedTables( queryReferencedTables );
 			join.setSelector(
 					new JoinSequence.Selector() {
 						public boolean includeSubclasses(String alias) {

@@ -44,8 +44,8 @@ public class InsertSelect {
 	}
 
 	public InsertSelect addColumns(String[] columnNames) {
-		for ( int i = 0; i < columnNames.length; i++ ) {
-			this.columnNames.add( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			this.columnNames.add( columnName );
 		}
 		return this;
 	}

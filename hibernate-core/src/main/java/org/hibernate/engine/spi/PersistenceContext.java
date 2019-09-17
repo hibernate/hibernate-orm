@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -477,7 +479,9 @@ public interface PersistenceContext {
 
 	/** 
 	 * Retrieve the set of EntityKeys representing nullifiable references
+	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
 	 */
+	@Deprecated
 	HashSet getNullifiableEntityKeys();
 
 	/**
@@ -507,8 +511,17 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the mapping from collection instance to collection entry
+	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
 	 */
+	@Deprecated
 	Map getCollectionEntries();
+
+	/**
+	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.
+	 * @param action the lambda to apply on each PersistentCollection,CollectionEntry map entry of the PersistenceContext.
+	 * @param concurrent set this to false for improved efficiency, but that would make it illegal to make changes to the underlying collectionEntries map.
+	 */
+	void forEachCollectionEntry(BiConsumer<PersistentCollection,CollectionEntry> action, boolean concurrent);
 
 	/**
 	 * Get the mapping from collection key to collection instance
@@ -719,6 +732,42 @@ public interface PersistenceContext {
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
 	boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
+
+	/**
+	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
+	 *
+	 * @param sek a supplier for the EntityKey; this allows to not always needing to create the key;
+	 * for example is the map is known to be empty there is no need to create one to check.
+	 * @return true if the EntityKey had been registered before using {@link #registerNullifiableEntityKey(EntityKey)}
+	 * @see #registerNullifiableEntityKey(EntityKey)
+	 */
+	boolean containsNullifiableEntityKey(Supplier<EntityKey> sek);
+
+	/**
+	 * Registers an {@link EntityKey} as nullifiable on this {@link PersistenceContext}.
+	 * @param key
+	 */
+	void registerNullifiableEntityKey(EntityKey key);
+
+	/**
+	 * @return true if no {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
+	 * @see #registerNullifiableEntityKey(EntityKey)
+	 */
+	boolean isNullifiableEntityKeysEmpty();
+
+	/**
+	 * The size of the internal map storing all collection entries.
+	 * (The map is not exposed directly, but the size is often useful)
+	 * @return the size
+	 */
+	int getCollectionEntriesSize();
+
+	/**
+	 * Remove a {@link PersistentCollection} from the {@link PersistenceContext}.
+	 * @param collection the collection to remove
+	 * @return the matching {@link CollectionEntry}, if any was removed.
+	 */
+	CollectionEntry removeCollectionEntry(PersistentCollection collection);
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

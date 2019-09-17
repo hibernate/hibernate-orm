@@ -35,15 +35,15 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	public EntityCopyObserverFactory initiateService(final Map configurationValues, final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
 		if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME ) || value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: " + EntityCopyNotAllowedObserver.SHORT_NAME );
+			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME ) || value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: " + EntityCopyAllowedObserver.SHORT_NAME );
+			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyAllowedObserver.SHORT_NAME );
 			return EntityCopyAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME ) || value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: " + EntityCopyAllowedLoggedObserver.SHORT_NAME );
+			LOG.debugf( "Configured EntityCopyObserver strategy: %s",  EntityCopyAllowedLoggedObserver.SHORT_NAME );
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
 		else {
@@ -52,7 +52,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			//and that they are indeed of the right type.
 			EntityCopyObserver exampleInstance = registry.getService( StrategySelector.class ).resolveStrategy( EntityCopyObserver.class, value );
 			Class observerType = exampleInstance.getClass();
-			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type " + observerType.getName() );
+			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type %s", observerType.getName() );
 			return new EntityObserversFactoryFromClass( observerType );
 		}
 	}

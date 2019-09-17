@@ -7,10 +7,12 @@
 package org.hibernate.internal;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -44,6 +46,12 @@ public interface SessionCreationOptions {
 	String getTenantIdentifier();
 
 	TimeZone getJdbcTimeZone();
+
+	/**
+	 * @return the full list of SessionEventListener if this was customized,
+	 * or null if this Session is being created with the default list.
+	 */
+	List<SessionEventListener> getCustomSessionEventListener();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecations

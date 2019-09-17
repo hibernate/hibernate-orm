@@ -35,8 +35,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -45,8 +43,10 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -102,22 +102,22 @@ public class SubselectFetchCollectionFromBatchTest  extends BaseCoreFunctionalTe
 		assertEquals( 0, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 
-		for (int i = 0 ; i < groups.length; i++ ) {
+		for ( EmployeeGroup group : groups ) {
 			// Both groups get initialized  and are added to the PersistenceContext when i == 0;
 			// Still need to call Hibernate.initialize( groups[i] ) for i > 0 so that the entity
 			// in the PersistenceContext gets assigned to its respective proxy target (is this a
 			// bug???)
-			Hibernate.initialize( groups[ i ] );
-			assertTrue( Hibernate.isInitialized( groups[i] ) );
+			Hibernate.initialize( group );
+			assertTrue( Hibernate.isInitialized( group ) );
 			// the collections should be uninitialized
-			assertFalse( Hibernate.isInitialized( groups[i].getEmployees() ) );
+			assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
 		}
 
 		// both Group proxies should have been loaded in the same batch;
 		assertEquals( 1, sessionFactory().getStatistics().getPrepareStatementCount() );
 		sessionFactory().getStatistics().clear();
 
-		for (EmployeeGroup group : groups) {
+		for ( EmployeeGroup group : groups ) {
 			assertTrue( Hibernate.isInitialized( group ) );
 			assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
 		}
@@ -250,26 +250,26 @@ public class SubselectFetchCollectionFromBatchTest  extends BaseCoreFunctionalTe
 		assertEquals( 0, sessionFactory().getStatistics().getPrepareStatementCount() );
 
 
-		for (int i = 0 ; i < groups.length; i++ ) {
+		for ( EmployeeGroup group : groups ) {
 			// Both groups get initialized  and are added to the PersistenceContext when i == 0;
 			// Still need to call Hibernate.initialize( groups[i] ) for i > 0 so that the entity
 			// in the PersistenceContext gets assigned to its respective proxy target (is this a
 			// bug???)
-			Hibernate.initialize( groups[ i ] );
-			assertTrue( Hibernate.isInitialized( groups[i] ) );
-			assertTrue( Hibernate.isInitialized( groups[i].getLead() ) );
-			assertFalse( Hibernate.isInitialized( groups[i].getLead().getCollaborators() ) );
-			assertTrue( Hibernate.isInitialized( groups[i].getManager() ) );
-			assertFalse( Hibernate.isInitialized( groups[i].getManager().getCollaborators() ) );
+			Hibernate.initialize( group );
+			assertTrue( Hibernate.isInitialized( group ) );
+			assertTrue( Hibernate.isInitialized( group.getLead() ) );
+			assertFalse( Hibernate.isInitialized( group.getLead().getCollaborators() ) );
+			assertTrue( Hibernate.isInitialized( group.getManager() ) );
+			assertFalse( Hibernate.isInitialized( group.getManager().getCollaborators() ) );
 			// the collections should be uninitialized
-			assertFalse( Hibernate.isInitialized( groups[i].getEmployees() ) );
+			assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
 		}
 
 		// both Group proxies should have been loaded in the same batch;
 		assertEquals( 1, sessionFactory().getStatistics().getPrepareStatementCount() );
 		sessionFactory().getStatistics().clear();
 
-		for (EmployeeGroup group : groups) {
+		for ( EmployeeGroup group : groups ) {
 			assertTrue( Hibernate.isInitialized( group ) );
 			assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
 		}

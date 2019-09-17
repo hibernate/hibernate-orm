@@ -30,21 +30,21 @@ public abstract class ConfigurationHelper {
 
 	public static FlushMode getFlushMode(Object value, FlushMode defaultFlushMode) {
 		final FlushMode flushMode;
-		if (value instanceof FlushMode) {
+		if ( value instanceof FlushMode ) {
 			flushMode = (FlushMode) value;
 		}
-		else if (value instanceof javax.persistence.FlushModeType) {
-			flushMode = ConfigurationHelper.getFlushMode( (javax.persistence.FlushModeType) value);
+		else if ( value instanceof javax.persistence.FlushModeType ) {
+			flushMode = ConfigurationHelper.getFlushMode( (javax.persistence.FlushModeType) value );
 		}
-		else if (value instanceof String) {
-			flushMode = ConfigurationHelper.getFlushMode( (String) value);
+		else if ( value instanceof String ) {
+			flushMode = ConfigurationHelper.getFlushMode( (String) value );
 		}
 		else {
 			flushMode = defaultFlushMode;
 		}
 
-		if (flushMode == null) {
-			throw new PersistenceException("Unable to parse org.hibernate.flushMode: " + value);
+		if ( flushMode == null ) {
+			throw new PersistenceException( "Unable to parse org.hibernate.flushMode: " + value );
 		}
 
 		return flushMode;
@@ -55,21 +55,21 @@ public abstract class ConfigurationHelper {
 	}
 
 	private static FlushMode getFlushMode(String flushMode)  {
-		if (flushMode == null) {
+		if ( flushMode == null ) {
 			return null;
 		}
-		flushMode = flushMode.toUpperCase(Locale.ROOT);
+		flushMode = flushMode.toUpperCase( Locale.ROOT );
 		return FlushMode.valueOf( flushMode );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushMode)  {
-		switch(flushMode) {
+		switch ( flushMode ) {
 			case AUTO:
 				return FlushMode.AUTO;
 			case COMMIT:
 				return FlushMode.COMMIT;
 			default:
-				throw new AssertionFailure("Unknown FlushModeType: " + flushMode);
+				throw new AssertionFailure( "Unknown FlushModeType: " + flushMode );
 		}
 	}
 

@@ -431,4 +431,9 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	public boolean supportsLockTimeouts() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return false;
+	}
 }

@@ -96,8 +96,6 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -107,7 +105,6 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.event.spi.FlushEvent;
@@ -148,6 +145,7 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -170,8 +168,6 @@ import org.hibernate.query.internal.CollectionFilterImpl;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
-import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
@@ -197,31 +193,22 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Steve Ebersole
  * @author Brett Meyer
  * @author Chris Cranford
+ * @author Sanne Grinovero
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
 		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 
-
-	private static final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-			JPA_LOCK_SCOPE,
-			JPA_LOCK_TIMEOUT,
-			AvailableSettings.FLUSH_MODE,
-			JPA_SHARED_CACHE_RETRIEVE_MODE,
-			JPA_SHARED_CACHE_STORE_MODE,
-			QueryHints.SPEC_HINT_TIMEOUT
-	};
-
-	private Map<String, Object> properties = new HashMap<>();
+	// Defaults to null which means the properties are the default - as defined in FastSessionServices#defaultSessionProperties
+	private Map<String, Object> properties;
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
-	// todo : (5.2) HEM always initialized this.  Is that really needed?
-	private LockOptions lockOptions = new LockOptions();
+	private LockOptions lockOptions;
 
 	private boolean autoClear;
 	private boolean autoClose;
@@ -231,10 +218,7 @@ public final class SessionImpl
 
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
-	private transient boolean discardOnClose;
-
 	private transient TransactionObserver transactionObserver;
-	private transient EventListenerRegistry eventListenerRegistry;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -245,8 +229,6 @@ public final class SessionImpl
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
 		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
-
-		this.discardOnClose = factory.getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -266,67 +248,53 @@ public final class SessionImpl
 			statistics.openSession();
 		}
 
+		if ( this.properties != null ) {
+			//There might be custom properties for this session that affect the LockOptions state
+			LockOptionsHelper.applyPropertiesToLockOptions( this.properties, this::getLockOptionsForWrite );
+		}
+		getSession().setCacheMode( fastSessionServices.initialSessionCacheMode );
+
 		// NOTE : pulse() already handles auto-join-ability correctly
 		getTransactionCoordinator().pulse();
-
-		setDefaultProperties();
-		applyProperties();
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
 	}
 
-	private void setDefaultProperties() {
-		properties.putIfAbsent( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
-		properties.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		properties.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		properties.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		properties.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+	private LockOptions getLockOptionsForRead() {
+		return this.lockOptions == null ? fastSessionServices.defaultLockOptions : this.lockOptions;
 	}
 
-
-	private void applyProperties() {
-		applyEntityManagerSpecificProperties();
-		setHibernateFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
-		setLockOptions( this.properties, this.lockOptions );
-		getSession().setCacheMode(
-				CacheModeHelper.interpretCacheMode(
-						currentCacheStoreMode(),
-						currentCacheRetrieveMode()
-				)
-		);
-	}
-
-	private void applyEntityManagerSpecificProperties() {
-		final Map<String, Object> properties = getFactory().getProperties();
-		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
-			if ( properties.containsKey( key ) ) {
-				this.properties.put( key, properties.get( key ) );
-			}
+	private LockOptions getLockOptionsForWrite() {
+		if ( this.lockOptions == null ) {
+			this.lockOptions = new LockOptions();
 		}
+		return this.lockOptions;
 	}
 
 	protected void applyQuerySettingsAndHints(Query query) {
-		if ( lockOptions.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( getLockMode( lockOptions.getLockMode() ) );
+		final LockOptions lockOptionsForRead = getLockOptionsForRead();
+		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
+			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
 		final Object queryTimeout;
-		if ( ( queryTimeout = properties.get( QueryHints.SPEC_HINT_TIMEOUT ) ) != null ) {
+		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
 		final Object lockTimeout;
-		if ( ( lockTimeout = properties.get( JPA_LOCK_TIMEOUT ) ) != null ) {
+		if ( ( lockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT ) ) != null ) {
 			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
 		}
 	}
 
-	private CacheRetrieveMode currentCacheRetrieveMode() {
-		return determineCacheRetrieveMode( properties );
-	}
-
-	private CacheStoreMode currentCacheStoreMode() {
-		return determineCacheStoreMode( properties );
+	private Object getSessionProperty(final String name) {
+		if ( properties == null ) {
+			return fastSessionServices.defaultSessionProperties.get( name );
+		}
+		else {
+			return properties.get( name );
+		}
 	}
 
 	@Override
@@ -354,13 +322,12 @@ public final class SessionImpl
 		persistenceContext.clear();
 		actionQueue.clear();
 
-		final ClearEvent event = new ClearEvent( this );
-		for ( ClearEventListener listener : listeners( EventType.CLEAR ) ) {
-			listener.onClear( event );
-		}
+		fastSessionServices.eventListenerGroup_CLEAR.fireLazyEventOnEachListener( this::createClearEvent, ClearEventListener::onClear );
 	}
 
-
+	private ClearEvent createClearEvent() {
+		return new ClearEvent( this );
+	}
 
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
@@ -388,7 +355,7 @@ public final class SessionImpl
 			// Original hibernate-entitymanager EM#close behavior
 			checkSessionFactoryOpen();
 			checkOpenOrWaitingForAutoClose();
-			if ( discardOnClose || !isTransactionInProgress( false ) ) {
+			if ( fastSessionServices.discardOnClose || !isTransactionInProgress( false ) ) {
 				super.close();
 			}
 			else {
@@ -422,7 +389,8 @@ public final class SessionImpl
 			return super.shouldCloseJdbcCoordinatorOnClose( isTransactionCoordinatorShared );
 		}
 
-		if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
+		final ActionQueue actionQueue = getActionQueue();
+		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
 			log.warn(
 					"On close, shared Session had before/after transaction actions that have not yet been processed"
 			);
@@ -457,10 +425,6 @@ public final class SessionImpl
 			log.debug( "Forcing Session/EntityManager closed as SessionFactory/EntityManagerFactory has been closed" );
 			setClosed();
 		}
-	}
-
-	private boolean isFlushModeNever() {
-		return FlushMode.isManualFlushMode( getHibernateFlushMode() );
 	}
 
 	private void managedFlush() {
@@ -628,27 +592,13 @@ public final class SessionImpl
 		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
 	}
 
-	private void fireSaveOrUpdate(SaveOrUpdateEvent event) {
+	private void fireSaveOrUpdate(final SaveOrUpdateEvent event) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE_UPDATE ) ) {
-			listener.onSaveOrUpdate( event );
-		}
+		fastSessionServices.eventListenerGroup_SAVE_UPDATE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
 		checkNoUnresolvedActionsAfterOperation();
 	}
-
-	private <T> Iterable<T> listeners(EventType<T> type) {
-		return eventListenerGroup( type ).listeners();
-	}
-
-	private <T> EventListenerGroup<T> eventListenerGroup(EventType<T> type) {
-		if ( this.eventListenerRegistry == null ) {
-			this.eventListenerRegistry = getFactory().getServiceRegistry().getService( EventListenerRegistry.class );
-		}
-		return eventListenerRegistry.getEventListenerGroup( type );
-	}
-
 
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -662,13 +612,11 @@ public final class SessionImpl
 		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
 
-	private Serializable fireSave(SaveOrUpdateEvent event) {
+	private Serializable fireSave(final SaveOrUpdateEvent event) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE ) ) {
-			listener.onSaveOrUpdate( event );
-		}
+		fastSessionServices.eventListenerGroup_SAVE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
 		checkNoUnresolvedActionsAfterOperation();
 		return event.getResultId();
 	}
@@ -690,9 +638,7 @@ public final class SessionImpl
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
-		for ( SaveOrUpdateEventListener listener : listeners( EventType.UPDATE ) ) {
-			listener.onSaveOrUpdate( event );
-		}
+		fastSessionServices.eventListenerGroup_UPDATE.fireEventOnEachListener( event, SaveOrUpdateEventListener::onSaveOrUpdate );
 		checkNoUnresolvedActionsAfterOperation();
 	}
 
@@ -725,12 +671,9 @@ public final class SessionImpl
 	private void fireLock(LockEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( LockEventListener listener : listeners( EventType.LOCK ) ) {
-			listener.onLock( event );
-		}
+		fastSessionServices.eventListenerGroup_LOCK.fireEventOnEachListener( event, LockEventListener::onLock );
 		delayedAfterCompletion();
 	}
-
 
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -752,14 +695,12 @@ public final class SessionImpl
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
-	private void firePersist(PersistEvent event) {
+	private void firePersist(final PersistEvent event) {
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
-			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
-				listener.onPersist( event );
-			}
+			fastSessionServices.eventListenerGroup_PERSIST.fireEventOnEachListener( event, PersistEventListener::onPersist );
 		}
 		catch (MappingException e) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
@@ -777,13 +718,13 @@ public final class SessionImpl
 		}
 	}
 
-	private void firePersist(Map copiedAlready, PersistEvent event) {
+	private void firePersist(final Map copiedAlready, final PersistEvent event) {
 		pulseTransactionCoordinator();
 
 		try {
-			for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
-				listener.onPersist( event, copiedAlready );
-			}
+			//Uses a capturing lambda in this case as we need to carry the additional Map parameter:
+			fastSessionServices.eventListenerGroup_PERSIST
+					.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
 		}
 		catch ( MappingException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) ) ;
@@ -799,40 +740,14 @@ public final class SessionImpl
 
 	// persistOnFlush() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void persistOnFlush(String entityName, Object object)
-			throws HibernateException {
-		firePersistOnFlush( new PersistEvent( entityName, object, this ) );
-	}
-
-	public void persistOnFlush(Object object) throws HibernateException {
-		persist( null, object );
-	}
-
 	@Override
-	public void persistOnFlush(String entityName, Object object, Map copiedAlready)
-			throws HibernateException {
-		firePersistOnFlush( copiedAlready, new PersistEvent( entityName, object, this ) );
-	}
-
-	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
+	public void persistOnFlush(String entityName, Object object, Map copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
-			listener.onPersist( event, copiedAlready );
-		}
+		PersistEvent event = new PersistEvent( entityName, object, this );
+		fastSessionServices.eventListenerGroup_PERSIST_ONFLUSH.fireEventOnEachListener( event, copiedAlready, PersistEventListener::onPersist );
 		delayedAfterCompletion();
 	}
-
-	private void firePersistOnFlush(PersistEvent event) {
-		checkOpen();
-		checkTransactionSynchStatus();
-		checkNoUnresolvedActionsBeforeOperation();
-		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
-			listener.onPersist( event );
-		}
-		checkNoUnresolvedActionsAfterOperation();
-	}
-
 
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -858,9 +773,7 @@ public final class SessionImpl
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
-			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
-				listener.onMerge( event );
-			}
+			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, MergeEventListener::onMerge );
 			checkNoUnresolvedActionsAfterOperation();
 		}
 		catch ( ObjectDeletedException sse ) {
@@ -877,12 +790,10 @@ public final class SessionImpl
 		return event.getResult();
 	}
 
-	private void fireMerge(Map copiedAlready, MergeEvent event) {
+	private void fireMerge(final Map copiedAlready, final MergeEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
-				listener.onMerge( event, copiedAlready );
-			}
+			fastSessionServices.eventListenerGroup_MERGE.fireEventOnEachListener( event, copiedAlready, MergeEventListener::onMerge );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -918,7 +829,9 @@ public final class SessionImpl
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities)
 			throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		final boolean removingOrphanBeforeUpates = persistenceContext.isRemovingOrphanBeforeUpates();
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( traceEnabled && removingOrphanBeforeUpates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
 		}
 		fireDelete(
@@ -926,12 +839,12 @@ public final class SessionImpl
 						entityName,
 						object,
 						isCascadeDeleteEnabled,
-						persistenceContext.isRemovingOrphanBeforeUpates(),
+						removingOrphanBeforeUpates,
 						this
 				),
 				transientEntities
 		);
-		if ( log.isTraceEnabled() && persistenceContext.isRemovingOrphanBeforeUpates() ) {
+		if ( traceEnabled && removingOrphanBeforeUpates ) {
 			logRemoveOrphanBeforeUpdates( "after continuing", entityName, object );
 		}
 	}
@@ -940,7 +853,8 @@ public final class SessionImpl
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 		// ordering is improved.
-		if ( log.isTraceEnabled() ) {
+		final boolean traceEnabled = log.isTraceEnabled();
+		if ( traceEnabled ) {
 			logRemoveOrphanBeforeUpdates( "begin", entityName, child );
 		}
 		persistenceContext.beginRemoveOrphanBeforeUpdates();
@@ -950,27 +864,27 @@ public final class SessionImpl
 		}
 		finally {
 			persistenceContext.endRemoveOrphanBeforeUpdates();
-			if ( log.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				logRemoveOrphanBeforeUpdates( "end", entityName, child );
 			}
 		}
 	}
 
 	private void logRemoveOrphanBeforeUpdates(String timing, String entityName, Object entity) {
-		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
-		log.tracef(
-				"%s remove orphan before updates: [%s]",
-				timing,
-				entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
-		);
+		if ( log.isTraceEnabled() ) {
+			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+			log.tracef(
+					"%s remove orphan before updates: [%s]",
+					timing,
+					entityEntry == null ? entityName : MessageHelper.infoString( entityName, entityEntry.getId() )
+			);
+		}
 	}
 
-	private void fireDelete(DeleteEvent event) {
+	private void fireDelete(final DeleteEvent event) {
 		try{
 			pulseTransactionCoordinator();
-		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
-			listener.onDelete( event );
-		}
+			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, DeleteEventListener::onDelete );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -987,12 +901,10 @@ public final class SessionImpl
 		}
 	}
 
-	private void fireDelete(DeleteEvent event, Set transientEntities) {
+	private void fireDelete(final DeleteEvent event, final Set transientEntities) {
 		try{
 			pulseTransactionCoordinator();
-			for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
-				listener.onDelete( event, transientEntities );
-			}
+			fastSessionServices.eventListenerGroup_DELETE.fireEventOnEachListener( event, transientEntities, DeleteEventListener::onDelete );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( sse ) );
@@ -1108,7 +1020,7 @@ public final class SessionImpl
 		boolean clearedEffectiveGraph = false;
 		if ( semantic != null ) {
 			if ( ! graph.appliesTo( entityName ) ) {
-				log.debugf( "Clearing effective entity graph for subsequent-select" );
+				log.debug( "Clearing effective entity graph for subsequent-select" );
 				clearedEffectiveGraph = true;
 				effectiveEntityGraph.clear();
 			}
@@ -1265,19 +1177,15 @@ public final class SessionImpl
 	// so to skip the session open, transaction synch, etc.. checks,
 	// which have been proven to be not particularly cheap:
 	// it seems they prevent these hot methods from being inlined.
-	private void fireLoadNoChecks(LoadEvent event, LoadType loadType) {
+	private void fireLoadNoChecks(final LoadEvent event, final LoadType loadType) {
 		pulseTransactionCoordinator();
-		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
-			listener.onLoad( event, loadType );
-		}
+		fastSessionServices.eventListenerGroup_LOAD.fireEventOnEachListener( event, loadType, LoadEventListener::onLoad );
 	}
 
-	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
+	private void fireResolveNaturalId(final ResolveNaturalIdEvent event) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
-			listener.onResolveNaturalId( event );
-		}
+		fastSessionServices.eventListenerGroup_RESOLVE_NATURAL_ID.fireEventOnEachListener( event, ResolveNaturalIdEventListener::onResolveNaturalId );
 		delayedAfterCompletion();
 	}
 
@@ -1320,7 +1228,7 @@ public final class SessionImpl
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
-	private void fireRefresh(RefreshEvent event) {
+	private void fireRefresh(final RefreshEvent event) {
 		try {
 			if ( !getSessionFactory().getSessionFactoryOptions().isAllowRefreshDetachedEntity() ) {
 				if ( event.getEntityName() != null ) {
@@ -1335,9 +1243,7 @@ public final class SessionImpl
 				}
 			}
 			pulseTransactionCoordinator();
-			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
-				listener.onRefresh( event );
-			}
+			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, RefreshEventListener::onRefresh );
 		}
 		catch (RuntimeException e) {
 			if ( !getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
@@ -1353,12 +1259,10 @@ public final class SessionImpl
 		}
 	}
 
-	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
+	private void fireRefresh(final Map refreshedAlready, final RefreshEvent event) {
 		try {
 			pulseTransactionCoordinator();
-			for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
-				listener.onRefresh( event, refreshedAlready );
-			}
+			fastSessionServices.eventListenerGroup_REFRESH.fireEventOnEachListener( event, refreshedAlready, RefreshEventListener::onRefresh );
 		}
 		catch (RuntimeException e) {
 			throw getExceptionConverter().convert( e );
@@ -1382,12 +1286,10 @@ public final class SessionImpl
 		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
 	}
 
-	private void fireReplicate(ReplicateEvent event) {
+	private void fireReplicate(final ReplicateEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( ReplicateEventListener listener : listeners( EventType.REPLICATE ) ) {
-			listener.onReplicate( event );
-		}
+		fastSessionServices.eventListenerGroup_REPLICATE.fireEventOnEachListener( event, ReplicateEventListener::onReplicate );
 		delayedAfterCompletion();
 	}
 
@@ -1400,15 +1302,10 @@ public final class SessionImpl
 	 */
 	@Override
 	public void evict(Object object) throws HibernateException {
-		fireEvict( new EvictEvent( object, this ) );
-	}
-
-	private void fireEvict(EvictEvent event) {
 		checkOpen();
 		pulseTransactionCoordinator();
-		for ( EvictEventListener listener : listeners( EventType.EVICT ) ) {
-			listener.onEvict( event );
-		}
+		final EvictEvent event = new EvictEvent( object, this );
+		fastSessionServices.eventListenerGroup_EVICT.fireEventOnEachListener( event, EvictEventListener::onEvict );
 		delayedAfterCompletion();
 	}
 
@@ -1423,9 +1320,7 @@ public final class SessionImpl
 			return false;
 		}
 		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
-		for ( AutoFlushEventListener listener : listeners( EventType.AUTO_FLUSH ) ) {
-			listener.onAutoFlush( event );
-		}
+		fastSessionServices.eventListenerGroup_AUTO_FLUSH.fireEventOnEachListener( event, AutoFlushEventListener::onAutoFlush );
 		return event.isFlushRequired();
 	}
 
@@ -1439,9 +1334,7 @@ public final class SessionImpl
 			return true;
 		}
 		DirtyCheckEvent event = new DirtyCheckEvent( this );
-		for ( DirtyCheckEventListener listener : listeners( EventType.DIRTY_CHECK ) ) {
-			listener.onDirtyCheck( event );
-		}
+		fastSessionServices.eventListenerGroup_DIRTY_CHECK.fireEventOnEachListener( event, DirtyCheckEventListener::onDirtyCheck );
 		delayedAfterCompletion();
 		return event.isDirty();
 	}
@@ -1461,11 +1354,8 @@ public final class SessionImpl
 				throw new HibernateException( "Flush during cascade is dangerous" );
 			}
 
-			FlushEvent flushEvent = new FlushEvent( this );
-			for ( FlushEventListener listener : listeners( EventType.FLUSH ) ) {
-				listener.onFlush( flushEvent );
-			}
-
+			FlushEvent event = new FlushEvent( this );
+			fastSessionServices.eventListenerGroup_FLUSH.fireEventOnEachListener( event, FlushEventListener::onFlush );
 			delayedAfterCompletion();
 		}
 		catch ( RuntimeException e ) {
@@ -2266,9 +2156,7 @@ public final class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
-		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
-			listener.onInitializeCollection( event );
-		}
+		fastSessionServices.eventListenerGroup_INIT_COLLECTION.fireEventOnEachListener( event, InitializeCollectionEventListener::onInitializeCollection );
 		delayedAfterCompletion();
 	}
 
@@ -2506,12 +2394,12 @@ public final class SessionImpl
 		// We do not want an exception to be thrown if the transaction
 		// is not accessible. If the transaction is not accessible,
 		// then return null.
-		return isTransactionAccessible() ? accessTransaction() : null;
+		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
-		log.tracef( "SessionImpl#beforeTransactionCompletion()" );
+		log.trace( "SessionImpl#beforeTransactionCompletion()" );
 		flushBeforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		try {
@@ -2525,7 +2413,9 @@ public final class SessionImpl
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
+		}
 
 		if ( !isClosed() || waitingForAutoClose ) {
 			if ( autoClear ||!successful ) {
@@ -3364,25 +3254,6 @@ public final class SessionImpl
 		return getHibernateFlushMode() != FlushMode.MANUAL;
 	}
 
-	private static final AfterCompletionAction STANDARD_AFTER_COMPLETION_ACTION = (AfterCompletionAction) (successful, session) -> {
-		// nothing to do by default.
-	};
-
-
-	public static class ManagedFlushCheckerStandardImpl implements ManagedFlushChecker {
-		@Override
-		public boolean shouldDoManagedFlush(SessionImplementor session) {
-			if ( session.isClosed() ) {
-				return false;
-			}
-			return session.getHibernateFlushMode() != FlushMode.MANUAL;
-		}
-	}
-
-	private static final ManagedFlushCheckerStandardImpl STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushCheckerStandardImpl() {
-	};
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// HibernateEntityManager impl
 
@@ -3399,57 +3270,17 @@ public final class SessionImpl
 	@Override
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
-		LockOptions.copy( this.lockOptions, lockOptions );
+		if ( this.lockOptions != null ) { //otherwise the default LockOptions constructor is the same as DEFAULT_LOCK_OPTIONS
+			LockOptions.copy( this.lockOptions, lockOptions );
+		}
 		lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		if ( properties != null ) {
-			setLockOptions( properties, lockOptions );
+			LockOptionsHelper.applyPropertiesToLockOptions( properties, () -> lockOptions );
 		}
 		return lockOptions;
 	}
 
-	private void setLockOptions(Map<String, Object> props, LockOptions options) {
-		Object lockScope = props.get( JPA_LOCK_SCOPE );
-		if ( lockScope instanceof String && PessimisticLockScope.valueOf( ( String ) lockScope ) == PessimisticLockScope.EXTENDED ) {
-			options.setScope( true );
-		}
-		else if ( lockScope instanceof PessimisticLockScope ) {
-			boolean extended = PessimisticLockScope.EXTENDED.equals( lockScope );
-			options.setScope( extended );
-		}
-		else if ( lockScope != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_SCOPE + ": " + lockScope );
-		}
 
-		Object lockTimeout = props.get( JPA_LOCK_TIMEOUT );
-		int timeout = 0;
-		boolean timeoutSet = false;
-		if ( lockTimeout instanceof String ) {
-			timeout = Integer.parseInt( ( String ) lockTimeout );
-			timeoutSet = true;
-		}
-		else if ( lockTimeout instanceof Number ) {
-			timeout = ( (Number) lockTimeout ).intValue();
-			timeoutSet = true;
-		}
-		else if ( lockTimeout != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_TIMEOUT + ": " + lockTimeout );
-		}
-
-		if ( timeoutSet ) {
-			if ( timeout == LockOptions.SKIP_LOCKED ) {
-				options.setTimeOut( LockOptions.SKIP_LOCKED );
-			}
-			else if ( timeout < 0 ) {
-				options.setTimeOut( LockOptions.WAIT_FOREVER );
-			}
-			else if ( timeout == 0 ) {
-				options.setTimeOut( LockOptions.NO_WAIT );
-			}
-			else {
-				options.setTimeOut( timeout );
-			}
-		}
-	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3555,20 +3386,20 @@ public final class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = determineCacheRetrieveMode( this.properties );
+			retrieveMode = fastSessionServices.getCacheRetrieveMode( this.properties );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = determineCacheStoreMode( this.properties );
+			storeMode = fastSessionServices.getCacheStoreMode( this.properties );
 		}
 		return CacheModeHelper.interpretCacheMode( storeMode, retrieveMode );
 	}
 
-	private CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
 		return ( CacheRetrieveMode ) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 	}
 
-	private CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
 		return ( CacheStoreMode ) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 	}
 
@@ -3698,12 +3529,48 @@ public final class SessionImpl
 			return;
 		}
 
+		if ( propertyName == null ) {
+			log.warnf( "Property having key null is illegal; value won't be set." );
+			return;
+		}
+
+		//Store property for future reference:
+
+		if ( properties == null ) {
+			properties = computeCurrentSessionProperties();
+		}
 		properties.put( propertyName, value );
-		applyProperties();
+
+		//now actually update settings, if it's any of these which have a direct impact on this Session state:
+
+		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
+			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
+		}
+		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals(  propertyName ) ) {
+			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
+		}
+		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName ) || JPA_SHARED_CACHE_STORE_MODE.equals(  propertyName ) ) {
+			getSession().setCacheMode(
+					CacheModeHelper.interpretCacheMode(
+							determineCacheStoreMode( properties ),
+							determineCacheRetrieveMode( properties )
+					)
+			);
+		}
+	}
+
+	private Map<String, Object> computeCurrentSessionProperties() {
+		final HashMap<String, Object> map = new HashMap<>( fastSessionServices.defaultSessionProperties );
+		//The FLUSH_MODE is always set at Session creation time, so it needs special treatment to not eagerly initialize this Map:
+		map.put( AvailableSettings.FLUSH_MODE, getHibernateFlushMode().name() );
+		return map;
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
+		if ( properties == null ) {
+			properties = computeCurrentSessionProperties();
+		}
 		return Collections.unmodifiableMap( properties );
 	}
 
@@ -3926,7 +3793,5 @@ public final class SessionImpl
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
-
-		this.discardOnClose = getFactory().getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled();
 	}
 }

@@ -8,7 +8,6 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 
 import java.util.Locale;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
@@ -31,8 +30,7 @@ public class EnhancementHelper {
 	public static boolean includeInBaseFetchGroup(
 			Property bootMapping,
 			boolean isEnhanced,
-			boolean allowEnhancementAsProxy,
-			Function<String,Boolean> hasSubclassChecker) {
+			boolean allowEnhancementAsProxy) {
 		final Value value = bootMapping.getValue();
 
 		if ( ! isEnhanced ) {
@@ -57,7 +55,6 @@ public class EnhancementHelper {
 					}
 					// include it in the base fetch group so long as the config allows
 					// using the FK to create an "enhancement proxy"
-//					return allowEnhancementAsProxy && hasSubclassChecker.apply( toOne.getReferencedEntityName() );
 					return allowEnhancementAsProxy;
 				}
 

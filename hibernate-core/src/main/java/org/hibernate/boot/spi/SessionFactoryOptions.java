@@ -314,4 +314,6 @@ public interface SessionFactoryOptions {
 	default boolean isEnhancementAsProxyEnabled() {
 		return false;
 	}
+
+	boolean isOmitJoinOfSuperclassTablesEnabled();
 }

@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
@@ -1870,5 +1871,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'javax.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
 	void multipleSchemaCreationSettingsDefined();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
+	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
 
 }

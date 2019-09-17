@@ -25,6 +25,7 @@ import javax.persistence.Id;
 import org.hibernate.Query;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.ZonedDateTimeType;
 
 import org.hibernate.testing.TestForIssue;
@@ -102,6 +103,11 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 								.add( 1900, 1, 1, 0, 19, 31, 0, "GMT+00:19:32", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 31, 0, "GMT+00:19:32", ZONE_AMSTERDAM )
 								.add( 1900, 1, 1, 0, 19, 31, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
+				)
+				.skippedForDialects(
+						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
+						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, SybaseDialect.class ),
+						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, "GMT+00:19:32", ZONE_AMSTERDAM )
 								.add( 1600, 1, 1, 0, 0, 0, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
 				)

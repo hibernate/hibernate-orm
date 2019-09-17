@@ -50,6 +50,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				flushEverythingToExecutions( event );
 				if ( flushIsReallyNeeded( event, source ) ) {
 					LOG.trace( "Need to execute flush" );
+					event.setFlushRequired( true );
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
@@ -65,10 +66,9 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				}
 				else {
 					LOG.trace( "Don't need to execute flush" );
+					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}
-
-				event.setFlushRequired( flushIsReallyNeeded( event, source ) );
 			}
 		}
 		finally {
@@ -89,6 +89,6 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
 				&& source.getDontFlushFromFind() == 0
 				&& ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-						persistenceContext.getCollectionEntries().size() > 0 );
+						persistenceContext.getCollectionEntriesSize() > 0 );
 	}
 }

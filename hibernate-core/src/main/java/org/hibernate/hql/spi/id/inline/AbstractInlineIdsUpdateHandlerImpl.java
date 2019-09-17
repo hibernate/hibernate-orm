@@ -103,8 +103,8 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 							.prepareStatement( update, false )) {
 						int position = 1; // jdbc params are 1-based
 						if ( assignmentParameterSpecifications[i] != null ) {
-							for ( int x = 0; x < assignmentParameterSpecifications[i].length; x++ ) {
-								position += assignmentParameterSpecifications[i][x]
+							for ( ParameterSpecification assignmentParameterSpecification : assignmentParameterSpecifications[i] ) {
+								position += assignmentParameterSpecification
 										.bind( ps, queryParameters, session, position );
 							}
 						}

@@ -1915,8 +1915,9 @@ public abstract class AbstractCollectionPersister
 		}
 
 		String[] result = new String[rawAliases.length];
+		final Alias alias = new Alias( suffix );
 		for ( int i = 0; i < rawAliases.length; i++ ) {
-			result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+			result[i] = alias.toUnquotedAliasString( rawAliases[i] );
 		}
 		return result;
 	}

@@ -111,6 +111,7 @@ public class CollectionCacheInvalidator
 				return;
 			}
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+			final boolean debugEnabled = LOG.isDebugEnabled();
 			for ( String role : collectionRoles ) {
 				final CollectionPersister collectionPersister = metamodel.collectionPersister( role );
 				if ( !collectionPersister.hasCache() ) {
@@ -142,7 +143,9 @@ public class CollectionCacheInvalidator
 					}
 				}
 				else {
-					LOG.debug( "Evict CollectionRegion " + role );
+					if ( debugEnabled ) {
+						LOG.debug( "Evict CollectionRegion " + role );
+					}
 					final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 					final SoftLock softLock = cacheAccessStrategy.lockRegion();
 					session.getActionQueue().registerProcess( (success, session1) -> {

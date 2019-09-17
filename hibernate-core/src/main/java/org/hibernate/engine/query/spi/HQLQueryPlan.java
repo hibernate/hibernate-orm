@@ -163,8 +163,8 @@ public class HQLQueryPlan implements Serializable {
 	 */
 	public String[] getSqlStrings() {
 		List<String> sqlStrings = new ArrayList<>();
-		for ( int i = 0; i < translators.length; i++ ) {
-			sqlStrings.addAll( translators[i].collectSqlStrings() );
+		for ( QueryTranslator translator : translators ) {
+			sqlStrings.addAll( translator.collectSqlStrings() );
 		}
 		return ArrayHelper.toStringArray( sqlStrings );
 	}

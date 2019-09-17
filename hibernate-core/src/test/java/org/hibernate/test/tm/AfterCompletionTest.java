@@ -20,6 +20,7 @@ import org.hibernate.Session;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.junit.Test;
@@ -71,8 +72,9 @@ public class AfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
 			// The before causes the original thread to wait until Reaper aborts the transaction
 			// The after tracks whether it is invoked since this test is to guarantee it is called
 			final SessionImplementor sessionImplementor = (SessionImplementor) session;
-			sessionImplementor.getActionQueue().registerProcess( new AfterCallbackCompletionHandler() );
-			sessionImplementor.getActionQueue().registerProcess( new BeforeCallbackCompletionHandler() );
+			final ActionQueue actionQueue = sessionImplementor.getActionQueue();
+			actionQueue.registerProcess( new AfterCallbackCompletionHandler() );
+			actionQueue.registerProcess( new BeforeCallbackCompletionHandler() );
 
 			TestingJtaPlatformImpl.transactionManager().commit();
 		}

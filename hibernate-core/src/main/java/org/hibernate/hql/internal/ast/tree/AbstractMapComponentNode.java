@@ -11,6 +11,8 @@ import java.util.Map;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -123,4 +125,19 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 
 		return MapKeyEntityFromElement.buildKeyJoin( getFromElement() );
 	}
+
+	@Override
+	public String[] getReferencedTables() {
+		String[] referencedTables = null;
+		FromElement fromElement = getFromElement();
+		if ( fromElement != null ) {
+			EntityPersister entityPersister = fromElement.getEntityPersister();
+			if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
+				AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) entityPersister;
+				referencedTables = abstractEntityPersister.getTableNames();
+			}
+		}
+		return referencedTables;
+	}
+
 }

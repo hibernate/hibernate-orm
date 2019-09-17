@@ -38,12 +38,12 @@ public class Insert {
 	}
 
 	public Insert addColumn(String columnName) {
-		return addColumn(columnName, "?");
+		return addColumn( columnName, "?" );
 	}
 
 	public Insert addColumns(String[] columnNames) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i] );
+		for ( String columnName : columnNames ) {
+			addColumn( columnName );
 		}
 		return this;
 	}
@@ -67,12 +67,12 @@ public class Insert {
 	}
 
 	public Insert addColumn(String columnName, String valueExpression) {
-		columns.put(columnName, valueExpression);
+		columns.put( columnName, valueExpression );
 		return this;
 	}
 
 	public Insert addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
+		return addColumn( columnName, type.objectToSQLString( value, dialect ) );
 	}
 
 	public Insert addIdentityColumn(String columnName) {

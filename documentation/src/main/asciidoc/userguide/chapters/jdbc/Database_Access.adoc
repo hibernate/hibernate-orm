@@ -39,6 +39,14 @@ The `DataSource` `ConnectionProvider` also (optionally) accepts the `hibernate.c
 If specified, the https://docs.oracle.com/javase/8/docs/api/javax/sql/DataSource.html#getConnection-java.lang.String-java.lang.String-[`DataSource#getConnection(String username, String password)`] will be used.
 Otherwise, the no-arg form is used.
 
+[[database-connectionprovider-driver]]
+=== Driver Configuration
+`hibernate.connection.driver_class`:: The name of the JDBC Driver class to use
+`hibernate.connection.url`:: The JDBC connection url
+`hibernate.connection.*`:: All such setting names (except the <<appendices/Configurations.adoc#configurations-database-connection,predefined ones>>) will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
+
+NOTE: Not all properties apply to all situations. For example, if you are providing a data source, `hibernate.connection.driver_class` setting will not be used.
+
 [[database-connectionprovider-c3p0]]
 === Using c3p0
 
@@ -48,13 +56,10 @@ To use the c3p0 integration, the application must include the `hibernate-c3p0` m
 ====
 
 Hibernate also provides support for applications to use http://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
-When using this c3p0 support, a number of additional configuration settings are recognized.
+When c3p0 support is enabled, a number of c3p0-specific configuration settings are recognized in addition to the general ones described in <<database-connectionprovider-driver>>.
 
 Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
 
-`hibernate.connection.driver_class`:: The name of the JDBC Driver class to use
-`hibernate.connection.url`:: The JDBC connection url.
-Any settings prefixed with `hibernate.connection.` (other than the "special ones"):: These all have the `hibernate.connection.` prefix stripped and the rest will be passed as JDBC connection properties
 `hibernate.c3p0.min_size` or `c3p0.minPoolSize`:: The minimum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 minPoolSize]
 `hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]
 `hibernate.c3p0.timeout` or `c3p0.maxIdleTime`:: The Connection idle time. See http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 maxIdleTime]

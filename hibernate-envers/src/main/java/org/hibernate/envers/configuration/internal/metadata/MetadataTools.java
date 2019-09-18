@@ -95,6 +95,26 @@ public final class MetadataTools {
 		);
 	}
 
+	public static Element addModifiedFlagPropertyWithColumn(
+			Element parent,
+			String propertyName,
+			String suffix,
+			String modifiedFlagName,
+			String columnName) {
+		final Element property = addProperty(
+				parent,
+				(modifiedFlagName != null) ? modifiedFlagName : getModifiedFlagPropertyName( propertyName, suffix ),
+				"boolean",
+				true,
+				false,
+				false
+		);
+
+		addColumn( property, columnName, null, null, null, null, null, null );
+
+		return property;
+	}
+
 	public static String getModifiedFlagPropertyName(String propertyName, String suffix) {
 		return propertyName + suffix;
 	}

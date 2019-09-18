@@ -19,6 +19,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.MapKey;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
@@ -639,6 +640,12 @@ public class AuditedPropertiesReader {
 		final MapKey mapKey = property.getAnnotation( MapKey.class );
 		if ( mapKey != null ) {
 			propertyData.setMapKey( mapKey.name() );
+		}
+		else {
+			final MapKeyEnumerated mapKeyEnumerated = property.getAnnotation( MapKeyEnumerated.class );
+			if ( mapKeyEnumerated != null ) {
+				propertyData.setMapKeyEnumType( mapKeyEnumerated.value() );
+			}
 		}
 	}
 

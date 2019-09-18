@@ -26,10 +26,11 @@ import static org.junit.Assert.assertEquals;
  */
 public class DefaultSchemaNameResolverTest {
 	private static final String SCHEMA_NAME = "theSchemaName";
+	private static final String UNSUPPORTED_SCHEMA_NAME = "theSchemaName";
 	private static final String GET_CURRENT_SCHEMA_NAME_COMMAND = "get the schema name";
 
 	@Test
-	public void testSecondConnectionDoesNotSupportGetSchemaName() throws SQLException {
+	public void testConnectionsThatDoesNotSupportGetSchemaName() throws SQLException {
 		final Connection connectionSupportsGetSchemaName =
 				ConnectionProxy.generateProxy( new ConnectionProxy( SCHEMA_NAME ) );
 		String schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
@@ -40,9 +41,22 @@ public class DefaultSchemaNameResolverTest {
 		assertEquals( SCHEMA_NAME, schemaName );
 
 		final Connection connectionNotSupportGetSchemaName =
-				ConnectionProxy.generateProxy( new ConnectionProxy( null ) );
+				ConnectionProxy.generateProxy( new ConnectionProxy( UNSUPPORTED_SCHEMA_NAME ) );
 		schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
 				connectionNotSupportGetSchemaName,
+				new Dialect() {
+					@Override
+					public String getCurrentSchemaCommand() {
+						return GET_CURRENT_SCHEMA_NAME_COMMAND ;
+					}
+				}
+		);
+		assertEquals( SCHEMA_NAME, schemaName );
+
+		final Connection connectionNotSupportGetSchemaNameAndReturningNull =
+				ConnectionProxy.generateProxy( new ConnectionProxy( null ) );
+		schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
+				connectionNotSupportGetSchemaNameAndReturningNull,
 				new Dialect() {
 					@Override
 					public String getCurrentSchemaCommand() {
@@ -78,10 +92,11 @@ public class DefaultSchemaNameResolverTest {
 
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			if ( method.getName().equals( "getSchema" ) && args == null ) {
-				if ( schemaName != null ) {
-					return schemaName;
+				if ( UNSUPPORTED_SCHEMA_NAME.equals( schemaName ) ) {
+					throw new AbstractMethodError( "getSchema is not implemented" );
 				}
-				throw new AbstractMethodError( "getSchema is not implemented" );
+
+				return schemaName;
 			}
 			else if ( method.getName().equals( "createStatement" ) && args == null ) {
 				return StatementProxy.generateProxy( new StatementProxy() );

@@ -589,13 +589,9 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
+			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
 			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
-				propertyData.setModifiedFlagName( aud.modifiedColumnName() );
-			}
-			else {
-				propertyData.setModifiedFlagName(
-						MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix )
-				);
+				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}
 			return true;
 		}

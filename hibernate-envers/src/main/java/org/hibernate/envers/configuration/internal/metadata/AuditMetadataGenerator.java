@@ -213,7 +213,7 @@ public final class AuditMetadataGenerator {
 			}
 			return;
 		}
-		addModifiedFlagIfNeeded( parent, propertyAuditingData, processModifiedFlag );
+		addModifiedFlagIfNeeded( value, parent, propertyAuditingData, processModifiedFlag );
 	}
 
 	private boolean processedInSecondPass(Type type) {
@@ -290,19 +290,20 @@ public final class AuditMetadataGenerator {
 		else {
 			return;
 		}
-		addModifiedFlagIfNeeded( parent, propertyAuditingData, processModifiedFlag );
+		addModifiedFlagIfNeeded( value, parent, propertyAuditingData, processModifiedFlag );
 	}
 
 	private void addModifiedFlagIfNeeded(
+			Value value,
 			Element parent,
 			PropertyAuditingData propertyAuditingData,
 			boolean processModifiedFlag) {
 		if ( processModifiedFlag && propertyAuditingData.isUsingModifiedFlag() ) {
-			MetadataTools.addModifiedFlagProperty(
+			globalCfg.getModifiedColumnNamingStrategy().addModifiedColumns(
+					globalCfg,
+					value,
 					parent,
-					propertyAuditingData.getName(),
-					globalCfg.getModifiedFlagSuffix(),
-					propertyAuditingData.getModifiedFlagName()
+					propertyAuditingData
 			);
 		}
 	}

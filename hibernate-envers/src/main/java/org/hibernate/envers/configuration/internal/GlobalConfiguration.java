@@ -7,13 +7,17 @@
 package org.hibernate.envers.configuration.internal;
 
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.boot.internal.LegacyModifiedColumnNamingStrategy;
+import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -77,10 +81,14 @@ public class GlobalConfiguration {
 	*/
 	private final String correlatedSubqueryOperator;
 
+	private final ModifiedColumnNamingStrategy modifiedColumnNamingStrategy;
+
 	public GlobalConfiguration(
 			EnversService enversService,
 			Map properties) {
 		this.enversService = enversService;
+
+		final StrategySelector strategySelector = enversService.getServiceRegistry().getService( StrategySelector.class );
 
 		generateRevisionsForCollections = ConfigurationHelper.getBoolean(
 				EnversSettings.REVISION_ON_COLLECTION_CHANGE,
@@ -155,6 +163,21 @@ public class GlobalConfiguration {
 		else {
 			revisionListenerClass = null;
 		}
+
+		modifiedColumnNamingStrategy = strategySelector.resolveDefaultableStrategy(
+				ModifiedColumnNamingStrategy.class,
+				properties.get( EnversSettings.MODIFIED_COLUMN_NAMING_STRATEGY ),
+				new Callable<ModifiedColumnNamingStrategy>() {
+					@Override
+					public ModifiedColumnNamingStrategy call() throws Exception {
+						return strategySelector.resolveDefaultableStrategy(
+								ModifiedColumnNamingStrategy.class,
+								"default",
+								new LegacyModifiedColumnNamingStrategy()
+						);
+					}
+				}
+		);
 
 		allowIdentifierReuse = ConfigurationHelper.getBoolean(
 				EnversSettings.ALLOW_IDENTIFIER_REUSE, properties, false
@@ -231,5 +254,9 @@ public class GlobalConfiguration {
 
 	public boolean isAuditReaderFindAtRevisionExactMatch() {
 		return findByRevisionExactMatch;
+	}
+
+	public ModifiedColumnNamingStrategy getModifiedColumnNamingStrategy() {
+		return modifiedColumnNamingStrategy;
 	}
 }

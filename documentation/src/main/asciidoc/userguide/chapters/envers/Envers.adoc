@@ -286,6 +286,9 @@ The suffix for columns storing "Modified Flags".
 +
 For example, a property called "age", will by default get modified flag with column name "age_MOD".
 
+`*org.hibernate.envers.modified_column_naming_strategy*` (default: `org.hibernate.envers.boot.internal.LegacyModifiedColumnNamingStrategy` )::
+The naming strategy to be used for modified flag columns in the audit metadata.
+
 `*org.hibernate.envers.embeddable_set_ordinal_field_name*` (default: `SETORDINAL` )::
 Name of column used for storing ordinal of the change in sets of embeddable elements.
 
@@ -314,6 +317,7 @@ The following configuration options have been added recently and should be regar
 .  `org.hibernate.envers.track_entities_changed_in_revision`
 .  `org.hibernate.envers.using_modified_flag`
 .  `org.hibernate.envers.modified_flag_suffix`
+.  `org.hibernate.envers.modified_column_naming_strategy`
 .  `org.hibernate.envers.original_id_prop_name`
 .  `org.hibernate.envers.find_by_revision_exact_match`
 ====
@@ -720,6 +724,77 @@ include::{extrasdir}/envers-tracking-properties-changes-example.sql[]
 ====
 
 To see how "Modified Flags" can be utilized, check out the very simple query API that uses them: <<envers-tracking-properties-changes-queries>>.
+
+[[envers-tracking-properties-changes-strategy]]
+=== Selecting strategy for tracking property level changes
+
+By default, Envers uses the `legacy` modified column naming strategy.
+This strategy is designed to add columns based the following rule-set:
+
+. If property is annotated with `@Audited` and the _modifiedColumnName_ attribute is specified, the column will directly be based on the supplied name.
+. If property is not annotated with `@Audited` or if no _modifiedColumnName_ attribute is given, the column will be named after the java class property, appended with the configured suffix, the default being `_MOD`.
+
+While this strategy has no performance drawbacks, it does present concerns for users who prefer consistency without verbosity.
+Lets take the following entity mapping as an example.
+
+```
+@Audited(withModifiedFlags = true)
+@Entity
+public class Customer {
+  @Id
+  private Integer id;
+  @Column(name = "customer_name")
+  private String name;
+}
+```
+
+This mapping will actually lead to some inconsistent naming between columns, see below with how the model's name will be stored in `customer_name` but the modified column that tracks whether this column changes between revisions is named `name_MOD`.
+
+```
+CREATE TABLE Customer_AUD (
+    id bigint not null,
+    REV integer not null,
+    REVTYPE tinyint not null,
+    customer_name varchar(255),
+    name_MOD boolean,
+    primary key(id, REV)
+)
+```
+
+An additional strategy called `improved`, aims to address these consistent column naming concerns.
+This strategy uses the following rule-set:
+
+. Property is a Basic type (Single Column valued property)
+.. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
+.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value.
+. Property is an Association (to-one mapping) with a Foreign Key using a single column
+.. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
+.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value.
+. Property is an Association (to-one mapping) with a Foreign Key using multiple columns
+.. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
+.. Otherwise use the property name appended with the modified flag suffix configured value.
+. Property is an Embeddable
+.. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
+.. Otherwise use the property name appended with the modified flag suffix configured value.
+
+While using this strategy, the same `Customer` mapping will generate the following table schema:
+
+```
+CREATE TABLE Customer_AUD (
+    id bigint not null,
+    REV integer not null,
+    REVTYPE tinyint not null,
+    customer_name varchar(255),
+    customer_name_MOD boolean,
+    primary key(id, REV)
+)
+```
+
+When already using Envers in conjunction with the modified columns flag feature, its advised not to enable the new strategy immediately as schema changes would be required.
+You will need to either migrate your existing schema manually to adhere to the rules above or use the explicit _modifiedColumnName_ attribute on the `@Audited` annotation for existing columns that use the feature.
+
+To configure a custom strategy implementation or use the improved strategy, the configuration option `org.hibernate.envers.modified_column_naming_strategy` will need to be set.
+This option can be the fully qualified class name of a `ModifiedColumnNameStrategy` implementation or `legacy` or `improved` for either of the two provided implementations.
 
 [[envers-queries]]
 === Queries

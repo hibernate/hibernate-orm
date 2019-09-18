@@ -15,6 +15,7 @@ import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.Type;
 
@@ -38,6 +39,7 @@ public class PropertyAuditingData {
 	private boolean forceInsertable;
 	private boolean usingModifiedFlag;
 	private String modifiedFlagName;
+	private String explicitModifiedFlagName;
 	private Value value;
 	// Synthetic properties are ones which are not part of the actual java model.
 	// They're properties used for bookkeeping by Hibernate
@@ -224,6 +226,18 @@ public class PropertyAuditingData {
 
 	public void setModifiedFlagName(String modifiedFlagName) {
 		this.modifiedFlagName = modifiedFlagName;
+	}
+
+	public boolean isModifiedFlagNameExplicitlySpecified() {
+		return !StringTools.isEmpty( explicitModifiedFlagName );
+	}
+
+	public String getExplicitModifiedFlagName() {
+		return explicitModifiedFlagName;
+	}
+
+	public void setExplicitModifiedFlagName(String modifiedFlagName) {
+		this.explicitModifiedFlagName = modifiedFlagName;
 	}
 
 	public void addAuditingOverride(AuditOverride annotation) {

@@ -48,7 +48,7 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 					// then the getSchemaMethod is not null but the call to getSchema() throws an java.lang.AbstractMethodError
 					// or returns null
 					String schema = connection.getSchema();
-					if (schema == null) {
+					if ( schema == null ) {
 						log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
 						return SchemaNameResolverFallbackDelegate.INSTANCE;
 					} else {

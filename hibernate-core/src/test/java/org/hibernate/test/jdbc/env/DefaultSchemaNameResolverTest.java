@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class DefaultSchemaNameResolverTest {
 	private static final String SCHEMA_NAME = "theSchemaName";
-	private static final String UNSUPPORTED_SCHEMA_NAME = "theSchemaName";
+	private static final String UNSUPPORTED_SCHEMA_NAME = "unsupportedSchemaName";
 	private static final String GET_CURRENT_SCHEMA_NAME_COMMAND = "get the schema name";
 
 	@Test
@@ -96,7 +96,7 @@ public class DefaultSchemaNameResolverTest {
 					throw new AbstractMethodError( "getSchema is not implemented" );
 				}
 
-				return SCHEMA_NAME;
+				return schemaName;
 			}
 			else if ( method.getName().equals( "createStatement" ) && args == null ) {
 				return StatementProxy.generateProxy( new StatementProxy() );

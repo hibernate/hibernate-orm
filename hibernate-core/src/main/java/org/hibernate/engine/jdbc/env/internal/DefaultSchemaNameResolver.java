@@ -51,7 +51,8 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 					if ( schema == null ) {
 						log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
 						return SchemaNameResolverFallbackDelegate.INSTANCE;
-					} else {
+					}
+					else {
 						return new SchemaNameResolverJava17Delegate();
 					}
 				}

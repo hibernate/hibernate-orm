@@ -21,5 +21,8 @@
 
   <bean id="additionalJaxbMappingProducer" class="org.hibernate.envers.boot.internal.AdditionalJaxbMappingProducerImpl"/>
   <service ref="additionalJaxbMappingProducer" interface="org.hibernate.boot.spi.AdditionalJaxbMappingProducer"/>
-  
+
+  <bean id="modifiedColumnNamingStrategyRegistrationProducer" class="org.hibernate.envers.boot.internal.ModifiedColumnNamingStrategyRegistrationProvider"/>
+  <service ref="modifiedColumnNamingStrategyRegistrationProducer" interface="org.hibernate.boot.registry.selector.StrategyRegistrationProvider"/>
+
 </blueprint>

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.persistence.EnumType;
 import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
@@ -42,6 +43,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.ListCollectionMapp
 import org.hibernate.envers.internal.entities.mapper.relation.MapCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleMapKeyEnumeratedComponentMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.SortedMapCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.SortedSetCollectionMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
@@ -64,7 +66,6 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Tools;
-import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
@@ -215,7 +216,8 @@ public final class CollectionMetadataGenerator {
 		// in a join table, so the prefix value is arbitrary).
 		final MiddleIdData referencedIdData = createMiddleIdData(
 				referencedIdMapping,
-				null, referencedEntityName
+				null,
+				referencedEntityName
 		);
 
 		// Generating the element mapping.
@@ -523,7 +525,8 @@ public final class CollectionMetadataGenerator {
 		if ( propertyValue instanceof IndexedCollection ) {
 			final IndexedCollection indexedValue = (IndexedCollection) propertyValue;
 			final String mapKey = propertyAuditingData.getMapKey();
-			if ( mapKey == null ) {
+			final EnumType mapKeyEnumType = propertyAuditingData.getMapKeyEnumType();
+			if ( mapKey == null && mapKeyEnumType == null ) {
 				// This entity doesn't specify a javax.persistence.MapKey. Mapping it to the middle entity.
 				return addValueToMiddleTable(
 						indexedValue.getIndex(),
@@ -532,6 +535,15 @@ public final class CollectionMetadataGenerator {
 						"mapkey",
 						null,
 						true
+				);
+			}
+			else if ( mapKeyEnumType != null ) {
+				final IdMappingData referencedIdMapping = mainGenerator.getEntitiesConfigurations()
+						.get( referencedEntityName ).getIdMappingData();
+				final int currentIndex = queryGeneratorBuilder == null ? 0 : queryGeneratorBuilder.getCurrentIndex();
+				return new MiddleComponentData(
+						new MiddleMapKeyEnumeratedComponentMapper( propertyAuditingData.getName() ),
+						currentIndex
 				);
 			}
 			else {

@@ -9,6 +9,8 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EnumType;
+
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
@@ -28,6 +30,7 @@ public class PropertyAuditingData {
 	private String beanName;
 	private ModificationStore store;
 	private String mapKey;
+	private EnumType mapKeyEnumType;
 	private AuditJoinTable joinTable;
 	private String accessType;
 	private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<>( 0 );
@@ -124,6 +127,14 @@ public class PropertyAuditingData {
 
 	public void setMapKey(String mapKey) {
 		this.mapKey = mapKey;
+	}
+
+	public EnumType getMapKeyEnumType() {
+		return mapKeyEnumType;
+	}
+
+	public void setMapKeyEnumType(EnumType mapKeyEnumType) {
+		this.mapKeyEnumType = mapKeyEnumType;
 	}
 
 	public AuditJoinTable getJoinTable() {

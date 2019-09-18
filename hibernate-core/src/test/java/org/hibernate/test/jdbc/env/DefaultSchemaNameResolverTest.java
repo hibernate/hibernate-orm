@@ -96,7 +96,7 @@ public class DefaultSchemaNameResolverTest {
 					throw new AbstractMethodError( "getSchema is not implemented" );
 				}
 
-				return schemaName;
+				return SCHEMA_NAME;
 			}
 			else if ( method.getName().equals( "createStatement" ) && args == null ) {
 				return StatementProxy.generateProxy( new StatementProxy() );

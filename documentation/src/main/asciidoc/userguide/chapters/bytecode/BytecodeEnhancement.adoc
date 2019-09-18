@@ -1,0 +1,23 @@
+[[enhancement]]
+== Enhancement
+:sourcedir: ../../../../../test/java/org/hibernate/userguide/bytecode
+:extrasdir: extras
+
+Hibernate offers a number of services that can be added into an application's domain model classes
+through bytecode enhancement...
+
+
+[[enhancement-laziness]]
+=== Laziness
+
+
+[[enhancement-bidir]]
+=== Bi-directionality
+
+
+[[enhancement-dirty]]
+=== In-line dirty checking
+
+
+[[enhancement-extended]]
+=== Extended enhancement

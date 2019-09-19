@@ -298,7 +298,6 @@ public class SqmSelectToSqlAstConverter
 					alias,
 					SqmSelectToSqlAstConverter.this
 			);
-
 		}
 		catch (RuntimeException e) {
 			throw new HibernateException(

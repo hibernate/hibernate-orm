@@ -15,6 +15,7 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -34,9 +35,18 @@ public abstract class AbstractFetchParent implements FetchParent {
 		this.fetches = creationState.visitFetches( this );
 	}
 
+	public FetchableContainer getFetchContainer() {
+		return fetchContainer;
+	}
+
 	@Override
 	public ManagedMappingType getReferencedMappingType() {
-		return (ManagedMappingType) fetchContainer;
+		return (ManagedMappingType) getFetchContainer();
+	}
+
+	@Override
+	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+		return getReferencedMappingType().getJavaTypeDescriptor();
 	}
 
 	@Override

@@ -14,13 +14,13 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.ScalarDomainResult;
+import org.hibernate.sql.results.spi.BasicResultMappingNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicResultImpl<T> implements ScalarDomainResult<T> {
+public class BasicResult<T> implements BasicResultMappingNode<T> {
 	private final String resultVariable;
 	private final JavaTypeDescriptor<T> javaTypeDescriptor;
 
@@ -28,14 +28,14 @@ public class BasicResultImpl<T> implements ScalarDomainResult<T> {
 
 	private final DomainResultAssembler<T> assembler;
 
-	public BasicResultImpl(
+	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this( jdbcValuesArrayPosition, resultVariable, javaTypeDescriptor, (NavigablePath) null );
 	}
 
-	public BasicResultImpl(
+	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,
@@ -48,7 +48,7 @@ public class BasicResultImpl<T> implements ScalarDomainResult<T> {
 		this.assembler = new BasicResultAssembler<>( jdbcValuesArrayPosition, javaTypeDescriptor );
 	}
 
-	public BasicResultImpl(
+	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,
@@ -56,7 +56,7 @@ public class BasicResultImpl<T> implements ScalarDomainResult<T> {
 		this( valuesArrayPosition, resultVariable, javaTypeDescriptor, valueConverter, null );
 	}
 
-	public BasicResultImpl(
+	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
 			JavaTypeDescriptor<T> javaTypeDescriptor,

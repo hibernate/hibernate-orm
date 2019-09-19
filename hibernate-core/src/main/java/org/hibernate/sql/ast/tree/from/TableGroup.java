@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqmSelectableInterpretation;
@@ -32,7 +33,7 @@ public interface TableGroup
 		extends SqlAstNode, ColumnReferenceQualifier, DomainResultProducer,	SqmSelectableInterpretation {
 	NavigablePath getNavigablePath();
 
-	ModelPart getModelPart();
+	ModelPartContainer getModelPart();
 
 	LockMode getLockMode();
 

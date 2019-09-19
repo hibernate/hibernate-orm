@@ -86,7 +86,12 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 
 	@Override
 	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
-		tableGroupJoins.addAll( joins );
+		if ( tableGroupJoins == null ) {
+			tableGroupJoins = new HashSet<>( joins );
+		}
+		else {
+			tableGroupJoins.addAll( joins );
+		}
 	}
 
 	@Override

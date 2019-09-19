@@ -12,7 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.EntityMappingNode;
+import org.hibernate.sql.results.spi.EntityResultNode;
 import org.hibernate.sql.results.spi.Initializer;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.sql.results.spi.Initializer;
  */
 public class EntityRootInitializer extends AbstractEntityInitializer {
 	public EntityRootInitializer(
-			EntityMappingNode resultDescriptor,
+			EntityResultNode resultDescriptor,
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			DomainResult identifierResult,

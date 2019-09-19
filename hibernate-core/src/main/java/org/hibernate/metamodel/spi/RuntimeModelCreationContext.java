@@ -22,11 +22,13 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 
 	BootstrapContext getBootstrapContext();
 
+	MetadataImplementor getBootModel();
+
+	DomainMetamodel getDomainModel();
+
 	default TypeConfiguration getTypeConfiguration() {
 		return getBootstrapContext().getTypeConfiguration();
 	}
-
-	MetadataImplementor getMetadata();
 
 	default ManagedBeanRegistry getManagedBeanRegistry() {
 		return getSessionFactory().getServiceRegistry().getService( ManagedBeanRegistry.class );
@@ -34,5 +36,10 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 
 	default JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
 		return getTypeConfiguration().getJavaTypeDescriptorRegistry();
+	}
+
+	@Override
+	default MetadataImplementor getMetadata() {
+		return getBootModel();
 	}
 }

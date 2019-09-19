@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
  *
  * @author Steve Ebersole
  */
-public interface EntityResult extends EntityMappingNode, DomainResult {
+public interface EntityResult extends EntityResultNode, DomainResult {
 	@Override
 	EntityValuedModelPart getReferencedMappingContainer();
 }

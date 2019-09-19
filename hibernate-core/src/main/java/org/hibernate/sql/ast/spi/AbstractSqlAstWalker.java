@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
@@ -260,46 +261,63 @@ public abstract class AbstractSqlAstWalker
 		String separator = NO_SEPARATOR;
 		for ( TableGroup root : fromClause.getRoots() ) {
 			appendSql( separator );
-			visitRoot( root );
+			processRoot( root );
 			separator = COMA_SEPARATOR;
 		}
 	}
 
-	protected void visitRoot(TableGroup root) {
-		visitTableGroup( root );
-		consumeJoins( root );
+	protected void processRoot(TableGroup root) {
+		root.render( sqlAppender, this );
+
+		processTableGroupJoins( root );
 	}
 
-	private void consumeJoins(TableGroup tableGroup) {
-		tableGroup.visitTableGroupJoins( this::visitTableGroupJoin );
+	protected void processTableGroupJoins(TableGroup source) {
+		source.visitTableGroupJoins( this::processTableGroupJoin );
+	}
+
+	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin) {
+		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+
+		//noinspection StatementWithEmptyBody
+		if ( joinedGroup instanceof VirtualTableGroup ) {
+			// nothing to do
+			// todo (6.0) : join predicates?
+		}
+		else {
+			appendSql( EMPTY_STRING_SEPARATOR );
+			appendSql( tableGroupJoin.getJoinType().getText() );
+			appendSql( " join (" );
+			joinedGroup.render( sqlAppender, this );
+			appendSql( CLOSE_PARENTHESIS );
+
+			clauseStack.push( Clause.WHERE );
+			try {
+				if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
+					appendSql( " on " );
+					tableGroupJoin.getPredicate().accept( this );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+
+		processTableGroupJoins( joinedGroup );
 	}
 
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
-		tableGroup.render( sqlAppender, this );
+		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
+
+		// todo (6.0) : what is the correct behavior here?
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
-		TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-		appendSql( EMPTY_STRING_SEPARATOR );
-		appendSql( tableGroupJoin.getJoinType().getText() );
-		appendSql( " join (" );
-		visitTableGroup( joinedGroup );
-		appendSql( CLOSE_PARENTHESIS );
+		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
 
-		clauseStack.push( Clause.WHERE );
-		try {
-			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-				appendSql( " on " );
-				tableGroupJoin.getPredicate().accept( this );
-			}
-		}
-		finally {
-			clauseStack.pop();
-		}
-
-		joinedGroup.visitTableGroupJoins( this::visitTableGroupJoin );
+		// todo (6.0) : what is the correct behavior here?
 	}
 
 	@Override

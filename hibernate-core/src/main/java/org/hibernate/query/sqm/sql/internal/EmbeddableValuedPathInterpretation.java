@@ -9,14 +9,14 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -29,34 +29,34 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 /**
  * @author Steve Ebersole
  */
-public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T>, DomainResultProducer<T> {
+public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T>, DomainResultProducer<T> {
+
 	/**
 	 * Static factory
 	 */
-	public static <T> BasicValuedPathInterpretation<T> from(
-			SqmBasicValuedSimplePath<T> sqmPath,
+	public static <T> EmbeddableValuedPathInterpretation<T> from(
+			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker) {
 		final TableGroup tableGroup = DomainModelHelper.resolveLhs( sqmPath, sqlAstCreationState );
 		tableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), sqlAstCreationState );
 
-		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
+		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
 				null
 		);
 
-		return new BasicValuedPathInterpretation<>( sqmPath, mapping, tableGroup );
+		return new EmbeddableValuedPathInterpretation<>( sqmPath, mapping, tableGroup );
 	}
 
-	private final SqmBasicValuedSimplePath<T> sqmPath;
-	private final BasicValuedModelPart mapping;
+
+	private final SqmEmbeddedValuedSimplePath<T> sqmPath;
+	private final EmbeddableValuedModelPart mapping;
 	private final TableGroup tableGroup;
 
-	private Expression expression;
-
-	private BasicValuedPathInterpretation(
-			SqmBasicValuedSimplePath<T> sqmPath,
-			BasicValuedModelPart mapping,
+	public EmbeddableValuedPathInterpretation(
+			SqmEmbeddedValuedSimplePath<T> sqmPath,
+			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
 		this.sqmPath = sqmPath;
 		this.mapping = mapping;
@@ -85,9 +85,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 	}
 
 	@Override
-	public DomainResult<T> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
+	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		return mapping.createDomainResult( getNavigablePath(), tableGroup, resultVariable, creationState );
 	}
 
@@ -98,13 +96,14 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SqmExpressionInterpretation
+	// SqmPathInterpretation
 
 	@Override
 	public Expression toSqlExpression(
-			Clause clause, SqmToSqlAstConverter walker,
+			Clause clause,
+			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return mapping.toSqlExpression( tableGroup, clause, walker, sqlAstCreationState );
 	}
 
 	@Override
@@ -116,8 +115,10 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+
+
 	@Override
 	public String toString() {
-		return "BasicValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
+		return "EmbeddableValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
 	}
 }

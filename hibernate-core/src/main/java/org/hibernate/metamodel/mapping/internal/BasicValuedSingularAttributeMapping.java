@@ -18,15 +18,18 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -97,7 +100,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
 		//noinspection unchecked
-		return new BasicResultImpl(
+		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
@@ -160,9 +163,12 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.findTableGroup( fetchParent.getNavigablePath() );
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
+				fetchParent.getNavigablePath(),
+				pnp -> DomainModelHelper.resolveLhs( fetchParent.getNavigablePath(), sqlAstCreationState )
+		);
+
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
 		return new BasicFetch(

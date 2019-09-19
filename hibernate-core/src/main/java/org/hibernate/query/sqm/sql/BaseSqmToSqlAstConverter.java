@@ -20,6 +20,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -37,6 +38,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
@@ -587,10 +589,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
-		final SqmPath<?> lhs = sqmPath.getLhs();
-		assert lhs != null;
-
-		return (SqmPathInterpretation) sqmPath;
+		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
+//		final SqmPath<?> lhs = sqmPath.getLhs();
+//		assert lhs != null;
+//
+//		return (SqmPathInterpretation) sqmPath;
 	}
 
 	@Override

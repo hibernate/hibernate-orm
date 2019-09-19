@@ -7,13 +7,13 @@
 package org.hibernate.sql.results.spi;
 
 
-import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 
 /**
  * @author Steve Ebersole
  */
 public interface CompositeInitializer extends Initializer, FetchParentAccess {
-	ModelPartContainer getInitializingEmbeddedDescriptor();
+	EmbeddableValuedModelPart getInitializingModelPart();
 
 	Object getCompositeInstance();
 

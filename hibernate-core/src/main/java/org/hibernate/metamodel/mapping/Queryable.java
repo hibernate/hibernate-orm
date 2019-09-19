@@ -9,6 +9,10 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Defines a mapping model contract for things that can be queried in the HQL,
@@ -38,4 +42,11 @@ public interface Queryable extends ModelPart {
 	 * entity, its super-types and its sub-types.
 	 */
 	void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType);
+
+	/**
+	 * Perform any preparation for using `this` as the left-hand side for the given `subPartSqmPath`.
+	 *
+	 * @param navigablePath The right-hand side NavigablePath.  The path's parent should reference this mapping type.
+	 */
+	TableGroup prepareAsLhs(NavigablePath navigablePath, SqlAstCreationState creationState);
 }

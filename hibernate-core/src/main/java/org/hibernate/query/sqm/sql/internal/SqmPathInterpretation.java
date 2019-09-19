@@ -19,6 +19,10 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
+ * todo (6.0) : consider having `SqmPathInterpretation` extend `org.hibernate.sql.ast.tree.expression.Expression`.
+ * 		- Basic paths would logically resolve to a `ColumnReference`
+ * 		- Composite and entity-valued paths would logically resolve to a `SqlTuple`
+ *
  * @author Steve Ebersole
  */
 public interface SqmPathInterpretation<T> extends SqmExpressionInterpretation<T> {

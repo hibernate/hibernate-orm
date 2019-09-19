@@ -16,7 +16,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
-public interface FetchParent {
+public interface FetchParent extends ResultSetMappingNode {
 	FetchableContainer getReferencedMappingContainer();
 
 	/**

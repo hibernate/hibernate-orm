@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingNode extends ResultSetMappingNode, FetchParent {
+public interface EntityResultNode extends ResultSetMappingNode, FetchParent {
 	@Override
 	NavigablePath getNavigablePath();
 

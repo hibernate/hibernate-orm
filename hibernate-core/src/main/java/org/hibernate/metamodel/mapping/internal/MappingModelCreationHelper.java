@@ -6,16 +6,30 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -25,12 +39,14 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -42,6 +58,10 @@ public class MappingModelCreationHelper {
 	 */
 	private MappingModelCreationHelper() {
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// EntityIdentifier
 
 	public static EntityIdentifierMapping buildSimpleIdentifierMapping(
 			EntityPersister entityPersister,
@@ -119,7 +139,7 @@ public class MappingModelCreationHelper {
 				);
 
 				//noinspection unchecked
-				return new BasicResultImpl(
+				return new BasicResult(
 						sqlSelection.getValuesArrayPosition(),
 						resultVariable,
 						entityPersister.getIdentifierMapping().getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
@@ -272,5 +292,235 @@ public class MappingModelCreationHelper {
 				);
 			}
 		};
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Non-identifier attributes
+
+	public static BasicValuedSingularAttributeMapping buildBasicAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			BasicType attrType,
+			String tableExpression,
+			String attrColumnName,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		final BasicValue.Resolution<?> resolution = ( (BasicValue) bootProperty.getValue() ).resolve();
+		final BasicValueConverter valueConverter = resolution.getValueConverter();
+
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
+			private final boolean nullable = bootProperty.getValue().isNullable();
+			private final boolean insertable = bootProperty.isInsertable();
+			private final boolean updateable = bootProperty.isUpdateable();
+			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
+
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return mutabilityPlan;
+			}
+
+			@Override
+			public boolean isNullable() {
+				return nullable;
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return insertable;
+			}
+
+			@Override
+			public boolean isUpdatable() {
+				return updateable;
+			}
+
+			@Override
+			public boolean isIncludedInDirtyChecking() {
+				// todo (6.0) : do not believe this is correct
+				return updateable;
+			}
+
+			@Override
+			public boolean isIncludedInOptimisticLocking() {
+				return includeInOptimisticLocking;
+			}
+
+			@Override
+			public CascadeStyle getCascadeStyle() {
+				return cascadeStyle;
+			}
+		};
+
+		final FetchStrategy fetchStrategy = bootProperty.isLazy()
+				? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
+				: FetchStrategy.IMMEDIATE_JOIN;
+
+		if ( valueConverter != null ) {
+			// we want to "decompose" the "type" into its various pieces as expected by the mapping
+			assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
+
+			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
+					.getDomainModel()
+					.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getRelationalSqlTypeDescriptor() );
+
+
+			return new BasicValuedSingularAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					attributeMetadataAccess,
+					fetchStrategy,
+					tableExpression,
+					attrColumnName,
+					valueConverter,
+					mappingBasicType,
+					mappingBasicType.getJdbcMapping(),
+					declaringType,
+					propertyAccess
+			);
+		}
+		else {
+			return new BasicValuedSingularAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					attributeMetadataAccess,
+					fetchStrategy,
+					tableExpression,
+					attrColumnName,
+					null,
+					attrType,
+					attrType,
+					declaringType,
+					propertyAccess
+			);
+		}
+	}
+
+
+
+	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			CompositeType attrType,
+			String tableExpression,
+			String[] attrColumnNames,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+			private final boolean nullable = bootProperty.getValue().isNullable();
+			private final boolean insertable = bootProperty.isInsertable();
+			private final boolean updateable = bootProperty.isUpdateable();
+			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
+
+			private final MutabilityPlan mutabilityPlan;
+
+			{
+				if ( updateable ) {
+					mutabilityPlan = new MutabilityPlan() {
+						@Override
+						public boolean isMutable() {
+							return true;
+						}
+
+						@Override
+						public Object deepCopy(Object value) {
+							if ( value == null ) {
+								return null;
+							}
+
+							return attrType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
+						}
+
+						@Override
+						public Serializable disassemble(Object value) {
+							throw new NotYetImplementedFor6Exception( getClass() );
+						}
+
+						@Override
+						public Object assemble(Serializable cached) {
+							throw new NotYetImplementedFor6Exception( getClass() );
+						}
+					};
+				}
+				else {
+					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+				}
+			}
+
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return mutabilityPlan;
+			}
+
+			@Override
+			public boolean isNullable() {
+				return nullable;
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return insertable;
+			}
+
+			@Override
+			public boolean isUpdatable() {
+				return updateable;
+			}
+
+			@Override
+			public boolean isIncludedInDirtyChecking() {
+				// todo (6.0) : do not believe this is correct
+				return updateable;
+			}
+
+			@Override
+			public boolean isIncludedInOptimisticLocking() {
+				return includeInOptimisticLocking;
+			}
+
+			@Override
+			public CascadeStyle getCascadeStyle() {
+				return cascadeStyle;
+			}
+		};
+
+		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+				(Component) bootProperty.getValue(),
+				attrType,
+				attributeMappingType -> new EmbeddedAttributeMapping(
+						attrName,
+						stateArrayPosition,
+						tableExpression,
+						attrColumnNames,
+						attributeMetadataAccess,
+						FetchStrategy.IMMEDIATE_JOIN,
+						attributeMappingType,
+						declaringType,
+						propertyAccess
+				),
+				creationProcess
+		);
+
+		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
 	}
 }

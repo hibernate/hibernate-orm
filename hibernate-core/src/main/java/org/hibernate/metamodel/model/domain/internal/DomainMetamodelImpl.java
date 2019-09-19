@@ -44,7 +44,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -166,8 +165,13 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			}
 
 			@Override
-			public MetadataImplementor getMetadata() {
+			public MetadataImplementor getBootModel() {
 				return bootModel;
+			}
+
+			@Override
+			public DomainMetamodel getDomainModel() {
+				return DomainMetamodelImpl.this;
 			}
 		};
 
@@ -189,35 +193,13 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 				runtimeModelCreationContext
 		);
 
-		final MappingModelCreationContext mappingModelCreationContext = new MappingModelCreationContext() {
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			@Override
-			public DomainMetamodel getDomainModel() {
-				return DomainMetamodelImpl.this;
-			}
-
-			@Override
-			public MetadataImplementor getBootModel() {
-				return bootModel;
-			}
-
-			@Override
-			public BootstrapContext getBootstrapContext() {
-				return bootstrapContext;
-			}
-		};
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
 
 		MappingModelCreationProcess.process(
 				entityPersisterMap,
-				mappingModelCreationContext
+				runtimeModelCreationContext
 		);
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {

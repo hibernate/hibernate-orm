@@ -6,25 +6,34 @@
  */
 package org.hibernate.orm.test.metamodel.mapping;
 
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -77,6 +86,16 @@ public class SmokeTests {
 			assert attrMapping.getConverter() != null;
 			assert attrMapping.getConverter() instanceof NamedEnumValueConverter;
 		}
+
+		{
+			final ModelPart part = entityDescriptor.findSubPart( "component" );
+			assert part instanceof EmbeddedAttributeMapping;
+			final EmbeddedAttributeMapping attrMapping = (EmbeddedAttributeMapping) part;
+			assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
+			assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 2 ) );
+			assertThat( attrMapping.getMappedColumnExpressions().get( 0 ), is( "attribute1" ) );
+			assertThat( attrMapping.getMappedColumnExpressions().get( 1 ), is( "attribute2" ) );
+		}
 	}
 
 	public enum Gender {
@@ -92,6 +111,7 @@ public class SmokeTests {
 		private String name;
 		private Gender gender;
 		private Gender gender2;
+		private Component component;
 
 		@Id
 		public Integer getId() {
@@ -127,7 +147,37 @@ public class SmokeTests {
 		public void setGender2(Gender gender2) {
 			this.gender2 = gender2;
 		}
+
+		@Embedded
+		public Component getComponent() {
+			return component;
+		}
+
+		public void setComponent(Component component) {
+			this.component = component;
+		}
 	}
 
+	@Embeddable
+	public static class Component {
+		private String attribute1;
+		private String attribute2;
+
+		public String getAttribute1() {
+			return attribute1;
+		}
+
+		public void setAttribute1(String attribute1) {
+			this.attribute1 = attribute1;
+		}
+
+		public String getAttribute2() {
+			return attribute2;
+		}
+
+		public void setAttribute2(String attribute2) {
+			this.attribute2 = attribute2;
+		}
+	}
 
 }

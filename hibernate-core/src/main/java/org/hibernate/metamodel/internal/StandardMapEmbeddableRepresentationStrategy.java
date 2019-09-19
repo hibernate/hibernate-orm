@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.util.Map;
+
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -15,16 +17,19 @@ import org.hibernate.metamodel.spi.Instantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardMapEmbeddableRepresentationStrategy implements EmbeddableRepresentationStrategy {
+	private final JavaTypeDescriptor<?> mapJtd;
 	private final DynamicMapInstantiator instantiator;
 
 	public StandardMapEmbeddableRepresentationStrategy(
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
+		this.mapJtd = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
 		this.instantiator = new DynamicMapInstantiator( bootDescriptor );
 	}
 
@@ -36,6 +41,11 @@ public class StandardMapEmbeddableRepresentationStrategy implements EmbeddableRe
 	@Override
 	public ReflectionOptimizer getReflectionOptimizer() {
 		return null;
+	}
+
+	@Override
+	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+		return mapJtd;
 	}
 
 	@Override

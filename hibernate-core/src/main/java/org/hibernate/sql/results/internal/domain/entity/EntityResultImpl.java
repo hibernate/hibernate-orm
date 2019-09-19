@@ -16,14 +16,13 @@ import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 
 import org.hibernate.sql.results.spi.EntityResult;
-import org.hibernate.sql.results.spi.Initializer;
 
 /**
  * Standard ReturnEntity impl
  *
  * @author Steve Ebersole
  */
-public class EntityResultImpl extends AbstractEntityMappingNode implements EntityResult {
+public class EntityResultImpl extends AbstractEntityResultNode implements EntityResult {
 	private final String resultVariable;
 
 

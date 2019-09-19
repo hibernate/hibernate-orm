@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
+import org.hibernate.sql.results.spi.BasicResultMappingNode;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -20,17 +21,18 @@ import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.Initializer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicFetch implements Fetch {
+public class BasicFetch<T> implements Fetch, BasicResultMappingNode<T> {
 	private final NavigablePath navigablePath;
 	private final FetchParent fetchParent;
 	private final BasicValuedModelPart valuedMapping;
 	private final boolean nullable;
 
-	private final BasicResultAssembler assembler;
+	private final BasicResultAssembler<T> assembler;
 
 	private final FetchTiming fetchTiming;
 
@@ -69,6 +71,11 @@ public class BasicFetch implements Fetch {
 	}
 
 	@Override
+	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+		return null;
+	}
+
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
@@ -86,4 +93,16 @@ public class BasicFetch implements Fetch {
 		return assembler;
 	}
 
+	@Override
+	public DomainResultAssembler<T> createResultAssembler(
+			Consumer<Initializer> initializerCollector,
+			AssemblerCreationState creationState) {
+		return assembler;
+	}
+
+	@Override
+	public String getResultVariable() {
+		// a basic value used as a fetch will never have a result variable in the domain result
+		return null;
+	}
 }

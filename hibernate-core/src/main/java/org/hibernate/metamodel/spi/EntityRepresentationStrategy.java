@@ -37,11 +37,6 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 		return false;
 	}
 
-	/**
-	 * The Java type descriptor for the concrete entity type
-	 */
-	JavaTypeDescriptor<?> getMappedJavaTypeDescriptor();
-
 	JavaTypeDescriptor<?> getProxyJavaTypeDescriptor();
 
 	/**

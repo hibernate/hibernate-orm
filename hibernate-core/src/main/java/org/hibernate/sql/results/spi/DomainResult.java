@@ -8,8 +8,6 @@ package org.hibernate.sql.results.spi;
 
 import java.util.function.Consumer;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-
 /**
  * Represents a result value in the domain query results.  Acts as the
  * producer for the {@link DomainResultAssembler} for this result as well
@@ -22,7 +20,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * QueryResult is distinctly different from a {@link Fetch} and so modeled as
  * completely separate hierarchy.
  *
- * @see ScalarDomainResult
+ * @see BasicResultMappingNode
  * @see DynamicInstantiationResult
  * @see EntityResult
  * @see CollectionResult

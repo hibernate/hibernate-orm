@@ -13,7 +13,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -21,15 +21,22 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmTreeTransformationLogger;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.BasicType;
 
 /**
@@ -165,26 +172,89 @@ public class DomainModelHelper {
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
 		}
 
-		final ModelPartContainer container = resolveLhs( sqmPath, creationState );
-		return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), null );
+		final TableGroup lhsTableGroup = resolveLhs( sqmPath, creationState );
+		lhsTableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), creationState );
+		return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 	}
 
-	private static ModelPartContainer resolveLhs(SqmPath<?> sqmPath, SqlAstCreationState creationState) {
+	public static TableGroup resolveLhs(SqmPath<?> sqmPath, SqlAstCreationState creationState) {
 		final SqmPath<?> lhs = sqmPath.getLhs();
-		final SqmPathSource<?> referencedPathSource = lhs.getReferencedPathSource();
 
-		if ( referencedPathSource instanceof EntityDomainType ) {
-			return resolveEntityPersister(  (EntityDomainType) referencedPathSource, creationState.getCreationContext().getSessionFactory() );
-		}
-		else if ( referencedPathSource instanceof SingularPersistentAttribute ) {
-			final SingularPersistentAttribute attribute = (SingularPersistentAttribute) referencedPathSource;
-			if ( attribute.getType() instanceof EntityDomainType ) {
-				return resolveEntityPersister(  (EntityDomainType) attribute.getType(), creationState.getCreationContext().getSessionFactory() );
-			}
+		final TableGroup tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
+				lhs.getNavigablePath(),
+				lhsNp -> {
+					assert !( lhs instanceof SqmFrom );
+					assert lhs.getLhs() != null;
 
-			throw new NotYetImplementedFor6Exception( "Support for composite sub-paths not yet implemented" );
-		}
+					final TableGroup lhsLhsTableGroup = resolveLhs( lhs, creationState );
 
-		throw new NotYetImplementedFor6Exception( );
+					final ModelPart lhsPart = lhsLhsTableGroup.getModelPart().findSubPart(
+							lhs.getReferencedPathSource().getPathName(),
+							null
+					);
+
+					return ( (Queryable) lhsPart ).prepareAsLhs( sqmPath.getNavigablePath(), creationState );
+				}
+		);
+
+		SqmTreeTransformationLogger.LOGGER.debugf(
+				"Resolved TableGroup [%s] as the left-hand side for interpretations of SqmPath [%s]",
+				tableGroup,
+				sqmPath
+		);
+
+		return tableGroup;
+	}
+
+	public static TableGroup resolveLhs(NavigablePath navigablePath, SqlAstCreationState creationState) {
+		assert navigablePath.getParent() != null;
+
+		final TableGroup tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
+				navigablePath.getParent(),
+				lhsNp -> {
+					// LHS does not yet have an associated TableGroup..
+
+					final TableGroup lhsLhsTableGroup = resolveLhs( lhsNp, creationState );
+
+					final ModelPart lhsPart = lhsLhsTableGroup.getModelPart().findSubPart(
+							lhsNp.getLocalName(),
+							null
+					);
+
+					return ( (Queryable) lhsPart ).prepareAsLhs( navigablePath, creationState );
+				}
+		);
+
+		SqmTreeTransformationLogger.LOGGER.debugf(
+				"Resolved NavigablePath : [%s] -> [%s]",
+				navigablePath.getParent(),
+				tableGroup
+		);
+
+		return tableGroup;
+	}
+
+	public static TableGroup resolve(FetchParent fetchParent, DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+
+		return fromClauseAccess.resolveTableGroup(
+				fetchParent.getNavigablePath(),
+				pnp -> {
+					// `fetchParent` does not yet have an associated TableGroup..
+
+					assert fetchParent.getNavigablePath().getParent() != null;
+
+					final TableGroup parentParentTableGroup = resolveLhs(
+							fetchParent.getNavigablePath().getParent(),
+							sqlAstCreationState
+					);
+
+					return parentParentTableGroup.getModelPart().prepareAsLhs(
+							fetchParent.getNavigablePath(),
+							sqlAstCreationState
+					);
+				}
+		);
 	}
 }

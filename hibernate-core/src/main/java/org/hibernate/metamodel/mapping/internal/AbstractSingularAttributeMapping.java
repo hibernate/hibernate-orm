@@ -6,26 +6,17 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Steve Ebersole
  */
-public class AbstractSingularAttributeMapping
+public abstract class AbstractSingularAttributeMapping
 		extends AbstractStateArrayContributorMapping
 		implements SingularAttributeMapping {
 
@@ -41,26 +32,6 @@ public class AbstractSingularAttributeMapping
 			PropertyAccess propertyAccess) {
 		super( name, type, attributeMetadataAccess, mappedFetchStrategy, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
-	}
-
-	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			FetchTiming fetchTiming,
-			boolean selected,
-			LockMode lockMode,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

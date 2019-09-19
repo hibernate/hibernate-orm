@@ -13,5 +13,5 @@ package org.hibernate.sql.results.spi;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public interface ScalarDomainResult<J> extends DomainResult<J> {
+public interface BasicResultMappingNode<J> extends DomainResult<J> {
 }

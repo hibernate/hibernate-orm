@@ -12,6 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
@@ -31,7 +32,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.domain.basic.BasicResultAssembler;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -192,8 +193,8 @@ public class SmokeTests {
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
-					assertThat( domainResult, instanceOf( BasicResultImpl.class ) );
-					final BasicResultImpl scalarDomainResult = (BasicResultImpl) domainResult;
+					assertThat( domainResult, instanceOf( BasicResult.class ) );
+					final BasicResult scalarDomainResult = (BasicResult) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
 					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
 					assertThat( assembler.getValueConverter(), notNullValue() );
@@ -203,7 +204,7 @@ public class SmokeTests {
 							"e"
 					).append( "gender" );
 					assertThat( domainResult.getNavigablePath(), equalTo( expectedSelectedPath ) );
-					assertThat( domainResult, instanceOf( BasicResultImpl.class ) );
+					assertThat( domainResult, instanceOf( BasicResult.class ) );
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
@@ -246,6 +247,26 @@ public class SmokeTests {
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<SimpleEntity> query = session.createQuery( "select e from SimpleEntity e", SimpleEntity.class );
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	public void testSelectEmbeddedHqlExecution(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Component> query = session.createQuery( "select e.component from SimpleEntity e", Component.class );
+					query.list();
+				}
+		);
+	}
+
+	@Test
+	public void testSelectEmbeddableSubPathHqlExecution(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<String> query = session.createQuery( "select e.component.attribute1 from SimpleEntity e", String.class );
 					query.list();
 				}
 		);

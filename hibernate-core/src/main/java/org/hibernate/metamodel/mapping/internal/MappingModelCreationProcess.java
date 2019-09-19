@@ -6,10 +6,13 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -21,7 +24,7 @@ public class MappingModelCreationProcess {
 	 */
 	public static void process(
 			Map<String,EntityPersister> entityPersisterMap,
-			MappingModelCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
 				creationContext
@@ -31,18 +34,18 @@ public class MappingModelCreationProcess {
 
 	private final Map<String,EntityPersister> entityPersisterMap;
 
-	private final MappingModelCreationContext creationContext;
+	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
 
 	private MappingModelCreationProcess(
 			Map<String,EntityPersister> entityPersisterMap,
-			MappingModelCreationContext creationContext) {
+			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
 		this.creationContext = creationContext;
 	}
 
-	public MappingModelCreationContext getCreationContext() {
+	public RuntimeModelCreationContext getCreationContext() {
 		return creationContext;
 	}
 
@@ -63,6 +66,18 @@ public class MappingModelCreationProcess {
 
 			entityPersister.prepareMappingModel( this );
 		}
+
+		while ( postInitCallbacks != null && ! postInitCallbacks.isEmpty() ) {
+			// copy to avoid CCME
+			final ArrayList<PostInitCallback> copy = new ArrayList<>( new ArrayList<>( postInitCallbacks ) );
+
+			for ( PostInitCallback callback : copy ) {
+				final boolean completed = callback.process();
+				if ( completed ) {
+					postInitCallbacks.remove( callback );
+				}
+			}
+		}
 	}
 
 	public <T extends ModelPart> T processSubPart(
@@ -79,6 +94,20 @@ public class MappingModelCreationProcess {
 		finally {
 			currentlyProcessingRole = initialRole;
 		}
+	}
+
+	private List<PostInitCallback> postInitCallbacks;
+
+	public void registerInitializationCallback(PostInitCallback callback) {
+		if ( postInitCallbacks == null ) {
+			postInitCallbacks = new ArrayList<>();
+		}
+		postInitCallbacks.add( callback );
+	}
+
+	@FunctionalInterface
+	public interface PostInitCallback {
+		boolean process();
 	}
 
 	/**

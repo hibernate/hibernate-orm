@@ -63,6 +63,11 @@ public abstract class AbstractEmbeddableRepresentationStrategy implements Embedd
 		return embeddableJavaTypeDescriptor;
 	}
 
+	@Override
+	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+		return getEmbeddableJavaTypeDescriptor();
+	}
+
 	public int getPropertySpan() {
 		return propertySpan;
 	}

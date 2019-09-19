@@ -44,7 +44,7 @@ import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.EntityInitializer;
-import org.hibernate.sql.results.spi.EntityMappingNode;
+import org.hibernate.sql.results.spi.EntityResultNode;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.LoadingEntityEntry;
@@ -88,7 +88,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractEntityInitializer(
-			EntityMappingNode resultDescriptor,
+			EntityResultNode resultDescriptor,
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			DomainResult<?> identifierResult,

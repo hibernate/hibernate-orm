@@ -65,9 +65,6 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
@@ -123,7 +120,6 @@ import org.hibernate.loader.spi.Loader;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
 import org.hibernate.loader.spi.NaturalIdLoader;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -141,18 +137,14 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -167,7 +159,10 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -179,6 +174,7 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -215,7 +211,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -6051,7 +6046,7 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		final MappingModelCreationContext creationContext = creationProcess.getCreationContext();
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 
 		final PersistentClass bootEntityDescriptor = creationContext
 				.getBootModel()
@@ -6206,106 +6201,35 @@ public abstract class AbstractEntityPersister
 		final String tableExpression = getPropertyTableName( attrName );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
 
+		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
+
 		if ( attrType instanceof BasicType ) {
-			final BasicValue.Resolution<?> resolution = ( (BasicValue) bootProperty.getValue() ).resolve();
-			final BasicValueConverter valueConverter = resolution.getValueConverter();
-
-			final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
-				private final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
-				private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
-				private final boolean nullable = bootProperty.getValue().isNullable();
-				private final boolean insertable = bootProperty.isInsertable();
-				private final boolean updateable = bootProperty.isUpdateable();
-				private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();
-
-				@Override
-				public PropertyAccess getPropertyAccess() {
-					return propertyAccess;
-				}
-
-				@Override
-				public MutabilityPlan getMutabilityPlan() {
-					return mutabilityPlan;
-				}
-
-				@Override
-				public boolean isNullable() {
-					return nullable;
-				}
-
-				@Override
-				public boolean isInsertable() {
-					return insertable;
-				}
-
-				@Override
-				public boolean isUpdatable() {
-					return updateable;
-				}
-
-				@Override
-				public boolean isIncludedInDirtyChecking() {
-					// todo (6.0) : do not believe this is correct
-					return updateable;
-				}
-
-				@Override
-				public boolean isIncludedInOptimisticLocking() {
-					return includeInOptimisticLocking;
-				}
-
-				@Override
-				public CascadeStyle getCascadeStyle() {
-					return tupleAttrDefinition.getCascadeStyle();
-				}
-			};
-
-			final FetchStrategy fetchStrategy = bootProperty.isLazy()
-					? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
-					: FetchStrategy.IMMEDIATE_JOIN;
-
-			final PropertyAccess propertyAccess = getRepresentationStrategy()
-					.resolvePropertyAccess( bootProperty );
-			if ( valueConverter != null ) {
-				// we want to "decompose" the "type" into its various pieces as expected by the mapping
-				assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
-
-				final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
-						.getDomainModel()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getRelationalSqlTypeDescriptor() );
-
-
-				return new BasicValuedSingularAttributeMapping(
-						attrName,
-						stateArrayPosition,
-						attributeMetadataAccess,
-						fetchStrategy,
-						tableExpression,
-						attrColumnNames[0],
-						valueConverter,
-						mappingBasicType,
-						mappingBasicType.getJdbcMapping(),
-						declaringType,
-						propertyAccess
-				);
-			}
-			else {
-				return new BasicValuedSingularAttributeMapping(
-						attrName,
-						stateArrayPosition,
-						attributeMetadataAccess,
-						fetchStrategy,
-						tableExpression,
-						attrColumnNames[0],
-						null,
-						(BasicType) attrType,
-						(BasicType) attrType,
-						declaringType,
-						propertyAccess
-				);
-			}
+			return MappingModelCreationHelper.buildBasicAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					bootProperty,
+					declaringType,
+					(BasicType) attrType,
+					tableExpression,
+					attrColumnNames[0],
+					propertyAccess,
+					tupleAttrDefinition.getCascadeStyle(),
+					creationProcess
+			);
+		}
+		else if ( attrType instanceof CompositeType ) {
+			return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					bootProperty,
+					declaringType,
+					(CompositeType) attrType,
+					tableExpression,
+					attrColumnNames,
+					propertyAccess,
+					tupleAttrDefinition.getCascadeStyle(),
+					creationProcess
+			);
 		}
 
 		// todo (6.0) : for now ignore any non basic-typed attributes

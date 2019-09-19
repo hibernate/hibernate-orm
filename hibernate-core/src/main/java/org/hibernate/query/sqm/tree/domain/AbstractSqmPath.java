@@ -330,4 +330,9 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 				(pathSource, name) -> createPluralPath( (MapPersistentAttribute) map )
 		);
 	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + '(' + navigablePath.getFullPath() + ')';
+	}
 }

@@ -33,20 +33,24 @@ import org.hibernate.loader.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.MappingModelCreationContext;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -896,5 +900,28 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	@Deprecated
 	default boolean canIdentityInsertBeDelayed() {
 		return false;
+	}
+
+
+	@Override
+	default TableGroup prepareAsLhs(
+			NavigablePath navigablePath,
+			SqlAstCreationState creationState) {
+		final NavigablePath lhsPath = navigablePath.getParent();
+
+		return creationState.getFromClauseAccess().resolveTableGroup(
+				lhsPath,
+				np -> {
+					// getting here means that LHS has not yet been processed into a TableGroup
+					// 		- that should mean that the LHS reference is not a root
+					assert np.getParent() != null;
+
+					// however, that means the preparation should have been handled on
+					// the entity-valued sub-part
+					throw new UnsupportedOperationException(
+							"EntityPersister does not support preparation as LHS for non-root paths"
+					);
+				}
+		);
 	}
 }

@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole
@@ -27,5 +28,4 @@ public interface FetchableContainer extends ModelPartContainer {
 		//noinspection unchecked
 		visitSubParts( (Consumer) fetchableConsumer, treatTargetType );
 	}
-
 }

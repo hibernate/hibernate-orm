@@ -19,13 +19,13 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.EntityMappingNode;
+import org.hibernate.sql.results.spi.EntityResultNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractEntityMappingNode extends AbstractFetchParent implements EntityMappingNode {
+public abstract class AbstractEntityResultNode extends AbstractFetchParent implements EntityResultNode {
 	private final EntityValuedModelPart referencedModelPart;
 	private final DomainResult identifierResult;
 	private final DomainResult discriminatorResult;
@@ -36,7 +36,7 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 
 	private final List<DomainResult> attributeDomainResults = new ArrayList<>();
 
-	public AbstractEntityMappingNode(
+	public AbstractEntityResultNode(
 			EntityValuedModelPart referencedModelPart,
 			LockMode lockMode,
 			NavigablePath navigablePath,
@@ -44,7 +44,7 @@ public abstract class AbstractEntityMappingNode extends AbstractFetchParent impl
 		this( referencedModelPart, lockMode, navigablePath, null, creationState );
 	}
 
-	public AbstractEntityMappingNode(
+	public AbstractEntityResultNode(
 			EntityValuedModelPart referencedModelPart,
 			LockMode lockMode,
 			NavigablePath navigablePath,

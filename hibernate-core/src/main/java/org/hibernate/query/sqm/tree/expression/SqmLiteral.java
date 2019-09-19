@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -53,7 +53,7 @@ public class SqmLiteral<T>
 			SqlAstCreationState sqlAstCreationState) {
 		return new QueryLiteral(
 				getLiteralValue(),
-				DomainModelHelper.resolveMappingModelExpressable( this, sqlAstCreationState ),
+				SqmMappingModelHelper.resolveMappingModelExpressable( this, sqlAstCreationState ),
 				clause
 		);
 	}

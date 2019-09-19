@@ -23,17 +23,14 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -218,7 +215,7 @@ public class EmbeddedAttributeMapping
 				lnp -> {
 					// there is not yet a TableGroup associated with this path - create one...
 
-					final TableGroup lhsLhsTableGroup = DomainModelHelper.resolveLhs( lhsPath, creationState );
+					final TableGroup lhsLhsTableGroup = SqmMappingModelHelper.resolveLhs( lhsPath, creationState );
 
 					final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
 							lnp,

@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -51,7 +52,7 @@ public abstract class AbstractPluralAttribute<D,C,E>
 
 		this.classification = builder.getCollectionClassification();
 
-		this.elementPathSource = DomainModelHelper.resolveSqmPathSource(
+		this.elementPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				getName(),
 				builder.getValueType(),
 				BindableType.PLURAL_ATTRIBUTE

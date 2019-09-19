@@ -12,6 +12,7 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -27,7 +28,7 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 		super( builder, metadataContext );
 
 		//noinspection unchecked
-		this.indexPathSource = (SqmPathSource) DomainModelHelper.resolveSqmPathSource(
+		this.indexPathSource = (SqmPathSource) SqmMappingModelHelper.resolveSqmPathSource(
 				getName(),
 				builder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE

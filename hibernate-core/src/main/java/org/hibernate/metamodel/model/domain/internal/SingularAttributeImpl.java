@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
@@ -65,7 +66,7 @@ public class SingularAttributeImpl<D,J>
 		this.isOptional = isOptional;
 
 
-		this.sqmPathSource = DomainModelHelper.resolveSqmPathSource(
+		this.sqmPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				name,
 				attributeType,
 				BindableType.SINGULAR_ATTRIBUTE

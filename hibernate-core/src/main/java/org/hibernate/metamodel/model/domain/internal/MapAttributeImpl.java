@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -28,7 +29,7 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
 
-		this.keyPathSource = DomainModelHelper.resolveSqmPathSource(
+		this.keyPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				getName(),
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE

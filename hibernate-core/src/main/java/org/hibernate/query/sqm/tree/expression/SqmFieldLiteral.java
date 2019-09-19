@@ -77,11 +77,6 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 		return value;
 	}
 
-	@Override
-	public SqmExpressable<T> getExpressableType() {
-		return expressable;
-	}
-
 	public JavaTypeDescriptor<T> getFieldJavaTypeDescriptor() {
 		return fieldJavaTypeDescriptor;
 	}

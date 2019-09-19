@@ -65,11 +65,6 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 		return referencedEnumTypeDescriptor;
 	}
 
-	@Override
-	public SqmExpressable<Enum> getExpressableType() {
-		return expressable;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart

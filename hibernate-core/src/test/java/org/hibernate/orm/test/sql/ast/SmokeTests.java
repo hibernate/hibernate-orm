@@ -126,15 +126,6 @@ public class SmokeTests {
 	}
 
 	@Test
-	public void testSimpleHqlExecution(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select e.name from SimpleEntity e", String.class );
-					query.list();
-				}
-		);
-	}
-	@Test
 	public void testConvertedHqlInterpretation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -228,46 +219,6 @@ public class SmokeTests {
 							jdbcSelectOperation.getSql(),
 							is( "select s1_0.gender from mapping_simple_entity as s1_0" )
 					);
-				}
-		);
-	}
-
-	@Test
-	public void testConvertedHqlExecution(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
-					query.list();
-				}
-		);
-	}
-
-	@Test
-	public void testSelectRootHqlExecution(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<SimpleEntity> query = session.createQuery( "select e from SimpleEntity e", SimpleEntity.class );
-					query.list();
-				}
-		);
-	}
-
-	@Test
-	public void testSelectEmbeddedHqlExecution(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<Component> query = session.createQuery( "select e.component from SimpleEntity e", Component.class );
-					query.list();
-				}
-		);
-	}
-
-	@Test
-	public void testSelectEmbeddableSubPathHqlExecution(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select e.component.attribute1 from SimpleEntity e", String.class );
-					query.list();
 				}
 		);
 	}

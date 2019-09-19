@@ -163,6 +163,14 @@ public class SmokeTests {
 		private String attribute1;
 		private String attribute2;
 
+		public Component() {
+		}
+
+		public Component(String attribute1, String attribute2) {
+			this.attribute1 = attribute1;
+			this.attribute2 = attribute2;
+		}
+
 		public String getAttribute1() {
 			return attribute1;
 		}

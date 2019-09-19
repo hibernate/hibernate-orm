@@ -9,13 +9,8 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -23,44 +18,34 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 /**
  * @author Steve Ebersole
  */
-public class SqmParameterInterpretation implements SqmExpressionInterpretation {
+public class SqmParameterInterpretation implements Expression {
 	private final SqmParameter sqmParameter;
-	private final List<JdbcParameter> jdbcParameters;
 	private final MappingModelExpressable valueMapping;
+
+	private final Expression resolvedExpression;
 
 	public SqmParameterInterpretation(
 			SqmParameter sqmParameter,
 			List<JdbcParameter> jdbcParameters,
 			MappingModelExpressable valueMapping) {
+		this.sqmParameter = sqmParameter;
 		this.valueMapping = valueMapping;
+
 		assert jdbcParameters != null;
 		assert jdbcParameters.size() > 0;
 
-		this.sqmParameter = sqmParameter;
-		this.jdbcParameters = jdbcParameters;
+		this.resolvedExpression = jdbcParameters.size() == 1
+				? jdbcParameters.get( 0 )
+				: new SqlTuple( jdbcParameters, valueMapping );
 	}
 
 	@Override
-	public SqmExpressable getExpressableType() {
-		return sqmParameter.getExpressableType();
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		resolvedExpression.accept( sqlTreeWalker );
 	}
 
 	@Override
-	public Expression toSqlExpression(
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		if ( jdbcParameters.size() == 1 ) {
-			return jdbcParameters.get( 0 );
-		}
-
-		return new SqlTuple( jdbcParameters, valueMapping );
-	}
-
-	@Override
-	public DomainResultProducer getDomainResultProducer(
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		throw new SemanticException( "SqmParameter parameter cannot be a DomainResult" );
+	public MappingModelExpressable getExpressionType() {
+		return valueMapping;
 	}
 }

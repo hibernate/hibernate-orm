@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.Clause;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing SQL AST.
@@ -15,4 +17,5 @@ import org.hibernate.query.sqm.sql.SqlAstCreationState;
  * @author Steve Ebersole
  */
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
+	Stack<Clause> getCurrentClauseStack();
 }

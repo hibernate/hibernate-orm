@@ -13,7 +13,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -32,10 +31,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.results.internal.domain.instantiation.DynamicInstantiation;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -53,6 +48,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.results.internal.domain.instantiation.DynamicInstantiation;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -141,8 +137,7 @@ public class SqmSelectToSqlAstConverter
 	}
 
 	private DomainResultProducer resolveDomainResultProducer(SqmSelection sqmSelection) {
-		SqmSelectableInterpretation<?> interpretation = (SqmSelectableInterpretation<?>) sqmSelection.getSelectableNode().accept( this );
-		return interpretation.getDomainResultProducer( this, getSqlAstCreationState() );
+		return (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
 	}
 
 	private int fetchDepth = 0;

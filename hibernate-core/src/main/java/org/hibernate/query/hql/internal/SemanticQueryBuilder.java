@@ -570,11 +570,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		else {
 			final String className = ctx.dynamicInstantiationTarget().dotIdentifierSequence().getText();
 			try {
-				final Class<?> targetJavaType = classForName( className );
-				final JavaTypeDescriptor jtd = creationContext.getJpaMetamodel()
-						.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.resolveDescriptor( targetJavaType );
+				final JavaTypeDescriptor jtd = resolveInstantiationTargetJtd( className );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
 						jtd,
 						creationContext.getNodeBuilder()
@@ -590,6 +586,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		return dynamicInstantiation;
+	}
+
+	private JavaTypeDescriptor resolveInstantiationTargetJtd(String className) {
+		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
+		return creationContext.getJpaMetamodel()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.resolveDescriptor( targetJavaType );
 	}
 
 	private Class classForName(String className) {

@@ -10,15 +10,16 @@ import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -44,44 +45,62 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 				null
 		);
 
-		return new BasicValuedPathInterpretation<>( sqmPath, mapping, tableGroup );
+		final ColumnReference columnReference = (ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+				SqlExpressionResolver.createColumnReferenceKey(
+						mapping.getContainingTableExpression(),
+						mapping.getMappedColumnExpression()
+				),
+				sacs -> new ColumnReference(
+						mapping.getMappedColumnExpression(),
+						tableGroup.resolveTableReference( mapping.getContainingTableExpression() )
+								.getIdentificationVariable(),
+						mapping.getJdbcMapping(),
+						sqlAstCreationState.getCreationContext().getSessionFactory()
+				)
+		);
+
+		return new BasicValuedPathInterpretation<>( columnReference, sqmPath, mapping, tableGroup );
 	}
+
+	private final ColumnReference columnReference;
 
 	private final SqmBasicValuedSimplePath<T> sqmPath;
 	private final BasicValuedModelPart mapping;
 	private final TableGroup tableGroup;
 
-	private Expression expression;
-
 	private BasicValuedPathInterpretation(
+			ColumnReference columnReference,
 			SqmBasicValuedSimplePath<T> sqmPath,
 			BasicValuedModelPart mapping,
 			TableGroup tableGroup) {
+		assert columnReference != null;
+		this.columnReference = columnReference;
+
+		assert sqmPath != null;
 		this.sqmPath = sqmPath;
+
+		assert mapping != null;
 		this.mapping = mapping;
+
+		assert tableGroup != null;
 		this.tableGroup = tableGroup;
+
+
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
+	public SqmPath<T> getInterpretedSqmPath() {
+		return sqmPath;
 	}
 
 	@Override
-	public SqmPathSource<T> getSqmPathSource() {
-		return sqmPath.getReferencedPathSource();
+	public ModelPart getExpressionType() {
+		return mapping;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainResultProducer
-
-	@Override
-	public DomainResultProducer<T> getDomainResultProducer(
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return this;
-	}
 
 	@Override
 	public DomainResult<T> createDomainResult(
@@ -95,17 +114,6 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 		mapping.applySqlSelections( getNavigablePath(), tableGroup, creationState );
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SqmExpressionInterpretation
-
-	@Override
-	public Expression toSqlExpression(
-			Clause clause, SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
 	@Override
 	public void applySqlAssignments(
 			Expression newValueExpression,
@@ -113,6 +121,11 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 			Consumer<Assignment> assignmentConsumer,
 			SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		columnReference.accept( sqlTreeWalker );
 	}
 
 	@Override

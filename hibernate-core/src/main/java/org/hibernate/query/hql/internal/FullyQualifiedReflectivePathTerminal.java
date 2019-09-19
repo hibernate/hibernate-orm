@@ -238,9 +238,4 @@ public class FullyQualifiedReflectivePathTerminal
 	public NodeBuilder nodeBuilder() {
 		return null;
 	}
-
-	@Override
-	public SqmExpressable getExpressableType() {
-		return expressableType;
-	}
 }

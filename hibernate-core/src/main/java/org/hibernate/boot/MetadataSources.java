@@ -14,12 +14,14 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
 import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.HibernateException;
@@ -41,6 +43,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
+
 import org.w3c.dom.Document;
 
 /**
@@ -63,6 +66,8 @@ public class MetadataSources implements Serializable {
 	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<>();
 	private LinkedHashSet<String> annotatedClassNames = new LinkedHashSet<>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<>();
+
+	private Map<String,Class<?>> extraQueryImports;
 
 	public MetadataSources() {
 		this( new BootstrapServiceRegistryBuilder().build() );
@@ -109,6 +114,10 @@ public class MetadataSources implements Serializable {
 
 	public Collection<String> getAnnotatedClassNames() {
 		return annotatedClassNames;
+	}
+
+	public Map<String,Class<?>> getExtraQueryImports() {
+		return extraQueryImports;
 	}
 
 	public ServiceRegistry getServiceRegistry() {
@@ -197,6 +206,16 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
+	 * Var-arg form of {@link #addAnnotatedClass}
+	 */
+	public MetadataSources addAnnotatedClasses(Class<?>... annotatedClasses) {
+		if ( annotatedClasses != null && annotatedClasses.length > 0 ) {
+			Collections.addAll( this.annotatedClasses, annotatedClasses );
+		}
+		return this;
+	}
+
+	/**
 	 * Read metadata from the annotations attached to the given class.  The important
 	 * distinction here is that the {@link Class} will not be accessed until later
 	 * which is important for on-the-fly bytecode-enhancement
@@ -207,6 +226,26 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClassName(String annotatedClassName) {
 		annotatedClassNames.add( annotatedClassName );
+		return this;
+	}
+
+	/**
+	 * Var-arg form of {@link #addAnnotatedClassName}
+	 */
+	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
+		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
+			Collections.addAll( this.annotatedClassNames, annotatedClassNames );
+		}
+		return this;
+	}
+
+	public MetadataSources addQueryImport(String importedName, Class<?> target) {
+		if ( extraQueryImports == null ) {
+			extraQueryImports = new HashMap<>();
+		}
+
+		extraQueryImports.put( importedName, target );
+
 		return this;
 	}
 

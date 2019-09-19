@@ -9,13 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -44,18 +38,6 @@ public class SqmLiteral<T>
 	@Override
 	public <R> R accept(SemanticQueryWalker<R> walker) {
 		return walker.visitLiteral( this );
-	}
-
-	@Override
-	public Expression toSqlExpression(
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return new QueryLiteral(
-				getLiteralValue(),
-				SqmMappingModelHelper.resolveMappingModelExpressable( this, sqlAstCreationState ),
-				clause
-		);
 	}
 
 	@Override

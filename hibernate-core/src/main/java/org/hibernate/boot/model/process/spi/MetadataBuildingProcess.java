@@ -8,6 +8,7 @@ package org.hibernate.boot.model.process.spi;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.MetadataSources;
@@ -304,7 +305,22 @@ public class MetadataBuildingProcess {
 			}
 		}
 
+		applyExtraQueryImports( managedResources, metadataCollector );
+
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+	}
+
+	private static void applyExtraQueryImports(
+			ManagedResources managedResources,
+			InFlightMetadataCollectorImpl metadataCollector) {
+		final Map<String, Class<?>> extraQueryImports = managedResources.getExtraQueryImports();
+		if ( extraQueryImports == null || extraQueryImports.isEmpty() ) {
+			return;
+		}
+
+		for ( Map.Entry<String, Class<?>> entry : extraQueryImports.entrySet() ) {
+			metadataCollector.addImport( entry.getKey(), entry.getValue().getName() );
+		}
 	}
 
 //	todo (7.0) : buildJandexInitializer

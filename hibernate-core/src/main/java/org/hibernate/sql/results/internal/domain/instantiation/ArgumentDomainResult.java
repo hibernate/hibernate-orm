@@ -37,6 +37,10 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 	public ArgumentReader<A> createResultAssembler(
 			Consumer<Initializer> initializerCollector,
 			AssemblerCreationState creationState) {
-		return null;
+		//noinspection unchecked
+		return new ArgumentReader(
+				realDomainResult.createResultAssembler( initializerCollector, creationState ),
+				getResultVariable()
+		);
 	}
 }

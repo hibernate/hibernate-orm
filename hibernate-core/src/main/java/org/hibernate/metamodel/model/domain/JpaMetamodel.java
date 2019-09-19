@@ -81,6 +81,8 @@ public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
 
 	void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action);
 
+	String qualifyImportableName(String queryName);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns

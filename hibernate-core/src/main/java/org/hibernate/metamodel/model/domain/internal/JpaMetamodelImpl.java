@@ -269,6 +269,11 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		return results;
 	}
 
+	@Override
+	public String qualifyImportableName(String queryName) {
+		return resolveImportedName( queryName );
+	}
+
 	private String resolveImportedName(String name) {
 		String result = nameToImportNameMap.get( name );
 		if ( result == null ) {

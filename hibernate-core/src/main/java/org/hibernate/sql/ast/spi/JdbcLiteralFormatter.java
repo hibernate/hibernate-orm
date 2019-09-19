@@ -22,5 +22,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface JdbcLiteralFormatter<T> {
+	String NULL = "null";
+
 	String toJdbcLiteral(T value, Dialect dialect, SharedSessionContractImplementor session);
 }

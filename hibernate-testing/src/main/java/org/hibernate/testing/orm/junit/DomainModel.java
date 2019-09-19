@@ -93,4 +93,11 @@ public @interface DomainModel {
 	Class[] annotatedClasses() default {};
 	String[] annotatedClassNames() default {};
 	String[] xmlMappings() default {};
+	ExtraQueryImport[] extraQueryImports() default {};
+	Class<?>[] extraQueryImportClasses() default {};
+
+	@interface ExtraQueryImport {
+		String name();
+		Class<?> importedClass();
+	}
 }

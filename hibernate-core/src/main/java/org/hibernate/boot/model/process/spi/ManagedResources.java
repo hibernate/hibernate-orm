@@ -7,6 +7,8 @@
 package org.hibernate.boot.model.process.spi;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -66,4 +68,6 @@ public interface ManagedResources {
 	 * @return The list of bindings for all known XML mapping files.
 	 */
 	Collection<Binding> getXmlMappingBindings();
+
+	Map<String,Class<?>> getExtraQueryImports();
 }

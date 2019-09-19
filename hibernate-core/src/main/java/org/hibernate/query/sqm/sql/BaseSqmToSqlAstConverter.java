@@ -20,7 +20,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -35,12 +35,12 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
-import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -614,8 +614,12 @@ public abstract class BaseSqmToSqlAstConverter
 	// General expressions
 
 	@Override
-	public SqmExpressionInterpretation visitLiteral(SqmLiteral literal) {
-		return literal;
+	public Expression visitLiteral(SqmLiteral literal) {
+		return new QueryLiteral(
+				literal.getLiteralValue(),
+				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable( literal, this ),
+				getCurrentClauseStack().getCurrent()
+		);
 	}
 
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam = new IdentityHashMap<>();
@@ -627,12 +631,12 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqmExpressionInterpretation visitNamedParameterExpression(SqmNamedParameter expression) {
+	public Expression visitNamedParameterExpression(SqmNamedParameter expression) {
 		return consumeSqmParameter( expression );
 	}
 
 
-	private SqmExpressionInterpretation consumeSqmParameter(SqmParameter sqmParameter) {
+	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
@@ -1242,7 +1246,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
 		return new QueryLiteral(
 				sqmEnumLiteral.getEnumValue(),
-				determineValueMapping( sqmEnumLiteral ),
+				(BasicValuedMapping) determineValueMapping( sqmEnumLiteral ),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -1251,7 +1255,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
 		return new QueryLiteral(
 				sqmFieldLiteral.getValue(),
-				determineValueMapping( sqmFieldLiteral ),
+				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral ),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -1322,11 +1326,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final Expression lhs;
 		try {
-			lhs = ( (SqmExpressionInterpretation) predicate.getLeftHandExpression().accept( this ) ).toSqlExpression(
-					getCurrentClauseStack().getCurrent(),
-					this,
-					this
-			);
+			lhs = (Expression) predicate.getLeftHandExpression().accept( this );
 		}
 		finally {
 			inferableTypeAccessStack.pop();
@@ -1336,11 +1336,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final Expression rhs;
 		try {
-			rhs = ( (SqmExpressionInterpretation) predicate.getRightHandExpression().accept( this ) ).toSqlExpression(
-					getCurrentClauseStack().getCurrent(),
-					this,
-					this
-			);
+			rhs = (Expression) predicate.getRightHandExpression().accept( this );
 		}
 		finally {
 			inferableTypeAccessStack.pop();
@@ -1472,13 +1468,7 @@ public abstract class BaseSqmToSqlAstConverter
 								domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 							}
 
-							inListPredicate.addExpression(
-									consumeSqmParameter( sqmParamToConsume ).toSqlExpression(
-											getCurrentClauseStack().getCurrent(),
-											this,
-											this
-									)
-							);
+							inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
 						}
 					}
 					finally {

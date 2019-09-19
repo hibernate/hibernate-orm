@@ -12,9 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
@@ -76,11 +73,5 @@ public class StandardTableGroup extends AbstractTableGroup {
 	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
 		return tableJoins;
-	}
-
-	@Override
-	public DomainResultProducer getDomainResultProducer(
-			SqmToSqlAstConverter walker, SqlAstCreationState sqlAstCreationState) {
-		return this;
 	}
 }

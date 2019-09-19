@@ -6,68 +6,26 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.List;
-
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.sql.ConversionException;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
- * todo (6.0) : consider having `SqmPathInterpretation` extend `org.hibernate.sql.ast.tree.expression.Expression`.
- * 		- Basic paths would logically resolve to a `ColumnReference`
- * 		- Composite and entity-valued paths would logically resolve to a `SqlTuple`
+ * Interpretation of a {@link SqmPath} as part of the translation to SQL AST
+ *
+ * @see org.hibernate.query.sqm.sql.SqmToSqlAstConverter
+ * @see #getInterpretedSqmPath
  *
  * @author Steve Ebersole
  */
-public interface SqmPathInterpretation<T> extends SqmExpressionInterpretation<T> {
-	NavigablePath getNavigablePath();
-
-	@Override
-	default SqmPathSource<T> getExpressableType() {
-		return getSqmPathSource();
+public interface SqmPathInterpretation<T> extends Expression, DomainResultProducer<T> {
+	default NavigablePath getNavigablePath() {
+		return getInterpretedSqmPath().getNavigablePath();
 	}
 
-	SqmPathSource<T> getSqmPathSource();
+	SqmPath<T> getInterpretedSqmPath();
 
-//	@Override
-//	default Expression toSqlExpression(SqlAstCreationState sqlAstCreationState) {
-//		throw new NotYetImplementedFor6Exception( getClass() );
-//		final TableGroup tableGroup;
-//
-//		if ( getSqmPathSource() instanceof BasicSqmPathSource ) {
-//			// maybe we should register the LHS TableGroup for the basic value
-//			// under its NavigablePath, similar to what we do for embeddables
-//			tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( getNavigablePath().getParent() );
-//		}
-//		else {
-//			// for embeddable-, entity- and plural-valued Navigables we maybe do not have a TableGroup
-//			final TableGroup thisTableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( getNavigablePath() );
-//			if ( thisTableGroup != null ) {
-//				tableGroup = thisTableGroup;
-//			}
-//			else {
-//				final NavigablePath lhsNavigablePath = getNavigablePath().getParent();
-//				if ( lhsNavigablePath == null ) {
-//					throw new ConversionException( "Could not find TableGroup to use - " + getNavigablePath().getFullPath() );
-//				}
-//				tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( lhsNavigablePath );
-//			}
-//		}
-//
-//		sqlAstCreationState.getCreationContext().getDomainModel().resolveMappingExpressable(  )
-//
-//		final List list = getNavigable().resolveColumnReferences( tableGroup, sqlAstCreationState );
-//		if ( list.size() == 1 ) {
-//			assert list.get( 0 ) instanceof Expression;
-//			return (Expression) list.get( 0 );
-//		}
-//
-//		return new SqlTuple( list, sqlAstCreationState.getJdbcMapping() );
-//	}
+	@Override
+	ModelPart getExpressionType();
 }

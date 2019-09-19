@@ -8,17 +8,24 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * We classify literals different based on their source so that we can handle then differently
@@ -31,10 +38,10 @@ import org.hibernate.type.BasicType;
 public abstract class AbstractLiteral<T>
 		implements JdbcParameterBinder, Expression, DomainResultProducer<T> {
 	private final Object value;
-	private final MappingModelExpressable type;
+	private final BasicValuedMapping type;
 	private final Clause clause;
 
-	public AbstractLiteral(Object value, MappingModelExpressable type, Clause clause) {
+	public AbstractLiteral(Object value, BasicValuedMapping type, Clause clause) {
 		this.value = value;
 		this.type = type;
 		this.clause = clause;
@@ -49,15 +56,51 @@ public abstract class AbstractLiteral<T>
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public BasicValuedMapping getExpressionType() {
 		return type;
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+				this,
+				type.getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
+		);
+
+		//noinspection unchecked
+		return new BasicResult<>(
+				sqlSelection.getJdbcResultSetIndex(),
+				resultVariable,
+				type.getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this,
+				type.getJdbcMapping()
+		);
+	}
+
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action,
+			TypeConfiguration typeConfiguration) {
+		action.accept( type.getJdbcMapping() );
 	}
 
 	@Override

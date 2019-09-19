@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,14 +15,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.query.sqm.sql.internal.SqmExpressionInterpretation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -38,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class SqmTuple<T>
 		extends AbstractSqmExpression<T>
-		implements JpaCompoundSelection<T>, SqmExpressionInterpretation<T> {
+		implements JpaCompoundSelection<T> {
 	private final List<SqmExpression<?>> groupedExpressions;
 
 	public SqmTuple(NodeBuilder nodeBuilder, SqmExpression<?>... groupedExpressions) {
@@ -61,6 +53,10 @@ public class SqmTuple<T>
 	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressable<T> type, NodeBuilder nodeBuilder) {
 		this( groupedExpressions, nodeBuilder );
 		applyInferableType( type );
+	}
+
+	public List<SqmExpression<?>> getGroupedExpressions() {
+		return groupedExpressions;
 	}
 
 	@Override
@@ -87,37 +83,6 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public Expression toSqlExpression(
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		final List<Expression> groupedSqlExpressions  = new ArrayList<>();
-
-		for ( SqmExpression groupedExpression : groupedExpressions ) {
-			final SqmExpressionInterpretation interpretation = (SqmExpressionInterpretation) groupedExpression.accept( walker );
-			final Expression sqlExpression = interpretation.toSqlExpression(
-					clause, walker,
-					sqlAstCreationState
-			);
-
-			groupedSqlExpressions.add( sqlExpression );
-		}
-
-		return new SqlTuple(
-				groupedSqlExpressions,
-				sqlAstCreationState.getCreationContext().getDomainModel()
-						.resolveMappingExpressable( getExpressableType() )
-		);
-	}
-
-	@Override
-	public DomainResultProducer getDomainResultProducer(
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return null;
-	}
-
-	@Override
 	public String asLoggableText() {
 		return toString();
 	}
@@ -134,7 +99,7 @@ public class SqmTuple<T>
 
 	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
-		return groupedExpressions;
+		return getGroupedExpressions();
 	}
 
 }

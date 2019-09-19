@@ -30,6 +30,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private Set<String> annotatedPackageNames = new LinkedHashSet<>();
 	private List<Binding> mappingFileBindings = new ArrayList<>();
+	private Map<String, Class<?>> extraQueryImports;
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl impl = new ManagedResourcesImpl();
@@ -38,6 +39,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
 		impl.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
 		impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+		impl.extraQueryImports = sources.getExtraQueryImports();
 		return impl;
 	}
 
@@ -67,6 +69,11 @@ public class ManagedResourcesImpl implements ManagedResources {
 	@Override
 	public Collection<Binding> getXmlMappingBindings() {
 		return Collections.unmodifiableList( mappingFileBindings );
+	}
+
+	@Override
+	public Map<String, Class<?>> getExtraQueryImports() {
+		return extraQueryImports;
 	}
 
 

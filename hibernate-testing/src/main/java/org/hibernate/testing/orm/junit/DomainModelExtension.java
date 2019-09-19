@@ -95,6 +95,14 @@ public class DomainModelExtension
 					metadataSources.addResource( xmlMapping );
 				}
 
+				for ( DomainModel.ExtraQueryImport extraQueryImport : domainModelAnnotation.extraQueryImports() ) {
+					metadataSources.addQueryImport( extraQueryImport.name(), extraQueryImport.importedClass() );
+				}
+
+				for ( Class<?> importedClass : domainModelAnnotation.extraQueryImportClasses() ) {
+					metadataSources.addQueryImport( importedClass.getSimpleName(), importedClass );
+				}
+
 				return (MetadataImplementor) metadataSources.buildMetadata();
 			};
 		}

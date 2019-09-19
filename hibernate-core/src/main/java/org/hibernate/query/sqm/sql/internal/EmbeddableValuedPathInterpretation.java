@@ -10,15 +10,15 @@ import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -28,59 +28,67 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T>, DomainResultProducer<T> {
+public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathInterpretation<T> {
 
 	/**
 	 * Static factory
 	 */
 	public static <T> EmbeddableValuedPathInterpretation<T> from(
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
-			SqlAstCreationState sqlAstCreationState,
+			SqmToSqlAstConverter converter,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = SqmMappingModelHelper.resolveLhs( sqmPath.getNavigablePath(), sqlAstCreationState );
-		tableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), sqlAstCreationState );
+		final TableGroup tableGroup = SqmMappingModelHelper.resolveLhs( sqmPath.getNavigablePath(), converter );
+		tableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), converter );
 
 		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
 				null
 		);
 
-		return new EmbeddableValuedPathInterpretation<>( sqmPath, mapping, tableGroup );
+		return new EmbeddableValuedPathInterpretation<>(
+				mapping.toSqlExpression(
+						tableGroup,
+						converter.getCurrentClauseStack().getCurrent(),
+						converter,
+						converter
+				),
+				sqmPath,
+				mapping,
+				tableGroup
+		);
 	}
 
+
+	private final Expression sqlExpression;
 
 	private final SqmEmbeddedValuedSimplePath<T> sqmPath;
 	private final EmbeddableValuedModelPart mapping;
 	private final TableGroup tableGroup;
 
 	public EmbeddableValuedPathInterpretation(
+			Expression sqlExpression,
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
+		this.sqlExpression = sqlExpression;
 		this.sqmPath = sqmPath;
 		this.mapping = mapping;
 		this.tableGroup = tableGroup;
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
+	public SqmPath<T> getInterpretedSqmPath() {
+		return sqmPath;
 	}
 
 	@Override
-	public SqmPathSource<T> getSqmPathSource() {
-		return sqmPath.getReferencedPathSource();
+	public ModelPart getExpressionType() {
+		return mapping;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// DomainResultProducer
-
 	@Override
-	public DomainResultProducer<T> getDomainResultProducer(
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return this;
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlExpression.accept( sqlTreeWalker );
 	}
 
 	@Override
@@ -91,18 +99,6 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		mapping.applySqlSelections( getNavigablePath(), tableGroup, creationState );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SqmPathInterpretation
-
-	@Override
-	public Expression toSqlExpression(
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		return mapping.toSqlExpression( tableGroup, clause, walker, sqlAstCreationState );
 	}
 
 	@Override

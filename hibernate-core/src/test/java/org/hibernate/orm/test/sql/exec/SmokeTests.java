@@ -160,6 +160,28 @@ public class SmokeTests {
 		);
 	}
 
+	@Test
+	public void testHqlSelectLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<String> query = session.createQuery( "select 'items' from SimpleEntity e", String.class );
+					final String attribute1 = query.uniqueResult();
+					assertThat( attribute1, is( "items" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<String> query = session.createQuery( "select :param from SimpleEntity e", String.class );
+					final String attribute1 = query.setParameter( "param", "items" ).uniqueResult();
+					assertThat( attribute1, is( "items" ) );
+				}
+		);
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Dynamic instantiations
@@ -255,6 +277,26 @@ public class SmokeTests {
 	}
 
 	@Test
+	public void testHqlNestedDynamicInstantiationWithLiteral(SessionFactoryScope scope) {
+		scope.getSessionFactory().inTransaction(
+				session -> {
+					final Query<CategorizedListItemDto> query = session.createQuery(
+							"select new CategorizedListItemDto( new ListItemDto( 'items', e.component.attribute1 ), e.component.attribute2, e.name ) from SimpleEntity e",
+							CategorizedListItemDto.class
+					);
+
+					final CategorizedListItemDto dto = query.getSingleResult();
+					assertThat( dto, notNullValue() );
+					assertThat( dto.category, notNullValue() );
+					assertThat( dto.category.code, is( "items") );
+					assertThat( dto.category.value, is( "a1") );
+					assertThat( dto.code, is( "a2" ) );
+					assertThat( dto.value, is( "Fab" ) );
+				}
+		);
+	}
+
+	@Test
 	public void testHqlMultipleDynamicInstantiation(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -278,7 +320,7 @@ public class SmokeTests {
 	}
 
 	@Test
-	public void testBasicSetterDynamicInstantiation(SessionFactoryScope scope) {
+	public void testHqlBasicSetterDynamicInstantiation(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					final Query<BasicSetterBasedDto> query = session.createQuery(

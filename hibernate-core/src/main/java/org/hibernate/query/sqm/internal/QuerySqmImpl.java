@@ -44,11 +44,13 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -199,19 +201,39 @@ public class QuerySqmImpl<R>
 
 			final SqmSelection sqmSelection = selections.get( 0 );
 
-			if ( ! resultClass.isAssignableFrom( sqmSelection.getNodeType().getExpressableJavaTypeDescriptor().getJavaType() ) ) {
-				final String errorMessage = String.format(
-						"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
-						resultClass.getName(),
-						sqmSelection.getNodeType().getExpressableJavaTypeDescriptor().getJavaType().getName()
-				);
+			if ( sqmSelection.getSelectableNode() instanceof SqmParameter ) {
+				final SqmParameter sqmParameter = (SqmParameter) sqmSelection.getSelectableNode();
 
-				if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
-					throw new IllegalArgumentException( errorMessage );
+				// we may not yet know a selection type
+				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressableJavaTypeDescriptor() == null ) {
+					// we can't verify the result type up front
+					return;
 				}
-				else {
-					throw new QueryTypeMismatchException( errorMessage );
-				}
+			}
+
+			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
+		}
+	}
+
+	private static <T> void verifyResultType(
+			Class<T> resultClass,
+			SqmExpressable<?> sqmExpressable,
+			SessionFactoryImplementor sessionFactory) {
+		assert sqmExpressable != null;
+		assert sqmExpressable.getExpressableJavaTypeDescriptor() != null;
+
+		if ( ! resultClass.isAssignableFrom( sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType() ) ) {
+			final String errorMessage = String.format(
+					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
+					resultClass.getName(),
+					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType().getName()
+			);
+
+			if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+				throw new IllegalArgumentException( errorMessage );
+			}
+			else {
+				throw new QueryTypeMismatchException( errorMessage );
 			}
 		}
 	}

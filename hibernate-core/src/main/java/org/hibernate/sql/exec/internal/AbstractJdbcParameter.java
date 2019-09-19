@@ -13,13 +13,16 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -28,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcParameter
-		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressable {
+		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressable, SqlExpressable {
 
 	private final JdbcMapping jdbcMapping;
 
@@ -39,6 +42,29 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public JdbcParameterBinder getParameterBinder() {
 		return this;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		// todo (6.0) : investigate "virtual" or "static" selections
+		//		- anything that is the same for each row always - parameter, literal, etc;
+		//			the idea would be to write the value directly into the JdbcValues array
+		//			and not generating a SQL selection in the query sent to DB
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this,
+				jdbcMapping
+		);
 	}
 
 	@Override

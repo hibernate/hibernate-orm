@@ -76,7 +76,7 @@ public abstract class AbstractLiteral<T>
 
 		//noinspection unchecked
 		return new BasicResult<>(
-				sqlSelection.getJdbcResultSetIndex(),
+				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				type.getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
 		);

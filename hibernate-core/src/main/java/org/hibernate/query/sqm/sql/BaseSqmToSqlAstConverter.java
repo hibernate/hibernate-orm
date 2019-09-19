@@ -221,6 +221,16 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public DomainParameterXref getDomainParameterXref() {
+		return domainParameterXref;
+	}
+
+	@Override
+	public QueryParameterBindings getDomainParameterBindings() {
+		return domainParameterBindings;
+	}
+
+	@Override
 	public LockMode determineLockMode(String identificationVariable) {
 		return queryOptions.getLockOptions().getEffectiveLockMode( identificationVariable );
 	}
@@ -653,7 +663,17 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {
-		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
+		SqmExpressable<?> nodeType = sqmExpression.getNodeType();
+
+		if ( nodeType == null ) {
+			if ( sqmExpression instanceof SqmParameter ) {
+				final SqmParameter sqmParameter = (SqmParameter) sqmExpression;
+				final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( domainParameterXref.getQueryParameter( sqmParameter ) );
+				assert binding != null;
+
+				nodeType = binding.getBindType();
+			}
+		}
 
 		MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
 

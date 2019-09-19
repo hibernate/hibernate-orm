@@ -9,6 +9,8 @@ package org.hibernate.query.sqm.sql;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -31,6 +33,10 @@ public interface SqlAstCreationState {
 	FromClauseAccess getFromClauseAccess();
 
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
+
+	DomainParameterXref getDomainParameterXref();
+
+	QueryParameterBindings getDomainParameterBindings();
 
 	LockMode determineLockMode(String identificationVariable);
 

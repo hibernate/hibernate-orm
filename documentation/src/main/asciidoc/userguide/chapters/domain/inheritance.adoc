@@ -350,7 +350,7 @@ include::{sourcedir}/polymorphism/DomainModelEntity.java[tags=entity-inheritance
 ====
 
 If we have two entity mappings, a `Book` and a `Blog`,
-and the `Book` entity is mapped with the
+and the `Blog` entity is mapped with the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Polymorphism.html[`@Polymorphism`] annotation
 and taking the `PolymorphismType.EXPLICIT` setting:
 

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.bytecode.enhancement.lazy;
+package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -19,6 +19,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -47,7 +48,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 @RunWith(BytecodeEnhancerRunner.class)
-public class QueryScrollinWithInheritanceTest extends BaseNonConfigCoreFunctionalTestCase {
+public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -96,7 +97,29 @@ public class QueryScrollinWithInheritanceTest extends BaseNonConfigCoreFunctiona
 			}
 
 			while ( scrollableResults.next() ) {
-				scrollableResults.get( 0 );
+				final Employee employee = (Employee) scrollableResults.get( 0 );
+				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
+				assertThat( Hibernate.isInitialized( employee.getOtherEntities() ), is( true ) );
+				if ( "ENG1".equals( employee.getDept() ) ) {
+					assertThat( employee.getOtherEntities().size(), is( 2 ) );
+					for ( OtherEntity otherEntity : employee.getOtherEntities() ) {
+						if ( "test1".equals( otherEntity.id ) ) {
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
+							assertThat( otherEntity.employee, is( employee ) );
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
+							assertThat( otherEntity.employeeParent, is( employee ) );
+						}
+						else {
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
+							assertThat( otherEntity.employee, is( employee ) );
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
+							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( false ) );
+						}
+					}
+				}
+				else {
+					assertThat( employee.getOtherEntities().size(), is( 0 ) );
+				}
 			}
 			statelessSession.getTransaction().commit();
 			assertThat( stats.getPrepareStatementCount(), is( 1L ) );
@@ -138,7 +161,29 @@ public class QueryScrollinWithInheritanceTest extends BaseNonConfigCoreFunctiona
 			}
 
 			while ( scrollableResults.next() ) {
-				scrollableResults.get( 0 );
+				final Employee employee = (Employee) scrollableResults.get( 0 );
+				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
+				assertThat( Hibernate.isInitialized( employee.getOtherEntities() ), is( true ) );
+				if ( "ENG1".equals( employee.getDept() ) ) {
+					assertThat( employee.getOtherEntities().size(), is( 2 ) );
+					for ( OtherEntity otherEntity : employee.getOtherEntities() ) {
+						if ( "test1".equals( otherEntity.id ) ) {
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
+							assertThat( otherEntity.employee, is( employee ) );
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
+							assertThat( otherEntity.employeeParent, is( employee ) );
+						}
+						else {
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
+							assertThat( otherEntity.employee, is( employee ) );
+							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
+							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( false ) );
+						}
+					}
+				}
+				else {
+					assertThat( employee.getOtherEntities().size(), is( 0 ) );
+				}
 			}
 			session.getTransaction().commit();
 			assertThat( stats.getPrepareStatementCount(), is( 1L ) );

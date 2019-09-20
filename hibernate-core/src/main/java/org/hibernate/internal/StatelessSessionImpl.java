@@ -46,6 +46,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -298,34 +299,73 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			// caller did not request forceful eager loading, see if we can create
 			// some form of proxy
 
+			final boolean allowBytecodeProxy = getFactory()
+					.getSessionFactoryOptions()
+					.isEnhancementAsProxyEnabled();
+
+			final boolean entityHasHibernateProxyFactory = persister.getEntityMetamodel()
+					.getTuplizer()
+					.getProxyFactory() != null;
+
 			// first, check to see if we can use "bytecode proxies"
 
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			if ( allowBytecodeProxy && bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
 
-				// we cannot use bytecode proxy for entities with subclasses
-				if ( !entityMetamodel.hasSubclasses() ) {
+				// if the entity defines a HibernateProxy factory, see if there is an
+				// existing proxy associated with the PC - and if so, use it
+				if ( entityHasHibernateProxyFactory ) {
+					final PersistenceContext persistenceContext = getPersistenceContext();
+					final Object proxy = persistenceContext.getProxy( entityKey );
+
+					if ( proxy != null ) {
+						LOG.trace( "Entity proxy found in session cache" );
+
+						final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
+						if ( li.isUnwrap() ) {
+							return li.getImplementation();
+						}
+
+						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
+					}
+
+					// specialized handling for entities with subclasses with a HibernateProxy factory
+					if ( persister.getEntityMetamodel().hasSubclasses() ) {
+						// entities with subclasses that define a ProxyFactory can create
+						// a HibernateProxy.
+						LOG.debugf( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
+						return createProxy( entityKey );
+					}
 					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-			}
-
-			// we could not use bytecode proxy, check to see if we can use HibernateProxy
-			if ( persister.hasProxy() ) {
-				final Object existingProxy = getPersistenceContext().getProxy( entityKey );
-				if ( existingProxy != null ) {
-					return getPersistenceContext().narrowProxy( existingProxy, persister, entityKey, null );
-				}
 				else {
-					final Object proxy = persister.createProxy( id, this );
-					getPersistenceContext().addProxy( entityKey, proxy );
-					return proxy;
+					if ( !entityMetamodel.hasSubclasses() ) {
+						return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
+					}
+				}
+			}
+			else {
+				if ( persister.hasProxy() ) {
+					final Object existingProxy = getPersistenceContext().getProxy( entityKey );
+					if ( existingProxy != null ) {
+						return getPersistenceContext().narrowProxy( existingProxy, persister, entityKey, null );
+					}
+					else {
+						return createProxy( entityKey );
+					}
 				}
 			}
 		}
 
 		// otherwise immediately materialize it
 		return get( entityName, id );
+	}
+
+	private Object createProxy(EntityKey entityKey) {
+		final Object proxy = entityKey.getPersister().createProxy( entityKey.getIdentifier(), this );
+		getPersistenceContext().addProxy( entityKey, proxy );
+		return proxy;
 	}
 
 	@Override

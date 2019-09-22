@@ -67,11 +67,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public String getMappingRole() {
-		return navigablePath.getUnqualifiedFullPath();
-	}
-
-	@Override
 	public SqmPathSource<T> getNodeType() {
 		return (SqmPathSource<T>) super.getNodeType();
 	}

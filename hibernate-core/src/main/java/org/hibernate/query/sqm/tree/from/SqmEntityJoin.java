@@ -8,18 +8,21 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
+import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifiedJoin<T,T> {
+public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
 	private final SqmRoot sqmRoot;
 	private SqmPredicate joinPredicate;
 
@@ -46,6 +49,19 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T,T> implements SqmQualifi
 	@Override
 	public SqmRoot findRoot() {
 		return getRoot();
+	}
+
+	@Override
+	public SqmPath resolveIndexedAccess(
+			SqmExpression selector,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		return null;
+	}
+
+	@Override
+	public EntityDomainType<T> getModel() {
+		return (EntityDomainType<T>) super.getModel();
 	}
 
 	@Override

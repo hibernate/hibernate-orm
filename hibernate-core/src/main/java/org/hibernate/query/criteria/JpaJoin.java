@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 *
 * @author Steve Ebersole
 */
-public interface JpaJoin<O, T> extends JpaFrom<O, T>, Join<O, T> {
+public interface JpaJoin<O, T> extends JpaJoinedFrom<O, T>, Join<O, T> {
 	@Override
 	PersistentAttribute<? super O, ?> getAttribute();
 

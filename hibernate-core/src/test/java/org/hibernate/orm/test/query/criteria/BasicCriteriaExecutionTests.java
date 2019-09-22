@@ -16,7 +16,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 
@@ -134,6 +139,22 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 
 		inStatelessSession(
 				session -> session.createQuery( criteria ).setParameter( param, 1 ).list()
+		);
+	}
+
+	@Test
+	public void testCriteriaEntityJoin() {
+		final HibernateCriteriaBuilder criteriaBuilder = sessionFactory().getCriteriaBuilder();
+
+		final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
+
+		final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );
+		root.join( BasicEntity.class );
+
+		criteria.select( root );
+
+		inSession(
+				session -> session.createQuery( criteria ).list()
 		);
 	}
 

@@ -274,6 +274,7 @@ public class SqmSelectToSqlAstConverter
 									JoinType.LEFT,
 									LockMode.NONE,
 									getSqlAliasBaseManager(),
+									getSqlExpressionResolver(),
 									getCreationContext()
 							);
 							lhs.addTableGroupJoin(  tableGroupJoin );

@@ -6,20 +6,12 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.Root;
-
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 /**
  * @author Steve Ebersole
  */
-public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
+public interface JpaEntityJoin<T> extends JpaJoinedFrom<T,T> {
 	@Override
 	EntityDomainType<T> getModel();
-
-	EntityDomainType<T> getManagedType();
-
-	<X> JpaEntityJoin<X> join(Class<X> entityJavaType);
-
-	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity);
 }

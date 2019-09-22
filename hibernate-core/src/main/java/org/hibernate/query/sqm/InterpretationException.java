@@ -13,6 +13,10 @@ package org.hibernate.query.sqm;
  * @author Steve Ebersole
  */
 public class InterpretationException extends RuntimeException {
+	public InterpretationException(String query) {
+		this( query, null );
+	}
+
 	public InterpretationException(String query, Throwable cause) {
 		super(
 				"Error interpreting query [" + query + "]; this may indicate a semantic (user query) problem or a bug in the parser",

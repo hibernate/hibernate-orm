@@ -20,9 +20,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -31,6 +31,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SqmFunction;
@@ -67,6 +68,7 @@ import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
@@ -407,14 +409,7 @@ public abstract class BaseSqmToSqlAstConverter
 		currentClauseStack.push( Clause.FROM );
 
 		try {
-			sqmFromClause.visitRoots(
-					sqmRoot -> {
-						final TableGroup rootTableGroup = visitRootPath( sqmRoot );
-
-						currentQuerySpec().getFromClause().addRoot( rootTableGroup );
-						getFromClauseIndex().register( sqmRoot, rootTableGroup );
-					}
-			);
+			sqmFromClause.visitRoots( this::consumeFromClauseRoot );
 		}
 		finally {
 			currentClauseStack.pop();
@@ -423,16 +418,11 @@ public abstract class BaseSqmToSqlAstConverter
 		return null;
 	}
 
+	@SuppressWarnings("WeakerAccess")
+	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
+		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
 
-	@Override
-	public TableGroup visitRootPath(SqmRoot<?> sqmRoot) {
-		log.tracef( "Starting resolution of SqmRoot [%s] to TableGroup", sqmRoot );
-
-		final TableGroup resolvedTableGroup = fromClauseIndex.findTableGroup( sqmRoot.getNavigablePath() );
-		if ( resolvedTableGroup != null ) {
-			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolvedTableGroup );
-			return resolvedTableGroup;
-		}
+		assert ! fromClauseIndex.isResolved( sqmRoot );
 
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
 
@@ -446,108 +436,180 @@ public abstract class BaseSqmToSqlAstConverter
 				creationContext
 		);
 
-
-		fromClauseIndex.register( sqmRoot, tableGroup );
-
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
-		visitExplicitJoins( sqmRoot, tableGroup );
-		visitImplicitJoins( sqmRoot, tableGroup );
+		fromClauseIndex.register( sqmRoot, tableGroup );
+		currentQuerySpec().getFromClause().addRoot( tableGroup );
 
-		return tableGroup;
+		consumeExplicitJoins( sqmRoot, tableGroup );
+		consumeImplicitJoins( sqmRoot, tableGroup );
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
 		return creationContext.getDomainModel().getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 	}
 
-	private void visitExplicitJoins(SqmFrom<?,?> sqmFrom, TableGroup tableGroup) {
+	protected void consumeExplicitJoins(SqmFrom<?,?> sqmFrom, TableGroup lhsTableGroup) {
 		log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
 
 		sqmFrom.visitSqmJoins(
-				sqmJoin -> {
-					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoin.accept( this );
-					if ( tableGroupJoin != null ) {
-						tableGroup.addTableGroupJoin( tableGroupJoin );
-						getFromClauseIndex().register( sqmFrom, tableGroup );
-					}
-				}
+				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup )
 		);
 	}
 
-	private void visitImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
+	@SuppressWarnings("WeakerAccess")
+	protected void consumeExplicitJoin(SqmJoin<?,?> sqmJoin, TableGroup lhsTableGroup) {
+		if ( sqmJoin instanceof SqmAttributeJoin ) {
+			consumeAttributeJoin( ( (SqmAttributeJoin) sqmJoin ), lhsTableGroup );
+		}
+		else if ( sqmJoin instanceof SqmCrossJoin ) {
+			consumeCrossJoin( ( (SqmCrossJoin) sqmJoin ), lhsTableGroup );
+		}
+		else if ( sqmJoin instanceof SqmEntityJoin ) {
+			consumeEntityJoin( ( (SqmEntityJoin) sqmJoin ), lhsTableGroup );
+		}
+		else {
+			throw new InterpretationException( "Could not resolve SqmJoin [" + sqmJoin.getNavigablePath() + "] to TableGroupJoin" );
+		}
+	}
+
+	private void consumeAttributeJoin(SqmAttributeJoin<?,?> sqmJoin, TableGroup lhsTableGroup) {
+		assert fromClauseIndex.findTableGroup( sqmJoin.getNavigablePath() ) == null;
+		assert fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() ) == null;
+
+		final SqmPathSource<?> pathSource = sqmJoin.getReferencedPathSource();
+
+		final AttributeMapping attributeMapping = (AttributeMapping) lhsTableGroup.getModelPart().findSubPart(
+				pathSource.getPathName(),
+				SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+		);
+
+		assert attributeMapping instanceof TableGroupJoinProducer;
+		final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) attributeMapping ).createTableGroupJoin(
+				sqmJoin.getNavigablePath(),
+				lhsTableGroup,
+				sqmJoin.getExplicitAlias(),
+				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+				determineLockMode( sqmJoin.getExplicitAlias() ),
+				sqlAliasBaseManager, getSqlExpressionResolver(),
+				creationContext
+		);
+
+		fromClauseIndex.register( sqmJoin, tableGroupJoin );
+
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		// add any additional join restrictions
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			tableGroupJoin.applyPredicate(
+					(Predicate) sqmJoin.getJoinPredicate().accept( this )
+			);
+		}
+
+		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+	}
+
+	private void consumeCrossJoin(SqmCrossJoin sqmJoin, TableGroup lhsTableGroup) {
+		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+
+		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getExplicitAlias(),
+				JoinType.CROSS,
+				determineLockMode( sqmJoin.getExplicitAlias() ),
+				sqlAliasBaseManager,
+				getSqlExpressionResolver(),
+				getCreationContext()
+		);
+
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				sqmJoin.getNavigablePath(),
+				JoinType.CROSS,
+				tableGroup
+		);
+
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		fromClauseIndex.register( sqmJoin, tableGroup );
+
+		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+	}
+
+	private void consumeEntityJoin(SqmEntityJoin sqmJoin, TableGroup lhsTableGroup) {
+		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+
+		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getExplicitAlias(),
+				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+				determineLockMode( sqmJoin.getExplicitAlias() ),
+				sqlAliasBaseManager,
+				getSqlExpressionResolver(),
+				getCreationContext()
+		);
+		fromClauseIndex.register( sqmJoin, tableGroup );
+
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				sqmJoin.getNavigablePath(),
+				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+				tableGroup,
+				null
+		);
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		// add any additional join restrictions
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			tableGroupJoin.applyPredicate(
+					(Predicate) sqmJoin.getJoinPredicate().accept( this )
+			);
+		}
+
+		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+	}
+
+	private void consumeImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
 		log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
 
 		sqmPath.visitImplicitJoinPaths(
 				joinedPath -> {
 					log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
+
+					// todo (6.0) : implement
 				}
 		);
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SqmPath handling
+	//		- Note that SqmFrom references defined in the FROM-clause are already
+	//			handled during `#visitFromClause`
+
+	@Override
+	public TableGroup visitRootPath(SqmRoot<?> sqmRoot) {
+		final TableGroup resolved = fromClauseIndex.findTableGroup( sqmRoot.getNavigablePath() );
+		if ( resolved != null ) {
+			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
+			return resolved;
+		}
+
+		throw new InterpretationException( "SqmRoot not yet resolved to TableGroup" );
+	}
+
 	@Override
 	public TableGroupJoin visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
-		final TableGroupJoin tableJoinJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
-		if ( tableJoinJoin != null ) {
-			return tableJoinJoin;
+		// todo (6.0) : have this resolve to TableGroup instead?
+		//		- trying to remove tracking of TableGroupJoin in the x-refs
+
+		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		if ( existing != null ) {
+			log.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+			return existing;
 		}
 
-		final SqmPathSource<?> pathSource = sqmJoin.getReferencedPathSource();
-
-		final TableGroup lhsTableGroup = fromClauseIndex.findTableGroup( sqmJoin.getLhs().getNavigablePath() );
-
-		if ( pathSource.getSqmPathType() instanceof EmbeddableDomainType<?> ) {
-			// we need some special handling for embeddables...
-
-			// Above we checked for a TableGroupJoin associated with the `sqmJoin` path - but for
-			// an embeddable, check for its LHS too
-			final TableGroupJoin lhsTableGroupJoin = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
-			if ( lhsTableGroupJoin != null ) {
-				fromClauseIndex.register( sqmJoin, lhsTableGroupJoin );
-				return lhsTableGroupJoin;
-			}
-
-			// Next, although we don't want an actual TableGroup/TableGroupJoin created just for the
-			// embeddable, we do need to register a TableGroup against its NavigablePath.
-			// Specifically the TableGroup associated with the embeddable's LHS
-			fromClauseIndex.registerTableGroup( sqmJoin.getNavigablePath(), lhsTableGroup );
-
-			// we also still want to process its joins, adding them to the LHS TableGroup
-			sqmJoin.visitSqmJoins(
-					sqmJoinJoin -> {
-						final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
-						if ( tableGroupJoin != null ) {
-							lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-						}
-					}
-			);
-
-			// return null - there is no TableGroupJoin that needs to be added
-			return null;
-		}
-
-		final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) pathSource ).createTableGroupJoin(
-				sqmJoin.getNavigablePath(),
-				lhsTableGroup,
-				sqmJoin.getExplicitAlias(),
-				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
-				LockMode.READ,
-				sqlAliasBaseManager,
-				creationContext
-		);
-
-		fromClauseIndex.register( sqmJoin, tableGroupJoin );
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
-		// add any additional join restrictions
-		if ( sqmJoin.getJoinPredicate() != null ) {
-			currentQuerySpec().applyPredicate(
-					(Predicate) sqmJoin.getJoinPredicate().accept( this )
-			);
-		}
-
-
-		return tableGroupJoin;
+		throw new InterpretationException( "SqmAttributeJoin not yet resolved to TableGroup" );
 	}
 
 	private QuerySpec currentQuerySpec() {
@@ -557,35 +619,30 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public TableGroupJoin visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
-		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
+		// todo (6.0) : have this resolve to TableGroup instead?
+		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
-		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
-				sqmJoin.getNavigablePath(),
-				sqmJoin.getExplicitAlias(),
-				JoinType.INNER,
-				LockMode.NONE,
-				sqlAliasBaseManager,
-				getSqlExpressionResolver(),
-				getCreationContext()
-		);
+		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		if ( existing != null ) {
+			log.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+			return existing;
+		}
 
-		fromClauseIndex.register( sqmJoin, tableGroup );
-
-		sqmJoin.visitSqmJoins(
-				sqmJoinJoin -> {
-					final TableGroupJoin tableGroupJoin = (TableGroupJoin) sqmJoinJoin.accept( this );
-					if ( tableGroupJoin != null ) {
-						tableGroup.addTableGroupJoin( tableGroupJoin );
-					}
-				}
-		);
-
-		return new TableGroupJoin( sqmJoin.getNavigablePath(), JoinType.CROSS, tableGroup, null );
+		throw new InterpretationException( "SqmCrossJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
-	public Object visitQualifiedEntityJoin(SqmEntityJoin joinedFromElement) {
-		throw new NotYetImplementedFor6Exception();
+	public TableGroupJoin visitQualifiedEntityJoin(SqmEntityJoin sqmJoin) {
+		// todo (6.0) : have this resolve to TableGroup instead?
+		//		- trying to remove tracking of TableGroupJoin in the x-refs
+
+		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		if ( existing != null ) {
+			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
+			return existing;
+		}
+
+		throw new InterpretationException( "SqmEntityJoin not yet resolved to TableGroup" );
 	}
 
 
@@ -600,10 +657,6 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
 		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
-//		final SqmPath<?> lhs = sqmPath.getLhs();
-//		assert lhs != null;
-//
-//		return (SqmPathInterpretation) sqmPath;
 	}
 
 	@Override

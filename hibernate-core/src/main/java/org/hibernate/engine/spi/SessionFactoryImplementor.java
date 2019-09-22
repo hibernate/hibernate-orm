@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityGraph;
-import javax.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -37,6 +36,7 @@ import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
@@ -88,7 +88,7 @@ public interface SessionFactoryImplementor
 	QueryEngine getQueryEngine();
 
 	@Override
-	CriteriaBuilder getCriteriaBuilder();
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	@Override
 	SessionBuilderImplementor withOptions();

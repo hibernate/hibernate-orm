@@ -12,10 +12,12 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -81,6 +83,20 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 	@Override
 	public EntityDomainType<E> getManagedType() {
 		return getReferencedPathSource();
+	}
+
+
+	@Override
+	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType) {
+		return join( nodeBuilder().getDomainModel().entity( entityJavaType ) );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
+		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, SqmJoinType.CROSS, this );
+		//noinspection unchecked
+		addSqmJoin( (SqmEntityJoin) join );
+		return join;
 	}
 
 	@Override

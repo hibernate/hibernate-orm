@@ -10,6 +10,7 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.Queryable;
@@ -29,7 +30,9 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeTransformationLogger;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -165,5 +168,16 @@ public class SqmMappingModelHelper {
 		);
 
 		return tableGroup;
+	}
+
+	public static EntityMappingType resolveExplicitTreatTarget(
+			SqmPath<?> sqmPath,
+			SqmToSqlAstConverter converter) {
+		if ( sqmPath instanceof SqmTreatedPath ) {
+			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
+			return resolveEntityPersister( treatedPath.getTreatTarget(), converter.getCreationContext().getSessionFactory() );
+		}
+
+		return null;
 	}
 }

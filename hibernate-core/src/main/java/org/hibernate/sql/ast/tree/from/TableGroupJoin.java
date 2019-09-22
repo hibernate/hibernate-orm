@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -22,7 +23,8 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 	private final NavigablePath navigablePath;
 	private final JoinType joinType;
 	private final TableGroup joinedGroup;
-	private final Predicate predicate;
+
+	private Predicate predicate;
 
 	public TableGroupJoin(
 			NavigablePath navigablePath,
@@ -35,6 +37,13 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 		this.predicate = predicate;
 	}
 
+	public TableGroupJoin(
+			NavigablePath navigablePath,
+			JoinType joinType,
+			TableGroup joinedGroup) {
+		this( navigablePath, joinType, joinedGroup, null );
+	}
+
 	public JoinType getJoinType() {
 		return joinType;
 	}
@@ -45,6 +54,10 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 
 	public Predicate getPredicate() {
 		return predicate;
+	}
+
+	public void applyPredicate(Predicate predicate) {
+		this.predicate = SqlAstTreeHelper.combinePredicates( this.predicate, predicate );
 	}
 
 	@Override

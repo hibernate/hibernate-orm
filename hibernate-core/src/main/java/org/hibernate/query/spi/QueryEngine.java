@@ -13,6 +13,8 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -66,9 +68,16 @@ public class QueryEngine {
 			SqmCreationOptions sqmCreationOptions,
 			Map properties,
 			NamedQueryRepository namedQueryRepository) {
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
+
 		this.namedQueryRepository = namedQueryRepository;
+
 		// todo (6.0) : allow SemanticQueryProducer to be pluggable (see legacy `QueryTranslatorFactoryInitiator`)
+		//		- also, allow for Dialect to specify producer to use (or defer to standard producer)
 		this.semanticQueryProducer = new SemanticQueryProducerImpl( sqmCreationContext, sqmCreationOptions );
+
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
 				domainModel.getJpaMetamodel(),
@@ -78,10 +87,7 @@ public class QueryEngine {
 		this.interpretationCache = buildQueryPlanCache( properties );
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
-		serviceRegistry.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.initializeFunctionRegistry( this );
+		dialect.initializeFunctionRegistry( this );
 		if ( runtimeOptions.getSqmFunctionRegistry() != null ) {
 			runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
 		}

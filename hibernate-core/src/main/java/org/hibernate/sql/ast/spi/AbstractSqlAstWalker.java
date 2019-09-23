@@ -57,38 +57,7 @@ import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.sql.ast.spi.SqlAppender.AND_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.ASC_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.AS_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.BETWEEN_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.CASE_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.CLOSE_PARENTHESIS;
-import static org.hibernate.sql.ast.spi.SqlAppender.COLLATE_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.COMA_SEPARATOR;
-import static org.hibernate.sql.ast.spi.SqlAppender.DESC_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.DISTINCT_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.ELSE_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.EMPTY_STRING;
-import static org.hibernate.sql.ast.spi.SqlAppender.END_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.ESCAPE_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.FROM_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.IN_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.IS_NOT_NULL_FRAGMENT;
-import static org.hibernate.sql.ast.spi.SqlAppender.IS_NULL_FRAGMENT;
-import static org.hibernate.sql.ast.spi.SqlAppender.JOIN_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.LIKE_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.NOT_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.NO_SEPARATOR;
-import static org.hibernate.sql.ast.spi.SqlAppender.NULL_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.ON_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.OPEN_PARENTHESIS;
-import static org.hibernate.sql.ast.spi.SqlAppender.ORDER_BY_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.OR_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.PARAM_MARKER;
-import static org.hibernate.sql.ast.spi.SqlAppender.SELECT_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.THEN_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.WHEN_KEYWORD;
-import static org.hibernate.sql.ast.spi.SqlAppender.WHERE_KEYWORD;
+import static org.hibernate.sql.ast.spi.SqlAppender.*;
 
 /**
  * @author Steve Ebersole

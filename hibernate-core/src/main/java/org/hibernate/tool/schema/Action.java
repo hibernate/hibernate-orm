@@ -109,7 +109,7 @@ public enum Action {
 			return (Action) value;
 		}
 
-		final String name = value.toString();
+		final String name = value.toString().trim();
 		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
 			// default is NONE
 			return NONE;

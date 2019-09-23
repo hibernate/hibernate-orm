@@ -3,6 +3,90 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.5.Final (September 17, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31779/tab/release-report-done
+
+** Bug
+    * [HHH-13259] - StackOverflowError from StringHelper
+    * [HHH-13466] - ClassCastException when changing a Collection association to a Set if @PreUpdate listener exists
+    * [HHH-13544] - Restore logged warning on jdbc code mapping issue in NationalizedTypeMappings
+    * [HHH-13550] - Fix Oracle failure for test added by HHH-13424
+    * [HHH-13551] - StrategyRegistrationProvider does not properly handle implementations from different classloader
+    * [HHH-13554] - QueryAndSQLTest.testNativeQueryWithFormulaAttributeWithoutAlias() fails on Oracle, MSSQL, Sybase, DB2, MariaDB
+    * [HHH-13555] - FetchGraphTest, MergeProxyTest and ProxyDeletionTest fail due to ConstraintViolationException
+    * [HHH-13556] - Tests doing dynamic fetch scrolling a collection fail on DB2
+    * [HHH-13557] - LocalTimeTest#writeThenNativeRead and OffsetTimeTest#writeThenNativeRead tests are failing on SQL Server
+    * [HHH-13558] - InstantTest, LocalDateTimeTest, OffsetDateTimeTest, ZonedDateTimeTest failing on Sybase for year 1600
+    * [HHH-13564] - Envers - Getting NPE while reading revisions of entity with @EmbeddedId composite key located in parent @MappedSuperclass
+    * [HHH-13569] - org.hibernate.test.annotations.embedded.EmbeddedTest failures on Sybase
+    * [HHH-13570] - Test failures due to Sybase not supporting UPDATE statement with WITH(NOWAIT)
+    * [HHH-13571] - Test failures due to cross joined table out of scope of a subsequent JOIN on Sybase
+    * [HHH-13573] - Test failure due to Sybase not supporting cascade delete on foreign key definitions
+    * [HHH-13574] - SybaseASE does not support PARTITION BY
+    * [HHH-13577] - LockTest.testContendedPessimisticLock and StatementIsClosedAfterALockExceptionTest.testStatementIsClosed  tests fail on Sybase
+    * [HHH-13580] - LocalTimeTest#writeThenNativeRead* and OffsetTimeTest#writeThenNativeRead* failing on MySQL
+    * [HHH-13581] - LocalTimeTest#writeThenRead* and OffsetTimeTest#writeThenRead* failing on MariaDB
+    * [HHH-13582] - LocalDateTest failures on MySQL
+    * [HHH-13586] - ClassCastException when using a single region name for both entity and query results
+    * [HHH-13590] - TransientObjectException merging a non-proxy association to a HibernateProxy
+    * [HHH-13592] - AutoFlushEvent#isFlushRequired is always false
+    * [HHH-13607] - Exception thrown while flushing uninitialized enhanced proxy with immutable natural ID
+    * [HHH-13611] - Restore EntityMetamodel constructor to take SessionFactoryImplementor argument instead of PersisterCreationContext.
+    * [HHH-13616] - Enable the hibernate-orm-modules test for JDK 11
+    * [HHH-13621] - Exception if spaces after value of  javax.persistence.schema-generation.scripts.action in hibernate.properties
+
+** New Feature
+    * [HHH-13249] - Introduce an option to Log slow queries instead of all queries
+
+** Task
+    * [HHH-13525] - Make test SessionDelegatorBaseImplTest more resilient to previously existing alias definition
+    * [HHH-13526] - Optimise ResourceRegistryStandardImpl#release
+    * [HHH-13527] - Performance regression in org.hibernate.stat.internal.StatisticsImpl
+    * [HHH-13528] - Invoke afterStatements only at the end of releasing all statements for a batch
+    * [HHH-13529] - Performance regression in org.hibernate.engine.spi.SessionFactoryImplementor#getDialect
+    * [HHH-13531] - Some more opportunities to reuse the constants pool in AliasConstantsHelper
+    * [HHH-13534] - AbstractLoadPlanBasedLoader never needs a List of AfterLoadAction
+    * [HHH-13546] - Make the sessionFactory field in StatisticsImpl required
+    * [HHH-13549] - Cleanup dead code in StringHelper
+    * [HHH-13552] - CollectionType needs a direct reference to its Persister
+    * [HHH-13553] - Fix test failures on SAP HANA
+    * [HHH-13561] - Do not retrieve the same ActionQueue multiple times
+    * [HHH-13562] - List of TransactionObserver for  JdbcResourceLocalTransactionCoordinatorImpl should be lazily initialized
+    * [HHH-13563] - ResultSetReturnImpl is looking up JdbcServices on each construction
+    * [HHH-13565] - Improve Session opening efficiency
+    * [HHH-13568] - Instances of NaturalIdXrefDelegate should be lazily initialized if possible
+    * [HHH-13605] - InstantTest, OffsetDateTimeTest, ZonedDateTimeTest fail for MariaDB on CI
+    * [HHH-13606] - LocalDateTimeTest fails for HANA on CI
+    * [HHH-13622] - Upgrade the WildFly Transaction Client to 1.1.7.Final
+
+** Improvement
+    * [HHH-13133] - Print message about 'successfully enhanced class' as debug in Maven enhancement plugin
+    * [HHH-13412] - Move hibernate.connection description out of c3p0 section
+    * [HHH-13512] - Avoid allocating an array in org.hibernate.internal.util.StringHelper#unquote(String[], Dialect) if there are no changes to be applied
+    * [HHH-13521] - Avoid excessive validation of enabled filters
+    * [HHH-13522] - Optimise LoadQueryInfluencers by making maps lazily initialized
+    * [HHH-13523] - StatementPreparerImpl should not need to retrieve the JDBCService as often
+    * [HHH-13524] - Remove unused fields xref,unassociatedResultSets from JdbcCoordinatorImpl
+    * [HHH-13541] - ExceptionConverter instance in AbstractSharedSessionContract should be lazily initialized
+    * [HHH-13548] - Since SessionOwner is deprecated several fields in SessionImpl can be removed
+    * [HHH-13576] - Invoking tracef() or debugf() w/o an array of parameters actually allocates an empty Object[]
+    * [HHH-13579] - Cleanup of resources in ResourceRegistryStandardImpl allocates many Iterators
+    * [HHH-13584] - Reduce ServiceRegistry lookups in LocalConnectionAccess in SessionFactory
+    * [HHH-13585] - Duplicate resource release in PessimisticReadSelectLockingStrategy
+    * [HHH-13587] - Initialize selected collections of StatefulPersistenceContext lazily
+    * [HHH-13588] - MySQL Dialect: missed functions: weight_string, to_base64, from_base64, regexp_replace, regexp_instr, regexp_substr
+    * [HHH-13589] - Minor memory allocation improvements in ActionQueue
+    * [HHH-13591] - Replaces simple uses of array iteration with a corresponding for-each loop
+    * [HHH-13594] - ResourceRegistryStandardImpl#release could avoid allocating a capturing lambda
+    * [HHH-13599] - Avoid ArrayList allocation in JtaTransactionCoordinatorImp in common scenario
+    * [HHH-13600] - Avoid allocation of capturing lambdas in ParameterTranslationsImpl and AbstractDomainDataRegion
+
+** Deprecation
+    * [HHH-13595] - Deprecate ConnectionObserver
+
+
 Changes in 5.4.4.Final (July 29, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

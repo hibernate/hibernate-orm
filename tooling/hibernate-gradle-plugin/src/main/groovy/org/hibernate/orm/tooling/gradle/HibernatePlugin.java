@@ -55,12 +55,9 @@ public class HibernatePlugin implements Plugin<Project> {
 		project.getExtensions().add( "hibernate", hibernateExtension );
 
 		project.afterEvaluate(
-				new Action<Project>() {
-					@Override
-					public void execute(Project project) {
-						if ( hibernateExtension.enhance != null ) {
-							applyEnhancement( project, hibernateExtension );
-						}
+				project1 -> {
+					if ( hibernateExtension.enhance != null ) {
+						applyEnhancement( project1, hibernateExtension );
 					}
 				}
 		);
@@ -76,150 +73,11 @@ public class HibernatePlugin implements Plugin<Project> {
 			project.getLogger().debug( "Applying Hibernate enhancement action to SourceSet.{}", sourceSet.getName() );
 
 			final Task compileTask = project.getTasks().findByName( sourceSet.getCompileJavaTaskName() );
+			assert compileTask != null;
 			compileTask.doLast(
-					new Action<Task>() {
-						@Override
-						public void execute(Task task) {
-							project.getLogger().debug( "Starting Hibernate enhancement on SourceSet.{}", sourceSet.getName() );
-
-							final ClassLoader classLoader = toClassLoader( sourceSet.getRuntimeClasspath() );
-
-							EnhancementContext enhancementContext = new DefaultEnhancementContext() {
-								@Override
-								public ClassLoader getLoadingClassLoader() {
-									return classLoader;
-								}
-
-								@Override
-								public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
-									return hibernateExtension.enhance.getEnableAssociationManagement();
-								}
-
-								@Override
-								public boolean doDirtyCheckingInline(UnloadedClass classDescriptor) {
-									return hibernateExtension.enhance.getEnableDirtyTracking();
-								}
-
-								@Override
-								public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
-									return hibernateExtension.enhance.getEnableLazyInitialization();
-								}
-
-								@Override
-								public boolean isLazyLoadable(UnloadedField field) {
-									return hibernateExtension.enhance.getEnableLazyInitialization();
-								}
-
-								@Override
-								public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
-									return hibernateExtension.enhance.getEnableExtendedEnhancement();
-								}
-							};
-
-							if ( hibernateExtension.enhance.getEnableExtendedEnhancement() ) {
-								logger.warn("Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
-							}
-
-							final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
-
-							for ( File classesDir: sourceSet.getOutput().getClassesDirs() ) {
-								final FileTree fileTree = project.fileTree( classesDir );
-								for ( File file : fileTree ) {
-									if ( !file.getName().endsWith( ".class" ) ) {
-										continue;
-									}
-
-									final byte[] enhancedBytecode = doEnhancement( classesDir, file, enhancer );
-									if ( enhancedBytecode != null ) {
-										writeOutEnhancedClass( enhancedBytecode, file );
-										logger.info( "Successfully enhanced class [" + file + "]" );
-									}
-									else {
-										logger.info( "Skipping class [" + file.getAbsolutePath() + "], not an entity nor embeddable" );
-									}
-								}
-							}
-						}
-					}
+					task -> EnhancementHelper.enhance( sourceSet, hibernateExtension.enhance, project )
 			);
 		}
-	}
-
-	private ClassLoader toClassLoader(FileCollection runtimeClasspath) {
-		List<URL> urls = new ArrayList<URL>();
-		for ( File file : runtimeClasspath ) {
-			try {
-				urls.add( file.toURI().toURL() );
-				logger.debug( "Adding classpath entry for " + file.getAbsolutePath() );
-			}
-			catch (MalformedURLException e) {
-				throw new GradleException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
-			}
-		}
-		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
-	}
-
-	private byte[] doEnhancement(File root, File javaClassFile, Enhancer enhancer) {
-		try {
-			String className = javaClassFile.getAbsolutePath().substring(
-					root.getAbsolutePath().length() + 1,
-					javaClassFile.getAbsolutePath().length() - ".class".length()
-			).replace( File.separatorChar, '.' );
-			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
-			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
-			try {
-				byte[] buffer = new byte[1024];
-				int length;
-				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
-					originalBytes.write( buffer, 0, length );
-				}
-			}
-			finally {
-				fileInputStream.close();
-			}
-			return enhancer.enhance( className, originalBytes.toByteArray() );
-		}
-		catch (Exception e) {
-			throw new GradleException( "Unable to enhance class : " + javaClassFile, e );
-		}
-	}
-
-	private void writeOutEnhancedClass(byte[] enhancedBytecode, File file) {
-		try {
-			if ( file.delete() ) {
-				if ( !file.createNewFile() ) {
-					logger.error( "Unable to recreate class file [" + file.getName() + "]" );
-				}
-			}
-			else {
-				logger.error( "Unable to delete class file [" + file.getName() + "]" );
-			}
-		}
-		catch (IOException e) {
-			logger.warn( "Problem preparing class file for writing out enhancements [" + file.getName() + "]" );
-		}
-
-		try {
-			FileOutputStream outputStream = new FileOutputStream( file, false );
-			try {
-				outputStream.write( enhancedBytecode );
-				outputStream.flush();
-			}
-			catch (IOException e) {
-				throw new GradleException( "Error writing to enhanced class [" + file.getName() + "] to file [" + file.getAbsolutePath() + "]", e );
-			}
-			finally {
-				try {
-					outputStream.close();
-				}
-				catch (IOException ignore) {
-				}
-			}
-		}
-		catch (FileNotFoundException e) {
-			throw new GradleException( "Error opening class file for writing : " + file.getAbsolutePath(), e );
-		}
-
 	}
 
 }

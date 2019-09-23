@@ -8,7 +8,7 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -19,11 +19,11 @@ import org.hibernate.query.sqm.tree.SqmStatement;
  *
  * @author Steve Ebersole
  */
-public class SemanticQueryProducerImpl implements SemanticQueryProducer {
+public class StandardHqlTranslator implements HqlTranslator {
 	private final SqmCreationContext sqmCreationContext;
 	private final SqmCreationOptions sqmCreationOptions;
 
-	public SemanticQueryProducerImpl(
+	public StandardHqlTranslator(
 			SqmCreationContext sqmCreationContext,
 			SqmCreationOptions sqmCreationOptions) {
 		this.sqmCreationContext = sqmCreationContext;

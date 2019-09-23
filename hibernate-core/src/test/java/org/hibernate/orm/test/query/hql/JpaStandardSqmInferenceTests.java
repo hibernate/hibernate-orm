@@ -114,7 +114,7 @@ public class JpaStandardSqmInferenceTests extends SessionFactoryBasedFunctionalT
 	}
 
 	private void checkParameters(String query, Class<?>... expecteds) {
-		final SqmStatement sqmStatement = sessionFactory().getQueryEngine().getSemanticQueryProducer().interpret( query );
+		final SqmStatement sqmStatement = sessionFactory().getQueryEngine().getHqlTranslator().interpret( query );
 
 		checkParameterTypes( sqmStatement, expecteds );
 	}

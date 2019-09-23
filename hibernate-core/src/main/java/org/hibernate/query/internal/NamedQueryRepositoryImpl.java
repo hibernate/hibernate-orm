@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -127,7 +127,7 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
 		Map<String,HibernateException> errors = new HashMap<>();
 
-		final SemanticQueryProducer sqmProducer = queryEngine.getSemanticQueryProducer();
+		final HqlTranslator sqmProducer = queryEngine.getHqlTranslator();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 		final boolean cachingEnabled = interpretationCache.isEnabled();
 

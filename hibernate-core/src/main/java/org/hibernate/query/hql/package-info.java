@@ -12,7 +12,7 @@
  * This includes transformation via Antlr, {@link org.hibernate.query.Query}
  * manipulation and execution
  *
- * @see org.hibernate.query.hql.SemanticQueryProducer
+ * @see org.hibernate.query.hql.HqlTranslator
  * @see org.hibernate.query.hql.spi.HqlQueryImplementor
  * @see org.hibernate.query.hql.spi.NamedHqlQueryMemento
  */

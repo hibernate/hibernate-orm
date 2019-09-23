@@ -30,15 +30,19 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
-import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
+ *
+ * @implNote non-abstract to ensure that all SessionFactoryOptions methods have at least
+ * a default implementation
  *
  * @author Steve Ebersole
  */
@@ -391,8 +395,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public SemanticQueryProducer getHqlTranslator() {
+	public HqlTranslator getHqlTranslator() {
 		return delegate.getHqlTranslator();
+	}
+
+	@Override
+	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+		return delegate.getSqmTranslatorFactory();
 	}
 
 	@Override

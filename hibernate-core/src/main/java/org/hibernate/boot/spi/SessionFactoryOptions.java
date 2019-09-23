@@ -33,9 +33,10 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
-import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
@@ -143,7 +144,9 @@ public interface SessionFactoryOptions {
 		};
 	}
 
-	SemanticQueryProducer getHqlTranslator();
+	HqlTranslator getHqlTranslator();
+
+	SqmToSqlAstConverterFactory getSqmTranslatorFactory();
 
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
@@ -351,5 +354,4 @@ public interface SessionFactoryOptions {
 	boolean isUseOfJdbcNamedParametersEnabled();
 
 	boolean isOmitJoinOfSuperclassTablesEnabled();
-
 }

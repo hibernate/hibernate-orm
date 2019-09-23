@@ -64,14 +64,14 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author John O'Hara
  */
 @SuppressWarnings("unchecked")
-public class SqmSelectToSqlAstConverter
+public class StandardSqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
-		implements DomainResultCreationState {
+		implements DomainResultCreationState, org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter {
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
 	private final List<DomainResult> domainResults = new ArrayList<>();
 
-	public SqmSelectToSqlAstConverter(
+	public StandardSqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
@@ -82,6 +82,7 @@ public class SqmSelectToSqlAstConverter
 		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings, influencers );
 	}
 
+	@Override
 	public SqmSelectInterpretation interpret(SqmSelectStatement statement) {
 		return new SqmSelectInterpretation(
 				visitSelectStatement( statement ),
@@ -292,7 +293,7 @@ public class SqmSelectToSqlAstConverter
 					joined,
 					lockMode,
 					alias,
-					SqmSelectToSqlAstConverter.this
+					StandardSqmSelectToSqlAstConverter.this
 			);
 		}
 		catch (RuntimeException e) {

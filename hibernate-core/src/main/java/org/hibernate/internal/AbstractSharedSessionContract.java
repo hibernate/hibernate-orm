@@ -615,7 +615,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 			final SqmStatement sqm = interpretationCache.resolveSqmStatement(
 					queryString,
-					s -> queryEngine.getSemanticQueryProducer().interpret( queryString )
+					s -> queryEngine.getHqlTranslator().interpret( queryString )
 			);
 
 			final QuerySqmImpl query = new QuerySqmImpl(

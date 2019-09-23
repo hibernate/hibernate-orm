@@ -17,7 +17,7 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 /**
  * Details of the result of interpreting an SQM SELECT AST into a SQL SELECT AST
  *
- * @see SqmSelectToSqlAstConverter#interpret(org.hibernate.query.sqm.tree.select.SqmSelectStatement)
+ * @see StandardSqmSelectToSqlAstConverter#interpret(org.hibernate.query.sqm.tree.select.SqmSelectStatement)
  *
  * @author Steve Ebersole
  */

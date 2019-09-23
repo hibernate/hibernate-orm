@@ -16,21 +16,27 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.QueryLogger;
+import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.internal.StandardHqlTranslator;
+import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.hql.SemanticQueryProducer;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.hql.internal.SemanticQueryProducerImpl ;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
+import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.hql.spi.SqmCreationOptions;
+import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -44,7 +50,7 @@ public class QueryEngine {
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor metadata) {
 		return new QueryEngine(
-				sessionFactory.getMetamodel(),
+				sessionFactory.getJpaMetamodel(),
 				sessionFactory.getServiceRegistry(),
 				sessionFactory.getSessionFactoryOptions(),
 				sessionFactory,
@@ -56,12 +62,13 @@ public class QueryEngine {
 
 	private final NamedQueryRepository namedQueryRepository;
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
-	private final SemanticQueryProducer semanticQueryProducer;
+	private final HqlTranslator hqlTranslator;
+	private final SqmToSqlAstConverterFactory sqmToSqlAstConverterFactory;
 	private final QueryInterpretationCache interpretationCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
 	public QueryEngine(
-			MetamodelImplementor domainModel,
+			JpaMetamodel domainModel,
 			ServiceRegistry serviceRegistry,
 			SessionFactoryOptions runtimeOptions,
 			SqmCreationContext sqmCreationContext,
@@ -74,17 +81,27 @@ public class QueryEngine {
 
 		this.namedQueryRepository = namedQueryRepository;
 
-		// todo (6.0) : allow SemanticQueryProducer to be pluggable (see legacy `QueryTranslatorFactoryInitiator`)
-		//		- also, allow for Dialect to specify producer to use (or defer to standard producer)
-		this.semanticQueryProducer = new SemanticQueryProducerImpl( sqmCreationContext, sqmCreationOptions );
+		this.hqlTranslator = resolveHqlTranslator(
+				runtimeOptions,
+				dialect,
+				sqmCreationContext,
+				sqmCreationOptions
+		);
+
+		this.sqmToSqlAstConverterFactory = resolveSqmToSqlAstConverterFactory(
+				runtimeOptions,
+				dialect,
+				sqmCreationContext,
+				sqmCreationOptions
+		);
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
-				domainModel.getJpaMetamodel(),
+				domainModel,
 				serviceRegistry
 		);
 
-		this.interpretationCache = buildQueryPlanCache( properties );
+		this.interpretationCache = buildInterpretationCache( properties );
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		dialect.initializeFunctionRegistry( this );
@@ -93,7 +110,56 @@ public class QueryEngine {
 		}
 	}
 
-	private static QueryInterpretationCache buildQueryPlanCache(Map properties) {
+	private static HqlTranslator resolveHqlTranslator(
+			SessionFactoryOptions runtimeOptions,
+			Dialect dialect,
+			SqmCreationContext sqmCreationContext,
+			SqmCreationOptions sqmCreationOptions) {
+		if ( runtimeOptions.getHqlTranslator() != null ) {
+			return runtimeOptions.getHqlTranslator();
+		}
+
+		if ( dialect.getHqlTranslator() != null ) {
+			return dialect.getHqlTranslator();
+		}
+
+		return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
+	}
+
+	private SqmToSqlAstConverterFactory resolveSqmToSqlAstConverterFactory(
+			SessionFactoryOptions runtimeOptions,
+			Dialect dialect,
+			SqmCreationContext sqmCreationContext,
+			SqmCreationOptions sqmCreationOptions) {
+		if ( runtimeOptions.getSqmTranslatorFactory() != null ) {
+			return runtimeOptions.getSqmTranslatorFactory();
+		}
+
+		if ( dialect.getSqmTranslatorFactory() != null ) {
+			return dialect.getSqmTranslatorFactory();
+		}
+
+		//noinspection Convert2Lambda
+		return new SqmToSqlAstConverterFactory() {
+			@Override
+			public SqmSelectToSqlAstConverter createSelectConverter(
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers influencers,
+					SqlAstCreationContext creationContext) {
+				return new StandardSqmSelectToSqlAstConverter(
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						influencers,
+						creationContext
+				);
+			}
+		};
+	}
+
+	private static QueryInterpretationCache buildInterpretationCache(Map properties) {
 		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
 				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
 				properties,
@@ -144,8 +210,12 @@ public class QueryEngine {
 		return criteriaBuilder;
 	}
 
-	public SemanticQueryProducer getSemanticQueryProducer() {
-		return semanticQueryProducer;
+	public HqlTranslator getHqlTranslator() {
+		return hqlTranslator;
+	}
+
+	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+		return sqmToSqlAstConverterFactory;
 	}
 
 	public QueryInterpretationCache getInterpretationCache() {
@@ -165,8 +235,8 @@ public class QueryEngine {
 			criteriaBuilder.close();
 		}
 
-		if ( semanticQueryProducer != null ) {
-			semanticQueryProducer.close();
+		if ( hqlTranslator != null ) {
+			hqlTranslator.close();
 		}
 
 		if ( interpretationCache != null ) {

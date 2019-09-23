@@ -12,7 +12,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
@@ -20,7 +19,7 @@ import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
-import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -78,7 +77,7 @@ public class SmokeTests {
 					//noinspection unchecked
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
-					final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+					final StandardSqmSelectToSqlAstConverter sqmConverter = new StandardSqmSelectToSqlAstConverter(
 							hqlQuery.getQueryOptions(),
 							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
@@ -134,7 +133,7 @@ public class SmokeTests {
 					//noinspection unchecked
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
-					final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+					final StandardSqmSelectToSqlAstConverter sqmConverter = new StandardSqmSelectToSqlAstConverter(
 							hqlQuery.getQueryOptions(),
 							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),

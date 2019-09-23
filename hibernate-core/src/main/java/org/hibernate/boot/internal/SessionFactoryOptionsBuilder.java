@@ -58,9 +58,10 @@ import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
-import org.hibernate.query.hql.SemanticQueryProducer;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -210,9 +211,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	// Queries
-	private SemanticQueryProducer semanticQueryProducer;
+	private HqlTranslator hqlTranslator;
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmFunctionRegistry sqmFunctionRegistry;
+	private SqmToSqlAstConverterFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
 	private Map querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
@@ -356,7 +358,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
-		final String semanticQueryProducerImplName = ConfigurationHelper.extractValue(
+		final String hqlTranslatorImplFqn = ConfigurationHelper.extractValue(
 				AvailableSettings.SEMANTIC_QUERY_PRODUCER,
 				configurationSettings,
 				() -> ConfigurationHelper.extractPropertyValue(
@@ -364,11 +366,22 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						configurationSettings
 				)
 		);
-		this.semanticQueryProducer = resolveSemanticQueryProducer(
-				semanticQueryProducerImplName,
+		this.hqlTranslator = resolveHqlTranslator(
+				hqlTranslatorImplFqn,
 				serviceRegistry,
 				strategySelector
 		);
+
+		final String sqmTranslatorFactoryImplFqn = ConfigurationHelper.extractPropertyValue(
+				AvailableSettings.SEMANTIC_QUERY_TRANSLATOR,
+				configurationSettings
+		);
+		this.sqmTranslatorFactory = resolveSqmTranslator(
+				sqmTranslatorFactoryImplFqn,
+				serviceRegistry,
+				strategySelector
+		);
+
 
 		final String sqmMutationStrategyImplName = ConfigurationHelper.extractValue(
 				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
@@ -587,7 +600,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private SemanticQueryProducer resolveSemanticQueryProducer(
+	private HqlTranslator resolveHqlTranslator(
 			String producerName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
@@ -597,15 +610,29 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		//noinspection Convert2Lambda
 		return strategySelector.resolveDefaultableStrategy(
-				SemanticQueryProducer.class,
+				HqlTranslator.class,
 				producerName,
-				new Callable<SemanticQueryProducer>() {
+				new Callable<HqlTranslator>() {
 					@Override
-					public SemanticQueryProducer call() throws Exception {
+					public HqlTranslator call() throws Exception {
 						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-						return (SemanticQueryProducer) classLoaderService.classForName( producerName ).newInstance();
+						return (HqlTranslator) classLoaderService.classForName( producerName ).newInstance();
 					}
 				}
+		);
+	}
+
+	private SqmToSqlAstConverterFactory resolveSqmTranslator(
+			String translatorImplFqn,
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector) {
+		if ( StringHelper.isEmpty( translatorImplFqn ) ) {
+			return null;
+		}
+
+		return strategySelector.resolveStrategy(
+				SqmToSqlAstConverterFactory.class,
+				translatorImplFqn
 		);
 	}
 
@@ -831,8 +858,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SemanticQueryProducer getHqlTranslator() {
-		return semanticQueryProducer;
+	public HqlTranslator getHqlTranslator() {
+		return hqlTranslator;
+	}
+
+	@Override
+	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+		return sqmTranslatorFactory;
 	}
 
 	@Override

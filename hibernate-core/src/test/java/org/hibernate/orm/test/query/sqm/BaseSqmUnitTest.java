@@ -56,7 +56,7 @@ public abstract class BaseSqmUnitTest
 	}
 
 	public static SqmSelectStatement interpretSelect(String hql, SessionFactoryImplementor sessionFactory) {
-		return (SqmSelectStatement) sessionFactory.getQueryEngine().getSemanticQueryProducer().interpret( hql );
+		return (SqmSelectStatement) sessionFactory.getQueryEngine().getHqlTranslator().interpret( hql );
 	}
 
 	@Override

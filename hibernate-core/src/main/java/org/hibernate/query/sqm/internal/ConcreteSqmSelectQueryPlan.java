@@ -14,14 +14,17 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
-import org.hibernate.query.sqm.sql.internal.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -147,20 +150,30 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(ExecutionContext executionContext) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+
 		if ( jdbcSelect == null ) {
 			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
 			//		- this is similar to the plan for loaders
-			final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
+
+			final SessionFactoryImplementor sessionFactory = session.getFactory();
+
+			final SqmToSqlAstConverterFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
+
+			final SqmSelectToSqlAstConverter sqmConverter = sqmTranslatorFactory.createSelectConverter(
 					executionContext.getQueryOptions(),
 					domainParameterXref,
 					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
 					executionContext.getLoadQueryInfluencers(),
-					executionContext.getSession().getFactory()
+					sessionFactory
 			);
+
 			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
+
+			// todo (6.0) : allow Dialect to specify SQL -> JdbcCall converter to use
 			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
 					interpretation.getSqlAst(),
-					executionContext.getSession().getFactory()
+					sessionFactory
 			);
 
 			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
@@ -174,11 +187,11 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				executionContext.getSession()
+				session
 		);
 
 		try {
-			return executionContext.getSession().getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 					jdbcSelect,
 					jdbcParameterBindings,
 					executionContext,

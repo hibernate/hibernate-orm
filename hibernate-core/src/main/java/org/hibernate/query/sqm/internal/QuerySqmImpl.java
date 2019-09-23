@@ -92,7 +92,7 @@ public class QuerySqmImpl<R>
 
 		final SessionFactoryImplementor factory = producer.getFactory();
 
-		this.sqmStatement = factory.getQueryEngine().getSemanticQueryProducer().interpret( hqlString );
+		this.sqmStatement = factory.getQueryEngine().getHqlTranslator().interpret( hqlString );
 
 		if ( resultType != null ) {
 			if ( sqmStatement instanceof SqmDmlStatement ) {

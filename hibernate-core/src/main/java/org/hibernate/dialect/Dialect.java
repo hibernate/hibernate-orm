@@ -40,6 +40,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
@@ -95,9 +96,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -3071,5 +3074,32 @@ public abstract class Dialect implements ConversionContext {
 
 	protected String prependComment(String sql, String comment) {
 		return  "/* " + comment + " */ " + sql;
+	}
+
+	/**
+	 * Return an HqlTranslator specific for the Dialect.  Return {@code null}
+	 * to use Hibernate's standard translator.
+	 *
+	 * Note that {@link SessionFactoryOptions#getHqlTranslator()} has higher precedence
+	 *
+	 * @see org.hibernate.query.hql.internal.StandardHqlTranslator
+	 * @see QueryEngine#getHqlTranslator()
+	 */
+	public HqlTranslator getHqlTranslator() {
+		return null;
+	}
+
+	/**
+	 * Return an SqmToSqlAstConverterFactory specific for the Dialect.  Return {@code null}
+	 * to use Hibernate's standard translator.
+	 *
+	 * Note that {@link SessionFactoryOptions#getSqmTranslatorFactory()} has higher
+	 * precedence as it comes directly from the user config
+	 *
+	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter
+	 * @see QueryEngine#getSqmTranslator()
+	 */
+	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+		return null;
 	}
 }

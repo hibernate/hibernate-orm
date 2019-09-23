@@ -1196,6 +1196,7 @@ public abstract class AbstractEntityPersister
 				lockMode,
 				primaryTableReference,
 				joins,
+				sqlAliasBase,
 				getFactory()
 		);
 	}

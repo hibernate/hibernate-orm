@@ -10,6 +10,16 @@ package org.hibernate.query;
  * @author Steve Ebersole
  */
 public enum UnaryArithmeticOperator {
-	UNARY_PLUS,
-	UNARY_MINUS
+	UNARY_PLUS( '+' ),
+	UNARY_MINUS( '-' );
+
+	private final char operatorChar;
+
+	UnaryArithmeticOperator(char operatorChar) {
+		this.operatorChar = operatorChar;
+	}
+
+	public char getOperatorChar() {
+		return operatorChar;
+	}
 }

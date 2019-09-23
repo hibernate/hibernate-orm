@@ -12,8 +12,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
  * @author Steve Ebersole
@@ -28,8 +27,9 @@ public class StandardTableGroup extends AbstractTableGroup {
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableJoins,
+			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, lockMode, sessionFactory );
+		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
 	}
@@ -40,25 +40,8 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
-		renderTableReference( primaryTableReference, sqlAppender, walker );
-
-		if ( tableJoins != null ) {
-			for ( TableReferenceJoin tableJoin : tableJoins ) {
-				sqlAppender.appendSql( " " );
-				sqlAppender.appendSql( tableJoin.getJoinType().getText() );
-				sqlAppender.appendSql( " join " );
-				renderTableReference( tableJoin.getJoinedTableReference(), sqlAppender, walker );
-				if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-					sqlAppender.appendSql( " on " );
-					tableJoin.getJoinPredicate().accept( walker );
-				}
-			}
-		}
-	}
-
-	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
+		// todo (6.0) : if we implement dynamic TableReference creation, this still needs to return the expressions for all mapped tables not just the ones with a TableReference at this time
 		nameCollector.accept( getPrimaryTableReference().getTableExpression() );
 		for ( TableReferenceJoin tableReferenceJoin : tableJoins ) {
 			nameCollector.accept( tableReferenceJoin.getJoinedTableReference().getTableExpression() );

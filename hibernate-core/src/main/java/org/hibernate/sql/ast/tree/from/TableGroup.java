@@ -14,6 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -27,9 +28,14 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
  *
  * @author Steve Ebersole
  */
-public interface TableGroup
-		extends SqlAstNode, ColumnReferenceQualifier, DomainResultProducer {
+public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, DomainResultProducer {
 	NavigablePath getNavigablePath();
+
+	/**
+	 * If we want to use CTE for TableGroup rendering we will need to know the
+	 * alias we can use for the group
+	 */
+	String getGroupAlias();
 
 	ModelPartContainer getModelPart();
 
@@ -44,8 +50,6 @@ public interface TableGroup
 	void addTableGroupJoin(TableGroupJoin join);
 
 	void visitTableGroupJoins(Consumer<TableGroupJoin> consumer);
-
-	void render(SqlAppender sqlAppender, SqlAstWalker walker);
 
 	void applyAffectedTableNames(Consumer<String> nameCollector);
 

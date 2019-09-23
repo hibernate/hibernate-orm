@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
@@ -25,6 +26,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
 	private final LockMode lockMode;
+	private final SqlAliasBase sqlAliasBase;
 
 	private Set<TableGroupJoin> tableGroupJoins;
 	private boolean isInnerJoinPossible;
@@ -35,8 +37,9 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
 			LockMode lockMode,
+			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		this( navigablePath, producer, lockMode, false, sessionFactory );
+		this( navigablePath, producer, lockMode, sqlAliasBase, false, sessionFactory );
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -44,19 +47,30 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
 			LockMode lockMode,
+			SqlAliasBase sqlAliasBase,
 			boolean isInnerJoinPossible,
 			SessionFactoryImplementor sessionFactory) {
 		super();
 		this.navigablePath = navigablePath;
 		this.producer = producer;
 		this.lockMode = lockMode;
+		this.sqlAliasBase = sqlAliasBase;
 		this.isInnerJoinPossible = isInnerJoinPossible;
 		this.sessionFactory = sessionFactory;
+	}
+
+	public SqlAliasBase getSqlAliasBase() {
+		return sqlAliasBase;
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public String getGroupAlias() {
+		return sqlAliasBase.getAliasStem();
 	}
 
 	@Override

@@ -17,8 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
@@ -44,6 +42,12 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public String getGroupAlias() {
+		// none, although we could also delegate to the underlyingTableGroup's group-alias
+		return null;
 	}
 
 	@Override
@@ -89,11 +93,6 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
 		}
-	}
-
-	@Override
-	public void render(SqlAppender sqlAppender, SqlAstWalker walker) {
-		walker.visitTableGroup( this );
 	}
 
 	@Override

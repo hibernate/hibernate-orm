@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.sql;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 
@@ -49,7 +50,11 @@ public class SqlAliasBaseManager implements SqlAliasBaseGenerator {
 		@Override
 		public String generateNewAlias() {
 			synchronized ( this ) {
-				return stem + '_' + (aliasCount++);
+				final String alias = stem + '_' + ( aliasCount++ );
+				if ( SqlTreeCreationLogger.DEBUG_ENABLED ) {
+					SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
+				}
+				return alias;
 			}
 		}
 	}

@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
+import org.hibernate.sql.ast.spi.StandardSqlAstSelectTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -111,10 +111,8 @@ public class SmokeTests {
 					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
 					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
-					final JdbcSelect jdbcSelectOperation = SqlAstSelectToJdbcSelectConverter.interpret(
-							sqlAst,
-							session.getSessionFactory()
-					);
+					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
+							.interpret( sqlAst );
 
 					assertThat(
 							jdbcSelectOperation.getSql(),
@@ -208,11 +206,8 @@ public class SmokeTests {
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 
-
-					final JdbcSelect jdbcSelectOperation = SqlAstSelectToJdbcSelectConverter.interpret(
-							sqlAst,
-							session.getSessionFactory()
-					);
+					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
+							.interpret( sqlAst );
 
 					assertThat(
 							jdbcSelectOperation.getSql(),

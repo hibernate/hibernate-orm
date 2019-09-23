@@ -21,7 +21,7 @@ import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -931,7 +931,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
 
 	/**
-	 * Names the {@link SqmToSqlAstConverterFactory} class to use.
+	 * Names the {@link SqmTranslatorFactory} class to use.
 	 */
 	String SEMANTIC_QUERY_TRANSLATOR = "hibernate.query.sqm.translator";
 

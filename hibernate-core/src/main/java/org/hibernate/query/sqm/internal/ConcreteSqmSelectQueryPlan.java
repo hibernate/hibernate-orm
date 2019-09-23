@@ -14,22 +14,25 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.ast.spi.SqlAstSelectToJdbcSelectConverter;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -157,8 +160,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			//		- this is similar to the plan for loaders
 
 			final SessionFactoryImplementor sessionFactory = session.getFactory();
+			final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
-			final SqmToSqlAstConverterFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
+			final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
 
 			final SqmSelectToSqlAstConverter sqmConverter = sqmTranslatorFactory.createSelectConverter(
 					executionContext.getQueryOptions(),
@@ -170,11 +174,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 			final SqmSelectInterpretation interpretation = sqmConverter.interpret( sqm );
 
-			// todo (6.0) : allow Dialect to specify SQL -> JdbcCall converter to use
-			jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
-					interpretation.getSqlAst(),
-					sessionFactory
-			);
+			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+
+			jdbcSelect = sqlAstTranslatorFactory.buildSelectConverter( sessionFactory )
+					.interpret( interpretation.getSqlAst() );
 
 			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
 					domainParameterXref,

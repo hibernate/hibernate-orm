@@ -61,7 +61,7 @@ import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -214,7 +214,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private HqlTranslator hqlTranslator;
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmFunctionRegistry sqmFunctionRegistry;
-	private SqmToSqlAstConverterFactory sqmTranslatorFactory;
+	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
 	private Map querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
@@ -622,7 +622,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private SqmToSqlAstConverterFactory resolveSqmTranslator(
+	private SqmTranslatorFactory resolveSqmTranslator(
 			String translatorImplFqn,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
@@ -631,7 +631,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		return strategySelector.resolveStrategy(
-				SqmToSqlAstConverterFactory.class,
+				SqmTranslatorFactory.class,
 				translatorImplFqn
 		);
 	}
@@ -863,7 +863,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return sqmTranslatorFactory;
 	}
 

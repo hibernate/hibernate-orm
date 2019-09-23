@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.spi;
 import java.util.Collections;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstSelectTranslator;
 import org.hibernate.sql.ast.SqlTreePrinter;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -23,47 +24,47 @@ import org.hibernate.sql.results.internal.JdbcValuesMappingProducerStandard;
  *
  * @author Steve Ebersole
  */
-public class SqlAstSelectToJdbcSelectConverter extends AbstractSqlAstToJdbcOperationConverter implements SqlSelectAstWalker {
-	/**
-	 * Perform interpretation of a SQL AST QuerySpec
-	 *
-	 * @return The interpretation result
-	 */
-	public static JdbcSelect interpret(QuerySpec querySpec, SessionFactoryImplementor sessionFactory) {
-		final SqlAstSelectToJdbcSelectConverter walker = new SqlAstSelectToJdbcSelectConverter( sessionFactory );
-		walker.visitQuerySpec( querySpec );
+public class StandardSqlAstSelectTranslator
+		extends AbstractSqlAstToJdbcOperationConverter
+		implements SqlAstSelectTranslator {
+
+	@SuppressWarnings("WeakerAccess")
+	public StandardSqlAstSelectTranslator(SessionFactoryImplementor sessionFactory) {
+		super( sessionFactory );
+	}
+
+	@Override
+	public JdbcSelect interpret(QuerySpec querySpec) {
+		visitQuerySpec( querySpec );
+
 		return new JdbcSelect(
-				walker.getSql(),
-				walker.getParameterBinders(),
+				getSql(),
+				getParameterBinders(),
 				new JdbcValuesMappingProducerStandard(
 						querySpec.getSelectClause().getSqlSelections(),
 						Collections.emptyList()
 				),
-				walker.getAffectedTableNames()
+				getAffectedTableNames()
 		);
 	}
 
-	public static JdbcSelect interpret(SelectStatement sqlSelectPlan, SessionFactoryImplementor sessionFactory) {
+	@Override
+	public JdbcSelect interpret(SelectStatement sqlAstSelect) {
 		if ( SqlAstTreeLogger.DEBUG_ENABLED ) {
-			SqlTreePrinter.print( sqlSelectPlan );
+			SqlTreePrinter.print( sqlAstSelect );
 		}
 
-		final SqlAstSelectToJdbcSelectConverter walker = new SqlAstSelectToJdbcSelectConverter( sessionFactory );
+		visitQuerySpec( sqlAstSelect.getQuerySpec() );
 
-		walker.visitSelectQuery( sqlSelectPlan );
 		return new JdbcSelect(
-				walker.getSql(),
-				walker.getParameterBinders(),
+				getSql(),
+				getParameterBinders(),
 				new JdbcValuesMappingProducerStandard(
-						sqlSelectPlan.getQuerySpec().getSelectClause().getSqlSelections(),
-						sqlSelectPlan.getDomainResultDescriptors()
+						sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
+						sqlAstSelect.getDomainResultDescriptors()
 				),
-				sqlSelectPlan.getAffectedTableExpressions()
+				sqlAstSelect.getAffectedTableExpressions()
 		);
-	}
-
-	private SqlAstSelectToJdbcSelectConverter(SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory );
 	}
 
 	@Override

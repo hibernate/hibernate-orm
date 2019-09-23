@@ -39,6 +39,8 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
@@ -51,6 +53,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private static final Logger log = Logger.getLogger( JdbcEnvironmentImpl.class );
 
 	private final Dialect dialect;
+
+	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
 
 	private final SqlExceptionHelper sqlExceptionHelper;
 	private final ExtractedDatabaseMetaData extractedMetaDataSupport;
@@ -71,6 +75,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 */
 	public JdbcEnvironmentImpl(final ServiceRegistryImplementor serviceRegistry, Dialect dialect) {
 		this.dialect = dialect;
+
+		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
@@ -119,6 +125,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
 	}
 
+	private static SqlAstTranslatorFactory resolveSqlAstTranslatorFactory(Dialect dialect) {
+		if ( dialect.getSqlAstTranslatorFactory() != null ) {
+			return dialect.getSqlAstTranslatorFactory();
+		}
+
+		return new StandardSqlAstTranslatorFactory();
+	}
+
 	private static boolean logWarnings(ConfigurationService cfgService, Dialect dialect) {
 		return cfgService.getSetting(
 				AvailableSettings.LOG_JDBC_WARNINGS,
@@ -158,6 +172,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 */
 	public JdbcEnvironmentImpl(DatabaseMetaData databaseMetaData, Dialect dialect) throws SQLException {
 		this.dialect = dialect;
+
+		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, false );
 
@@ -231,6 +247,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			Dialect dialect,
 			DatabaseMetaData databaseMetaData) throws SQLException {
 		this.dialect = dialect;
+
+		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
@@ -337,6 +355,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public Dialect getDialect() {
 		return dialect;
+	}
+
+	@Override
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+		return sqlAstTranslatorFactory;
 	}
 
 	@Override

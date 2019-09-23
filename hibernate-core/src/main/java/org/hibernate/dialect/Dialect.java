@@ -68,6 +68,7 @@ import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -83,7 +84,6 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.loader.BatchLoadSizingStrategy;
@@ -100,13 +100,15 @@ import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -3097,9 +3099,20 @@ public abstract class Dialect implements ConversionContext {
 	 * precedence as it comes directly from the user config
 	 *
 	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter
-	 * @see QueryEngine#getSqmTranslator()
+	 * @see QueryEngine#getSqmTranslatorFactory()
 	 */
-	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
+	public SqmTranslatorFactory getSqmTranslatorFactory() {
+		return null;
+	}
+
+	/**
+	 * Return an SqlAstTranslatorFactory specific for the Dialect.  Return {@code null}
+	 * to use Hibernate's standard translator.
+	 *
+	 * @see StandardSqlAstTranslatorFactory
+	 * @see JdbcEnvironment#getSqlAstTranslatorFactory()
+	 */
+	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return null;
 	}
 }

@@ -11,6 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.service.Service;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 
 /**
  * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
@@ -25,6 +26,8 @@ public interface JdbcEnvironment extends Service {
 	 * @return The dialect.
 	 */
 	Dialect getDialect();
+
+	SqlAstTranslatorFactory getSqlAstTranslatorFactory();
 
 	/**
 	 * Access to the bits of information we pulled off the JDBC {@link java.sql.DatabaseMetaData} (that did not get

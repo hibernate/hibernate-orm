@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 /**
  * @author Steve Ebersole
  */
-public interface SqmToSqlAstConverterFactory {
+public interface SqmTranslatorFactory {
 	SqmSelectToSqlAstConverter createSelectConverter(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,

@@ -27,7 +27,7 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverterFactory;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -63,7 +63,7 @@ public class QueryEngine {
 	private final NamedQueryRepository namedQueryRepository;
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private final HqlTranslator hqlTranslator;
-	private final SqmToSqlAstConverterFactory sqmToSqlAstConverterFactory;
+	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final QueryInterpretationCache interpretationCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
@@ -88,7 +88,7 @@ public class QueryEngine {
 				sqmCreationOptions
 		);
 
-		this.sqmToSqlAstConverterFactory = resolveSqmToSqlAstConverterFactory(
+		this.sqmTranslatorFactory = resolveSqmTranslatorFactory(
 				runtimeOptions,
 				dialect,
 				sqmCreationContext,
@@ -126,7 +126,7 @@ public class QueryEngine {
 		return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
 	}
 
-	private SqmToSqlAstConverterFactory resolveSqmToSqlAstConverterFactory(
+	private SqmTranslatorFactory resolveSqmTranslatorFactory(
 			SessionFactoryOptions runtimeOptions,
 			Dialect dialect,
 			SqmCreationContext sqmCreationContext,
@@ -140,7 +140,7 @@ public class QueryEngine {
 		}
 
 		//noinspection Convert2Lambda
-		return new SqmToSqlAstConverterFactory() {
+		return new SqmTranslatorFactory() {
 			@Override
 			public SqmSelectToSqlAstConverter createSelectConverter(
 					QueryOptions queryOptions,
@@ -214,8 +214,8 @@ public class QueryEngine {
 		return hqlTranslator;
 	}
 
-	public SqmToSqlAstConverterFactory getSqmTranslatorFactory() {
-		return sqmToSqlAstConverterFactory;
+	public SqmTranslatorFactory getSqmTranslatorFactory() {
+		return sqmTranslatorFactory;
 	}
 
 	public QueryInterpretationCache getInterpretationCache() {

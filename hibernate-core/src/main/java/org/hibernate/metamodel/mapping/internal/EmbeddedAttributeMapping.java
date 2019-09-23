@@ -25,18 +25,20 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.domain.composite.CompositeFetch;
 import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
@@ -203,30 +205,32 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public TableGroup prepareAsLhs(
+	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
-			SqlAstCreationState creationState) {
-		final NavigablePath lhsPath = navigablePath.getParent();
-
-		// NOTE : `lhsPath` refers to this mapping...
-
-		return creationState.getFromClauseAccess().resolveTableGroup(
-				lhsPath,
-				lnp -> {
-					// there is not yet a TableGroup associated with this path - create one...
-
-					final TableGroup lhsLhsTableGroup = SqmMappingModelHelper.resolveLhs( lhsPath, creationState );
-
-					final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
-							lnp,
-							this,
-							lhsLhsTableGroup
-					);
-
-					lhsLhsTableGroup.addTableGroupJoin( new TableGroupJoin( lnp, JoinType.INNER, compositeTableGroup, null ) );
-
-					return compositeTableGroup;
-				}
+			TableGroup lhs,
+			String explicitSourceAlias,
+			JoinType joinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
+				navigablePath,
+				this,
+				lhs
 		);
+
+		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, JoinType.INNER, compositeTableGroup, null ) );
+
+		return new TableGroupJoin(
+				navigablePath,
+				joinType,
+				compositeTableGroup
+		);
+	}
+
+	@Override
+	public String getSqlAliasStem() {
+		return getAttributeName();
 	}
 }

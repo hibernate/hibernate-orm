@@ -20,7 +20,6 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.Clause;
@@ -163,10 +162,11 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
-				fetchParent.getNavigablePath(),
-				pnp -> SqmMappingModelHelper.resolveLhs( fetchParent.getNavigablePath(), sqlAstCreationState )
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+				fetchParent.getNavigablePath()
 		);
+
+		assert tableGroup != null;
 
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 

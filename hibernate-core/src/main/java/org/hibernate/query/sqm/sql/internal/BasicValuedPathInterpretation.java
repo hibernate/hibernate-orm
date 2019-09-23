@@ -12,7 +12,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
@@ -37,8 +36,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = SqmMappingModelHelper.resolveLhs( sqmPath.getNavigablePath(), sqlAstCreationState );
-		tableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), sqlAstCreationState );
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),

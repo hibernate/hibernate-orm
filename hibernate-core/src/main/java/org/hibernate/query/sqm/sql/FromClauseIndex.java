@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -47,17 +48,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		return affectedTableNames;
 	}
 
-	public void register(SqmFrom sqmPath, TableGroup tableGroup) {
-		if ( sqmPath instanceof SqmAttributeJoin ) {
-			throw new IllegalArgumentException(
-					"Passed SqmPath [" + sqmPath + "] is a SqmNavigableJoin - use the form of #register specific to joins"
-			);
-		}
-
-		performRegistration( sqmPath, tableGroup );
-	}
-
-	private void performRegistration(SqmFrom sqmPath, TableGroup tableGroup) {
+	public void register(SqmPath<?> sqmPath, TableGroup tableGroup) {
 		registerTableGroup( sqmPath.getNavigablePath(), tableGroup );
 
 		if ( sqmPath.getExplicitAlias() != null ) {
@@ -80,31 +71,6 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
 		super.registerTableGroup( navigablePath, tableGroup );
 		tableGroup.applyAffectedTableNames( affectedTableNames::add );
-	}
-
-	public void register(SqmAttributeJoin join, TableGroupJoin tableGroupJoin) {
-		performRegistration( join, tableGroupJoin.getJoinedGroup() );
-
-		if ( tableGroupJoinMap == null ) {
-			tableGroupJoinMap = new HashMap<>();
-		}
-		tableGroupJoinMap.put( join.getNavigablePath(), tableGroupJoin );
-
-		if ( join.isFetched() ) {
-			if ( fetchesByPath == null ) {
-				fetchesByPath = new HashMap<>();
-			}
-			fetchesByPath.put( join.getNavigablePath(), join );
-
-			if ( fetchesByParentPath == null ) {
-				fetchesByParentPath = new HashMap<>();
-			}
-			final Map<NavigablePath, SqmAttributeJoin> fetchesForParent = fetchesByParentPath.computeIfAbsent(
-					join.getNavigablePath().getParent(),
-					navigablePath -> new HashMap<>()
-			);
-			fetchesForParent.put( join.getNavigablePath(), join );
-		}
 	}
 
 	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {

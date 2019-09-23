@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -26,11 +25,8 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SqmTreeTransformationLogger;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -137,37 +133,8 @@ public class SqmMappingModelHelper {
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
 		}
 
-		final TableGroup lhsTableGroup = resolveLhs( sqmPath.getNavigablePath(), creationState );
-		lhsTableGroup.getModelPart().prepareAsLhs( sqmPath.getNavigablePath(), creationState );
+		final TableGroup lhsTableGroup = creationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
-	}
-
-	public static TableGroup resolveLhs(NavigablePath navigablePath, SqlAstCreationState creationState) {
-		assert navigablePath.getParent() != null;
-
-		final TableGroup tableGroup = creationState.getFromClauseAccess().resolveTableGroup(
-				navigablePath.getParent(),
-				lhsNp -> {
-					// LHS does not yet have an associated TableGroup..
-
-					final TableGroup lhsLhsTableGroup = resolveLhs( lhsNp, creationState );
-
-					final ModelPart lhsPart = lhsLhsTableGroup.getModelPart().findSubPart(
-							lhsNp.getLocalName(),
-							null
-					);
-
-					return ( (Queryable) lhsPart ).prepareAsLhs( navigablePath, creationState );
-				}
-		);
-
-		SqmTreeTransformationLogger.LOGGER.debugf(
-				"Resolved NavigablePath : [%s] -> [%s]",
-				navigablePath.getParent(),
-				tableGroup
-		);
-
-		return tableGroup;
 	}
 
 	public static EntityMappingType resolveExplicitTreatTarget(

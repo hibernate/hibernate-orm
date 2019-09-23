@@ -23,6 +23,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -50,6 +51,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -495,9 +497,7 @@ public abstract class BaseSqmToSqlAstConverter
 				creationContext
 		);
 
-		fromClauseIndex.register( sqmJoin, tableGroupJoin );
-
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+		fromClauseIndex.register( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -577,7 +577,31 @@ public abstract class BaseSqmToSqlAstConverter
 				joinedPath -> {
 					log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
 
-					// todo (6.0) : implement
+					assert getFromClauseAccess().findTableGroup( joinedPath.getLhs().getNavigablePath() ) == tableGroup;
+
+					final ModelPart subPart = tableGroup.getModelPart().findSubPart(
+							joinedPath.getReferencedPathSource().getPathName(),
+							sqmPath instanceof SqmTreatedPath
+									? resolveEntityPersister( ( (SqmTreatedPath) sqmPath ).getTreatTarget() )
+									: null
+					);
+
+					assert subPart instanceof TableGroupJoinProducer;
+					final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
+					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
+							joinedPath.getNavigablePath(),
+							tableGroup,
+							null,
+							tableGroup.isInnerJoinPossible() ? JoinType.INNER : JoinType.LEFT,
+							null,
+							sqlAliasBaseManager,
+							getSqlExpressionResolver(),
+							creationContext
+					);
+
+					fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );
+
+					consumeImplicitJoins( joinedPath, tableGroupJoin.getJoinedGroup() );
 				}
 		);
 	}
@@ -599,11 +623,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public TableGroupJoin visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
+	public TableGroup visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
-		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		final TableGroup existing = fromClauseIndex.findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return existing;
@@ -618,11 +642,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public TableGroupJoin visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
+	public TableGroup visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
-		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		final TableGroup existing = fromClauseIndex.findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return existing;
@@ -632,11 +656,11 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public TableGroupJoin visitQualifiedEntityJoin(SqmEntityJoin sqmJoin) {
+	public TableGroup visitQualifiedEntityJoin(SqmEntityJoin sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
-		final TableGroupJoin existing = fromClauseIndex.findTableGroupJoin( sqmJoin.getNavigablePath() );
+		final TableGroup existing = fromClauseIndex.findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
 			return existing;
@@ -655,7 +679,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath sqmPath) {
+	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> sqmPath) {
 		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
 	}
 

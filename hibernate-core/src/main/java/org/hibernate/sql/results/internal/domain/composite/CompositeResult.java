@@ -8,9 +8,13 @@ package org.hibernate.sql.results.internal.domain.composite;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeResultMappingNode;
@@ -33,6 +37,27 @@ public class CompositeResult<T> extends AbstractFetchParent implements Composite
 			DomainResultCreationState creationState) {
 		super( modelPart, navigablePath );
 		this.resultVariable = resultVariable;
+
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+
+		fromClauseAccess.resolveTableGroup(
+				navigablePath,
+				np -> {
+					final EmbeddableValuedModelPart embeddedValueMapping = modelPart.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
+							navigablePath,
+							fromClauseAccess.findTableGroup( navigablePath.getParent() ),
+							resultVariable,
+							JoinType.INNER,
+							LockMode.NONE,
+							creationState.getSqlAstCreationState().getSqlAliasBaseGenerator(),
+							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+							creationState.getSqlAstCreationState().getCreationContext()
+					);
+
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
 
 		afterInitialize( creationState );
 	}

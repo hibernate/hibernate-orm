@@ -123,33 +123,6 @@ public class Helper {
 		return params;
 	}
 
-	/**
-	 * Operates like SQL coalesce expression, except empty strings are treated as null.  Return the first non-empty value
-	 *
-	 * @param values The list of values.
-	 * @param <T> Generic type of values to coalesce
-	 *
-	 * @return The first non-empty value, or null if all values were empty
-	 */
-	public static <T> T coalesce(T... values) {
-		if ( values == null ) {
-			return null;
-		}
-		for ( T value : values ) {
-			if ( value != null ) {
-				if ( String.class.isInstance( value ) ) {
-					if ( StringHelper.isNotEmpty( (String) value ) ) {
-						return value;
-					}
-				}
-				else {
-					return value;
-				}
-			}
-		}
-		return null;
-	}
-
 	static ToolingHintContext collectToolingHints(
 			ToolingHintContext baseline,
 			ToolingHintContainer toolingHintContainer) {

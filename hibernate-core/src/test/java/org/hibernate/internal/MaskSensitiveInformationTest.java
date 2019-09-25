@@ -34,10 +34,8 @@ public class MaskSensitiveInformationTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.JPA_JDBC_USER, options.get( AvailableSettings.USER ) );
-		options.put( AvailableSettings.JPA_JDBC_PASSWORD, options.get( AvailableSettings.PASS ) );
+		super.addConfigOptions( options );
 	}
 
 	@Test

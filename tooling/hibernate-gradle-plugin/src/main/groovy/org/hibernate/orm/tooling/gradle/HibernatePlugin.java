@@ -6,35 +6,10 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.gradle.api.Action;
-import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.SourceSet;
-
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
 
 /**
  * The Hibernate Gradle plugin.  Adds Hibernate build-time capabilities into your Gradle-based build.
@@ -44,8 +19,6 @@ import org.hibernate.cfg.Environment;
  */
 @SuppressWarnings("serial")
 public class HibernatePlugin implements Plugin<Project> {
-	private final Logger logger = Logging.getLogger( HibernatePlugin.class );
-
 	public void apply(Project project) {
 		project.getPlugins().apply( "java" );
 
@@ -55,16 +28,12 @@ public class HibernatePlugin implements Plugin<Project> {
 		project.getExtensions().add( "hibernate", hibernateExtension );
 
 		project.afterEvaluate(
-				project1 -> {
-					if ( hibernateExtension.enhance != null ) {
-						applyEnhancement( project1, hibernateExtension );
-					}
-				}
+				p -> applyEnhancement( p, hibernateExtension )
 		);
 	}
 
 	private void applyEnhancement(final Project project, final HibernateExtension hibernateExtension) {
-		if ( !hibernateExtension.enhance.shouldApply() ) {
+		if ( hibernateExtension.enhance == null || ! hibernateExtension.enhance.shouldApply() ) {
 			project.getLogger().warn( "Skipping Hibernate bytecode enhancement since no feature is enabled" );
 			return;
 		}

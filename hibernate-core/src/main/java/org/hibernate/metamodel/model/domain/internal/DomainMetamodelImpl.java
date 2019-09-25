@@ -697,17 +697,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		return results.toArray( new String[results.size()] );
 	}
 
-	private EntityMappingType resolveAsEntity(NavigablePath navigablePath) {
-		final String unqualifiedFullPath = navigablePath.getUnqualifiedFullPath();
-		final EntityPersister descriptor = findEntityDescriptor( unqualifiedFullPath );
-
-		if ( descriptor == null ) {
-			throw new PathException( "Expected entity name, but could not resolve `" + unqualifiedFullPath + "` as entity" );
-		}
-
-		return descriptor;
-	}
-
 	@Override
 	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable) {
 		if ( sqmExpressable instanceof BasicType<?> ) {

@@ -26,7 +26,6 @@ public class NavigablePath implements DotIdentifierSequence {
 	private final NavigablePath parent;
 	private final String localName;
 	private final String fullPath;
-	private final String unqualifiedFullPath;
 
 	private final int hashCode;
 
@@ -39,29 +38,17 @@ public class NavigablePath implements DotIdentifierSequence {
 		// various things such as criteria paths and fetch profile association paths
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( navigableName ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
-			this.unqualifiedFullPath = parent != null ? parent.getUnqualifiedFullPath() : "";
 		}
 		else {
-			final String prefix;
-			final String unqualifiedPrefix;
 			if ( parent != null ) {
 				final String parentFullPath = parent.getFullPath();
-				final String parentUnqualifiedFullPath = parent.getUnqualifiedFullPath();
-
-				prefix = StringHelper.isEmpty( parentFullPath )
-						? ""
-						: parentFullPath + '.';
-				unqualifiedPrefix = StringHelper.isEmpty( parentUnqualifiedFullPath )
-						? ""
-						: parentUnqualifiedFullPath + '.';
+				this.fullPath = StringHelper.isEmpty( parentFullPath )
+						? navigableName
+						: parentFullPath + '.' + navigableName;
 			}
 			else {
-				prefix = "";
-				unqualifiedPrefix = "";
+				this.fullPath = navigableName;
 			}
-
-			this.fullPath = prefix + navigableName;
-			this.unqualifiedFullPath = unqualifiedPrefix + navigableName;
 		}
 
 		this.hashCode = fullPath.hashCode();
@@ -74,19 +61,12 @@ public class NavigablePath implements DotIdentifierSequence {
 		this.localName = navigableName;
 
 		final String prefix;
-		final String unqualifiedPrefix;
-
 		final String parentFullPath = parent.getFullPath();
-		final String parentUnqualifiedFullPath = parent.getUnqualifiedFullPath();
 
 		prefix = StringHelper.isEmpty( parentFullPath )
 				? ""
 				: parentFullPath + '.';
-		unqualifiedPrefix = StringHelper.isEmpty( parentUnqualifiedFullPath )
-				? ""
-				: parentUnqualifiedFullPath + '.';
 
-		this.unqualifiedFullPath = unqualifiedPrefix + navigableName;
 		this.fullPath = alias == null ? prefix : prefix + '(' + alias + ')';
 
 		this.hashCode = fullPath.hashCode();
@@ -100,7 +80,6 @@ public class NavigablePath implements DotIdentifierSequence {
 		this.parent = null;
 		this.localName = rootName;
 
-		this.unqualifiedFullPath = rootName;
 		this.fullPath = alias == null ? rootName : rootName + '(' + alias + ')';
 
 		this.hashCode = fullPath.hashCode();
@@ -128,10 +107,6 @@ public class NavigablePath implements DotIdentifierSequence {
 
 	public String getFullPath() {
 		return fullPath;
-	}
-
-	public String getUnqualifiedFullPath() {
-		return unqualifiedFullPath;
 	}
 
 	@Override

@@ -5283,7 +5283,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Class getConcreteProxyClass() {
-		return getRepresentationStrategy().getProxyJavaTypeDescriptor().getJavaType();
+		final JavaTypeDescriptor<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
+		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaType() : javaTypeDescriptor.getJavaType();
 	}
 
 	public void setPropertyValues(Object object, Object[] values) {

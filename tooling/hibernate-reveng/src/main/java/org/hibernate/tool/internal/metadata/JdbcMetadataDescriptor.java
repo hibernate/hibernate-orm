@@ -32,20 +32,6 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 
 	public JdbcMetadataDescriptor(
 			ReverseEngineeringStrategy reverseEngineeringStrategy, 
-			Properties properties,
-			boolean preferBasicCompositeIds) {
-		this.properties.putAll(Environment.getProperties());
-		if (properties != null) {
-			this.properties.putAll(properties);
-		}
-		if (reverseEngineeringStrategy != null) {
-			this.reverseEngineeringStrategy = reverseEngineeringStrategy;
-		}
-		this.properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
-	}
-
-	public JdbcMetadataDescriptor(
-			ReverseEngineeringStrategy reverseEngineeringStrategy, 
 			Properties properties) {
 		this.properties.putAll(Environment.getProperties());
 		if (properties != null) {

@@ -28,7 +28,7 @@ public class DomainModelParameterResolver implements ParameterResolver {
 	public Object resolveParameter(
 			ParameterContext parameterContext,
 			ExtensionContext extensionContext) throws ParameterResolutionException {
-		final DomainModelScope modelScope = DomainModelExtension.findMetamodelScope(
+		final DomainModelScope modelScope = DomainModelExtension.findDomainModelScope(
 				extensionContext.getRequiredTestInstance(),
 				extensionContext
 		);

@@ -32,7 +32,7 @@ public class DomainModelExtension
 		return JUnitHelper.locateExtensionStore( ServiceRegistryExtension.class, context, testInstance );
 	}
 
-	public static DomainModelScope findMetamodelScope(Object testInstance, ExtensionContext context) {
+	public static DomainModelScope findDomainModelScope(Object testInstance, ExtensionContext context) {
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 		final DomainModelScope existing = (DomainModelScope) store.get( MODEL_KEY );
 		if ( existing != null ) {
@@ -120,7 +120,7 @@ public class DomainModelExtension
 
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
-		findMetamodelScope( testInstance, context );
+		findDomainModelScope( testInstance, context );
 	}
 
 	@Override

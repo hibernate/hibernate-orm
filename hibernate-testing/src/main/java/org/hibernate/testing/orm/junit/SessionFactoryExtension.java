@@ -6,17 +6,26 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.Interceptor;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.Transaction;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -48,6 +57,8 @@ public class SessionFactoryExtension
 		}
 
 		SessionFactoryProducer producer = null;
+
+		final DomainModelScope domainModelScope = DomainModelExtension.findDomainModelScope( testInstance, context );
 
 		if ( testInstance instanceof SessionFactoryProducer ) {
 			producer = (SessionFactoryProducer) testInstance;
@@ -85,7 +96,13 @@ public class SessionFactoryExtension
 							);
 						}
 
-						return (SessionFactoryImplementor) sessionFactoryBuilder.build();
+						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
+
+						if ( sessionFactoryConfig.exportSchema() ) {
+							prepareSchemaExport( sessionFactory, model );
+						}
+
+						return sessionFactory;
 					}
 					catch (Exception e) {
 						throw new RuntimeException( "Could not build SessionFactory", e );
@@ -98,9 +115,8 @@ public class SessionFactoryExtension
 			throw new IllegalStateException( "Could not determine SessionFactory producer" );
 		}
 
-
 		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl(
-				DomainModelExtension.findMetamodelScope( testInstance, context ),
+				domainModelScope,
 				producer
 		);
 
@@ -111,6 +127,40 @@ public class SessionFactoryExtension
 		}
 
 		return sfScope;
+	}
+
+	private static void prepareSchemaExport(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor model) {
+		final Map<String, Object> baseProperties = sessionFactory.getProperties();
+
+		final ActionGrouping actions = ActionGrouping.interpret( baseProperties );
+
+		// if there are explicit setting for auto schema tooling then skip the annotation
+		if ( actions.getDatabaseAction() != Action.NONE || actions.getScriptAction() != Action.NONE ) {
+			// the properties contained explicit settings for auto schema tooling - skip the annotation
+			return;
+		}
+
+		final HashMap settings = new HashMap<>( baseProperties );
+		//noinspection unchecked
+		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
+
+		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
+
+		SchemaManagementToolCoordinator.process(
+				model,
+				serviceRegistry,
+				settings,
+				action -> sessionFactory.addObserver(
+						new SessionFactoryObserver() {
+							@Override
+							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {
+								action.perform( serviceRegistry );
+							}
+						}
+				)
+		);
 	}
 
 	@Override

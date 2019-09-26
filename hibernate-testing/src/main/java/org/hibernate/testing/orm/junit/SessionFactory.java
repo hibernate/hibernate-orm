@@ -42,6 +42,7 @@ public @interface SessionFactory {
 	String sessionFactoryName() default "";
 
 	boolean generateStatistics() default false;
+	boolean exportSchema() default true;
 
 	Class<? extends Interceptor> interceptorClass() default Interceptor.class;
 

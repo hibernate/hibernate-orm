@@ -141,10 +141,10 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -159,10 +159,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -174,7 +171,6 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -5357,7 +5353,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getVersion(Object object) {
-		return getVersionMapping().getAttributeMetadataAccess().resolveAttributeMetadata( this ).getPropertyAccess().getGetter().get( object );
+		if ( getVersionMapping() == null ) {
+			return null;
+		}
+		final StateArrayContributorMetadata attrMetadata = getVersionMapping().getAttributeMetadataAccess().resolveAttributeMetadata( this );
+		assert attrMetadata != null;
+		return attrMetadata.getPropertyAccess().getGetter().get( object );
 	}
 
 	@Override

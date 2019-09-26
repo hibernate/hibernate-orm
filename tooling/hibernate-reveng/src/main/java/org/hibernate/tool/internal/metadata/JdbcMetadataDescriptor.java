@@ -27,8 +27,9 @@ import org.hibernate.type.Type;
 
 public class JdbcMetadataDescriptor implements MetadataDescriptor {
 	
+	private final static String PREFER_BASIC_COMPOSITE_IDS = "org.hibernate.tool.internal.metadata.JdbcMetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS";
+	
 	private ReverseEngineeringStrategy reverseEngineeringStrategy = new DefaultReverseEngineeringStrategy();
-    private boolean preferBasicCompositeIds = true;
     private Properties properties = new Properties();
 
 	public JdbcMetadataDescriptor(
@@ -42,7 +43,7 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 		if (reverseEngineeringStrategy != null) {
 			this.reverseEngineeringStrategy = reverseEngineeringStrategy;
 		}
-		this.preferBasicCompositeIds = preferBasicCompositeIds;
+		this.properties.put(PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
 	}
 
 	public Properties getProperties() {
@@ -78,7 +79,7 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 				getProperties(), 
 				metadataBuildingContext, 
 				reverseEngineeringStrategy, 
-				preferBasicCompositeIds);
+				(Boolean)this.properties.get(PREFER_BASIC_COMPOSITE_IDS));
 		binder.readFromDatabase(
 				null, 
 				null, 

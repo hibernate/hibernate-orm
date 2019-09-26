@@ -12,16 +12,6 @@ public class MetadataDescriptorFactory {
 	
 	public static MetadataDescriptor createJdbcDescriptor(
 			ReverseEngineeringStrategy reverseEngineeringStrategy, 
-			Properties properties,
-			boolean preferBasicCompositeIds) {
-		return new JdbcMetadataDescriptor(
-				reverseEngineeringStrategy, 
-				properties,
-				preferBasicCompositeIds);
-	}
-	
-	public static MetadataDescriptor createJdbcDescriptor(
-			ReverseEngineeringStrategy reverseEngineeringStrategy, 
 			Properties properties) {
 		return new JdbcMetadataDescriptor(
 				reverseEngineeringStrategy, 

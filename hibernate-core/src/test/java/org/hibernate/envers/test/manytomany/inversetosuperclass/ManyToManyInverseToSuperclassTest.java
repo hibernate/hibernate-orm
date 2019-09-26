@@ -27,7 +27,7 @@ public class ManyToManyInverseToSuperclassTest extends EnversEntityManagerFactor
 
 	@Override
 	protected String[] getMappings() {
-		return new String[] { "manyToMany/inverseToSuperclass/mappings.hbm.xml" };
+		return new String[] { "manyToMany/inversetosuperclass/mappings.hbm.xml" };
 	}
 
 	@DynamicBeforeAll

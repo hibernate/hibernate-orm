@@ -30,7 +30,7 @@ public class OneToManyInverseToSuperclassTest extends EnversEntityManagerFactory
 
 	@Override
 	protected String[] getMappings() {
-		return new String[] { "oneToMany/inverseToSuperclass/mappings.hbm.xml" };
+		return new String[] { "oneToMany/inversetosuperclass/mappings.hbm.xml" };
 	}
 
 	@DynamicBeforeAll

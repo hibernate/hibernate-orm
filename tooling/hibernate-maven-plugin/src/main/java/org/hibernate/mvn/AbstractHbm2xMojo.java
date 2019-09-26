@@ -94,11 +94,11 @@ public abstract class AbstractHbm2xMojo extends AbstractMojo {
     }
 
     private MetadataDescriptor createJdbcDescriptor(ReverseEngineeringStrategy strategy, Properties properties) {
+    	properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
         return MetadataDescriptorFactory
                 .createJdbcDescriptor(
                         strategy,
-                        properties,
-                        preferBasicCompositeIds);
+                        properties);
     }
 
     protected abstract void executeExporter(MetadataDescriptor metadataDescriptor);

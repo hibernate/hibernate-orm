@@ -41,11 +41,11 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 	protected MetadataDescriptor createMetadataDescriptor() {
 		Properties properties = loadPropertiesFile();
 		ReverseEngineeringStrategy res = createReverseEngineeringStrategy();
+		properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
 		return MetadataDescriptorFactory
 				.createJdbcDescriptor(
 						res, 
-						properties, 
-						preferBasicCompositeIds);
+						properties);
 	}
 	
 	private ReverseEngineeringStrategy createReverseEngineeringStrategy() {

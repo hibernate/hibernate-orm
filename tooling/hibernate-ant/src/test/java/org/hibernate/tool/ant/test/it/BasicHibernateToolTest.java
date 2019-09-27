@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Target;
 import org.apache.tools.ant.Task;
-import org.hibernate.tool.ant.HibernateToolTask;
+import org.hibernate.tool.ant.fresh.HibernateToolTask;
 import org.hibernate.tool.ant.test.util.ProjectUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,7 +26,7 @@ public class BasicHibernateToolTest {
 				"<project name='HibernateToolTaskTest'>                       " +
 				"  <taskdef                                                   " +
                 "      name='hibernatetool'                                   " +
-				"      classname='org.hibernate.tool.ant.HibernateToolTask' />" +
+				"      classname='org.hibernate.tool.ant.fresh.HibernateToolTask' />" +
 		        "  <target name='testHibernateToolTask'>                      " +
 				"    <hibernatetool/>                                         " +
 		        "  </target>                                                  " +

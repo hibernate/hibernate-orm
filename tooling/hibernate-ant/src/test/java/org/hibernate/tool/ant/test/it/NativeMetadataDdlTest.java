@@ -32,7 +32,7 @@ public class NativeMetadataDdlTest {
 				"<project name='NativeMetadataDdlTest'>                       " +
 				"  <taskdef                                                   " +
                 "      name='hibernatetool'                                   " +
-				"      classname='org.hibernate.tool.ant.HibernateToolTask'/> " +
+				"      classname='org.hibernate.tool.ant.fresh.HibernateToolTask'/> " +
 		        "  <target name='testNativeMetadataExportDdl'>                " +
 				"    <hibernatetool>                                          " +
 				"      <metadata                                              " +

@@ -1,4 +1,4 @@
-package org.hibernate.tool.ant;
+package org.hibernate.tool.ant.fresh;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -13,7 +13,8 @@ import java.util.ArrayList;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.selectors.FilenameSelector;
-import org.hibernate.tool.ant.MetadataTask.Type;
+import org.hibernate.tool.ant.fresh.MetadataTask;
+import org.hibernate.tool.ant.fresh.MetadataTask.Type;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

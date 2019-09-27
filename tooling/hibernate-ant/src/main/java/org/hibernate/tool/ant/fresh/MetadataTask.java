@@ -1,4 +1,4 @@
-package org.hibernate.tool.ant;
+package org.hibernate.tool.ant.fresh;
 
 import java.io.File;
 import java.io.FileInputStream;

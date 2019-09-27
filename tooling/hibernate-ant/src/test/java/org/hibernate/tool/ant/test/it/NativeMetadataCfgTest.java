@@ -50,7 +50,7 @@ public class NativeMetadataCfgTest {
 				"<project name='HibernateToolTaskTest'>                       " +
 				"  <taskdef                                                   " +
                 "      name='hibernatetool'                                   " +
-				"      classname='org.hibernate.tool.ant.HibernateToolTask'/> " +
+				"      classname='org.hibernate.tool.ant.fresh.HibernateToolTask'/> " +
 		        "  <target name='testNativeMetadataExportCfg'>                " +
 				"    <hibernatetool>                                          " +
 				"      <metadata                                              " +

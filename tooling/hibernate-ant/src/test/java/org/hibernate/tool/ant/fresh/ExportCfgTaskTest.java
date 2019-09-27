@@ -1,4 +1,4 @@
-package org.hibernate.tool.ant;
+package org.hibernate.tool.ant.fresh;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
+import org.hibernate.tool.ant.fresh.ExportCfgTask;
+import org.hibernate.tool.ant.fresh.HibernateToolTask;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;

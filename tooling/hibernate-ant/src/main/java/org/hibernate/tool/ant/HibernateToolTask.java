@@ -22,10 +22,12 @@ public class HibernateToolTask {
 	}
 	
 	public void execute() {
-		exportCfgTask.getProperties().put(
-				ExporterConstants.METADATA_DESCRIPTOR, 
-				metadataTask.createMetadataDescriptor());
-		exportCfgTask.execute();
+		if (exportCfgTask != null) {
+			exportCfgTask.getProperties().put(
+					ExporterConstants.METADATA_DESCRIPTOR, 
+					metadataTask.createMetadataDescriptor());
+			exportCfgTask.execute();
+		}
 	}
 	
 }

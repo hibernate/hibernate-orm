@@ -54,12 +54,17 @@ final class StatsNamedContainer<V> {
 		}
 		else {
 			final V v2 = function.apply( key );
-			final V v3 = map.putIfAbsent( key, v2 );
-			if ( v3 == null ) {
-				return v2;
+			if ( v2 == null ) {
+				return null;
 			}
 			else {
-				return v3;
+				final V v3 = map.putIfAbsent( key, v2 );
+				if ( v3 == null ) {
+					return v2;
+				}
+				else {
+					return v3;
+				}
 			}
 		}
 	}

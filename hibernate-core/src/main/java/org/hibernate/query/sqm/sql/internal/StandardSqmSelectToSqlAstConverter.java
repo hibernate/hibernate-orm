@@ -7,23 +7,23 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -52,6 +52,7 @@ import org.hibernate.sql.results.internal.domain.instantiation.DynamicInstantiat
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.EntityResultNode;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.Fetchable;
@@ -67,19 +68,27 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class StandardSqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
 		implements DomainResultCreationState, org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter {
+	private final LoadQueryInfluencers fetchInfluencers;
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
 	private final List<DomainResult> domainResults = new ArrayList<>();
+
+	private GraphImplementor<?> currentJpaGraphNode;
 
 	public StandardSqmSelectToSqlAstConverter(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers influencers,
-//			Callback callback,
+			LoadQueryInfluencers fetchInfluencers,
 			SqlAstCreationContext creationContext) {
-//		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings, influencers, callback );
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings, influencers );
+		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
+		this.fetchInfluencers = fetchInfluencers;
+
+		if ( fetchInfluencers != null ) {
+			if ( fetchInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
+				currentJpaGraphNode = fetchInfluencers.getEffectiveEntityGraph().getGraph();
+			}
+		}
 	}
 
 	@Override
@@ -180,8 +189,6 @@ public class StandardSqmSelectToSqlAstConverter
 		return fetches;
 	}
 
-	private Set<Fetchable> processedFetchables;
-
 	private Fetch buildFetch(FetchParent fetchParent, Fetchable fetchable) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
@@ -191,12 +198,14 @@ public class StandardSqmSelectToSqlAstConverter
 
 		final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
 
+		final GraphImplementor<?> previousGraphNode = currentJpaGraphNode;
+
+		final String alias;
 		LockMode lockMode = LockMode.READ;
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
+		boolean joined = false;
 
 		final SqmAttributeJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
-		final String alias;
-		boolean joined;
 
 		if ( fetchedJoin != null ) {
 			// there was an explicit fetch in the SQM
@@ -211,34 +220,33 @@ public class StandardSqmSelectToSqlAstConverter
 		}
 		else {
 			// there was not an explicit fetch in the SQM
-
 			alias = null;
 
-			if ( fetchable instanceof Joinable ) {
-				if ( processedFetchables == null ) {
-					processedFetchables = new HashSet<>();
-				}
-
-				final boolean added = processedFetchables.add( fetchable );
-
-				if ( ! added ) {
-					joined = false;
-				}
-				else {
-					joined = fetchTiming == FetchTiming.IMMEDIATE && fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+			// see if we have any "influencer" in effect that indicates
+			if ( this.currentJpaGraphNode != null && appliesTo( this.currentJpaGraphNode, fetchParent ) ) {
+				final AttributeNodeImplementor<?> attributeNode = this.currentJpaGraphNode.findAttributeNode( fetchable.getFetchableName() );
+				// todo (6.0) : need to account for `org.hibernate.graph.GraphSemantic` here as well
+				if ( attributeNode != null ) {
+					fetchTiming = FetchTiming.IMMEDIATE;
+					joined = true;
 				}
 			}
-			else {
-				joined = true;
+			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
+				if ( fetchParent instanceof EntityResultNode ) {
+					final EntityResultNode entityFetchParent = (EntityResultNode) fetchParent;
+					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
+					final String fetchParentEntityName = entityMappingType.getEntityName();
+					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
+
+					for ( String enabledFetchProfileName : fetchInfluencers.getEnabledFetchProfileNames() ) {
+						final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory().getFetchProfile( enabledFetchProfileName );
+						final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
+
+						fetchTiming = FetchTiming.IMMEDIATE;
+						joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+					}
+				}
 			}
-
-			// todo (6.0) : account for EntityGraph
-			//		it would adjust:
-			//			* fetchTiming - make it IMMEDIATE
-			//
-			// todo (6.0) : how to handle
-			//			* joined ? - sh
-
 
 			final TableGroup existingJoinedGroup = getFromClauseIndex().findTableGroup( fetchablePath );
 			if ( existingJoinedGroup !=  null ) {
@@ -271,7 +279,7 @@ public class StandardSqmSelectToSqlAstConverter
 							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
 									fetchablePath,
 									lhs,
-									null,
+									alias,
 									JoinType.LEFT,
 									LockMode.NONE,
 									getSqlAliasBaseManager(),
@@ -307,6 +315,23 @@ public class StandardSqmSelectToSqlAstConverter
 					e
 			);
 		}
+		finally {
+			currentJpaGraphNode = previousGraphNode;
+		}
+	}
+
+	private static boolean appliesTo(GraphImplementor<?> graphNode, FetchParent fetchParent) {
+		if ( ! ( fetchParent instanceof EntityResultNode ) ) {
+			return false;
+		}
+
+		final EntityResultNode entityFetchParent = (EntityResultNode) fetchParent;
+		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
+
+		assert graphNode.getGraphedType() instanceof EntityDomainType;
+		final EntityDomainType entityDomainType = (EntityDomainType) graphNode.getGraphedType();
+
+		return entityDomainType.getHibernateEntityName().equals( entityFetchParentMappingType.getEntityName() );
 	}
 
 	@Override

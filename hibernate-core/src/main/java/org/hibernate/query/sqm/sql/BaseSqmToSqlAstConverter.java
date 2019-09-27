@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -25,9 +24,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -158,9 +155,6 @@ public abstract class BaseSqmToSqlAstConverter
 	private final SqlAstCreationContext creationContext;
 	private final QueryOptions queryOptions;
 
-	private final LoadQueryInfluencers loadQueryInfluencers;
-	//private final Callback callback;
-
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<JpaCriteriaParameter<?>,Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
@@ -180,18 +174,13 @@ public abstract class BaseSqmToSqlAstConverter
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-//			LoadQueryInfluencers loadQueryInfluencers,
-//			Callback callback) {
-			LoadQueryInfluencers loadQueryInfluencers) {
+			QueryParameterBindings domainParameterBindings) {
 		super( creationContext.getServiceRegistry() );
 		this.creationContext = creationContext;
 		this.queryOptions = queryOptions;
 		this.domainParameterXref = domainParameterXref;
 		this.domainParameterBindings = domainParameterBindings;
 		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
-		this.loadQueryInfluencers = loadQueryInfluencers;
-//		this.callback = callback;
 	}
 
 	protected Stack<SqlAstProcessingState> getProcessingStateStack() {

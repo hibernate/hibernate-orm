@@ -6,22 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 
 /**
  * @author Steve Ebersole

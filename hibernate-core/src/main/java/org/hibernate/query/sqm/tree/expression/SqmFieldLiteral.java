@@ -97,7 +97,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	@Override
 	public void applyInferableType(SqmExpressable<?> type) {
 		//noinspection unchecked
-		this.expressable = (SqmExpressable) type;
+//		this.expressable = (SqmExpressable) type;
 	}
 
 	@Override

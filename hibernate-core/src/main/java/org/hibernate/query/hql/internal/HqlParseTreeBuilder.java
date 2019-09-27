@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.util.Arrays;
+
 import org.jboss.logging.Logger;
 
 import org.antlr.v4.runtime.CharStreams;

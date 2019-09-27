@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -44,7 +45,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * @apiNote The SqmExpressable type parameter is dropped here because
 	 * the inference could technically cause a change in Java type (i.e.
 	 * an implicit cast)
+	 *
+	 * @deprecated - type inference is now handled during the SQM -> SQL AST transformation
 	 */
+	@Remove
+	@Deprecated
 	void applyInferableType(SqmExpressable<?> type);
 
 	@Override

@@ -24,7 +24,10 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -740,34 +743,71 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {
-		SqmExpressable<?> nodeType = sqmExpression.getNodeType();
-
-		if ( nodeType == null ) {
-			if ( sqmExpression instanceof SqmParameter ) {
-				final SqmParameter sqmParameter = (SqmParameter) sqmExpression;
-				final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( domainParameterXref.getQueryParameter( sqmParameter ) );
-				assert binding != null;
-
-				nodeType = binding.getBindType();
-			}
+		if ( sqmExpression instanceof SqmParameter ) {
+			return determineValueMapping( (SqmParameter) sqmExpression );
 		}
 
-		MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
+		if ( sqmExpression instanceof SqmPath ) {
+			log.debugf( "Determining mapping-model type for SqmPath : " + sqmExpression );
+			return SqmMappingModelHelper.resolveMappingModelExpressable( sqmExpression, this );
+		}
+
+
+		log.debugf( "Determining mapping-model type for generalized SqmExpression : " + sqmExpression );
+		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
+		final MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
 
 		if ( valueMapping == null ) {
 			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
 			if ( currentExpressableSupplier != null ) {
-				valueMapping = currentExpressableSupplier.get();
+				return currentExpressableSupplier.get();
 			}
 		}
 
 		if ( valueMapping == null ) {
-			throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmExpression );
+			throw new ConversionException( "Could not determine ValueMapping for SqmExpression: " + sqmExpression );
 		}
 
 		return valueMapping;
 	}
 
+
+	@SuppressWarnings("WeakerAccess")
+	protected MappingModelExpressable<?> determineValueMapping(SqmParameter<?> sqmParameter) {
+		log.debugf( "Determining mapping-model type for SqmParameter : " + sqmParameter );
+
+		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
+		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
+
+		if ( sqmParameter.getAnticipatedType() == null ) {
+			// this should indicate the condition that the user query did not define an
+			// explicit type in regard to this parameter.  Here we should prefer the
+			// inferable type and fallback to the binding type
+			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
+			if ( currentExpressableSupplier != null ) {
+				final MappingModelExpressable inferredMapping = currentExpressableSupplier.get();
+				if ( inferredMapping != null ) {
+					return inferredMapping;
+				}
+			}
+		}
+
+		AllowableParameterType<?> parameterSqmType = binding.getBindType();
+		if ( parameterSqmType == null ) {
+			parameterSqmType = queryParameter.getHibernateType();
+			if ( parameterSqmType == null ) {
+				parameterSqmType = sqmParameter.getAnticipatedType();
+			}
+		}
+
+		assert parameterSqmType != null;
+
+		if ( parameterSqmType instanceof BasicValuedMapping ) {
+			return (BasicValuedMapping) parameterSqmType;
+		}
+
+		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+	}
 
 	private final Stack<Supplier<MappingModelExpressable>> inferableTypeAccessStack = new StandardStack<>(
 			() -> null

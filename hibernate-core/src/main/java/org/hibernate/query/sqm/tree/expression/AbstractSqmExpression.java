@@ -33,16 +33,16 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public final void applyInferableType(SqmExpressable<?> type) {
-		if ( type == null ) {
-			return;
-		}
-
-		final SqmExpressable<?> oldType = getNodeType();
-
-		final SqmExpressable<?> newType = highestPrecedenceType( oldType, type );
-		if ( newType != null && newType != oldType ) {
-			internalApplyInferableType( newType );
-		}
+//		if ( type == null ) {
+//			return;
+//		}
+//
+//		final SqmExpressable<?> oldType = getNodeType();
+//
+//		final SqmExpressable<?> newType = highestPrecedenceType( oldType, type );
+//		if ( newType != null && newType != oldType ) {
+//			internalApplyInferableType( newType );
+//		}
 	}
 
 	protected void internalApplyInferableType(SqmExpressable<?> newType) {

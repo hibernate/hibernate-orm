@@ -107,7 +107,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	@Override
 	public void applyInferableType(SqmExpressable<?> type) {
 		//noinspection unchecked
-		this.expressable = (SqmExpressable) type;
+//		this.expressable = (SqmExpressable) type;
 	}
 
 	@Override

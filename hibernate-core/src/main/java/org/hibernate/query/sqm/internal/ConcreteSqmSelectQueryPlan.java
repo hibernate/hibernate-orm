@@ -192,6 +192,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
+				// todo (6.0) : ugh.  this one is important
+				null,
 				session
 		);
 

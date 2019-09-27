@@ -182,6 +182,22 @@ public class SmokeTests {
 		);
 	}
 
+	@Test
+	public void testHqlBasicParameterUsage(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Component> query = session.createQuery(
+							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
+							Component.class
+					);
+					final Component component = query.setParameter( "param", "a1" ).uniqueResult();
+					assertThat( component, notNullValue() );
+					assertThat( component.getAttribute1(), is( "a1" ) );
+					assertThat( component.getAttribute2(), is( "a2" ) );
+				}
+		);
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Dynamic instantiations

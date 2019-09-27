@@ -50,6 +50,11 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
+	public String toString() {
+		return "SqmPositionalParameter(" + getPosition() + ")";
+	}
+
+	@Override
 	public String asLoggableText() {
 		return "?" + getPosition();
 	}

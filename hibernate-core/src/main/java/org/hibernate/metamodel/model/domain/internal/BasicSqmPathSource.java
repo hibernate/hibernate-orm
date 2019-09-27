@@ -61,4 +61,11 @@ public class BasicSqmPathSource<J>
 	public Class<J> getJavaType() {
 		return getExpressableJavaTypeDescriptor().getJavaType();
 	}
+
+	@Override
+	public String toString() {
+		return "BasicSqmPathSource(" +
+				getPathName() + " : " + getJavaType().getSimpleName() +
+				")";
+	}
 }

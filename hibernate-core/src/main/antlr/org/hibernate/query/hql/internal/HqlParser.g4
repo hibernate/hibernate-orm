@@ -761,7 +761,13 @@ trigFunction
 	;
 
 trigFunctionName
-    : SIN | COS | TAN | ASIN | ACOS | ATAN
+    : COS
+    | SIN
+    | TAN
+    | ACOS
+    | ASIN
+    | ATAN
+    | ATAN2
     ;
 
 atan2Function
@@ -845,30 +851,43 @@ positionFunctionStringArgument
 identifier
 	: IDENTIFIER
 	| (ABS
+	| AS
 	| ALL
 	| AND
 	| ANY
 	| AS
 	| ASC
-	| ATAN2
 	| AVG
 	| BY
 	| BETWEEN
 	| BOTH
+	| CASE
 	| CAST
 	| CEILING
+	| CLASS
 	| COALESCE
 	| COLLATE
 	| CONCAT
 	| COUNT
 	| CROSS
+	| CURRENT_DATE
+	| CURRENT_INSTANT
+	| CURRENT_TIME
+	| CURRENT_TIMESTAMP
 	| DAY
 	| DELETE
 	| DESC
 	| DISTINCT
 	| ELEMENTS
+	| ELSE
+	| EMPTY
+	| END
 	| ENTRY
+	| ESCAPE
+	| EXISTS
 	| EXP
+	| EXTRACT
+	| FETCH
 	| FLOOR
 	| FROM
 	| FOR
@@ -882,6 +901,8 @@ identifier
 	| INDEX
 	| INNER
 	| INSERT
+	| INTO
+	| IS
 	| JOIN
 	| KEY
 	| LEADING
@@ -892,38 +913,53 @@ identifier
 	| LIMIT
 	| LIST
 	| LN
+	| LOCATE
 	| LOWER
 	| MAP
 	| MAX
+	| MAXELEMENT
+	| MAXINDEX
+	| MEMBER
 	| MICROSECOND
 	| MILLISECOND
 	| MIN
+	| MINELEMENT
+	| MININDEX
 	| MINUTE
-	| MEMBER
+	| MOD
 	| MONTH
+	| NEW
+	| NOT
 	| NULLIF
 	| OBJECT
+	| OF
 	| OFFSET
 	| ON
 	| OR
 	| ORDER
 	| OUTER
 	| POSITION
-	| QUARTER
 	| POWER
+	| QUARTER
 	| REPLACE
-	| ROUND
 	| RIGHT
-	| SELECT
+	| ROUND
 	| SECOND
+	| SELECT
 	| SET
 	| SIGN
+	| SIZE
 	| SQRT
 	| STR
 	| SUBSTRING
 	| SUM
+	| THEN
+	| TIMEZONE_HOUR
+	| TIMEZONE_MINUTE
 	| TRAILING
 	| TREAT
+	| TRIM
+	| TYPE
 	| UPDATE
 	| UPPER
 	| VALUE

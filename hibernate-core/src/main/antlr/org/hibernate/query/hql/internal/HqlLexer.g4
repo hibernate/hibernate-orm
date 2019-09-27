@@ -110,12 +110,15 @@ DOUBLE_PIPE : '||';
 QUESTION_MARK :	'?';
 ARROW :	'->';
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Keywords
+
 ABS					: [aA] [bB] [sS];
-AS					: [aA] [sS];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];
 ANY					: [aA] [nN] [yY];
+AS					: [aA] [sS];
 ASC					: [aA] [sS] [cC];
 AVG					: [aA] [vV] [gG];
 BY					: [bB] [yY];
@@ -129,11 +132,11 @@ COALESCE			: [cC] [oO] [aA] [lL] [eE] [sS] [cC] [eE];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
+CROSS				: [cC] [rR] [oO] [sS] [sS];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
 CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
-CROSS				: [cC] [rR] [oO] [sS] [sS];
 DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DESC				: [dD] [eE] [sS] [cC];
@@ -170,8 +173,8 @@ LEADING				: [lL] [eE] [aA] [dD] [iI] [nN] [gG];
 LEAST				: [lL] [eE] [aA] [sS] [tT];
 LEFT				: [lL] [eE] [fF] [tT];
 LENGTH				: [lL] [eE] [nN] [gG] [tT] [hH];
-LIMIT				: [lL] [iI] [mM] [iI] [tT];
 LIKE				: [lL] [iI] [kK] [eE];
+LIMIT				: [lL] [iI] [mM] [iI] [tT];
 LIST				: [lL] [iI] [sS] [tT];
 LN  				: [lL] [nN];
 LOCATE				: [lL] [oO] [cC] [aA] [tT] [eE];
@@ -230,12 +233,12 @@ WHERE				: [wW] [hH] [eE] [rR] [eE];
 WITH				: [wW] [iI] [tT] [hH];
 YEAR				: [yY] [eE] [aA] [rR];
 
+ACOS				: [aA] [cC] [oO] [sH];
 ASIN				: [aA] [sS] [iI] [nN];
-ATAN				: [aA] [cC] [oO] [sH];
+ATAN				: [aA] [tT] [aA] [nN];
 ATAN2				: [aA] [tT] [aA] [nN] '2';
-ACOS				: [aA] [tT] [aA] [nN];
-SIN					: [sS] [iI] [nN];
 COS					: [cC] [oO] [sH];
+SIN					: [sS] [iI] [nN];
 TAN					: [tT] [aA] [nN];
 
 // case-insensitive true, false and null recognition (split vote :)

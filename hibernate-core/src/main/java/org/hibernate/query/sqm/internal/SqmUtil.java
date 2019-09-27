@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -25,13 +26,13 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
+import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -107,50 +108,52 @@ public class SqmUtil {
 
 		return result;
 	}
-	public static JdbcParameterBindings buildJdbcParameterBindings(
-			SqmStatement sqmStatement,
-			JdbcParameterBySqmParameterAccess sqmInterpretation,
-			ExecutionContext executionContext) {
-		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref =
-				generateJdbcParamsXref( domainParameterXref, sqmInterpretation );
-		return createJdbcParameterBindings(
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-				domainParameterXref,
-				jdbcParamsXref,
-				executionContext.getSession()
-		);
-	}
 
-	public static JdbcParameterBindings buildJdbcParameterBindings(
-			SqmStatement sqmStatement,
-			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref,
-			ExecutionContext executionContext) {
-		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
-		return createJdbcParameterBindings(
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-				domainParameterXref,
-				jdbcParamsXref,
-				executionContext.getSession()
-		);
-	}
+//	public static JdbcParameterBindings buildJdbcParameterBindings(
+//			SqmStatement sqmStatement,
+//			JdbcParameterBySqmParameterAccess sqmInterpretation,
+//			ExecutionContext executionContext) {
+//		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
+//		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref =
+//				generateJdbcParamsXref( domainParameterXref, sqmInterpretation );
+//		return createJdbcParameterBindings(
+//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+//				domainParameterXref,
+//				jdbcParamsXref,
+//				executionContext.getSession()
+//		);
+//	}
 
-	public static JdbcParameterBindings buildJdbcParameterBindings(
-			DomainParameterXref domainParameterXref,
-			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref,
-			ExecutionContext executionContext) {
-		return createJdbcParameterBindings(
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-				domainParameterXref,
-				jdbcParamsXref,
-				executionContext.getSession()
-		);
-	}
+//	public static JdbcParameterBindings buildJdbcParameterBindings(
+//			SqmStatement sqmStatement,
+//			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref,
+//			ExecutionContext executionContext) {
+//		final DomainParameterXref domainParameterXref = DomainParameterXref.from( sqmStatement );
+//		return createJdbcParameterBindings(
+//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+//				domainParameterXref,
+//				jdbcParamsXref,
+//				executionContext.getSession()
+//		);
+//	}
+
+//	public static JdbcParameterBindings buildJdbcParameterBindings(
+//			DomainParameterXref domainParameterXref,
+//			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref,
+//			ExecutionContext executionContext) {
+//		return createJdbcParameterBindings(
+//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+//				domainParameterXref,
+//				jdbcParamsXref,
+//				executionContext.getSession()
+//		);
+//	}
 
 	public static JdbcParameterBindings createJdbcParameterBindings(
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
+			SqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
 
@@ -160,16 +163,18 @@ public class SqmUtil {
 			final List<SqmParameter> sqmParameters = entry.getValue();
 
 			final QueryParameterBinding<?> domainParamBinding = domainParamBindings.getBinding( queryParam );
-			final AllowableParameterType<?> parameterType = determineParameterType( domainParamBinding, queryParam, session );
+			final AllowableParameterType<?> parameterType = determineParameterType(
+					domainParamBinding,
+					queryParam,
+					session.getFactory()
+			);
 
 			final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap = jdbcParamXref.get( queryParam );
 			for ( SqmParameter sqmParameter : sqmParameters ) {
 				final List<JdbcParameter> jdbcParams = jdbcParamMap.get( sqmParameter );
 
 				if ( ! domainParamBinding.isBound() ) {
-					final MappingModelExpressable mappingExpressable = session.getFactory()
-							.getDomainModel()
-							.resolveMappingExpressable( parameterType );
+					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable( sqmParameter, sqlAstCreationState );
 					mappingExpressable.visitJdbcTypes(
 							new Consumer<JdbcMapping>() {
 								int position = 0;
@@ -264,10 +269,10 @@ public class SqmUtil {
 		);
 	}
 
-	private static AllowableParameterType determineParameterType(
+	public static AllowableParameterType determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
-			SharedSessionContractImplementor session) {
+			SessionFactoryImplementor sessionFactory) {
 		if ( binding.getBindType() != null ) {
 			return binding.getBindType();
 		}
@@ -276,7 +281,7 @@ public class SqmUtil {
 			return parameter.getHibernateType();
 		}
 
-		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
 		// assume we have (or can create) a mapping for the parameter's Java type
 		return typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );

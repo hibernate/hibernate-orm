@@ -42,6 +42,11 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
+	public String toString() {
+		return "SqmNamedParameter(" + getName() + ")";
+	}
+
+	@Override
 	public String getName() {
 		return name;
 	}

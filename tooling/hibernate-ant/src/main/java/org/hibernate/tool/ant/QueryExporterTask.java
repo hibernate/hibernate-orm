@@ -1,19 +1,13 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.tool.ant;
-
-import org.apache.tools.ant.BuildException;
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterConstants;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
-import org.hibernate.tool.reveng.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.tools.ant.BuildException;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.internal.export.query.QueryExporter;
+import org.hibernate.internal.util.StringHelper;
 
 public class QueryExporterTask extends ExporterTask {
 
@@ -22,49 +16,51 @@ public class QueryExporterTask extends ExporterTask {
 	List<HQL> queries = new ArrayList<HQL>();
 
 	public QueryExporterTask(HibernateToolTask parent) {
-		super( parent );
+		super( parent );		
 	}
 
 	protected Exporter configureExporter(Exporter exp) {
-		Exporter exporter = super.configureExporter( exp );
+		QueryExporter exporter = (QueryExporter) exp;
 		List<String> queryStrings = new ArrayList<String>();
-		if(!StringUtil.isEmptyOrNull(query)) {
+		if(StringHelper.isNotEmpty(query)) {
 			queryStrings.add(query);
 		}
 		for (Iterator<HQL> iter = queries.iterator(); iter.hasNext();) {
 			HQL hql = iter.next();
-			if(!StringUtil.isEmptyOrNull(hql.query)) {
+			if(StringHelper.isNotEmpty(hql.query)) {
 				queryStrings.add(hql.query);
 			}
 		}
-		exporter.getProperties().put(ExporterConstants.QUERY_LIST, queryStrings);
-		exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, filename);
-		return exporter;
+		exporter.setQueries(queryStrings);
+		exporter.setFilename(filename);
+		super.configureExporter( exp );		
+        return exporter;
 	}
 
 	public void validateParameters() {
 		super.validateParameters();
-		if(StringUtil.isEmptyOrNull(query) && queries.isEmpty()) {
+		if(StringHelper.isEmpty(query) && queries.isEmpty()) {
 			throw new BuildException("Need to specify at least one query.");
 		}
-
+		
 		for (Iterator<HQL> iter = queries.iterator(); iter.hasNext();) {
 			HQL hql = iter.next();
-			if(StringUtil.isEmptyOrNull(hql.query)) {
+			if(StringHelper.isEmpty(hql.query)) {
 				throw new BuildException("Query must not be empty");
 			}
 		}
 	}
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.QUERY);
+		QueryExporter exporter = new QueryExporter();
+		return exporter;
 	}
 
 	public void addText(String text) {
-		if(!StringUtil.isEmptyOrNull(text)) {
-		query += trim(text);
+		if(StringHelper.isNotEmpty(text)) {
+		  query += trim(text);
 		}
 	}
-
+	
 	static private String trim(String text) {
 		return text.trim();
 	}
@@ -72,22 +68,22 @@ public class QueryExporterTask extends ExporterTask {
 	public static class HQL {
 		String query = "";
 		public void addText(String text) {
-			if(!StringUtil.isEmptyOrNull(text)) {
+			if(StringHelper.isNotEmpty(text)) {
 				query += trim(text);
 			}
-		}
+		}		
 	}
-
+	
 	public HQL createHql() {
 		HQL hql = new HQL();
 		queries.add(hql);
 		return hql;
 	}
-
+	
 	public void setDestFile(String filename) {
 		this.filename = filename;
 	}
-
+	 
 	public void execute() {
 		parent.log("Executing: [" + query + "]");
 		super.execute();
@@ -95,10 +91,6 @@ public class QueryExporterTask extends ExporterTask {
 	public String getName() {
 		return "query (Executes queries)";
 	}
-
-
-	boolean isNotEmpty(String string) {
-		return string != null && string.length() > 0;
-	}
-
+	
+	
 }

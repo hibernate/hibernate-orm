@@ -1,22 +1,22 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Created on 14-Feb-2005
+ *
  */
 package org.hibernate.tool.ant;
 
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 /**
  * @author max
- *
+ * 
  */
 public class Hbm2JavaExporterTask extends ExporterTask {
 
-	boolean ejb3 = true;
+	boolean ejb3 = false;
 
-	boolean jdk5 = true;
+	boolean jdk5 = false;
 
 	public Hbm2JavaExporterTask(HibernateToolTask parent) {
 		super( parent );
@@ -32,13 +32,13 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 
 	protected Exporter configureExporter(Exporter exp) {
 		super.configureExporter( exp );
-		exp.getProperties().setProperty("ejb3", ""+ejb3);
-		exp.getProperties().setProperty("jdk5", ""+jdk5);
+        exp.getProperties().setProperty("ejb3", ""+ejb3);
+        exp.getProperties().setProperty("jdk5", ""+jdk5);
 		return exp;
 	}
 
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.JAVA);
+		return ExporterFactory.createExporter(ExporterType.POJO);
 	}
 
 	public String getName() {

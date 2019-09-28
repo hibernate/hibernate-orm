@@ -2,7 +2,7 @@
  * Created on 13-Feb-2005
  *
  */
-package org.hibernate.tool.ant.old;
+package org.hibernate.tool.ant;
 
 import java.io.File;
 import java.util.ArrayList;

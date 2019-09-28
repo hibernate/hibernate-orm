@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Created on 25-Feb-2005
+ *
  */
 package org.hibernate.tool.ant;
 
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.internal.export.doc.DocExporter;
 
 public class Hbm2DocExporterTask extends ExporterTask {
 
@@ -19,6 +18,6 @@ public class Hbm2DocExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.DOC);
+		return new DocExporter();
 	}
 }

@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Created on 25-Feb-2005
+ *
  */
 package org.hibernate.tool.ant;
 
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.internal.export.cfg.CfgExporter;
 
 public class Hbm2CfgXmlExporterTask extends ExporterTask {
 
@@ -17,21 +16,20 @@ public class Hbm2CfgXmlExporterTask extends ExporterTask {
 	}
 
 	public Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.CFG);
+		return new CfgExporter();
 	}
 
 	public void setEjb3(boolean ejb3) {
 		this.ejb3 = ejb3;
 	}
-
+	
 	public String getName() {
 		return "hbm2cfgxml (Generates hibernate.cfg.xml)";
 	}
-
+	
 	protected Exporter configureExporter(Exporter exporter) {
-		super.configureExporter( exporter );
-		exporter.getProperties().setProperty("ejb3", ""+ejb3);
-		return exporter;
+		CfgExporter hce = (CfgExporter)super.configureExporter( exporter );
+        hce.getProperties().setProperty("ejb3", ""+ejb3);
+		return hce;
 	}
-
 }

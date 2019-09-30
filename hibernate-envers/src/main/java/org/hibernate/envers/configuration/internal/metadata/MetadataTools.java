@@ -27,6 +27,9 @@ public final class MetadataTools {
 	private MetadataTools() {
 	}
 
+	
+	
+	
 	public static Element addNativelyGeneratedId(
 			Element parent, String name, String type,
 			boolean useRevisionEntityWithNativeId) {
@@ -308,6 +311,7 @@ public final class MetadataTools {
 				if ( nameAttr != null ) {
 					nameAttr.setText( columnNameIterator.next() );
 				}
+				break ;
 			}
 		}
 	}
@@ -340,7 +344,21 @@ public final class MetadataTools {
 					insert.setText( Boolean.toString( insertable ) );
 				}
 			}
+			
+			else {
+				if ("key-property".equals(property.getName())) {
+					final Attribute nameAttr = property.attribute( "name" );
+					if ( nameAttr != null ) {
+						nameAttr.setText( prefix + nameAttr.getText() );
+					}
+
+					changeNamesInColumnElement( property, columnNameIterator );
+					property.setName("property");
+				}
+			}
 		}
+		
+		
 	}
 
 	/**

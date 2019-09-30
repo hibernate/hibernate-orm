@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
@@ -38,6 +39,10 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 		for ( IdMapper idMapper : ids.values() ) {
 			idMapper.mapToMapFromEntity( data, obj );
 		}
+	}
+
+	public void add(PropertyData propertyData, String prefix, String path) {
+		ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), propertyData, path ) );
 	}
 
 	@Override
@@ -101,10 +106,17 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
 		final EmbeddedIdMapper ret = new EmbeddedIdMapper( idPropertyData, compositeIdClass, getServiceRegistry() );
-
+		String realName = MappingTools.getRealToOneRelationName( prefix );
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();
-			ret.ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), new PropertyData( prefix + propertyName, propertyData ) ) );
+			String path = propertyData.getName();
+			if ( !realName.isEmpty() ) {
+				path = realName + "." + propertyData.getName();
+			}
+			if ( ReflectionTools.isEmbeddedProperty( compositeIdClass, propertyData.getName() ) ) {
+				path = path + "." + propertyData.getBeanName();
+			}
+			ret.ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), new PropertyData( prefix + propertyName, propertyData ), path ) );
 		}
 
 		return ret;

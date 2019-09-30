@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -47,10 +48,11 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
 		final MultipleIdMapper ret = new MultipleIdMapper( compositeIdClass, getServiceRegistry() );
-
+		String realName = MappingTools.getRealToOneRelationName( prefix );
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();
-			ret.ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), new PropertyData( prefix + propertyName, propertyData ) ) );
+			String path = realName + "." + propertyData.getName() + "." + propertyData.getBeanName();
+			ret.ids.put( propertyData, new SingleIdMapper( getServiceRegistry(), new PropertyData( prefix + propertyName, propertyData ), path ) );
 		}
 
 		return ret;

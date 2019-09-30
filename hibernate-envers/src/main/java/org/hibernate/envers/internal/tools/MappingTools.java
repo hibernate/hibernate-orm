@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.internal.tools;
 
+import javax.persistence.Embedded;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
@@ -23,6 +25,20 @@ public abstract class MappingTools {
 	 */
 	public static String createComponentPrefix(String componentName) {
 		return componentName + "_";
+	}
+	
+	/**
+	 * @param prefix
+	 * @return
+	 */
+	public static String getRealToOneRelationName(String prefix) {
+		if ( prefix == null ) {
+			return "";
+		}
+		if ( prefix.endsWith( "_" ) ) {
+			return prefix.substring( 0, prefix.length() - 1 );
+		}
+		return prefix;
 	}
 
 	/**
@@ -61,4 +77,7 @@ public abstract class MappingTools {
 		}
 		return false;
 	}
+
+
+
 }

@@ -23,6 +23,7 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -53,6 +54,14 @@ public final class IdMetadataGenerator {
 			final Type propertyType = property.getType();
 			if ( !"_identifierMapper".equals( property.getName() ) ) {
 				boolean added = false;
+				if ( propertyType instanceof ComponentType ) {
+					added = mainGenerator.getBasicMetadataGenerator().addComponent(
+							parent,
+							getIdPersistentPropertyAuditingData( property ).getBeanName(),
+							property.getValue(),
+							mapper, "" );
+
+				}else{
 				if ( propertyType instanceof ManyToOneType ) {
 					added = mainGenerator.getBasicMetadataGenerator().addManyToOne(
 							parent,
@@ -70,7 +79,8 @@ public final class IdMetadataGenerator {
 							mapper,
 							true,
 							key
-					);
+						);
+					}
 				}
 				if ( !added ) {
 					// If the entity is audited, and a non-supported id component is used, throwing an exception.

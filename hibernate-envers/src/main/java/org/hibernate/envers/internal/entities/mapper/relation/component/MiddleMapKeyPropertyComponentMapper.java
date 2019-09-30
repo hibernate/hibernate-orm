@@ -10,6 +10,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
 
+import javax.persistence.Embedded;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -43,8 +45,20 @@ public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMappe
 				new PrivilegedAction<Object>() {
 					@Override
 					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								dataObject.getClass(),
+						Class clazz = dataObject.getClass();
+						if ( isNestedProperty( propertyName ) ) {
+							clazz = getEmbeddedType( clazz, propertyName );
+							int index = propertyName.indexOf( "." );
+							String suffix = propertyName.substring( 0, index );
+							final Getter getter = ReflectionTools.getGetter(
+									clazz,
+									suffix,
+									accessType,
+									entityInstantiator.getEnversService().getServiceRegistry() );
+							return getter.get( dataObject );
+						}
+					 	final Getter getter = ReflectionTools.getGetter(
+								clazz,
 								propertyName,
 								accessType,
 								entityInstantiator.getEnversService().getServiceRegistry()
@@ -53,6 +67,25 @@ public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMappe
 					}
 				}
 		);
+	}
+	
+		
+	private boolean isNestedProperty(String fieldName) {
+		return fieldName != null && fieldName.contains( "." );
+	}
+
+	private Class getEmbeddedType(Class cls, String fieldName) {
+		int index = fieldName.indexOf( "." );
+		String prefix = fieldName.substring( 0, index );
+		if ( !ReflectionTools.isEmbeddedProperty( cls, prefix ) ) {
+			return cls;
+		}
+		try {
+			return cls.getDeclaredField( fieldName ).getType();
+		}
+		catch (NoSuchFieldException | SecurityException e) {
+			return null;
+		}
 	}
 
 	@Override

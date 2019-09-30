@@ -139,7 +139,7 @@ public interface EnversSettings {
 	 *
 	 * Defaults to {@link org.hibernate.envers.boot.internal.LegacyModifiedColumnNamingStrategy}.
 	 *
-	 * @since 5.4.6
+	 * @since 5.4.7
 	 */
 	String MODIFIED_COLUMN_NAMING_STRATEGY = "org.hibernate.envers.modified_column_naming_strategy";
 }

@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.OverrideRepository;
-import org.hibernate.tool.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectionUtil;
 
 public class ReverseEngineeringStrategyFactory {
 	
@@ -16,7 +16,7 @@ public class ReverseEngineeringStrategyFactory {
 		ReverseEngineeringStrategy result = null;
 		try {
 			Class<?> reverseEngineeringClass = 
-					ReflectHelper.classForName(
+					ReflectionUtil.classForName(
 							reverseEngineeringClassName == null ? 
 									DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME : 
 									reverseEngineeringClassName);

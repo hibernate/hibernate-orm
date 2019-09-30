@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.tool.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectionUtil;
 
 
 /**
@@ -24,7 +24,7 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 	public H2MetaDataDialect() {
 		super();
 		try {
-			Class<?> constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
+			Class<?> constants = ReflectionUtil.classForName( "org.h2.engine.Constants" );
 			Integer build = (Integer)constants.getDeclaredField( "BUILD_ID" ).get( null );
 			if ( build.intValue() < 55 ) {
 				understandsCatalogName = false;

@@ -7,7 +7,7 @@ package org.hibernate.tool.ant;
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.internal.export.common.GenericExporter;
-import org.hibernate.tool.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectionUtil;
 
 /**
  * @author max
@@ -49,7 +49,7 @@ public class GenericExporterTask extends ExporterTask {
 			return new GenericExporter();
 		} else {
 			try {
-				return (Exporter) ReflectHelper.classForName(exporterClass).newInstance();
+				return (Exporter) ReflectionUtil.classForName(exporterClass).newInstance();
 			} catch (ClassNotFoundException e) {
 				throw new BuildException("Could not find custom exporter class: " + exporterClass, e);
 			} catch (InstantiationException e) {

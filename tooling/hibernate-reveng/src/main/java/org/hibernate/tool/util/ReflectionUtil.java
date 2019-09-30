@@ -1,6 +1,6 @@
 package org.hibernate.tool.util;
 
-public class ReflectHelper {
+public class ReflectionUtil {
 
 	public static Class<?> classForName(String name) throws ClassNotFoundException {
 		try {

@@ -6,13 +6,9 @@
  */
 package org.hibernate.orm.test.bootstrap;
 
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
@@ -100,7 +96,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 							final Properties puProperties;
 
 							{
-								puDataSource = new DataSourceImpl( "puDataSource" );
+								puDataSource = new DataSourceStub( "puDataSource" );
 
 								puProperties = new Properties();
 								puProperties.putAll( info.getProperties() );
@@ -161,7 +157,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 							final DataSource puDataSource;
 
 							{
-								puDataSource = new DataSourceImpl( "puDataSource" );
+								puDataSource = new DataSourceStub( "puDataSource" );
 							}
 
 							@Override
@@ -209,8 +205,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 					"have precedence over integration settings, which is also incorrect"
 	)
 	public void testPassingIntegrationJpaDataSourceOverrideForJtaDataSourceElement() {
-		final DataSource puDataSource = new DataSourceImpl( "puDataSource" );
-		final DataSource integrationDataSource = new DataSourceImpl( "integrationDataSource" );
+		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
+		final DataSource integrationDataSource = new DataSourceStub( "integrationDataSource" );
 
 		PersistenceProvider provider = new HibernatePersistenceProvider() {
 			@Override
@@ -263,7 +259,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	public void testIntegrationOverridesOfPersistenceXmlDataSource() {
 
 		// mimics a DataSource defined in the persistence.xml
-		final DataSourceImpl dataSource = new DataSourceImpl( "puDataSource" );
+		final DataSourceStub dataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 
 			@Override
@@ -274,7 +270,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 
 		// Now create "integration Map" that overrides the DataSource to use
-		final DataSource override = new DataSourceImpl( "integrationDataSource" );
+		final DataSource override = new DataSourceStub( "integrationDataSource" );
 		final Map<String,Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_NON_JTA_DATASOURCE, override );
 
@@ -308,7 +304,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfo() {
 
 		// mimics a DataSource defined in the persistence.xml
-		final DataSourceImpl dataSource = new DataSourceImpl( "puDataSource" );
+		final DataSourceStub dataSource = new DataSourceStub( "puDataSource" );
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 
 			@Override
@@ -335,71 +331,4 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
 	}
 
-	private static class DataSourceImpl implements DataSource {
-		private final String id;
-		private final DriverManagerConnectionProviderImpl connectionProvider;
-		private PrintWriter printWriter;
-
-		DataSourceImpl(String id) {
-			this.id = id;
-			connectionProvider = new DriverManagerConnectionProviderImpl();
-			connectionProvider.configure( ConnectionProviderBuilder.getConnectionProviderProperties() );
-
-			printWriter = null;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			return connectionProvider.getConnection();
-		}
-
-		@Override
-		public Connection getConnection(String username, String password) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public PrintWriter getLogWriter() {
-			return printWriter;
-		}
-
-		@Override
-		public void setLogWriter(PrintWriter out) {
-			this.printWriter = out;
-		}
-
-		@Override
-		public void setLoginTimeout(int seconds) {
-		}
-
-		@Override
-		public int getLoginTimeout() {
-			return -1;
-		}
-
-		@Override
-		public Logger getParentLogger() {
-			return Logger.getGlobal();
-		}
-
-		@Override
-		public <T> T unwrap(Class<T> iface) {
-			//noinspection unchecked
-			return (T) this;
-		}
-
-		@Override
-		public boolean isWrapperFor(Class<?> iface) {
-			return iface.isAssignableFrom( getClass() );
-		}
-
-		@Override
-		public String toString() {
-			return "DataSourceImpl(" + id + ")";
-		}
-	}
 }

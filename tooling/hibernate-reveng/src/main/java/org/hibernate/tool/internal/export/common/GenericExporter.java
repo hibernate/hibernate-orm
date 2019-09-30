@@ -10,6 +10,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
 
@@ -32,7 +33,7 @@ public class GenericExporter extends AbstractExporter {
 						new HashMap<String, Object>(), 
 						ge.getTemplateName(), 
 						new File(ge.getOutputDirectory(),ge.filePattern), 
-						ge.templateName, 
+						ge.getTemplateName(), 
 						"Configuration");				
 			}			
 		});
@@ -72,16 +73,15 @@ public class GenericExporter extends AbstractExporter {
 		});
 	}
 	
-	private String templateName;
 	private String filePattern;
 	private String forEach;
 	
 	public String getTemplateName() {
-		return templateName;
+		return (String)getProperties().get(ExporterConstants.TEMPLATE_NAME);
 	}
 	
 	public void setTemplateName(String templateName) {
-		this.templateName = templateName;
+		getProperties().put(ExporterConstants.TEMPLATE_NAME, templateName);
 	}
 		
 	
@@ -95,7 +95,7 @@ public class GenericExporter extends AbstractExporter {
 		if(filePattern==null) {
 			throw new RuntimeException("File pattern not set on " + this.getClass());
 		}
-		if(templateName==null) {
+		if(getTemplateName()==null) {
 			throw new RuntimeException("Template name not set on " + this.getClass());
 		}
 		
@@ -144,7 +144,12 @@ public class GenericExporter extends AbstractExporter {
 		if(filename.endsWith(".java") && filename.indexOf('$')>=0) {
 			log.warn("Filename for " + getClassNameForFile( element ) + " contains a $. Innerclass generation is not supported.");
 		}
-		producer.produce(additionalContext, getTemplateName(), new File(getOutputDirectory(),filename), templateName, element.toString());
+		producer.produce(
+				additionalContext, 
+				getTemplateName(), 
+				new File(getOutputDirectory(),filename), 
+				getTemplateName(), 
+				element.toString());
 	}
 
 	protected String resolveFilename(POJOClass element) {

@@ -76,14 +76,9 @@ public class GenericExporter extends AbstractExporter {
 	private String filePattern;
 	private String forEach;
 	
-	public String getTemplateName() {
+	protected String getTemplateName() {
 		return (String)getProperties().get(ExporterConstants.TEMPLATE_NAME);
 	}
-	
-	public void setTemplateName(String templateName) {
-		getProperties().put(ExporterConstants.TEMPLATE_NAME, templateName);
-	}
-		
 	
 	public void setForEach(String foreach) {
 		this.forEach = foreach;

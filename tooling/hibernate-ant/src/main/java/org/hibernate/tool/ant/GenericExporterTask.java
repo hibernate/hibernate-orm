@@ -6,6 +6,7 @@ package org.hibernate.tool.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.internal.export.common.GenericExporter;
 import org.hibernate.tool.util.ReflectionUtil;
 
@@ -62,11 +63,12 @@ public class GenericExporterTask extends ExporterTask {
 	
 	protected Exporter configureExporter(Exporter exp) {
 		super.configureExporter(exp);
-		
+		if (templateName != null) {
+			exp.getProperties().put(ExporterConstants.TEMPLATE_NAME, templateName);
+		}
 		if(exp instanceof GenericExporter) {
 			GenericExporter exporter = (GenericExporter) exp;
 			if(filePattern!=null) exporter.setFilePattern(filePattern);
-			if(templateName!=null) exporter.setTemplateName(templateName);
 			if(forEach!=null) exporter.setForEach(forEach);
 		}
 		

@@ -48,7 +48,7 @@ public class HibernateMappingExporter extends GenericExporter {
 	}
 	
 	protected void init() {
-		setTemplateName("hbm/hibernate-mapping.hbm.ftl");
+    	getProperties().put(TEMPLATE_NAME, "hbm/hibernate-mapping.hbm.ftl");
     	setFilePattern("{package-name}/{class-name}.hbm.xml");    	
 	}
 

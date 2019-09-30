@@ -17,7 +17,7 @@ public class DAOExporter extends POJOExporter {
     
     protected void init() {
     	super.init();
-    	setTemplateName(DAO_DAOHOME_FTL);
+    	getProperties().put(TEMPLATE_NAME, DAO_DAOHOME_FTL);
     	setFilePattern("{package-name}/{class-name}Home.java");    	    	
     }
     

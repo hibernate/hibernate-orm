@@ -26,7 +26,7 @@ public class DAONewExporter extends GenericExporter {
             getProperties().put("jdk5", "false");
 
         initFilePattern();
-        setTemplateName(getProperty("hibernatetool.template_name"));
+        getProperties().put(TEMPLATE_NAME, getProperty("hibernatetool.template_name"));
         
         super.setupContext();
     }

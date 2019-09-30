@@ -9,7 +9,7 @@ public class HbmLintExporter extends GenericExporter {
     public void start() {
     	// TODO: make non-hardwired 
     	setFilePattern( "hbmlint-result.txt" );
-		setTemplateName( TEXT_REPORT_FTL );		
+    	getProperties().put(TEMPLATE_NAME, TEXT_REPORT_FTL);
     	super.start();
     }
 	protected void setupContext() {

@@ -918,7 +918,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				throw new DuplicateMappingException(
 						String.format(
 								Locale.ENGLISH,
-								"Table [%s] contains physical column name [%s] referred to by multiple physical " +
+								"Table [%s] contains physical column name [%s] referred to by multiple logical " +
 										"column names: [%s], [%s]",
 								tableName,
 								physicalName,

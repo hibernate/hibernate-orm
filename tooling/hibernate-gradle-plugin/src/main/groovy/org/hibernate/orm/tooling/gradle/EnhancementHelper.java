@@ -71,6 +71,10 @@ public class EnhancementHelper {
 			}
 		};
 
+		if ( options.getEnableExtendedEnhancement() ) {
+			project.getLogger().warn("Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
+		}
+
 		final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
 
 		for ( File classesDir: sourceSet.getOutput().getClassesDirs() ) {

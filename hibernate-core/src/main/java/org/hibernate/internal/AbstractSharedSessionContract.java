@@ -58,6 +58,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.Query;
+import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
@@ -625,8 +626,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					this
 			);
 
-			query.setComment( queryString );
 			applyQuerySettingsAndHints( query );
+			query.setComment( queryString );
 
 			return query;
 		}
@@ -653,6 +654,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			NativeQueryImpl query = new NativeQueryImpl( queryString, this );
 			query.setComment( "dynamic native SQL query" );
+			applyQuerySettingsAndHints( query );
 			return query;
 		}
 		catch (RuntimeException he) {
@@ -740,7 +742,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getHqlQueryMemento( queryName );
 
 		if ( namedHqlDescriptor != null ) {
-			return namedHqlDescriptor.toQuery( this, resultType );
+			HqlQueryImplementor query = namedHqlDescriptor.toQuery( this, resultType );
+			query.setComment( "dynamic native SQL query" );
+			applyQuerySettingsAndHints( query );
+			return query;
 		}
 
 		// otherwise, see if it is a named native query
@@ -749,7 +754,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.getNativeQueryMemento( queryName );
 
 		if ( namedNativeDescriptor != null ) {
-			return namedNativeDescriptor.toQuery( this, resultType );
+			NativeQueryImplementor query = namedNativeDescriptor.toQuery( this, resultType );
+			query.setComment( "dynamic native SQL query" );
+			applyQuerySettingsAndHints( query );
+			return query;
 		}
 
 		// todo (6.0) : allow this for named stored procedures as well?

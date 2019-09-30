@@ -6,8 +6,6 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -71,12 +69,21 @@ final class StatsNamedContainer<V> {
 		}
 		else {
 			final V v2 = function.apply( key );
-			final V v3 = map.putIfAbsent( key, v2 );
-			if ( v3 == null ) {
-				return v2;
+			//Occasionally a function might return null. We can't store a null in the CHM,
+			// so a placeholder would be required to implement that, but we prefer to just keep this
+			// situation as slightly sub-optimal so to not make the code more complex just to handle the exceptional case:
+			// null values are assumed to be rare enough for this not being worth it.
+			if ( v2 == null ) {
+				return null;
 			}
 			else {
-				return v3;
+				final V v3 = map.putIfAbsent( key, v2 );
+				if ( v3 == null ) {
+					return v2;
+				}
+				else {
+					return v3;
+				}
 			}
 		}
 	}

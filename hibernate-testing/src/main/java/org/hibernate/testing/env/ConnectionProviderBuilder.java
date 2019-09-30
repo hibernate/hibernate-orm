@@ -6,25 +6,15 @@
  */
 package org.hibernate.testing.env;
 
-import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
-
 import javax.sql.DataSource;
 
-import javassist.scopedpool.SoftValueHashMap;
-
-import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
@@ -38,25 +28,40 @@ import org.hibernate.testing.DialectCheck;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String DRIVER = "org.h2.Driver";
 	public static final String DATA_SOURCE = "org.h2.jdbcx.JdbcDataSource";
 //	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MVCC=TRUE";
-	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1";
+	public static final String URL_FORMAT = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1";
+	public static final String URL = URL_FORMAT;
 	public static final String USER = "sa";
 	public static final String PASS = "";
 
 	public static Properties getConnectionProviderProperties(String dbName) {
 		Properties props = new Properties( null );
 		props.put( Environment.DRIVER, DRIVER );
-		props.put( Environment.URL, String.format( URL, dbName ) );
+		props.put( Environment.URL, String.format( URL_FORMAT, dbName ) );
 		props.put( Environment.USER, USER );
 		props.put( Environment.PASS, PASS );
 		return props;
 	}
 
+	public static Properties getJpaConnectionProviderProperties(String dbName) {
+		Properties props = new Properties( null );
+		props.put( Environment.JPA_JDBC_DRIVER, DRIVER );
+		props.put( Environment.JPA_JDBC_URL, String.format( URL_FORMAT, dbName ) );
+		props.put( Environment.JPA_JDBC_USER, USER );
+		props.put( Environment.JPA_JDBC_PASSWORD, PASS );
+		return props;
+	}
+
 	public static Properties getConnectionProviderProperties() {
 		return getConnectionProviderProperties( "db1" );
+	}
+
+	public static Properties getJpaConnectionProviderProperties() {
+		return getJpaConnectionProviderProperties( "db1" );
 	}
 
 	public static DriverManagerConnectionProviderImpl buildConnectionProvider() {
@@ -133,7 +138,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 			return connectionProxy;
 		}
 
-		private class ConnectionInvocationHandler implements InvocationHandler {
+		private static class ConnectionInvocationHandler implements InvocationHandler {
 
 			private final Connection target;
 

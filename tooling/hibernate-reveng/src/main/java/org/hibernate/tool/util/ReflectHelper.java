@@ -9,8 +9,7 @@ public class ReflectHelper {
 				return classLoader.loadClass(name);
 			}
 		}
-		catch ( Throwable ignore ) {
-		}
+		catch ( Throwable ignore ) {}
 		return Class.forName( name );
 	}
 	

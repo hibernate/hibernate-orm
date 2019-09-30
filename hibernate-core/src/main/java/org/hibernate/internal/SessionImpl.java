@@ -1156,11 +1156,11 @@ public final class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		event.setShouldUnwrapProxy( unwrapProxy );
 		fireLoadNoChecks( event, type );
 		Object result = event.getResult();
 		if ( !nullable ) {
-			UnresolvableObjectException.throwIfNull( result, id, entityName );}
+			UnresolvableObjectException.throwIfNull( result, id, entityName );
+		}
 
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
@@ -1186,7 +1186,6 @@ public final class SessionImpl
 			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
 			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
 			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
-			event.setShouldUnwrapProxy( null );
 			return event;
 		}
 	}

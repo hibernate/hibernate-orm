@@ -17,7 +17,7 @@ import org.dom4j.Element;
  * Defines a naming strategy for applying modified columns to the audited entity metamodel.
  *
  * @author Chris Cranford
- * @since 5.4.6
+ * @since 5.4.7
  */
 @Incubating
 public interface ModifiedColumnNamingStrategy {

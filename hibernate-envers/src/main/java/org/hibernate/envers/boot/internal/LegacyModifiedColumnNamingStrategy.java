@@ -24,7 +24,7 @@ import org.dom4j.Element;
  * This is the default Envers modified column naming behavior.
  *
  * @author Chris Cranford
- * @since 5.4.6
+ * @since 5.4.7
  */
 public class LegacyModifiedColumnNamingStrategy implements ModifiedColumnNamingStrategy {
 	@Override
@@ -33,9 +33,12 @@ public class LegacyModifiedColumnNamingStrategy implements ModifiedColumnNamingS
 			Value value,
 			Element parent,
 			PropertyAuditingData propertyAuditingData) {
-		String columnName = propertyAuditingData.getModifiedFlagName();
+		final String columnName;
 		if ( propertyAuditingData.isModifiedFlagNameExplicitlySpecified() ) {
 			columnName = propertyAuditingData.getExplicitModifiedFlagName();
+		}
+		else {
+			columnName = propertyAuditingData.getModifiedFlagName();
 		}
 		MetadataTools.addModifiedFlagProperty(
 				parent,

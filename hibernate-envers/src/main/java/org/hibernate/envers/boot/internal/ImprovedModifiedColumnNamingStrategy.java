@@ -10,7 +10,6 @@ import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
-import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
@@ -30,9 +29,9 @@ import org.dom4j.Element;
  * </ul>
  *
  * @author Chris Cranford
- * @since 5.4.6
+ * @since 5.4.7
  */
-public class ImprovedModifiedColumnNamingStrategy implements ModifiedColumnNamingStrategy {
+public class ImprovedModifiedColumnNamingStrategy extends LegacyModifiedColumnNamingStrategy {
 	@Override
 	public void addModifiedColumns(
 			GlobalConfiguration globalCfg,
@@ -48,7 +47,7 @@ public class ImprovedModifiedColumnNamingStrategy implements ModifiedColumnNamin
 				Selectable selectable = value.getColumnIterator().next();
 				if ( selectable instanceof Column ) {
 					// This should not be applied for formulas
-					String columnName = propertyAuditingData.getModifiedFlagName();
+					final String columnName;
 					if ( !propertyAuditingData.isModifiedFlagNameExplicitlySpecified() ) {
 						columnName = ( (Column) selectable ).getName() + globalCfg.getModifiedFlagSuffix();
 					}
@@ -70,11 +69,6 @@ public class ImprovedModifiedColumnNamingStrategy implements ModifiedColumnNamin
 		}
 
 		// Default legacy behavior
-		MetadataTools.addModifiedFlagProperty(
-				parent,
-				propertyAuditingData.getName(),
-				globalCfg.getModifiedFlagSuffix(),
-				propertyAuditingData.getModifiedFlagName()
-		);
+		super.addModifiedColumns( globalCfg, value, parent, propertyAuditingData );
 	}
 }

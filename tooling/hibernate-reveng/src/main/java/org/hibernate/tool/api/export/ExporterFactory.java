@@ -1,6 +1,6 @@
 package org.hibernate.tool.api.export;
 
-import org.hibernate.tool.internal.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectHelper;
 
 public class ExporterFactory {
 	

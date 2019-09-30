@@ -7,7 +7,7 @@ package org.hibernate.tool.ant;
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.internal.export.common.GenericExporter;
-import org.hibernate.tool.internal.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectHelper;
 
 /**
  * @author max

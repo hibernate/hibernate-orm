@@ -16,7 +16,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
-import org.hibernate.tool.internal.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectHelper;
 
 
 /**

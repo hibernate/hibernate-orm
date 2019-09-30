@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.tool.internal.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectHelper;
 
 
 /**

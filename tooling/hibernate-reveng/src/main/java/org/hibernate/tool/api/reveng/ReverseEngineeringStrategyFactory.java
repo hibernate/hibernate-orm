@@ -4,7 +4,7 @@ import java.io.File;
 
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.OverrideRepository;
-import org.hibernate.tool.internal.util.ReflectHelper;
+import org.hibernate.tool.util.ReflectHelper;
 
 public class ReverseEngineeringStrategyFactory {
 	

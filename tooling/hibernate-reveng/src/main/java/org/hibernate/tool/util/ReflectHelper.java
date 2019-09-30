@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.util;
 
 public class ReflectHelper {
 

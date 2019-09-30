@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.6.Final (September 30, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31794/tab/release-report-done
+
+** Bug
+    * [HHH-11797] - Envers Map<Enum, Entity> not auditing correctly
+    * [HHH-13493] - For a native query, the SessionImpl class does not call applyQuerySettingsAndHints
+    * [HHH-13597] - Building DatabaseInformation fails on H2 without DATABASE_TO_UPPER
+    * [HHH-13625] - After upgrading to 5.4.5, it's no longer possible to bootstrap Hibernate if the org.hibernate.cfg LOG is set to DEBUG
+    * [HHH-13645] - StatsNamedContainer#getOrCompute throws NullPointerException when computed value is null
+
+** Improvement
+    * [HHH-13130] - Provide Gradle-based bytecode enhancement as a task separate from the compileJava task
+
+
 Changes in 5.4.5.Final (September 17, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

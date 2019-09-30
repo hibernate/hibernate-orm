@@ -22,7 +22,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -63,7 +62,6 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13640")
 	public void testNewProxyAssociation() {
 		inTransaction(
 				session -> {
@@ -87,7 +85,6 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13640")
 	public void testReusedProxyAssociation() {
 		inTransaction(
 				session -> {

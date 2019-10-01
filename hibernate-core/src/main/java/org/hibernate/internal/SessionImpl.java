@@ -36,7 +36,6 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockScope;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -1041,7 +1040,6 @@ public final class SessionImpl
 			loadEvent = null;
 
 			event = recycleEventInstance( event, id, entityName );
-			event.setShouldUnwrapProxy( unwrapProxy );
 
 			fireLoadNoChecks( event, type );
 
@@ -1081,7 +1079,6 @@ public final class SessionImpl
 			event.setLockMode( LoadEvent.DEFAULT_LOCK_MODE );
 			event.setLockScope( LoadEvent.DEFAULT_LOCK_OPTIONS.getScope() );
 			event.setLockTimeout( LoadEvent.DEFAULT_LOCK_OPTIONS.getTimeOut() );
-			event.setShouldUnwrapProxy( null );
 			return event;
 		}
 	}

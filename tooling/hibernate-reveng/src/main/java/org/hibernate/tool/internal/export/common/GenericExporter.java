@@ -73,14 +73,13 @@ public class GenericExporter extends AbstractExporter {
 		});
 	}
 	
-	private String forEach;
 	
 	protected String getTemplateName() {
 		return (String)getProperties().get(ExporterConstants.TEMPLATE_NAME);
 	}
 	
 	public void setForEach(String foreach) {
-		this.forEach = foreach;
+		getProperties().put(FOR_EACH, foreach);
 	}
 	
 	
@@ -95,7 +94,7 @@ public class GenericExporter extends AbstractExporter {
 		
 		List<ModelIterator> exporters = new ArrayList<ModelIterator>();
 	
-		if(StringHelper.isEmpty( forEach )) {
+		if(StringHelper.isEmpty( getForEach() )) {
 			if(getFilePattern().indexOf("{class-name}")>=0) {				
 				exporters.add( modelIterators.get( "entity" ) );
 				exporters.add( modelIterators.get( "component") );
@@ -103,7 +102,7 @@ public class GenericExporter extends AbstractExporter {
 				exporters.add( modelIterators.get( "configuration" ));			
 			}
 		} else {
-			StringTokenizer tokens = new StringTokenizer(forEach, ",");
+			StringTokenizer tokens = new StringTokenizer(getForEach(), ",");
 		 
 			while ( tokens.hasMoreTokens() ) {
 				String nextToken = tokens.nextToken();
@@ -167,5 +166,9 @@ public class GenericExporter extends AbstractExporter {
 	private String getFilePattern() {
 		return (String)getProperties().get(FILE_PATTERN);
 	}
+	
+	private String getForEach() {
+		return (String)getProperties().get(FOR_EACH);
+	}	
 	
 }

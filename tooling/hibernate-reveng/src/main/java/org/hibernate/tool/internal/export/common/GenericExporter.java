@@ -32,7 +32,7 @@ public class GenericExporter extends AbstractExporter {
 				producer.produce(
 						new HashMap<String, Object>(), 
 						ge.getTemplateName(), 
-						new File(ge.getOutputDirectory(),ge.filePattern), 
+						new File(ge.getOutputDirectory(),ge.getFilePattern()), 
 						ge.getTemplateName(), 
 						"Configuration");				
 			}			
@@ -73,7 +73,6 @@ public class GenericExporter extends AbstractExporter {
 		});
 	}
 	
-	private String filePattern;
 	private String forEach;
 	
 	protected String getTemplateName() {
@@ -87,7 +86,7 @@ public class GenericExporter extends AbstractExporter {
 	
 	protected void doStart() {
 				
-		if(filePattern==null) {
+		if(getFilePattern()==null) {
 			throw new RuntimeException("File pattern not set on " + this.getClass());
 		}
 		if(getTemplateName()==null) {
@@ -97,7 +96,7 @@ public class GenericExporter extends AbstractExporter {
 		List<ModelIterator> exporters = new ArrayList<ModelIterator>();
 	
 		if(StringHelper.isEmpty( forEach )) {
-			if(filePattern.indexOf("{class-name}")>=0) {				
+			if(getFilePattern().indexOf("{class-name}")>=0) {				
 				exporters.add( modelIterators.get( "entity" ) );
 				exporters.add( modelIterators.get( "component") );
 			} else {
@@ -148,7 +147,7 @@ public class GenericExporter extends AbstractExporter {
 	}
 
 	protected String resolveFilename(POJOClass element) {
-		String filename = StringHelper.replace(filePattern, "{class-name}", getClassNameForFile( element )); 
+		String filename = StringHelper.replace(getFilePattern(), "{class-name}", getClassNameForFile( element )); 
 		String packageLocation = StringHelper.replace(getPackageNameForFile( element ),".", "/");
 		if(StringHelper.isEmpty(packageLocation)) {
 			packageLocation = "."; // done to ensure default package classes doesn't end up in the root of the filesystem when outputdir=""
@@ -166,11 +165,11 @@ public class GenericExporter extends AbstractExporter {
 	}
 
 	public void setFilePattern(String filePattern) {
-		this.filePattern = filePattern;		
+		getProperties().put(FILE_PATTERN, filePattern);
 	}
 	
-	public String getFilePattern() {
-		return filePattern;
+	private String getFilePattern() {
+		return (String)getProperties().get(FILE_PATTERN);
 	}
 	
 }

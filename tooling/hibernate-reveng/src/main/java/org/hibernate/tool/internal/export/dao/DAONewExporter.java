@@ -36,7 +36,7 @@ public class DAONewExporter extends GenericExporter {
         if (filePattern == null)
         	throw new IllegalStateException("Expected parameter file_pattern is not found");
         filePattern = replaceParameters(filePattern, getProperties());
-        setFilePattern(filePattern);
+        getProperties().put(FILE_PATTERN, filePattern);
         log.debug("File pattern set to " + filePattern);
 	}
 

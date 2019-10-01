@@ -164,10 +164,6 @@ public class GenericExporter extends AbstractExporter {
 		return element.getDeclarationName();
 	}
 
-	public void setFilePattern(String filePattern) {
-		getProperties().put(FILE_PATTERN, filePattern);
-	}
-	
 	private String getFilePattern() {
 		return (String)getProperties().get(FILE_PATTERN);
 	}

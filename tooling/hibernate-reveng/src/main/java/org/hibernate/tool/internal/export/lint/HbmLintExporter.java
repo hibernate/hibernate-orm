@@ -7,9 +7,8 @@ public class HbmLintExporter extends GenericExporter {
     private static final String TEXT_REPORT_FTL = "lint/text-report.ftl";
     
     public void start() {
-    	// TODO: make non-hardwired 
-    	setFilePattern( "hbmlint-result.txt" );
     	getProperties().put(TEMPLATE_NAME, TEXT_REPORT_FTL);
+    	getProperties().put(FILE_PATTERN, "hbmlint-result.txt");
     	super.start();
     }
 	protected void setupContext() {

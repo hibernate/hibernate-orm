@@ -169,11 +169,11 @@ public class DocExporter extends AbstractExporter {
 				}
  
 				exporter.getProperties().put(TEMPLATE_NAME, "dot/entitygraph.dot.ftl");
-				exporter.setFilePattern( "entities/entitygraph.dot" );
+				exporter.getProperties().put(FILE_PATTERN, "entities/entitygraph.dot");
 				exporter.start();
 
 				exporter.getProperties().put(TEMPLATE_NAME, "dot/tablegraph.dot.ftl");
-				exporter.setFilePattern( "tables/tablegraph.dot" );
+				exporter.getProperties().put(FILE_PATTERN, "tables/tablegraph.dot");
 				exporter.start();
 				
 				

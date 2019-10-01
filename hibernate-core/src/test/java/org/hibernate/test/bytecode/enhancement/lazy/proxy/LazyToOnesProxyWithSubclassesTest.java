@@ -22,6 +22,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
@@ -31,6 +32,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -77,14 +79,50 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 		inSession(
 				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
+
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
 					Animal animal = session.load( Animal.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( 1, stats.getPrepareStatementCount() );
 				}
 		);
+	}
+
+	@Test
+	public void testGetInitializeAssociations() {
+		inTransaction(
+				session -> {
+					Human human = new Human( "A Human" );
+					OtherEntity otherEntity = new OtherEntity( "test1" );
+					otherEntity.animal = human;
+
+					session.persist( human );
+					session.persist( otherEntity );
+				}
+		);
+
+		inSession(
+				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
+					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
+					Animal animal = session.get( Animal.class, "A Human" );
+					assertTrue( Hibernate.isInitialized( animal ) );
+					assertEquals( 2, stats.getPrepareStatementCount() );
+				}
+		);
+
 	}
 
 	@Test
@@ -102,6 +140,8 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 		inSession(
 				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
@@ -109,7 +149,7 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "primate" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.primate ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.primate ) );
-
+					assertEquals( 1, stats.getPrepareStatementCount() );
 				}
 		);
 	}
@@ -131,6 +171,9 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 		inSession(
 				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
+
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
@@ -142,6 +185,8 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
 					// TODO: Should otherEntity.human be a narrowed HibernateProxy or
 					// an uninitialized non-HibernateProxy proxy?
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
 				}
 		);
 	}
@@ -157,7 +202,6 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 				}
 		);
 	}
-
 
 	@Entity(name = "Animal")
 	@Table(name = "Animal")

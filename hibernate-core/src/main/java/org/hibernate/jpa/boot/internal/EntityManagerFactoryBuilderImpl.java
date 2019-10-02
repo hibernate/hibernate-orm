@@ -27,7 +27,6 @@ import javax.sql.DataSource;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
@@ -222,10 +221,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		configureIdentifierGenerators( standardServiceRegistry );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources );
+		List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
 		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		populate( metamodelBuilder, mergedSettings, attributeConverterDefinitions );
+		applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
 
 		applyMetadataBuilderContributor();
 
@@ -316,7 +315,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// temporary!
-	@SuppressWarnings("unchecked")
 	public Map getConfigurationValues() {
 		return Collections.unmodifiableMap( configurationValues );
 	}
@@ -335,7 +333,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * @param associationManagementEnabled To enable association management feature
 	 * @return An enhancement context for classes managed by this EM
 	 */
-	protected EnhancementContext getEnhancementContext(final boolean dirtyTrackingEnabled, final boolean lazyInitializationEnabled, final boolean associationManagementEnabled ) {
+	protected EnhancementContext getEnhancementContext(
+			final boolean dirtyTrackingEnabled,
+			final boolean lazyInitializationEnabled,
+			final boolean associationManagementEnabled ) {
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -463,7 +464,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
-	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?,?> integrationSettings,
@@ -582,7 +582,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// these should have precedence.
 		//
 		// NOTE that this occurs after the specialized normalize calls above which remove
-		// any specially-handled settings
+		// any specially-handled settings.
 		for ( Map.Entry<?,?> entry : integrationSettingsCopy.entrySet() ) {
 			if ( entry.getKey() == null ) {
 				continue;
@@ -630,8 +630,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return persistenceUnit.getProperties() == null ? null : (T) persistenceUnit.getProperties().get( propertyName );
 	}
 
-	private static final String IS_JTA_TXN_COORD = "local.setting.IS_JTA_TXN_COORD";
-
 	@SuppressWarnings("unchecked")
 	private void applyUserAndPass(Object effectiveUser, Object effectivePass, MergedSettings mergedSettings) {
 		if ( effectiveUser != null ) {
@@ -644,6 +642,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			mergedSettings.configurationValues.put( JPA_JDBC_PASSWORD, effectivePass );
 		}
 	}
+
+	private static final String IS_JTA_TXN_COORD = "local.setting.IS_JTA_TXN_COORD";
 
 	@SuppressWarnings("unchecked")
 	private void normalizeTransactionCoordinator(
@@ -1060,7 +1060,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<AttributeConverterDefinition> populate(MetadataSources metadataSources) {
+	private List<AttributeConverterDefinition> applyMappingResources(MetadataSources metadataSources) {
+		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
+
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
 //
 //		// todo : make sure MetadataSources/Metadata are capable of handling duplicate sources
@@ -1137,11 +1139,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return attributeConverterDefinitions;
 	}
 
-	protected void populate(
-			MetadataBuilder metamodelBuilder,
+	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,
 			List<AttributeConverterDefinition> attributeConverterDefinitions) {
-		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
+		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
 			metamodelBuilder.applyTempClassLoader( persistenceUnit.getTempClassLoader() );
@@ -1225,7 +1226,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// Metamodel will clean this up...
 		try {
 			SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
-			populate( sfBuilder, standardServiceRegistry );
+			populateSfBuilder( sfBuilder, standardServiceRegistry );
 
 			SchemaManagementToolCoordinator.process(
 					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -1239,10 +1240,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		cancel();
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public EntityManagerFactory build() {
-		SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
-		populate( sfBuilder, standardServiceRegistry );
+		final SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
+		populateSfBuilder( sfBuilder, standardServiceRegistry );
 
 		try {
 			return sfBuilder.build();
@@ -1252,7 +1253,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
+	protected void populateSfBuilder(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
 
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 

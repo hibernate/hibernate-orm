@@ -9,6 +9,7 @@ package org.hibernate.boot.registry;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,26 @@ import org.hibernate.service.spi.ServiceContributor;
  * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
  */
 public class StandardServiceRegistryBuilder {
+	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
+			@Override
+			protected void addConfigurationValues(Map configurationValues) {
+				// here, do nothing
+			}
+		};
+		return new StandardServiceRegistryBuilder(
+				bootstrapServiceRegistry,
+				new HashMap(),
+				loadedConfig
+		) {
+			@Override
+			public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
+				getAggregatedCfgXml().merge( loadedConfig );
+				return this;
+			}
+		};
+	}
+
 	/**
 	 * The default resource name for a hibernate configuration xml file.
 	 */
@@ -43,7 +64,7 @@ public class StandardServiceRegistryBuilder {
 
 	private final Map settings;
 	private final List<StandardServiceInitiator> initiators = standardInitiatorList();
-	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+	private final List<ProvidedService> providedServices = new ArrayList<>();
 
 	private boolean autoCloseRegistry = true;
 
@@ -68,6 +89,19 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
+	 * Intended for use exclusively from JPA boot-strapping
+	 */
+	private StandardServiceRegistryBuilder(
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map settings,
+			LoadedConfig loadedConfig) {
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.settings = settings;
+		this.aggregatedCfgXml = loadedConfig;
+	}
+
+	/**
 	 * Create a builder with the specified bootstrap services.
 	 *
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
@@ -79,6 +113,10 @@ public class StandardServiceRegistryBuilder {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.aggregatedCfgXml = loadedConfigBaseline;
+	}
+
+	public ConfigLoader getConfigLoader() {
+		return configLoader;
 	}
 
 	/**
@@ -94,11 +132,12 @@ public class StandardServiceRegistryBuilder {
 	 * @return List of standard initiators
 	 */
 	private static List<StandardServiceInitiator> standardInitiatorList() {
-		final List<StandardServiceInitiator> initiators = new ArrayList<StandardServiceInitiator>( StandardServiceInitiators.LIST.size() );
+		final List<StandardServiceInitiator> initiators = new ArrayList<>( StandardServiceInitiators.LIST.size() );
 		initiators.addAll( StandardServiceInitiators.LIST );
 		return initiators;
 	}
 
+	@SuppressWarnings("unused")
 	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
 		return bootstrapServiceRegistry;
 	}

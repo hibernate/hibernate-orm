@@ -306,12 +306,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
 
 					if ( li.isUnwrap() ) {
-						if ( entityMetamodel.hasSubclasses() ) {
-							LOG.debug( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
-						}
-						else {
-							return li.getImplementation();
-						}
+						LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 					}
 
 					return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );

@@ -285,21 +285,21 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 					LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
 
-					if ( li.isUnwrap() || event.getShouldUnwrapProxy() ) {
-						return li.getImplementation();
+					if ( li.isUnwrap() ) {
+						if ( entityMetamodel.hasSubclasses() ) {
+							LOG.debug( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
+						}
+						else {
+							return li.getImplementation();
+						}
 					}
-
 
 					return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
 				}
 
 				// specialized handling for entities with subclasses with a HibernateProxy factory
 				if ( entityMetamodel.hasSubclasses() ) {
-					// entities with subclasses that define a ProxyFactory can create
-					// a HibernateProxy so long as NO_PROXY was not specified.
-					if ( event.getShouldUnwrapProxy() != null && event.getShouldUnwrapProxy() ) {
-						LOG.debug( "Ignoring NO_PROXY for to-one association with subclasses to honor laziness" );
-					}
+					// entities with subclasses that define a ProxyFactory can create a HibernateProxy
 					return createProxy( event, persister, keyToLoad, persistenceContext );
 				}
 			}

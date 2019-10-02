@@ -133,4 +133,13 @@ public interface EnversSettings {
 	 * @since 5.4.4
 	 */
 	String FIND_BY_REVISION_EXACT_MATCH = "org.hibernate.envers.find_by_revision_exact_match";
+
+	/**
+	 * Specifies the {@link org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy} to use
+	 *
+	 * Defaults to {@link org.hibernate.envers.boot.internal.LegacyModifiedColumnNamingStrategy}.
+	 *
+	 * @since 5.4.7
+	 */
+	String MODIFIED_COLUMN_NAMING_STRATEGY = "org.hibernate.envers.modified_column_naming_strategy";
 }

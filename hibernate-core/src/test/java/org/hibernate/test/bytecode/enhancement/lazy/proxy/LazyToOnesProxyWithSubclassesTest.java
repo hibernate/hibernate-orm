@@ -24,7 +24,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -155,7 +154,6 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13640" )
 	public void testExistingProxyAssociationLeafSubclass() {
 		inTransaction(
 				session -> {
@@ -187,6 +185,12 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					// an uninitialized non-HibernateProxy proxy?
 					assertEquals( 1, stats.getPrepareStatementCount() );
 
+					Human human = otherEntity.getHuman();
+					human.getName();
+					assertEquals( 1, stats.getPrepareStatementCount() );
+
+					human.getSex();
+					assertEquals( 2, stats.getPrepareStatementCount() );
 				}
 		);
 	}
@@ -239,6 +243,8 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	@Table(name = "Human")
 	public static class Human extends Primate {
 
+		private String sex;
+
 		public Human(String name) {
 			this();
 			setName( name );
@@ -246,6 +252,14 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 		protected Human() {
 			// this form used by Hibernate
+		}
+
+		public String getSex() {
+			return sex;
+		}
+
+		public void setSex(String sex) {
+			this.sex = sex;
 		}
 	}
 
@@ -278,6 +292,14 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 		public String getId() {
 			return id;
+		}
+
+		public Human getHuman() {
+			return human;
+		}
+
+		public void setHuman(Human human) {
+			this.human = human;
 		}
 	}
 }

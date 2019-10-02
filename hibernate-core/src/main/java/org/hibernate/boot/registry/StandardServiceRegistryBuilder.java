@@ -9,7 +9,6 @@ package org.hibernate.boot.registry;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +36,14 @@ import org.hibernate.service.spi.ServiceContributor;
  * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
  */
 public class StandardServiceRegistryBuilder {
+	/**
+	 * Intended only for use from {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
+	 *
+	 * Creates a StandardServiceRegistryBuilder specific to the needs of JPA bootstrapping.
+	 * Specifically we ignore properties found in `cfg.xml` files in terms of adding them to
+	 * the builder immediately.  EntityManagerFactoryBuilderImpl handles collecting these
+	 * properties itself.
+	 */
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		final LoadedConfig loadedConfig = new LoadedConfig( null ) {
 			@Override
@@ -52,6 +59,7 @@ public class StandardServiceRegistryBuilder {
 			@Override
 			public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
 				getAggregatedCfgXml().merge( loadedConfig );
+				// super also collects the properties - here we skip that part
 				return this;
 			}
 		};
@@ -89,7 +97,9 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from JPA boot-strapping
+	 * Intended for use exclusively from JPA boot-strapping.
+	 *
+	 * @see #forJpa
 	 */
 	private StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,

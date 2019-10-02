@@ -69,11 +69,9 @@ public class GenericExporterTask extends ExporterTask {
 		if (filePattern != null) {
 			exp.getProperties().put(ExporterConstants.FILE_PATTERN, filePattern);
 		}
-		if(exp instanceof GenericExporter) {
-			GenericExporter exporter = (GenericExporter) exp;
-			if(forEach!=null) exporter.setForEach(forEach);
+		if (forEach != null) {
+			exp.getProperties().put(ExporterConstants.FOR_EACH, forEach);
 		}
-		
 		return exp;
 	}
 

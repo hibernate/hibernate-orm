@@ -78,11 +78,6 @@ public class GenericExporter extends AbstractExporter {
 		return (String)getProperties().get(ExporterConstants.TEMPLATE_NAME);
 	}
 	
-	public void setForEach(String foreach) {
-		getProperties().put(FOR_EACH, foreach);
-	}
-	
-	
 	protected void doStart() {
 				
 		if(getFilePattern()==null) {

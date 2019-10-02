@@ -218,16 +218,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		ssrBuilder.applySettings( configurationValues );
 
 		this.standardServiceRegistry = ssrBuilder.build();
-		configure( standardServiceRegistry, mergedSettings );
+
+		configureIdentifierGenerators( standardServiceRegistry );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate(
-				metadataSources,
-				mergedSettings,
-				standardServiceRegistry
-		);
+		List<AttributeConverterDefinition> attributeConverterDefinitions = populate( metadataSources );
+
 		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
+		populate( metamodelBuilder, mergedSettings, attributeConverterDefinitions );
 
 		applyMetadataBuilderContributor();
 
@@ -471,16 +469,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<?,?> integrationSettings,
 			StandardServiceRegistryBuilder ssrBuilder) {
 		final MergedSettings mergedSettings = new MergedSettings();
-
-		// first apply `hibernate.properties`
-		mergedSettings.configurationValues.putAll( Environment.getProperties() );
-
-		// next, apply `persistence.xml` defined settings
-		if ( persistenceUnit.getProperties() != null ) {
-			mergedSettings.configurationValues.putAll( persistenceUnit.getProperties() );
-		}
-
-		mergedSettings.configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+		mergedSettings.processPersistenceUnitDescriptorProperties( persistenceUnit );
 
 		// see if the persistence.xml settings named a Hibernate config file....
 		String cfgXmlResourceName = (String) mergedSettings.configurationValues.remove( CFG_FILE );
@@ -490,8 +479,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
-			final LoadedConfig loadedCfg = ssrBuilder.getConfigLoader().loadConfigXmlResource( cfgXmlResourceName );
-			processConfigXml( loadedCfg, mergedSettings, ssrBuilder );
+			processHibernateConfigXmlResources( ssrBuilder, mergedSettings, cfgXmlResourceName );
 		}
 
 		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
@@ -986,33 +974,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 	}
 
-	@SuppressWarnings("unchecked")
-	private void processConfigXml(
-			LoadedConfig loadedConfig,
+	private void processHibernateConfigXmlResources(
+			StandardServiceRegistryBuilder ssrBuilder,
 			MergedSettings mergedSettings,
-			StandardServiceRegistryBuilder ssrBuilder) {
-		if ( ! mergedSettings.configurationValues.containsKey( SESSION_FACTORY_NAME ) ) {
-			// there is not already a SF-name in the merged settings
-			final String sfName = loadedConfig.getSessionFactoryName();
-			if ( sfName != null ) {
-				// but the cfg.xml file we are processing named one..
-				mergedSettings.configurationValues.put( SESSION_FACTORY_NAME, sfName );
-			}
-		}
-		else {
-			// make sure they match?
-		}
+			String cfgXmlResourceName) {
+		final LoadedConfig loadedConfig = ssrBuilder.getConfigLoader().loadConfigXmlResource( cfgXmlResourceName );
 
-		mergedSettings.configurationValues.putAll( loadedConfig.getConfigurationValues() );
-
-		// todo : the ssrBuilder is passed here so that we can ultimately perform a "merge"
-
-		// NOTE : DO NOT CALL `StandardServiceRegistryBuilder#configure(LoadedConfig)` here, which also adds
-		//		config values defined in the `cfg.xml` to the StandardServiceRegistryBuilder tracked settings.
-		//
-		//		We use a specialized `LoadedConfig` (the SSRB's aggregated one) and specialized
-		//		`StandardServiceRegistryBuilder` to not collect settings which means this is not totally
-		// 		necessary.  But its more accurate to simply do this call.
+		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
 
 		ssrBuilder.getAggregatedCfgXml().merge( loadedConfig );
 	}
@@ -1070,7 +1038,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
 	}
 
-	private void configure(StandardServiceRegistry ssr, MergedSettings mergedSettings) {
+	private void configureIdentifierGenerators(StandardServiceRegistry ssr) {
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// apply id generators
@@ -1092,10 +1060,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<AttributeConverterDefinition> populate(
-			MetadataSources metadataSources,
-			MergedSettings mergedSettings,
-			StandardServiceRegistry ssr) {
+	protected List<AttributeConverterDefinition> populate(MetadataSources metadataSources) {
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
 //
 //		// todo : make sure MetadataSources/Metadata are capable of handling duplicate sources
@@ -1175,7 +1140,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	protected void populate(
 			MetadataBuilder metamodelBuilder,
 			MergedSettings mergedSettings,
-			StandardServiceRegistry ssr,
 			List<AttributeConverterDefinition> attributeConverterDefinitions) {
 		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
 
@@ -1373,7 +1337,36 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
+		/**
+		 * 	MergedSettings is initialized with hibernate.properties
+		 */
 		private MergedSettings() {
+			configurationValues.putAll( Environment.getProperties() );
+		}
+
+		public void processPersistenceUnitDescriptorProperties(PersistenceUnitDescriptor persistenceUnit) {
+			if ( persistenceUnit.getProperties() != null ) {
+				configurationValues.putAll( persistenceUnit.getProperties() );
+			}
+
+			configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+
+		}
+
+		public void processHibernateConfigXmlResources(LoadedConfig loadedConfig){
+			if ( ! configurationValues.containsKey( SESSION_FACTORY_NAME ) ) {
+				// there is not already a SF-name in the merged settings
+				final String sfName = loadedConfig.getSessionFactoryName();
+				if ( sfName != null ) {
+					// but the cfg.xml file we are processing named one..
+					configurationValues.put( SESSION_FACTORY_NAME, sfName );
+				}
+			}
+			else {
+				// make sure they match?
+			}
+
+			configurationValues.putAll( loadedConfig.getConfigurationValues() );
 		}
 
 		public Map getConfigurationValues() {

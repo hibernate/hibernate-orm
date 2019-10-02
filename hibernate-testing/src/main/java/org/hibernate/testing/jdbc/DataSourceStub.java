@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.bootstrap;
+package org.hibernate.testing.jdbc;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -24,7 +24,7 @@ public class DataSourceStub implements DataSource {
 	private final DriverManagerConnectionProviderImpl connectionProvider;
 	private PrintWriter printWriter;
 
-	DataSourceStub(String id) {
+	public DataSourceStub(String id) {
 		this.id = id;
 		connectionProvider = new DriverManagerConnectionProviderImpl();
 		connectionProvider.configure( ConnectionProviderBuilder.getConnectionProviderProperties() );

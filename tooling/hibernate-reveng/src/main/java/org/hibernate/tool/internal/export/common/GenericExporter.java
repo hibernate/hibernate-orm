@@ -73,7 +73,6 @@ public class GenericExporter extends AbstractExporter {
 		});
 	}
 	
-	
 	protected String getTemplateName() {
 		return (String)getProperties().get(ExporterConstants.TEMPLATE_NAME);
 	}

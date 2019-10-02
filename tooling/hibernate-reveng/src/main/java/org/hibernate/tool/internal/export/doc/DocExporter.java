@@ -14,8 +14,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
-import org.hibernate.tool.internal.export.common.GenericExporter;
 import org.hibernate.tool.internal.export.common.TemplateProducer;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
 
@@ -158,7 +160,7 @@ public class DocExporter extends AbstractExporter {
 		
 		if(StringHelper.isNotEmpty( cmd )) {
 			try {
-				GenericExporter exporter = new GenericExporter();
+				Exporter exporter = ExporterFactory.createExporter(ExporterType.GENERIC);
 				exporter.getProperties().putAll( getProperties() );
 				exporter.getProperties().put(ARTIFACT_COLLECTOR, getArtifactCollector());
 				exporter.getProperties().put(METADATA_DESCRIPTOR, getMetadataDescriptor());

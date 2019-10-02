@@ -7,7 +7,8 @@ package org.hibernate.tool.ant;
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.common.GenericExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.util.ReflectionUtil;
 
 /**
@@ -47,7 +48,7 @@ public class GenericExporterTask extends ExporterTask {
 	
 	protected Exporter createExporter() {
 		if (exporterClass == null) {
-			return new GenericExporter();
+			return ExporterFactory.createExporter(ExporterType.GENERIC);
 		} else {
 			try {
 				return (Exporter) ReflectionUtil.classForName(exporterClass).newInstance();

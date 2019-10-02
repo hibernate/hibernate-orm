@@ -27,11 +27,9 @@ import javax.sql.DataSource;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
-import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
@@ -60,7 +58,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
@@ -73,6 +73,7 @@ import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
@@ -199,24 +200,31 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
 
 		// merge configuration sources and build the "standard" service registry
-		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
+		final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );
+
 		final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
+
+		// flush before completion validation
+		if ( "true".equals( mergedSettings.configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
+			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
+			mergedSettings.configurationValues.put( Environment.FLUSH_BEFORE_COMPLETION, "false" );
+		}
+
+		// keep the merged config values for phase-2
 		this.configurationValues = mergedSettings.getConfigurationValues();
 
 		// Build the "standard" service registry
 		ssrBuilder.applySettings( configurationValues );
-		configure( ssrBuilder );
+
 		this.standardServiceRegistry = ssrBuilder.build();
-		configure( standardServiceRegistry, mergedSettings );
+
+		configureIdentifierGenerators( standardServiceRegistry );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = populate(
-				metadataSources,
-				mergedSettings,
-				standardServiceRegistry
-		);
+		List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
+
 		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		populate( metamodelBuilder, mergedSettings, standardServiceRegistry, attributeConverterDefinitions );
+		applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
 
 		applyMetadataBuilderContributor();
 
@@ -307,7 +315,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// temporary!
-	@SuppressWarnings("unchecked")
 	public Map getConfigurationValues() {
 		return Collections.unmodifiableMap( configurationValues );
 	}
@@ -326,7 +333,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * @param associationManagementEnabled To enable association management feature
 	 * @return An enhancement context for classes managed by this EM
 	 */
-	protected EnhancementContext getEnhancementContext(final boolean dirtyTrackingEnabled, final boolean lazyInitializationEnabled, final boolean associationManagementEnabled ) {
+	protected EnhancementContext getEnhancementContext(
+			final boolean dirtyTrackingEnabled,
+			final boolean lazyInitializationEnabled,
+			final boolean associationManagementEnabled ) {
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -454,21 +464,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
-	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?,?> integrationSettings,
 			StandardServiceRegistryBuilder ssrBuilder) {
 		final MergedSettings mergedSettings = new MergedSettings();
-
-		// first, apply persistence.xml-defined settings
-		if ( persistenceUnit.getProperties() != null ) {
-			mergedSettings.configurationValues.putAll( persistenceUnit.getProperties() );
-		}
-
-		mergedSettings.configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
-
-		final ConfigLoader configLoader = new ConfigLoader( ssrBuilder.getBootstrapServiceRegistry() );
+		mergedSettings.processPersistenceUnitDescriptorProperties( persistenceUnit );
 
 		// see if the persistence.xml settings named a Hibernate config file....
 		String cfgXmlResourceName = (String) mergedSettings.configurationValues.remove( CFG_FILE );
@@ -478,35 +479,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
-			final LoadedConfig loadedCfg = configLoader.loadConfigXmlResource( cfgXmlResourceName );
-			processConfigXml( loadedCfg, mergedSettings, ssrBuilder );
+			processHibernateConfigXmlResources( ssrBuilder, mergedSettings, cfgXmlResourceName );
 		}
 
-		// finally, apply integration-supplied settings (per JPA spec, integration settings should override other sources)
-		for ( Map.Entry<?,?> entry : integrationSettings.entrySet() ) {
-			if ( entry.getKey() == null ) {
-				continue;
-			}
-
-			if ( entry.getValue() == null ) {
-				mergedSettings.configurationValues.remove( entry.getKey() );
-			}
-			else {
-				mergedSettings.configurationValues.put( entry.getKey(), entry.getValue() );
-			}
-		}
-
-		if ( !mergedSettings.configurationValues.containsKey( JPA_VALIDATION_MODE ) ) {
-			if ( persistenceUnit.getValidationMode() != null ) {
-				mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
-			}
-		}
-
-		if ( !mergedSettings.configurationValues.containsKey( JPA_SHARED_CACHE_MODE ) ) {
-			if ( persistenceUnit.getSharedCacheMode() != null ) {
-				mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
-			}
-		}
+		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
 
 		final String jaccContextId = (String) mergedSettings.configurationValues.get( JACC_CONTEXT_ID );
 
@@ -567,22 +543,446 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return mergedSettings;
 	}
 
+	/**
+	 * Handles normalizing the settings coming from multiple sources, applying proper precedences
+	 */
 	@SuppressWarnings("unchecked")
-	private void processConfigXml(
-			LoadedConfig loadedConfig,
-			MergedSettings mergedSettings,
-			StandardServiceRegistryBuilder ssrBuilder) {
-		if ( ! mergedSettings.configurationValues.containsKey( SESSION_FACTORY_NAME ) ) {
-			// there is not already a SF-name in the merged settings
-			final String sfName = loadedConfig.getSessionFactoryName();
-			if ( sfName != null ) {
-				// but the cfg.xml file we are processing named one..
-				mergedSettings.configurationValues.put( SESSION_FACTORY_NAME, sfName );
+	private void normalizeSettings(
+			PersistenceUnitDescriptor persistenceUnit,
+			Map<?, ?> integrationSettings,
+			MergedSettings mergedSettings) {
+		// make a copy so we can remove things as we process them
+		final HashMap<?, ?> integrationSettingsCopy = new HashMap<>( integrationSettings );
+
+		normalizeConnectionAccessUserAndPass( integrationSettingsCopy, mergedSettings );
+
+		normalizeTransactionCoordinator( persistenceUnit, integrationSettingsCopy, mergedSettings );
+
+		normalizeDataAccess( integrationSettingsCopy, mergedSettings, persistenceUnit );
+
+		// normalize ValidationMode
+		final Object intgValidationMode = integrationSettingsCopy.remove( JPA_VALIDATION_MODE );
+		if ( intgValidationMode != null ) {
+			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, intgValidationMode );
+		}
+		else if ( persistenceUnit.getValidationMode() != null ) {
+			mergedSettings.configurationValues.put( JPA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
+		}
+
+		// normalize SharedCacheMode
+		final Object intgCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
+		if ( intgCacheMode != null ) {
+			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, intgCacheMode );
+		}
+		else if ( persistenceUnit.getSharedCacheMode() != null ) {
+			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+		}
+
+		// Apply all "integration overrides" as the last step.  By specification,
+		// these should have precedence.
+		//
+		// NOTE that this occurs after the specialized normalize calls above which remove
+		// any specially-handled settings.
+		for ( Map.Entry<?,?> entry : integrationSettingsCopy.entrySet() ) {
+			if ( entry.getKey() == null ) {
+				continue;
+			}
+
+			if ( entry.getValue() == null ) {
+				mergedSettings.configurationValues.remove( entry.getKey() );
+			}
+			else {
+				mergedSettings.configurationValues.put( entry.getKey(), entry.getValue() );
+			}
+		}
+	}
+
+	/**
+	 * Because a DataSource can be secured (requiring Hibernate to pass the USER/PASSWORD when accessing the DataSource)
+	 * we apply precedence to the USER and PASS separately
+	 */
+	private void normalizeConnectionAccessUserAndPass(
+			HashMap<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
+		//noinspection unchecked
+		final Object effectiveUser = NullnessHelper.coalesceSuppliedValues(
+				() -> integrationSettingsCopy.remove( USER ),
+				() -> integrationSettingsCopy.remove( JPA_JDBC_USER ),
+				() -> extractPuProperty( persistenceUnit, USER ),
+				() -> extractPuProperty( persistenceUnit, JPA_JDBC_USER )
+		);
+
+		//noinspection unchecked
+		final Object effectivePass = NullnessHelper.coalesceSuppliedValues(
+				() -> integrationSettingsCopy.remove( PASS ),
+				() -> integrationSettingsCopy.remove( JPA_JDBC_PASSWORD ),
+				() -> extractPuProperty( persistenceUnit, PASS ),
+				() -> extractPuProperty( persistenceUnit, JPA_JDBC_PASSWORD )
+		);
+
+		if ( effectiveUser != null || effectivePass != null ) {
+			applyUserAndPass( effectiveUser, effectivePass, mergedSettings );
+		}
+	}
+
+	private <T> T extractPuProperty(PersistenceUnitDescriptor persistenceUnit, String propertyName) {
+		//noinspection unchecked
+		return persistenceUnit.getProperties() == null ? null : (T) persistenceUnit.getProperties().get( propertyName );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyUserAndPass(Object effectiveUser, Object effectivePass, MergedSettings mergedSettings) {
+		if ( effectiveUser != null ) {
+			mergedSettings.configurationValues.put( USER, effectiveUser );
+			mergedSettings.configurationValues.put( JPA_JDBC_USER, effectiveUser );
+		}
+
+		if ( effectivePass != null ) {
+			mergedSettings.configurationValues.put( PASS, effectivePass );
+			mergedSettings.configurationValues.put( JPA_JDBC_PASSWORD, effectivePass );
+		}
+	}
+
+	private static final String IS_JTA_TXN_COORD = "local.setting.IS_JTA_TXN_COORD";
+
+	@SuppressWarnings("unchecked")
+	private void normalizeTransactionCoordinator(
+			PersistenceUnitDescriptor persistenceUnit,
+			HashMap<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
+		PersistenceUnitTransactionType txnType = null;
+
+		final Object intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
+
+		if ( intgTxnType != null ) {
+			txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType( intgTxnType );
+		}
+		else if ( persistenceUnit.getTransactionType() != null ) {
+			txnType = persistenceUnit.getTransactionType();
+		}
+		else {
+			final Object puPropTxnType = mergedSettings.configurationValues.get( JPA_TRANSACTION_TYPE );
+			if ( puPropTxnType != null ) {
+				txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType( puPropTxnType );
 			}
 		}
 
-		mergedSettings.configurationValues.putAll( loadedConfig.getConfigurationValues() );
-		ssrBuilder.configure( loadedConfig );
+		if ( txnType == null ) {
+			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
+			LOG.debugf( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
+		}
+
+		boolean hasTxStrategy = mergedSettings.configurationValues.containsKey( TRANSACTION_COORDINATOR_STRATEGY );
+		final Boolean definiteJtaCoordinator;
+
+		if ( hasTxStrategy ) {
+			LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
+
+			// see if we can tell whether it is a JTA coordinator
+			final Object strategy = mergedSettings.configurationValues.get( TRANSACTION_COORDINATOR_STRATEGY );
+			if ( strategy instanceof TransactionCoordinatorBuilder ) {
+				definiteJtaCoordinator = ( (TransactionCoordinatorBuilder) strategy ).isJta();
+			}
+			else {
+				definiteJtaCoordinator = false;
+			}
+		}
+		else {
+			if ( txnType == PersistenceUnitTransactionType.JTA ) {
+				mergedSettings.configurationValues.put( TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
+				definiteJtaCoordinator = true;
+			}
+			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
+				mergedSettings.configurationValues.put( TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
+				definiteJtaCoordinator = false;
+			}
+			else {
+				throw new IllegalStateException( "Could not determine TransactionCoordinator strategy to use" );
+			}
+		}
+
+		mergedSettings.configurationValues.put( IS_JTA_TXN_COORD, definiteJtaCoordinator );
+	}
+
+	private void normalizeDataAccess(
+			HashMap<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings,
+			PersistenceUnitDescriptor persistenceUnit) {
+		if ( dataSource != null ) {
+			applyDataSource(
+					dataSource,
+					// we don't explicitly know
+					null,
+					integrationSettingsCopy,
+					mergedSettings
+			);
+
+			// EARLY EXIT!!
+			return;
+		}
+
+		if ( integrationSettingsCopy.containsKey( DATASOURCE ) ) {
+			final Object dataSourceRef = integrationSettingsCopy.remove( DATASOURCE );
+			if ( dataSourceRef != null ) {
+				applyDataSource(
+						dataSourceRef,
+						null,
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( integrationSettingsCopy.containsKey( JPA_JTA_DATASOURCE ) ) {
+			final Object dataSourceRef = integrationSettingsCopy.remove( JPA_JTA_DATASOURCE );
+			if ( dataSourceRef != null ) {
+				applyDataSource(
+						dataSourceRef,
+						true,
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( integrationSettingsCopy.containsKey( JPA_NON_JTA_DATASOURCE ) ) {
+			final Object dataSourceRef = integrationSettingsCopy.remove( JPA_NON_JTA_DATASOURCE );
+
+			applyDataSource(
+					dataSourceRef,
+					false,
+					integrationSettingsCopy,
+					mergedSettings
+			);
+
+			// EARLY EXIT!!
+			return;
+		}
+
+		if ( integrationSettingsCopy.containsKey( URL ) ) {
+			// these have precedence over the JPA ones
+			final Object integrationJdbcUrl = integrationSettingsCopy.get( URL );
+			if ( integrationJdbcUrl != null ) {
+				//noinspection unchecked
+				applyJdbcSettings(
+						integrationJdbcUrl,
+						NullnessHelper.coalesceSuppliedValues(
+								() -> ConfigurationHelper.getString( DRIVER, integrationSettingsCopy ),
+								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
+								() -> ConfigurationHelper.getString( DRIVER, mergedSettings.configurationValues ),
+								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+						),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( integrationSettingsCopy.containsKey( JPA_JDBC_URL ) ) {
+			final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
+
+			if ( integrationJdbcUrl != null ) {
+				//noinspection unchecked
+				applyJdbcSettings(
+						integrationJdbcUrl,
+						NullnessHelper.coalesceSuppliedValues(
+								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
+								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+						),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( persistenceUnit.getJtaDataSource() != null ) {
+			applyDataSource(
+					persistenceUnit.getJtaDataSource(),
+					true,
+					integrationSettingsCopy,
+					mergedSettings
+			);
+
+			// EARLY EXIT!!
+			return;
+		}
+
+		if ( persistenceUnit.getNonJtaDataSource() != null ) {
+			applyDataSource(
+					persistenceUnit.getNonJtaDataSource(),
+					false,
+					integrationSettingsCopy,
+					mergedSettings
+			);
+
+			// EARLY EXIT!!
+			return;
+		}
+
+		if ( mergedSettings.configurationValues.containsKey( URL ) ) {
+			final Object url = mergedSettings.configurationValues.get( URL );
+
+			if ( url != null && ( ! ( url instanceof String ) || StringHelper.isNotEmpty( (String) url ) ) ) {
+				applyJdbcSettings(
+						url,
+						ConfigurationHelper.getString( DRIVER, mergedSettings.configurationValues ),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( mergedSettings.configurationValues.containsKey( JPA_JDBC_URL ) ) {
+			final Object url = mergedSettings.configurationValues.get( JPA_JDBC_URL );
+
+			if ( url != null && ( ! ( url instanceof String ) || StringHelper.isNotEmpty( (String) url ) ) ) {
+				applyJdbcSettings(
+						url,
+						ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		// any other conditions to account for?
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyDataSource(
+			Object dataSourceRef,
+			Boolean useJtaDataSource,
+			HashMap<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
+
+		// `IS_JTA_TXN_COORD` is a value set during `#normalizeTransactionCoordinator` to indicate whether
+		// the execution environment "is JTA" as best as it can tell..
+		//
+		// we use this value when JTA was not explicitly specified in regards the DataSource
+		final boolean isJtaTransactionCoordinator = (boolean) mergedSettings.configurationValues.remove( IS_JTA_TXN_COORD );
+		final boolean isJta = useJtaDataSource == null ? isJtaTransactionCoordinator : useJtaDataSource;
+
+		// add to EMF properties (questionable - see HHH-13432)
+		final String emfKey;
+		final String inverseEmfKey;
+		if ( isJta ) {
+			emfKey = JPA_JTA_DATASOURCE;
+			inverseEmfKey = JPA_NON_JTA_DATASOURCE;
+		}
+		else {
+			emfKey = JPA_NON_JTA_DATASOURCE;
+			inverseEmfKey = JPA_JTA_DATASOURCE;
+		}
+		mergedSettings.configurationValues.put( emfKey, dataSourceRef );
+
+		// clear any settings logically overridden by this datasource
+		cleanUpConfigKeys(
+				integrationSettingsCopy,
+				mergedSettings,
+				inverseEmfKey,
+				JPA_JDBC_DRIVER,
+				DRIVER,
+				JPA_JDBC_URL,
+				URL
+		);
+
+
+		// clean-up the entries in the "integration overrides" so they do not get get picked
+		// up in the general "integration overrides" handling
+		cleanUpConfigKeys( integrationSettingsCopy, DATASOURCE, JPA_JTA_DATASOURCE, JPA_NON_JTA_DATASOURCE );
+
+		// add under Hibernate's DATASOURCE setting where the ConnectionProvider will find it
+		mergedSettings.configurationValues.put( DATASOURCE, dataSourceRef );
+	}
+
+	private void cleanUpConfigKeys(HashMap<?, ?> integrationSettingsCopy, MergedSettings mergedSettings, String... keys) {
+		for ( String key : keys ) {
+			final Object removedIntgSetting = integrationSettingsCopy.remove( key );
+			if ( removedIntgSetting != null ) {
+				LOG.debugf( "Removed integration override setting [%s] due to normalization", key );
+			}
+
+			final Object removedMergedSetting = mergedSettings.configurationValues.remove( key );
+			if ( removedMergedSetting != null ) {
+				LOG.debugf( "Removed merged setting [%s] due to normalization", key );
+			}
+		}
+	}
+
+	private void cleanUpConfigKeys(Map<?, ?> settings, String... keys) {
+		for ( String key : keys ) {
+			settings.remove( key );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyJdbcSettings(
+			Object url,
+			String driver,
+			HashMap<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
+		mergedSettings.configurationValues.put( URL, url );
+		mergedSettings.configurationValues.put( JPA_JDBC_URL, url );
+
+		if ( driver != null ) {
+			mergedSettings.configurationValues.put( DRIVER, driver );
+			mergedSettings.configurationValues.put( JPA_JDBC_DRIVER, driver );
+		}
+		else {
+			mergedSettings.configurationValues.remove( DRIVER );
+			mergedSettings.configurationValues.remove( JPA_JDBC_DRIVER );
+		}
+
+		// clean up the integration-map values
+		cleanUpConfigKeys(
+				integrationSettingsCopy,
+				DRIVER,
+				JPA_JDBC_DRIVER,
+				URL,
+				JPA_JDBC_URL,
+				USER,
+				JPA_JDBC_USER,
+				PASS,
+				JPA_JDBC_PASSWORD
+		);
+
+		cleanUpConfigKeys(
+				integrationSettingsCopy,
+				mergedSettings,
+				DATASOURCE,
+				JPA_JTA_DATASOURCE,
+				JPA_NON_JTA_DATASOURCE
+		);
+	}
+
+	private void processHibernateConfigXmlResources(
+			StandardServiceRegistryBuilder ssrBuilder,
+			MergedSettings mergedSettings,
+			String cfgXmlResourceName) {
+		final LoadedConfig loadedConfig = ssrBuilder.getConfigLoader().loadConfigXmlResource( cfgXmlResourceName );
+
+		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
+
+		ssrBuilder.getAggregatedCfgXml().merge( loadedConfig );
 	}
 
 	private GrantedPermission parseJaccConfigEntry(String keyString, String valueString) {
@@ -638,90 +1038,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
 	}
 
-	private void configure(StandardServiceRegistryBuilder ssrBuilder) {
-
-		applyJdbcConnectionProperties( ssrBuilder );
-		applyTransactionProperties( ssrBuilder );
-
-		// flush before completion validation
-		if ( "true".equals( configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
-			ssrBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-		}
-
-//		final StrategySelector strategySelector = ssrBuilder.getBootstrapServiceRegistry().getService( StrategySelector.class );
-//		final Object interceptorSetting = configurationValues.remove( AvailableSettings.SESSION_INTERCEPTOR );
-//		if ( interceptorSetting != null ) {
-//			settings.setSessionInterceptorClass(
-//					loadSessionInterceptorClass( interceptorSetting, strategySelector )
-//			);
-//		}
-	}
-
-	private void applyJdbcConnectionProperties(StandardServiceRegistryBuilder ssrBuilder) {
-		if ( dataSource != null ) {
-			ssrBuilder.applySetting( DATASOURCE, dataSource );
-		}
-		else if ( persistenceUnit.getJtaDataSource() != null ) {
-			if ( ! ssrBuilder.getSettings().containsKey( DATASOURCE ) ) {
-				ssrBuilder.applySetting( DATASOURCE, persistenceUnit.getJtaDataSource() );
-				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( JPA_JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
-			}
-		}
-		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			if ( ! ssrBuilder.getSettings().containsKey( DATASOURCE ) ) {
-				ssrBuilder.applySetting( DATASOURCE, persistenceUnit.getNonJtaDataSource() );
-				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
-				configurationValues.put( JPA_NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
-			}
-		}
-		else {
-			final String driver = (String) configurationValues.get( JPA_JDBC_DRIVER );
-			if ( StringHelper.isNotEmpty( driver ) ) {
-				ssrBuilder.applySetting( DRIVER, driver );
-			}
-			final String url = (String) configurationValues.get( JPA_JDBC_URL );
-			if ( StringHelper.isNotEmpty( url ) ) {
-				ssrBuilder.applySetting( URL, url );
-			}
-			final String user = (String) configurationValues.get( JPA_JDBC_USER );
-			if ( StringHelper.isNotEmpty( user ) ) {
-				ssrBuilder.applySetting( USER, user );
-			}
-			final String pass = (String) configurationValues.get( JPA_JDBC_PASSWORD );
-			if ( StringHelper.isNotEmpty( pass ) ) {
-				ssrBuilder.applySetting( PASS, pass );
-			}
-		}
-	}
-
-	private void applyTransactionProperties(StandardServiceRegistryBuilder ssrBuilder) {
-		PersistenceUnitTransactionType txnType = PersistenceUnitTransactionTypeHelper.interpretTransactionType(
-				configurationValues.get( JPA_TRANSACTION_TYPE )
-		);
-		if ( txnType == null ) {
-			txnType = persistenceUnit.getTransactionType();
-		}
-		if ( txnType == null ) {
-			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
-		}
-		boolean hasTxStrategy = configurationValues.containsKey( TRANSACTION_COORDINATOR_STRATEGY );
-		if ( hasTxStrategy ) {
-			LOG.overridingTransactionStrategyDangerous( TRANSACTION_COORDINATOR_STRATEGY );
-		}
-		else {
-			if ( txnType == PersistenceUnitTransactionType.JTA ) {
-				ssrBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class );
-			}
-			else if ( txnType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-				ssrBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
-			}
-		}
-	}
-
-	private void configure(StandardServiceRegistry ssr, MergedSettings mergedSettings) {
+	private void configureIdentifierGenerators(StandardServiceRegistry ssr) {
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// apply id generators
@@ -743,10 +1060,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	@SuppressWarnings("unchecked")
-	protected List<AttributeConverterDefinition> populate(
-			MetadataSources metadataSources,
-			MergedSettings mergedSettings,
-			StandardServiceRegistry ssr) {
+	private List<AttributeConverterDefinition> applyMappingResources(MetadataSources metadataSources) {
+		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
+
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
 //
 //		// todo : make sure MetadataSources/Metadata are capable of handling duplicate sources
@@ -823,12 +1139,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return attributeConverterDefinitions;
 	}
 
-	protected void populate(
-			MetadataBuilder metamodelBuilder,
+	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,
-			StandardServiceRegistry ssr,
 			List<AttributeConverterDefinition> attributeConverterDefinitions) {
-		( (MetadataBuilderImplementor) metamodelBuilder ).getBootstrapContext().markAsJpaBootstrap();
+		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
 			metamodelBuilder.applyTempClassLoader( persistenceUnit.getTempClassLoader() );
@@ -912,7 +1226,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// Metamodel will clean this up...
 		try {
 			SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
-			populate( sfBuilder, standardServiceRegistry );
+			populateSfBuilder( sfBuilder, standardServiceRegistry );
 
 			SchemaManagementToolCoordinator.process(
 					metadata, standardServiceRegistry, configurationValues, DelayedDropRegistryNotAvailableImpl.INSTANCE
@@ -926,10 +1240,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		cancel();
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public EntityManagerFactory build() {
-		SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
-		populate( sfBuilder, standardServiceRegistry );
+		final SessionFactoryBuilder sfBuilder = metadata().getSessionFactoryBuilder();
+		populateSfBuilder( sfBuilder, standardServiceRegistry );
 
 		try {
 			return sfBuilder.build();
@@ -939,7 +1253,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	protected void populate(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
+	protected void populateSfBuilder(SessionFactoryBuilder sfBuilder, StandardServiceRegistry ssr) {
 
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
@@ -1024,7 +1338,36 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
+		/**
+		 * 	MergedSettings is initialized with hibernate.properties
+		 */
 		private MergedSettings() {
+			configurationValues.putAll( Environment.getProperties() );
+		}
+
+		public void processPersistenceUnitDescriptorProperties(PersistenceUnitDescriptor persistenceUnit) {
+			if ( persistenceUnit.getProperties() != null ) {
+				configurationValues.putAll( persistenceUnit.getProperties() );
+			}
+
+			configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+
+		}
+
+		public void processHibernateConfigXmlResources(LoadedConfig loadedConfig){
+			if ( ! configurationValues.containsKey( SESSION_FACTORY_NAME ) ) {
+				// there is not already a SF-name in the merged settings
+				final String sfName = loadedConfig.getSessionFactoryName();
+				if ( sfName != null ) {
+					// but the cfg.xml file we are processing named one..
+					configurationValues.put( SESSION_FACTORY_NAME, sfName );
+				}
+			}
+			else {
+				// make sure they match?
+			}
+
+			configurationValues.putAll( loadedConfig.getConfigurationValues() );
 		}
 
 		public Map getConfigurationValues() {

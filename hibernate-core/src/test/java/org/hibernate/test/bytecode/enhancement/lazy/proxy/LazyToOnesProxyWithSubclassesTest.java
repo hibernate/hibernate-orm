@@ -21,7 +21,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.proxy.HibernateProxy;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -78,6 +80,7 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
+					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
 					Animal animal = session.load( Animal.class, "A Human" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 				}
@@ -85,7 +88,7 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	public void testReusedProxyAssociation() {
+	public void testExistingProxyAssociation() {
 		inTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
@@ -102,8 +105,43 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
+					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "primate" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.primate ) );
+					assertTrue( HibernateProxy.class.isInstance( otherEntity.primate ) );
+
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-13640" )
+	public void testExistingProxyAssociationLeafSubclass() {
+		inTransaction(
+				session -> {
+					Human human = new Human( "A Human" );
+					OtherEntity otherEntity = new OtherEntity( "test1" );
+					otherEntity.animal = human;
+					otherEntity.primate = human;
+					otherEntity.human = human;
+					session.persist( human );
+					session.persist( otherEntity );
+				}
+		);
+
+		inSession(
+				session -> {
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
+					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
+					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
+					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "primate" ) );
+					assertFalse( Hibernate.isInitialized( otherEntity.primate ) );
+					assertTrue( HibernateProxy.class.isInstance( otherEntity.primate ) );
+					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
+					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
+					// TODO: Should otherEntity.human be a narrowed HibernateProxy or
+					// an uninitialized non-HibernateProxy proxy?
 				}
 		);
 	}

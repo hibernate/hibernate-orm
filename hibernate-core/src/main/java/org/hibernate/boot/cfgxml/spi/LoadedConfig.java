@@ -47,7 +47,7 @@ public class LoadedConfig {
 	private List<MappingReference> mappingReferences;
 	private Map<EventType,Set<String>> eventListenerMap;
 
-	private LoadedConfig(String sessionFactoryName) {
+	public LoadedConfig(String sessionFactoryName) {
 		this.sessionFactoryName = sessionFactoryName;
 	}
 
@@ -259,7 +259,7 @@ public class LoadedConfig {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void addConfigurationValues(Map configurationValues) {
+	protected void addConfigurationValues(Map configurationValues) {
 		if ( configurationValues == null ) {
 			return;
 		}

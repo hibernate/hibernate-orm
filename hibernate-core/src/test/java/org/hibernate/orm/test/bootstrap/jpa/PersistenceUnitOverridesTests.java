@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.bootstrap;
+package org.hibernate.orm.test.bootstrap.jpa;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -21,18 +22,21 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.DataSourceStub;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
-import org.hibernate.testing.util.jpa.PersistenceUnitInfoPropertiesWrapper;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -41,31 +45,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	@Test
-	public void testCustomProviderPassingIntegrationJpaJdbcOverrides() {
-		PersistenceProvider provider = new HibernatePersistenceProvider() {
-			@Override
-			public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integrationOverrides) {
-				return super.createContainerEntityManagerFactory(
-						new DelegatingPersistenceUnitInfo( info ) {
-							@Override
-							public Properties getProperties() {
-								// use the "db1" connection settings keyed by the JPA property names (org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER, e.g.)
-								final Properties properties = new Properties();
-								properties.putAll( info.getProperties() );
-								properties.putAll( ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db1" ) );
-								return properties;
-							}
-						},
-						integrationOverrides
-				);
-			}
-		};
+	public void testPassingIntegrationJpaJdbcOverrides() {
 
-		// however, use the "db2" JPA connection settings which should override the persistence unit values
+		// the integration overrides say to use the "db2" JPA connection settings (which should override the persistence unit values)
 		final Map integrationOverrides = ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" );
 
-		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
-				new PersistenceUnitInfoPropertiesWrapper(),
+		final EntityManagerFactory emf = new HibernatePersistenceProvider().createContainerEntityManagerFactory(
+				new PersistenceUnitInfoAdapter() {
+					@Override
+					public Properties getProperties() {
+						// effectively, the `persistence.xml` defines `db1` as the connection settings
+						return ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db1" );
+					}
+				},
 				integrationOverrides
 		);
 
@@ -84,7 +76,45 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testPassingIntegrationJpaJdbcOverridesForJtaDataSourceProperty() {
+	public void testPassingIntegrationJtaDataSourceOverrideForJpaJdbcSettings() {
+		final PersistenceUnitInfoAdapter puInfo = new PersistenceUnitInfoAdapter(
+				ConnectionProviderBuilder.getJpaConnectionProviderProperties( "db2" )
+		);
+
+		final DataSource integrationDataSource = new DataSourceStub( "integrationDataSource" );
+
+		final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				puInfo,
+				Collections.singletonMap( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource )
+		);
+
+		// first let's check the DataSource used in the EMF...
+		final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
+				.getServiceRegistry()
+				.getService( ConnectionProvider.class );
+		assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+		final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
+		assertThat( dsCp.getDataSource(), is( integrationDataSource ) );
+
+		// now let's check that it is exposed via the EMF properties
+		//		- note : the spec does not indicate that this should work, but
+		//			it worked this way in previous versions
+		final Object jtaDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
+		assertThat( jtaDs, is( integrationDataSource ) );
+
+		// Additionally, we should have set Hibernate's DATASOURCE setting
+		final Object hibDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
+		assertThat( hibDs, is( integrationDataSource ) );
+
+		// Make sure the non-jta-data-source setting was cleared or otherwise null
+		final Object nonJtaDs = emf.getProperties().get( AvailableSettings.JPA_NON_JTA_DATASOURCE );
+		assertThat( nonJtaDs, nullValue() );
+	}
+
+	@Test
+	public void testPassingIntegrationJpaJdbcOverrideForJtaDataSourceProperty() {
 		PersistenceProvider provider = new HibernatePersistenceProvider() {
 			@Override
 			public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map integrationOverrides) {
@@ -101,6 +131,16 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 								puProperties = new Properties();
 								puProperties.putAll( info.getProperties() );
 								puProperties.put( AvailableSettings.JPA_JTA_DATASOURCE, puDataSource );
+							}
+
+							@Override
+							public DataSource getJtaDataSource() {
+								return null;
+							}
+
+							@Override
+							public DataSource getNonJtaDataSource() {
+								return null;
 							}
 
 							@Override
@@ -142,11 +182,11 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-12858",
-			message = "Even though the JDBC settings override a DataSource *property*, it" +
-					" does not override a DataSource defined using the dedicated persistence.xml element"
-	)
+//	@FailureExpected(
+//			jiraKey = "HHH-12858",
+//			message = "Even though the JDBC settings override a DataSource *property*, it" +
+//					" does not override a DataSource defined using the dedicated persistence.xml element"
+//	)
 	public void testPassingIntegrationJpaJdbcOverridesForJtaDataSourceElement() {
 		PersistenceProvider provider = new HibernatePersistenceProvider() {
 			@Override
@@ -154,11 +194,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 				return super.createContainerEntityManagerFactory(
 						new DelegatingPersistenceUnitInfo( info ) {
 							// inject a JPA JTA DataSource setting into the PU
-							final DataSource puDataSource;
-
-							{
-								puDataSource = new DataSourceStub( "puDataSource" );
-							}
+							final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 
 							@Override
 							public DataSource getJtaDataSource() {
@@ -199,11 +235,11 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-12858",
-			message = "So it appears any use of the persistence.xml `jta-data-source` or `non-jta-data-source` " +
-					"have precedence over integration settings, which is also incorrect"
-	)
+//	@FailureExpected(
+//			jiraKey = "HHH-12858",
+//			message = "So it appears any use of the persistence.xml `jta-data-source` or `non-jta-data-source` " +
+//					"have precedence over integration settings, which is also incorrect"
+//	)
 	public void testPassingIntegrationJpaDataSourceOverrideForJtaDataSourceElement() {
 		final DataSource puDataSource = new DataSourceStub( "puDataSource" );
 		final DataSource integrationDataSource = new DataSourceStub( "integrationDataSource" );
@@ -255,7 +291,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12858", message = "regression - fix" )
+	@TestForIssue( jiraKey = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSource() {
 
 		// mimics a DataSource defined in the persistence.xml
@@ -300,7 +336,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12858", message = "regression - fix" )
+	@TestForIssue( jiraKey = "HHH-13640" )
 	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfo() {
 
 		// mimics a DataSource defined in the persistence.xml

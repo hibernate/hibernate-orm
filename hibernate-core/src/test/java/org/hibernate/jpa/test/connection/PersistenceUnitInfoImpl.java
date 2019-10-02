@@ -37,7 +37,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private URL puRoot;
 
 	public PersistenceUnitInfoImpl(URL puRoot, String[] mappingFiles) {
-		this.mappingFiles = new ArrayList<String>( mappingFiles.length );
+		this.mappingFiles = new ArrayList<>( mappingFiles.length );
 		this.mappingFiles.addAll( Arrays.asList( mappingFiles ) );
 		this.puRoot = puRoot;
 	}

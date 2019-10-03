@@ -6,31 +6,30 @@
  */
 package org.hibernate.jpa.test.query;
 
-import java.util.*;
-import javax.persistence.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
-import org.hibernate.FlushMode;
-import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.testing.SkipForDialect;
+
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
+@TestForIssue( jiraKey = "HHH-13614")
 public class ConstructorResultDtoTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

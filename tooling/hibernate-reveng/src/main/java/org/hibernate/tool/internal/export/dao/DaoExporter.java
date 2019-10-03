@@ -5,13 +5,13 @@ import java.util.Map;
 import org.hibernate.tool.internal.export.pojo.POJOClass;
 import org.hibernate.tool.internal.export.pojo.POJOExporter;
 
-public class DAOExporter extends POJOExporter {
+public class DaoExporter extends POJOExporter {
 
     private static final String DAO_DAOHOME_FTL = "dao/daohome.ftl";
 
     private String sessionFactoryName = "SessionFactory";
 
-    public DAOExporter() {
+    public DaoExporter() {
     		super();
     }
     

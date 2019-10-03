@@ -241,8 +241,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
+		final boolean traceEnabled = LOG.isTraceEnabled();
 
-		if ( LOG.isTraceEnabled() ) {
+		if ( traceEnabled ) {
 			LOG.tracev(
 					"Loading entity: {0}",
 					MessageHelper.infoString( persister, event.getEntityId(), factory )
@@ -283,11 +284,11 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				final Object proxy = persistenceContext.getProxy( keyToLoad );
 
 				if ( proxy != null ) {
-					LOG.trace( "Entity proxy found in session cache" );
+					if( traceEnabled ) {
+						LOG.trace( "Entity proxy found in session cache" );
+					}
 
-					LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
-
-					if ( li.isUnwrap() ) {
+					if ( LOG.isDebugEnabled() && ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
 						LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 					}
 

@@ -368,18 +368,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
 
-		final IntegratorProvider integratorProvider = loadSettingInstance(
-				INTEGRATOR_PROVIDER,
-				integrationSettings.get( INTEGRATOR_PROVIDER ),
-				IntegratorProvider.class
-		);
+		applyIntegrationProvider( integrationSettings, bsrBuilder );
 
-		if ( integratorProvider != null ) {
-			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
-				bsrBuilder.applyIntegrator( integrator );
-			}
-		}
-		
 		final StrategyRegistrationProviderList strategyRegistrationProviderList
 				= (StrategyRegistrationProviderList) integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
 		if ( strategyRegistrationProviderList != null ) {
@@ -443,6 +433,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
+	private void applyIntegrationProvider(Map integrationSettings, BootstrapServiceRegistryBuilder bsrBuilder) {
+		Object integrationSetting = integrationSettings.get( INTEGRATOR_PROVIDER );
+		if ( integrationSetting == null ) {
+			return;
+		}
+		final IntegratorProvider integratorProvider = loadSettingInstance(
+				INTEGRATOR_PROVIDER,
+				integrationSetting,
+				IntegratorProvider.class
+		);
+
+		if ( integratorProvider != null ) {
+			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
+				bsrBuilder.applyIntegrator( integrator );
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?,?> integrationSettings,
@@ -1375,10 +1384,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private <T> T loadSettingInstance(String settingName, Object settingValue, Class<T> clazz) {
-		if ( settingValue == null ) {
-			return null;
-		}
-
 		T instance = null;
 		Class<? extends T> instanceClass = null;
 
@@ -1416,7 +1421,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			catch (InstantiationException | IllegalAccessException e) {
 				throw new IllegalArgumentException(
-						"The MetadataBuilderContributor class [" + instanceClass + "] could not be instantiated!",
+						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated!",
 						e
 				);
 			}

@@ -28,7 +28,7 @@ public class NullnessHelper {
 		for ( T value : values ) {
 			if ( value != null ) {
 				if ( String.class.isInstance( value ) ) {
-					if ( StringHelper.isNotEmpty( (String) value ) ) {
+					if ( !( (String) value ).isEmpty() ) {
 						return value;
 					}
 				}

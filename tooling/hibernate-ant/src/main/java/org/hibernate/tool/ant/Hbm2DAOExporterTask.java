@@ -2,7 +2,8 @@ package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.dao.DAOExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 /**
  * @author Dennis Byrne
@@ -13,14 +14,8 @@ public class Hbm2DAOExporterTask extends Hbm2JavaExporterTask {
 		super(parent);
 	}
 	
-	protected Exporter configureExporter(Exporter exp) {
-		DAOExporter exporter = (DAOExporter)exp;
-		super.configureExporter(exp);
-		return exporter;
-	}
-	
 	protected Exporter createExporter() {
-		Exporter result = new DAOExporter();
+		Exporter result = ExporterFactory.createExporter(ExporterType.DAO);
 		result.getProperties().putAll(parent.getProperties());
 		result.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, parent.getMetadataDescriptor());
 		result.getProperties().put(ExporterConstants.DESTINATION_FOLDER, getDestdir());

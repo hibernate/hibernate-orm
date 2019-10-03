@@ -5,7 +5,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.internal.export.cfg.CfgExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 public class Hbm2CfgXmlExporterTask extends ExporterTask {
 
@@ -16,7 +17,7 @@ public class Hbm2CfgXmlExporterTask extends ExporterTask {
 	}
 
 	public Exporter createExporter() {
-		return new CfgExporter();
+		return ExporterFactory.createExporter(ExporterType.CFG);
 	}
 
 	public void setEjb3(boolean ejb3) {
@@ -28,8 +29,8 @@ public class Hbm2CfgXmlExporterTask extends ExporterTask {
 	}
 	
 	protected Exporter configureExporter(Exporter exporter) {
-		CfgExporter hce = (CfgExporter)super.configureExporter( exporter );
-        hce.getProperties().setProperty("ejb3", ""+ejb3);
-		return hce;
+		super.configureExporter( exporter );
+        exporter.getProperties().setProperty("ejb3", ""+ejb3);
+		return exporter;
 	}
 }

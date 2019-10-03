@@ -30,8 +30,8 @@ public class CfgExporter extends AbstractExporter {
 
 	private Writer output;
     private Properties customProperties = new Properties();
-
-	public Properties getCustomProperties() {
+    
+ 	public Properties getCustomProperties() {
 		return customProperties;
 	}
 

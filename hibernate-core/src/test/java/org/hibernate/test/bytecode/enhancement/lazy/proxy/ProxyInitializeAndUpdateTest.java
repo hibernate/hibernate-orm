@@ -91,7 +91,6 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-13653")
 	public void testInitializeWithSetter() {
 		inTransaction(
 				session -> {

@@ -251,7 +251,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			String suffixForDefaultColumnName,
 			MetadataBuildingContext buildingContext) {
 		if ( ann != null ) {
-			if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
+			if ( !BinderHelper.isEmptyOrNullAnnotationValue( mappedBy ) ) {
 				throw new AnnotationException(
 						"Illegal attempt to define a @JoinColumn with a mappedBy association: "
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )

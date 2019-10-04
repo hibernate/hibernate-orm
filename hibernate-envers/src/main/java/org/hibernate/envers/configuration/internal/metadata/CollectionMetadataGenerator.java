@@ -526,8 +526,9 @@ public final class CollectionMetadataGenerator {
 			final IndexedCollection indexedValue = (IndexedCollection) propertyValue;
 			final String mapKey = propertyAuditingData.getMapKey();
 			final EnumType mapKeyEnumType = propertyAuditingData.getMapKeyEnumType();
-			if ( mapKey == null && mapKeyEnumType == null ) {
-				// This entity doesn't specify a javax.persistence.MapKey. Mapping it to the middle entity.
+			if ( ( mapKey == null && mapKeyEnumType == null ) || ( mapKeyEnumType != null && referencedEntityName == null ) ) {
+				// This entity doesn't specify a javax.persistence.MapKey or there is a MapKeyEnumerated but its a non-entity type.
+				// Mapping it to the middle entity.
 				return addValueToMiddleTable(
 						indexedValue.getIndex(),
 						middleEntityXml,

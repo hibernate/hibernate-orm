@@ -6,7 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +39,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	private boolean initialized;
 
+	private boolean initializeBeforeWrite;
+
 	public EnhancementAsProxyLazinessInterceptor(
 			String entityName,
 			Set<String> identifierAttributeNames,
@@ -59,6 +60,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		final EntityPersister entityPersister = session.getFactory().getMetamodel().entityPersister( entityName );
 		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
+		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
+		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values
+		initializeBeforeWrite = !inLineDirtyChecking || !entityPersister.getEntityMetamodel().isDynamicUpdate();
 	}
 
 	public EntityKey getEntityKey() {
@@ -89,7 +93,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 							.entityPersister( getEntityName() );
 					final EntityTuplizer entityTuplizer = entityPersister.getEntityTuplizer();
 
-					if ( inLineDirtyChecking && writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
+					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
 						// enhancement has dirty-tracking available and at least one attribute was explicitly set
 
@@ -241,13 +245,17 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			return newValue;
 		}
 
-		if ( ! inLineDirtyChecking ) {
+		if ( initializeBeforeWrite ) {
 			// we need to force-initialize the proxy - the fetch group to which the `attributeName` belongs
 			try {
 				forceInitialize( target, attributeName );
 			}
 			finally {
 				initialized = true;
+			}
+
+			if ( inLineDirtyChecking ) {
+				( (SelfDirtinessTracker) target ).$$_hibernate_trackChange( attributeName );
 			}
 		}
 		else {

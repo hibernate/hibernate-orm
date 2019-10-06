@@ -10,11 +10,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Id;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
@@ -22,6 +26,7 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
@@ -409,6 +414,9 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
 					instanceOf( PersistenceUnitDialect.class )
 			);
+
+			final EntityType<MappedEntity> entityMapping = emf.getMetamodel().entity( MappedEntity.class );
+			assertThat( entityMapping, notNullValue() );
 		}
 		finally {
 			emf.close();
@@ -450,6 +458,15 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
 					instanceOf( IntegrationDialect.class )
 			);
+
+			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
+					.getMetamodel()
+					.entityPersister( MappedEntity.class );
+			assertThat( entityMapping, notNullValue() );
+			assertThat(
+					entityMapping.getCacheAccessStrategy().getAccessType(),
+					is( AccessType.READ_ONLY )
+			);
 		}
 		finally {
 			emf.close();
@@ -463,4 +480,26 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	public static class IntegrationDialect extends Dialect {
 	}
 
+	@Entity
+	public static class MappedEntity {
+		private Integer id;
+		private String name;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
 }

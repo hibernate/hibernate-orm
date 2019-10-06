@@ -8,5 +8,7 @@
 <hibernate-configuration>
 	<session-factory>
 		<property name="hibernate.dialect">org.hibernate.orm.test.bootstrap.jpa.PersistenceUnitOverridesTests$PersistenceUnitDialect</property>
+		<mapping class="org.hibernate.orm.test.bootstrap.jpa.PersistenceUnitOverridesTests$MappedEntity"/>
+		<class-cache class="org.hibernate.orm.test.bootstrap.jpa.PersistenceUnitOverridesTests$MappedEntity" usage="read-only"/>
 	</session-factory>
 </hibernate-configuration>

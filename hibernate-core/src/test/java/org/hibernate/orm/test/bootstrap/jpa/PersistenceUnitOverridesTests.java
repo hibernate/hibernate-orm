@@ -16,6 +16,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -23,10 +24,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.DataSourceStub;
-
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.testing.jdbc.DataSourceStub;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
@@ -90,27 +89,32 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 				Collections.singletonMap( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource )
 		);
 
-		// first let's check the DataSource used in the EMF...
-		final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
-				.getServiceRegistry()
-				.getService( ConnectionProvider.class );
-		assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
-		final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
-		assertThat( dsCp.getDataSource(), is( integrationDataSource ) );
+		try {
+			// first let's check the DataSource used in the EMF...
+			final ConnectionProvider connectionProvider = emf.unwrap( SessionFactoryImplementor.class )
+					.getServiceRegistry()
+					.getService( ConnectionProvider.class );
+			assertThat( connectionProvider, instanceOf( DatasourceConnectionProviderImpl.class ) );
+			final DatasourceConnectionProviderImpl dsCp = (DatasourceConnectionProviderImpl) connectionProvider;
+			assertThat( dsCp.getDataSource(), is( integrationDataSource ) );
 
-		// now let's check that it is exposed via the EMF properties
-		//		- note : the spec does not indicate that this should work, but
-		//			it worked this way in previous versions
-		final Object jtaDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
-		assertThat( jtaDs, is( integrationDataSource ) );
+			// now let's check that it is exposed via the EMF properties
+			//		- note : the spec does not indicate that this should work, but
+			//			it worked this way in previous versions
+			final Object jtaDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
+			assertThat( jtaDs, is( integrationDataSource ) );
 
-		// Additionally, we should have set Hibernate's DATASOURCE setting
-		final Object hibDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
-		assertThat( hibDs, is( integrationDataSource ) );
+			// Additionally, we should have set Hibernate's DATASOURCE setting
+			final Object hibDs = emf.getProperties().get( AvailableSettings.JPA_JTA_DATASOURCE );
+			assertThat( hibDs, is( integrationDataSource ) );
 
-		// Make sure the non-jta-data-source setting was cleared or otherwise null
-		final Object nonJtaDs = emf.getProperties().get( AvailableSettings.JPA_NON_JTA_DATASOURCE );
-		assertThat( nonJtaDs, nullValue() );
+			// Make sure the non-jta-data-source setting was cleared or otherwise null
+			final Object nonJtaDs = emf.getProperties().get( AvailableSettings.JPA_NON_JTA_DATASOURCE );
+			assertThat( nonJtaDs, nullValue() );
+		}
+		finally {
+			emf.close();
+		}
 	}
 
 	@Test
@@ -362,9 +366,101 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 				integrationSettings
 		);
 
-		final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
-		final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService( ConnectionProvider.class );
-		assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		try {
+			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
+			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
+					ConnectionProvider.class );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
+	public void testCfgXmlBaseline() {
+		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
+			private final Properties props = new Properties();
+			{
+				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+			}
+
+			@Override
+			public Properties getProperties() {
+				return props;
+			}
+		};
+
+		final PersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final Map integrationSettings = Collections.emptyMap();
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				info,
+				integrationSettings
+		);
+
+		try {
+			assertThat(
+					emf.getProperties().get( AvailableSettings.DIALECT ),
+					is( PersistenceUnitDialect.class.getName() )
+			);
+			assertThat(
+					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
+					instanceOf( PersistenceUnitDialect.class )
+			);
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
+	public void testIntegrationOverridesOfCfgXml() {
+		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
+			private final Properties props = new Properties();
+			{
+				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+			}
+
+			@Override
+			public Properties getProperties() {
+				return props;
+			}
+		};
+
+		final PersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final Map integrationSettings = Collections.singletonMap(
+				AvailableSettings.DIALECT,
+				IntegrationDialect.class.getName()
+		);
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				info,
+				integrationSettings
+		);
+
+		try {
+			assertThat(
+					emf.getProperties().get( AvailableSettings.DIALECT ),
+					is( IntegrationDialect.class.getName() )
+			);
+			assertThat(
+					emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect(),
+					instanceOf( IntegrationDialect.class )
+			);
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	public static class PersistenceUnitDialect extends Dialect {
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public static class IntegrationDialect extends Dialect {
 	}
 
 }

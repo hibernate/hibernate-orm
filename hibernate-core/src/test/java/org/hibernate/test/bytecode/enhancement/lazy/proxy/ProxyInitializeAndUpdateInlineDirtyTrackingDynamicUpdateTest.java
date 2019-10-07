@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -34,8 +35,8 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue( jiraKey = "HHH-13640" )
 @RunWith(BytecodeEnhancerRunner.class)
-@EnhancementOptions(lazyLoading = true)
-public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
+@EnhancementOptions(lazyLoading = true,inlineDirtyChecking = true)
+public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -109,8 +110,9 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 					Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					animal.setSex( "other" );
-					// Setting the attribute value should have initialized animal.
-					assertTrue( Hibernate.isInitialized( animal ) );
+					// Setting the attribute value should not initialize animal
+					// with dirty-checking and dynamic-update.
+					assertFalse( Hibernate.isInitialized( animal ) );
 				}
 		);
 
@@ -315,6 +317,7 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 
 	@Entity(name = "Animal")
 	@Table(name = "Animal")
+	@DynamicUpdate
 	public static class Animal {
 
 		@Id

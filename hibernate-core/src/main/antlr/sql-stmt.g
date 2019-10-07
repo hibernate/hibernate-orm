@@ -40,6 +40,10 @@ options {
 
     public void throwExceptionIfErrorOccurred() {
         if ( errorHandler.hasErrors() ) {
+        	String errorMessage = errorHandler.getErrorMessage();
+        	if(errorMessage.contains("expecting STMT_END")) {
+        		throw new StatementParserException( "Import script Sql statements must terminate with a ';' char"  );
+        	}
             throw new StatementParserException( errorHandler.getErrorMessage() );
         }
     }

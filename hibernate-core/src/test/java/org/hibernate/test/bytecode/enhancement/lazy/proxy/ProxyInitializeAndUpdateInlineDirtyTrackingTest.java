@@ -34,8 +34,8 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue( jiraKey = "HHH-13640" )
 @RunWith(BytecodeEnhancerRunner.class)
-@EnhancementOptions(lazyLoading = true)
-public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
+@EnhancementOptions(lazyLoading = true,inlineDirtyChecking = true)
+public class ProxyInitializeAndUpdateInlineDirtyTrackingTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );

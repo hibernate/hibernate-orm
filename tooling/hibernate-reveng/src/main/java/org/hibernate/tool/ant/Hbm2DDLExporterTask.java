@@ -38,7 +38,7 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 		super.configureExporter( exp );
 		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, exportToDatabase);
 		exporter.setConsole(scriptToConsole);
-		exporter.setUpdate(schemaUpdate);
+		exporter.getProperties().put(ExporterConstants.SCHEMA_UPDATE, schemaUpdate);
 		exporter.setDelimiter(delimiter);
 		exporter.setDrop(drop);
 		exporter.setCreate(create);

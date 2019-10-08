@@ -36,7 +36,6 @@ import org.hibernate.tool.schema.TargetType;
 public class DdlExporter extends AbstractExporter {
 
 	protected boolean scriptToConsole = true;
-	protected boolean schemaUpdate = false;
 	protected String delimiter = ";";
 	protected boolean drop = false;
 	protected boolean create = true;
@@ -54,7 +53,6 @@ public class DdlExporter extends AbstractExporter {
 
 	protected void setupContext() {
 		scriptToConsole = setupBoolProperty("scriptToConsole", scriptToConsole);
-		schemaUpdate = setupBoolProperty("schemaUpdate", schemaUpdate);
 		delimiter = getProperties().getProperty("delimiter", delimiter);
 		drop = setupBoolProperty("drop", drop);
 		create = setupBoolProperty("create", create);
@@ -74,7 +72,7 @@ public class DdlExporter extends AbstractExporter {
 		if (scriptToConsole) targetTypes.add(TargetType.STDOUT);
 		if (getExportToDatabase()) targetTypes.add(TargetType.DATABASE);
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
-		if (schemaUpdate) {
+		if (getSchemaUpdate()) {
 			SchemaUpdate update = new SchemaUpdate();
 			if(outputFileName == null && delimiter == null && haltOnError && format)  {
 				update.execute(targetTypes, metadata);
@@ -135,13 +133,6 @@ public class DdlExporter extends AbstractExporter {
 
 
 	/**
-	 * Run SchemaUpdate instead of SchemaExport
-	 */
-	public void setUpdate(boolean update) {
-		this.schemaUpdate = update;
-	}
-
-	/**
 	 * Output sql to console ? (default true)
 	 */
 	public void setConsole(boolean console) {
@@ -189,4 +180,13 @@ public class DdlExporter extends AbstractExporter {
 			return (boolean)getProperties().get(EXPORT_TO_DATABASE);
 		}
 	}
+	
+	private boolean getSchemaUpdate() {
+		if (!getProperties().containsKey(SCHEMA_UPDATE)) {
+			return false;
+		} else {
+			return (boolean)getProperties().get(SCHEMA_UPDATE);
+		}
+	}
+	
 }

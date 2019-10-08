@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean drop = false;
 	protected boolean create = true;
 	protected boolean format = false;
 
@@ -50,7 +49,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		drop = setupBoolProperty("drop", drop);
 		create = setupBoolProperty("create", create);
 		format = setupBoolProperty("format", format);
 		outputFileName = getProperties().getProperty("outputFileName", outputFileName);
@@ -114,9 +112,9 @@ public class DdlExporter extends AbstractExporter {
 			}
 			export.setHaltOnError(haltOnError);
 			export.setFormat(format);
-			if (drop && create) {
+			if (getDrop() && create) {
 				export.execute(targetTypes, Action.BOTH, metadata);
-			} else if (drop) {
+			} else if (getDrop()) {
 				export.execute(targetTypes, Action.DROP, metadata);
 			} else if (create) {
 				export.execute(targetTypes, Action.CREATE, metadata);
@@ -142,10 +140,6 @@ public class DdlExporter extends AbstractExporter {
 		outputFileName = fileName;
 	}
 
-	public void setDrop(boolean drop) {
-		this.drop = drop;
-	}
-
 	public void setCreate(boolean create) {
 		this.create = create;
 	}
@@ -167,6 +161,14 @@ public class DdlExporter extends AbstractExporter {
 			return true;
 		} else {
 			return (boolean)getProperties().get(EXPORT_TO_CONSOLE);
+		}
+	}
+	
+	private boolean getDrop() {
+		if (!getProperties().containsKey(DROP_DATABASE)) {
+			return false;
+		} else {
+			return (boolean)getProperties().get(DROP_DATABASE);
 		}
 	}
 	

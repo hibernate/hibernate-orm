@@ -5,6 +5,7 @@ public interface ExporterConstants {
 	public static final String ARTIFACT_COLLECTOR = "org.hibernate.tool.api.export.ExporterConstants.ArtifactCollector";
 	public static final String DELIMITER = "org.hibernate.tool.api.export.ExporterConstants.Delimiter";
 	public static final String DESTINATION_FOLDER = "org.hibernate.tool.api.export.ExporterConstants.DestinationFolder";
+	public static final String DROP_DATABASE = "org.hibernate.tool.api.export.ExporterConstants.DropDatabase";
 	public static final String EXPORT_TO_CONSOLE = "org.hibernate.tool.api.export.ExporterConstants.ExportToConsole";
 	public static final String EXPORT_TO_DATABASE = "org.hibernate.tool.api.export.ExporterConstants.ExportToDatabase";
 	public static final String FILE_PATTERN = "org.hibernate.tool.api.export.ExporterConstants.FilePattern";

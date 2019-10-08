@@ -4,7 +4,7 @@ public enum ExporterType {
 	
 	CFG ("org.hibernate.tool.internal.export.cfg.CfgExporter"),
 	DAO ("org.hibernate.tool.internal.export.dao.DaoExporter"),
-	DDL ("org.hibernate.tool.internal.export.ddl.Hbm2DDLExporter"),
+	DDL ("org.hibernate.tool.internal.export.ddl.DdlExporter"),
 	GENERIC ("org.hibernate.tool.internal.export.common.GenericExporter"),
 	POJO ("org.hibernate.tool.internal.export.pojo.POJOExporter");
 	

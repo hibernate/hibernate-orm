@@ -33,7 +33,7 @@ import org.hibernate.tool.schema.TargetType;
  * @author Vitali
  * 
  */
-public class Hbm2DDLExporter extends AbstractExporter {
+public class DdlExporter extends AbstractExporter {
 
 	protected boolean exportToDatabase = true; 
 	protected boolean scriptToConsole = true;

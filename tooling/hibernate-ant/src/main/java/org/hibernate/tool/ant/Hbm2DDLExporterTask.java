@@ -36,7 +36,7 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 	protected Exporter configureExporter(Exporter exp) {
 		DdlExporter exporter = (DdlExporter) exp;
 		super.configureExporter( exp );
-		exporter.setExport(exportToDatabase);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, exportToDatabase);
 		exporter.setConsole(scriptToConsole);
 		exporter.setUpdate(schemaUpdate);
 		exporter.setDelimiter(delimiter);

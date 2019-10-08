@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean exportToDatabase = true; 
 	protected boolean scriptToConsole = true;
 	protected boolean schemaUpdate = false;
 	protected String delimiter = ";";
@@ -54,7 +53,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		exportToDatabase = setupBoolProperty("exportToDatabase", exportToDatabase);
 		scriptToConsole = setupBoolProperty("scriptToConsole", scriptToConsole);
 		schemaUpdate = setupBoolProperty("schemaUpdate", schemaUpdate);
 		delimiter = getProperties().getProperty("delimiter", delimiter);
@@ -74,7 +72,7 @@ public class DdlExporter extends AbstractExporter {
 		Metadata metadata = getMetadata();
 		final EnumSet<TargetType> targetTypes = EnumSet.noneOf( TargetType.class );
 		if (scriptToConsole) targetTypes.add(TargetType.STDOUT);
-		if (exportToDatabase) targetTypes.add(TargetType.DATABASE);
+		if (getExportToDatabase()) targetTypes.add(TargetType.DATABASE);
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
 		if (schemaUpdate) {
 			SchemaUpdate update = new SchemaUpdate();
@@ -136,10 +134,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 
-	public void setExport(boolean export) {
-		exportToDatabase = export;
-	}
-
 	/**
 	 * Run SchemaUpdate instead of SchemaExport
 	 */
@@ -186,5 +180,13 @@ public class DdlExporter extends AbstractExporter {
 
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
+	}
+	
+	private boolean getExportToDatabase() {
+		if (!getProperties().containsKey(EXPORT_TO_DATABASE)) {
+			return true;
+		} else {
+			return (boolean)getProperties().get(EXPORT_TO_DATABASE);
+		}
 	}
 }

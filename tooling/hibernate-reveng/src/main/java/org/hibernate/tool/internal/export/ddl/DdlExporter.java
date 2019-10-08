@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected String delimiter = ";";
 	protected boolean drop = false;
 	protected boolean create = true;
 	protected boolean format = false;
@@ -51,7 +50,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		delimiter = getProperties().getProperty("delimiter", delimiter);
 		drop = setupBoolProperty("drop", drop);
 		create = setupBoolProperty("create", create);
 		format = setupBoolProperty("format", format);
@@ -72,15 +70,15 @@ public class DdlExporter extends AbstractExporter {
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
 		if (getSchemaUpdate()) {
 			SchemaUpdate update = new SchemaUpdate();
-			if(outputFileName == null && delimiter == null && haltOnError && format)  {
+			if(outputFileName == null && getDelimiter() == null && haltOnError && format)  {
 				update.execute(targetTypes, metadata);
 			}
 			else {				
 				if (null != outputFileName) {
 					File outputFile = new File(getOutputDirectory(), outputFileName);
 					update.setOutputFile(outputFile.getPath());		
-					log.debug("delimiter ='"+ delimiter + "'");
-					update.setDelimiter(delimiter);
+					log.debug("delimiter ='"+ getDelimiter() + "'");
+					update.setDelimiter(getDelimiter());
 					update.setFormat(Boolean.valueOf(format));	
 				}
 				
@@ -111,8 +109,8 @@ public class DdlExporter extends AbstractExporter {
 				export.setOutputFile(new File(getOutputDirectory(),
 						outputFileName).toString());
 			}
-			if (null != delimiter) {
-				export.setDelimiter(delimiter);
+			if (null != getDelimiter()) {
+				export.setDelimiter(getDelimiter());
 			}
 			export.setHaltOnError(haltOnError);
 			export.setFormat(format);
@@ -152,18 +150,18 @@ public class DdlExporter extends AbstractExporter {
 		this.create = create;
 	}
 
-	public void setDelimiter(String delimiter) {
-		this.delimiter = delimiter;
-	}
-
-	public String getDelimiter() {
-		return delimiter;
-	}
-
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
 	}
 	
+	
+	private String getDelimiter() {
+		if (!getProperties().containsKey(DELIMITER)) {
+			return ";";
+		}
+		return (String)getProperties().get(DELIMITER);
+	}
+
 	private boolean getExportToConsole() {
 		if (!getProperties().containsKey(EXPORT_TO_CONSOLE)) {
 			return true;

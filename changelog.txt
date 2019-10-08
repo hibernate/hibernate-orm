@@ -4,6 +4,18 @@ Hibernate 5 Changelog
 Note: Please refer to JIRA to learn more about each issue.
 
 
+Changes in 5.3.13.Final (October 8th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31792/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13586] - ClassCastException when using a single region name for both entity and query results
+    * [HHH-13645] - StatsNamedContainer#getOrCompute throws NullPointerException when computed value is null
+
+** Improvement
+    * [HHH-13130] - Provide Gradle-based bytecode enhancement as a task separate from the compileJava task
+
 Changes in 5.3.12.Final (September 11th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

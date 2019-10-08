@@ -23,8 +23,8 @@ import java.util.Iterator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
-import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.schema.TargetType;
 
 /**
@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean scriptToConsole = true;
 	protected String delimiter = ";";
 	protected boolean drop = false;
 	protected boolean create = true;
@@ -52,7 +51,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		scriptToConsole = setupBoolProperty("scriptToConsole", scriptToConsole);
 		delimiter = getProperties().getProperty("delimiter", delimiter);
 		drop = setupBoolProperty("drop", drop);
 		create = setupBoolProperty("create", create);
@@ -69,7 +67,7 @@ public class DdlExporter extends AbstractExporter {
 	protected void doStart() {
 		Metadata metadata = getMetadata();
 		final EnumSet<TargetType> targetTypes = EnumSet.noneOf( TargetType.class );
-		if (scriptToConsole) targetTypes.add(TargetType.STDOUT);
+		if (getExportToConsole()) targetTypes.add(TargetType.STDOUT);
 		if (getExportToDatabase()) targetTypes.add(TargetType.DATABASE);
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
 		if (getSchemaUpdate()) {
@@ -133,13 +131,6 @@ public class DdlExporter extends AbstractExporter {
 
 
 	/**
-	 * Output sql to console ? (default true)
-	 */
-	public void setConsole(boolean console) {
-		this.scriptToConsole = console;
-	}
-
-	/**
 	 * Format the generated sql
 	 */
 	public void setFormat(boolean format) {
@@ -171,6 +162,14 @@ public class DdlExporter extends AbstractExporter {
 
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
+	}
+	
+	private boolean getExportToConsole() {
+		if (!getProperties().containsKey(EXPORT_TO_CONSOLE)) {
+			return true;
+		} else {
+			return (boolean)getProperties().get(EXPORT_TO_CONSOLE);
+		}
 	}
 	
 	private boolean getExportToDatabase() {

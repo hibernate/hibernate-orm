@@ -115,8 +115,12 @@ public class ClassesAuditingData {
 
 		if ( propertyAuditingData.getMapKeyEnumType() != null ) {
 			final String referencedEntityName = MappingTools.getReferencedEntityName( property.getValue() );
-			final ClassAuditingData referencedAuditingData = entityNameToAuditingData.get( referencedEntityName );
-			addMapEnumeratedKey( property.getValue(), property.getPropertyAccessorName(), referencedAuditingData );
+			if ( referencedEntityName != null ) {
+				// If no entity could be determined, this means the enum type isn't an entity mapping and instead is one
+				// to a basic type.  In this use case, there is nothing special to do.
+				final ClassAuditingData referencedAuditingData = entityNameToAuditingData.get( referencedEntityName );
+				addMapEnumeratedKey( property.getValue(), property.getPropertyAccessorName(), referencedAuditingData );
+			}
 		}
 
 		// HHH-9108

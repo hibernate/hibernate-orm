@@ -46,7 +46,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private final AliasResolutionContext aliasResolutionContext;
 	private final boolean readOnly;
 	private final boolean shouldUseOptionalEntityInformation;
-	private final boolean forceFetchLazyAttributes;
 	private final boolean shouldReturnProxies;
 	private final QueryParameters queryParameters;
 	private final NamedParameterContext namedParameterContext;
@@ -57,6 +56,8 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private Map<EntityReference,Set<EntityKey>> subselectLoadableEntityKeyMap;
 	private List<HydratedEntityRegistration> hydratedEntityRegistrationList;
 	private int nRowsRead = 0;
+
+	private Map<EntityReference,EntityReferenceProcessingState> identifierResolutionContextMap;
 
 	/**
 	 * Builds a ResultSetProcessingContextImpl
@@ -72,7 +73,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			final AliasResolutionContext aliasResolutionContext,
 			final boolean readOnly,
 			final boolean shouldUseOptionalEntityInformation,
-			final boolean forceFetchLazyAttributes,
 			final boolean shouldReturnProxies,
 			final QueryParameters queryParameters,
 			final NamedParameterContext namedParameterContext,
@@ -83,7 +83,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		this.aliasResolutionContext = aliasResolutionContext;
 		this.readOnly = readOnly;
 		this.shouldUseOptionalEntityInformation = shouldUseOptionalEntityInformation;
-		this.forceFetchLazyAttributes = forceFetchLazyAttributes;
 		this.shouldReturnProxies = shouldReturnProxies;
 		this.queryParameters = queryParameters;
 		this.namedParameterContext = namedParameterContext;
@@ -137,15 +136,22 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		return LockMode.NONE;
 	}
 
-	private Map<EntityReference,EntityReferenceProcessingState> identifierResolutionContextMap;
-
 	@Override
 	public EntityReferenceProcessingState getProcessingState(final EntityReference entityReference) {
+		EntityReferenceProcessingState context;
 		if ( identifierResolutionContextMap == null ) {
-			identifierResolutionContextMap = new IdentityHashMap<>();
+			//The default expected size of IdentityHashMap is 21, which is likely to allocate larger arrays than what is typically necessary.
+			//Reducing to 5, as a reasonable estimate for typical use: any larger query can better justify the need to resize,
+			//while single loads shouldn't pay such an high cost.
+			//This can save a lot of memory as it reduces the internal table of IdentityHashMap from a 64 slot array, to 16 slots:
+			//that's a 75% memory cost reduction for usage patterns which do many individual loads.
+			identifierResolutionContextMap = new IdentityHashMap<>(5);
+			context = null;
+		}
+		else {
+			context = identifierResolutionContextMap.get( entityReference );
 		}
 
-		EntityReferenceProcessingState context = identifierResolutionContextMap.get( entityReference );
 		if ( context == null ) {
 			context = new EntityReferenceProcessingState() {
 				private boolean wasMissingIdentifier;

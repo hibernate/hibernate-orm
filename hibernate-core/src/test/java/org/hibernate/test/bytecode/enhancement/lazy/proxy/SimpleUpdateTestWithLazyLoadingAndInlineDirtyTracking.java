@@ -115,13 +115,13 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking extends BaseN
 			MatcherAssert.assertThat( interceptor, instanceOf( EnhancementAsProxyLazinessInterceptor.class ) );
 
 			loadedChild.setName( updatedName );
-			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertEquals( 1, stats.getPrepareStatementCount() );
 			assertThat( loadedChild.getName(), is( updatedName ) );
-			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertEquals( 1, stats.getPrepareStatementCount() );
 		} );
 
 		// the UPDATE
-		assertEquals( 1, stats.getPrepareStatementCount() );
+		assertEquals( 2, stats.getPrepareStatementCount() );
 
 		doInHibernate( this::sessionFactory, s -> {
 			Child loadedChild = s.load( Child.class, lastChildID );
@@ -143,11 +143,11 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking extends BaseN
 			Parent parent = new Parent();
 			parent.setName( parentName );
 
-			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertEquals( 1, stats.getPrepareStatementCount() );
 			loadedChild.setParent( parent );
-			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertEquals( 1, stats.getPrepareStatementCount() );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
-			assertEquals( 0, stats.getPrepareStatementCount() );
+			assertEquals( 1, stats.getPrepareStatementCount() );
 			s.save( parent );
 		} );
 

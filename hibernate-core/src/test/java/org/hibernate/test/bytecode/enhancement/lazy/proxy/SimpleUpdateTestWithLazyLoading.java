@@ -25,12 +25,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.Statistics;
 
@@ -200,8 +197,12 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 
 		doInHibernate( this::sessionFactory, s -> {
 			Child loadedChild = s.load( Child.class, lastChildID );
+			assertThat( Hibernate.isInitialized( loadedChild ), is( false ) );
 			assertThat( loadedChild.getName(), is( updatedName ) );
+			assertThat( Hibernate.isInitialized( loadedChild ), is( true ) );
+			assertThat( Hibernate.isInitialized( loadedChild.getParent() ), is( false ) );
 			assertThat( loadedChild.getParent().getName(), is( parentName ) );
+			assertThat( Hibernate.isInitialized( loadedChild.getParent() ), is( true ) );
 		} );
 	}
 
@@ -216,7 +217,9 @@ public class SimpleUpdateTestWithLazyLoading extends BaseNonConfigCoreFunctional
 			assertEquals( 0, stats.getPrepareStatementCount() );
 			Person relative = new Person();
 			relative.setName( "Luis" );
+			assertThat( Hibernate.isInitialized( loadedChild ), is( false ) );
 			loadedChild.addRelative( relative );
+			assertThat( Hibernate.isInitialized( loadedChild ), is( true ) );
 			assertEquals( 2, stats.getPrepareStatementCount() );
 			s.persist( relative );
 		} );

@@ -65,7 +65,7 @@ public class NullnessHelper {
 	 * @return The first non-empty value, or null if all values were empty
 	 */
 	@SafeVarargs
-	public static <T> T coalesce(Supplier<T>... valueSuppliers) {
+	public static <T> T coalesceSuppliedValues(Supplier<T>... valueSuppliers) {
 		if ( valueSuppliers == null ) {
 			return null;
 		}

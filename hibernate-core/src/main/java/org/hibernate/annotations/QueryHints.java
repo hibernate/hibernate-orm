@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 
 /**
@@ -22,24 +23,24 @@ public class QueryHints {
 	/**
 	 * The cache mode to use.
 	 *
-	 * @see org.hibernate.Query#setCacheMode
-	 * @see org.hibernate.SQLQuery#setCacheMode
+	 * @see org.hibernate.query.Query#setCacheMode
+	 * @see org.hibernate.query.NativeQuery#setCacheMode
 	 */
 	public static final String CACHE_MODE = "org.hibernate.cacheMode";
 
 	/**
 	 * The cache region to use.
 	 *
-	 * @see org.hibernate.Query#setCacheRegion
-	 * @see org.hibernate.SQLQuery#setCacheRegion
+	 * @see org.hibernate.query.Query#setCacheRegion
+	 * @see org.hibernate.query.NativeQuery#setCacheRegion
 	 */
 	public static final String CACHE_REGION = "org.hibernate.cacheRegion";
 
 	/**
 	 * Are the query results cacheable?
 	 *
-	 * @see org.hibernate.Query#setCacheable
-	 * @see org.hibernate.SQLQuery#setCacheable
+	 * @see org.hibernate.query.Query#setCacheable
+	 * @see org.hibernate.query.NativeQuery#setCacheable
 	 */
 	public static final String CACHEABLE = "org.hibernate.cacheable";
 
@@ -51,33 +52,33 @@ public class QueryHints {
 	/**
 	 * Defines a comment to be applied to the SQL sent to the database.
 	 *
-	 * @see org.hibernate.Query#setComment
-	 * @see org.hibernate.SQLQuery#setComment
+	 * @see org.hibernate.query.Query#setComment
+	 * @see org.hibernate.query.NativeQuery#setComment
 	 */
 	public static final String COMMENT = "org.hibernate.comment";
 
 	/**
 	 * Defines the JDBC fetch size to use.
 	 *
-	 * @see org.hibernate.Query#setFetchSize
-	 * @see org.hibernate.SQLQuery#setFetchSize
+	 * @see org.hibernate.query.Query#setFetchSize
+	 * @see org.hibernate.query.NativeQuery#setFetchSize
 	 */
 	public static final String FETCH_SIZE = "org.hibernate.fetchSize";
 
 	/**
 	 * The flush mode to associate with the execution of the query.
 	 *
-	 * @see org.hibernate.Query#setFlushMode
-	 * @see org.hibernate.SQLQuery#setFlushMode
-	 * @see org.hibernate.Session#setFlushMode
+	 * @see org.hibernate.query.Query#setHibernateFlushMode
+	 * @see org.hibernate.query.NativeQuery#setHibernateFlushMode
+	 * @see org.hibernate.Session#setHibernateFlushMode
 	 */
 	public static final String FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
 	 * Should entities returned from the query be set in read only mode?
 	 *
-	 * @see org.hibernate.Query#setReadOnly
-	 * @see org.hibernate.SQLQuery#setReadOnly
+	 * @see org.hibernate.query.Query#setReadOnly
+	 * @see org.hibernate.query.NativeQuery#setReadOnly
 	 * @see org.hibernate.Session#setReadOnly
 	 */
 	public static final String READ_ONLY = "org.hibernate.readOnly";
@@ -85,8 +86,8 @@ public class QueryHints {
 	/**
 	 * Apply a Hibernate query timeout, which is defined in <b>seconds</b>.
 	 *
-	 * @see org.hibernate.Query#setTimeout
-	 * @see org.hibernate.SQLQuery#setTimeout
+	 * @see org.hibernate.query.Query#setTimeout
+	 * @see org.hibernate.query.NativeQuery#setTimeout
 	 */
 	public static final String TIMEOUT_HIBERNATE = "org.hibernate.timeout";
 

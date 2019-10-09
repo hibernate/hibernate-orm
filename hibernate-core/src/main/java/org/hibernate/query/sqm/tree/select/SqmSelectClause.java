@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -36,17 +37,11 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 
 	public SqmSelectClause(
 			boolean distinct,
-			List<SqmSelection<?>> selections,
+			int expectedNumberOfSelections,
 			NodeBuilder nodeBuilder) {
-		this( distinct, nodeBuilder );
-		this.selections = selections;
-	}
-
-	public SqmSelectClause(
-			boolean distinct,
-			NodeBuilder nodeBuilder,
-			SqmSelection<?>... selections) {
-		this( distinct, asList( selections ), nodeBuilder );
+		super( nodeBuilder );
+		this.distinct = distinct;
+		this.selections = CollectionHelper.arrayList( expectedNumberOfSelections );
 	}
 
 	public boolean isDistinct() {

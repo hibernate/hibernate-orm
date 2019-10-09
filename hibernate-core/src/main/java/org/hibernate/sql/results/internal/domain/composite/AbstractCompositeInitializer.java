@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
@@ -116,7 +115,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 				.instantiate( rowProcessingState.getSession() );
 		CompositeLoadingLogger.INSTANCE.debugf(
 				"Created composite instance [%s] : %s",
-				LoggingHelper.toLoggableString( navigablePath ),
+				navigablePath,
 				compositeInstance
 		);
 	}
@@ -126,7 +125,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 
 		CompositeLoadingLogger.INSTANCE.debugf(
 				"Initializing composite instance [%s] : %s",
-				LoggingHelper.toLoggableString( navigablePath ),
+				navigablePath,
 				compositeInstance
 		);
 

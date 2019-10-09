@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
+
 /**
  * Contract representing a from clause.
  * <p/>
@@ -21,6 +23,13 @@ import java.util.function.Consumer;
  */
 public class SqmFromClause {
 	private List<SqmRoot> domainRoots;
+
+	public SqmFromClause() {
+	}
+
+	public SqmFromClause(int expectedNumberOfRoots) {
+		this.domainRoots = CollectionHelper.arrayList( expectedNumberOfRoots );
+	}
 
 	/**
 	 * Immutable view of the domain roots.  Use {@link #setRoots} or {@link #addRoot} to
@@ -55,6 +64,15 @@ public class SqmFromClause {
 	public void visitRoots(Consumer<SqmRoot> consumer) {
 		if ( domainRoots != null ) {
 			domainRoots.forEach( consumer );
+		}
+	}
+
+	public int getNumberOfRoots() {
+		if ( domainRoots == null ) {
+			return 0;
+		}
+		else {
+			return domainRoots.size();
 		}
 	}
 }

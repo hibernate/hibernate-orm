@@ -28,16 +28,15 @@ import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -236,16 +235,14 @@ public class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitSelectClause(SqmSelectClause selectClause) {
-		for ( SqmSelection selection : selectClause.getSelections() ) {
-			// todo (6.0) : add the ability for certain SqlSelections to be sort of "implicit"...
-			//		- they do not get rendered into the SQL, but do have a SqlReader
-			//
-			// this is useful in 2 specific:
-			///		1) literals : no need to even send those to the database - we could
-			//			just have the SqlSelectionReader return us back the literal value
-			//		2) `EmptySqlSelection` : if this ends up being important at all..
-			visitSelection( selection );
-		}
+		// todo (6.0) : add the ability for certain SqlSelections to be sort of "implicit"...
+		//		- they do not get rendered into the SQL, but do have a SqlReader
+		//
+		// this is useful in 2 specific:
+		///		1) literals : no need to even send those to the database - we could
+		//			just have the SqlSelectionReader return us back the literal value
+		//		2) `EmptySqlSelection` : if this ends up being important at all..
+		selectClause.getSelections().forEach( this::visitSelection );
 		return selectClause;
 	}
 

@@ -42,12 +42,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(
 		annotatedClasses = SmokeTests.SimpleEntity.class
 )
-@ServiceRegistry(
-		settings = @ServiceRegistry.Setting(
-				name = AvailableSettings.HBM2DDL_AUTO,
-				value = "create-drop"
-		)
-)
+@ServiceRegistry
 @SessionFactory
 public class SmokeTests {
 
@@ -92,7 +87,7 @@ public class SmokeTests {
 			assert part instanceof EmbeddedAttributeMapping;
 			final EmbeddedAttributeMapping attrMapping = (EmbeddedAttributeMapping) part;
 			assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
-			assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 2 ) );
+			assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 4 ) );
 			assertThat( attrMapping.getMappedColumnExpressions().get( 0 ), is( "attribute1" ) );
 			assertThat( attrMapping.getMappedColumnExpressions().get( 1 ), is( "attribute2" ) );
 		}
@@ -158,10 +153,41 @@ public class SmokeTests {
 		}
 	}
 
+	@Embeddable static class SubComponent {
+		private String subAttribute1;
+		private String subAttribute2;
+
+		public SubComponent() {
+		}
+
+		public SubComponent(String subAttribute1, String subAttribute2) {
+			this.subAttribute1 = subAttribute1;
+			this.subAttribute2 = subAttribute2;
+		}
+
+		public String getSubAttribute1() {
+			return subAttribute1;
+		}
+
+		public void setSubAttribute1(String subAttribute1) {
+			this.subAttribute1 = subAttribute1;
+		}
+
+		public String getSubAttribute2() {
+			return subAttribute2;
+		}
+
+		public void setSubAttribute2(String subAttribute2) {
+			this.subAttribute2 = subAttribute2;
+		}
+	}
+
 	@Embeddable
 	public static class Component {
 		private String attribute1;
 		private String attribute2;
+
+		private SubComponent subComponent;
 
 		public Component() {
 		}
@@ -185,6 +211,15 @@ public class SmokeTests {
 
 		public void setAttribute2(String attribute2) {
 			this.attribute2 = attribute2;
+		}
+
+		@Embedded
+		public SubComponent getSubComponent() {
+			return subComponent;
+		}
+
+		public void setSubComponent(SubComponent subComponent) {
+			this.subComponent = subComponent;
 		}
 	}
 

@@ -6361,13 +6361,9 @@ public abstract class AbstractEntityPersister
 	public void visitFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
+		//noinspection unchecked
 		visitStateArrayContributors(
-				mapping -> {
-// treat limits are already handled in `#visitAttributeMappings` (called from `#visitStateArrayContributors`)
-//					if ( mapping.isDeclaredOnTypeOrSuperType( treatTargetType ) ) {
-						fetchableConsumer.accept( mapping );
-//					}
-				},
+				(Consumer) fetchableConsumer,
 				treatTargetType
 		);
 	}
@@ -6376,10 +6372,14 @@ public abstract class AbstractEntityPersister
 	public void visitStateArrayContributors(
 			Consumer<StateArrayContributorMapping> mappingConsumer,
 			EntityMappingType targetType) {
+		//noinspection Convert2Lambda
 		visitAttributeMappings(
-				attributeMapping -> {
-					if ( attributeMapping instanceof StateArrayContributorMapping ) {
-						mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping );
+				new Consumer<AttributeMapping>() {
+					@Override
+					public void accept(AttributeMapping attributeMapping) {
+						if ( attributeMapping instanceof StateArrayContributorMapping ) {
+							mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping );
+						}
 					}
 				},
 				targetType

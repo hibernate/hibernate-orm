@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  *
- * @see org.hibernate.SQLQuery
+ * @see org.hibernate.query.NativeQuery
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)

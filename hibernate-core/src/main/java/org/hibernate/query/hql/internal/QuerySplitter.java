@@ -14,12 +14,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.function.SqmFunction;
+import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -34,7 +35,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -83,12 +83,7 @@ public class QuerySplitter {
 		// We only allow unmapped polymorphism in a very restricted way.  Specifically,
 		// the unmapped polymorphic reference can only be a root and can be the only
 		// root.  Use that restriction to locate the unmapped polymorphic reference
-		SqmRoot unmappedPolymorphicReference = null;
-		for ( SqmRoot root : statement.getQuerySpec().getFromClause().getRoots() ) {
-			if ( root.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor ) {
-				unmappedPolymorphicReference = root;
-			}
-		}
+		final SqmRoot unmappedPolymorphicReference = findUnmappedPolymorphicReference( statement );
 
 		if ( unmappedPolymorphicReference == null ) {
 			return new SqmSelectStatement[] { statement };
@@ -109,6 +104,16 @@ public class QuerySplitter {
 		}
 
 		return expanded;
+	}
+
+	private static SqmRoot findUnmappedPolymorphicReference(SqmSelectStatement statement) {
+		return statement.getQuerySpec()
+				.getFromClause()
+				.getRoots()
+				.stream()
+				.filter( sqmRoot -> sqmRoot.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor )
+				.findFirst()
+				.orElse( null );
 	}
 
 	@SuppressWarnings("unchecked")

@@ -33,6 +33,8 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final JdbcValuesMapping valuesMapping;
 	private final ExecutionContext executionContext;
 
+	private final SqlSelection[] sqlSelections;
+
 	// todo (6.0) - manage limit-based skips
 
 	private final int numberOfRowsToProcess;
@@ -56,6 +58,8 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 		// todo (6.0) : decide how to handle paged/limited results
 		this.numberOfRowsToProcess = interpretNumberOfRowsToProcess( queryOptions );
+
+		this.sqlSelections = valuesMapping.getSqlSelections().toArray( new SqlSelection[0] );
 	}
 
 	private static int interpretNumberOfRowsToProcess(QueryOptions queryOptions) {
@@ -134,9 +138,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private Object[] readCurrentRowValues(RowProcessingState rowProcessingState) throws SQLException {
-		final int numberOfSqlSelections = valuesMapping.getSqlSelections().size();
+		final int numberOfSqlSelections = sqlSelections.length;
 		final Object[] row = new Object[numberOfSqlSelections];
-		for ( SqlSelection sqlSelection : valuesMapping.getSqlSelections() ) {
+		for ( SqlSelection sqlSelection : sqlSelections ) {
 			row[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
 					resultSetAccess.getResultSet(),
 					sqlSelection.getJdbcResultSetIndex(),

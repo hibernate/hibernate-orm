@@ -441,7 +441,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// for now, this is slightly different than the legacy behavior where
 		// the root and each non-fetched-join was selected.  For now, here, we simply
 		// select the root
-		final SqmSelectClause selectClause = new SqmSelectClause( false, creationContext.getNodeBuilder() );
+		final SqmSelectClause selectClause = new SqmSelectClause(
+				false,
+				fromClause.getNumberOfRoots(),
+				creationContext.getNodeBuilder()
+		);
+
 		//noinspection unchecked
 		fromClause.visitRoots(
 				sqmRoot -> selectClause.addSelection(

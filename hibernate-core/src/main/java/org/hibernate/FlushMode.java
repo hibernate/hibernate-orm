@@ -13,9 +13,8 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
  * database state with session state by detecting state changes
  * and executing SQL statements.
  *
- * @see Session#setFlushMode(FlushMode)
- * @see Query#setFlushMode(FlushMode)
- * @see Criteria#setFlushMode(FlushMode)
+ * @see Session#setHibernateFlushMode
+ * @see org.hibernate.query.Query#setHibernateFlushMode
  *
  * @author Gavin King
  */

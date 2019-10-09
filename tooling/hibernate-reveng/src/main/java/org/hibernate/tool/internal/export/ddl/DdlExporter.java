@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean create = true;
 	protected boolean format = false;
 
 	protected String outputFileName = null;
@@ -49,7 +48,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		create = setupBoolProperty("create", create);
 		format = setupBoolProperty("format", format);
 		outputFileName = getProperties().getProperty("outputFileName", outputFileName);
 		haltOnError = setupBoolProperty("haltOnError", haltOnError);
@@ -112,11 +110,11 @@ public class DdlExporter extends AbstractExporter {
 			}
 			export.setHaltOnError(haltOnError);
 			export.setFormat(format);
-			if (getDrop() && create) {
+			if (getDrop() && getCreate()) {
 				export.execute(targetTypes, Action.BOTH, metadata);
 			} else if (getDrop()) {
 				export.execute(targetTypes, Action.DROP, metadata);
-			} else if (create) {
+			} else if (getCreate()) {
 				export.execute(targetTypes, Action.CREATE, metadata);
 			} else {
 				export.execute(targetTypes, Action.NONE, metadata);
@@ -141,7 +139,7 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	public void setCreate(boolean create) {
-		this.create = create;
+		getProperties().put(CREATE_DATABASE, create);
 	}
 
 	public void setHaltonerror(boolean haltOnError) {
@@ -161,6 +159,14 @@ public class DdlExporter extends AbstractExporter {
 			return true;
 		} else {
 			return (boolean)getProperties().get(EXPORT_TO_CONSOLE);
+		}
+	}
+	
+	private boolean getCreate() {
+		if (!getProperties().containsKey(CREATE_DATABASE)) {
+			return true;
+		} else {
+			return (boolean)getProperties().get(CREATE_DATABASE);
 		}
 	}
 	

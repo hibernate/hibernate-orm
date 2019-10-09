@@ -3,6 +3,7 @@ package org.hibernate.tool.api.export;
 public interface ExporterConstants {
 	
 	public static final String ARTIFACT_COLLECTOR = "org.hibernate.tool.api.export.ExporterConstants.ArtifactCollector";
+	public static final String CREATE_DATABASE = "org.hibernate.tool.api.export.ExporterConstants.CreateDatabase";
 	public static final String DELIMITER = "org.hibernate.tool.api.export.ExporterConstants.Delimiter";
 	public static final String DESTINATION_FOLDER = "org.hibernate.tool.api.export.ExporterConstants.DestinationFolder";
 	public static final String DROP_DATABASE = "org.hibernate.tool.api.export.ExporterConstants.DropDatabase";

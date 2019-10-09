@@ -5,7 +5,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.internal.export.doc.DocExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 public class Hbm2DocExporterTask extends ExporterTask {
 
@@ -18,6 +19,6 @@ public class Hbm2DocExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		return new DocExporter();
+		return ExporterFactory.createExporter(ExporterType.DOC);
 	}
 }

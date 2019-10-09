@@ -5,7 +5,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 public class Hbm2HbmXmlExporterTask extends ExporterTask {
 
@@ -14,7 +15,7 @@ public class Hbm2HbmXmlExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		return new HbmExporter();
+		return ExporterFactory.createExporter(ExporterType.HBM);
 	}	
 	
 	public String getName() {

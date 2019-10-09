@@ -9,7 +9,9 @@ This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) to a
 
 To run the matrix tests for NuoDB:
 
-1. Firstly make sure you have our Hibernate 5 dialect jar available:
+1. You must have Java JDK 8 installed.  Java 11 won't work.
+
+1. Next, make sure you have our Hibernate 5 dialect jar available:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
@@ -28,11 +30,14 @@ To run the matrix tests for NuoDB:
    ```
 
 1. Set the Hibernate dialect - this must match the Hibernate 5 dialect you installed earlier.
-   Note the value you set _does not_ have `-hib5` in the end:
-   ```
-   export DIALECT_VERSION=20.x.x      (Linux/MacOS)
-   set DIALECT_VERSION=20.x.x         (Windows)
-   ```
+
+   * **Note:** the value you set _does not_ have `-hib5` in the end:
+
+     ```bash
+     export DIALECT_VERSION=20.x.x      (Linux/MacOS)
+     set DIALECT_VERSION=20.x.x         (Windows)
+     ```
+
    Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=20.x.x ./gradlew ...`
 
 1. Compile the code: `./gradlew clean compile`
@@ -44,17 +49,27 @@ To run the matrix tests for NuoDB:
 
 1. Run tests:
 
-   * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`).
-     To setup gradle, see original readme content below.  The expected output is:
+   * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`). To setup gradle, see original readme content below.  The expected output is:
 
-   ```
-   6935 tests completed, 114 failed, 822 skipped
-   ```
+     ```sh
+     6935 tests completed, 114 failed, 822 skipped
+     ```
 
-   **Note:** If you run the tests without the `clean` option you may get a weird internal error in the compiler.
+   * **Warnings:**
+     * If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
-   **Note:** Not all tests clean up after themselves.  You may need to drop the DBO schema used by the tests by
+     * Not all tests clean up after themselves.  You may need to drop the DBO schema used by the tests by
        running "`DROP SCHEMA DBO CASCADE`".
+
+     * If you get this error, the easiest solution is to delete and reclone the entire repository.
+
+       ``` sh
+       FAILURE: Build failed with an exception.
+
+       * What went wrong:
+       Execution failed for task ':hibernate-core:jar'.
+       > Could not add MANIFEST.MF to ZIP '/.../hibernate-orm/hibernate-core/target/libs/hibernate-core-5.4.1-SNAPSHOT.jar'.
+​       ```
 
 1. Run individual tests
 
@@ -81,7 +96,7 @@ Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail,
 
 ## Upgrade Hibernate Dialect
 
-If the Hibernate dialect has a new vewrsion number:
+If the Hibernate dialect has a new version number:
 
 1. Update the environment variable: `SET DIALECT_VERSION=20.x.x`
 

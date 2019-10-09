@@ -46,7 +46,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private final AliasResolutionContext aliasResolutionContext;
 	private final boolean readOnly;
 	private final boolean shouldUseOptionalEntityInformation;
-	private final boolean forceFetchLazyAttributes;
 	private final boolean shouldReturnProxies;
 	private final QueryParameters queryParameters;
 	private final NamedParameterContext namedParameterContext;
@@ -74,7 +73,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			final AliasResolutionContext aliasResolutionContext,
 			final boolean readOnly,
 			final boolean shouldUseOptionalEntityInformation,
-			final boolean forceFetchLazyAttributes,
 			final boolean shouldReturnProxies,
 			final QueryParameters queryParameters,
 			final NamedParameterContext namedParameterContext,
@@ -85,7 +83,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		this.aliasResolutionContext = aliasResolutionContext;
 		this.readOnly = readOnly;
 		this.shouldUseOptionalEntityInformation = shouldUseOptionalEntityInformation;
-		this.forceFetchLazyAttributes = forceFetchLazyAttributes;
 		this.shouldReturnProxies = shouldReturnProxies;
 		this.queryParameters = queryParameters;
 		this.namedParameterContext = namedParameterContext;

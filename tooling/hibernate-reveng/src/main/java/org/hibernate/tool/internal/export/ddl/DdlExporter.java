@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected String outputFileName = null;
 	protected boolean haltOnError = false;
 
 	protected boolean setupBoolProperty(String property, boolean defaultVal) {
@@ -46,7 +45,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		outputFileName = getProperties().getProperty("outputFileName", outputFileName);
 		haltOnError = setupBoolProperty("haltOnError", haltOnError);
 		super.setupContext();
 	}
@@ -56,6 +54,7 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void doStart() {
+		String outputFileName = getProperties().getProperty(OUTPUT_FILE_NAME);
 		Metadata metadata = getMetadata();
 		final EnumSet<TargetType> targetTypes = EnumSet.noneOf( TargetType.class );
 		if (getExportToConsole()) targetTypes.add(TargetType.STDOUT);
@@ -126,13 +125,6 @@ public class DdlExporter extends AbstractExporter {
 	 */
 	public void setFormat(boolean format) {
 		getProperties().put(FORMAT, format);
-	}
-
-	/**
-	 * File out put name (default: empty)
-	 */
-	public void setOutputFileName(String fileName) {
-		outputFileName = fileName;
 	}
 
 	public void setHaltonerror(boolean haltOnError) {

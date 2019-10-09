@@ -43,7 +43,11 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 		exporter.getProperties().put(ExporterConstants.DROP_DATABASE, drop);
 		exporter.getProperties().put(ExporterConstants.CREATE_DATABASE, create);
 		exporter.getProperties().put(ExporterConstants.FORMAT, format);
-		exporter.setOutputFileName(outputFileName);
+		if (outputFileName == null) {
+			exporter.getProperties().remove(ExporterConstants.OUTPUT_FILE_NAME);
+		} else {
+			exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, outputFileName);
+		}
 		exporter.setHaltonerror(haltOnError);		
 		return exporter;
 	}

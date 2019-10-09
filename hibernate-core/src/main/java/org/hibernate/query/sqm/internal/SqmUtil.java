@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -81,7 +82,10 @@ public class SqmUtil {
 			return Collections.emptyMap();
 		}
 
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> result = new IdentityHashMap<>();
+		final int queryParameterCount = domainParameterXref.getQueryParameterCount();
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> result = new IdentityHashMap<>(
+				CollectionHelper.determineProperSizing( queryParameterCount )
+		);
 
 		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry :
 				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {

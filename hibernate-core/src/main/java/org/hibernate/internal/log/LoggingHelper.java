@@ -28,25 +28,13 @@ public class LoggingHelper {
 			return UNREFERENCED;
 		}
 
-		if ( role.isRoot() ) {
-			return StringHelper.collapse( role.getFullPath() );
-		}
-		else {
-			assert role.getParent() != null;
-			return StringHelper.collapse( role.getParent().getFullPath() ) + '.' + role.getNavigableName();
-		}
+		return role.getFullPath();
 	}
 
 	public static String toLoggableString(NavigablePath path) {
 		assert path != null;
 
-		if ( path.isRoot() ) {
-			return StringHelper.collapse( path.getFullPath() );
-		}
-		else {
-			assert path.getParent() != null;
-			return StringHelper.collapse( path.getParent().getFullPath() ) + '.' + path.getLocalName();
-		}
+		return path.getFullPath();
 	}
 
 	public static String toLoggableString(NavigableRole role, Object key) {

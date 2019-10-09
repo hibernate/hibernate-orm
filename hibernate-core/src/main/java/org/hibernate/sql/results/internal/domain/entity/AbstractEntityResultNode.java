@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -34,7 +36,7 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 
 	private final EntityMappingType targetType;
 
-	private final List<DomainResult> attributeDomainResults = new ArrayList<>();
+	private final List<DomainResult> attributeDomainResults;
 
 	public AbstractEntityResultNode(
 			EntityValuedModelPart referencedModelPart,
@@ -92,18 +94,20 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 			);
 		}
 
-//		entityDescriptor.visitAttributeMappings(
-//				mapping -> attributeDomainResults.add(
-//						mapping.createDomainResult(
-//								navigablePath.append( mapping.getAttributeName() ),
-//								entityTableGroup,
-//								null,
-//								creationState
-//						)
-//				)
-//		);
-
 		// todo (6.0) : handle other special navigables such as discriminator, row-id, tenant-id, etc
+
+		attributeDomainResults = CollectionHelper.arrayList( entityDescriptor.getNumberOfAttributeMappings() );
+
+		entityDescriptor.visitAttributeMappings(
+				mapping -> attributeDomainResults.add(
+						mapping.createDomainResult(
+								navigablePath.append( mapping.getAttributeName() ),
+								entityTableGroup,
+								null,
+								creationState
+						)
+				)
+		);
 	}
 
 	@Override

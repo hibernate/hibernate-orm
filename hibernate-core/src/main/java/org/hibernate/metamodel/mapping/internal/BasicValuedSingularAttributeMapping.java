@@ -156,6 +156,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
+			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
 			LockMode lockMode,
@@ -173,6 +174,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 		return new BasicFetch(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
+				fetchablePath,
 				this,
 				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				getConverter(),

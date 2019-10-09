@@ -804,7 +804,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		treatHandlerStack.push( new TreatHandlerFromClause() );
 
 		try {
-			final SqmFromClause fromClause = new SqmFromClause();
+			final SqmFromClause fromClause = new SqmFromClause( parserFromClause.fromClauseSpace().size() );
 			for ( HqlParser.FromClauseSpaceContext parserSpace : parserFromClause.fromClauseSpace() ) {
 				final SqmRoot sqmPathRoot = visitFromClauseSpace( parserSpace );
 				fromClause.addRoot( sqmPathRoot );

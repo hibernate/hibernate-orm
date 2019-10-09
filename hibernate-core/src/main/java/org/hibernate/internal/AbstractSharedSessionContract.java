@@ -614,14 +614,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final QueryEngine queryEngine = getFactory().getQueryEngine();
 			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-			final SqmStatement sqm = interpretationCache.resolveSqmStatement(
-					queryString,
-					s -> queryEngine.getHqlTranslator().interpret( queryString )
-			);
 
 			final QuerySqmImpl query = new QuerySqmImpl(
 					queryString,
-					sqm,
+					interpretationCache.resolveHqlInterpretation(
+							queryString,
+							s -> queryEngine.getHqlTranslator().interpret( queryString )
+					),
 					resultClass,
 					this
 			);
@@ -886,7 +885,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			return new QuerySqmImpl<>(
-					"<criteria>",
 					(SqmStatement) criteriaQuery,
 					criteriaQuery.getResultType(),
 					this
@@ -902,7 +900,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
-					"<criteria>",
 					(SqmUpdateStatement) criteriaUpdate,
 					null,
 					this
@@ -918,7 +915,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
-					"<criteria>",
 					(SqmDeleteStatement) criteriaDelete,
 					null,
 					this

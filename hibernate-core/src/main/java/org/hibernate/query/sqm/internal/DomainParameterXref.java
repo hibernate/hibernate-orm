@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
@@ -42,9 +43,6 @@ public class DomainParameterXref {
 	 * SQM statement
 	 */
 	public static DomainParameterXref from(SqmStatement<?> sqmStatement) {
-		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
-		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>();
-
 		// `xrefMap` is used to help maintain the proper cardinality between an
 		// SqmParameter and a QueryParameter.  Multiple SqmParameter references
 		// can map to the same QueryParameter.  Consider, e.g.,
@@ -89,6 +87,13 @@ public class DomainParameterXref {
 		if ( parameterResolutions.getSqmParameters().isEmpty() ) {
 			return empty();
 		}
+
+		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
+
+		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
+		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>(
+				CollectionHelper.determineProperSizing( sqmParamCount )
+		);
 
 		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
 			if ( sqmParameter instanceof JpaCriteriaParameter ) {
@@ -179,6 +184,10 @@ public class DomainParameterXref {
 	 */
 	public Set<QueryParameterImplementor<?>> getQueryParameters() {
 		return sqmParamsByQueryParam.keySet();
+	}
+
+	public int getQueryParameterCount() {
+		return sqmParamsByQueryParam.size();
 	}
 
 	/**

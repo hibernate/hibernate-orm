@@ -276,7 +276,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {
-		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty() );
+		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty(), sqmQuerySpec.getFromClause().getNumberOfRoots() );
 
 		processingStateStack.push(
 				new SqlAstQuerySpecProcessingStateImpl(
@@ -737,12 +737,12 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 
 		if ( sqmExpression instanceof SqmPath ) {
-			log.debugf( "Determining mapping-model type for SqmPath : " + sqmExpression );
+			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
 			return SqmMappingModelHelper.resolveMappingModelExpressable( sqmExpression, this );
 		}
 
 
-		log.debugf( "Determining mapping-model type for generalized SqmExpression : " + sqmExpression );
+		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
 		final MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
 
@@ -763,7 +763,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@SuppressWarnings("WeakerAccess")
 	protected MappingModelExpressable<?> determineValueMapping(SqmParameter<?> sqmParameter) {
-		log.debugf( "Determining mapping-model type for SqmParameter : " + sqmParameter );
+		log.debugf( "Determining mapping-model type for SqmParameter : %s", sqmParameter );
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );

@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 public class QuerySpec implements SqlAstNode, PredicateContainer {
 	private final boolean isRoot;
 
-	private final FromClause fromClause = new FromClause();
+	private final FromClause fromClause;
 	private final SelectClause selectClause = new SelectClause();
 
 	private Predicate whereClauseRestrictions;
@@ -34,6 +34,12 @@ public class QuerySpec implements SqlAstNode, PredicateContainer {
 
 	public QuerySpec(boolean isRoot) {
 		this.isRoot = isRoot;
+		this.fromClause = new FromClause();
+	}
+
+	public QuerySpec(boolean isRoot, int expectedNumberOfRoots) {
+		this.isRoot = isRoot;
+		this.fromClause = new FromClause( expectedNumberOfRoots );
 	}
 
 	/**

@@ -7,14 +7,19 @@
 package org.hibernate.query.internal;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogger;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.jboss.logging.Logger;
@@ -29,8 +34,12 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	/**
 	 * The default strong reference count.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated
 	public static final int DEFAULT_PARAMETER_METADATA_MAX_COUNT = 128;
+
 	/**
 	 * The default soft reference count.
 	 */
@@ -41,27 +50,31 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
-	private final BoundedConcurrentHashMap<String, SqmStatement<?>> sqmStatementCache;
+	private final BoundedConcurrentHashMap<String, HqlInterpretation> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount) {
 		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
 
 		queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		sqmStatementCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 	}
 
 	@Override
-	public SelectQueryPlan getSelectQueryPlan(Key key) {
+	public SelectQueryPlan resolveSelectQueryPlan(
+			Key key,
+			Supplier<SelectQueryPlan> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
-		return (SelectQueryPlan) queryPlanCache.get( key );
-	}
 
-	@Override
-	public void cacheSelectQueryPlan(Key key, SelectQueryPlan plan) {
-		log.tracef( "QueryPlan#cacheSelectQueryPlan(%s)", key );
-		queryPlanCache.putIfAbsent( key, plan );
+		final SelectQueryPlan cached = (SelectQueryPlan) queryPlanCache.get( key );
+		if ( cached != null ) {
+			return cached;
+		}
+
+		final SelectQueryPlan plan = creator.get();
+		queryPlanCache.put( key, plan );
+		return plan;
 	}
 
 	@Override
@@ -76,17 +89,37 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	}
 
 	@Override
-	public SqmStatement resolveSqmStatement(
+	public HqlInterpretation resolveHqlInterpretation(
 			String queryString,
 			Function<String, SqmStatement<?>> creator) {
-		log.tracef( "QueryPlan#resolveSqmStatement(%s)", queryString );
-		return sqmStatementCache.computeIfAbsent(
-				queryString,
-				s -> {
-					log.debugf( "Creating and caching SqmStatement - %s", queryString );
-					return creator.apply( queryString );
-				}
-		);
+		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
+
+		final HqlInterpretation cached = hqlInterpretationCache.get( queryString );
+		if ( cached != null ) {
+			return cached;
+		}
+
+		log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
+
+		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+		final DomainParameterXref domainParameterXref;
+		final ParameterMetadataImplementor parameterMetadata;
+
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			domainParameterXref = DomainParameterXref.empty();
+			parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			domainParameterXref = DomainParameterXref.from( sqmStatement );
+			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		}
+
+		final HqlInterpretation interpretation = new SimpleHqlInterpretationImpl(
+				sqmStatement,
+				parameterMetadata,
+				domainParameterXref);
+		hqlInterpretationCache.put( queryString, interpretation );
+		return interpretation;
 	}
 
 	@Override

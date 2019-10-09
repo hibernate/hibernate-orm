@@ -24,14 +24,12 @@ public class NavigablePath implements DotIdentifierSequence {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;
-	private final String localName;
 	private final String fullPath;
 
 	private final int hashCode;
 
 	public NavigablePath(NavigablePath parent, String navigableName) {
 		this.parent = parent;
-		this.localName = navigableName;
 
 		// the _identifierMapper is a "hidden property" on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
@@ -54,31 +52,12 @@ public class NavigablePath implements DotIdentifierSequence {
 		this.hashCode = fullPath.hashCode();
 	}
 
-	public NavigablePath(NavigablePath parent, String navigableName, String alias) {
-		assert parent != null;
-
-		this.parent = parent;
-		this.localName = navigableName;
-
-		final String prefix;
-		final String parentFullPath = parent.getFullPath();
-
-		prefix = StringHelper.isEmpty( parentFullPath )
-				? ""
-				: parentFullPath + '.';
-
-		this.fullPath = alias == null ? prefix : prefix + '(' + alias + ')';
-
-		this.hashCode = fullPath.hashCode();
-	}
-
 	public NavigablePath(String localName) {
 		this( localName, null );
 	}
 
 	public NavigablePath(String rootName, String alias) {
 		this.parent = null;
-		this.localName = rootName;
 
 		this.fullPath = alias == null ? rootName : rootName + '(' + alias + ')';
 
@@ -102,7 +81,7 @@ public class NavigablePath implements DotIdentifierSequence {
 	}
 
 	public String getLocalName() {
-		return localName;
+		return parent == null ? fullPath : StringHelper.unqualify( fullPath );
 	}
 
 	public String getFullPath() {

@@ -37,7 +37,7 @@ public interface DomainResultCreationState {
 	 * 	 					BiFunction<FetchParent,Fetchable,LockMode> lockModeResolver)
 	 *
 	 * [1] `selected` refers to the named parameter in
-	 * {@link Fetchable#generateFetch(FetchParent, org.hibernate.engine.FetchTiming, boolean, LockMode, String, DomainResultCreationState)}.
+	 * {@link Fetchable#generateFetch(FetchParent, org.hibernate.query.NavigablePath, org.hibernate.engine.FetchTiming, boolean, LockMode, String, DomainResultCreationState)}.
 	 * For {@link org.hibernate.engine.FetchTiming#IMMEDIATE}, this boolean value indicates
 	 * whether the values for the generated assembler/initializers are or should be available in
 	 * the {@link JdbcValues} being processed.  For {@link org.hibernate.engine.FetchTiming#DELAYED} this

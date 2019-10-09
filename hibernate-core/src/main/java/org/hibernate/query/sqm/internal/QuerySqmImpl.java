@@ -35,6 +35,7 @@ import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -72,9 +73,9 @@ public class QuerySqmImpl<R>
 	private final SqmStatement sqmStatement;
 	private final Class resultType;
 
+	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
 
-	private final ParameterMetadataImpl parameterMetadata;
 	private final QueryParameterBindingsImpl parameterBindings;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
@@ -141,26 +142,56 @@ public class QuerySqmImpl<R>
 		}
 	}
 
+	/**
+	 * Form used for HQL queries
+	 */
 	public QuerySqmImpl(
 			String hqlString,
+			HqlInterpretation hqlInterpretation,
+			Class resultType,
+			SharedSessionContractImplementor producer) {
+		super( producer );
+
+		this.hqlString = hqlString;
+		this.resultType = resultType;
+
+		this.sqmStatement = hqlInterpretation.getSqmStatement();
+
+		if ( resultType != null ) {
+			SqmUtil.verifyIsSelectStatement( sqmStatement );
+			//noinspection unchecked
+			checkQueryReturnType( (SqmSelectStatement<R>) sqmStatement, resultType, producer.getFactory() );
+		}
+
+		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
+		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
+
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+	}
+
+	/**
+	 * Form used for criteria queries
+	 */
+	public QuerySqmImpl(
 			SqmStatement sqmStatement,
 			Class resultType,
 			SharedSessionContractImplementor producer) {
 		super( producer );
 
-		SqmUtil.verifyIsSelectStatement( sqmStatement );
-		checkQueryReturnType( (SqmSelectStatement<R>) sqmStatement, resultType, producer.getFactory() );
-
 		if ( resultType != null ) {
-			if ( sqmStatement instanceof SqmDmlStatement ) {
+			if ( sqmStatement instanceof SqmSelectStatement ) {
+				//noinspection unchecked
+				checkQueryReturnType( (SqmSelectStatement<R>) sqmStatement, resultType, producer.getFactory() );
+			}
+			else {
+				assert sqmStatement instanceof SqmDmlStatement;
 				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 			}
 		}
 
-		this.hqlString = hqlString;
+		this.hqlString = "<criteria>";
 		this.sqmStatement = sqmStatement;
 		this.resultType = resultType;
-
 
 		this.domainParameterXref = DomainParameterXref.from( sqmStatement );
 		if ( ! domainParameterXref.hasParameters() ) {
@@ -391,27 +422,22 @@ public class QuerySqmImpl<R>
 
 	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		// resolve (or make) the QueryPlan.  This QueryPlan might be an
-		// aggregation of multiple plans.  QueryPlans can be cached, except
-		// for in certain circumstances, the determination of which occurs in
-		// SqmInterpretationsKey#generateFrom - if SqmInterpretationsKey#generateFrom
-		// returns null the query is not cacheable
-
-		SelectQueryPlan<R> queryPlan = null;
+		// resolve (or make) the QueryPlan.  This QueryPlan might be an aggregation of multiple plans.
+		//
+		// QueryPlans can be cached, except for in certain circumstances
+		// 		- the determination of these circumstances occurs in SqmInterpretationsKey#generateFrom.
+		//		If SqmInterpretationsKey#generateFrom returns null the query is not cacheable
 
 		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.generateFrom( this );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getSelectQueryPlan( cacheKey );
+			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
+					cacheKey,
+					this::buildSelectQueryPlan
+			);
 		}
-
-		if ( queryPlan == null ) {
-			queryPlan = buildSelectQueryPlan();
-			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheSelectQueryPlan( cacheKey, queryPlan );
-			}
+		else {
+			return buildSelectQueryPlan();
 		}
-
-		return queryPlan;
 	}
 
 	private SelectQueryPlan<R> buildSelectQueryPlan() {

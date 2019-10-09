@@ -99,6 +99,7 @@ public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
+			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
 			LockMode lockMode,

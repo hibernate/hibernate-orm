@@ -180,7 +180,7 @@ public class QuerySplitter {
 			final SqmFromClause previousCurrent = currentFromClauseCopy;
 
 			try {
-				SqmFromClause copy = new SqmFromClause();
+				SqmFromClause copy = new SqmFromClause( fromClause.getNumberOfRoots() );
 				currentFromClauseCopy = copy;
 				super.visitFromClause( fromClause );
 				return copy;

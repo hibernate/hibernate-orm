@@ -7,12 +7,15 @@
 package org.hibernate.query.internal;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
-import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
@@ -25,12 +28,8 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	public static final QueryInterpretationCacheDisabledImpl INSTANCE = new QueryInterpretationCacheDisabledImpl();
 
 	@Override
-	public SelectQueryPlan getSelectQueryPlan(Key key) {
+	public SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator) {
 		return null;
-	}
-
-	@Override
-	public void cacheSelectQueryPlan(Key key, SelectQueryPlan plan) {
 	}
 
 	@Override
@@ -43,8 +42,36 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
-	public SqmStatement resolveSqmStatement(String queryString, Function<String, SqmStatement<?>> creator) {
-		return creator.apply( queryString );
+	public HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator) {
+		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+
+		final DomainParameterXref domainParameterXref;
+		final ParameterMetadataImplementor parameterMetadata;
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			domainParameterXref = DomainParameterXref.empty();
+			parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			domainParameterXref = DomainParameterXref.from( sqmStatement );
+			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		}
+
+		return new HqlInterpretation() {
+			@Override
+			public SqmStatement getSqmStatement() {
+				return sqmStatement;
+			}
+
+			@Override
+			public ParameterMetadataImplementor getParameterMetadata() {
+				return parameterMetadata;
+			}
+
+			@Override
+			public DomainParameterXref getDomainParameterXref() {
+				return domainParameterXref;
+			}
+		};
 	}
 
 	@Override

@@ -18,6 +18,9 @@ import org.hibernate.sql.results.spi.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
+	int getNumberOfAttributeMappings();
+	int getNumberOfDeclaredAttributeMappings();
+
 	Collection<AttributeMapping> getAttributeMappings();
 
 	/**

@@ -25,6 +25,7 @@ import java.util.function.Function;
  * @author Steve Ebersole
  */
 public final class CollectionHelper {
+	public static final int DEFAULT_LIST_CAPACITY = 10;
 	public static final int MINIMUM_INITIAL_CAPACITY = 16;
 	public static final float LOAD_FACTOR = 0.75f;
 
@@ -178,8 +179,8 @@ public final class CollectionHelper {
 		return new ConcurrentHashMap<K, V>( size, loadFactor );
 	}
 
-	public static <T> ArrayList<T> arrayList(int anticipatedSize) {
-		return new ArrayList<T>( anticipatedSize );
+	public static <T> ArrayList<T> arrayList(int expectedNumberOfElements) {
+		return new ArrayList<>( Math.max( expectedNumberOfElements + 1, DEFAULT_LIST_CAPACITY ) );
 	}
 
 	public static <T> Set<T> makeCopy(Set<T> source) {

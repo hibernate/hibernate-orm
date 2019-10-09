@@ -12,8 +12,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;

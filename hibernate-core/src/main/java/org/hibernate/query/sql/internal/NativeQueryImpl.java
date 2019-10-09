@@ -76,6 +76,7 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
+import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
@@ -112,6 +113,7 @@ public class NativeQueryImpl<R>
 	private boolean autoDiscoverTypes;
 
 	private Serializable collectionKey;
+	private NativeQueryInterpreter nativeQueryInterpreter;
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
@@ -344,33 +346,31 @@ public class NativeQueryImpl<R>
 
 	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		final NativeQueryInterpreter interpreter = getSessionFactory().getServiceRegistry().getService( NativeQueryInterpreter.class );
 
 		SelectQueryPlan<R> queryPlan = null;
 
 
 		final JdbcValuesMappingProducer resultSetMapping = getJdbcValuesMappingProducer();
-		final RowTransformer rowTransformer = resolveRowTransformer();
 
 		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getSelectQueryPlan( cacheKey );
-		}
-
-		if ( queryPlan == null ) {
-			queryPlan = interpreter.createQueryPlan(
-					generateSelectQueryDefinition(),
-					getSessionFactory()
+			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
+					cacheKey,
+					this::createQueryPlan
 			);
-			if ( cacheKey != null ) {
-				getSession().getFactory()
-						.getQueryEngine()
-						.getInterpretationCache()
-						.cacheSelectQueryPlan( cacheKey, queryPlan );
-			}
 		}
+		else {
+			return createQueryPlan();
+		}
+	}
 
-		return queryPlan;
+	private NativeSelectQueryPlan<R> createQueryPlan() {
+		final RowTransformer rowTransformer = resolveRowTransformer();
+
+		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter().createQueryPlan(
+				generateSelectQueryDefinition(),
+				getSessionFactory()
+		);
 	}
 
 	private JdbcValuesMappingProducer getJdbcValuesMappingProducer() {

@@ -39,13 +39,14 @@ public class BasicFetch<T> implements Fetch, BasicResultMappingNode<T> {
 	public BasicFetch(
 			int valuesArrayPosition,
 			FetchParent fetchParent,
+			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
 			boolean nullable,
 			BasicValueConverter valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		this.nullable = nullable;
-		this.navigablePath = fetchParent.getNavigablePath().append( valuedMapping.getFetchableName() );
+		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;

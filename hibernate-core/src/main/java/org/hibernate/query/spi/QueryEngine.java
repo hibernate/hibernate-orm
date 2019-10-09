@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -64,6 +65,7 @@ public class QueryEngine {
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private final HqlTranslator hqlTranslator;
 	private final SqmTranslatorFactory sqmTranslatorFactory;
+	private final NativeQueryInterpreter nativeQueryInterpreter;
 	private final QueryInterpretationCache interpretationCache;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
@@ -100,6 +102,8 @@ public class QueryEngine {
 				domainModel,
 				serviceRegistry
 		);
+
+		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
 
 		this.interpretationCache = buildInterpretationCache( properties );
 
@@ -163,20 +167,21 @@ public class QueryEngine {
 		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
 				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
 				properties,
-				false
+				// enabled by default
+				true
 		);
 
-		final Integer explicitMaxPlanCount = ConfigurationHelper.getInteger(
+		final Integer explicitMaxPlanSize = ConfigurationHelper.getInteger(
 				AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE,
 				properties
 		);
 
-		if ( explicitUseCache || ( explicitMaxPlanCount != null && explicitMaxPlanCount > 0 ) ) {
-			return new QueryInterpretationCacheStandardImpl(
-					explicitMaxPlanCount != null
-							? explicitMaxPlanCount
-							: QueryInterpretationCacheStandardImpl.DEFAULT_QUERY_PLAN_MAX_COUNT
-			);
+		if ( explicitUseCache || ( explicitMaxPlanSize != null && explicitMaxPlanSize > 0 ) ) {
+			final int size = explicitMaxPlanSize != null
+					? explicitMaxPlanSize
+					: QueryInterpretationCacheStandardImpl.DEFAULT_QUERY_PLAN_MAX_COUNT;
+
+			return new QueryInterpretationCacheStandardImpl( size );
 		}
 		else {
 			// disabled
@@ -216,6 +221,10 @@ public class QueryEngine {
 
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return sqmTranslatorFactory;
+	}
+
+	public NativeQueryInterpreter getNativeQueryInterpreter() {
+		return nativeQueryInterpreter;
 	}
 
 	public QueryInterpretationCache getInterpretationCache() {

@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,6 +20,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
@@ -71,7 +71,8 @@ public class StandardSqmSelectToSqlAstConverter
 	private final LoadQueryInfluencers fetchInfluencers;
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
-	private final List<DomainResult> domainResults = new ArrayList<>();
+	// prepare for 10 root selections to avoid list growth in most cases
+	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
 
 	private GraphImplementor<?> currentJpaGraphNode;
 
@@ -154,29 +155,33 @@ public class StandardSqmSelectToSqlAstConverter
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		final List<Fetch> fetches = new ArrayList();
+		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfAttributeMappings() );
 
-		final Consumer<Fetchable> fetchableConsumer = fetchable -> {
-			final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
-					fetchParent,
-					fetchable
-			);
+		//noinspection Convert2Lambda
+		final Consumer<Fetchable> fetchableConsumer = new Consumer<Fetchable>() {
+			@Override
+			public void accept(Fetchable fetchable) {
+				final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
+						fetchParent,
+						fetchable
+				);
 
-			if ( biDirectionalFetch != null ) {
-				fetches.add( biDirectionalFetch );
-				return;
-			}
-
-			try {
-				fetchDepth++;
-				final Fetch fetch = buildFetch( fetchParent, fetchable );
-
-				if ( fetch != null ) {
-					fetches.add( fetch );
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
+					return;
 				}
-			}
-			finally {
-				fetchDepth--;
+
+				try {
+					fetchDepth++;
+					final Fetch fetch = buildFetch( fetchParent, fetchable );
+
+					if ( fetch != null ) {
+						fetches.add( fetch );
+					}
+				}
+				finally {
+					fetchDepth--;
+				}
 			}
 		};
 
@@ -297,6 +302,7 @@ public class StandardSqmSelectToSqlAstConverter
 		try {
 			return fetchable.generateFetch(
 					fetchParent,
+					fetchablePath,
 					fetchTiming,
 					joined,
 					lockMode,

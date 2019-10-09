@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -19,9 +20,14 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Steve Ebersole
  */
 public class FromClause implements SqlAstNode {
-	private final List<TableGroup> roots = new ArrayList<>();
+	private final List<TableGroup> roots;
 
 	public FromClause() {
+		roots = new ArrayList<>();
+	}
+
+	public FromClause(int expectedNumberOfRoots) {
+		roots = CollectionHelper.arrayList( expectedNumberOfRoots );
 	}
 
 	public List<TableGroup> getRoots() {

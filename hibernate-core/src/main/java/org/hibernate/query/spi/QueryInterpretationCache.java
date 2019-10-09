@@ -7,14 +7,14 @@
 package org.hibernate.query.spi;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 /**
- * A cache for QueryPlans used (and produced) by the translation
- * and execution of a query.
+ * Cache for various parts of translating or interpreting queries.
  *
  * @author Steve Ebersole
  */
@@ -23,13 +23,15 @@ public interface QueryInterpretationCache {
 	interface Key {
 	}
 
-	SelectQueryPlan getSelectQueryPlan(Key key);
-	void cacheSelectQueryPlan(Key key, SelectQueryPlan plan);
+	SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator);
 
 	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);
 
-	SqmStatement resolveSqmStatement(String queryString, Function<String, SqmStatement<?>> creator);
+	/**
+	 * todo (6.0) : Doesn't holding these separate from the QueryPlans lead to extra, unnecessary memory use?
+	 */
+	HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator);
 
 	ParameterInterpretation resolveNativeQueryParameters(String queryString, Function<String, ParameterInterpretation> creator);
 
@@ -45,4 +47,5 @@ public interface QueryInterpretationCache {
 	 * memory until they are replaced by others. It is not considered a memory leak as the cache is bounded.
 	 */
 	void close();
+
 }

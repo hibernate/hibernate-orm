@@ -118,6 +118,18 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 		return SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( getEntityName() );
 	}
 
+	@Override
+	default int getNumberOfAttributeMappings() {
+		// for backwards-compatibility
+		return getAttributeMappings().size();
+	}
+
+	@Override
+	default int getNumberOfDeclaredAttributeMappings() {
+		// for backwards-compatibility
+		return getAttributeMappings().size();
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // stuff that is persister-centric and/or EntityInfo-centric ~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

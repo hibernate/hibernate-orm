@@ -251,20 +251,35 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void visitDisassembledJdbcValues(
-			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
 	public void visitJdbcValues(
-			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 
+	@Override
+	public int getNumberOfAttributeMappings() {
+		return attributeMappings.size();
+	}
+
+	@Override
+	public int getNumberOfDeclaredAttributeMappings() {
+		return getNumberOfAttributeMappings();
 	}
 
 	@Override

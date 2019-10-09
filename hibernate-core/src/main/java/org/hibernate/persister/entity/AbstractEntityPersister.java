@@ -29,6 +29,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -103,6 +104,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -5313,16 +5315,24 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( object );
 		}
 		else {
-			final List<Object> values = new ArrayList<>();
+			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
+			final AtomicInteger index = new AtomicInteger( 0 );
 
+			//noinspection Convert2Lambda
 			visitAttributeMappings(
-					attributeMapping -> {
-						final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess()
-								.resolveAttributeMetadata( this );
-						values.add( attributeMetadata.getPropertyAccess().getGetter().get( object ) );
+					new Consumer<AttributeMapping>() {
+						@Override
+						public void accept(AttributeMapping mapping) {
+							values[ index.getAndIncrement() ] = mapping.getAttributeMetadataAccess()
+									.resolveAttributeMetadata( AbstractEntityPersister.this )
+									.getPropertyAccess()
+									.getGetter()
+									.get( object );
+						}
 					}
 			);
-			return values.toArray();
+
+			return values;
 		}
 	}
 
@@ -6040,6 +6050,7 @@ public abstract class AbstractEntityPersister
 	private EntityVersionMapping versionMapping;
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
+	private Collection<AttributeMapping> attributeMappings;
 
 	private ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -6079,7 +6090,7 @@ public abstract class AbstractEntityPersister
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
 
-		int stateArrayPosition = superMappingType == null ? 0 : superMappingType.getAttributeMappings().size();
+		int stateArrayPosition = superMappingType == null ? 0 : superMappingType.getNumberOfAttributeMappings();
 
 		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
 			final NonIdentifierAttribute runtimeAttrDefinition = currentEntityMetamodel.getProperties()[i];
@@ -6124,6 +6135,20 @@ public abstract class AbstractEntityPersister
 			subclassMappingTypes = new TreeMap();
 		}
 		subclassMappingTypes.put( sub.getEntityName(), sub );
+	}
+
+	@Override
+	public int getNumberOfAttributeMappings() {
+		if ( attributeMappings == null ) {
+			// force calculation of `attributeMappings`
+			getAttributeMappings();
+		}
+		return attributeMappings.size();
+	}
+
+	@Override
+	public int getNumberOfDeclaredAttributeMappings() {
+		return declaredAttributeMappings.size();
 	}
 
 	@Override
@@ -6259,8 +6284,6 @@ public abstract class AbstractEntityPersister
 	public EntityVersionMapping getVersionMapping() {
 		return versionMapping;
 	}
-
-	private Collection<AttributeMapping> attributeMappings;
 
 	@Override
 	public Collection<AttributeMapping> getAttributeMappings() {

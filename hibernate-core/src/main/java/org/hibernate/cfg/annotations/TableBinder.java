@@ -781,7 +781,7 @@ public class TableBinder {
 			result = java.util.Collections.emptyList();
 		}
 		else {
-			result = new ArrayList<UniqueConstraintHolder>( CollectionHelper.determineProperSizing( annotations.length ) );
+			result = CollectionHelper.arrayList( annotations.length );
 			for ( UniqueConstraint uc : annotations ) {
 				result.add(
 						new UniqueConstraintHolder()

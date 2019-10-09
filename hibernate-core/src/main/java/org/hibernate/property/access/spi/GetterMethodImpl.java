@@ -17,6 +17,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -39,7 +40,7 @@ public class GetterMethodImpl implements Getter {
 	@Override
 	public Object get(Object owner) {
 		try {
-			return getterMethod.invoke( owner );
+			return getterMethod.invoke( owner, ArrayHelper.EMPTY_OBJECT_ARRAY );
 		}
 		catch (InvocationTargetException ite) {
 			throw new PropertyAccessException(

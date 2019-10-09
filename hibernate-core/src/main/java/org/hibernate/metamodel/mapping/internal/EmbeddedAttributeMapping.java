@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -15,6 +14,8 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -38,7 +39,6 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.domain.composite.CompositeFetch;
 import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
@@ -47,6 +47,7 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -107,6 +108,23 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action,
+			Clause clause,
+			TypeConfiguration typeConfiguration) {
+		getEmbeddableTypeDescriptor().visitJdbcTypes( action, clause, typeConfiguration );
+	}
+
+	@Override
+	public void visitJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().visitJdbcValues( value, clause, valuesConsumer, session );
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -132,13 +150,14 @@ public class EmbeddedAttributeMapping
 	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
+			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return new CompositeFetch(
-				fetchParent.getNavigablePath().append( getFetchableName() ),
+				fetchablePath,
 				this,
 				fetchParent,
 				fetchTiming,
@@ -152,7 +171,7 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		final List<ColumnReference> columnReferences = new ArrayList<>();
+		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( attrColumnNames.length );
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
 
 		getEmbeddableTypeDescriptor().visitJdbcTypes(

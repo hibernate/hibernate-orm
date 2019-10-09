@@ -11,15 +11,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
@@ -74,19 +71,34 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	// descriptor access
 
 	public <T> JavaTypeDescriptor<T> getDescriptor(Class<T> javaType) {
-		return RegistryHelper.INSTANCE.resolveDescriptor(
-				descriptorsByClass,
-				javaType,
-				() -> {
-					log.debugf(
-							"Could not find matching scoped JavaTypeDescriptor for requested Java class [%s]; " +
-									"falling back to static registry",
-							javaType.getName()
-					);
-
-					return org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( javaType );
-				}
-		);
+		return resolveDescriptor( javaType );
+//		return RegistryHelper.INSTANCE.resolveDescriptor(
+//				descriptorsByClass,
+//				javaType,
+//				() -> {
+//					log.debugf(
+//							"Could not find matching scoped JavaTypeDescriptor for requested Java class [%s]; " +
+//									"falling back to static registry",
+//							javaType.getName()
+//					);
+//
+//					if ( Serializable.class.isAssignableFrom( javaType ) ) {
+//						return new SerializableTypeDescriptor( javaType );
+//					}
+//
+//					if ( !AttributeConverter.class.isAssignableFrom( javaType ) ) {
+//						log.debugf(
+//								"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+//										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
+//										"",
+//								javaType.getName()
+//						);
+//						checkEqualsAndHashCode( javaType );
+//					}
+//
+//					return new FallbackJavaTypeDescriptor<>( javaType );
+//				}
+//		);
 	}
 
 	public void addDescriptor(JavaTypeDescriptor descriptor) {
@@ -103,15 +115,15 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	}
 
 	public <J> JavaTypeDescriptor<J> resolveDescriptor(Class<J> javaType, Supplier<JavaTypeDescriptor<J>> creator) {
-		//noinspection unchecked
-		return descriptorsByClass.computeIfAbsent(
-				javaType,
-				jt -> {
-					final JavaTypeDescriptor<J> jtd = creator.get();
-					performInjections( jtd );
-					return jtd;
-				}
-		);
+		final JavaTypeDescriptor cached = descriptorsByClass.get( javaType );
+		if ( cached != null ) {
+			//noinspection unchecked
+			return cached;
+		}
+
+		final JavaTypeDescriptor<J> created = creator.get();
+		descriptorsByClass.put( javaType, created );
+		return created;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -126,7 +138,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 						fallbackDescriptor = new EnumJavaTypeDescriptor( javaType );
 					}
 					else if ( Serializable.class.isAssignableFrom( javaType ) ) {
-						fallbackDescriptor = new OnTheFlySerializableJavaDescriptor( javaType );
+						fallbackDescriptor = new SerializableTypeDescriptor( javaType );
 					}
 					else {
 						fallbackDescriptor = new JavaTypeDescriptorBasicAdaptor( javaType );
@@ -146,7 +158,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		return new DynamicJtd();
 	}
 
-	private class DynamicJtd implements JavaTypeDescriptor<Map> {
+	private static class DynamicJtd implements JavaTypeDescriptor<Map> {
 		@Override
 		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
 			throw new UnsupportedOperationException();
@@ -170,66 +182,6 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		@Override
 		public Class<Map> getJavaTypeClass() {
 			return Map.class;
-		}
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private class OnTheFlySerializableJavaDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
-		private final SqlTypeDescriptor sqlTypeDescriptor;
-
-		public OnTheFlySerializableJavaDescriptor(Class<T> type) {
-			super( type );
-
-			// todo (6.0) : would be nice to expose for config by user
-			// todo (6.0) : ^^ might also be nice to allow them to plug in a "JavaTypeDescriptorResolver"
-			// 		- that allows them to hook into the #getDescriptor call either as the primary or as a fallback
-
-
-			log.debugf(
-					"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback via its Serializable interface.  " +
-							"This means Hibernate does not know how to perform certain basic operations in relation to this Java type" +
-							"which can lead to those operations having a large performance impact.  Consider registering these " +
-							"JavaTypeDescriptors with the %s during bootstrap, either directly or through a registered %s " +
-							"accessing the %s ",
-					getJavaType().getName(),
-					JavaTypeDescriptorRegistry.class.getName(),
-					TypeContributor.class.getName(),
-					TypeConfiguration.class.getName()
-			);
-
-
-			sqlTypeDescriptor = VarbinaryTypeDescriptor.INSTANCE;
-		}
-
-		@Override
-		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-			return sqlTypeDescriptor;
-		}
-
-		@Override
-		public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
-			if ( type.equals( byte[].class ) ) {
-				throw new UnsupportedOperationException( "Cannot unwrap Serializable to format other than byte[]" );
-			}
-
-			return (X) SerializationHelper.serialize( value );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <X> T wrap(X value, WrapperOptions options) {
-			if ( value == null ) {
-				return null;
-			}
-
-			if ( value.getClass().equals( byte[].class ) ) {
-				throw new UnsupportedOperationException( "Cannot unwrap Serializable to format other than byte[]" );
-			}
-
-			final byte[] bytes = (byte[]) value;
-
-			return (T) SerializationHelper.deserialize( bytes );
 		}
 	}
 }

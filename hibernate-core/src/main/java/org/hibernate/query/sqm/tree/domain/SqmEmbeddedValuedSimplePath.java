@@ -64,12 +64,12 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException();
+		throw new PathException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return null;
+		throw new PathException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
 	//	@Override

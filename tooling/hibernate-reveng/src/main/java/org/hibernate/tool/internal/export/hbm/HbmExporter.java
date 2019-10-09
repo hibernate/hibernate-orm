@@ -17,7 +17,7 @@ import org.hibernate.tool.internal.export.pojo.POJOClass;
 /**
  * @author david and max
  */
-public class HibernateMappingExporter extends GenericExporter {
+public class HbmExporter extends GenericExporter {
     
 	protected HibernateMappingGlobalSettings globalSettings = new HibernateMappingGlobalSettings();
 	
@@ -52,7 +52,7 @@ public class HibernateMappingExporter extends GenericExporter {
     	getProperties().put(FILE_PATTERN, "{package-name}/{class-name}.hbm.xml");
 	}
 
-	public HibernateMappingExporter() {
+	public HbmExporter() {
 		init();		
 	}
 

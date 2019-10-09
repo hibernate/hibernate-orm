@@ -6,7 +6,8 @@ package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.ddl.DdlExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 /**
  * @author max
@@ -34,8 +35,7 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 	}
 
 	protected Exporter configureExporter(Exporter exp) {
-		DdlExporter exporter = (DdlExporter) exp;
-		super.configureExporter( exp );
+		Exporter exporter = super.configureExporter( exp );
 		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, exportToDatabase);
 		exporter.getProperties().put(ExporterConstants.EXPORT_TO_CONSOLE, scriptToConsole);
 		exporter.getProperties().put(ExporterConstants.SCHEMA_UPDATE, schemaUpdate);
@@ -53,7 +53,7 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		DdlExporter exporter = new DdlExporter();
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DDL);
 		exporter.getProperties().putAll(parent.getProperties());
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, parent.getProperties());
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, parent.getDestDir());

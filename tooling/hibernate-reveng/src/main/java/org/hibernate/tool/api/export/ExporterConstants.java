@@ -12,6 +12,7 @@ public interface ExporterConstants {
 	public static final String FILE_PATTERN = "org.hibernate.tool.api.export.ExporterConstants.FilePattern";
 	public static final String FOR_EACH = "org.hibernate.tool.api.export.ExporterConstants.ForEach";
 	public static final String FORMAT = "org.hibernate.tool.api.export.ExporterConstants.Format";
+	public static final String HALT_ON_ERROR = "org.hibernate.tool.api.export.ExporterConstants.HaltOnError";
 	public static final String METADATA_DESCRIPTOR = "org.hibernate.tool.api.export.ExporterConstants.MetadataDescriptor";
 	public static final String OUTPUT_FILE_NAME = "org.hibernate.tool.api.export.ExporterConstants.OutputFileName";
 	public static final String SCHEMA_UPDATE = "org.hibernate.tool.api.export.ExporterConstants.SchemaUpdate";

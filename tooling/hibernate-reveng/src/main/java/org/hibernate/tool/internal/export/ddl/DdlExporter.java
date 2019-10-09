@@ -35,24 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean haltOnError = false;
-
-	protected boolean setupBoolProperty(String property, boolean defaultVal) {
-		if (!getProperties().containsKey(property)) {
-			return defaultVal;
-		}
-		return Boolean.parseBoolean(getProperties().getProperty(property));
-	}
-
-	protected void setupContext() {
-		haltOnError = setupBoolProperty("haltOnError", haltOnError);
-		super.setupContext();
-	}
-
-	protected void cleanUpContext() {
-		super.cleanUpContext();
-	}
-
 	protected void doStart() {
 		String outputFileName = getProperties().getProperty(OUTPUT_FILE_NAME);
 		Metadata metadata = getMetadata();
@@ -62,7 +44,7 @@ public class DdlExporter extends AbstractExporter {
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
 		if (getSchemaUpdate()) {
 			SchemaUpdate update = new SchemaUpdate();
-			if(outputFileName == null && getDelimiter() == null && haltOnError && getFormat())  {
+			if(outputFileName == null && getDelimiter() == null && getHaltOnError() && getFormat())  {
 				update.execute(targetTypes, metadata);
 			}
 			else {				
@@ -74,8 +56,8 @@ public class DdlExporter extends AbstractExporter {
 					update.setFormat(Boolean.valueOf(getFormat()));	
 				}
 				
-				if (haltOnError) {
-					update.setHaltOnError(Boolean.valueOf(haltOnError));
+				if (getHaltOnError()) {
+					update.setHaltOnError(Boolean.valueOf(getHaltOnError()));
 				}
 				
 				update.execute(targetTypes, metadata);
@@ -88,7 +70,7 @@ public class DdlExporter extends AbstractExporter {
 
 					}
 					log.error(i - 1 + " errors occurred while performing Hbm2DDLExporter.");
-					if (haltOnError) {
+					if (getHaltOnError()) {
 						throw new RuntimeException(
 								"Errors while performing Hbm2DDLExporter");
 					}
@@ -104,7 +86,7 @@ public class DdlExporter extends AbstractExporter {
 			if (null != getDelimiter()) {
 				export.setDelimiter(getDelimiter());
 			}
-			export.setHaltOnError(haltOnError);
+			export.setHaltOnError(getHaltOnError());
 			export.setFormat(getFormat());
 			if (getDrop() && getCreate()) {
 				export.execute(targetTypes, Action.BOTH, metadata);
@@ -119,19 +101,6 @@ public class DdlExporter extends AbstractExporter {
 		
 	}
 
-
-	/**
-	 * Format the generated sql
-	 */
-	public void setFormat(boolean format) {
-		getProperties().put(FORMAT, format);
-	}
-
-	public void setHaltonerror(boolean haltOnError) {
-		this.haltOnError = haltOnError;
-	}
-	
-	
 	private boolean getCreate() {
 		if (!getProperties().containsKey(CREATE_DATABASE)) {
 			return true;
@@ -176,6 +145,14 @@ public class DdlExporter extends AbstractExporter {
 			return false;
 		} else {
 			return (boolean)getProperties().get(FORMAT);
+		}
+	}
+	
+	private boolean getHaltOnError() {
+		if (!getProperties().containsKey(HALT_ON_ERROR)) {
+			return false;
+		} else {
+			return (boolean)getProperties().get(HALT_ON_ERROR);
 		}
 	}
 	

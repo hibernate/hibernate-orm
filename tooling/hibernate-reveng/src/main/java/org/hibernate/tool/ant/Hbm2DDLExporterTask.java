@@ -48,7 +48,7 @@ public class Hbm2DDLExporterTask extends ExporterTask {
 		} else {
 			exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, outputFileName);
 		}
-		exporter.setHaltonerror(haltOnError);		
+		exporter.getProperties().put(ExporterConstants.HALT_ON_ERROR, haltOnError);
 		return exporter;
 	}
 

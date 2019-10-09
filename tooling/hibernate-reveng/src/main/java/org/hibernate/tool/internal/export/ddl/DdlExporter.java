@@ -35,8 +35,6 @@ import org.hibernate.tool.schema.TargetType;
  */
 public class DdlExporter extends AbstractExporter {
 
-	protected boolean format = false;
-
 	protected String outputFileName = null;
 	protected boolean haltOnError = false;
 
@@ -48,7 +46,6 @@ public class DdlExporter extends AbstractExporter {
 	}
 
 	protected void setupContext() {
-		format = setupBoolProperty("format", format);
 		outputFileName = getProperties().getProperty("outputFileName", outputFileName);
 		haltOnError = setupBoolProperty("haltOnError", haltOnError);
 		super.setupContext();
@@ -66,7 +63,7 @@ public class DdlExporter extends AbstractExporter {
 		if (null != outputFileName) targetTypes.add(TargetType.SCRIPT);
 		if (getSchemaUpdate()) {
 			SchemaUpdate update = new SchemaUpdate();
-			if(outputFileName == null && getDelimiter() == null && haltOnError && format)  {
+			if(outputFileName == null && getDelimiter() == null && haltOnError && getFormat())  {
 				update.execute(targetTypes, metadata);
 			}
 			else {				
@@ -75,7 +72,7 @@ public class DdlExporter extends AbstractExporter {
 					update.setOutputFile(outputFile.getPath());		
 					log.debug("delimiter ='"+ getDelimiter() + "'");
 					update.setDelimiter(getDelimiter());
-					update.setFormat(Boolean.valueOf(format));	
+					update.setFormat(Boolean.valueOf(getFormat()));	
 				}
 				
 				if (haltOnError) {
@@ -109,7 +106,7 @@ public class DdlExporter extends AbstractExporter {
 				export.setDelimiter(getDelimiter());
 			}
 			export.setHaltOnError(haltOnError);
-			export.setFormat(format);
+			export.setFormat(getFormat());
 			if (getDrop() && getCreate()) {
 				export.execute(targetTypes, Action.BOTH, metadata);
 			} else if (getDrop()) {
@@ -128,7 +125,7 @@ public class DdlExporter extends AbstractExporter {
 	 * Format the generated sql
 	 */
 	public void setFormat(boolean format) {
-		this.format = format;
+		getProperties().put(FORMAT, format);
 	}
 
 	/**
@@ -138,29 +135,10 @@ public class DdlExporter extends AbstractExporter {
 		outputFileName = fileName;
 	}
 
-	public void setCreate(boolean create) {
-		getProperties().put(CREATE_DATABASE, create);
-	}
-
 	public void setHaltonerror(boolean haltOnError) {
 		this.haltOnError = haltOnError;
 	}
 	
-	
-	private String getDelimiter() {
-		if (!getProperties().containsKey(DELIMITER)) {
-			return ";";
-		}
-		return (String)getProperties().get(DELIMITER);
-	}
-
-	private boolean getExportToConsole() {
-		if (!getProperties().containsKey(EXPORT_TO_CONSOLE)) {
-			return true;
-		} else {
-			return (boolean)getProperties().get(EXPORT_TO_CONSOLE);
-		}
-	}
 	
 	private boolean getCreate() {
 		if (!getProperties().containsKey(CREATE_DATABASE)) {
@@ -170,6 +148,13 @@ public class DdlExporter extends AbstractExporter {
 		}
 	}
 	
+	private String getDelimiter() {
+		if (!getProperties().containsKey(DELIMITER)) {
+			return ";";
+		}
+		return (String)getProperties().get(DELIMITER);
+	}
+
 	private boolean getDrop() {
 		if (!getProperties().containsKey(DROP_DATABASE)) {
 			return false;
@@ -178,11 +163,27 @@ public class DdlExporter extends AbstractExporter {
 		}
 	}
 	
+	private boolean getExportToConsole() {
+		if (!getProperties().containsKey(EXPORT_TO_CONSOLE)) {
+			return true;
+		} else {
+			return (boolean)getProperties().get(EXPORT_TO_CONSOLE);
+		}
+	}
+	
 	private boolean getExportToDatabase() {
 		if (!getProperties().containsKey(EXPORT_TO_DATABASE)) {
 			return true;
 		} else {
 			return (boolean)getProperties().get(EXPORT_TO_DATABASE);
+		}
+	}
+	
+	private boolean getFormat() {
+		if (!getProperties().containsKey(FORMAT)) {
+			return false;
+		} else {
+			return (boolean)getProperties().get(FORMAT);
 		}
 	}
 	

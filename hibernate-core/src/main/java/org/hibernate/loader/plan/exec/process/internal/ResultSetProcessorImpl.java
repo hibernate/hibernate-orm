@@ -99,9 +99,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			maxRows = Integer.MAX_VALUE;
 		}
 
-		// Handles the "FETCH ALL PROPERTIES" directive in HQL
-		final boolean forceFetchLazyAttributes = false;
-
 		final ResultSetProcessingContextImpl context = new ResultSetProcessingContextImpl(
 				resultSet,
 				session,
@@ -109,7 +106,6 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				aliasResolutionContext,
 				readOnly,
 				shouldUseOptionalEntityInstance,
-				forceFetchLazyAttributes,
 				returnProxies,
 				queryParameters,
 				namedParameterContext,

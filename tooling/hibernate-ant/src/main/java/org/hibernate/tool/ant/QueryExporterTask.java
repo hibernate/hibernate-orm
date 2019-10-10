@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.internal.export.query.QueryExporter;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.tool.util.StringUtil;
 
 public class QueryExporterTask extends ExporterTask {
 
@@ -22,12 +22,12 @@ public class QueryExporterTask extends ExporterTask {
 	protected Exporter configureExporter(Exporter exp) {
 		QueryExporter exporter = (QueryExporter) exp;
 		List<String> queryStrings = new ArrayList<String>();
-		if(StringHelper.isNotEmpty(query)) {
+		if(!StringUtil.isEmptyOrNull(query)) {
 			queryStrings.add(query);
 		}
 		for (Iterator<HQL> iter = queries.iterator(); iter.hasNext();) {
 			HQL hql = iter.next();
-			if(StringHelper.isNotEmpty(hql.query)) {
+			if(!StringUtil.isEmptyOrNull(hql.query)) {
 				queryStrings.add(hql.query);
 			}
 		}
@@ -39,13 +39,13 @@ public class QueryExporterTask extends ExporterTask {
 
 	public void validateParameters() {
 		super.validateParameters();
-		if(StringHelper.isEmpty(query) && queries.isEmpty()) {
+		if(StringUtil.isEmptyOrNull(query) && queries.isEmpty()) {
 			throw new BuildException("Need to specify at least one query.");
 		}
 		
 		for (Iterator<HQL> iter = queries.iterator(); iter.hasNext();) {
 			HQL hql = iter.next();
-			if(StringHelper.isEmpty(hql.query)) {
+			if(StringUtil.isEmptyOrNull(hql.query)) {
 				throw new BuildException("Query must not be empty");
 			}
 		}
@@ -56,7 +56,7 @@ public class QueryExporterTask extends ExporterTask {
 	}
 
 	public void addText(String text) {
-		if(StringHelper.isNotEmpty(text)) {
+		if(!StringUtil.isEmptyOrNull(text)) {
 		  query += trim(text);
 		}
 	}
@@ -68,7 +68,7 @@ public class QueryExporterTask extends ExporterTask {
 	public static class HQL {
 		String query = "";
 		public void addText(String text) {
-			if(StringHelper.isNotEmpty(text)) {
+			if(!StringUtil.isEmptyOrNull(text)) {
 				query += trim(text);
 			}
 		}		
@@ -93,4 +93,8 @@ public class QueryExporterTask extends ExporterTask {
 	}
 	
 	
+    boolean isNotEmpty(String string) {
+		return string != null && string.length() > 0;
+	}
+
 }

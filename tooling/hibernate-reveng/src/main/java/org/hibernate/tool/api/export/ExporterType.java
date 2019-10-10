@@ -8,6 +8,7 @@ public enum ExporterType {
 	DOC ("org.hibernate.tool.internal.export.doc.DocExporter"),
 	GENERIC ("org.hibernate.tool.internal.export.common.GenericExporter"),
 	HBM ("org.hibernate.tool.internal.export.hbm.HbmExporter"),
+	HBM_LINT ("org.hibernate.tool.internal.export.lint.HbmLintExporter"),
 	POJO ("org.hibernate.tool.internal.export.pojo.POJOExporter");
 	
 	private String className;

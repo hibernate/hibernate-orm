@@ -1,7 +1,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.internal.export.lint.HbmLintExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 
 public class HbmLintExporterTask extends ExporterTask {
 
@@ -10,7 +11,7 @@ public class HbmLintExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		return new HbmLintExporter();
+		return ExporterFactory.createExporter(ExporterType.HBM_LINT);
 	}
 		
 

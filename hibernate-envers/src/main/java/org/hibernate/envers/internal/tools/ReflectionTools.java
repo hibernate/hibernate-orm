@@ -10,6 +10,8 @@ import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.persistence.Embedded;
+
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -168,6 +170,39 @@ public abstract class ReflectionTools {
 		}
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + name + "]", e );
+		}
+	}
+	
+	/**
+	 * This method returns the type of the given field
+	 * 
+	 * @param cls
+	 * @param fieldName
+	 * @return
+	 * @throws SecurityException
+	 * @throws NoSuchFieldException
+	 */
+	public static <T> Class<T> getFieldType(Class cls, String fieldName) throws NoSuchFieldException, SecurityException {
+		return (Class<T>) cls.getDeclaredField( fieldName ).getType();
+	}
+	
+	
+	/**
+	 * This method checks whether the field is an embedded type or not
+	 * 
+	 * @param cls
+	 * @param fieldName
+	 * @return
+	 */
+	public static boolean isEmbeddedProperty(Class cls, String fieldName) {
+		try {
+			return cls.getDeclaredField( fieldName ).isAnnotationPresent( Embedded.class );
+		}
+		catch (NoSuchFieldException e) {
+			return false ;
+		}
+		catch (SecurityException e) {
+			return false ;
 		}
 	}
 }

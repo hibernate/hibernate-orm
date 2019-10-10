@@ -95,6 +95,11 @@ public final class ToOneRelationMetadataGenerator {
 		// Extracting related id properties from properties tag
 		for ( Object o : properties.content() ) {
 			final Element element = (Element) o;
+			// If the relation is member of a composite code, it will be mapped
+			// by the EmbeddedId
+			if ( isMemberOfCompositeId( parent, element ) ) {
+				continue;
+			}
 			element.setParent( null );
 			parent.add( element );
 		}
@@ -191,5 +196,22 @@ public final class ToOneRelationMetadataGenerator {
 						mainGenerator.getServiceRegistry()
 				)
 		);
+	}
+	
+	/**
+	 * @param parent
+	 * @param element
+	 * @return
+	 */
+	private boolean isMemberOfCompositeId(Element parent, Element element) {
+		Element compositeElement = parent.element( "composite-id" );
+		if ( compositeElement != null && element.attribute( "name" ) != null ) {
+			for ( Object subElement : compositeElement.elements() ) {
+				if ( element.attribute( "name" ).getText().equals( ( (Element) subElement ).attribute( "name" ).getText() ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

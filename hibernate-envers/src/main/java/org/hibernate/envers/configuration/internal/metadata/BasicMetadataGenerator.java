@@ -6,19 +6,25 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.util.Iterator;
 import java.util.Properties;
 
+import org.dom4j.Element;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
+import org.hibernate.envers.internal.entities.mapper.id.EmbeddedIdMapper;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
-
-import org.dom4j.Element;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
@@ -160,5 +166,75 @@ public final class BasicMetadataGenerator {
 		}
 
 		return false;
+	}
+	
+	
+	public boolean addComponent(Element parent, String beanName, Value value, SimpleMapperBuilder mapper, String path) {
+
+		Iterator it = ( (Component) value ).getPropertyIterator();
+		while ( it.hasNext() ) {
+			Property property = (Property) it.next();
+			if ( property.getType() instanceof ComponentType ) {
+				String realPath = getPropertyPath( beanName, path, property );
+				addComponent( parent, beanName + "_" + property.getName(), property.getValue(), mapper, realPath );
+			}
+			else {
+				Element element = parent.addElement( "key-property" );
+				element.addAttribute( "name", beanName + "_" + property.getName() );
+				element.addAttribute( "type", property.getType().getName() );
+				MetadataTools.addColumns( element, property.getColumnIterator() );
+				if ( mapper != null ) {
+					addIdToMapper( beanName, mapper, path, property );
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * This method returns the path of the property
+	 * 
+	 * @param beanName
+	 * @param path
+	 * @param property
+	 * @return
+	 */
+	private String getPropertyPath(String beanName, String path, Property property) {
+		String realPath;
+		if ( path != null && !path.isEmpty() ) {
+			realPath = path + "." + beanName;
+		}
+		else {
+			realPath = beanName + "." + property.getName();
+		}
+		return realPath;
+	}
+
+	/**
+	 * This method add the id to Mapper
+	 * 
+	 * @param beanName
+	 * @param mapper
+	 * @param path
+	 * @param property
+	 */
+	private void addIdToMapper(String beanName, SimpleMapperBuilder mapper, String path, Property property) {
+		PropertyData propertyData = new PropertyAuditingData( beanName, property.getName(), property.getPropertyAccessorName(),
+				ModificationStore.FULL, RelationTargetAuditMode.NOT_AUDITED, null, null, false )
+						.getPropertyData();
+		if ( mapper instanceof EmbeddedIdMapper ) {
+			String newPath = path;
+			if ( path.isEmpty() ) {
+				newPath = beanName + "." + property.getName();
+			}
+			else {
+				newPath = path + "." + property.getName();
+			}
+			( (EmbeddedIdMapper) mapper ).add( propertyData, beanName + "_", newPath );
+		}
+		else {
+			mapper.add( propertyData );
+		}
 	}
 }

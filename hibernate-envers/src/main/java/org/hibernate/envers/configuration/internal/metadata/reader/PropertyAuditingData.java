@@ -85,6 +85,26 @@ public class PropertyAuditingData {
 		this.syntheic = syntheic;
 		this.value = value;
 	}
+	
+	public PropertyAuditingData(
+			String name,
+			String beanName,
+			String accessType,
+			ModificationStore store,
+			RelationTargetAuditMode relationTargetAuditMode,
+			String auditMappedBy,
+			String positionMappedBy,
+			boolean forceInsertable) {
+		this.name = name;
+		this.beanName = beanName;
+		this.accessType = accessType;
+		this.store = store;
+		this.relationTargetAuditMode = relationTargetAuditMode;
+		this.auditMappedBy = auditMappedBy;
+		this.positionMappedBy = positionMappedBy;
+		this.forceInsertable = forceInsertable;
+	}
+
 
 	public String getName() {
 		return name;

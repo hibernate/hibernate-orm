@@ -1001,18 +1001,7 @@ public final class SessionImpl
 			String entityName,
 			Serializable id,
 			boolean eager,
-			boolean nullable) throws HibernateException {
-		return internalLoad( entityName, id, eager, nullable, null );
-
-	}
-
-	@Override
-	public final Object internalLoad(
-			String entityName,
-			Serializable id,
-			boolean eager,
-			boolean nullable,
-			Boolean unwrapProxy) {
+			boolean nullable) {
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();

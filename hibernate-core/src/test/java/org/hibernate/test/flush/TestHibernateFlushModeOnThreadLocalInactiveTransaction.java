@@ -21,17 +21,17 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-13663")
 public class TestHibernateFlushModeOnThreadLocalInactiveTransaction extends BaseCoreFunctionalTestCase {
-	
+
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+		configuration.setProperty( AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread" );
 	}
 
 	@Test
 	public void testHibernateFlushModeOnInactiveTransaction() {
 		Session s = openSession();
 		//s.setFlushMode(FlushMode.AUTO); // this does not throw (API is deprecated)
-		s.setHibernateFlushMode(FlushMode.AUTO); // this should not throw even within an inactive transaction
+		s.setHibernateFlushMode( FlushMode.AUTO ); // this should not throw even within an inactive transaction
 	}
 
 }

@@ -8,6 +8,8 @@ package org.hibernate.test.flush;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -18,7 +20,12 @@ import org.junit.Test;
  * @author Luca Domenichini
  */
 @TestForIssue(jiraKey = "HHH-13663")
-public class TestHibernateFlushModeOnInactiveTransaction extends BaseCoreFunctionalTestCase {
+public class TestHibernateFlushModeOnThreadLocalInactiveTransaction extends BaseCoreFunctionalTestCase {
+	
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+	}
 
 	@Test
 	public void testHibernateFlushModeOnInactiveTransaction() {

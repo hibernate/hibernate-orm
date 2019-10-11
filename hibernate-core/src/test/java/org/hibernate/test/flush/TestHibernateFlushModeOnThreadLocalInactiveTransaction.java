@@ -29,9 +29,10 @@ public class TestHibernateFlushModeOnThreadLocalInactiveTransaction extends Base
 
 	@Test
 	public void testHibernateFlushModeOnInactiveTransaction() {
-		Session s = openSession();
-		//s.setFlushMode(FlushMode.AUTO); // this does not throw (API is deprecated)
-		s.setHibernateFlushMode( FlushMode.AUTO ); // this should not throw even within an inactive transaction
+		try ( Session s = sessionFactory().getCurrentSession() ) {
+			//s.setFlushMode( FlushMode.AUTO ); // this does not throw (API is deprecated)
+			s.setHibernateFlushMode( FlushMode.AUTO ); // this should not throw even within an inactive transaction
+		}
 	}
 
 }

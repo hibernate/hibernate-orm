@@ -332,6 +332,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "getTransaction".equals( methodName )
 							|| "isTransactionInProgress".equals( methodName )
 							|| "setFlushMode".equals( methodName )
+							|| "setHibernateFlushMode".equals( methodName )
 							|| "getFactory".equals( methodName )
 							|| "getSessionFactory".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {

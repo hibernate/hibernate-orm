@@ -255,6 +255,10 @@ public interface SharedSessionContractImplementor
 	Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
 			throws HibernateException;
 
+	/**
+	 * @deprecated Use {@link #internalLoad(String, Serializable, boolean, boolean)} instead.
+	 */
+	@Deprecated
 	default Object internalLoad(
 			String entityName,
 			Serializable id,

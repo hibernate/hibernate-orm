@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -155,7 +156,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
-					session.merge( animalInitialized );
+					final Animal animalMerged = (Animal) session.merge( animalInitialized );
+					assertSame( animal, animalMerged );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( 4, animal.getAge() );
 					assertEquals( "other", animal.getSex() );
@@ -204,7 +206,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 					assertTrue( Hibernate.isInitialized( animal ) );
 					animal.setAge( 5 );
 					animal.setSex( "male" );
-					session.merge( animalInitialized );
+					final Animal animalMerged = (Animal) session.merge( animalInitialized );
+					assertSame( animal, animalMerged );
 					assertEquals( 4, animal.getAge() );
 					assertEquals( "other", animal.getSex() );
 				}
@@ -245,7 +248,8 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
-					session.merge( animalUninitialized );
+					final Animal animalMerged = (Animal) session.merge( animalUninitialized );
+					assertSame( animal, animalMerged );
 					assertFalse( Hibernate.isInitialized( animal ) );
 				}
 		);
@@ -283,11 +287,13 @@ public class ProxyInitializeAndUpdateTest extends BaseNonConfigCoreFunctionalTes
 
 		inTransaction(
 				session -> {
-					final Animal animal = session.get( Animal.class, "animal" );
-					assertTrue( Hibernate.isInitialized( animal ) );
+					final Animal animal = session.load( Animal.class, "animal" );
+					assertFalse( Hibernate.isInitialized( animal ) );
 					animal.setSex( "other" );
+					assertTrue( Hibernate.isInitialized( animal ) );
 					animal.setAge( 4 );
-					session.merge( animalUninitialized );
+					final Animal animalMerged = (Animal) session.merge( animalUninitialized );
+					assertSame( animal, animalMerged );
 					assertTrue( Hibernate.isInitialized( animal ) );
 					assertEquals( "other", animal.getSex() );
 					assertEquals( 4, animal.getAge() );

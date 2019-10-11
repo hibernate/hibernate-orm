@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.internal.export.query.QueryExporter;
 import org.hibernate.tool.util.StringUtil;
 
@@ -32,7 +33,7 @@ public class QueryExporterTask extends ExporterTask {
 			}
 		}
 		exporter.setQueries(queryStrings);
-		exporter.setFilename(filename);
+		exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, filename);
 		super.configureExporter( exp );		
         return exporter;
 	}

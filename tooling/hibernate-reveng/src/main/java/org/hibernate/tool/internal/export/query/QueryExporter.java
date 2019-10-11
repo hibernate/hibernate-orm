@@ -19,7 +19,6 @@ import org.hibernate.tool.internal.export.common.AbstractExporter;
  **/
 public class QueryExporter extends AbstractExporter {
 
-	private String filename;
 	private List<String> queryStrings;
 
 	@SuppressWarnings({ "unchecked" })
@@ -78,13 +77,9 @@ public class QueryExporter extends AbstractExporter {
 	}
 
 	private String getFileName() {
-		return filename;
+		return (String)getProperties().get(OUTPUT_FILE_NAME);
 	}
 
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
-	
 	public void setQueries(List<String> queryStrings) {
 		this.queryStrings = queryStrings;		
 	}

@@ -1132,17 +1132,7 @@ public final class SessionImpl
 			String entityName,
 			Serializable id,
 			boolean eager,
-			boolean nullable) throws HibernateException {
-		return internalLoad( entityName, id, eager, nullable, null );
-	}
-
-	@Override
-	public final Object internalLoad(
-			String entityName,
-			Serializable id,
-			boolean eager,
-			boolean nullable,
-			Boolean unwrapProxy) {
+			boolean nullable) {
 		final LoadEventListener.LoadType type;
 		if ( nullable ) {
 			type = LoadEventListener.INTERNAL_LOAD_NULLABLE;

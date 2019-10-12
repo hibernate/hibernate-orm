@@ -15,6 +15,7 @@ public interface ExporterConstants {
 	public static final String HALT_ON_ERROR = "org.hibernate.tool.api.export.ExporterConstants.HaltOnError";
 	public static final String METADATA_DESCRIPTOR = "org.hibernate.tool.api.export.ExporterConstants.MetadataDescriptor";
 	public static final String OUTPUT_FILE_NAME = "org.hibernate.tool.api.export.ExporterConstants.OutputFileName";
+	public static final String QUERY_LIST = "org.hibernate.tool.api.export.ExporterConstants.QueryList";
 	public static final String SCHEMA_UPDATE = "org.hibernate.tool.api.export.ExporterConstants.SchemaUpdate";
 	public static final String TEMPLATE_NAME = "org.hibernate.tool.api.export.ExporterConstants.TemplateName";
 	public static final String TEMPLATE_PATH = "org.hibernate.tool.api.export.ExporterConstants.TemplatePath";

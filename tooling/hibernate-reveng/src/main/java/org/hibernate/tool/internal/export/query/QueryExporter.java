@@ -19,8 +19,6 @@ import org.hibernate.tool.internal.export.common.AbstractExporter;
  **/
 public class QueryExporter extends AbstractExporter {
 
-	private List<String> queryStrings;
-
 	@SuppressWarnings({ "unchecked" })
 	public void doStart() {
 		Session session = null;
@@ -30,7 +28,7 @@ public class QueryExporter extends AbstractExporter {
 			sessionFactory = buildMetadata().buildSessionFactory();
 			session = sessionFactory.openSession();
 			transaction = session.beginTransaction();
-			for (Iterator<String> iter = queryStrings.iterator(); iter.hasNext();) {
+			for (Iterator<?> iter = getQueryList().iterator(); iter.hasNext();) {
 				String query = (String) iter.next();
 				
 				List<Object> list = session.createQuery(query).getResultList();
@@ -79,9 +77,13 @@ public class QueryExporter extends AbstractExporter {
 	private String getFileName() {
 		return (String)getProperties().get(OUTPUT_FILE_NAME);
 	}
+	
+	private List<?> getQueryList() {
+		return (List<?>)getProperties().get(QUERY_LIST);
+	}
 
 	public void setQueries(List<String> queryStrings) {
-		this.queryStrings = queryStrings;		
+		getProperties().put(QUERY_LIST, queryStrings);		
 	}
 
 }

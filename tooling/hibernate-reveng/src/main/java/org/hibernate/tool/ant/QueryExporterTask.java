@@ -32,7 +32,7 @@ public class QueryExporterTask extends ExporterTask {
 				queryStrings.add(hql.query);
 			}
 		}
-		exporter.setQueries(queryStrings);
+		exporter.getProperties().put(ExporterConstants.QUERY_LIST, queryStrings);
 		exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, filename);
 		super.configureExporter( exp );		
         return exporter;

@@ -436,7 +436,7 @@ public class MapBinder extends CollectionBinder {
 				referencedEntityColumns = referencedProperty.getColumnIterator();
 			}
 			fromAndWhere = getFromAndWhereFormula(
-					associatedClass.getTable().getName(),
+					associatedClass.getTable().getQualifiedTableName().toString(),
 					element.getColumnIterator(),
 					referencedEntityColumns
 			);

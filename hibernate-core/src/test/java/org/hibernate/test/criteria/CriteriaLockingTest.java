@@ -19,11 +19,9 @@ import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.jboss.byteman.contrib.bmunit.BMRule;
 import org.jboss.byteman.contrib.bmunit.BMRules;
-import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
@@ -34,7 +32,6 @@ import static org.junit.Assert.assertTrue;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-8788")
-@RunWith(BMUnitRunner.class)
 public class CriteriaLockingTest extends BaseCoreFunctionalTestCase {
 
 	@Rule

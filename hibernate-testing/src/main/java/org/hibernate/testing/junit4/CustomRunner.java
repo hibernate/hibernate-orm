@@ -29,11 +29,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.manipulation.NoTestsRemainException;
 import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.jboss.logging.Logger;
 
 /**
@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class CustomRunner extends BlockJUnit4ClassRunner {
+public class CustomRunner extends BMUnitRunner {
 	private static final Logger log = Logger.getLogger( CustomRunner.class );
 
 	private TestClassMetadata testClassMetadata;

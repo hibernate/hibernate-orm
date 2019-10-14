@@ -46,9 +46,11 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
+import org.hibernate.testing.junit4.runtimecheck.BMRuntimeCheckCustomRunner;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
@@ -58,6 +60,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
+@RunWith( BMRuntimeCheckCustomRunner.class )
 @SuppressWarnings( {"deprecation"} )
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";

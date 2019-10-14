@@ -1,0 +1,24 @@
+HELPER org.hibernate.testing.junit4.runtimecheck.BMRuntimeCheckHelper
+
+RULE mark session factory is being created (since Configuration)
+CLASS org.hibernate.cfg.Configuration
+METHOD buildSessionFactory
+AT ENTRY
+IF true
+DO markSessionFactoryInCreation()
+ENDRULE
+
+RULE mark session factory has been created
+CLASS org.hibernate.internal.SessionFactoryImpl
+METHOD <init>
+AT EXIT
+IF true
+DO markSessionFactoryCreated()
+ENDRULE
+
+RULE check regex pattern parsing is not used at runtime
+CLASS Pattern
+METHOD compile
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Regex pattern parsing");
+ENDRULE

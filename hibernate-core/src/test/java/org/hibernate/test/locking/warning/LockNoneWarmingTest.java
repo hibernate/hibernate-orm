@@ -18,7 +18,6 @@ import java.util.Set;
 
 import org.jboss.byteman.contrib.bmunit.BMRule;
 import org.jboss.byteman.contrib.bmunit.BMRules;
-import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 
 import org.jboss.logging.Logger;
 
@@ -32,7 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -46,7 +44,6 @@ import static org.junit.Assert.assertFalse;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10513")
-@RunWith(BMUnitRunner.class)
 public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable triggerable;

@@ -1730,16 +1730,21 @@ public abstract class Loader {
 		// see if the entity defines reference caching, and if so use the cached reference (if one).
 		if ( session.getCacheMode().isGetEnabled() && persister.canUseReferenceCacheEntries() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			final Object ck = cache.generateCacheKey(
-					key.getIdentifier(),
-					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
+			if ( cache != null ) {
+				final Object ck = cache.generateCacheKey(
+						key.getIdentifier(),
+						persister,
+						session.getFactory(),
+						session.getTenantIdentifier()
+				);
+				final Object cachedEntry = CacheHelper.fromSharedCache( session, ck, cache );
+				if ( cachedEntry != null ) {
+					CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure(
+							cachedEntry,
+							factory
 					);
-			final Object cachedEntry = CacheHelper.fromSharedCache( session, ck, cache );
-			if ( cachedEntry != null ) {
-				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( cachedEntry, factory );
-				return ( (ReferenceCacheEntryImpl) entry ).getReference();
+					return ( (ReferenceCacheEntryImpl) entry ).getReference();
+				}
 			}
 		}
 

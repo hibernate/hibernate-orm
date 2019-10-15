@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Chris Cranford
  */
-public class AfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
+public class JtaAfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { SimpleEntity.class };

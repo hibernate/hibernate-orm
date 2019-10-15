@@ -11,13 +11,12 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,6 +34,7 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = SimpleEntity.class,
 		extraQueryImportClasses = {
@@ -59,13 +59,25 @@ public class SmokeTests {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SimpleEntity simpleEntity = new SimpleEntity();
-					simpleEntity.setId( 1 );
-					simpleEntity.setGender( FEMALE );
-					simpleEntity.setName( "Fab" );
-					simpleEntity.setGender2( MALE );
-					simpleEntity.setComponent( new Component( "a1", "a2" ) );
-					session.save( simpleEntity );
+					{
+						SimpleEntity simpleEntity = new SimpleEntity();
+						simpleEntity.setId( 1 );
+						simpleEntity.setGender( FEMALE );
+						simpleEntity.setName( "Fab" );
+						simpleEntity.setGender2( MALE );
+						simpleEntity.setComponent( new Component( "a1", "a2" ) );
+						session.save( simpleEntity );
+					}
+
+					{
+						SimpleEntity simpleEntity = new SimpleEntity();
+						simpleEntity.setId( 2 );
+						simpleEntity.setGender( MALE );
+						simpleEntity.setName( "Andrea" );
+						simpleEntity.setGender2( FEMALE );
+						simpleEntity.setComponent( new Component( "b1", "b2" ) );
+						session.save( simpleEntity );
+					}
 				}
 		);
 	}
@@ -194,6 +206,32 @@ public class SmokeTests {
 					assertThat( component, notNullValue() );
 					assertThat( component.getAttribute1(), is( "a1" ) );
 					assertThat( component.getAttribute2(), is( "a2" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlQueryReuseWithDiffParameterBinds(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Component> query = session.createQuery(
+							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
+							Component.class
+					);
+
+					{
+						final Component component = query.setParameter( "param", "a1" ).uniqueResult();
+						assertThat( component, notNullValue() );
+						assertThat( component.getAttribute1(), is( "a1" ) );
+						assertThat( component.getAttribute2(), is( "a2" ) );
+					}
+
+					{
+						final Component component = query.setParameter( "param", "b1" ).uniqueResult();
+						assertThat( component, notNullValue() );
+						assertThat( component.getAttribute1(), is( "b1" ) );
+						assertThat( component.getAttribute2(), is( "b2" ) );
+					}
 				}
 		);
 	}

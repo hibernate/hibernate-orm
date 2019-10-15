@@ -16,10 +16,10 @@ import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.QueryLogger;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.SqmTreeTransformationLogger;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -29,10 +29,6 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 
 /**
  * Maintains a cross-reference between SqmParameter and QueryParameter references.
- *
- * @apiNote The difference between {@link #addCriteriaAdjustment} and {@link #addExpansion}
- * is the durability of given parameter.  A Criteria-adjustment lives beyond
- * {@link #clearExpansions()} while an expansion does not.
  *
  * @author Steve Ebersole
  */
@@ -124,7 +120,7 @@ public class DomainParameterXref {
 
 			if ( ! sqmParameter.allowMultiValuedBinding() ) {
 				if ( queryParameter.allowsMultiValuedBinding() ) {
-					QueryLogger.QUERY_LOGGER.debugf(
+					SqmTreeTransformationLogger.LOGGER.debugf(
 							"SqmParameter [%s] does not allow multi-valued binding, " +
 									"but mapped to existing QueryParameter [%s] that does - " +
 									"disallowing multi-valued binding" ,
@@ -190,6 +186,19 @@ public class DomainParameterXref {
 		return sqmParamsByQueryParam.size();
 	}
 
+	public int getSqmParameterCount() {
+		return queryParamBySqmParam.size();
+	}
+
+	public int getNumberOfSqmParameters(QueryParameterImplementor<?> queryParameter) {
+		final List<SqmParameter> sqmParameters = sqmParamsByQueryParam.get( queryParameter );
+		if ( sqmParameters == null ) {
+			// this should maybe be an exception instead
+			return 0;
+		}
+		return sqmParameters.size();
+	}
+
 	/**
 	 * Get the mapping of all QueryParameters to the List of its corresponding
 	 * SqmParameters
@@ -213,20 +222,11 @@ public class DomainParameterXref {
 		return queryParamBySqmParam.get( sqmParameter );
 	}
 
-	public void addCriteriaAdjustment(
-			QueryParameterImplementor<?> domainParam,
-			JpaCriteriaParameter originalSqmParameter,
-			SqmParameter adjustment) {
-		QueryLogger.QUERY_LOGGER.debugf( "Adding JPA-param xref adjustment : %s", originalSqmParameter );
-		sqmParamsByQueryParam.get( domainParam ).add( adjustment );
-		queryParamBySqmParam.put( adjustment, domainParam );
-	}
-
 	public void addExpansion(
 			QueryParameterImplementor<?> domainParam,
 			SqmParameter originalSqmParameter,
 			SqmParameter expansion) {
-		QueryLogger.QUERY_LOGGER.debugf( "Adding domain-param xref expansion : %s", originalSqmParameter );
+		SqmTreeTransformationLogger.LOGGER.debugf( "Adding domain-param xref expansion : %s", originalSqmParameter );
 		queryParamBySqmParam.put( expansion, domainParam );
 
 		if ( expansions == null ) {

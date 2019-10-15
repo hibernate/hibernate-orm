@@ -93,12 +93,14 @@ pathRoot
 	;
 
 /**
- * Rule for dotIdentifierSequence where we expect an entity-name.  The extra
- * "rule layer" allows the walker to specially handle such a case (to use a special
- * org.hibernate.query.hql.DotIdentifierConsumer, etc)
+ * Specialized dotIdentifierSequence for cases where we expect an entity-name.  We handle it specially
+ * for the sake of performance.  Specifically we concatenate together the entity name as we walk the
+ * parse tree.  Relying on the `EntiytNameContext#getText` or `DotIdentifierSequenceContext#getText`
+ * performs walk to determine the name.
  */
 entityName
-	: dotIdentifierSequence
+	returns [String fullNameText]
+	: (i=identifier { $fullNameText = _localctx.i.getText(); }) (DOT c=identifier { $fullNameText += ("." + _localctx.c.getText() ); })*
 	;
 
 identificationVariableDef
@@ -968,7 +970,7 @@ identifier
 	| WITH
 	| YEAR
 	| trigFunctionName) {
-		logUseOfReservedWordAsIdentifier(getCurrentToken());
+		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}
 	;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.util.Arrays;
+import org.hibernate.query.hql.HqlLogger;
 
 import org.jboss.logging.Logger;
 
@@ -20,7 +20,8 @@ import org.antlr.v4.runtime.Token;
  * @author Steve Ebersole
  */
 public class HqlParseTreeBuilder {
-	private static final Logger log = Logger.getLogger( HqlParseTreeBuilder.class );
+	private static final Logger LOGGER = HqlLogger.subLogger( "reservedWordAsIdentifier" );
+	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	/**
 	 * Singleton access
@@ -35,7 +36,9 @@ public class HqlParseTreeBuilder {
 		return new HqlParser( new CommonTokenStream( hqlLexer ) ) {
 			@Override
 			protected void logUseOfReservedWordAsIdentifier(Token token) {
-				log.debugf( "Encountered use of reserved word as identifier : " + token.getText() );
+				if ( DEBUG_ENABLED ) {
+					LOGGER.debugf( "Encountered use of reserved word as identifier : %s", token.getText() );
+				}
 			}
 		};
 	}

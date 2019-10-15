@@ -149,9 +149,19 @@ public class OneToMany implements Value {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public boolean hasAnyInsertableColumns() {
+		return false;
+	}
+
 	public boolean[] getColumnUpdateability() {
 		//TODO: we could just return all false...
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean hasAnyUpdatableColumns() {
+		return false;
 	}
 
 	public boolean isIgnoreNotFound() {

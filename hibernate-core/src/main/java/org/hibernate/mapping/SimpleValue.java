@@ -41,6 +41,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -707,13 +708,37 @@ public abstract class SimpleValue implements KeyValue {
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
-	
+
+	@Override
 	public boolean[] getColumnInsertability() {
 		return extractBooleansFromList( insertability );
 	}
-	
+
+	@Override
+	public boolean hasAnyInsertableColumns() {
+		for ( Boolean val : insertability ) {
+			if ( val ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean[] getColumnUpdateability() {
 		return extractBooleansFromList( updatability );
+	}
+
+	@Override
+	public boolean hasAnyUpdatableColumns() {
+		for ( Boolean val : updatability ) {
+			if ( val ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {

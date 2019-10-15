@@ -102,13 +102,23 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
+		public boolean[] getColumnInsertability() {
+			return new boolean[] { true };
+		}
+
+		@Override
+		public boolean hasAnyInsertableColumns() {
+			return true;
+		}
+
+		@Override
 		public boolean[] getColumnUpdateability() {
 			return new boolean[] { true };
 		}
 
 		@Override
-		public boolean[] getColumnInsertability() {
-			return new boolean[] { true };
+		public boolean hasAnyUpdatableColumns() {
+			return true;
 		}
 
 		@Override

@@ -13,12 +13,12 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.QueryLogger;
+import org.hibernate.query.hql.HqlLogger;
+import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -178,7 +178,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		if ( found == null ) {
 			if ( associatedProcessingState.getParentProcessingState() != null ) {
-				QueryLogger.QUERY_LOGGER.debugf(
+				HqlLogger.QUERY_LOGGER.debugf(
 						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
 						navigableName
 				);

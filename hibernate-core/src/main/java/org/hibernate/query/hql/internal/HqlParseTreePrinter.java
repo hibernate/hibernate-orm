@@ -7,6 +7,7 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.query.QueryLogger;
+import org.hibernate.query.hql.HqlLogger;
 
 import org.jboss.logging.Logger;
 
@@ -19,7 +20,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  */
 @SuppressWarnings("WeakerAccess")
 public class HqlParseTreePrinter extends HqlParserBaseListener {
-	private static final Logger HQL_LOGGER = QueryLogger.subLogger( "hql.parseTree" );
+	private static final Logger HQL_LOGGER = HqlLogger.subLogger( "ast" );
 	private static final boolean LOG_DEBUG_ENABLED = HQL_LOGGER.isDebugEnabled();
 
 	public static void logStatementParseTree(HqlParser parser) {

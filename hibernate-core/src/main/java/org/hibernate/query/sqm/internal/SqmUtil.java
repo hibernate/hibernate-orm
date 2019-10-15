@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -83,18 +82,15 @@ public class SqmUtil {
 		}
 
 		final int queryParameterCount = domainParameterXref.getQueryParameterCount();
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> result = new IdentityHashMap<>(
-				CollectionHelper.determineProperSizing( queryParameterCount )
-		);
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> result = new IdentityHashMap<>( queryParameterCount );
 
-		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry :
-				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
+		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
 			final List<SqmParameter> sqmParams = entry.getValue();
 
 			final Map<SqmParameter, List<JdbcParameter>> sqmParamMap = result.computeIfAbsent(
 					queryParam,
-					qp -> new IdentityHashMap<>()
+					qp -> new IdentityHashMap<>( sqmParams.size() )
 			);
 
 			for ( SqmParameter sqmParam : sqmParams ) {
@@ -159,7 +155,7 @@ public class SqmUtil {
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
 			SqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl();
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref );
 
 		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry :
 				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {

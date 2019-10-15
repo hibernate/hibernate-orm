@@ -34,6 +34,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final ExecutionContext executionContext;
 
 	private final SqlSelection[] sqlSelections;
+	private final Object[] currentRowJdbcValues;
 
 	// todo (6.0) - manage limit-based skips
 
@@ -43,7 +44,6 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	//		increments position to 0, which is the first row
 	private int position = -1;
 
-	private Object[] currentRowJdbcValues;
 
 	public JdbcValuesResultSetImpl(
 			ResultSetAccess resultSetAccess,
@@ -60,6 +60,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.numberOfRowsToProcess = interpretNumberOfRowsToProcess( queryOptions );
 
 		this.sqlSelections = valuesMapping.getSqlSelections().toArray( new SqlSelection[0] );
+		this.currentRowJdbcValues = new Object[ sqlSelections.length ];
 	}
 
 	private static int interpretNumberOfRowsToProcess(QueryOptions queryOptions) {
@@ -98,8 +99,6 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	protected final boolean processNext(RowProcessingState rowProcessingState) {
-		currentRowJdbcValues = null;
-
 		if ( numberOfRowsToProcess != -1 && position > numberOfRowsToProcess ) {
 			// numberOfRowsToProcess != -1 means we had some limit, and
 			//		position > numberOfRowsToProcess means we have exceeded the
@@ -119,7 +118,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		}
 
 		try {
-			currentRowJdbcValues = readCurrentRowValues( rowProcessingState );
+			readCurrentRowValues( rowProcessingState );
 			return true;
 		}
 		catch (SQLException e) {
@@ -137,17 +136,14 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		);
 	}
 
-	private Object[] readCurrentRowValues(RowProcessingState rowProcessingState) throws SQLException {
-		final int numberOfSqlSelections = sqlSelections.length;
-		final Object[] row = new Object[numberOfSqlSelections];
-		for ( SqlSelection sqlSelection : sqlSelections ) {
-			row[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
+	private void readCurrentRowValues(RowProcessingState rowProcessingState) throws SQLException {
+		for ( final SqlSelection sqlSelection : sqlSelections ) {
+			currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
 					resultSetAccess.getResultSet(),
 					sqlSelection.getJdbcResultSetIndex(),
 					executionContext.getSession()
 			);
 		}
-		return row;
 	}
 
 	@Override

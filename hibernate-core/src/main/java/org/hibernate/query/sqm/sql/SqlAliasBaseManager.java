@@ -50,7 +50,7 @@ public class SqlAliasBaseManager implements SqlAliasBaseGenerator {
 		@Override
 		public String generateNewAlias() {
 			synchronized ( this ) {
-				final String alias = stem + '_' + ( aliasCount++ );
+				final String alias = stem + "_" + ( aliasCount++ );
 				if ( SqlTreeCreationLogger.DEBUG_ENABLED ) {
 					SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
 				}

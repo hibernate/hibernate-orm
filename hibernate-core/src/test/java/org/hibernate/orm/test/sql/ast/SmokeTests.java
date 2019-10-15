@@ -44,6 +44,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -170,7 +171,6 @@ public class SmokeTests {
 					final Expression selectedExpression = ( (SqlSelectionImpl) sqlSelection ).getWrappedSqlExpression();
 					assertThat( selectedExpression, instanceOf( ColumnReference.class ) );
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
-					assertThat( columnReference.getReferencedColumnExpression(), is( "gender" ) );
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
 					final MappingModelExpressable selectedExpressable = selectedExpression.getExpressionType();

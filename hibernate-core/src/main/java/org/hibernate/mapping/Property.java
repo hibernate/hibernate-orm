@@ -163,17 +163,13 @@ public class Property implements Serializable, MetaAttributable {
 	public boolean isUpdateable() {
 		// if the property mapping consists of all formulas,
 		// make it non-updateable
-		return updateable && !ArrayHelper.isAllFalse( value.getColumnUpdateability() );
+		return updateable && value.hasAnyUpdatableColumns();
 	}
 
 	public boolean isInsertable() {
 		// if the property mapping consists of all formulas, 
 		// make it non-insertable
-		final boolean[] columnInsertability = value.getColumnInsertability();
-		return insertable && (
-				columnInsertability.length==0 ||
-				!ArrayHelper.isAllFalse( columnInsertability )
-			);
+		return insertable && value.hasAnyInsertableColumns();
 	}
 
 	public ValueGeneration getValueGenerationStrategy() {

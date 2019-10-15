@@ -115,11 +115,15 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 								getContainingTableExpression(),
 								getMappedColumnExpression()
 						),
-						sqlAstProcessingState -> new ColumnReference(
+						sqlAstProcessingState -> tableGroup.resolveColumnReference(
+								getContainingTableExpression(),
 								getMappedColumnExpression(),
-								tableGroup.resolveTableReference( getContainingTableExpression() ).getIdentificationVariable(),
-								jdbcMapping,
-								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+								() -> new ColumnReference(
+										getMappedColumnExpression(),
+										tableGroup.resolveTableReference( getContainingTableExpression() ).getIdentificationVariable(),
+										jdbcMapping,
+										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+								)
 						)
 				),
 				valueConverter == null ? getMappedTypeDescriptor().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),

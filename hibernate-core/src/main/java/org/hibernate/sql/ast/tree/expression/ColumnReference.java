@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -26,8 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
-	private final String columnExpression;
-	private final String qualifier;
+	private final String referenceExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(
@@ -35,17 +33,29 @@ public class ColumnReference implements Expression {
 			String qualifier,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
-		this.columnExpression = columnExpression;
-		this.qualifier = qualifier;
+		this(
+				qualifier == null
+						? columnExpression
+						: qualifier + "." + columnExpression,
+				jdbcMapping,
+				sessionFactory
+		);
+	}
+
+	public ColumnReference(
+			String referenceExpression,
+			JdbcMapping jdbcMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this.referenceExpression = referenceExpression;
 		this.jdbcMapping = jdbcMapping;
 	}
 
-	public String getReferencedColumnExpression() {
-		return columnExpression;
+	public String getExpressionText() {
+		return referenceExpression;
 	}
 
-	public String getQualifier() {
-		return qualifier;
+	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
+		return getExpressionText();
 	}
 
 	@Override
@@ -77,7 +87,7 @@ public class ColumnReference implements Expression {
 				Locale.ROOT,
 				"%s(%s)",
 				getClass().getSimpleName(),
-				columnExpression
+				referenceExpression
 		);
 	}
 
@@ -91,21 +101,11 @@ public class ColumnReference implements Expression {
 		}
 
 		final ColumnReference that = (ColumnReference) o;
-		return Objects.equals( qualifier, that.qualifier )
-				&& Objects.equals( columnExpression, that.columnExpression );
+		return Objects.equals( referenceExpression, that.referenceExpression );
 	}
 
 	@Override
 	public int hashCode() {
-		int hash = Objects.hash( columnExpression );
-		return qualifier == null ? hash : hash + Objects.hash( qualifier );
-	}
-
-	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
-		if ( getQualifier() != null ) {
-			return getQualifier() + '.' + getReferencedColumnExpression();
-		}
-
-		return getReferencedColumnExpression();
+		return referenceExpression.hashCode();
 	}
 }

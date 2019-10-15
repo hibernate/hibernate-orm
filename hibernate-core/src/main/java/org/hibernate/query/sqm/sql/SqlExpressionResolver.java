@@ -32,14 +32,19 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface SqlExpressionResolver {
 	/**
+	 * Helper for generating an expression key for a column reference.
+	 *
+	 * @see #resolveSqlExpression
+	 */
+	static String createColumnReferenceKey(String tableExpression, String columnExpression) {
+		return tableExpression + columnExpression;
+	}
+
+	/**
 	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
 	 * (Sql)Expression reference.
 	 */
 	Expression resolveSqlExpression(String key, Function<SqlAstProcessingState,Expression> creator);
-
-	static String createColumnReferenceKey(String tableExpression, String columnExpression) {
-		return tableExpression + '.' + columnExpression;
-	}
 
 	/**
 	 * Resolve the SqlSelection for the given expression

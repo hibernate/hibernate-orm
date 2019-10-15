@@ -57,7 +57,13 @@ import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.sql.ast.spi.SqlAppender.*;
+import static org.hibernate.sql.ast.spi.SqlAppender.CLOSE_PARENTHESIS;
+import static org.hibernate.sql.ast.spi.SqlAppender.COMA_SEPARATOR;
+import static org.hibernate.sql.ast.spi.SqlAppender.EMPTY_STRING;
+import static org.hibernate.sql.ast.spi.SqlAppender.NO_SEPARATOR;
+import static org.hibernate.sql.ast.spi.SqlAppender.NULL_KEYWORD;
+import static org.hibernate.sql.ast.spi.SqlAppender.OPEN_PARENTHESIS;
+import static org.hibernate.sql.ast.spi.SqlAppender.PARAM_MARKER;
 
 /**
  * @author Steve Ebersole
@@ -131,14 +137,14 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		if ( !querySpec.isRoot() ) {
-			appendSql( EMPTY_STRING + OPEN_PARENTHESIS );
+			appendSql( " (" );
 		}
 
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 
 		if ( querySpec.getWhereClauseRestrictions() != null && !querySpec.getWhereClauseRestrictions().isEmpty() ) {
-			appendSql( EMPTY_STRING + WHERE_KEYWORD + EMPTY_STRING );
+			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
 			try {
@@ -151,7 +157,7 @@ public abstract class AbstractSqlAstWalker
 
 		final List<SortSpecification> sortSpecifications = querySpec.getSortSpecifications();
 		if ( sortSpecifications != null && !sortSpecifications.isEmpty() ) {
-			appendSql( EMPTY_STRING + ORDER_BY_KEYWORD + EMPTY_STRING );
+			appendSql( " order by " );
 
 			String separator = NO_SEPARATOR;
 			for (SortSpecification sortSpecification : sortSpecifications ) {
@@ -164,7 +170,7 @@ public abstract class AbstractSqlAstWalker
 		visitLimitOffsetClause( querySpec );
 
 		if ( !querySpec.isRoot() ) {
-			appendSql( COLLATE_KEYWORD + EMPTY_STRING );
+			appendSql( ")" );
 		}
 	}
 
@@ -178,16 +184,16 @@ public abstract class AbstractSqlAstWalker
 
 		final String collation = sortSpecification.getCollation();
 		if ( collation != null ) {
-			appendSql( EMPTY_STRING + COLLATE_KEYWORD + EMPTY_STRING );
+			appendSql( " collate " );
 			appendSql( collation );
 		}
 
 		final SortOrder sortOrder = sortSpecification.getSortOrder();
 		if ( sortOrder == SortOrder.ASCENDING ) {
-			appendSql( EMPTY_STRING + ASC_KEYWORD );
+			appendSql( " asc" );
 		}
 		else if ( sortOrder == SortOrder.DESCENDING ) {
-			appendSql( EMPTY_STRING + DESC_KEYWORD );
+			appendSql( " desc" );
 		}
 
 		// TODO: null precedence handling
@@ -230,9 +236,9 @@ public abstract class AbstractSqlAstWalker
 		clauseStack.push( Clause.SELECT );
 
 		try {
-			appendSql( SELECT_KEYWORD + EMPTY_STRING );
+			appendSql( "select " );
 			if ( selectClause.isDistinct() ) {
-				appendSql( DISTINCT_KEYWORD + EMPTY_STRING );
+				appendSql( "distinct " );
 			}
 
 			String separator = NO_SEPARATOR;
@@ -261,7 +267,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFromClause(FromClause fromClause) {
-		appendSql( EMPTY_STRING + FROM_KEYWORD + EMPTY_STRING );
+		appendSql( " from " );
 
 		String separator = NO_SEPARATOR;
 		for ( TableGroup root : fromClause.getRoots() ) {
@@ -297,7 +303,8 @@ public abstract class AbstractSqlAstWalker
 
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
-			sqlAppender.appendSql( EMPTY_STRING + AS_KEYWORD + EMPTY_STRING + identificationVariable );
+			sqlAppender.appendSql( " as " );
+			sqlAppender.appendSql( identificationVariable );
 		}
 	}
 
@@ -311,12 +318,12 @@ public abstract class AbstractSqlAstWalker
 		for ( TableReferenceJoin tableJoin : joins ) {
 			sqlAppender.appendSql( EMPTY_STRING );
 			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
-			sqlAppender.appendSql( EMPTY_STRING + JOIN_KEYWORD + EMPTY_STRING);
+			sqlAppender.appendSql( " join " );
 
 			renderTableReference( tableJoin.getJoinedTableReference() );
 
 			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-				sqlAppender.appendSql( EMPTY_STRING + ON_KEYWORD + EMPTY_STRING );
+				sqlAppender.appendSql( " on " );
 				tableJoin.getJoinPredicate().accept( this );
 			}
 		}
@@ -339,14 +346,14 @@ public abstract class AbstractSqlAstWalker
 		else {
 			appendSql( EMPTY_STRING );
 			appendSql( tableGroupJoin.getJoinType().getText() );
-			appendSql( EMPTY_STRING + JOIN_KEYWORD + EMPTY_STRING);
+			appendSql( " join " );
 
 			renderTableGroup( joinedGroup );
 
 			clauseStack.push( Clause.WHERE );
 			try {
 				if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-					appendSql( EMPTY_STRING + ON_KEYWORD + EMPTY_STRING );
+					appendSql( " on " );
 					tableGroupJoin.getPredicate().accept( this );
 				}
 			}
@@ -733,33 +740,34 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		appendSql( CASE_KEYWORD + EMPTY_STRING );
+		appendSql( "case " );
+
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			appendSql( EMPTY_STRING + WHEN_KEYWORD + EMPTY_STRING );
+			appendSql( " when " );
 			whenFragment.getPredicate().accept( this );
-			appendSql( EMPTY_STRING + THEN_KEYWORD + EMPTY_STRING );
+			appendSql( " then " );
 			whenFragment.getResult().accept( this );
 		}
-		appendSql( ELSE_KEYWORD );
 
+		appendSql( " else " );
 		caseSearchedExpression.getOtherwise().accept( this );
-		appendSql( EMPTY_STRING + END_KEYWORD );
+
+		appendSql( " end" );
 	}
 
 	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		appendSql( CASE_KEYWORD + EMPTY_STRING );
+		appendSql( " case" );
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
-			appendSql( EMPTY_STRING + WHEN_KEYWORD + EMPTY_STRING );
+			appendSql( " when " );
 			whenFragment.getCheckValue().accept( this );
-			appendSql( EMPTY_STRING + THEN_KEYWORD + EMPTY_STRING );
+			appendSql( " then " );
 			whenFragment.getResult().accept( this );
 		}
-		appendSql( EMPTY_STRING + ELSE_KEYWORD + EMPTY_STRING );
-
+		appendSql( " else " );
 		caseSimpleExpression.getOtherwise().accept( this );
-		appendSql( EMPTY_STRING + END_KEYWORD );
+		appendSql( " end" );
 	}
 
 
@@ -881,11 +889,11 @@ public abstract class AbstractSqlAstWalker
 	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
 		betweenPredicate.getExpression().accept( this );
 		if ( betweenPredicate.isNegated() ) {
-			appendSql( EMPTY_STRING + NOT_KEYWORD );
+			appendSql( " not" );
 		}
-		appendSql( EMPTY_STRING + BETWEEN_KEYWORD + EMPTY_STRING );
+		appendSql( " between " );
 		betweenPredicate.getLowerBound().accept( this );
-		appendSql( EMPTY_STRING + AND_KEYWORD + EMPTY_STRING );
+		appendSql( " and " );
 		betweenPredicate.getUpperBound().accept( this );
 	}
 
@@ -909,9 +917,9 @@ public abstract class AbstractSqlAstWalker
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		inListPredicate.getTestExpression().accept( this );
 		if ( inListPredicate.isNegated() ) {
-			appendSql( NOT_KEYWORD );
+			appendSql( " not" );
 		}
-		appendSql( IN_KEYWORD + ' ' + OPEN_PARENTHESIS );
+		appendSql( " in (" );
 		if ( inListPredicate.getListExpressions().isEmpty() ) {
 			appendSql( NULL_KEYWORD );
 		}
@@ -930,9 +938,9 @@ public abstract class AbstractSqlAstWalker
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		inSubQueryPredicate.getTestExpression().accept( this );
 		if ( inSubQueryPredicate.isNegated() ) {
-			appendSql( ' ' + NOT_KEYWORD );
+			appendSql( " not" );
 		}
-		appendSql( ' ' + IN_KEYWORD + ' ' );
+		appendSql( " in " );
 		visitQuerySpec( inSubQueryPredicate.getSubQuery() );
 	}
 
@@ -946,9 +954,11 @@ public abstract class AbstractSqlAstWalker
 		for ( Predicate predicate : junction.getPredicates() ) {
 			appendSql( separator );
 			predicate.accept( this );
-			separator = junction.getNature() == Junction.Nature.CONJUNCTION
-					? EMPTY_STRING + AND_KEYWORD + EMPTY_STRING
-					: EMPTY_STRING + OR_KEYWORD + EMPTY_STRING;
+			if ( separator == NO_SEPARATOR ) {
+				separator = junction.getNature() == Junction.Nature.CONJUNCTION
+						? " and "
+						: " or ";
+			}
 		}
 	}
 
@@ -956,12 +966,12 @@ public abstract class AbstractSqlAstWalker
 	public void visitLikePredicate(LikePredicate likePredicate) {
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
-			appendSql( EMPTY_STRING + NOT_KEYWORD );
+			appendSql( " not" );
 		}
-		appendSql( EMPTY_STRING + LIKE_KEYWORD + EMPTY_STRING );
+		appendSql( " like " );
 		likePredicate.getPattern().accept( this );
 		if ( likePredicate.getEscapeCharacter() != null ) {
-			appendSql( EMPTY_STRING + ESCAPE_KEYWORD + EMPTY_STRING );
+			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
 		}
 	}
@@ -972,19 +982,19 @@ public abstract class AbstractSqlAstWalker
 			return;
 		}
 
-		appendSql( NOT_KEYWORD + EMPTY_STRING + OPEN_PARENTHESIS );
+		appendSql( "not (" );
 		negatedPredicate.getPredicate().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
+		appendSql( ")" );
 	}
 
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		nullnessPredicate.getExpression().accept( this );
 		if ( nullnessPredicate.isNegated() ) {
-			appendSql( IS_NOT_NULL_FRAGMENT );
+			appendSql( " is not null" );
 		}
 		else {
-			appendSql( IS_NULL_FRAGMENT );
+			appendSql( " is null" );
 		}
 	}
 

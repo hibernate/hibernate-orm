@@ -296,6 +296,18 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	@Override
+	public boolean hasAnyInsertableColumns() {
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
+			if ( property.getValue().hasAnyInsertableColumns() ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean[] getColumnUpdateability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
 		Iterator iter = getPropertyIterator();
@@ -309,6 +321,18 @@ public class Component extends SimpleValue implements MetaAttributable {
 			i+=chunk.length;
 		}
 		return result;
+	}
+
+	@Override
+	public boolean hasAnyUpdatableColumns() {
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
+			if ( property.getValue().hasAnyUpdatableColumns() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public boolean isKey() {

@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
@@ -35,6 +34,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final int assemblerCount;
 	private final Callback callback;
 
+	private final Object[] resultRow;
+
 	public StandardRowReader(
 			List<DomainResultAssembler> resultAssemblers,
 			List<Initializer> initializers,
@@ -46,6 +47,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		this.assemblerCount = resultAssemblers.size();
 		this.callback = callback;
+
+		this.resultRow = new Object[assemblerCount];
 	}
 
 	@Override
@@ -68,6 +71,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 		return rowTransformer.determineNumberOfResultElements( assemblerCount );
 	}
 
+
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LOG.info( "---Processing Row---" );
@@ -75,14 +79,13 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		// finally assemble the results
 
-		final Object[] result = new Object[assemblerCount];
 		for ( int i = 0; i < assemblerCount; i++ ) {
-			result[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
+			resultRow[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
 		}
 
 		afterRow( rowProcessingState, options );
 
-		return rowTransformer.transformRow( result );
+		return rowTransformer.transformRow( resultRow );
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
@@ -33,11 +34,11 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 	private final EmbeddableValuedModelPart embeddedModelPartDescriptor;
 	private final FetchParentAccess fetchParentAccess;
 
-	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap = new HashMap<>();
+	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap;
 
 	// per-row state
+	private final Object[] resolvedValues;
 	private Object compositeInstance;
-	private Object[] resolvedValues;
 
 
 	public AbstractCompositeInitializer(
@@ -49,7 +50,11 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 		this.embeddedModelPartDescriptor = resultDescriptor.getReferencedMappingContainer();
 		this.fetchParentAccess = fetchParentAccess;
 
-		embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().visitStateArrayContributors(
+		final int numOfAttrs = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+		this.resolvedValues = new Object[ numOfAttrs ];
+		this.assemblerMap = CollectionHelper.mapOfSize( numOfAttrs );
+
+		this.embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().visitStateArrayContributors(
 				stateArrayContributor -> {
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor.getFetchableName() );
 
@@ -60,6 +65,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 					assemblerMap.put( stateArrayContributor, stateAssembler );
 				}
 		);
+
 	}
 
 	@Override
@@ -129,8 +135,6 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 				compositeInstance
 		);
 
-		resolvedValues = new Object[ assemblerMap.size() ];
-
 		for ( Map.Entry<StateArrayContributorMapping, DomainResultAssembler> entry : assemblerMap.entrySet() ) {
 			final Object contributorValue = entry.getValue().assemble(
 					rowProcessingState,
@@ -150,7 +154,6 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
-		resolvedValues = null;
 
 		clearParentResolutionListeners();
 	}

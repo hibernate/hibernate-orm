@@ -21,6 +21,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
 
+	public SimpleFromClauseAccessImpl() {
+	}
+
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
 		return tableGroupMap.get( navigablePath );

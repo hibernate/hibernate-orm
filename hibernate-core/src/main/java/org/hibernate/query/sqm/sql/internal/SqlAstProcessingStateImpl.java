@@ -80,10 +80,16 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 	public Expression resolveSqlExpression(
 			String key,
 			Function<SqlAstProcessingState,Expression> creator) {
-		final Expression expression = expressionMap.computeIfAbsent(
-				key,
-				s -> creator.apply( this )
-		);
+		final Expression existing = expressionMap.get( key );
+
+		final Expression expression;
+		if ( existing != null ) {
+			expression = existing;
+		}
+		else {
+			expression = creator.apply( this );
+			expressionMap.put( key, expression );
+		}
 
 		final Expression result = normalize( expression );
 

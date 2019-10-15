@@ -97,10 +97,14 @@ import org.jboss.logging.Logger;
 public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
 
-	private static final Logger LOGGER = QueryLogger.subLogger( "sqm.sqmTree" );
+	private static final Logger LOGGER = QueryLogger.subLogger( "sqm.ast" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
 	public static void logTree(SqmStatement sqmStatement) {
+		if ( ! DEBUG_ENABLED ) {
+			return;
+		}
+
 		final SqmTreePrinter printer = new SqmTreePrinter();
 
 		if ( sqmStatement instanceof SqmSelectStatement ) {

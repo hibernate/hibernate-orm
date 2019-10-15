@@ -32,8 +32,6 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public SqmStatement interpret(String query) {
-//		final ParsingContext parsingContext = ;
-
 		// first, ask Antlr to build the parse tree
 		final HqlParser parser = HqlParseTreeBuilder.INSTANCE.parseHql( query );
 
@@ -48,6 +46,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 					sqmCreationContext
 			);
 
+			// Log the SQM tree (if enabled)
 			SqmTreePrinter.logTree( sqmStatement );
 
 			return sqmStatement;

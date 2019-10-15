@@ -42,7 +42,7 @@ public class NavigablePath implements DotIdentifierSequence {
 				final String parentFullPath = parent.getFullPath();
 				this.fullPath = StringHelper.isEmpty( parentFullPath )
 						? navigableName
-						: parentFullPath + '.' + navigableName;
+						: parentFullPath + "." + navigableName;
 			}
 			else {
 				this.fullPath = navigableName;
@@ -59,7 +59,7 @@ public class NavigablePath implements DotIdentifierSequence {
 	public NavigablePath(String rootName, String alias) {
 		this.parent = null;
 
-		this.fullPath = alias == null ? rootName : rootName + '(' + alias + ')';
+		this.fullPath = alias == null ? rootName : rootName + "(" + alias + ")";
 
 		this.hashCode = fullPath.hashCode();
 	}
@@ -90,7 +90,7 @@ public class NavigablePath implements DotIdentifierSequence {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + '[' + fullPath + ']';
+		return getClass().getSimpleName() + "[" + fullPath + "]";
 	}
 
 	@Override

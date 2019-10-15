@@ -4,9 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query;
+package org.hibernate.query.hql;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.QueryLogger;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -22,11 +23,11 @@ import static org.jboss.logging.Logger.Level.ERROR;
  * @author Steve Ebersole
  */
 @MessageLogger( projectCode = "HHH" )
-@ValidIdRange( min = 90003001, max = 90003500 )
-public interface QueryLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.query";
+@ValidIdRange( min = 90003501, max = 90004000 )
+public interface HqlLogger extends BasicLogger {
+	String LOGGER_NAME = QueryLogger.subLoggerName( "hql" );
 
-	QueryLogger QUERY_LOGGER = Logger.getMessageLogger( QueryLogger.class, LOGGER_NAME );
+	HqlLogger QUERY_LOGGER = Logger.getMessageLogger( HqlLogger.class, LOGGER_NAME );
 
 	boolean TRACE_ENABLED = QUERY_LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = QUERY_LOGGER.isDebugEnabled();
@@ -44,6 +45,6 @@ public interface QueryLogger extends BasicLogger {
 	}
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Error in named query: %s", id = 90003001)
+	@Message(value = "Error in named query: %s", id = 90003501)
 	void namedQueryError(String queryName, @Cause HibernateException e);
 }

@@ -35,11 +35,11 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.PathException;
-import org.hibernate.query.QueryLogger;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.hql.HqlInterpretationException;
+import org.hibernate.query.hql.HqlLogger;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -665,7 +665,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		if ( sortExpression instanceof SqmLiteral
 				|| sortExpression instanceof SqmParameter ) {
-			QueryLogger.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
+			HqlLogger.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
 		}
 
 		final String collation;
@@ -782,7 +782,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public EntityDomainType<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
-		final String entityName = parserEntityName.dotIdentifierSequence().getText();
+		final String entityName = parserEntityName.fullNameText;
 		final EntityDomainType entityReference = resolveEntityReference( entityName );
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve entity name [" + entityName + "] as DML target", entityName );
@@ -844,7 +844,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmRoot visitPathRoot(HqlParser.PathRootContext ctx) {
-		final String name = ctx.entityName().getText();
+		final String name = ctx.entityName().fullNameText;
 
 		log.debugf( "Handling root path - %s", name );
 
@@ -922,7 +922,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@SuppressWarnings("unchecked")
 	private void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot sqmRoot) {
-		final String name = parserJoin.pathRoot().entityName().getText();
+		final String name = parserJoin.pathRoot().entityName().fullNameText;
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
@@ -954,20 +954,20 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	protected void consumeQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin, SqmRoot<?> sqmRoot) {
 		final SqmJoinType joinType;
 		final HqlParser.JoinTypeQualifierContext joinTypeQualifier = parserJoin.joinTypeQualifier();
-		if ( joinTypeQualifier.OUTER() != null ) {
-			// for outer joins, only left outer joins are currently supported
-			if ( joinTypeQualifier.FULL() != null ) {
-				throw new SemanticException( "FULL OUTER joins are not yet supported : " + parserJoin.getText() );
-			}
-			if ( joinTypeQualifier.RIGHT() != null ) {
-				throw new SemanticException( "RIGHT OUTER joins are not yet supported : " + parserJoin.getText() );
-			}
 
+		if ( joinTypeQualifier.FULL() != null ) {
+			throw new SemanticException( "FULL OUTER joins are not yet supported : " + parserJoin.getText() );
+		}
+		else if ( joinTypeQualifier.RIGHT() != null ) {
+			throw new SemanticException( "RIGHT OUTER joins are not yet supported : " + parserJoin.getText() );
+		}
+		else if ( joinTypeQualifier.OUTER() != null || joinTypeQualifier.LEFT() != null ) {
 			joinType = SqmJoinType.LEFT;
 		}
 		else {
 			joinType = SqmJoinType.INNER;
 		}
+
 
 		final String alias = visitIdentificationVariableDef( parserJoin.qualifiedJoinRhs().identificationVariableDef() );
 

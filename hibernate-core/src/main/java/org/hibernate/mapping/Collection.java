@@ -656,12 +656,24 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 	}
 
+	@Override
 	public boolean[] getColumnInsertability() {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
 
+	@Override
+	public boolean hasAnyInsertableColumns() {
+		return true;
+	}
+
+	@Override
 	public boolean[] getColumnUpdateability() {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+	}
+
+	@Override
+	public boolean hasAnyUpdatableColumns() {
+		return true;
 	}
 
 	public boolean isSubselectLoadable() {

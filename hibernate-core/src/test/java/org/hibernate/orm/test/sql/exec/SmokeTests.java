@@ -59,25 +59,13 @@ public class SmokeTests {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					{
-						SimpleEntity simpleEntity = new SimpleEntity();
-						simpleEntity.setId( 1 );
-						simpleEntity.setGender( FEMALE );
-						simpleEntity.setName( "Fab" );
-						simpleEntity.setGender2( MALE );
-						simpleEntity.setComponent( new Component( "a1", "a2" ) );
-						session.save( simpleEntity );
-					}
-
-					{
-						SimpleEntity simpleEntity = new SimpleEntity();
-						simpleEntity.setId( 2 );
-						simpleEntity.setGender( MALE );
-						simpleEntity.setName( "Andrea" );
-						simpleEntity.setGender2( FEMALE );
-						simpleEntity.setComponent( new Component( "b1", "b2" ) );
-						session.save( simpleEntity );
-					}
+					SimpleEntity simpleEntity = new SimpleEntity();
+					simpleEntity.setId( 1 );
+					simpleEntity.setGender( FEMALE );
+					simpleEntity.setName( "Fab" );
+					simpleEntity.setGender2( MALE );
+					simpleEntity.setComponent( new Component( "a1", "a2" ) );
+					session.save( simpleEntity );
 				}
 		);
 	}
@@ -212,14 +200,29 @@ public class SmokeTests {
 
 	@Test
 	public void testHqlQueryReuseWithDiffParameterBinds(SessionFactoryScope scope) {
+		// first, let's create a second entity
 		scope.inTransaction(
 				session -> {
+					SimpleEntity simpleEntity = new SimpleEntity();
+					simpleEntity.setId( 2 );
+					simpleEntity.setGender( MALE );
+					simpleEntity.setName( "Andrea" );
+					simpleEntity.setGender2( FEMALE );
+					simpleEntity.setComponent( new Component( "b1", "b2" ) );
+					session.save( simpleEntity );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					// create a Query ref that we will use to query for each entity individually through a parameter
 					final QueryImplementor<Component> query = session.createQuery(
 							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);
 
 					{
+						// first query execution searching for the standard entity created in set-up
 						final Component component = query.setParameter( "param", "a1" ).uniqueResult();
 						assertThat( component, notNullValue() );
 						assertThat( component.getAttribute1(), is( "a1" ) );
@@ -227,6 +230,7 @@ public class SmokeTests {
 					}
 
 					{
+						// second query execution searching for the second entity created locally
 						final Component component = query.setParameter( "param", "b1" ).uniqueResult();
 						assertThat( component, notNullValue() );
 						assertThat( component.getAttribute1(), is( "b1" ) );

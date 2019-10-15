@@ -17,7 +17,7 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections4.MultiMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.ErrorLogger;

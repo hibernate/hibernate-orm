@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections4.MultiMap;
 import org.junit.Assert;
 import org.junit.Test;
 import org.w3c.dom.Document;

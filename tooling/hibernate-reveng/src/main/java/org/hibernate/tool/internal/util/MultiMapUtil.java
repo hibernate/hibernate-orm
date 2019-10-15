@@ -3,7 +3,7 @@ package org.hibernate.tool.internal.util;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.collections.MultiMap;
+import org.apache.commons.collections4.MultiMap;
 
 public class MultiMapUtil {
 

@@ -31,6 +31,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
+import org.hibernate.test.tm.JtaAfterCompletionTest;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * An envers specific quest that verifies the {@link AuditProcessManager} gets flushed.
  *
- * There is a similar test called {@link org.hibernate.test.tm.AfterCompletionTest}
+ * There is a similar test called {@link JtaAfterCompletionTest}
  * in hibernate-core which verifies that the callbacks fires.
  *
  * The premise behind this test is to verify that when a JTA transaction is aborted by

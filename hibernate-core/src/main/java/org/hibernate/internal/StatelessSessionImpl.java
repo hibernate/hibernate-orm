@@ -46,7 +46,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -312,11 +311,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					final Object proxy = persistenceContext.getProxy( entityKey );
 
 					if ( proxy != null ) {
-						LOG.trace( "Entity proxy found in session cache" );
-
-						final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
-						if ( li.isUnwrap() ) {
-							return li.getImplementation();
+						if ( LOG.isTraceEnabled() ) {
+							LOG.trace( "Entity proxy found in session cache" );
+						}
+						if ( LOG.isDebugEnabled() && ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUnwrap() ) {
+							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
 
 						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
@@ -331,11 +330,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
-				else {
-					if ( !entityMetamodel.hasSubclasses() ) {
-						return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
-					}
+				else if ( !entityMetamodel.hasSubclasses() ) {
+					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
+				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
+				// The entity will get loaded below.
 			}
 			else {
 				if ( persister.hasProxy() ) {

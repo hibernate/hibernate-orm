@@ -301,15 +301,18 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					return createProxy( event, persister, keyToLoad, persistenceContext );
 				}
 			}
+			if ( !entityMetamodel.hasSubclasses() ) {
+				if ( keyToLoad.isBatchLoadable() ) {
+					// Add a batch-fetch entry into the queue for this entity
+					persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+				}
 
-			if ( keyToLoad.isBatchLoadable() ) {
-				// Add a batch-fetch entry into the queue for this entity
-				persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+				// This is the crux of HHH-11147
+				// create the (uninitialized) entity instance - has only id set
+				return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, session );
 			}
-
-			// This is the crux of HHH-11147
-			// create the (uninitialized) entity instance - has only id set
-			return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, session );
+			// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
+			// The entity will get loaded below.
 		}
 		else {
 			if ( persister.hasProxy() ) {

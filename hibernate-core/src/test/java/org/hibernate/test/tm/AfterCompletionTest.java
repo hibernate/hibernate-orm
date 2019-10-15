@@ -98,10 +98,6 @@ public class AfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
-	private void registerAfterCallbackCompletionHandler(Session session) {
-		( (SessionImplementor) session ).getActionQueue().registerProcess( new AfterCallbackCompletionHandler() );
-	}
-
 	public static class BeforeCallbackCompletionHandler implements BeforeTransactionCompletionProcess {
 		@Override
 		public void doBeforeTransactionCompletion(SessionImplementor session) {

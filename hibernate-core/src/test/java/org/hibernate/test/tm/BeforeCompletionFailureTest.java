@@ -118,10 +118,6 @@ public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTest
 		return new SimpleEntity( id, "key", "name" );
 	}
 
-	private void runTest() {
-
-	}
-
 	@Entity(name = "SimpleEntity")
 	public static class SimpleEntity {
 		@Id

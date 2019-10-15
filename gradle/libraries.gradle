@@ -11,7 +11,7 @@ ext {
 
     junitVersion = '4.12'
     h2Version = '1.4.196'
-    bytemanVersion = '4.0.8' //Compatible with JDK14
+    bytemanVersion = '4.0.8' //Compatible with JDK11
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '5.1.0.Final'

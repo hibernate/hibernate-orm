@@ -26,6 +26,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -109,10 +110,13 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+
+		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
-								getContainingTableExpression(),
+								tableReference,
 								getMappedColumnExpression()
 						),
 						sqlAstProcessingState -> tableGroup.resolveColumnReference(
@@ -120,7 +124,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 								getMappedColumnExpression(),
 								() -> new ColumnReference(
 										getMappedColumnExpression(),
-										tableGroup.resolveTableReference( getContainingTableExpression() ).getIdentificationVariable(),
+										tableReference.getIdentificationVariable(),
 										jdbcMapping,
 										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 								)
@@ -136,18 +140,20 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-
 		// the act of resolving the selection creates the selection if it not already part of the collected selections
+
+		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
+
 		expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
-								getContainingTableExpression(),
+								tableReference,
 								getMappedColumnExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
 								getMappedColumnExpression(),
-								tableGroup.resolveTableReference( getContainingTableExpression() ).getIdentificationVariable(),
+								tableReference.getIdentificationVariable(),
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)

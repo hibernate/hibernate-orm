@@ -68,7 +68,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 			String columnExpression,
 			Supplier<ColumnReference> creator) {
 		return columnReferenceMap.computeIfAbsent(
-				SqlExpressionResolver.createColumnReferenceKey( tableExpression, columnExpression ),
+				SqlExpressionResolver.createColumnReferenceKey( resolveTableReference( tableExpression ), columnExpression ),
 				s -> creator.get()
 		);
 	}
@@ -76,7 +76,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	@Override
 	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression) {
 		return columnReferenceMap.get(
-				SqlExpressionResolver.createColumnReferenceKey( tableExpression, columnExpression )
+				SqlExpressionResolver.createColumnReferenceKey( resolveTableReference( tableExpression ), columnExpression )
 		);
 	}
 }

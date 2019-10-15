@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -38,6 +39,17 @@ public interface SqlExpressionResolver {
 	 */
 	static String createColumnReferenceKey(String tableExpression, String columnExpression) {
 		return tableExpression + columnExpression;
+	}
+	/**
+	 * Helper for generating an expression key for a column reference.
+	 *
+	 * @see #resolveSqlExpression
+	 */
+	static String createColumnReferenceKey(TableReference tableReference, String columnExpression) {
+		final String qualifier = tableReference.getIdentificationVariable() == null
+				? tableReference.getTableExpression()
+				: tableReference.getIdentificationVariable();
+		return qualifier + columnExpression;
 	}
 
 	/**

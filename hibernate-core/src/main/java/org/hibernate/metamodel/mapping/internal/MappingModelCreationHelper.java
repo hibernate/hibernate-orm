@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
@@ -19,6 +20,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -39,9 +41,13 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -63,12 +69,15 @@ public class MappingModelCreationHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// EntityIdentifier
 
-	public static EntityIdentifierMapping buildSimpleIdentifierMapping(
+	public static BasicEntityIdentifierMapping buildSimpleIdentifierMapping(
 			EntityPersister entityPersister,
 			String rootTable,
 			String pkColumnName,
 			BasicType idType,
 			MappingModelCreationProcess creationProcess) {
+		assert entityPersister.hasIdentifierProperty();
+		assert entityPersister.getIdentifierPropertyName() != null;
+
 		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
 				.getBootModel()
 				.getEntityBinding( entityPersister.getEntityName() );
@@ -76,7 +85,7 @@ public class MappingModelCreationHelper {
 		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
-		return new EntityIdentifierMapping() {
+		return new BasicEntityIdentifierMapping() {
 			@Override
 			public PropertyAccess getPropertyAccess() {
 				return propertyAccess;
@@ -121,12 +130,13 @@ public class MappingModelCreationHelper {
 					String resultVariable,
 					DomainResultCreationState creationState) {
 				final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+				final TableReference rootTableReference = tableGroup.resolveTableReference( rootTable );
 
 				final Expression expression = expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( rootTable, pkColumnName ),
+						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
 								pkColumnName,
-								tableGroup.resolveTableReference( rootTable ).getIdentificationVariable(),
+								rootTableReference.getIdentificationVariable(),
 								( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()
 						)
@@ -152,14 +162,10 @@ public class MappingModelCreationHelper {
 					TableGroup tableGroup,
 					DomainResultCreationState creationState) {
 				final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-
-				// todo (6.0) : in the original 6.0 work `#resolveSqlExpression` worked based on an overload to handle qualifiable versus un-qualifiable expressables.
-				//		- that gets awkward in terms of managing which overloaded form to call.  Perhaps a better
-				//		option would be to use heterogeneous keys - e.g. an array for a qualifiable expressable (alias + expressable)
-				//		or a String concatenation
+				final TableReference rootTableReference = tableGroup.resolveTableReference( rootTable );
 
 				final Expression expression = expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( rootTable, pkColumnName ),
+						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
 								pkColumnName,
 								rootTable,
@@ -176,7 +182,58 @@ public class MappingModelCreationHelper {
 				);
 			}
 
+			@Override
+			public String getContainingTableExpression() {
+				return rootTable;
+			}
+
+			@Override
+			public BasicValueConverter getConverter() {
+				return null;
+			}
+
+			@Override
+			public String getMappedColumnExpression() {
+				return pkColumnName;
+			}
+
+			@Override
+			public JdbcMapping getJdbcMapping() {
+				return idType;
+			}
+
+			@Override
+			public String getFetchableName() {
+				return entityPersister.getIdentifierPropertyName();
+			}
+
+			@Override
+			public FetchStrategy getMappedFetchStrategy() {
+				return FetchStrategy.IMMEDIATE_JOIN;
+			}
+
+			@Override
+			public Fetch generateFetch(
+					FetchParent fetchParent,
+					NavigablePath fetchablePath,
+					FetchTiming fetchTiming,
+					boolean selected,
+					LockMode lockMode,
+					String resultVariable,
+					DomainResultCreationState creationState) {
+				return new BasicFetch<>(
+						0,
+						fetchParent,
+						fetchablePath,
+						this,
+						false,
+						null,
+						FetchTiming.IMMEDIATE,
+						creationState
+				);
+			}
 		};
+
 	}
 
 	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -194,6 +195,40 @@ public class SmokeTests {
 					assertThat( component, notNullValue() );
 					assertThat( component.getAttribute1(), is( "a1" ) );
 					assertThat( component.getAttribute2(), is( "a2" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testColumnQualification(SessionFactoryScope scope) {
+		// make sure column references to the same column qualified by different table references works properly
+
+		// first, let's create a second entity
+		scope.inTransaction(
+				session -> {
+					SimpleEntity simpleEntity = new SimpleEntity();
+					simpleEntity.setId( 2 );
+					simpleEntity.setGender( MALE );
+					simpleEntity.setName( "Andrea" );
+					simpleEntity.setGender2( FEMALE );
+					simpleEntity.setComponent( new Component( "b1", "b2" ) );
+					session.save( simpleEntity );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final Object[] result = session.createQuery( "select e, e2 from SimpleEntity e, SimpleEntity e2 where e.id = 1 and e2.id = 2", Object[].class )
+							.uniqueResult();
+					assertThat( result, notNullValue() );
+
+					assertThat( result[0], instanceOf( SimpleEntity.class ) );
+					assertThat( ( (SimpleEntity) result[0] ).getId(), is( 1 ) );
+					assertThat( ( (SimpleEntity) result[0] ).getComponent().getAttribute1(), is( "a1" ) );
+
+					assertThat( result[1], instanceOf( SimpleEntity.class ) );
+					assertThat( ( (SimpleEntity) result[1] ).getId(), is( 2 ) );
+					assertThat( ( (SimpleEntity) result[1] ).getComponent().getAttribute1(), is( "b1" ) );
 				}
 		);
 	}

@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -43,15 +44,16 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 				null
 		);
 
+		final TableReference tableReference = tableGroup.resolveTableReference( mapping.getContainingTableExpression() );
+
 		final ColumnReference columnReference = (ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
-						mapping.getContainingTableExpression(),
+						tableReference,
 						mapping.getMappedColumnExpression()
 				),
 				sacs -> new ColumnReference(
 						mapping.getMappedColumnExpression(),
-						tableGroup.resolveTableReference( mapping.getContainingTableExpression() )
-								.getIdentificationVariable(),
+						tableReference.getIdentificationVariable(),
 						mapping.getJdbcMapping(),
 						sqlAstCreationState.getCreationContext().getSessionFactory()
 				)

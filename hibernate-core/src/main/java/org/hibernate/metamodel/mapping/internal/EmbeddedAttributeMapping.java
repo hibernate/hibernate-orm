@@ -184,7 +184,7 @@ public class EmbeddedAttributeMapping
 
 						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
-										getContainingTableExpression(),
+										tableReference,
 										attrColumnExpr
 								),
 								sqlAstProcessingState -> tableGroup.resolveColumnReference(

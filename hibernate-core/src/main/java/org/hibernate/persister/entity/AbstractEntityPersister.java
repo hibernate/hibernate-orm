@@ -1270,7 +1270,7 @@ public abstract class AbstractEntityPersister
 						final String rootPkColumnName = rootPkColumnNames[ columnIndex ];
 						final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
-										rootTableReference.getTableExpression(),
+										rootTableReference,
 										rootPkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
@@ -1284,7 +1284,7 @@ public abstract class AbstractEntityPersister
 						final String fkColumnName = fkColumnNames[ columnIndex ];
 						final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
-										joinedTableReference.getTableExpression(),
+										joinedTableReference,
 										fkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
@@ -6310,6 +6310,10 @@ public abstract class AbstractEntityPersister
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		LOG.tracef( "#findSubPart(`%s`)", name );
 
+		if ( isIdentifierReference( name ) ) {
+			return identifierMapping;
+		}
+
 		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
 		if ( declaredAttribute != null ) {
 			return declaredAttribute;
@@ -6333,6 +6337,23 @@ public abstract class AbstractEntityPersister
 		}
 
 		return null;
+	}
+
+	private boolean isIdentifierReference(String name) {
+		if ( EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
+			return true;
+		}
+
+		if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+			if ( hasIdentifierProperty() ) {
+				final String identifierPropertyName = getIdentifierPropertyName();
+				if ( identifierPropertyName.equals( name ) ) {
+					return true;
+				}
+			}
+		}
+
+		return "id".equals( name );
 	}
 
 	@Override

@@ -22,3 +22,10 @@ METHOD compile
 IF shouldPerformAPICheck()
 DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Regex pattern parsing");
 ENDRULE
+
+RULE check annotation is not read at runtime
+INTERFACE ^AnnotatedElement
+METHOD getAnnotation
+IF shouldPerformAPICheck(true)
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Reading annotation");
+ENDRULE

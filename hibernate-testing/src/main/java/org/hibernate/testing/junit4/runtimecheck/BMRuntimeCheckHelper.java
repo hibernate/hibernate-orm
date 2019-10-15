@@ -36,15 +36,37 @@ public class BMRuntimeCheckHelper extends Helper {
 
 	/**
 	 * Api check is supposed to be done when:
-	 * 1. Session factory has already been created and it is active
+	 * 1. Session factory has already been created and it is active.
 	 * 2. There is no class initialization in the frame set of the calling methods
-	 * 		{@code E.g. <code>static final Pattern PATTERN = Pattern.compile( "aaa" );</code>; should be legal}
+	 * 		{@code E.g. <code>static final Pattern PATTERN = Pattern.compile( "aaa" );</code>; should be legal}.
 	 *
 	 * @return whether the API should be checked
 	 */
 	public boolean shouldPerformAPICheck() {
+		return shouldPerformAPICheck( false );
+	}
+
+	/**
+	 * Api check is supposed to be done when:
+	 * 1. Session factory has already been created and it is active.
+	 * 2. There is no class initialization in the frame set of the calling methods
+	 * 		{@code E.g. <code>static final Pattern PATTERN = Pattern.compile( "aaa" );</code>; should be legal}.
+	 * 3. If {@code skipJUnitFrameworkMethod} is true,
+	 * 		there is no {@link org.junit.runners.model.FrameworkMethod} in the last 2 calls of the frame set.
+	 *
+	 * @param skipJUnitFrameworkMethod whether to skip the check if it has been called by {@link org.junit.runners.model.FrameworkMethod}
+	 * @return whether the API should be checked
+	 */
+	public boolean shouldPerformAPICheck(boolean skipJUnitFrameworkMethod) {
 		// setTriggering( false ) allows to not trigger the rule from the rule itself
 		// FRAME_SIZE_CHECK as frameCount should be enough to filter any call coming from any class initialization
-		return !flagged( SESSION_FACTORY_INIT_FLAG ) && setTriggering( false ) && !callerMatches("<clinit>", false, FRAME_SIZE_CHECK );
+		boolean outcome = !flagged( SESSION_FACTORY_INIT_FLAG ) && setTriggering( false )
+				&& !callerMatches( "<clinit>", false, FRAME_SIZE_CHECK );
+
+		if ( skipJUnitFrameworkMethod ) {
+			outcome &= !callerMatches( "org.junit.runners.model.FrameworkMethod.*", true, true, 2 );
+		}
+
+		return outcome;
 	}
 }

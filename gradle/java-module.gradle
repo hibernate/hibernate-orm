@@ -169,7 +169,8 @@ tasks.withType( Test.class ).all { task ->
 	task.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
 			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
-			'-XX:MetaspaceSize=512M'
+			'-XX:MetaspaceSize=512M',
+			'-Dorg.jboss.byteman.transform.all=true'
 	]
 
 	task.maxHeapSize = '4G'

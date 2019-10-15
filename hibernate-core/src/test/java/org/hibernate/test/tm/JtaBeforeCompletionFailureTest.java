@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTestCase {
+public class JtaBeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

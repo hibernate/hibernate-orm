@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -70,27 +69,6 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 			return this;
 		}
 		return null;
-	}
-
-	@Override
-	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression, Supplier<ColumnReference> creator) {
-		final ColumnReference existing = resolveColumnReference( tableExpression, columnExpression );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		final ColumnReference columnReference = creator.get();
-		columnReferenceResolutionMap.put( columnExpression, columnReference );
-		return columnReference;
-	}
-
-	@Override
-	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression) {
-		if ( ! tableExpression.equals( getTableExpression() ) ) {
-			throw new HibernateException( "Attempt to resolve ColumnReference relative to a table other than the referenced table" );
-		}
-
-		return columnReferenceResolutionMap.get( columnExpression );
 	}
 
 	@Override

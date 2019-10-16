@@ -58,6 +58,7 @@ public class EmbeddedAttributeMapping
 	private final String tableExpression;
 	private final String[] attrColumnNames;
 
+	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
 			String name,
 			int stateArrayPosition,
@@ -187,15 +188,11 @@ public class EmbeddedAttributeMapping
 										tableReference,
 										attrColumnExpr
 								),
-								sqlAstProcessingState -> tableGroup.resolveColumnReference(
-										getContainingTableExpression(),
+								sqlAstProcessingState -> new ColumnReference(
 										attrColumnExpr,
-										() -> new ColumnReference(
-												attrColumnExpr,
-												tableReference.getIdentificationVariable(),
-												jdbcMapping,
-												sqlAstCreationState.getCreationContext().getSessionFactory()
-										)
+										tableReference.getIdentificationVariable(),
+										jdbcMapping,
+										sqlAstCreationState.getCreationContext().getSessionFactory()
 								)
 						);
 

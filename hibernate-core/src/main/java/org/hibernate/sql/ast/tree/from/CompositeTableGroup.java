@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
  * @author Steve Ebersole
@@ -127,16 +126,4 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		return underlyingTableGroup.resolveTableReference( tableExpression );
 	}
 
-	@Override
-	public ColumnReference resolveColumnReference(
-			String tableExpression,
-			String columnExpression,
-			Supplier<ColumnReference> creator) {
-		return underlyingTableGroup.resolveColumnReference( tableExpression, columnExpression, creator );
-	}
-
-	@Override
-	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression) {
-		return underlyingTableGroup.resolveColumnReference( tableExpression, columnExpression );
-	}
 }

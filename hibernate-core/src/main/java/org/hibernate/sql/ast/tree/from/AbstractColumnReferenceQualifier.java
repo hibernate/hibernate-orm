@@ -7,13 +7,9 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +23,6 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TableReference handling
-
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
@@ -56,27 +51,4 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ColumnReference handling
-
-	private final SortedMap<String, ColumnReference> columnReferenceMap = new TreeMap<>();
-
-	@Override
-	public ColumnReference resolveColumnReference(
-			String tableExpression,
-			String columnExpression,
-			Supplier<ColumnReference> creator) {
-		return columnReferenceMap.computeIfAbsent(
-				SqlExpressionResolver.createColumnReferenceKey( resolveTableReference( tableExpression ), columnExpression ),
-				s -> creator.get()
-		);
-	}
-
-	@Override
-	public ColumnReference resolveColumnReference(String tableExpression, String columnExpression) {
-		return columnReferenceMap.get(
-				SqlExpressionResolver.createColumnReferenceKey( resolveTableReference( tableExpression ), columnExpression )
-		);
-	}
 }

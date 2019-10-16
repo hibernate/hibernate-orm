@@ -46,6 +46,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter valueConverter;
 
+	@SuppressWarnings("WeakerAccess")
 	public BasicValuedSingularAttributeMapping(
 			String attributeName,
 			int stateArrayPosition,
@@ -119,15 +120,11 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 								tableReference,
 								getMappedColumnExpression()
 						),
-						sqlAstProcessingState -> tableGroup.resolveColumnReference(
-								getContainingTableExpression(),
+						sqlAstProcessingState -> new ColumnReference(
 								getMappedColumnExpression(),
-								() -> new ColumnReference(
-										getMappedColumnExpression(),
-										tableReference.getIdentificationVariable(),
-										jdbcMapping,
-										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-								)
+								tableReference.getIdentificationVariable(),
+								jdbcMapping,
+								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
 				valueConverter == null ? getMappedTypeDescriptor().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),

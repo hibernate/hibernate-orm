@@ -17,6 +17,4 @@ public interface ColumnReferenceQualifier {
 	TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator);
 	TableReference resolveTableReference(String tableExpression);
 
-	ColumnReference resolveColumnReference(String tableExpression, String columnExpression, Supplier<ColumnReference> creator);
-	ColumnReference resolveColumnReference(String tableExpression, String columnExpression);
 }

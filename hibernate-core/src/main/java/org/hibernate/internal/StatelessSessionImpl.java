@@ -283,11 +283,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) throws HibernateException {
 		checkOpen();
 
-		EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
+		final EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
 		final EntityKey entityKey = generateEntityKey( id, persister );
 
 		// first, try to load it from the temp PC associated to this SS
-		Object loaded = temporaryPersistenceContext.getEntity( entityKey );
+		final PersistenceContext persistenceContext = getPersistenceContext();
+		Object loaded = persistenceContext.getEntity( entityKey );
 		if ( loaded != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
@@ -307,7 +308,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
 				if ( persister.getEntityMetamodel().getTuplizer().getProxyFactory() != null ) {
-					final PersistenceContext persistenceContext = getPersistenceContext();
 					final Object proxy = persistenceContext.getProxy( entityKey );
 
 					if ( proxy != null ) {
@@ -338,7 +338,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				if ( persister.hasProxy() ) {
-					final PersistenceContext persistenceContext = getPersistenceContext();
 					final Object existingProxy = persistenceContext.getProxy( entityKey );
 					if ( existingProxy != null ) {
 						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
@@ -351,7 +350,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		// otherwise immediately materialize it
-		return get( entityName, id );
+
+		// IMPLEMENTATION NOTE: increment/decrement the load count before/after getting the value
+		//                      to ensure that #get does not clear the PersistenceContext.
+		persistenceContext.beforeLoad();
+		try {
+			return get( entityName, id );
+		}
+		finally {
+			persistenceContext.afterLoad();
+		}
 	}
 
 	private Object createProxy(EntityKey entityKey) {

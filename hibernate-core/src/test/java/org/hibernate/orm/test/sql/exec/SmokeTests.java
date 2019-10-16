@@ -13,10 +13,12 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +39,7 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
  */
 @SuppressWarnings("WeakerAccess")
 @DomainModel(
-		annotatedClasses = SimpleEntity.class,
+		annotatedClasses = {SimpleEntity.class, OtherEntity.class},
 		extraQueryImportClasses = {
 				SmokeTests.ListItemDto.class,
 				SmokeTests.CategorizedListItemDto.class,
@@ -271,6 +273,16 @@ public class SmokeTests {
 						assertThat( component.getAttribute1(), is( "b1" ) );
 						assertThat( component.getAttribute2(), is( "b2" ) );
 					}
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected
+	public void testSelectManyToOne(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select e.simpleEntity from OtherEntity e" ).list();
 				}
 		);
 	}

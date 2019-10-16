@@ -21,18 +21,22 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -93,9 +97,62 @@ public class SmokeTests {
 		}
 	}
 
+	@Test
+	@FailureExpected
+	public void testEntityBasedManyToOne(SessionFactoryScope scope) {
+		final EntityPersister entityDescriptor = scope.getSessionFactory()
+				.getDomainModel()
+				.getEntityDescriptor( OtherEntity.class );
+
+		final ModelPart part = entityDescriptor.findSubPart( "simpleEntity" );
+		assertThat( part, notNullValue() );
+		assertThat( part, instanceOf( SingularAssociationAttributeMapping.class ) );
+		final SingularAssociationAttributeMapping attrMapping = (SingularAssociationAttributeMapping) part;
+//		assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
+//		assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 4 ) );
+//		assertThat( attrMapping.getMappedColumnExpressions().get( 0 ), is( "attribute1" ) );
+//		assertThat( attrMapping.getMappedColumnExpressions().get( 1 ), is( "attribute2" ) );
+	}
+
+
 	public enum Gender {
 		MALE,
 		FEMALE
+	}
+
+	@Entity( name = "OtherEntity" )
+	@Table( name = "mapping_other_entity" )
+	@SuppressWarnings("unused")
+	public static class OtherEntity {
+		private Integer id;
+		private String name;
+		private SimpleEntity simpleEntity;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@ManyToOne
+		public SimpleEntity getSimpleEntity() {
+			return simpleEntity;
+		}
+
+		public void setSimpleEntity(SimpleEntity simpleEntity) {
+			this.simpleEntity = simpleEntity;
+		}
 	}
 
 	@Entity( name = "SimpleEntity" )

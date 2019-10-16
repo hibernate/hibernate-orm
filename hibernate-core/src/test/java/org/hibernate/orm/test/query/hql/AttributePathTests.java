@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.jupiter.api.Test;
@@ -102,4 +103,15 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		interpretSelect( "select s.mate from Person s where s.{id} = ?1" );
 		interpretSelect( "select s.mate from Person s where s.pk = ?1" );
 	}
+
+	@Test
+	public void testManyToOneReference() {
+		final SqmSelectStatement sqm = interpretSelect( "select s.mate from Person s" );
+		final List<SqmSelection> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		assertThat( selections.size(), is( 1 ) );
+		final SqmSelection selection = selections.get( 0 );
+		final SqmSelectableNode selectableNode = selection.getSelectableNode();
+		assert Person.class.equals( selectableNode.getJavaTypeDescriptor().getJavaType() );
+	}
+
 }

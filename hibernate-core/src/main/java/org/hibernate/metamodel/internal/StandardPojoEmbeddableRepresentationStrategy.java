@@ -38,6 +38,7 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 	public StandardPojoEmbeddableRepresentationStrategy(
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
+		//noinspection unchecked
 		super(
 				bootDescriptor,
 				creationContext.getTypeConfiguration()
@@ -55,7 +56,10 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 		this.reflectionOptimizer = buildReflectionOptimizer( bootDescriptor, creationContext );
 
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
-			this.instantiator = new OptimizedPojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor(), reflectionOptimizer );
+			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
+			this.instantiator = instantiationOptimizer != null
+					? new OptimizedPojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor(), instantiationOptimizer )
+					: new PojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor() );
 		}
 		else {
 			this.instantiator = new PojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor() );

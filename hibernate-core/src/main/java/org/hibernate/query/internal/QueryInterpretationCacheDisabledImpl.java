@@ -28,6 +28,16 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	public static final QueryInterpretationCacheDisabledImpl INSTANCE = new QueryInterpretationCacheDisabledImpl();
 
 	@Override
+	public int getNumberOfCachedHqlInterpretations() {
+		return 0;
+	}
+
+	@Override
+	public int getNumberOfCachedQueryPlans() {
+		return 0;
+	}
+
+	@Override
 	public SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator) {
 		return null;
 	}

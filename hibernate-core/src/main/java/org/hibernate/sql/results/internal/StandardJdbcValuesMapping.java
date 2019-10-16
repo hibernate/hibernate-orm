@@ -48,8 +48,9 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			AssemblerCreationState creationState) {
 		final List<DomainResultAssembler> assemblers = CollectionHelper.arrayList( domainResults.size() );
 
-		for ( DomainResult domainResult : domainResults ) {
-			final DomainResultAssembler resultAssembler = domainResult.createResultAssembler(
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < domainResults.size(); i++ ) {
+			final DomainResultAssembler resultAssembler = domainResults.get( i ).createResultAssembler(
 					initializerConsumer,
 					creationState
 			);

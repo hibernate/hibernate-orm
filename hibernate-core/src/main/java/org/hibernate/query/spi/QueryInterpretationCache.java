@@ -23,15 +23,15 @@ public interface QueryInterpretationCache {
 	interface Key {
 	}
 
+	int getNumberOfCachedHqlInterpretations();
+	int getNumberOfCachedQueryPlans();
+
+	HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator);
+
 	SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator);
 
 	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);
-
-	/**
-	 * todo (6.0) : Doesn't holding these separate from the QueryPlans lead to extra, unnecessary memory use?
-	 */
-	HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator);
 
 	ParameterInterpretation resolveNativeQueryParameters(String queryString, Function<String, ParameterInterpretation> creator);
 

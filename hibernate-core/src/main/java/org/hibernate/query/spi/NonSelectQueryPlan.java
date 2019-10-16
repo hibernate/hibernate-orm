@@ -11,6 +11,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 /**
  * @author Steve Ebersole
  */
-public interface NonSelectQueryPlan {
+public interface NonSelectQueryPlan extends QueryPlan {
 	int executeUpdate(ExecutionContext executionContext);
 }

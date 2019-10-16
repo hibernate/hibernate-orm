@@ -16,9 +16,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class OptimizedPojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	private final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer;
 
-	public OptimizedPojoInstantiatorImpl(JavaTypeDescriptor javaTypeDescriptor, ReflectionOptimizer reflectionOptimizer) {
+	public OptimizedPojoInstantiatorImpl(JavaTypeDescriptor javaTypeDescriptor, ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer) {
 		super( javaTypeDescriptor.getJavaType() );
-		this.instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
+		this.instantiationOptimizer = instantiationOptimizer;
 	}
 
 	@Override

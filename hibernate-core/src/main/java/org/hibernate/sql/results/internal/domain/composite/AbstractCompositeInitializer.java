@@ -6,11 +6,10 @@
  */
 package org.hibernate.sql.results.internal.domain.composite;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
@@ -41,6 +40,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 	private Object compositeInstance;
 
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractCompositeInitializer(
 			CompositeResultMappingNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
@@ -52,7 +52,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 
 		final int numOfAttrs = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 		this.resolvedValues = new Object[ numOfAttrs ];
-		this.assemblerMap = CollectionHelper.mapOfSize( numOfAttrs );
+		this.assemblerMap = new IdentityHashMap<>( numOfAttrs );
 
 		this.embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().visitStateArrayContributors(
 				stateArrayContributor -> {
@@ -73,6 +73,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 		return embeddedModelPartDescriptor;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public FetchParentAccess getFetchParentAccess() {
 		return fetchParentAccess;
 	}

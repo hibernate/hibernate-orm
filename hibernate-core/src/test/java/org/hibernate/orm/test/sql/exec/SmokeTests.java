@@ -9,11 +9,10 @@ package org.hibernate.orm.test.sql.exec;
 import java.sql.Statement;
 import java.util.List;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
+import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
@@ -37,7 +36,7 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "DefaultAnnotationParam"})
 @DomainModel(
 		annotatedClasses = {SimpleEntity.class, OtherEntity.class},
 		extraQueryImportClasses = {
@@ -47,15 +46,8 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
 				SmokeTests.BasicSetterBasedDto.class
 		}
 )
-@ServiceRegistry(
-		settings = {
-				@ServiceRegistry.Setting(
-						name = AvailableSettings.HBM2DDL_AUTO,
-						value = "create-drop"
-				)
-		}
-)
-@SessionFactory
+@ServiceRegistry
+@SessionFactory( exportSchema = true )
 public class SmokeTests {
 
 	@BeforeEach

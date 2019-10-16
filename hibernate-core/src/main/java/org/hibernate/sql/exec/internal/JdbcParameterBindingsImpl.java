@@ -8,11 +8,10 @@ package org.hibernate.sql.exec.internal;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -28,14 +27,14 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 
 	public JdbcParameterBindingsImpl(DomainParameterXref domainParameterXref) {
 		if ( domainParameterXref.getSqmParameterCount() > 0 ) {
-			bindingMap = CollectionHelper.mapOfSize( domainParameterXref.getSqmParameterCount() );
+			bindingMap = new IdentityHashMap<>( domainParameterXref.getSqmParameterCount() );
 		}
 	}
 
 	@Override
 	public void addBinding(JdbcParameter parameter, JdbcParameterBinding binding) {
 		if ( bindingMap == null ) {
-			bindingMap = new HashMap<>();
+			bindingMap = new IdentityHashMap<>();
 		}
 
 		bindingMap.put( parameter, binding );

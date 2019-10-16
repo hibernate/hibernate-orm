@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal.domain.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -75,7 +76,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final DomainResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 
-	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap = new HashMap<>();
+	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap;
 
 	// per-row state
 	private EntityPersister concreteDescriptor;
@@ -131,6 +132,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else {
 			this.versionAssembler = null;
 		}
+
+		assemblerMap = new IdentityHashMap<>( entityDescriptor.getNumberOfAttributeMappings() );
 
 		entityDescriptor.visitStateArrayContributors(
 				attributeMapping -> {

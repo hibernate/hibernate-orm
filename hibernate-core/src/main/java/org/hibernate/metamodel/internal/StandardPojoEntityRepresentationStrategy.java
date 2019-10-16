@@ -108,10 +108,16 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 		this.proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
 
-		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider );
+		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
-		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
-			this.instantiator = new OptimizedPojoInstantiatorImpl<>( mappedJtd, reflectionOptimizer );
+		if ( reflectionOptimizer != null ) {
+			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
+			if ( instantiationOptimizer != null ) {
+				this.instantiator = new OptimizedPojoInstantiatorImpl<>( mappedJtd, instantiationOptimizer );
+			}
+			else {
+				this.instantiator = new PojoInstantiatorImpl<>( mappedJtd );
+			}
 		}
 		else {
 			this.instantiator = new PojoInstantiatorImpl<>( mappedJtd );
@@ -226,7 +232,8 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 	private ReflectionOptimizer resolveReflectionOptimizer(
 			PersistentClass bootType,
-			BytecodeProvider bytecodeProvider) {
+			BytecodeProvider bytecodeProvider,
+			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
 		final Class javaTypeToReflect;
 		if ( proxyFactory != null ) {
 			assert proxyJtd != null;

@@ -7,16 +7,13 @@
 package org.hibernate.sql.results.internal;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.Initializer;
@@ -32,11 +29,12 @@ import org.jboss.logging.Logger;
  */
 public class RowProcessingStateStandardImpl implements RowProcessingState {
 	private static final Logger log = Logger.getLogger( RowProcessingStateStandardImpl.class );
+	private static final Initializer[] NO_INITIALIZERS = new Initializer[0];
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
 	private final QueryOptions queryOptions;
 
-	private final Map<NavigablePath, Initializer> initializerMap;
+	private final Initializer[] initializers;
 
 	private final JdbcValues jdbcValues;
 	private Object[] currentRowJdbcValues;
@@ -52,14 +50,11 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 		final List<Initializer> initializers = rowReader.getInitializers();
 		if ( initializers == null || initializers.isEmpty() ) {
-			initializerMap = null;
+			this.initializers = NO_INITIALIZERS;
 		}
 		else {
-			initializerMap = new HashMap<>();
-			for ( Initializer initializer : initializers ) {
-				initializerMap.put( initializer.getNavigablePath(), initializer );
-			}
-
+			//noinspection ToArrayCallWithZeroLengthArrayArgument
+			this.initializers = initializers.toArray( new Initializer[initializers.size()] );
 		}
 	}
 
@@ -115,6 +110,12 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public Initializer resolveInitializer(NavigablePath path) {
-		return initializerMap == null ? null : initializerMap.get( path );
+		for ( Initializer initializer : initializers ) {
+			if ( initializer.getNavigablePath().equals( path ) ) {
+				return initializer;
+			}
+		}
+
+		return null;
 	}
 }

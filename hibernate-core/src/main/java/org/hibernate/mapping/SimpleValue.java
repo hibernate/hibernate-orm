@@ -716,8 +716,9 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasAnyInsertableColumns() {
-		for ( Boolean val : insertability ) {
-			if ( val ) {
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < insertability.size(); i++ ) {
+			if ( insertability.get( i ) ) {
 				return true;
 			}
 		}
@@ -732,8 +733,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasAnyUpdatableColumns() {
-		for ( Boolean val : updatability ) {
-			if ( val ) {
+		for ( int i = 0; i < updatability.size(); i++ ) {
+			if ( updatability.get( i ) ) {
 				return true;
 			}
 		}

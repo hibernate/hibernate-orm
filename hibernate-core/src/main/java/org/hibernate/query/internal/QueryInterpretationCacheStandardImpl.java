@@ -62,6 +62,16 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	}
 
 	@Override
+	public int getNumberOfCachedHqlInterpretations() {
+		return hqlInterpretationCache.size();
+	}
+
+	@Override
+	public int getNumberOfCachedQueryPlans() {
+		return queryPlanCache.size();
+	}
+
+	@Override
 	public SelectQueryPlan resolveSelectQueryPlan(
 			Key key,
 			Supplier<SelectQueryPlan> creator) {

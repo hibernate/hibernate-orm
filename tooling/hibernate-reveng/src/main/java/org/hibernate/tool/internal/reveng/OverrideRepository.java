@@ -5,19 +5,20 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.collections4.MultiMap;
+import org.apache.commons.collections4.MapIterator;
+import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.ErrorLogger;
@@ -29,6 +30,7 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
@@ -76,9 +78,9 @@ public class OverrideRepository  {
 	final private Map<String, AssociationInfo> foreignKeyToEntityInfo;
 	final private Map<String, AssociationInfo> foreignKeyToInverseEntityInfo;
 
-	final private Map<TableIdentifier, MultiMap> tableMetaAttributes; // TI -> MultiMap of SimpleMetaAttributes
+	final private Map<TableIdentifier, MultiValuedMap<String, SimpleMetaAttribute>> tableMetaAttributes; // TI -> MultiMap of SimpleMetaAttributes
 
-	final private Map<TableColumnKey, MultiMap> columnMetaAttributes;
+	final private Map<TableColumnKey, MultiValuedMap<String, SimpleMetaAttribute>> columnMetaAttributes;
 
 	//private String defaultCatalog;
 	//private String defaultSchema;
@@ -104,8 +106,8 @@ public class OverrideRepository  {
 		foreignKeyToInverseName = new HashMap<String, String>();
 		foreignKeyInverseExclude = new HashMap<String, Boolean>();
 		foreignKeyToOneExclude = new HashMap<String, Boolean>();
-		tableMetaAttributes = new HashMap<TableIdentifier, MultiMap>();
-		columnMetaAttributes = new HashMap<TableColumnKey, MultiMap>();
+		tableMetaAttributes = new HashMap<TableIdentifier, MultiValuedMap<String, SimpleMetaAttribute>>();
+		columnMetaAttributes = new HashMap<TableColumnKey, MultiValuedMap<String, SimpleMetaAttribute>>();
 		foreignKeyToEntityInfo = new HashMap<String, AssociationInfo>();
 		foreignKeyToInverseEntityInfo = new HashMap<String, AssociationInfo>();
 	}
@@ -510,7 +512,7 @@ public class OverrideRepository  {
 	}
 
 	protected Map<String, MetaAttribute> columnToMetaAttributes(TableIdentifier tableIdentifier, String column) {
-		MultiMap specific = columnMetaAttributes.get( new TableColumnKey(tableIdentifier, column) );
+		MultiValuedMap<String, SimpleMetaAttribute> specific = columnMetaAttributes.get( new TableColumnKey(tableIdentifier, column) );
 		if(specific!=null && !specific.isEmpty()) {
 			return toMetaAttributes(specific);
 		}
@@ -520,11 +522,11 @@ public class OverrideRepository  {
 
 	// TODO: optimize
 	protected Map<String,MetaAttribute> tableToMetaAttributes(TableIdentifier identifier) {
-		MultiMap specific = tableMetaAttributes.get( identifier );
+		MultiValuedMap<String, SimpleMetaAttribute> specific = tableMetaAttributes.get( identifier );
 		if(specific!=null && !specific.isEmpty()) {
 			return toMetaAttributes(specific);
 		}
-		Map<?,?> general = findGeneralAttributes( identifier );
+		MultiValuedMap<String, SimpleMetaAttribute> general = findGeneralAttributes( identifier );
 		if(general!=null && !general.isEmpty()) {
 			return toMetaAttributes(general);
 		}
@@ -546,32 +548,27 @@ public class OverrideRepository  {
 		*/
 	}
 
-	private Map<?,?> findGeneralAttributes(TableIdentifier identifier) {
+	private MultiValuedMap<String, SimpleMetaAttribute> findGeneralAttributes(TableIdentifier identifier) {
 		Iterator<TableFilter> iterator = tableFilters.iterator();
 		while(iterator.hasNext() ) {
 			TableFilter tf = iterator.next();
-			Map<?,?> value = tf.getMetaAttributes(identifier);
+			MultiValuedMap<String, SimpleMetaAttribute> value = tf.getMetaAttributes(identifier);
 			if(value!=null) {
 				return value;
 			}
 		}
 		return null;
 	}
-
-	private Map<String, MetaAttribute> toMetaAttributes(Map<?,?> value) {
+	
+	private Map<String, MetaAttribute> toMetaAttributes(MultiValuedMap<String, SimpleMetaAttribute> mvm) {
 		Map<String, MetaAttribute> result = new HashMap<String, MetaAttribute>();
-
-		Set<?> set = value.entrySet();
-		for (Iterator<?> iter = set.iterator(); iter.hasNext();) {
-			Entry<?, ?> entry = (Entry<?,?>)iter.next();
-			String name = (String) entry.getKey();
-			List<?> values = (List<?>) entry.getValue();
-
-			result.put(name, MetaAttributeHelper.toRealMetaAttribute(name, values));
+		for (MapIterator<String, SimpleMetaAttribute> iter = mvm.mapIterator(); iter.hasNext();) {
+			String key = iter.next();
+			Collection<SimpleMetaAttribute> values = mvm.get(key);
+			result.put(key, MetaAttributeHelper.toRealMetaAttribute(key, values));
 		}
-
 		return result;
-	}
+ 	}
 
 	public ReverseEngineeringStrategy getReverseEngineeringStrategy() {
 		return getReverseEngineeringStrategy(null);
@@ -712,14 +709,17 @@ public class OverrideRepository  {
 
 	}
 
-	public void addMetaAttributeInfo(Table table, MultiMap map) {
+	public void addMetaAttributeInfo(Table table, MultiValuedMap<String, SimpleMetaAttribute> map) {
 		if(map!=null && !map.isEmpty()) {
 			tableMetaAttributes.put(TableIdentifier.create(table), map);
 		}
 
 	}
 
-	public void addMetaAttributeInfo(TableIdentifier tableIdentifier, String name, MultiMap map) {
+	public void addMetaAttributeInfo(
+			TableIdentifier tableIdentifier, 
+			String name, 
+			MultiValuedMap<String, SimpleMetaAttribute> map) {
 		if(map!=null && !map.isEmpty()) {
 			columnMetaAttributes.put(new TableColumnKey( tableIdentifier, name ), map);
 		}

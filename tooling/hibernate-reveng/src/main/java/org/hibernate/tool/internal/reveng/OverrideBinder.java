@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.collections4.MultiMap;
-import org.apache.commons.collections4.map.MultiValueMap;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -13,6 +13,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,7 +56,10 @@ public class OverrideBinder {
 			tableFilter.setMatchName(getAttribute(element, "match-name"));
 			tableFilter.setExclude(Boolean.valueOf(getAttribute(element, "exclude")));
 			tableFilter.setPackage(getAttribute(element, "package"));
-			MultiMap map = MetaAttributeHelper.loadAndMergeMetaMap(element, new MultiValueMap());
+			MultiValuedMap<String, SimpleMetaAttribute> map = 
+					MetaAttributeHelper.loadAndMergeMetaMap(
+							element, 
+							new HashSetValuedHashMap<String, MetaAttributeHelper.SimpleMetaAttribute>());
 			if (map != null && !map.isEmpty()) {
 				tableFilter.setMetaAttributes(map);
 			} else {
@@ -122,7 +126,10 @@ public class OverrideBinder {
 			if (table.getColumn(column) != null) {
 				throw new MappingException("Column " + column.getName() + " already exists in table " + tableIdentifier );
 			}
-			MultiMap map = MetaAttributeHelper.loadAndMergeMetaMap( element, new MultiValueMap());
+			MultiValuedMap<String, SimpleMetaAttribute> map = 
+					MetaAttributeHelper.loadAndMergeMetaMap(
+							element, 
+							new HashSetValuedHashMap<String, MetaAttributeHelper.SimpleMetaAttribute>());
 			if(map!=null && !map.isEmpty()) {
 				repository.addMetaAttributeInfo( tableIdentifier, column.getName(), map);
 			} 
@@ -348,7 +355,10 @@ public class OverrideBinder {
 			Element element, 
 			Table table, 
 			OverrideRepository repository) {
-		MultiMap map = MetaAttributeHelper.loadAndMergeMetaMap( element, new MultiValueMap());
+		MultiValuedMap<String, SimpleMetaAttribute> map = 
+				MetaAttributeHelper.loadAndMergeMetaMap( 
+						element, 
+						new HashSetValuedHashMap<String, MetaAttributeHelper.SimpleMetaAttribute>());
 		if(map!=null && !map.isEmpty()) {
 			repository.addMetaAttributeInfo( table, map);
 		} 

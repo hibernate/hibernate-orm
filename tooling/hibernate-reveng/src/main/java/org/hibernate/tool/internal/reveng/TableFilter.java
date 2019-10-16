@@ -1,8 +1,8 @@
 package org.hibernate.tool.internal.reveng;
 
-import java.util.Map;
-
+import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
 
 
 /**
@@ -75,7 +75,7 @@ public class TableFilter {
 	private Matcher catalogMatcher;
 	private Matcher schemaMatcher;
 	private Matcher nameMatcher;
-	private Map<?,?> metaAttributes;
+	private MultiValuedMap<String, SimpleMetaAttribute> metaAttributes;
 
 	
 	
@@ -149,11 +149,11 @@ public class TableFilter {
 		return exclude;
 	}
 
-	public Map<?,?> getMetaAttributes(TableIdentifier identifier) {
+	public MultiValuedMap<String, SimpleMetaAttribute> getMetaAttributes(TableIdentifier identifier) {
 		return isRelevantFor(identifier) ? metaAttributes : null;	
 	}
 	
-	public void setMetaAttributes(Map<?,?> metaAttributes) {
+	public void setMetaAttributes(MultiValuedMap<String, SimpleMetaAttribute> metaAttributes) {
 		this.metaAttributes = metaAttributes;
 	}
 }

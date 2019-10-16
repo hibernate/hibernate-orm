@@ -5,17 +5,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections4.MultiMap;
-import org.apache.commons.collections4.map.MultiValueMap;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.tool.internal.util.MultiMapUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class MetaAttributeHelper {
 
-	public static MetaAttribute toRealMetaAttribute(String name, List<?> values) {
+	public static MetaAttribute toRealMetaAttribute(String name, Collection<?> values) {
 		MetaAttribute attribute = new MetaAttribute(name);
 		for (Iterator<?> iter = values.iterator(); iter.hasNext();) {
 			SimpleMetaAttribute element = (SimpleMetaAttribute) iter.next();
@@ -26,16 +25,16 @@ public class MetaAttributeHelper {
 	}
 
 
-	static MultiMap loadAndMergeMetaMap(
+	static MultiValuedMap<String, SimpleMetaAttribute> loadAndMergeMetaMap(
 			Element classElement,
-			MultiMap inheritedMeta) {
+			MultiValuedMap<String, SimpleMetaAttribute> inheritedMeta) {
 		return MetaAttributeHelper.mergeMetaMaps(
 				loadMetaMap(classElement), 
 				inheritedMeta);
 	}
 
-	static MultiMap loadMetaMap(Element element) {
-		MultiMap result = new MultiValueMap();
+	static MultiValuedMap<String, SimpleMetaAttribute> loadMetaMap(Element element) {
+		MultiValuedMap<String, SimpleMetaAttribute> result = new HashSetValuedHashMap<String, SimpleMetaAttribute>();
 		List<Element> metaAttributeList = new ArrayList<Element>();
 		ArrayList<Element> metaNodes = getChildElements(element, "meta");
 		for (Element metaNode : metaNodes) {
@@ -68,19 +67,19 @@ public class MetaAttributeHelper {
 	 * @return a MultiMap with all values from local and extra values
 	 * from inherited
 	 */
-	private static MultiMap mergeMetaMaps(MultiMap specific, MultiMap general) {
-		MultiValueMap result = new MultiValueMap();
-		MultiMapUtil.copyMultiMap(result, specific);
-		
+	private static MultiValuedMap<String, SimpleMetaAttribute> mergeMetaMaps(
+			MultiValuedMap<String, SimpleMetaAttribute> specific,
+			MultiValuedMap<String, SimpleMetaAttribute> general) {
+		MultiValuedMap<String, SimpleMetaAttribute> result = new HashSetValuedHashMap<String, MetaAttributeHelper.SimpleMetaAttribute>();
+		copyMultiMap(result, specific);	
 		if (general != null) {
-			for (Iterator<?> iter = general.keySet().iterator();iter.hasNext();) {
-				Object key = iter.next();
-	
+			for (Iterator<String> iter = general.keySet().iterator();iter.hasNext();) {
+				String key = iter.next();
 				if (!specific.containsKey(key) ) {
 					// inheriting a meta attribute only if it is inheritable
-					Collection<?> ml = (Collection<?>)general.get(key);
-					for (Iterator<?> iterator = ml.iterator(); iterator.hasNext();) {
-						SimpleMetaAttribute element = (SimpleMetaAttribute) iterator.next();
+					Collection<SimpleMetaAttribute> ml = general.get(key);
+					for (Iterator<SimpleMetaAttribute> iterator = ml.iterator(); iterator.hasNext();) {
+						SimpleMetaAttribute element = iterator.next();
 						if (element.inheritable) {
 							result.put(key, element);
 						}
@@ -92,6 +91,17 @@ public class MetaAttributeHelper {
 		return result;
 	
 	}
+
+    private static void copyMultiMap(
+    		MultiValuedMap<String, SimpleMetaAttribute> destination, 
+    		MultiValuedMap<String, SimpleMetaAttribute> specific) {
+        for (Iterator<String> keyIterator = specific.keySet().iterator(); keyIterator.hasNext(); ) {
+            String key = keyIterator.next();
+            Collection<SimpleMetaAttribute> c = specific.get(key);
+            for (Iterator<SimpleMetaAttribute> valueIterator = c.iterator(); valueIterator.hasNext(); ) 
+                destination.put(key, valueIterator.next() );
+        }
+    }
 
 	private static ArrayList<Element> getChildElements(Element parent, String tagName) {
 		ArrayList<Element> result = new ArrayList<Element>();

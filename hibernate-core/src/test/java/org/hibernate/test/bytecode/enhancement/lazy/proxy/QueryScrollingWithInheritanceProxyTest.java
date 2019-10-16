@@ -81,7 +81,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 		try {
 			statelessSession.beginTransaction();
 			Query<Employee> query = statelessSession.createQuery(
-					"select distinct e from Employee e left join fetch e.otherEntities",
+					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
 			if ( getDialect() instanceof DB2Dialect ) {
@@ -145,7 +145,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 		try {
 			session.beginTransaction();
 			Query<Employee> query = session.createQuery(
-					"select distinct e from Employee e left join fetch e.otherEntities",
+					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
 			if ( getDialect() instanceof DB2Dialect ) {

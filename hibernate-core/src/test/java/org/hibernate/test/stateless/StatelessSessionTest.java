@@ -50,15 +50,15 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		doc.setText("blah blah blah .... blah blay");
 		ss.update(doc);
 		tx.commit();
-		
+
 		Document doc2 = (Document) ss.get(Document.class.getName(), "Blahs");
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
-				
+
 		doc2 = (Document) ss.createQuery("from Document where text is not null").uniqueResult();
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
-		
+
 		ScrollableResults sr = ss.createQuery("from Document where text is not null")
 			.scroll(ScrollMode.FORWARD_ONLY);
 		sr.next();
@@ -66,17 +66,17 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		sr.close();
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
-				
+
 		doc2 = (Document) ss.createSQLQuery("select * from Document")
 			.addEntity(Document.class)
 			.uniqueResult();
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
-				
+
 		doc2 = (Document) ss.createCriteria(Document.class).uniqueResult();
 		assertEquals("Blahs", doc2.getName());
 		assertEquals(doc.getText(), doc2.getText());
-		
+
 		sr = ss.createCriteria(Document.class).scroll(ScrollMode.FORWARD_ONLY);
 		sr.next();
 		doc2 = (Document) sr.get(0);

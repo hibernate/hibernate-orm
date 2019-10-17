@@ -11,11 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -196,7 +197,14 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * @return Map of "equality" hashCode to List of objects
 	 */
 	private Map<Integer, List<Object>> groupByEqualityHash(List<Object> searchedBag, Type elementType) {
-		return searchedBag.stream().collect( Collectors.groupingBy( elementType::getHashCode ) );
+		if ( searchedBag.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+		Map<Integer, List<Object>> map = new HashMap<>();
+		for (Object o : searchedBag) {
+			map.computeIfAbsent( elementType.getHashCode( o ), k -> new ArrayList<>() ).add( o );
+		}
+		return map;
 	}
 
 	@Override

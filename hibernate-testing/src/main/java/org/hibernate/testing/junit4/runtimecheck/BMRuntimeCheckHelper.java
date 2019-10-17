@@ -43,30 +43,33 @@ public class BMRuntimeCheckHelper extends Helper {
 	 * @return whether the API should be checked
 	 */
 	public boolean shouldPerformAPICheck() {
-		return shouldPerformAPICheck( false );
+		// setTriggering( false ) allows to not trigger the rule from the rule itself
+		// FRAME_SIZE_CHECK as frameCount should be enough to filter any call coming from any class initialization
+		return  !flagged( SESSION_FACTORY_INIT_FLAG ) && setTriggering( false )
+				&& !callerMatches( "<clinit>", false, FRAME_SIZE_CHECK );
 	}
 
 	/**
 	 * Api check is supposed to be done when:
-	 * 1. Session factory has already been created and it is active.
-	 * 2. There is no class initialization in the frame set of the calling methods
-	 * 		{@code E.g. <code>static final Pattern PATTERN = Pattern.compile( "aaa" );</code>; should be legal}.
-	 * 3. If {@code skipJUnitFrameworkMethod} is true,
-	 * 		there is no {@link org.junit.runners.model.FrameworkMethod} in the last 2 calls of the frame set.
+	 * 1. as 2. as {@link #shouldPerformAPICheck()}
+	 * 3. there is no {@link org.junit.runners.model.FrameworkMethod} in the last 2 calls of the frame set.
 	 *
-	 * @param skipJUnitFrameworkMethod whether to skip the check if it has been called by {@link org.junit.runners.model.FrameworkMethod}
 	 * @return whether the API should be checked
 	 */
-	public boolean shouldPerformAPICheck(boolean skipJUnitFrameworkMethod) {
-		// setTriggering( false ) allows to not trigger the rule from the rule itself
-		// FRAME_SIZE_CHECK as frameCount should be enough to filter any call coming from any class initialization
-		boolean outcome = !flagged( SESSION_FACTORY_INIT_FLAG ) && setTriggering( false )
-				&& !callerMatches( "<clinit>", false, FRAME_SIZE_CHECK );
+	public boolean annotationReadCheck() {
+		return shouldPerformAPICheck() && !callerMatches( "org.junit.runners.model.FrameworkMethod.*", true, true, 2 );
+	}
 
-		if ( skipJUnitFrameworkMethod ) {
-			outcome &= !callerMatches( "org.junit.runners.model.FrameworkMethod.*", true, true, 2 );
-		}
-
-		return outcome;
+	/**
+	 * Api check is supposed to be done when:
+	 * 1. as 2. as {@link #shouldPerformAPICheck()}
+	 * 3. there is no {@link org.hibernate.cfg.Configuration()} in the frame set.
+	 *
+	 * @return whether the API should be checked
+	 */
+	public boolean classLookupCheck() {
+		return shouldPerformAPICheck() &&
+			!callerMatches( "org.hibernate.cfg.Configuration.<init>", true, true, FRAME_SIZE_CHECK ) &&
+			!callerMatches( "org.hibernate.testing.junit4.BaseCoreFunctionalTestCase.buildBootstrapServiceRegistry", true, true, FRAME_SIZE_CHECK );
 	}
 }

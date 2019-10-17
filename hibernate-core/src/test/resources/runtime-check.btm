@@ -26,6 +26,13 @@ ENDRULE
 RULE check annotation is not read at runtime
 INTERFACE ^AnnotatedElement
 METHOD getAnnotation
-IF shouldPerformAPICheck(true)
+IF annotationReadCheck()
 DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Reading annotation");
+ENDRULE
+
+RULE check class is not loaded at runtime
+CLASS Class
+METHOD forName
+IF classLookupCheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Loading class");
 ENDRULE

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Chris Cranford
  */
-public class AfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
+public class JtaAfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { SimpleEntity.class };
@@ -96,10 +96,6 @@ public class AfterCompletionTest extends BaseNonConfigCoreFunctionalTestCase {
 			// verify that the callback was fired.
 			assertEquals( 1, AfterCallbackCompletionHandler.invoked );
 		}
-	}
-
-	private void registerAfterCallbackCompletionHandler(Session session) {
-		( (SessionImplementor) session ).getActionQueue().registerProcess( new AfterCallbackCompletionHandler() );
 	}
 
 	public static class BeforeCallbackCompletionHandler implements BeforeTransactionCompletionProcess {

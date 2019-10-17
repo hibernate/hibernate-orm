@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTestCase {
+public class JtaBeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -116,10 +116,6 @@ public class BeforeCompletionFailureTest extends BaseNonConfigCoreFunctionalTest
 	private SimpleEntity newEntity(int id) {
 		// since "key" is reused, should violate the UK
 		return new SimpleEntity( id, "key", "name" );
-	}
-
-	private void runTest() {
-
 	}
 
 	@Entity(name = "SimpleEntity")

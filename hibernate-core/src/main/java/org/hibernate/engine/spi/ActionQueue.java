@@ -957,7 +957,7 @@ public class ActionQueue {
 					throw he;
 				}
 				catch (Exception e) {
-					throw new AssertionFailure( "Unable to perform beforeTransactionCompletion callback", e );
+					throw new HibernateException( "Unable to perform beforeTransactionCompletion callback: " + e.getMessage(), e );
 				}
 			}
 		}
@@ -987,7 +987,7 @@ public class ActionQueue {
 					// continue loop
 				}
 				catch (Exception e) {
-					throw new AssertionFailure( "Exception releasing cache locks", e );
+					throw new HibernateException( "Unable to perform afterTransactionCompletion callback: " + e.getMessage(), e );
 				}
 			}
 

@@ -81,7 +81,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		try {
 			statelessSession.beginTransaction();
 			Query<Employee> query = statelessSession.createQuery(
-					"select distinct e from Employee e left join fetch e.otherEntities",
+					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
 			if ( getDialect() instanceof DB2Dialect ) {
@@ -89,7 +89,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
 					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
+				*/
 				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
 			}
 			else {
@@ -145,7 +145,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		try {
 			session.beginTransaction();
 			Query<Employee> query = session.createQuery(
-					"select distinct e from Employee e left join fetch e.otherEntities",
+					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
 			if ( getDialect() instanceof DB2Dialect ) {
@@ -153,7 +153,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
 					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
+				*/
 				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
 			}
 			else {

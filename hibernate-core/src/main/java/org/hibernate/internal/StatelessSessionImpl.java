@@ -249,6 +249,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			this.getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
 		}
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
+		}
 	}
 
 	@Override

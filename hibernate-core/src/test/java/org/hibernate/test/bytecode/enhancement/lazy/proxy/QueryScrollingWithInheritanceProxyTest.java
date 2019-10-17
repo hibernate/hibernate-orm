@@ -97,7 +97,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 			}
 
 			while ( scrollableResults.next() ) {
-				final Employee employee = (Employee) scrollableResults.get( 0 );
+				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
 				assertThat( Hibernate.isInitialized( employee.getOtherEntities() ), is( true ) );
 				if ( "ENG1".equals( employee.getDept() ) ) {
@@ -161,7 +161,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 			}
 
 			while ( scrollableResults.next() ) {
-				final Employee employee = (Employee) scrollableResults.get( 0 );
+				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
 				assertThat( Hibernate.isInitialized( employee.getOtherEntities() ), is( true ) );
 				if ( "ENG1".equals( employee.getDept() ) ) {

@@ -300,7 +300,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
-				if ( persister.getEntityMetamodel().getTuplizer().getProxyFactory() != null ) {
+				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
 					final PersistenceContext persistenceContext = getPersistenceContext();
 					final Object proxy = persistenceContext.getProxy( entityKey );
 

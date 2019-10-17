@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue( jiraKey = "HHH-13640" )
 @RunWith(BytecodeEnhancerRunner.class)
-public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -67,60 +67,53 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 	}
 
 	@Test
-	public void testNewProxyAssociation() {
-		inTransaction(
+	public void testNewHibernateProxyAssociation() {
+		inStatelessTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
 					otherEntity.animal = human;
-					session.persist( human );
-					session.persist( otherEntity );
+					session.insert( human );
+					session.insert( otherEntity );
 				}
 		);
 
-		inSession(
+		inStatelessSession(
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
 
-					assertEquals( 1, stats.getPrepareStatementCount() );
-
-					Animal animal = session.load( Animal.class, "A Human" );
-					assertFalse( Hibernate.isInitialized( animal ) );
 					assertEquals( 1, stats.getPrepareStatementCount() );
 				}
 		);
 	}
 
 	@Test
-	public void testGetInitializeAssociations() {
-		inTransaction(
+	public void testNewEnhancedProxyAssociation() {
+		inStatelessTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
-					otherEntity.animal = human;
+					otherEntity.human = human;
 
-					session.persist( human );
-					session.persist( otherEntity );
+					session.insert( human );
+					session.insert( otherEntity );
 				}
 		);
 
-		inSession(
+		inStatelessSession(
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
-					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
+					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
+					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
+					assertFalse( HibernateProxy.class.isInstance( otherEntity.animal ) );
 					assertEquals( 1, stats.getPrepareStatementCount() );
-
-					Animal animal = session.get( Animal.class, "A Human" );
-					assertTrue( Hibernate.isInitialized( animal ) );
-					assertEquals( 2, stats.getPrepareStatementCount() );
 				}
 		);
 
@@ -128,22 +121,22 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 	@Test
 	public void testExistingProxyAssociation() {
-		inTransaction(
+		inStatelessTransaction(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
 					otherEntity.animal = human;
 					otherEntity.primate = human;
-					session.persist( human );
-					session.persist( otherEntity );
+					session.insert( human );
+					session.insert( otherEntity );
 				}
 		);
 
-		inSession(
+		inStatelessSession(
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -157,25 +150,25 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 
 	@Test
 	public void testExistingHibernateProxyAssociationLeafSubclass() {
-		inTransaction(
+		inStatelessSession(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
 					otherEntity.animal = human;
 					otherEntity.primate = human;
 					otherEntity.human = human;
-					session.persist( human );
-					session.persist( otherEntity );
+					session.insert( human );
+					session.insert( otherEntity );
 				}
 		);
 
 		final Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
-		inSession(
+		inStatelessSession(
 				session -> {
 
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -186,97 +179,36 @@ public class LazyToOnesProxyWithSubclassesTest extends BaseNonConfigCoreFunction
 					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
 
 					assertEquals( 1, stats.getPrepareStatementCount() );
-
-					// Make sure human can still get loaded and not initialized.
-					final Human human = session.getReference( Human.class, "A Human" );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.human ) );
-					assertFalse( Hibernate.isInitialized( human ) );
-
-					human.getName();
-					assertEquals( 1, stats.getPrepareStatementCount() );
-					assertFalse( Hibernate.isInitialized( human ) );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.human ) );
-
-					human.getSex();
-
-					assertTrue( Hibernate.isInitialized( human ) );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.human ) );
-					assertEquals( 2, stats.getPrepareStatementCount() );
 				}
 		);
 
-		assertEquals( 2, stats.getPrepareStatementCount() );
-		stats.clear();
-
-		inSession(
-				session -> {
-
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
-					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
-					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "primate" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.primate ) );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.primate ) );
-					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
-
-					assertEquals( 1, stats.getPrepareStatementCount() );
-
-					// Make sure human can still get loaded
-					final Human human = session.get( Human.class, "A Human" );
-					assertTrue( !HibernateProxy.class.isInstance( human ) );
-					assertTrue( Hibernate.isInitialized( human ) );
-					assertTrue( HibernateProxy.class.isInstance( otherEntity.getHuman() ) );
-
-					assertEquals( 2, stats.getPrepareStatementCount() );
-				}
-		);
-
-		assertEquals( 2, stats.getPrepareStatementCount() );
-
+		assertEquals( 1, stats.getPrepareStatementCount() );
 	}
 
 	@Test
 	public void testExistingEnhancedProxyAssociationLeafSubclassOnly() {
-		inTransaction(
+		inStatelessSession(
 				session -> {
 					Human human = new Human( "A Human" );
 					OtherEntity otherEntity = new OtherEntity( "test1" );
 					otherEntity.human = human;
-					session.persist( human );
-					session.persist( otherEntity );
+					session.insert( human );
+					session.insert( otherEntity );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		inStatelessSession(
+				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
 
-					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
 					assertNull( otherEntity.animal );
 					assertNull( otherEntity.primate );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
 					assertFalse( HibernateProxy.class.isInstance( otherEntity.human ) );
 					assertEquals( 1, stats.getPrepareStatementCount() );
-
-					// Make sure human can still get loaded and not initialized.
-					final Human human = session.getReference( Human.class, "A Human" );
-					assertFalse( Hibernate.isInitialized( human ) );
-					assertFalse( HibernateProxy.class.isInstance( otherEntity.human ) );
-
-					human.getName();
-					assertEquals( 1, stats.getPrepareStatementCount() );
-					assertFalse( HibernateProxy.class.isInstance( otherEntity.human ) );
-
-					human.getSex();
-					assertTrue( Hibernate.isInitialized( otherEntity.human ) );
-					assertFalse( HibernateProxy.class.isInstance( otherEntity.human ) );
-					assertEquals( 2, stats.getPrepareStatementCount() );
-
-					return otherEntity;
 				}
 		);
 	}

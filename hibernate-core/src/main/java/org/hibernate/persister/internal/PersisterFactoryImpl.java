@@ -37,6 +37,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The constructor signature for {@link EntityPersister} implementations
 	 */
+	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
 			EntityDataAccess.class,
@@ -47,6 +48,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations
 	 */
+	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
 			CollectionDataAccess.class,
@@ -66,7 +68,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			PersistentClass entityBinding,
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			PersisterCreationContext creationContext) throws HibernateException {
+			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) throws HibernateException {
 		// If the metadata for the entity specified an explicit persister class, use it...
 		Class<? extends EntityPersister> persisterClass = entityBinding.getEntityPersisterClass();
 		if ( persisterClass == null ) {
@@ -83,13 +85,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		);
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private EntityPersister createEntityPersister(
 			Class<? extends EntityPersister> persisterClass,
 			PersistentClass entityBinding,
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			PersisterCreationContext creationContext) {
+			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) {
 		try {
 			final Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
 			try {
@@ -116,7 +117,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 				throw new MappingException( "Could not instantiate persister " + persisterClass.getName(), e );
 			}
 		}
-		catch (MappingException e) {
+		catch (HibernateException e) {
 			throw e;
 		}
 		catch (Exception e) {
@@ -129,7 +130,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	public CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws HibernateException {
+			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) throws HibernateException {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
@@ -140,12 +141,11 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		return createCollectionPersister( persisterClass, collectionBinding, cacheAccessStrategy, creationContext );
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private CollectionPersister createCollectionPersister(
 			Class<? extends CollectionPersister> persisterClass,
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) {
+			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) {
 		try {
 			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( COLLECTION_PERSISTER_CONSTRUCTOR_ARGS );
 			try {

@@ -95,6 +95,8 @@ public class BasicFormatterImpl implements Formatter {
 		String lcToken;
 
 		public FormatProcess(String sql) {
+			assert sql != null : "SQL to format should not be null";
+
 			tokens = new StringTokenizer(
 					sql,
 					"()+*/-=<>'`\"[]," + StringHelper.WHITESPACE,

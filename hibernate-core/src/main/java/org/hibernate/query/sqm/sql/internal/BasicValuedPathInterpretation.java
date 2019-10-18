@@ -52,8 +52,8 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 						mapping.getMappedColumnExpression()
 				),
 				sacs -> new ColumnReference(
-						mapping.getMappedColumnExpression(),
 						tableReference.getIdentificationVariable(),
+						mapping.getMappedColumnExpression(),
 						mapping.getJdbcMapping(),
 						sqlAstCreationState.getCreationContext().getSessionFactory()
 				)

@@ -29,8 +29,8 @@ public class ColumnReference implements Expression {
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(
-			String columnExpression,
 			String qualifier,
+			String columnExpression,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this(

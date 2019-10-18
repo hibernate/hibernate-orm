@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
@@ -13,6 +16,7 @@ import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Contract for things that can produce the {@link TableGroup} that is the root of a
@@ -31,5 +35,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext);
 }

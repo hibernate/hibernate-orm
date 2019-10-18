@@ -31,6 +31,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -104,7 +105,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -134,6 +134,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -144,6 +145,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -179,6 +181,7 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -1180,6 +1183,7 @@ public abstract class AbstractEntityPersister
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
@@ -1274,8 +1278,8 @@ public abstract class AbstractEntityPersister
 										rootPkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										rootPkColumnName,
 										rootTableReference.getIdentificationVariable(),
+										rootPkColumnName,
 										jdbcMapping,
 										getFactory()
 								)
@@ -1288,8 +1292,8 @@ public abstract class AbstractEntityPersister
 										fkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										fkColumnName,
 										joinedTableReference.getIdentificationVariable(),
+										fkColumnName,
 										jdbcMapping,
 										getFactory()
 								)
@@ -5404,18 +5408,22 @@ public abstract class AbstractEntityPersister
 			return this;
 		}
 		else {
-			final String concreteEntityName = getEntityTuplizer().determineConcreteSubclassEntityName(
-					instance,
-					factory
-			);
-			if ( concreteEntityName == null || getEntityName().equals( concreteEntityName ) ) {
-				// the contract of EntityTuplizer.determineConcreteSubclassEntityName says that returning null
-				// is an indication that the specified entity-name (this.getEntityName) should be used.
+			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
+			//		- we may need something similar here...
+
+			if ( getRepresentationStrategy().getInstantiator().isInstance( instance, factory ) ) {
 				return this;
 			}
-			else {
-				return factory.getEntityPersister( concreteEntityName );
+
+			if ( hasSubclasses() ) {
+				for ( EntityMappingType sub : subclassMappingTypes.values() ) {
+					if ( sub.getEntityPersister().getRepresentationStrategy().getInstantiator().isInstance( instance, factory ) ) {
+						return sub.getEntityPersister();
+					}
+				}
 			}
+
+			return this;
 		}
 	}
 
@@ -6048,6 +6056,7 @@ public abstract class AbstractEntityPersister
 	private EntityIdentifierMapping identifierMapping;
 	private NaturalIdMapping naturalIdMapping;
 	private EntityVersionMapping versionMapping;
+	private EntityDiscriminatorMapping discriminatorMapping;
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
 	private Collection<AttributeMapping> attributeMappings;
@@ -6085,6 +6094,18 @@ public abstract class AbstractEntityPersister
 			versionMapping = creationProcess.processSubPart(
 					versionPropertyName,
 					(role, creationProcess1) -> generateVersionMapping( this, creationProcess )
+			);
+		}
+
+		if ( getDiscriminatorType() == null ) {
+			discriminatorMapping = null;
+		}
+		else {
+			discriminatorMapping = new EntityDiscriminatorMappingImpl(
+					this,
+					getRootTableName(),
+					getDiscriminatorColumnName(),
+					(BasicType) getDiscriminatorType()
 			);
 		}
 
@@ -6283,6 +6304,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return versionMapping;
+	}
+
+	@Override
+	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+		return discriminatorMapping;
 	}
 
 	@Override

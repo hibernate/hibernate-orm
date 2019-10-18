@@ -121,8 +121,8 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 								getMappedColumnExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								getMappedColumnExpression(),
 								tableReference.getIdentificationVariable(),
+								getMappedColumnExpression(),
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -149,8 +149,8 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 								getMappedColumnExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								getMappedColumnExpression(),
 								tableReference.getIdentificationVariable(),
+								getMappedColumnExpression(),
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)

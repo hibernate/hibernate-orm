@@ -189,8 +189,8 @@ public class EmbeddedAttributeMapping
 										attrColumnExpr
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										attrColumnExpr,
 										tableReference.getIdentificationVariable(),
+										attrColumnExpr,
 										jdbcMapping,
 										sqlAstCreationState.getCreationContext().getSessionFactory()
 								)

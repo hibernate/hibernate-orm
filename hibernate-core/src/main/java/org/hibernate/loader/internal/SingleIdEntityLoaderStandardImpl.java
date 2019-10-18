@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.internal;
 
+import java.io.Serializable;
 import java.util.EnumMap;
 
 import org.hibernate.LockMode;
@@ -14,9 +15,11 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.spi.InternalFetchProfile;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
@@ -45,14 +48,21 @@ public class SingleIdEntityLoaderStandardImpl<T> implements SingleIdEntityLoader
 
 	@Override
 	public T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		// todo (6.0) : TEMPORARY - use the legacy loaders
+
+		//noinspection unchecked
+		return (T) BatchingEntityLoaderBuilder.getBuilder( session.getFactory() )
+				.buildLoader( (OuterJoinLoadable) entityDescriptor, -1, lockOptions.getLockMode(), session.getFactory(), session.getLoadQueryInfluencers() )
+				.load( (Serializable) key, null, session, lockOptions );
+
 
 		// todo (6.0) : see `org.hibernate.loader.internal.StandardSingleIdEntityLoader#load` in "upstream" 6.0 branch
 		//		- and integrate as much as possible with the `o.h.loader.plan` stuff leveraging the similarities
 		//		between the legacy LoadPlan stuff and DomainResult, Assembler, etc.
-
-		final JdbcSelect jdbcSelect = resolveJdbcSelect( lockOptions, session );
-
-		throw new NotYetImplementedFor6Exception( getClass() );
+//
+//		final JdbcSelect jdbcSelect = resolveJdbcSelect( lockOptions, session );
+//
+//		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

@@ -135,8 +135,8 @@ public class MappingModelCreationHelper {
 				final Expression expression = expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
-								pkColumnName,
 								rootTableReference.getIdentificationVariable(),
+								pkColumnName,
 								( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()
 						)
@@ -167,8 +167,8 @@ public class MappingModelCreationHelper {
 				final Expression expression = expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
-								pkColumnName,
 								rootTable,
+								pkColumnName,
 								( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()
 						)

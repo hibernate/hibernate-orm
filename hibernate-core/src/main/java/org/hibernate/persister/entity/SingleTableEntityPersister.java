@@ -14,8 +14,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -37,10 +40,23 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.Type;
 
@@ -846,5 +862,61 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator( qualifiedTableNames, rootAlias );
+	}
+
+	@Override
+	public TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationContext creationContext) {
+		final TableGroup tableGroup = super.createRootTableGroup(
+				navigablePath,
+				explicitSourceAlias,
+				tableReferenceJoinType,
+				lockMode,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				additionalPredicateCollectorAccess,
+				creationContext
+		);
+
+		if ( needsDiscriminator() ) {
+			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
+					tableGroup,
+					sqlExpressionResolver,
+					creationContext
+			);
+			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
+		}
+
+		return tableGroup;
+	}
+
+	private Predicate createDiscriminatorPredicate(
+			TableGroup tableGroup,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return new ComparisonPredicate(
+				sqlExpressionResolver.resolveSqlExpression(
+						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getDiscriminatorColumnName() ),
+						sqlAstProcessingState -> new ColumnReference(
+								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								getDiscriminatorColumnName(),
+								( (BasicType) getDiscriminatorType() ).getJdbcMapping(),
+								getFactory()
+						)
+				),
+				ComparisonOperator.EQUAL,
+				new QueryLiteral<>(
+						getDiscriminatorValue(),
+						( (BasicType) getDiscriminatorType() ),
+						Clause.WHERE
+				)
+		);
 	}
 }

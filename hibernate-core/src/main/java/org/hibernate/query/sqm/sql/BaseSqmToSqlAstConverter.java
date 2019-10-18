@@ -96,6 +96,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -278,6 +279,8 @@ public abstract class BaseSqmToSqlAstConverter
 	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {
 		final QuerySpec sqlQuerySpec = new QuerySpec( processingStateStack.isEmpty(), sqmQuerySpec.getFromClause().getNumberOfRoots() );
 
+		additionalRestrictions = null;
+
 		processingStateStack.push(
 				new SqlAstQuerySpecProcessingStateImpl(
 						sqlQuerySpec,
@@ -306,6 +309,10 @@ public abstract class BaseSqmToSqlAstConverter
 				finally {
 					currentClauseStack.pop();
 				}
+			}
+
+			if ( additionalRestrictions != null ) {
+				sqlQuerySpec.applyPredicate( additionalRestrictions );
 			}
 
 			// todo : group-by
@@ -412,6 +419,8 @@ public abstract class BaseSqmToSqlAstConverter
 		return null;
 	}
 
+	Predicate additionalRestrictions;
+
 	@SuppressWarnings("WeakerAccess")
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
 		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
@@ -427,6 +436,7 @@ public abstract class BaseSqmToSqlAstConverter
 				LockMode.NONE,
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
+				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 				creationContext
 		);
 
@@ -512,6 +522,7 @@ public abstract class BaseSqmToSqlAstConverter
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
+				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 				getCreationContext()
 		);
 
@@ -539,6 +550,7 @@ public abstract class BaseSqmToSqlAstConverter
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
+				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 				getCreationContext()
 		);
 		fromClauseIndex.register( sqmJoin, tableGroup );

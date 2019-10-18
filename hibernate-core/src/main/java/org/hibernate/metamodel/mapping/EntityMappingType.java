@@ -33,6 +33,10 @@ public interface EntityMappingType extends ManagedMappingType {
 
 	EntityVersionMapping getVersionMapping();
 
+	default EntityDiscriminatorMapping getDiscriminatorMapping() {
+		return null;
+	}
+
 	NaturalIdMapping getNaturalIdMapping();
 
 	@Override

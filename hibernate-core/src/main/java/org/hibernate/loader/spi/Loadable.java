@@ -6,6 +6,9 @@
  */
 package org.hibernate.loader.spi;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -17,6 +20,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Contract for things that can be loaded by a Loader.
@@ -40,6 +44,7 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

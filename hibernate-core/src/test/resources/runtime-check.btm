@@ -17,22 +17,226 @@ DO markSessionFactoryCreated()
 ENDRULE
 
 RULE check regex pattern parsing is not used at runtime
-CLASS Pattern
+CLASS java.util.regex.Pattern
 METHOD compile
 IF shouldPerformAPICheck()
 DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Regex pattern parsing");
 ENDRULE
 
-RULE check annotation is not read at runtime
-INTERFACE ^AnnotatedElement
-METHOD getAnnotation
-IF annotationReadCheck()
-DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Reading annotation");
-ENDRULE
+# TODO HHH-13604 Even the smoke test does not work with the annotation read rule
+# RULE check annotation is not read at runtime
+# INTERFACE ^java.lang.reflect.AnnotatedElement
+# METHOD getAnnotation
+# IF annotationReadCheck()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Reading annotation");
+# ENDRULE
+
+## Rule to check reflection APIs ##
 
 RULE check class is not loaded at runtime
-CLASS Class
+CLASS java.lang.Class
 METHOD forName
 IF classLookupCheck()
 DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Loading class");
+ENDRULE
+
+RULE Class#getClasses is not used at runtime
+CLASS java.lang.Class
+METHOD getClasses
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getClasses");
+ENDRULE
+
+# TODO HHH-13604 This rule would provoke an infinite look, then a stack overflow.
+# RULE Class#getClassLoader is not used at runtime
+# CLASS java.lang.Class
+# METHOD getClassLoader
+# IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getClassLoader");
+# ENDRULE
+
+# TODO HHH-13604 This method is called at runtime by ByteBuddy
+# at java.lang.Class.getConstructor(Class.java)
+# at org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory.getProxy(ByteBuddyProxyFactory.java:89)
+# at org.hibernate.tuple.entity.AbstractEntityTuplizer.createProxy(AbstractEntityTuplizer.java:713)
+# RULE Class#getConstructor is not used at runtime
+# CLASS java.lang.Class
+# METHOD getConstructor
+# IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getConstructor");
+# ENDRULE
+
+RULE Class#getConstructors is not used at runtime
+CLASS java.lang.Class
+METHOD getConstructors
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getConstructors");
+ENDRULE
+
+RULE Class#getDeclaredClasses is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredClasses
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredClasses");
+ENDRULE
+
+RULE Class#getDeclaredClasses is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredClasses
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredClasses");
+ENDRULE
+
+RULE Class#getDeclaredConstructor is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredConstructor
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredConstructor");
+ENDRULE
+
+# TODO HHH-13604 This rule would provoke a deadlock: I need to thread-dump it!
+# RULE Class#getDeclaredConstructors is not used at runtime
+# CLASS java.lang.Class
+# METHOD getDeclaredConstructors
+# IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredConstructors");
+# ENDRULE
+
+RULE Class#getDeclaredField is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredField
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredField");
+ENDRULE
+
+RULE Class#getDeclaredFields is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredFields
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredFields");
+ENDRULE
+
+RULE Class#getDeclaredMethod is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredMethod
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredMethod");
+ENDRULE
+
+RULE Class#getDeclaredMethods is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaredMethods
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaredMethods");
+ENDRULE
+
+RULE Class#getDeclaringClass is not used at runtime
+CLASS java.lang.Class
+METHOD getDeclaringClass
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getDeclaringClass");
+ENDRULE
+
+RULE Class#getEnclosingClass is not used at runtime
+CLASS java.lang.Class
+METHOD getEnclosingClass
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getEnclosingClass");
+ENDRULE
+
+RULE Class#getEnclosingConstructor is not used at runtime
+CLASS java.lang.Class
+METHOD getEnclosingConstructor
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getEnclosingConstructor");
+ENDRULE
+
+RULE Class#getEnclosingMethod is not used at runtime
+CLASS java.lang.Class
+METHOD getEnclosingMethod
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getEnclosingMethod");
+ENDRULE
+
+RULE Class#getField is not used at runtime
+CLASS java.lang.Class
+METHOD getField
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getField");
+ENDRULE
+
+RULE Class#getFields is not used at runtime
+CLASS java.lang.Class
+METHOD getFields
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getFields");
+ENDRULE
+
+RULE Class#getGenericInterfaces is not used at runtime
+CLASS java.lang.Class
+METHOD getGenericInterfaces
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getGenericInterfaces");
+ENDRULE
+
+RULE Class#getGenericSuperclass is not used at runtime
+CLASS java.lang.Class
+METHOD getGenericSuperclass
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getGenericSuperclass");
+ENDRULE
+
+RULE Class#getMethod is not used at runtime
+CLASS java.lang.Class
+METHOD getMethod
+IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getMethod");
+ENDRULE
+
+# TODO HHH-13604 This rule would provoke a deadlock: I need to thread-dump it!
+# RULE Class#getMethods is not used at runtime
+# CLASS java.lang.Class
+# METHOD getMethods
+# IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getMethods");
+# ENDRULE
+
+RULE Class#getTypeParameters is not used at runtime
+CLASS java.lang.Class
+METHOD getTypeParameters
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getTypeParameters");
+ENDRULE
+
+# TODO HHH-13604 This rule would provoke an infinite look, then a stack overflow.
+# RULE Class#newInstance is not used at runtime
+# CLASS java.lang.Class
+# METHOD newInstance
+# IF checkInsideTestMethodAndNotCalledDirectlyByClass()
+# DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#newInstance");
+# ENDRULE
+
+## Resource look up ##
+
+RULE Class#getResourceAsStream is not used at runtime
+CLASS java.lang.Class
+METHOD getResourceAsStream
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getResourceAsStream");
+ENDRULE
+
+RULE Class#getResource is not used at runtime
+CLASS java.lang.Class
+METHOD getResource
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Class#getResource");
+ENDRULE
+
+## Proxy instantiation ##
+
+RULE proxy instantiation is not used at runtime
+CLASS java.lang.reflect.Proxy
+METHOD newProxyInstance
+IF shouldPerformAPICheck()
+DO THROW new org.hibernate.session.runtime.check.CheckForbiddenAPIException("Proxy instantiation");
 ENDRULE

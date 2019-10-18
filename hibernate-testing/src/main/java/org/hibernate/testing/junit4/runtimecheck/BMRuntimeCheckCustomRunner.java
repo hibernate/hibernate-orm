@@ -44,11 +44,6 @@ public class BMRuntimeCheckCustomRunner extends CustomRunner {
 			return;
 		}
 
-		// TODO HHH-13604 Even the smoke test does not work with the annotation read rule
-		if ( "CheckForbiddenAPIAtRuntimeTest".equals( clazz.getSimpleName() ) ) {
-			return;
-		}
-
 		try {
 			setAnnotations();
 		}

@@ -51,7 +51,7 @@ public class BMRuntimeCheckHelper extends Helper {
 
 	/**
 	 * Api check is supposed to be done when:
-	 * 1. as 2. as {@link #shouldPerformAPICheck()}
+	 * 1. as 2. as {@link #shouldPerformAPICheck()}.
 	 * 3. there is no {@link org.junit.runners.model.FrameworkMethod} in the last 2 calls of the frame set.
 	 *
 	 * @return whether the API should be checked
@@ -62,7 +62,7 @@ public class BMRuntimeCheckHelper extends Helper {
 
 	/**
 	 * Api check is supposed to be done when:
-	 * 1. as 2. as {@link #shouldPerformAPICheck()}
+	 * 1. as 2. as {@link #shouldPerformAPICheck()}.
 	 * 3. there is no {@link org.hibernate.cfg.Configuration()} in the frame set.
 	 *
 	 * @return whether the API should be checked
@@ -71,5 +71,28 @@ public class BMRuntimeCheckHelper extends Helper {
 		return shouldPerformAPICheck() &&
 			!callerMatches( "org.hibernate.cfg.Configuration.<init>", true, true, FRAME_SIZE_CHECK ) &&
 			!callerMatches( "org.hibernate.testing.junit4.BaseCoreFunctionalTestCase.buildBootstrapServiceRegistry", true, true, FRAME_SIZE_CHECK );
+	}
+
+	/**
+	 * Api check is supposed to be done when:
+	 * 1. as 2. as {@link #shouldPerformAPICheck()}.
+	 * 3. there is no {@link org.hibernate.testing.junit4.AfterClassCallbackHandler#evaluate} in the frame set.
+	 *
+	 * @return whether the API should be checked
+	 */
+	public boolean checkInsideTestMethod() {
+		return shouldPerformAPICheck() &&
+				!callerMatches( "org.hibernate.testing.junit4.AfterClassCallbackHandler.evaluate", true, true, FRAME_SIZE_CHECK );
+	}
+
+	/**
+	 * Api check is supposed to be done when:
+	 * 1. 2. and 3. as {@link #shouldPerformAPICheck()}.
+	 * 4. the method is not called directly by {@link Class}.
+	 *
+	 * @return whether the API should be checked
+	 */
+	public boolean checkInsideTestMethodAndNotCalledDirectlyByClass() {
+		return checkInsideTestMethod() && !callerMatches( "java.lang.Class.*", true, true, 1 );
 	}
 }

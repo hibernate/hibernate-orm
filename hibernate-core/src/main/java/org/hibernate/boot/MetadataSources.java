@@ -217,6 +217,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClasses(Class<?>... annotatedClasses) {
 		if ( annotatedClasses != null && annotatedClasses.length > 0 ) {
+			if ( this.annotatedClasses == null ) {
+				this.annotatedClasses = new LinkedHashSet<>();
+			}
 			Collections.addAll( this.annotatedClasses, annotatedClasses );
 		}
 		return this;

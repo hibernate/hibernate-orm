@@ -28,7 +28,7 @@ public class HqlParseTreeBuilder {
 	 */
 	public static final HqlParseTreeBuilder INSTANCE = new HqlParseTreeBuilder();
 
-	public HqlParser parseHql(String hql) {
+	public HqlParser generateHqlParser(String hql) {
 		// Build the lexer
 		HqlLexer hqlLexer = new HqlLexer( CharStreams.fromString( hql ) );
 

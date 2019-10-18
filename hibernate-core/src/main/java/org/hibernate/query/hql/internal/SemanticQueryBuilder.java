@@ -131,7 +131,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.atn.PredictionMode;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.hql.internal.HqlParser.IDENTIFIER;
@@ -149,17 +151,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	/**
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing a semantic model of the
 	 * query.
-	 *
-	 * @param statement The statement to analyze.
-	 * @param creationContext Access to things needed to perform the analysis
-	 *
-	 * @return The semantic query model
 	 */
 	public static SqmStatement buildSemanticModel(
-			HqlParser.StatementContext statement,
+			HqlParser.StatementContext hqlParseTree,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext) {
-		return new SemanticQueryBuilder( creationOptions, creationContext ).visitStatement( statement );
+		return new SemanticQueryBuilder( creationOptions, creationContext ).visitStatement( hqlParseTree );
 	}
 
 	private final SqmCreationOptions creationOptions;
@@ -179,7 +176,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return processingStateStack;
 	}
 
-	protected SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
+	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 

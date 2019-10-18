@@ -14,6 +14,13 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
+import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.ConsoleErrorListener;
+import org.antlr.v4.runtime.DefaultErrorStrategy;
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
+
 /**
  * Standard implementation of SemanticQueryInterpreter
  *
@@ -32,16 +39,12 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public SqmStatement interpret(String query) {
-		// first, ask Antlr to build the parse tree
-		final HqlParser parser = HqlParseTreeBuilder.INSTANCE.parseHql( query );
-
-		// Log the parse tree (if enabled)
-		HqlParseTreePrinter.logStatementParseTree( parser );
+		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
 		// then we perform semantic analysis and build the semantic representation...
 		try {
 			final SqmStatement sqmStatement = SemanticQueryBuilder.buildSemanticModel(
-					parser.statement(),
+					hqlParseTree,
 					sqmCreationOptions,
 					sqmCreationContext
 			);
@@ -57,5 +60,35 @@ public class StandardHqlTranslator implements HqlTranslator {
 		catch (Exception e) {
 			throw new InterpretationException( query, e );
 		}
+	}
+
+	private HqlParser.StatementContext parseHql(String hql) {
+		// Build the lexer
+		final HqlLexer hqlLexer = new HqlLexer( CharStreams.fromString( hql ) );
+
+		// first, ask Antlr to build the parse tree
+		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.generateHqlParser( hql );
+
+		// try to use SLL(k)-based parsing first - its faster
+		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
+		hqlParser.removeErrorListeners();
+		hqlParser.setErrorHandler( new BailErrorStrategy() );
+
+		try {
+			return hqlParser.statement();
+		}
+		catch ( ParseCancellationException e) {
+			// reset the input token stream and parser state
+			hqlLexer.reset();
+			hqlParser.reset();
+
+			// fall back to LL(k)-based parsing
+			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
+			hqlParser.addErrorListener( ConsoleErrorListener.INSTANCE );
+			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+
+			return hqlParser.statement();
+		}
+
 	}
 }

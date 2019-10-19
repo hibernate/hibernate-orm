@@ -6,22 +6,18 @@
  */
 package org.hibernate.test.idgen.enhanced.table;
 
-import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-/**
- * @author Steve Ebersole
- */
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+
 public class NullValueExceptionTest extends BaseCoreFunctionalTestCase {
 
 	@Rule

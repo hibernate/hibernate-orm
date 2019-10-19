@@ -585,7 +585,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													statementLogger,
 													statsCollector
 											)) {
-												boolean hasNullValue = false;
+												boolean wasNullValue = false;
 
 												selectPS.setString( 1, segmentValue );
 												final ResultSet selectRS = executeQuery( selectPS, statsCollector );
@@ -621,11 +621,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													}
 													value.initialize( selectRS, defaultValue );
 
-													hasNullValue = selectRS.wasNull();
+													wasNullValue = selectRS.wasNull();
 												}
 												selectRS.close();
 
-												if (hasNullValue) {
+												if (wasNullValue) {
 													throw new HibernateException("null '" + valueColumnName + "' for "
 														+ segmentColumnName + " '" + segmentValue + "'");
 												}

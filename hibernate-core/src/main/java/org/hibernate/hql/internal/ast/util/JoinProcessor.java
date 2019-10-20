@@ -6,8 +6,10 @@
  */
 package org.hibernate.hql.internal.ast.util;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -57,7 +59,7 @@ import antlr.collections.AST;
 public class JoinProcessor implements SqlTokenTypes {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JoinProcessor.class );
 
-	private static final Pattern DYNAMIC_FILTER_PATTERN = Pattern.compile(":(\\w+\\S*)\\s");
+	private static final Pattern DYNAMIC_FILTER_PATTERN = Pattern.compile( ":(\\w+\\S*)\\s" );
 	private static final String LITERAL_DELIMITER = "'";
 
 	private final HqlSqlWalker walker;
@@ -105,20 +107,27 @@ public class JoinProcessor implements SqlTokenTypes {
 
 	private <T extends AST> List<T> findAllNodes(AST node, Class<T> clazz) {
 		ArrayList<T> found = new ArrayList<>();
-		doFindAllNodes( node, clazz, found );
-		return found;
-	}
 
-	private <T extends AST> void doFindAllNodes(AST node, Class<T> clazz, List<T> found) {
-		if ( clazz.isAssignableFrom( node.getClass() ) ) {
-			found.add( (T) node );
+		Deque<AST> nodeDeque = new ArrayDeque<>();
+		nodeDeque.push( node );
+
+		while ( !nodeDeque.isEmpty() ) {
+			AST currentNode = nodeDeque.pop();
+			if ( clazz.isAssignableFrom( currentNode.getClass() ) ) {
+				found.add( (T) currentNode );
+			}
+
+			AST nextSibling = currentNode.getNextSibling();
+			if ( nextSibling != null ) {
+				nodeDeque.push( nextSibling );
+			}
+
+			AST firstChild = currentNode.getFirstChild();
+			if ( firstChild != null ) {
+				nodeDeque.push( firstChild );
+			}
 		}
-		if ( node.getFirstChild() != null ) {
-			doFindAllNodes( node.getFirstChild(), clazz, found );
-		}
-		if ( node.getNextSibling() != null ) {
-			doFindAllNodes( node.getNextSibling(), clazz, found );
-		}
+		return found;
 	}
 
 	private Set<String> findQueryReferencedTables(QueryNode query) {
@@ -354,7 +363,7 @@ public class JoinProcessor implements SqlTokenTypes {
 	}
 
 	private static boolean hasDynamicFilterParam(HqlSqlWalker walker, String sqlFragment) {
-		String closeQuote = String.valueOf( walker.getDialect().closeQuote()  );
+		String closeQuote = String.valueOf( walker.getDialect().closeQuote() );
 
 		Matcher matcher = DYNAMIC_FILTER_PATTERN.matcher( sqlFragment );
 		if ( matcher.find() && matcher.groupCount() > 0 ) {

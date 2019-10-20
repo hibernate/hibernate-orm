@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -38,6 +39,7 @@ public class JoinProcessorTest
 		);
 	}
 
+	@Ignore
 	@Test
 	public void testALotOfInValues() {
 		List<Long> values = LongStream.rangeClosed( 1, 10000 ).boxed().collect( Collectors.toList() );

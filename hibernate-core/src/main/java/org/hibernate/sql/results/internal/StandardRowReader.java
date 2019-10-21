@@ -74,10 +74,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		LOG.info( "---Processing Row---" );
-		coordinateInitializers( rowProcessingState, options );
+		LOG.debug( "---Processing Row---" );
 
-		// finally assemble the results
+		coordinateInitializers( rowProcessingState, options );
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
 			resultRow[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
@@ -89,7 +88,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		// todo : add AfterLoadActions handling here via Callback
+		// todo (6.0) : add AfterLoadActions handling here via Callback
 
 		for ( Initializer initializer : initializers ) {
 			initializer.finishUpRow( rowProcessingState );

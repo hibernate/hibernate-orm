@@ -13,6 +13,21 @@ ext {
 	jpaVersion = new JpaVersion('2.2')
 }
 
+if ( JavaVersion.current() == JavaVersion.VERSION_HIGHER ) {
+	// This JDK is not supported by Gradle.
+	// Use a hack to retrieve the major as a string.
+
+	// This only works for Java 9+ (we're at least on Java 13 here).
+	def major = System.getProperty( 'java.specification.version' )
+	logger.warn( "[WARN] The Java version '$major' is not supported by gradle." )
+
+	ext.testedJavaVersion = major
+}
+else {
+	// This JDK is supported by Gradle.
+	ext.testedJavaVersion = JavaVersion.current()
+}
+
 group = 'org.hibernate'
 version = project.ormVersion.fullName
 

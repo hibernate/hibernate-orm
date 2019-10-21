@@ -163,7 +163,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 	private static TypeDescription.Generic target(AnnotatedFieldDescription persistentField) {
 		AnnotationDescription.Loadable<Access> access = persistentField.getDeclaringType().asErasure().getDeclaredAnnotations().ofType( Access.class );
-		if ( access != null && access.loadSilent().value() == AccessType.FIELD ) {
+		if ( access != null && access.load().value() == AccessType.FIELD ) {
 			return persistentField.getType();
 		}
 		else {

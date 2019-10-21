@@ -514,7 +514,7 @@ public class EnhancerImpl implements Enhancer {
 		private AnnotationList doGetAnnotations() {
 			AnnotationDescription.Loadable<Access> access = fieldDescription.getDeclaringType().asErasure()
 					.getDeclaredAnnotations().ofType( Access.class );
-			if ( access != null && access.loadSilent().value() == AccessType.PROPERTY ) {
+			if ( access != null && access.load().value() == AccessType.PROPERTY ) {
 				Optional<MethodDescription> getter = getGetter();
 				if ( getter.isPresent() ) {
 					return getter.get().getDeclaredAnnotations();
@@ -523,7 +523,7 @@ public class EnhancerImpl implements Enhancer {
 					return fieldDescription.getDeclaredAnnotations();
 				}
 			}
-			else if ( access != null && access.loadSilent().value() == AccessType.FIELD ) {
+			else if ( access != null && access.load().value() == AccessType.FIELD ) {
 				return fieldDescription.getDeclaredAnnotations();
 			}
 			else {

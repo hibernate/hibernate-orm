@@ -25,7 +25,7 @@ jar {
 			classesDir = sourceSets.main.groovy.outputDir
 		}
 		else {
-			classesDir = sourceSets.main.output.classesDir
+			classesDir = sourceSets.main.java.outputDir
 		}
 		classpath = configurations.runtime
 
@@ -115,7 +115,7 @@ javadoc {
 
 		doFirst {
 			// ordering problems if we try to do this during config phase :(
-			classpath += project.sourceSets.main.output + project.sourceSets.main.compileClasspath + project.configurations.provided
+			classpath += project.sourceSets.main.output.classesDirs + project.sourceSets.main.compileClasspath + project.configurations.provided
 		}
 	}
 }

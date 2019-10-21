@@ -3,6 +3,39 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.7.Final (October 21, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31799/tab/release-report-done
+
+** Bug
+    * [HHH-4235] - MapBinder.createFormulatedValue() does not honor DB schema name when creating query
+    * [HHH-13633] - Bugs join-fetching a collection when scrolling with a stateless session using enhancement as proxy
+    * [HHH-13634] - PersistenceContext can get cleared before load completes using StatelessSessionImpl
+    * [HHH-13640] - Uninitialized HibernateProxy mapped as NO_PROXY gets initialized when reloaded with enhancement-as-proxy enabled
+    * [HHH-13653] - Uninitialized entity does not get initialized when a setter is called with enhancement-as-proxy enabled
+    * [HHH-13655] - Envers Map<Enum, Integer> causes NullPointerException when mapped with @MapKeyEnumerated since Hibernate 5.4.6
+    * [HHH-13663] - Session#setHibernateFlushMode() method not callable without an active transaction
+    * [HHH-13665] - Selecting an entity annotated with @Immutable but not with @Cachable causes a NPE when use_reference_entries is enabled
+    * [HHH-13672] - The temporary PersistenceContext of a StatelessSession is not cleared after a refresh operation
+    * [HHH-13675] - Optimize PersistentBag.groupByEqualityHash()
+
+** New Feature
+    * [HHH-10398] - _MOD columns not named correctly when using custom column names
+
+** Task
+    * [HHH-13680] - Upgrade to Byte Buddy 1.10.2
+    * [HHH-13681] - Upgrade to Byteman 4.0.8
+
+** Improvement
+    * [HHH-12858] - integration overrides during JPA bootstrap ought to override all logically related settings
+    * [HHH-13432] - Have EntityManagerFactory expose persistence.xml `jta-data-source` element as a `javax.persistence.nonJtaDataSource` property
+    * [HHH-13660] - Reduce allocation costs of IdentityMaps used by ResultSetProcessingContextImpl
+    * [HHH-13662] - Avoid initializing XmlMappingBinderAccess when no XML mappings are defined
+    * [HHH-13666] - AssertionFailure: Exception releasing cache locks upon After/BeforeTransactionCompletionProcess failure
+    * [HHH-13673] - Cryptic error when providing import.sql file without a terminal char at the end of each line
+
+
 Changes in 5.4.6.Final (September 30, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

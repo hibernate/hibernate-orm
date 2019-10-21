@@ -13,11 +13,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
-import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
@@ -37,16 +42,14 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.FEMALE;
-import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-@SuppressWarnings({"WeakerAccess", "DefaultAnnotationParam"})
+@SuppressWarnings({ "WeakerAccess", "DefaultAnnotationParam" })
 @DomainModel(
-		annotatedClasses = {SimpleEntity.class, OtherEntity.class},
+		annotatedClasses = { SmokeTests.SimpleEntity.class, SmokeTests.OtherEntity.class },
 		extraQueryImportClasses = {
 				SmokeTests.ListItemDto.class,
 				SmokeTests.CategorizedListItemDto.class,
@@ -56,11 +59,11 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
 )
 @ServiceRegistry(
 		settings = {
-				@ServiceRegistry.Setting( name = AvailableSettings.POOL_SIZE, value = "15" ),
-				@ServiceRegistry.Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" )
+				@ServiceRegistry.Setting(name = AvailableSettings.POOL_SIZE, value = "15"),
+				@ServiceRegistry.Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
 		}
 )
-@SessionFactory( exportSchema = true )
+@SessionFactory(exportSchema = true)
 public class SmokeTests {
 
 	@BeforeEach
@@ -69,11 +72,15 @@ public class SmokeTests {
 				session -> {
 					SimpleEntity simpleEntity = new SimpleEntity();
 					simpleEntity.setId( 1 );
-					simpleEntity.setGender( FEMALE );
+					simpleEntity.setGender( Gender.FEMALE );
 					simpleEntity.setName( "Fab" );
-					simpleEntity.setGender2( MALE );
+					simpleEntity.setGender2( Gender.MALE );
 					simpleEntity.setComponent( new Component( "a1", "a2" ) );
 					session.save( simpleEntity );
+					OtherEntity otherEntity = new OtherEntity();
+					otherEntity.setId( 2 );
+					otherEntity.setName( "Bar" );
+					session.save( otherEntity );
 				}
 		);
 	}
@@ -86,6 +93,7 @@ public class SmokeTests {
 								work -> {
 									Statement statement = work.createStatement();
 									statement.execute( "delete from mapping_simple_entity" );
+									statement.execute( "delete from mapping_other_entity" );
 									statement.close();
 								}
 						)
@@ -117,7 +125,7 @@ public class SmokeTests {
 					);
 					List<Gender> simpleEntities = query.list();
 					assertThat( simpleEntities.size(), is( 1 ) );
-					assertThat( simpleEntities.get( 0 ), is( FEMALE ) );
+					assertThat( simpleEntities.get( 0 ), is( Gender.FEMALE ) );
 				}
 		);
 	}
@@ -133,10 +141,10 @@ public class SmokeTests {
 					List<SimpleEntity> simpleEntities = query.list();
 					assertThat( simpleEntities.size(), is( 1 ) );
 					SimpleEntity simpleEntity = simpleEntities.get( 0 );
-					assertThat( simpleEntity.getId(), is(1) );
-					assertThat( simpleEntity.getGender(), is(FEMALE) );
-					assertThat( simpleEntity.getGender2(), is(MALE) );
-					assertThat( simpleEntity.getName(), is("Fab") );
+					assertThat( simpleEntity.getId(), is( 1 ) );
+					assertThat( simpleEntity.getGender(), is( Gender.FEMALE ) );
+					assertThat( simpleEntity.getGender2(), is( Gender.MALE ) );
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
 					assertThat( simpleEntity.getComponent(), notNullValue() );
 					assertThat( simpleEntity.getComponent().getAttribute1(), is( "a1" ) );
 					assertThat( simpleEntity.getComponent().getAttribute2(), is( "a2" ) );
@@ -148,7 +156,10 @@ public class SmokeTests {
 	public void testHqlSelectEmbeddedAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Component> query = session.createQuery( "select e.component from SimpleEntity e", Component.class );
+					final QueryImplementor<Component> query = session.createQuery(
+							"select e.component from SimpleEntity e",
+							Component.class
+					);
 					final Component component = query.uniqueResult();
 					assertThat( component, notNullValue() );
 					assertThat( component.getAttribute1(), is( "a1" ) );
@@ -161,7 +172,10 @@ public class SmokeTests {
 	public void testHqlSelectEmbeddableSubAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select e.component.attribute1 from SimpleEntity e", String.class );
+					final QueryImplementor<String> query = session.createQuery(
+							"select e.component.attribute1 from SimpleEntity e",
+							String.class
+					);
 					final String attribute1 = query.uniqueResult();
 					assertThat( attribute1, is( "a1" ) );
 				}
@@ -172,7 +186,10 @@ public class SmokeTests {
 	public void testHqlSelectLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select 'items' from SimpleEntity e", String.class );
+					final QueryImplementor<String> query = session.createQuery(
+							"select 'items' from SimpleEntity e",
+							String.class
+					);
 					final String attribute1 = query.uniqueResult();
 					assertThat( attribute1, is( "items" ) );
 				}
@@ -183,7 +200,10 @@ public class SmokeTests {
 	public void testHqlSelectParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery( "select :param from SimpleEntity e", String.class );
+					final QueryImplementor<String> query = session.createQuery(
+							"select :param from SimpleEntity e",
+							String.class
+					);
 					final String attribute1 = query.setParameter( "param", "items" ).uniqueResult();
 					assertThat( attribute1, is( "items" ) );
 				}
@@ -215,9 +235,9 @@ public class SmokeTests {
 				session -> {
 					SimpleEntity simpleEntity = new SimpleEntity();
 					simpleEntity.setId( 2 );
-					simpleEntity.setGender( MALE );
+					simpleEntity.setGender( Gender.MALE );
 					simpleEntity.setName( "Andrea" );
-					simpleEntity.setGender2( FEMALE );
+					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
 					session.save( simpleEntity );
 				}
@@ -225,7 +245,10 @@ public class SmokeTests {
 
 		scope.inTransaction(
 				session -> {
-					final Object[] result = session.createQuery( "select e, e2 from SimpleEntity e, SimpleEntity e2 where e.id = 1 and e2.id = 2", Object[].class )
+					final Object[] result = session.createQuery(
+							"select e, e2 from SimpleEntity e, SimpleEntity e2 where e.id = 1 and e2.id = 2",
+							Object[].class
+					)
 							.uniqueResult();
 					assertThat( result, notNullValue() );
 
@@ -247,9 +270,9 @@ public class SmokeTests {
 				session -> {
 					SimpleEntity simpleEntity = new SimpleEntity();
 					simpleEntity.setId( 2 );
-					simpleEntity.setGender( MALE );
+					simpleEntity.setGender( Gender.MALE );
 					simpleEntity.setName( "Andrea" );
-					simpleEntity.setGender2( FEMALE );
+					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
 					session.save( simpleEntity );
 				}
@@ -432,8 +455,8 @@ public class SmokeTests {
 					final CategorizedListItemDto dto = query.getSingleResult();
 					assertThat( dto, notNullValue() );
 					assertThat( dto.category, notNullValue() );
-					assertThat( dto.category.code, is( "a2") );
-					assertThat( dto.category.value, is( "a1") );
+					assertThat( dto.category.code, is( "a2" ) );
+					assertThat( dto.category.value, is( "a1" ) );
 					assertThat( dto.code, is( "a1" ) );
 					assertThat( dto.value, is( "Fab" ) );
 				}
@@ -452,8 +475,8 @@ public class SmokeTests {
 					final CategorizedListItemDto dto = query.getSingleResult();
 					assertThat( dto, notNullValue() );
 					assertThat( dto.category, notNullValue() );
-					assertThat( dto.category.code, is( "items") );
-					assertThat( dto.category.value, is( "a1") );
+					assertThat( dto.category.code, is( "items" ) );
+					assertThat( dto.category.value, is( "a1" ) );
 					assertThat( dto.code, is( "a2" ) );
 					assertThat( dto.value, is( "Fab" ) );
 				}
@@ -499,5 +522,163 @@ public class SmokeTests {
 					assertThat( dto.value, is( "Fab" ) );
 				}
 		);
+	}
+
+	public enum Gender {
+		MALE,
+		FEMALE
+	}
+
+	@Entity(name = "OtherEntity")
+	@Table(name = "mapping_other_entity")
+	@SuppressWarnings("unused")
+	public static class OtherEntity {
+		private Integer id;
+		private String name;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+	}
+
+
+	@Entity(name = "SimpleEntity")
+	@Table(name = "mapping_simple_entity")
+	@SuppressWarnings("unused")
+	public static class SimpleEntity {
+		private Integer id;
+		private String name;
+		private Gender gender;
+		private Gender gender2;
+		private Component component;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Enumerated
+		public Gender getGender() {
+			return gender;
+		}
+
+		public void setGender(Gender gender) {
+			this.gender = gender;
+		}
+
+		@Enumerated(EnumType.STRING)
+		public Gender getGender2() {
+			return gender2;
+		}
+
+		public void setGender2(Gender gender2) {
+			this.gender2 = gender2;
+		}
+
+		@Embedded
+		public Component getComponent() {
+			return component;
+		}
+
+		public void setComponent(Component component) {
+			this.component = component;
+		}
+	}
+
+	@Embeddable
+	static class SubComponent {
+		private String subAttribute1;
+		private String subAttribute2;
+
+		public SubComponent() {
+		}
+
+		public SubComponent(String subAttribute1, String subAttribute2) {
+			this.subAttribute1 = subAttribute1;
+			this.subAttribute2 = subAttribute2;
+		}
+
+		public String getSubAttribute1() {
+			return subAttribute1;
+		}
+
+		public void setSubAttribute1(String subAttribute1) {
+			this.subAttribute1 = subAttribute1;
+		}
+
+		public String getSubAttribute2() {
+			return subAttribute2;
+		}
+
+		public void setSubAttribute2(String subAttribute2) {
+			this.subAttribute2 = subAttribute2;
+		}
+	}
+
+	@Embeddable
+	public static class Component {
+		private String attribute1;
+		private String attribute2;
+
+		private SubComponent subComponent;
+
+		public Component() {
+		}
+
+		public Component(String attribute1, String attribute2) {
+			this.attribute1 = attribute1;
+			this.attribute2 = attribute2;
+		}
+
+		public String getAttribute1() {
+			return attribute1;
+		}
+
+		public void setAttribute1(String attribute1) {
+			this.attribute1 = attribute1;
+		}
+
+		public String getAttribute2() {
+			return attribute2;
+		}
+
+		public void setAttribute2(String attribute2) {
+			this.attribute2 = attribute2;
+		}
+
+		@Embedded
+		public SubComponent getSubComponent() {
+			return subComponent;
+		}
+
+		public void setSubComponent(SubComponent subComponent) {
+			this.subComponent = subComponent;
+		}
 	}
 }

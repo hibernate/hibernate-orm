@@ -6,17 +6,16 @@
  */
 package org.hibernate.orm.test.metamodel.mapping;
 
+import java.sql.Statement;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
@@ -31,10 +30,11 @@ import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -47,7 +47,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @SuppressWarnings("WeakerAccess")
 @DomainModel(
-		annotatedClasses = SmokeTests.SimpleEntity.class
+		annotatedClasses = { SmokeTests.SimpleEntity.class, SmokeTests.OtherEntity.class }
 )
 @ServiceRegistry
 @SessionFactory
@@ -60,7 +60,9 @@ public class SmokeTests {
 				.getEntityDescriptor( SimpleEntity.class );
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		assert Integer.class.equals( identifierMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor().getJavaType() );
+		assert Integer.class.equals( identifierMapping.getMappedTypeDescriptor()
+											 .getMappedJavaTypeDescriptor()
+											 .getJavaType() );
 
 		{
 			final ModelPart namePart = entityDescriptor.findSubPart( "name" );
@@ -110,30 +112,71 @@ public class SmokeTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testEntityBasedManyToOne(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
 				.getDomainModel()
 				.getEntityDescriptor( OtherEntity.class );
 
+		final EntityPersister simpleEntityDescriptor = scope.getSessionFactory()
+				.getDomainModel()
+				.getEntityDescriptor( SimpleEntity.class );
+
 		final ModelPart part = entityDescriptor.findSubPart( "simpleEntity" );
 		assertThat( part, notNullValue() );
 		assertThat( part, instanceOf( SingularAssociationAttributeMapping.class ) );
 		final SingularAssociationAttributeMapping attrMapping = (SingularAssociationAttributeMapping) part;
-//		assertThat( attrMapping.getContainingTableExpression(), is( "mapping_simple_entity" ) );
-//		assertThat( attrMapping.getMappedColumnExpressions(), CollectionMatchers.hasSize( 4 ) );
-//		assertThat( attrMapping.getMappedColumnExpressions().get( 0 ), is( "attribute1" ) );
-//		assertThat( attrMapping.getMappedColumnExpressions().get( 1 ), is( "attribute2" ) );
+		assertThat( attrMapping.getAttributeName(), is( "simpleEntity" ) );
+		assertThat( attrMapping.getMappedTypeDescriptor(), is( simpleEntityDescriptor ) );
+		assertThat(
+				attrMapping.getJavaTypeDescriptor(),
+				is( simpleEntityDescriptor.getJavaTypeDescriptor() )
+		);
+
+		assertThat( attrMapping.getDeclaringType(), is( entityDescriptor ) );
 	}
 
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SimpleEntity simpleEntity = new SimpleEntity();
+					simpleEntity.setId( 1 );
+					simpleEntity.setGender( Gender.FEMALE );
+					simpleEntity.setName( "Fab" );
+					simpleEntity.setGender2( Gender.MALE );
+					simpleEntity.setComponent( new Component( "a1", "a2" ) );
+					session.save( simpleEntity );
+					OtherEntity otherEntity = new OtherEntity();
+					otherEntity.setId( 2 );
+					otherEntity.setName( "Bar" );
+					otherEntity.setSimpleEntity( simpleEntity );
+					session.save( otherEntity );
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.doWork(
+								work -> {
+									Statement statement = work.createStatement();
+									statement.execute( "delete from mapping_other_entity" );
+									statement.execute( "delete from mapping_simple_entity" );
+									statement.close();
+								}
+						)
+		);
+	}
 
 	public enum Gender {
 		MALE,
 		FEMALE
 	}
 
-	@Entity( name = "OtherEntity" )
-	@Table( name = "mapping_other_entity" )
+	@Entity(name = "OtherEntity")
+	@Table(name = "mapping_other_entity")
 	@SuppressWarnings("unused")
 	public static class OtherEntity {
 		private Integer id;
@@ -167,8 +210,8 @@ public class SmokeTests {
 		}
 	}
 
-	@Entity( name = "SimpleEntity" )
-	@Table( name = "mapping_simple_entity" )
+	@Entity(name = "SimpleEntity")
+	@Table(name = "mapping_simple_entity")
 	@SuppressWarnings("unused")
 	public static class SimpleEntity {
 		private Integer id;
@@ -203,7 +246,7 @@ public class SmokeTests {
 			this.gender = gender;
 		}
 
-		@Enumerated( EnumType.STRING )
+		@Enumerated(EnumType.STRING)
 		public Gender getGender2() {
 			return gender2;
 		}
@@ -222,7 +265,8 @@ public class SmokeTests {
 		}
 	}
 
-	@Embeddable static class SubComponent {
+	@Embeddable
+	static class SubComponent {
 		private String subAttribute1;
 		private String subAttribute2;
 

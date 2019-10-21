@@ -85,6 +85,7 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -394,7 +395,6 @@ public class MappingModelCreationHelper {
 	}
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Non-identifier attributes
 
@@ -508,7 +508,6 @@ public class MappingModelCreationHelper {
 	}
 
 
-
 	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
@@ -520,7 +519,41 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+				bootProperty,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+
+		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+				(Component) bootProperty.getValue(),
+				attrType,
+				attributeMappingType -> new EmbeddedAttributeMapping(
+						attrName,
+						stateArrayPosition,
+						tableExpression,
+						attrColumnNames,
+						attributeMetadataAccess,
+						FetchStrategy.IMMEDIATE_JOIN,
+						attributeMappingType,
+						declaringType,
+						propertyAccess
+				),
+				creationProcess
+		);
+
+		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
+	}
+
+	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
+			Property bootProperty,
+			Type attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return entityMappingType -> new StateArrayContributorMetadata() {
 			private final boolean nullable = bootProperty.getValue().isNullable();
 			private final boolean insertable = bootProperty.isInsertable();
 			private final boolean updateable = bootProperty.isUpdateable();
@@ -602,25 +635,6 @@ public class MappingModelCreationHelper {
 				return cascadeStyle;
 			}
 		};
-
-		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-				(Component) bootProperty.getValue(),
-				attrType,
-				attributeMappingType -> new EmbeddedAttributeMapping(
-						attrName,
-						stateArrayPosition,
-						tableExpression,
-						attrColumnNames,
-						attributeMetadataAccess,
-						FetchStrategy.IMMEDIATE_JOIN,
-						attributeMappingType,
-						declaringType,
-						propertyAccess
-				),
-				creationProcess
-		);
-
-		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
 	public static PluralAttributeMapping buildPluralAttributeMapping(
@@ -780,7 +794,7 @@ public class MappingModelCreationHelper {
 			}
 			default: {
 				throw new MappingException(
-						"Unexpected CollectionClassification : " +  collectionSemantics.getCollectionClassification()
+						"Unexpected CollectionClassification : " + collectionSemantics.getCollectionClassification()
 				);
 			}
 		}
@@ -1082,6 +1096,53 @@ public class MappingModelCreationHelper {
 		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
 			return collectionJtd;
 		}
+	}
+
+
+	public static SingularAssociationAttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		ToOne value = (ToOne) bootProperty.getValue();
+		final EntityPersister entityPersister = creationProcess.getEntityPersister(
+				value.getReferencedEntityName() );
+
+		final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess = getStateArrayContributorMetadataAccess(
+				bootProperty,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+		final Dialect dialect = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getJdbcServices()
+				.getJdbcEnvironment()
+				.getDialect();
+
+		final ForeignKeyDescriptor foreignKeyDescriptor = interpretKeyDescriptor(
+				bootProperty,
+				value,
+				entityPersister,
+				dialect,
+				creationProcess
+		);
+		// todo (6.0) : determine the correct FetchStrategy
+		return new SingularAssociationAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				foreignKeyDescriptor,
+				stateArrayContributorMetadataAccess,
+				FetchStrategy.IMMEDIATE_JOIN,
+				entityPersister,
+				declaringType,
+				propertyAccess
+		);
 	}
 
 }

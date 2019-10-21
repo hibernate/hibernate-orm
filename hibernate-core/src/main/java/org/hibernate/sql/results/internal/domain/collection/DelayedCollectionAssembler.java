@@ -115,7 +115,7 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 			persistenceContext.addUninitializedCollection(
 					getInitializingCollectionDescriptor(),
 					instance,
-					(Serializable) collectionKey.getKey()
+					collectionKey.getKey()
 			);
 		}
 

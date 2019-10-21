@@ -84,7 +84,8 @@ task ciBuild {
 
 
 wrapper {
-	gradleVersion = '4.10.3'
+	// To upgrade the version of gradle used in the wrapper, run:
+	//     ./gradlew wrapper --gradle-version NEW_VERSION
 	distributionType = Wrapper.DistributionType.ALL
 }
 

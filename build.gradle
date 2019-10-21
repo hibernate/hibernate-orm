@@ -22,7 +22,7 @@ buildscript {
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.16'
+	id 'com.gradle.build-scan' version '2.4.2'
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 }
@@ -91,8 +91,8 @@ wrapper {
 
 
 buildScan {
-	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-	licenseAgree = 'yes'
+	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+	termsOfServiceAgree = 'yes'
 }
 
 buildScanRecipes {

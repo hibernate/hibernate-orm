@@ -8,6 +8,8 @@ if ( !JavaVersion.current().java8Compatible ) {
     throw new GradleException( "Gradle must be run with Java 8" )
 }
 
+enableFeaturePreview('STABLE_PUBLISHING')
+
 include 'hibernate-core'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'

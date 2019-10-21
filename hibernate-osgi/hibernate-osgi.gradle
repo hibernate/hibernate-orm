@@ -44,8 +44,8 @@ sourceSets {
 	test {
 		// send javac output and resource copying to the same output directory for test
 		// so Pax Exam can more easily find it without explicit TinyBundle hooks
-		output.classesDir = "${buildDir}/classes/test"
-		output.resourcesDir = output.classesDir
+		java.outputDir = file( "${buildDir}/classes/test" )
+		output.resourcesDir = java.outputDir
 	}
 }
 
@@ -218,7 +218,7 @@ task generatePaxExamEnvironmentFile {
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.distroUrl', karafDistroFile.toURI().toURL().toExternalForm() )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.unpackDir', karafUnpackDirectory.absolutePath )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.version', karafVersion as String )
-		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.output.classesDir.absolutePath )
+		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.classesDir', sourceSets.test.java.outputDir.absolutePath )
 		properties.setProperty( 'org.ops4j.pax.exam.container.karaf.probe.resourcesDir', sourceSets.test.output.resourcesDir.absolutePath )
 		properties.setProperty( 'org.hibernate.osgi.test.karafFeatureFile', karaf.features.outputFile.absolutePath )
 

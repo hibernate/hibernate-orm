@@ -38,10 +38,6 @@ ext {
 	forbiddenAPITargetJDKCompatibility = '11'
 }
 
-
-sourceCompatibility = project.baselineJavaVersion
-targetCompatibility = project.baselineJavaVersion
-
 if ( !project.description ) {
 	project.description = "The Hibernate ORM $project.name module"
 }
@@ -114,8 +110,20 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Compilation
 
-tasks.withType(JavaCompile) {
+tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
+	sourceCompatibility = project.baselineJavaVersion
+	targetCompatibility = project.baselineJavaVersion
+}
+
+if ( project.baselineJavaVersion != project.testedJavaVersion ) {
+	logger.info( "Forcing the target bytecode version for test classes to '$project.testedJavaVersion'" )
+
+	tasks.compileTestJava {
+		// For *tests only*, generate bytecode matching the Java version currently in use.
+		// This allows testing bytecode enhancement on the latest Java versions (13, 14, ...).
+		targetCompatibility = project.testedJavaVersion
+	}
 }
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )

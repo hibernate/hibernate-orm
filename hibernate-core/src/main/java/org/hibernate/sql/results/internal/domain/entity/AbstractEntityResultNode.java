@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -68,18 +69,17 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 				creationState
 		);
 
-//		final DiscriminatorMappDescriptor<?> discriminatorDescriptor = entityDescriptor.getHierarchy().getDiscriminatorDescriptor();
-//		if ( discriminatorDescriptor == null ) {
-//			discriminatorResult = null;
-//		}
-//		else {
-//			discriminatorResult = discriminatorDescriptor.createDomainResult(
-//					navigablePath.append( DiscriminatorDescriptor.NAVIGABLE_NAME ),
-//					null,
-//					creationState
-//			);
-//		}
-		discriminatorResult = null;
+		if ( entityDescriptor.getDiscriminatorMapping() != null ) {
+			discriminatorResult = entityDescriptor.getDiscriminatorMapping().createDomainResult(
+					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+					entityTableGroup,
+					null,
+					creationState
+			);
+		}
+		else {
+			discriminatorResult = null;
+		}
 
 		final EntityVersionMapping versionDescriptor = entityDescriptor.getVersionMapping();
 		if ( versionDescriptor == null ) {

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.FetchableContainer;
 
 /**
@@ -18,14 +19,23 @@ import org.hibernate.sql.results.spi.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
-	int getNumberOfAttributeMappings();
-	int getNumberOfDeclaredAttributeMappings();
 
+	/**
+	 * Get the number of attributes defined on this class and any supers
+	 */
+	int getNumberOfAttributeMappings();
+
+	default AttributeMapping findAttributeMapping(String name) {
+		return null;
+	}
+
+	/**
+	 * Get access to the attributes defined on this class and any supers
+	 */
 	Collection<AttributeMapping> getAttributeMappings();
 
 	/**
-	 * @todo (6.0) : consider dropping this in favor of a form passing the ManagedMappingType
-	 * 		which indicates the type to limit the attribute search to (the type and its super-type)
+	 * Visit attributes defined on this class and any supers
 	 */
 	void visitAttributeMappings(Consumer<AttributeMapping> action);
 
@@ -42,6 +52,4 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 				}
 		);
 	}
-
-	boolean isTypeOrSuperType(ManagedMappingType targetType);
 }

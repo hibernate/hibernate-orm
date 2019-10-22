@@ -278,8 +278,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	}
 
 	@Override
-	public int getNumberOfDeclaredAttributeMappings() {
-		return getNumberOfAttributeMappings();
+	public AttributeMapping findAttributeMapping(String name) {
+		return attributeMappings.get( name );
 	}
 
 	@Override
@@ -290,11 +290,6 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	@Override
 	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
 		attributeMappings.values().forEach( action );
-	}
-
-	@Override
-	public boolean isTypeOrSuperType(ManagedMappingType targetType) {
-		return targetType == null || targetType == this;
 	}
 
 	@Override

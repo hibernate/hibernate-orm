@@ -6,9 +6,17 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.spi.RowProcessingState;
+
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
 /**
  * todo (6.0) : make this implement RootTableGroupProducer, etc instead of EntityPersister?
@@ -29,6 +37,53 @@ public interface EntityMappingType extends ManagedMappingType {
 		return getEntityPersister().getEntityName();
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Inheritance
+
+	default AttributeMapping findDeclaredAttributeMapping(String name) {
+		return null;
+	}
+
+	/**
+	 * Get the number of attributes defined on this class - do not access attributes defined on the super
+	 */
+	default int getNumberOfDeclaredAttributeMappings() {
+		return getDeclaredAttributeMappings().size();
+	}
+
+	/**
+	 * Get access to the attributes defined on this class - do not access attributes defined on the super
+	 */
+	default Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	/**
+	 * Visit attributes defined on this class - do not visit attributes defined on the super
+	 */
+	default void visitDeclaredAttributeMappings(Consumer<AttributeMapping> action) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default EntityMappingType getSuperMappingType() {
+		return null;
+	}
+
+	default boolean isTypeOrSuperType(EntityMappingType targetType) {
+		return targetType == this;
+	}
+
+	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
+		if ( targetType instanceof EntityMappingType ) {
+			return isTypeOrSuperType( (EntityMappingType) targetType );
+		}
+
+		return false;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Special model parts - identifier, discriminator, etc
+
 	EntityIdentifierMapping getIdentifierMapping();
 
 	EntityVersionMapping getVersionMapping();
@@ -38,19 +93,6 @@ public interface EntityMappingType extends ManagedMappingType {
 	}
 
 	NaturalIdMapping getNaturalIdMapping();
-
-	@Override
-	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
-		if ( targetType instanceof EntityMappingType ) {
-			return isTypeOrSuperType( (EntityMappingType) targetType );
-		}
-
-		return false;
-	}
-
-	default boolean isTypeOrSuperType(EntityMappingType targetType) {
-		return targetType == this;
-	}
 
 	/**
 	 * Visit the mappings, but limited to just attributes defined
@@ -80,35 +122,41 @@ public interface EntityMappingType extends ManagedMappingType {
 
 	@Override
 	default void visitAttributeMappings(Consumer<AttributeMapping> action) {
-		visitAttributeMappings( action, null );
+		getAttributeMappings().forEach( action );
 	}
 
-	/**
-	 * Visit the mappings, but limited to just attributes defined
-	 * in the targetType or its super-type(s) if any.
-	 *
-	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
-	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
-	 */
-	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer, EntityMappingType targetType) {
-		visitAttributeMappings(
-				modelPart -> {
-					if ( modelPart instanceof StateArrayContributorMapping ) {
-						if ( targetType == null
-								|| ( (StateArrayContributorMapping) modelPart ).isDeclaredOnTypeOrSuperType( targetType ) ) {
-							mappingConsumer.accept( ( (StateArrayContributorMapping) modelPart ) );
-						}
+	// Customer <- DomesticCustomer <- OtherCustomer
+
+	default Object[] extractConcreteTypeStateValues(
+			Map<AttributeMapping, DomainResultAssembler> assemblerMapping,
+			RowProcessingState rowProcessingState) {
+		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
+		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
+
+		visitFetchables(
+				new Consumer<Fetchable>() {
+					private int index;
+
+					@Override
+					public void accept(Fetchable fetchable) {
+						assert fetchable instanceof StateArrayContributorMapping;
+
+						final DomainResultAssembler assembler = assemblerMapping.get( fetchable );
+						final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
+
+						values[index++] = value;
 					}
 				},
-				targetType
+				null
 		);
+
+		return values;
 	}
 
 	@Override
 	default void visitStateArrayContributors(Consumer<StateArrayContributorMapping> mappingConsumer) {
-		visitStateArrayContributors( mappingConsumer, null );
+		visitAttributeMappings(
+				attributeMapping -> mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping )
+		);
 	}
-
-	// todo (6.0) : not sure we actually need this distinction at the mapping model level...
-
 }

@@ -84,7 +84,9 @@ public class SessionFactoryExtension
 							sessionFactoryBuilder.applyName( sessionFactoryConfig.sessionFactoryName() );
 						}
 
-						sessionFactoryBuilder.applyStatisticsSupport( sessionFactoryConfig.generateStatistics() );
+						if ( sessionFactoryConfig.generateStatistics() ) {
+							sessionFactoryBuilder.applyStatisticsSupport( true );
+						}
 
 						if ( ! sessionFactoryConfig.interceptorClass().equals( Interceptor.class ) ) {
 							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().newInstance() );

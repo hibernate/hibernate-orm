@@ -20,13 +20,5 @@ public interface AttributeMapping extends ModelPart, ValueMapping {
 
 	ManagedMappingType getDeclaringType();
 
-	default boolean isDeclaredOnTypeOrSuperType(ManagedMappingType targetType) {
-		if ( getDeclaringType() instanceof EntityMappingType ) {
-			return ( (EntityMappingType) getDeclaringType() ).isTypeOrSuperType( targetType );
-		}
-
-		return false;
-	}
-
 	PropertyAccess getPropertyAccess();
 }

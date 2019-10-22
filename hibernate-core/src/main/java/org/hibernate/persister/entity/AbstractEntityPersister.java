@@ -5294,15 +5294,19 @@ public abstract class AbstractEntityPersister
 			accessOptimizer.setPropertyValues( object, values );
 		}
 		else {
-			int i = 0;
-			for ( Map.Entry<String, AttributeMapping> entries : declaredAttributeMappings.entrySet() ) {
-				AttributeMapping attributeMapping = entries.getValue();
-				final Setter setter = attributeMapping
-						.getPropertyAccess()
-						.getSetter();
-				setter.set( object, values[i], getFactory() );
-				i++;
-			}
+			visitFetchables(
+					fetchable -> {
+						final AttributeMapping attribute = (AttributeMapping) fetchable;
+						final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+						final Object value = values[stateArrayPosition];
+						if ( value != UNFETCHED_PROPERTY ) {
+							final Setter setter = attribute.getPropertyAccess().getSetter();
+							setter.set( object, value, getFactory() );
+						}
+
+					},
+					null
+			);
 		}
 	}
 
@@ -5320,21 +5324,13 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
-			final AtomicInteger index = new AtomicInteger( 0 );
-
-			//noinspection Convert2Lambda
-			visitAttributeMappings(
-					new Consumer<AttributeMapping>() {
-						@Override
-						public void accept(AttributeMapping mapping) {
-							values[ index.getAndIncrement() ] = mapping.getAttributeMetadataAccess()
-									.resolveAttributeMetadata( AbstractEntityPersister.this )
-									.getPropertyAccess()
-									.getGetter()
-									.get( object );
-						}
-					}
-			);
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				values[ i ] = attributeMappings.get( i ).getAttributeMetadataAccess()
+						.resolveAttributeMetadata( this )
+						.getPropertyAccess()
+						.getGetter()
+						.get( object );
+			}
 
 			return values;
 		}
@@ -5441,16 +5437,15 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( entity );
 		}
 
-		final Object[] result = new Object[declaredAttributeMappings.size()];
-		int i = 0;
-		for ( Map.Entry<String, AttributeMapping> entries : declaredAttributeMappings.entrySet() ) {
-			AttributeMapping attributeMapping = entries.getValue();
-			result[i] = attributeMapping.getPropertyAccess().getGetter().getForInsert(
+		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
+
+		final Object[] result = new Object[this.attributeMappings.size()];
+		for ( int i = 0; i < this.attributeMappings.size(); i++ ) {
+			result[i] = this.attributeMappings.get( i ).getPropertyAccess().getGetter().getForInsert(
 					entity,
 					mergeMap,
 					session
 			);
-			i++;
 		}
 		return result;
 	}
@@ -6059,9 +6054,14 @@ public abstract class AbstractEntityPersister
 	private EntityDiscriminatorMapping discriminatorMapping;
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
-	private Collection<AttributeMapping> attributeMappings;
+	private List<AttributeMapping> attributeMappings;
 
 	private ReflectionOptimizer.AccessOptimizer accessOptimizer;
+
+	@Override
+	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+		attributeMappings.forEach( action );
+	}
 
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
@@ -6069,45 +6069,54 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
+		if ( superMappingType != null ) {
+			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
+
+			this.identifierMapping = superMappingType.getIdentifierMapping();
+			this.versionMapping = superMappingType.getVersionMapping();
+			this.discriminatorMapping = superMappingType.getDiscriminatorMapping();
+			this.naturalIdMapping = superMappingType.getNaturalIdMapping();
+		}
+		else {
+			identifierMapping = creationProcess.processSubPart(
+					EntityIdentifierMapping.ROLE_LOCAL_NAME,
+					(role, creationProcess1) -> generateIdentifierMapping( creationProcess )
+			);
+
+			if ( getVersionType() == null ) {
+				versionMapping = null;
+			}
+			else {
+				final int versionPropertyIndex = getVersionProperty();
+				final String versionPropertyName = getPropertyNames()[ versionPropertyIndex ];
+
+				versionMapping = creationProcess.processSubPart(
+						versionPropertyName,
+						(role, creationProcess1) -> generateVersionMapping( this, creationProcess )
+				);
+			}
+
+			if ( getDiscriminatorType() == null ) {
+				discriminatorMapping = null;
+			}
+			else {
+				discriminatorMapping = new EntityDiscriminatorMappingImpl(
+						this,
+						getRootTableName(),
+						getDiscriminatorColumnName(),
+						(BasicType) getDiscriminatorType()
+				);
+			}
+
+			// todo (6.0) : support for natural-id not yet implemented
+			naturalIdMapping = null;
+		}
+
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 
 		final PersistentClass bootEntityDescriptor = creationContext
 				.getBootModel()
 				.getEntityBinding( getEntityName() );
-
-		// todo (6.0) : should we create these only on root?
-
-		identifierMapping = creationProcess.processSubPart(
-				EntityIdentifierMapping.ROLE_LOCAL_NAME,
-				(role, creationProcess1) -> generateIdentifierMapping( creationProcess )
-		);
-
-		naturalIdMapping = null;
-
-		if ( getVersionType() == null ) {
-			versionMapping = null;
-		}
-		else {
-			final int versionPropertyIndex = getVersionProperty();
-			final String versionPropertyName = getPropertyNames()[ versionPropertyIndex ];
-
-			versionMapping = creationProcess.processSubPart(
-					versionPropertyName,
-					(role, creationProcess1) -> generateVersionMapping( this, creationProcess )
-			);
-		}
-
-		if ( getDiscriminatorType() == null ) {
-			discriminatorMapping = null;
-		}
-		else {
-			discriminatorMapping = new EntityDiscriminatorMappingImpl(
-					this,
-					getRootTableName(),
-					getDiscriminatorColumnName(),
-					(BasicType) getDiscriminatorType()
-			);
-		}
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
 
@@ -6117,17 +6126,24 @@ public abstract class AbstractEntityPersister
 			final NonIdentifierAttribute runtimeAttrDefinition = currentEntityMetamodel.getProperties()[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
-			declaredAttributeMappings.put(
-					runtimeAttrDefinition.getName(),
-					generateNonIdAttributeMapping(
-							runtimeAttrDefinition,
-							bootProperty,
-							stateArrayPosition++,
-							this,
-							creationProcess
-					)
-			);
+			if ( superMappingType != null && superMappingType.findAttributeMapping( bootProperty.getName() ) != null ) {
+				// its defined on the super-type, skip it here
+			}
+			else {
+				declaredAttributeMappings.put(
+						runtimeAttrDefinition.getName(),
+						generateNonIdAttributeMapping(
+								runtimeAttrDefinition,
+								bootProperty,
+								stateArrayPosition++,
+								this,
+								creationProcess
+						)
+				);
+			}
 		}
+
+		getAttributeMappings();
 
 		final ReflectionOptimizer reflectionOptimizer = representationStrategy.getReflectionOptimizer();
 
@@ -6170,6 +6186,21 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int getNumberOfDeclaredAttributeMappings() {
 		return declaredAttributeMappings.size();
+	}
+
+	@Override
+	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		return declaredAttributeMappings.values();
+	}
+
+	@Override
+	public void visitDeclaredAttributeMappings(Consumer<AttributeMapping> action) {
+		declaredAttributeMappings.forEach( (key,value) -> action.accept( value ) );
+	}
+
+	@Override
+	public EntityMappingType getSuperMappingType() {
+		return superMappingType;
 	}
 
 	@Override
@@ -6317,11 +6348,7 @@ public abstract class AbstractEntityPersister
 			attributeMappings = new ArrayList<>();
 
 			if ( superMappingType != null ) {
-				superMappingType.visitAttributeMappings(
-						attributeMappings::add,
-						// only walk up the hierarchy
-						superMappingType
-				);
+				superMappingType.visitAttributeMappings( attributeMappings::add );
 			}
 
 			attributeMappings.addAll( declaredAttributeMappings.values() );
@@ -6330,6 +6357,28 @@ public abstract class AbstractEntityPersister
 		}
 
 		return attributeMappings;
+	}
+
+	@Override
+	public AttributeMapping findDeclaredAttributeMapping(String name) {
+		return declaredAttributeMappings.get( name );
+	}
+
+	@Override
+	public AttributeMapping findAttributeMapping(String name) {
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
+		if ( superMappingType != null ) {
+			final AttributeMapping fromSuperType = superMappingType.findAttributeMapping( name );
+			if ( fromSuperType != null ) {
+				return fromSuperType;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -6397,7 +6446,6 @@ public abstract class AbstractEntityPersister
 			EntityMappingType treatTargetType) {
 		if ( getIdentifierMapping() instanceof FetchableContainer ) {
 			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
-			//		- todo (6.0) : determine whether this should call `#visitFetchables` or `#visitKeyFetchables`
 			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
 		}
 
@@ -6408,41 +6456,23 @@ public abstract class AbstractEntityPersister
 	public void visitFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
-		//noinspection unchecked
-		visitStateArrayContributors(
-				(Consumer) fetchableConsumer,
-				treatTargetType
-		);
-	}
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			fetchableConsumer.accept( (Fetchable) attributeMappings.get( i ) );
+		}
 
-	@Override
-	public void visitStateArrayContributors(
-			Consumer<StateArrayContributorMapping> mappingConsumer,
-			EntityMappingType targetType) {
-		//noinspection Convert2Lambda
-		visitAttributeMappings(
-				new Consumer<AttributeMapping>() {
-					@Override
-					public void accept(AttributeMapping attributeMapping) {
-						if ( attributeMapping instanceof StateArrayContributorMapping ) {
-							mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping );
-						}
-					}
-				},
-				targetType
-		);
+		if ( treatTargetType == null || treatTargetType.isTypeOrSuperType( this ) ) {
+			visitSubTypeAttributeMappings(
+					attributeMapping -> fetchableConsumer.accept( (Fetchable) attributeMapping )
+			);
+		}
 	}
 
 	@Override
 	public void visitAttributeMappings(
 			Consumer<AttributeMapping> action,
 			EntityMappingType targetType) {
-		visitSuperTypeAttributeMappings( action );
-
-		declaredAttributeMappings.values().forEach( action );
-
-		if ( targetType == null || targetType.isTypeOrSuperType( this ) ) {
-			visitSubTypeAttributeMappings( action );
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			action.accept( attributeMappings.get( i ) );
 		}
 	}
 
@@ -6456,8 +6486,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
 		if ( subclassMappingTypes != null ) {
-			subclassMappingTypes.values().forEach(
-					subclassMappingTypes -> subclassMappingTypes.visitSubTypeAttributeMappings( action )
+			subclassMappingTypes.forEach(
+					(s, subType) -> {
+						subType.visitDeclaredAttributeMappings( action );
+						subType.visitSubTypeAttributeMappings( action );
+					}
 			);
 		}
 	}

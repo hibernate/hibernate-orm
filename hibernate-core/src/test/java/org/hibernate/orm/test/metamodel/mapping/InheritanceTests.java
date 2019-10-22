@@ -72,36 +72,13 @@ public class InheritanceTests {
 		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 	}
 
-	@BeforeEach
-	public void createTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.persist( new DomesticCustomer( 1, "domestic", "123" ) );
-					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
-				}
-		);
-	}
-
-	@AfterEach
-	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
-					);
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
-					);
-				}
-		);
-	}
-
 	@Test
-	@FailureExpected
+//	@FailureExpected
 	public void rootQueryExecutionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					{
+						// [name, taxId, vat]
 						final List<Customer> results = session.createQuery(
 								"select c from Customer c",
 								Customer.class
@@ -112,11 +89,15 @@ public class InheritanceTests {
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
-								assertThat( ( (DomesticCustomer) result ).getTaxId(), is( "123" ) );
+								final DomesticCustomer customer = (DomesticCustomer) result;
+								assertThat( customer.getName(), is( "domestic" ) );
+								assertThat( (customer).getTaxId(), is( "123" ) );
 							}
 							else {
 								assertThat( result.getId(), is( 2 ) );
-								assertThat( ( (ForeignCustomer) result ).getVat(), is( "987" ) );
+								final ForeignCustomer customer = (ForeignCustomer) result;
+								assertThat( customer.getName(), is( "foreign" ) );
+								assertThat( (customer).getVat(), is( "987" ) );
 							}
 						}
 
@@ -152,6 +133,30 @@ public class InheritanceTests {
 						assertThat( result.getName(), is( "foreign" ) );
 						assertThat( result.getVat(), is( "987" ) );
 					}
+				}
+		);
+	}
+
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist( new DomesticCustomer( 1, "domestic", "123" ) );
+					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
+				}
+		);
+	}
+
+	@AfterEach
+	public void cleanupTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
+							cust -> session.delete( cust )
+					);
+					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
+							cust -> session.delete( cust )
+					);
 				}
 		);
 	}

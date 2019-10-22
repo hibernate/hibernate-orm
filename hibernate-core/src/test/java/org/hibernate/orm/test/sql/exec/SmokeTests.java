@@ -7,14 +7,23 @@
 package org.hibernate.orm.test.sql.exec;
 
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Component;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.OtherEntity;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -46,7 +55,12 @@ import static org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender.MALE;
 				SmokeTests.BasicSetterBasedDto.class
 		}
 )
-@ServiceRegistry
+@ServiceRegistry(
+		settings = {
+				@ServiceRegistry.Setting( name = AvailableSettings.POOL_SIZE, value = "15" ),
+				@ServiceRegistry.Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" )
+		}
+)
 @SessionFactory( exportSchema = true )
 public class SmokeTests {
 
@@ -277,6 +291,60 @@ public class SmokeTests {
 					session.createQuery( "select e.simpleEntity from OtherEntity e" ).list();
 				}
 		);
+	}
+
+	@Test
+	public void testQueryConcurrency(SessionFactoryScope scope) throws InterruptedException {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		final int numberOfIterations = 400;
+		final int numberOfForks = 50;
+
+		final ExecutorService executor = Executors.newFixedThreadPool( 5 );
+
+		try {
+			for ( int f = 0; f < numberOfForks; f++ ) {
+				final ArrayList<Callable<String>> tasks = CollectionHelper.arrayList( numberOfIterations );
+
+				for ( int i = 0; i < numberOfIterations; i++ ) {
+					tasks.add( () -> executeQueriesForConcurrency( scope ) );
+				}
+
+				executor.invokeAll( tasks );
+			}
+		}
+		finally {
+			// make sure all iterations/tasks have completed
+			executor.shutdown();
+			executor.awaitTermination( 15, TimeUnit.SECONDS );
+		}
+	}
+
+	public String executeQueriesForConcurrency(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final QueryImplementor<Component> query1 = session.createQuery(
+							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
+							Component.class
+					);
+					query1.setParameter( "param", "a1" ).list();
+
+					final QueryImplementor<Component> query2 = session.createQuery(
+							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
+							Component.class
+					);
+					query2.setParameter( "param", "b1" ).list();
+
+					final QueryImplementor<Component> query3 = session.createQuery(
+							"select e from SimpleEntity e where e.component.attribute1 = :param",
+							Component.class
+					);
+					query3.setParameter( "param", "a1" ).list();
+				}
+		);
+
+		return null;
 	}
 
 

@@ -22,6 +22,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -76,6 +78,31 @@ public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMappin
 	}
 
 	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+
+		//noinspection unchecked
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				getJavaTypeDescriptor(),
+				navigablePath
+		);
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		resolveSqlSelection( tableGroup, creationState );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -104,6 +131,7 @@ public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMappin
 				creationState
 		);
 	}
+
 	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 

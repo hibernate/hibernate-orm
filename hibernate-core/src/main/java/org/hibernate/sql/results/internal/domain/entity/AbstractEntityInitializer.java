@@ -8,14 +8,12 @@ package org.hibernate.sql.results.internal.domain.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -35,8 +33,10 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -67,6 +67,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	// 		these
 
 	private final EntityPersister entityDescriptor;
+	private final EntityPersister rootEntityDescriptor;
 	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
 
@@ -76,7 +77,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final DomainResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 
-	private final Map<StateArrayContributorMapping, DomainResultAssembler> assemblerMap;
+	private final Map<AttributeMapping, DomainResultAssembler> assemblerMap;
 
 	// per-row state
 	private EntityPersister concreteDescriptor;
@@ -98,7 +99,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super( );
+
 		this.entityDescriptor = (EntityPersister) resultDescriptor.getEntityValuedModelPart().getEntityMappingType();
+
+		final String rootEntityName = entityDescriptor.getRootEntityName();
+		if ( rootEntityName == null || rootEntityName.equals( entityDescriptor.getEntityName() ) ) {
+			this.rootEntityDescriptor = entityDescriptor;
+		}
+		else {
+			this.rootEntityDescriptor = creationState.getSqlAstCreationContext().getDomainModel().findEntityDescriptor( rootEntityName );
+		}
+
 		this.navigablePath = navigablePath;
 		this.lockMode = lockMode;
 
@@ -135,13 +146,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		assemblerMap = new IdentityHashMap<>( entityDescriptor.getNumberOfAttributeMappings() );
 
-		entityDescriptor.visitStateArrayContributors(
-				attributeMapping -> {
+		entityDescriptor.visitFetchables(
+				fetchable -> {
+					final AttributeMapping attributeMapping = (AttributeMapping) fetchable;
+
 					// todo (6.0) : somehow we need to track whether all state is loaded/resolved
 					//		note that lazy proxies or uninitialized collections count against
 					//		that in the affirmative
 
-					final Fetch fetch = resultDescriptor.findFetch( attributeMapping.getAttributeName() );
+					final Fetch fetch = resultDescriptor.findFetch( fetchable.getFetchableName() );
 
 					final DomainResultAssembler stateAssembler;
 					if ( fetch == null ) {
@@ -156,7 +169,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					}
 
 					assemblerMap.put( attributeMapping, stateAssembler );
-				}
+				},
+				null
 		);
 
 		initializerConsumer.accept( this );
@@ -242,31 +256,33 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private EntityPersister determineConcreteEntityDescriptor(
 			RowProcessingState rowProcessingState,
-			SharedSessionContractImplementor persistenceContext) throws WrongClassException {
+			SharedSessionContractImplementor session) throws WrongClassException {
 		if ( discriminatorAssembler == null ) {
 			return entityDescriptor;
 		}
 
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		final Object discriminatorValue = discriminatorAssembler.assemble(
-//				rowProcessingState,
-//				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
-//		);
-//
-//		final String result = entityDescriptor.getDiscriminatorDescriptor()
-//				.getDiscriminatorMappings()
-//				.discriminatorValueToEntityName( discriminatorValue );
-//
-//		if ( result == null ) {
-//			// oops - we got an instance of another class hierarchy branch
-//			throw new WrongClassException(
-//					"Discriminator: " + discriminatorValue,
-//					entityKey.getIdentifier(),
-//					entityDescriptor.getEntityName()
-//			);
-//		}
-//
-//		return persistenceContext.getFactory().getMetamodel().findEntityDescriptor( result );
+		final Object discriminatorValue = discriminatorAssembler.assemble(
+				rowProcessingState,
+				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+		);
+
+		final String concreteEntityName = ( (Loadable) entityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
+
+		if ( concreteEntityName == null ) {
+			// oops - we got an instance of another class hierarchy branch
+			throw new WrongClassException(
+					"Discriminator: " + discriminatorValue,
+					entityKey.getIdentifier(),
+					entityDescriptor.getEntityName()
+			);
+		}
+
+		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
+
+		// verify that the `entityDescriptor` is either == concreteType or its super-type
+		assert concreteType.isTypeOrSuperType( entityDescriptor );
+
+		return concreteType;
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -454,12 +470,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		entityDescriptor.setIdentifier( entityInstance, entityIdentifier, session );
 
-		resolvedEntityState = new Object[ assemblerMap.size() ];
-		assemblerMap.forEach(
-				(key, value) -> resolvedEntityState[ key.getStateArrayPosition() ] = value.assemble( rowProcessingState )
+		resolvedEntityState = concreteDescriptor.extractConcreteTypeStateValues(
+				assemblerMap,
+				rowProcessingState
 		);
 
-		entityDescriptor.setPropertyValues( entityInstance, resolvedEntityState );
+		concreteDescriptor.setPropertyValues( entityInstance, resolvedEntityState );
 
 		persistenceContext.addEntity(
 				entityKey,
@@ -483,12 +499,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				version,
 				lockMode,
 				true,
-				entityDescriptor,
+				concreteDescriptor,
 				false
 		);
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
+		final EntityDataAccess cacheAccess = concreteDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
 
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
@@ -498,10 +514,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 
-			final CacheEntry entry = entityDescriptor.buildCacheEntry( entityInstance, resolvedEntityState, version, session );
+			final CacheEntry entry = concreteDescriptor.buildCacheEntry( entityInstance, resolvedEntityState, version, session );
 			final Object cacheKey = cacheAccess.generateCacheKey(
 					entityIdentifier,
-					entityDescriptor,
+					rootEntityDescriptor,
 					factory,
 					session.getTenantIdentifier()
 			);
@@ -512,11 +528,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			// 		2) Session#clear + some form of load
 			//
 			// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
-			if ( persistenceContext.wasInsertedDuringTransaction( entityDescriptor, entityIdentifier ) ) {
+			if ( persistenceContext.wasInsertedDuringTransaction( concreteDescriptor, entityIdentifier ) ) {
 				cacheAccess.update(
 						session,
 						cacheKey,
-						entityDescriptor.getCacheEntryStructure().structure( entry ),
+						rootEntityDescriptor.getCacheEntryStructure().structure( entry ),
 						version,
 						version
 				);
@@ -528,14 +544,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					final boolean put = cacheAccess.putFromLoad(
 							session,
 							cacheKey,
-							entityDescriptor.getCacheEntryStructure().structure( entry ),
+							rootEntityDescriptor.getCacheEntryStructure().structure( entry ),
 							version,
 							//useMinimalPuts( session, entityEntry )
 							false
 					);
 
 					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().entityCachePut( entityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
+						factory.getStatistics().entityCachePut( rootEntityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
 					}
 				}
 				finally {
@@ -554,7 +570,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		boolean isReallyReadOnly = isReadOnly( rowProcessingState, session );
-		if ( ! entityDescriptor.isMutable() ) {
+		if ( ! concreteDescriptor.isMutable() ) {
 			isReallyReadOnly = true;
 		}
 		else {
@@ -575,7 +591,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else {
 			//take a snapshot
 			TypeHelper.deepCopy(
-					entityDescriptor,
+					concreteDescriptor,
 					resolvedEntityState,
 					resolvedEntityState,
 					attributeMapping -> attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( concreteDescriptor ).isUpdatable()
@@ -583,7 +599,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 
-		entityDescriptor.afterInitialize( entityInstance, session );
+		concreteDescriptor.afterInitialize( entityInstance, session );
 
 		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 			EntityLoadingLogger.INSTANCE.debugf(
@@ -593,7 +609,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().loadEntity( entityDescriptor.getEntityName() );
+			factory.getStatistics().loadEntity( concreteDescriptor.getEntityName() );
 		}
 
 		postLoad( rowProcessingState );

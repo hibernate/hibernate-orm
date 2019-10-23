@@ -10,7 +10,36 @@ plugins {
 }
 
 if ( !JavaVersion.current().java8Compatible ) {
-    throw new GradleException( "Gradle must be run with Java 8" )
+    throw new GradleException( "Gradle must be run with Java 8 or later" )
+}
+
+// Consume the property 'testedJavaVersion' here and
+// set it on gradle.ext so that we can inspect the result in build.gradle.
+// We wouldn't be able to do that if we consumed
+// the property in base-information.gradle and set it on project.ext.
+
+if ( hasProperty( 'testedJavaVersion' ) ) {
+    logger.warn( "[WARN] Targeting Java version '$testedJavaVersion' in tests." )
+    gradle.ext.testedJavaVersion = testedJavaVersion
+    gradle.ext.testedJavaVersionAsEnum = JavaVersion.toVersion( testedJavaVersion )
+}
+else {
+    // We will simply use Gradle's JDK for compilation, tests and javadoc generation.
+    def major
+    if ( JavaVersion.current() == JavaVersion.VERSION_HIGHER) {
+        logger.warn( "Gradle does not support this JDK, because it is too recent; build is likely to fail." +
+                " To avoid failures, you should specify an older Java version in the 'testedJavaVersion' parameter." +
+                " Just append the following to your gradle command:" +
+                " '-PtestedJavaVersion=<major version of your newer JDK, e.g. 14>'" )
+        // Use a hack to retrieve the major as a string.
+        // This only works for Java 9+ (we're at least on Java 18 here).
+        gradle.ext.testedJavaVersion = System.getProperty( 'java.specification.version' )
+    }
+    else {
+        gradle.ext.testedJavaVersion = JavaVersion.current().getMajorVersion()
+    }
+
+    gradle.ext.testedJavaVersionAsEnum = JavaVersion.current()
 }
 
 include 'hibernate-core'

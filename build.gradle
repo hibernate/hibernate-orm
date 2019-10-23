@@ -58,7 +58,7 @@ task release {
 	// Force to release with JDK 8. Releasing with JDK 11 is not supported yet:
 	// - the hibernate-orm-modules tests do not run due to an issue with the ASM version currently used by Gradle
 	doFirst {
-		if ( !JavaVersion.current().isJava8() ) {
+		if ( !JavaVersion.current().isJava8() || !gradle.ext.testedJavaVersionAsEnum.isJava8() ) {
 			throw new IllegalStateException( "Please use JDK 8 to perform the release." )
 		}
 	}

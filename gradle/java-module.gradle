@@ -116,13 +116,13 @@ tasks.withType( JavaCompile ) {
 	targetCompatibility = project.baselineJavaVersion
 }
 
-if ( project.baselineJavaVersion != project.testedJavaVersion ) {
-	logger.info( "Forcing the target bytecode version for test classes to '$project.testedJavaVersion'" )
+if ( project.baselineJavaVersion != gradle.ext.testedJavaVersion ) {
+	logger.info( "Forcing the target bytecode version for test classes to '$gradle.ext.testedJavaVersion'" )
 
 	tasks.compileTestJava {
 		// For *tests only*, generate bytecode matching the Java version currently in use.
 		// This allows testing bytecode enhancement on the latest Java versions (13, 14, ...).
-		targetCompatibility = project.testedJavaVersion
+		targetCompatibility = gradle.ext.testedJavaVersion
 	}
 }
 

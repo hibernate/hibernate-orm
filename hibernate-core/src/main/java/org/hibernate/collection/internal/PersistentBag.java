@@ -202,9 +202,23 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		}
 		Map<Integer, List<Object>> map = new HashMap<>();
 		for (Object o : searchedBag) {
-			map.computeIfAbsent( elementType.getHashCode( o ), k -> new ArrayList<>() ).add( o );
+			map.computeIfAbsent( nullableHashCode(o , elementType), k -> new ArrayList<>() ).add( o );
 		}
 		return map;
+	}
+
+	/**
+	 * @param o
+	 * @param elementType
+	 * @return the default elementType hashcode of the object o, or null if the object is null
+	 */
+	private Integer nullableHashCode(Object o, Type elementType) {
+		if ( o == null ) {
+			return null;
+		}
+		else {
+			return elementType.getHashCode( o );
+		}
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -88,7 +89,7 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 
 	public void doBatchInsertUpdateJoined(int nEntities, int nBeforeFlush) {
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
 				e.getId();
@@ -106,7 +107,7 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 				"select e from Employee e" )
@@ -118,7 +119,7 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 				"select e from Employee e" )

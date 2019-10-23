@@ -109,6 +109,7 @@ ext {
             junit5_params : "org.junit.jupiter:junit-jupiter-params:${junit5Version}",
             junit:          "junit:junit:${junitVersion}",
             junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
+			junit_pcomms:   "org.junit.platform:junit-platform-commons:1.5.2",
 
             log4j:          "log4j:log4j:1.2.17",
 

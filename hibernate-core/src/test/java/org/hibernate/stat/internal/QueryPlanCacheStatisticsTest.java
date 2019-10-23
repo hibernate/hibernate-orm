@@ -18,6 +18,7 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -48,7 +49,7 @@ public class QueryPlanCacheStatisticsTest extends BaseEntityManagerFunctionalTes
 		SessionFactory sessionFactory = entityManagerFactory().unwrap( SessionFactory.class );
 		statistics = sessionFactory.getStatistics();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
 			for ( long i = 1; i <= 5; i++ ) {
 				if ( i % 3 == 0 ) {
 					entityManager.flush();

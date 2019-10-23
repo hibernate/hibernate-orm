@@ -19,6 +19,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.TestingUtil;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -32,6 +34,9 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 	@Override

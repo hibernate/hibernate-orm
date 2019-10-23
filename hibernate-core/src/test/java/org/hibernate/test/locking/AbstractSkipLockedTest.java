@@ -18,6 +18,7 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -40,7 +41,7 @@ public abstract class AbstractSkipLockedTest
 	@RequiresDialect({ SQLServer2005Dialect.class })
 	public void testSQLServerSkipLocked() {
 
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 			for ( long i = 1; i <= 10; i++ ) {
 				BatchJob batchJob = new BatchJob();
 				batchJob.setId( i );
@@ -73,7 +74,7 @@ public abstract class AbstractSkipLockedTest
 	@RequiresDialect({ PostgreSQL95Dialect.class })
 	public void testPostgreSQLSkipLocked() {
 
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 			for ( long i = 1; i <= 10; i++ ) {
 				BatchJob batchJob = new BatchJob();
 				batchJob.setId( i );
@@ -112,7 +113,7 @@ public abstract class AbstractSkipLockedTest
 	@RequiresDialect({ Oracle8iDialect.class })
 	public void testOracleSkipLocked() {
 
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 			for ( long i = 1; i <= 10; i++ ) {
 				BatchJob batchJob = new BatchJob();
 				batchJob.setId( i );
@@ -147,7 +148,7 @@ public abstract class AbstractSkipLockedTest
 	@RequiresDialect({ MySQL8Dialect.class })
 	public void testMySQLSkipLocked() {
 
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 			for ( long i = 1; i <= 10; i++ ) {
 				BatchJob batchJob = new BatchJob();
 				batchJob.setId( i );

@@ -19,7 +19,7 @@ import javax.persistence.TableGenerator;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -56,7 +56,7 @@ public class AssignedInitialValueTableGeneratorConfiguredTest extends BaseEntity
 
 	@Test
 	public void testTheGeneratedIdValuesAreCorrect() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
 			for ( long i = 0; i < 3; i++ ) {
 				Product product = new Product();
 				product.setName( "Hibernate " + i );

@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,7 @@ public class DB2390DialectTestCase extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void populateSchema() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
 			for ( int i = 0; i < 10; ++i ) {
 				final SimpleEntity simpleEntity = new SimpleEntity( i, "Entity" + i );
 				entityManager.persist( simpleEntity );

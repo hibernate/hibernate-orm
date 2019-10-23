@@ -5,6 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+import org.gradle.plugins.ide.eclipse.model.ProjectDependency
+ 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 description = 'Support for testing Hibernate ORM functionality'
@@ -41,6 +43,37 @@ dependencies {
 // resources inherently exclude sources
 sourceSets.test.resources {
     setSrcDirs( ['src/test/java'] )
+}
+
+tasks.eclipse.dependsOn(cleanEclipse)
+eclipse {
+	classpath {
+		file {
+			whenMerged { classpath ->
+				Set exclusionSourceSet = [
+					//May be a saide efect of 'gradlew_process_test_resources' on hibernate-core.gradle. It will be?!
+					'/org.eclipse.ui.externaltools.ExternalToolBuilder'
+				]
+				List newSourceSet = []
+				classpath.entries.each { item ->
+					if( !exclusionSourceSet.contains( item.path ) ) {
+						//println( 'INCLUDING:     ' + item )
+						newSourceSet.add( item )
+					} else {
+						//println( 'NOT INCLUDING: ' + item )
+					}
+				}
+				println( 'newSourceSet:' )
+				println( newSourceSet )
+				
+				def hibernateCore = new ProjectDependency('/hibernate-core')
+				newSourceSet += [
+					hibernateCore
+				]
+				classpath.entries = newSourceSet			
+			}
+		}
+	}
 }
 
 // todo : Fold into hibernate-core and publish in separate publications

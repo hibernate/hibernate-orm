@@ -28,6 +28,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -157,7 +158,7 @@ public class BatchFetchNotFoundIgnoreDefaultStyleTest extends BaseCoreFunctional
 	public void testMostNotFoundFromQuery() {
 
 		doInHibernate(
-				this::sessionFactory, session -> {
+				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 					// delete all but last Task entity
 					for ( int i = 0; i < 7; i++ ) {
 						session.delete( tasks.get( i ) );

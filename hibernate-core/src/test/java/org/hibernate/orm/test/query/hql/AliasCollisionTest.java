@@ -21,6 +21,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.ExpectedException;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -37,6 +39,9 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
  * @author Andrea Boriero
  */
 @SuppressWarnings("WeakerAccess")
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class AliasCollisionTest extends BaseSqmUnitTest {
 
 	@Override

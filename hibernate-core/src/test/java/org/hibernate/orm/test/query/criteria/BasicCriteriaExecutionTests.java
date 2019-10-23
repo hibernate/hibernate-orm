@@ -27,10 +27,15 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 
 /**
  * @author Steve Ebersole
  */
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

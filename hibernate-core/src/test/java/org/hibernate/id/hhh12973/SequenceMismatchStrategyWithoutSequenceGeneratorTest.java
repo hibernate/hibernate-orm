@@ -31,6 +31,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -105,7 +106,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends BaseEn
 
 		final int ITERATIONS = 51;
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
 			for ( int i = 1; i <= ITERATIONS; i++ ) {
 				ApplicationConfiguration model = new ApplicationConfiguration();
 

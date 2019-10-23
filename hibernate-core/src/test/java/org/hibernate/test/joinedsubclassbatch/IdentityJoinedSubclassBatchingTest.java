@@ -29,6 +29,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -92,7 +93,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 
 	public void doBatchInsertUpdateJoined(int nEntities, int nBeforeFlush) {
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
 				e.getId();
@@ -110,7 +111,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 					"select e from Employee e" )
@@ -122,7 +123,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 					"select e from Employee e" )
@@ -139,7 +140,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 	public void testAssertSubclassInsertedSuccessfullyAfterCommit() {
 		final int nEntities = 10;
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
 				e.setName( "Mark" );
@@ -157,7 +158,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			Assert.assertEquals( nEntities, numberOfInsertedEmployee );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 					"select e from Employee e" )
@@ -190,7 +191,7 @@ public class IdentityJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		} );
 
 
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 					"select e from Employee e" )

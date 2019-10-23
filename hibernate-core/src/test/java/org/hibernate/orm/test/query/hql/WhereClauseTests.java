@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -33,6 +35,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Gunnar Morling
  */
 @SuppressWarnings("WeakerAccess")
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Override

@@ -33,6 +33,8 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 import org.hibernate.testing.orm.junit.TestingUtil;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -49,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test

@@ -373,7 +373,7 @@ public class MetadataContext {
 		else if ( persistentClass.hasIdentifierMapper() ) {
 			@SuppressWarnings("unchecked")
 			final Iterator<Property> propertyIterator = persistentClass.getIdentifierMapper().getPropertyIterator();
-			final Set<SingularPersistentAttribute<?, ?>> idClassAttributes = (Set<SingularPersistentAttribute<?, ?>>) buildIdClassAttributes(
+			final Set<SingularPersistentAttribute<?, ?>> idClassAttributes = (Set<SingularPersistentAttribute<?, ?>>)(Object) buildIdClassAttributes(
 					identifiableType,
 					propertyIterator
 			);

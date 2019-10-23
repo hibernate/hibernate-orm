@@ -45,6 +45,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.endsWith;
@@ -69,6 +71,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		)
 )
 @SessionFactory
+@Tags({
+	@Tag("RunnableIdeTest"),
+})
 public class SmokeTests {
 	@Test
 	public void testSimpleHqlInterpretation(SessionFactoryScope scope) {

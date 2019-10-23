@@ -15,6 +15,7 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -46,7 +47,7 @@ public class HbmMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void prepareTest() {
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
 			TaskStatus taskStatus = new TaskStatus();
 			taskStatus.setName("Enabled");
 			taskStatus.setDisplayName("Enabled");

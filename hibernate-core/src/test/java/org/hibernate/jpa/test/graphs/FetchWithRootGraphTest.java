@@ -16,6 +16,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class FetchWithRootGraphTest extends BaseCoreFunctionalTestCase {
 
 	@Before
 	public void before() {
-		doInHibernate( this::sessionFactory, s -> {
+		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
 			for ( long i = 0; i < 10; ++i ) {
 				SimpleEntity sim = new SimpleEntity( i, "Entity #" + i );
 				EntityWithReference ref = new EntityWithReference( i, sim );

@@ -6463,7 +6463,6 @@ public abstract class AbstractEntityPersister
 			EntityMappingType treatTargetType) {
 		if ( treatTargetType == null ) {
 			getStaticFetchableList().forEach( fetchableConsumer );
-			staticFetchableList.forEach( fetchableConsumer );
 			// EARLY EXIT!!!
 			return;
 		}

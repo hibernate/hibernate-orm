@@ -199,9 +199,28 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		}
 		Map<Integer, List<Object>> map = new HashMap<>();
 		for (Object o : searchedBag) {
-			map.computeIfAbsent( elementType.getHashCode( o ), k -> new ArrayList<>() ).add( o );
+			map.computeIfAbsent( nullableHashCode(o , elementType), k -> new ArrayList<>() ).add( o );
 		}
 		return map;
+	}
+
+	/**
+	 * return the hashcode of the object or null if the object is null
+	 * this fix the regression found in HHH-13651 -  NPE on flushing when ElementCollection field contains null element
+	 * the previous implementation (pre - 5.4.4) allowed null element is the collections without
+	 * issue and knew to handle null element in the list to compute snapshot equality
+	 * @param o
+	 * @param elementType
+	 * @return the default elementType hashcode of the object or null if the object is null)
+	 * as it behave before fixing HHH-11032 in 5.4.4
+	 */
+	private Integer nullableHashCode(Object o, Type elementType){
+		if(o==null){
+			return null;
+		}
+		else {
+			return elementType.getHashCode(o);
+		}
 	}
 
 	@Override

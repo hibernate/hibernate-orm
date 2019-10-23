@@ -6055,6 +6055,7 @@ public abstract class AbstractEntityPersister
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
 	private List<AttributeMapping> attributeMappings;
+	private List<Fetchable> staticFetchableList;
 
 	private ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -6456,15 +6457,31 @@ public abstract class AbstractEntityPersister
 	public void visitFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			fetchableConsumer.accept( (Fetchable) attributeMappings.get( i ) );
+		if ( treatTargetType == null ) {
+			getStaticFetchableList().forEach( fetchableConsumer );
+			staticFetchableList.forEach( fetchableConsumer );
+			// EARLY EXIT!!!
+			return;
 		}
 
-		if ( treatTargetType == null || treatTargetType.isTypeOrSuperType( this ) ) {
+		//noinspection unchecked
+		attributeMappings.forEach( (Consumer) fetchableConsumer );
+
+		if ( treatTargetType.isTypeOrSuperType( this ) ) {
 			visitSubTypeAttributeMappings(
 					attributeMapping -> fetchableConsumer.accept( (Fetchable) attributeMapping )
 			);
 		}
+	}
+
+	private List<Fetchable> getStaticFetchableList() {
+		if ( staticFetchableList == null ) {
+			staticFetchableList = new ArrayList<>( attributeMappings.size() );
+			visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+
+			visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+		}
+		return staticFetchableList;
 	}
 
 	@Override

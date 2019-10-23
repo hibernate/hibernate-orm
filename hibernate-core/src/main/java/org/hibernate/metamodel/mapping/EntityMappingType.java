@@ -133,21 +133,19 @@ public interface EntityMappingType extends ManagedMappingType {
 		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
 		final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 
-		visitFetchables(
-				new Consumer<Fetchable>() {
+		visitStateArrayContributors(
+				new Consumer<StateArrayContributorMapping>() {
 					private int index;
 
 					@Override
-					public void accept(Fetchable fetchable) {
-						assert fetchable instanceof StateArrayContributorMapping;
-
-						final DomainResultAssembler assembler = assemblerMapping.get( fetchable );
+					public void accept(StateArrayContributorMapping attribute) {
+						final DomainResultAssembler assembler = assemblerMapping.get( attribute );
 						final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 
 						values[index++] = value;
+
 					}
-				},
-				null
+				}
 		);
 
 		return values;

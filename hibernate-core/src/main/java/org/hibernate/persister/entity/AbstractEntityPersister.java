@@ -6070,7 +6070,7 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		if ( superMappingType != null ) {
+		if ( superMappingType != null && shouldProcessSuperMapping() ) {
 			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
 
 			this.identifierMapping = superMappingType.getIdentifierMapping();
@@ -6097,7 +6097,7 @@ public abstract class AbstractEntityPersister
 				);
 			}
 
-			if ( getDiscriminatorType() == null ) {
+			if ( getDiscriminatorType() == null && shouldProcessSuperMapping() ) {
 				discriminatorMapping = null;
 			}
 			else {
@@ -6127,7 +6127,7 @@ public abstract class AbstractEntityPersister
 			final NonIdentifierAttribute runtimeAttrDefinition = currentEntityMetamodel.getProperties()[i];
 			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
 
-			if ( superMappingType != null && superMappingType.findAttributeMapping( bootProperty.getName() ) != null ) {
+			if ( superMappingType != null && superMappingType.findAttributeMapping( bootProperty.getName() ) != null && shouldProcessSuperMapping() ) {
 				// its defined on the super-type, skip it here
 			}
 			else {
@@ -6154,6 +6154,10 @@ public abstract class AbstractEntityPersister
 		else {
 			accessOptimizer = null;
 		}
+	}
+
+	protected boolean shouldProcessSuperMapping(){
+		return true;
 	}
 
 	@Override

@@ -14,6 +14,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -21,6 +23,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.Settings;
@@ -37,11 +40,27 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -220,6 +239,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassSpaces;
 	}
 
+	@Override
+	public String getRootTableName() {
+		return tableName;
+	}
+
 	public String getTableName() {
 		return subquery;
 	}
@@ -283,6 +307,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			select.setComment( "load " + getEntityName() );
 		}
 		return select.addCondition( getIdentifierColumnNames(), "=?" ).toStatementString();
+	}
+
+	@Override
+	protected boolean shouldProcessSuperMapping() {
+		return false;
 	}
 
 	protected String getDiscriminatorFormula() {

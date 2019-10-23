@@ -6,18 +6,22 @@ description = '(deprecated - use hibernate-core instead) Support for Java8-speci
 dependencies {
     compile( project( ':hibernate-core' ) )
 }
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// The OSGi JAR manifest support does not like a non-existent classes dir,
-// so make sure we dont use the OSGi one :)
+// Traditionally we used to not include any manifest attributes in this JAR
+// except "Manifest-Version"
+// Since it's a legacy JAR, let's continue that way until it's retired.
 
 jar {
-    manifest = null
+    manifest.attributes.removeAll { key, value -> key != "Manifest-Version" }
+    // Prevent BND from adding manifest attributes automatically
+    bnd( '-nobundles': 'true' )
 }
 
 sourcesJar {
-    manifest = null
+    manifest.attributes.removeAll { key, value -> key != "Manifest-Version" }
 }
 
 javadocJar {
-    manifest = null
+    manifest.attributes.removeAll { key, value -> key != "Manifest-Version" }
 }

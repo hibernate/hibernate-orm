@@ -217,7 +217,7 @@ task copyBundleResources (type: Copy) {
 processTestResources.dependsOn copyBundleResources
 
 task testJar(type: Jar, dependsOn: testClasses) {
-    classifier = 'test'
+    archiveClassifier.set( 'test' )
     from sourceSets.test.output
 }
 

@@ -6,19 +6,13 @@
  */
 package org.hibernate.orm.test.metamodel.mapping;
 
-import java.util.List;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.Table;
+import javax.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,27 +20,24 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.CoreMatchers;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = {
-				InheritanceTests.Customer.class,
-				InheritanceTests.DomesticCustomer.class,
-				InheritanceTests.ForeignCustomer.class
+				MappedSuperclassInheritanceTest.Customer.class,
+				MappedSuperclassInheritanceTest.DomesticCustomer.class,
+				MappedSuperclassInheritanceTest.ForeignCustomer.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class InheritanceTests {
+public class MappedSuperclassInheritanceTest {
+
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister customerDescriptor = scope.getSessionFactory()
@@ -59,51 +50,13 @@ public class InheritanceTests {
 				.getMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
-		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert ! customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert ! customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
+		assert customerDescriptor == null;
 
-		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert ! domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
+		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert ! foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
+		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-	}
-
-	@Test
-//	@FailureExpected
-	public void rootQueryExecutionTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					{
-						// [name, taxId, vat]
-						final List<Customer> results = session.createQuery(
-								"select c from Customer c",
-								Customer.class
-						).list();
-
-						assertThat( results.size(), is( 2 ) );
-
-						for ( Customer result : results ) {
-							if ( result.getId() == 1 ) {
-								assertThat( result, instanceOf( DomesticCustomer.class ) );
-								final DomesticCustomer customer = (DomesticCustomer) result;
-								assertThat( customer.getName(), is( "domestic" ) );
-								assertThat( (customer).getTaxId(), is( "123" ) );
-							}
-							else {
-								assertThat( result.getId(), is( 2 ) );
-								final ForeignCustomer customer = (ForeignCustomer) result;
-								assertThat( customer.getName(), is( "foreign" ) );
-								assertThat( (customer).getVat(), is( "987" ) );
-							}
-						}
-
-					}
-				}
-		);
 	}
 
 	@Test
@@ -151,20 +104,17 @@ public class InheritanceTests {
 	public void cleanupTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
-					);
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
-					);
+					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
+							.list()
+							.forEach( cust -> session.delete( cust ) );
+					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
+							.list()
+							.forEach( cust -> session.delete( cust ) );
 				}
 		);
 	}
 
-	@Entity( name = "Customer" )
-	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
-	@Table( name = "customer" )
-	@DiscriminatorColumn( name = "cust_type" )
+	@MappedSuperclass
 	public static abstract class Customer {
 		private Integer id;
 		private String name;
@@ -195,8 +145,7 @@ public class InheritanceTests {
 		}
 	}
 
-	@Entity( name = "DomesticCustomer" )
-	@DiscriminatorValue( "dc" )
+	@Entity(name = "DomesticCustomer")
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -217,8 +166,7 @@ public class InheritanceTests {
 		}
 	}
 
-	@Entity( name = "ForeignCustomer" )
-	@DiscriminatorValue( "fc" )
+	@Entity(name = "ForeignCustomer")
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 
@@ -240,4 +188,3 @@ public class InheritanceTests {
 	}
 
 }
-

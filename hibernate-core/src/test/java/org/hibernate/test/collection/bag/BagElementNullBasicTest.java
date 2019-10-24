@@ -9,6 +9,7 @@ package org.hibernate.test.collection.bag;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,6 +18,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +35,8 @@ public class BagElementNullBasicTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
-				AnEntity.class
+				AnEntity.class,
+				NullableElementsEntity.class
 		};
 	}
 
@@ -83,6 +88,19 @@ public class BagElementNullBasicTest extends BaseCoreFunctionalTestCase {
 					session.delete( e );
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13651")
+	public void addNullValueToNullableCollections() {
+		try (final Session s = sessionFactory().openSession()) {
+			final Transaction tx = s.beginTransaction();
+			NullableElementsEntity e = new NullableElementsEntity();
+			e.list.add( null );
+			s.persist( e );
+			s.flush();
+			tx.commit();
+		}
 	}
 
 	@Test
@@ -168,5 +186,18 @@ public class BagElementNullBasicTest extends BaseCoreFunctionalTestCase {
 		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn( name = "AnEntity_id" ) })
 		@OrderBy
 		private List<String> aCollection = new ArrayList<String>();
+	}
+
+	@Entity
+	@Table(name="NullableElementsEntity")
+	public static class NullableElementsEntity {
+		@Id
+		@GeneratedValue
+		private int id;
+
+		@ElementCollection
+		@CollectionTable(name="e_2_string", joinColumns=@JoinColumn(name="e_id"))
+		@Column(name="string_value", unique = false, nullable = true, insertable = true, updatable = true)
+		private List<String> list = new ArrayList<String>();
 	}
 }

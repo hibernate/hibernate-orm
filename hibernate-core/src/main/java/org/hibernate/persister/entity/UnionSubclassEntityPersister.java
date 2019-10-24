@@ -21,9 +21,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.Settings;
@@ -40,30 +38,25 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
-import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Implementation of the "table-per-concrete-class" or "roll-down" mapping
@@ -232,9 +225,30 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );
-
 	}
 
+	@Override
+	public TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationContext creationContext) {
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+
+		final TableReference tableReference = new TableReference(
+				getTableName(),
+				sqlAliasBase.generateNewAlias(),
+				false,
+				getFactory()
+		);
+		return new UnionTableGroup( navigablePath, tableReference, this );
+	}
+
+	@Override
 	public Serializable[] getQuerySpaces() {
 		return subclassSpaces;
 	}
@@ -244,18 +258,27 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableName;
 	}
 
+	@Override
 	public String getTableName() {
-		return subquery;
+		if ( hasSubclasses() ) {
+			return subquery;
+		}
+		else {
+			return tableName;
+		}
 	}
 
+	@Override
 	public Type getDiscriminatorType() {
 		return StandardBasicTypes.INTEGER;
 	}
 
+	@Override
 	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
+	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
 	}
@@ -264,10 +287,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassClosure;
 	}
 
+	@Override
 	public String getSubclassForDiscriminatorValue(Object value) {
 		return (String) subclassByDiscriminatorValue.get( value );
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return spaces;
 	}
@@ -276,37 +301,40 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
-	/**
-	 * Generate the SQL that selects a row by id
-	 */
-	protected String generateSelectString(LockMode lockMode) {
-		SimpleSelect select = new SimpleSelect( getFactory().getDialect() )
-				.setLockMode( lockMode )
-				.setTableName( getTableName() )
-				.addColumns( getIdentifierColumnNames() )
-				.addColumns(
-						getSubclassColumnClosure(),
-						getSubclassColumnAliasClosure(),
-						getSubclassColumnLazyiness()
-				)
-				.addColumns(
-						getSubclassFormulaClosure(),
-						getSubclassFormulaAliasClosure(),
-						getSubclassFormulaLazyiness()
+	@Override
+	public void setPropertyValues(Object object, Object[] values) {
+		if ( accessOptimizer != null ) {
+			accessOptimizer.setPropertyValues( object, values );
+		}
+		else {
+			if ( hasSubclasses() ) {
+				visitAttributeMappings(
+						attribute -> {
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
+						}
 				);
-		//TODO: include the rowids!!!!
-		if ( hasSubclasses() ) {
-			if ( isDiscriminatorFormula() ) {
-				select.addColumn( getDiscriminatorFormula(), getDiscriminatorAlias() );
 			}
 			else {
-				select.addColumn( getDiscriminatorColumnName(), getDiscriminatorAlias() );
+				visitFetchables(
+						fetchable -> {
+							final AttributeMapping attribute = (AttributeMapping) fetchable;
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
+
+						},
+						null
+				);
 			}
 		}
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
-			select.setComment( "load " + getEntityName() );
-		}
-		return select.addCondition( getIdentifierColumnNames(), "=?" ).toStatementString();
 	}
 
 	@Override
@@ -318,24 +346,29 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return null;
 	}
 
+	@Override
 	protected String getTableName(int j) {
 		return tableName;
 	}
 
+	@Override
 	protected String[] getKeyColumns(int j) {
 		return getIdentifierColumnNames();
 	}
 
+	@Override
 	protected boolean isTableCascadeDeleteEnabled(int j) {
 		return false;
 	}
 
+	@Override
 	protected boolean isPropertyOfTable(int property, int j) {
 		return true;
 	}
 
 	// Execute the SQL:
 
+	@Override
 	public String fromTableFragment(String name) {
 		return getTableName() + ' ' + name;
 	}
@@ -352,39 +385,55 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return filterFragment( alias );
 	}
 
+	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
 	}
 
+	@Override
 	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 		select.addColumn( name, getDiscriminatorColumnName(), getDiscriminatorAlias() );
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbersInSelect() {
 		return new int[getPropertySpan()];
 	}
 
+	@Override
 	protected int getSubclassPropertyTableNumber(int i) {
 		return 0;
 	}
 
+	@Override
 	public int getSubclassPropertyTableNumber(String propertyName) {
 		return 0;
 	}
 
+	@Override
 	public boolean isMultiTable() {
 		// This could also just be true all the time...
 		return isAbstract() || hasSubclasses();
 	}
 
+	@Override
+	protected void buildDiscriminatorMapping() {
+		if ( hasSubclasses() ) {
+			super.buildDiscriminatorMapping();
+		}
+	}
+
+	@Override
 	public int getTableSpan() {
 		return 1;
 	}
 
+	@Override
 	protected int[] getSubclassColumnTableNumberClosure() {
 		return new int[getSubclassColumnClosure().length];
 	}
 
+	@Override
 	protected int[] getSubclassFormulaTableNumberClosure() {
 		return new int[getSubclassFormulaClosure().length];
 	}
@@ -393,6 +442,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return new boolean[] {true};
 	}
 
+	@Override
 	protected int[] getPropertyTableNumbers() {
 		return new int[getPropertySpan()];
 	}
@@ -472,6 +522,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return buf.append( " )" ).toString();
 	}
 
+	@Override
 	protected String[] getSubclassTableKeyColumns(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -479,6 +530,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return getIdentifierColumnNames();
 	}
 
+	@Override
 	public String getSubclassTableName(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -486,10 +538,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return tableName;
 	}
 
+	@Override
 	public int getSubclassTableSpan() {
 		return 1;
 	}
 
+	@Override
 	protected boolean isClassOrSuperclassTable(int j) {
 		if ( j != 0 ) {
 			throw new AssertionFailure( "only one table" );
@@ -503,10 +557,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return getTableName();
 	}
 
+	@Override
 	public String[] getConstraintOrderedTableNameClosure() {
 		return constraintOrderedTableNames;
 	}
 
+	@Override
 	public String[][] getContraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
@@ -515,5 +571,4 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
 	}
-
 }

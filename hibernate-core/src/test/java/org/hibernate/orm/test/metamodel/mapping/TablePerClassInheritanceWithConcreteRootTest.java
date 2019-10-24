@@ -16,14 +16,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -36,17 +33,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel(
 		annotatedClasses = {
-				TablePerClassInheritanceTest.Customer.class,
-				TablePerClassInheritanceTest.DomesticCustomer.class,
-				TablePerClassInheritanceTest.ForeignCustomer.class
+				TablePerClassInheritanceWithConcreteRootTest.Customer.class,
+				TablePerClassInheritanceWithConcreteRootTest.DomesticCustomer.class,
+				TablePerClassInheritanceWithConcreteRootTest.ForeignCustomer.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-@Tags({
-	@Tag("RunnableIdeTest"),
-})
-public class TablePerClassInheritanceTest {
+public class TablePerClassInheritanceWithConcreteRootTest {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
@@ -80,7 +74,6 @@ public class TablePerClassInheritanceTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void rootQueryExecutionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -91,7 +84,7 @@ public class TablePerClassInheritanceTest {
 								Customer.class
 						).list();
 
-						assertThat( results.size(), is( 2 ) );
+						assertThat( results.size(), is( 3 ) );
 
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
@@ -100,11 +93,16 @@ public class TablePerClassInheritanceTest {
 								assertThat( customer.getName(), is( "domestic" ) );
 								assertThat( ( customer ).getTaxId(), is( "123" ) );
 							}
-							else {
+							else if ( result.getId() == 2 ) {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
 								assertThat( ( customer ).getVat(), is( "987" ) );
+							}
+							else {
+								assertThat( result.getId(), is( 3 ) );
+								final Customer customer = result;
+								assertThat( customer.getName(), is( "customer" ) );
 							}
 						}
 
@@ -114,7 +112,6 @@ public class TablePerClassInheritanceTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void subclassQueryExecutionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -145,24 +142,22 @@ public class TablePerClassInheritanceTest {
 		);
 	}
 
-//	@BeforeEach
+	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					session.persist( new Customer( 3, "customer" ) );
 					session.persist( new DomesticCustomer( 1, "domestic", "123" ) );
 					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
 				}
 		);
 	}
 
-//	@AfterEach
+	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-							cust -> session.delete( cust )
-					);
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
+					session.createQuery( "from Customer", Customer.class ).list().forEach(
 							cust -> session.delete( cust )
 					);
 				}
@@ -171,7 +166,7 @@ public class TablePerClassInheritanceTest {
 
 	@Entity(name = "Customer")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	public static abstract class Customer {
+	public static class Customer {
 		private Integer id;
 		private String name;
 

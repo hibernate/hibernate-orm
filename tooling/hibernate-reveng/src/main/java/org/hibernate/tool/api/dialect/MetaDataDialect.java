@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 
 /**
  * Interface for fetching metadata from databases.
@@ -22,7 +21,8 @@ public interface MetaDataDialect {
 
 	/**
 	 * Configure the metadatadialect. 
-	 * @param info a {@link ReverseEngineeringRuntimeInfo} to extract Connection and SQLExceptionConverter and other runtime info
+	 * @param connectionProvider a {@link ConnectionProvider} 
+     * @param sqlExceptionConverter a {@link SQLExceptionConverter}
 	 */
 	public void configure(ConnectionProvider connectionProvider, SQLExceptionConverter sqlExceptionConverter);
 	

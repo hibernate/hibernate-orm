@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
@@ -30,20 +31,23 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 	
 	private Connection connection;
 	private DatabaseMetaData metaData;
+	
+	private ConnectionProvider connectionProvider = null;
+	private SQLExceptionConverter exceptionConverter = null;
 
-	private ReverseEngineeringRuntimeInfo info;
+//	private ReverseEngineeringRuntimeInfo info;
 
 
 	public void configure(ReverseEngineeringRuntimeInfo info) {
-		this.info = info;
-				
+		this.connectionProvider = info.getConnectionProvider();	
+		this.exceptionConverter = info.getSQLExceptionConverter();
 	}
 	
 	public void close() {
 		metaData = null;
 		if(connection != null) {
 			try {
-				info.getConnectionProvider().closeConnection(connection);				
+				connectionProvider.closeConnection(connection);				
 			}
 			catch (SQLException e) {
 				throw getSQLExceptionConverter().convert(e, "Problem while closing connection", null);
@@ -51,7 +55,7 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 				connection = null;
 			}
 		}
-		info = null;		
+		connectionProvider = null;		
 	}
 	
 	protected DatabaseMetaData getMetaData() throws JdbcBinderException {
@@ -118,7 +122,7 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 
 	protected Connection getConnection() throws SQLException {
 		if(connection==null) {
-			connection = info.getConnectionProvider().getConnection();
+			connection = connectionProvider.getConnection();
 		}
 		return connection;
 	}
@@ -130,7 +134,7 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 	}
 	
 	protected SQLExceptionConverter getSQLExceptionConverter() {
-		return info.getSQLExceptionConverter();
+		return exceptionConverter;
 	}
 	
 	public boolean needQuote(String name) {

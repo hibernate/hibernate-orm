@@ -123,10 +123,6 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 		return connection;
 	}
 	
-	public ReverseEngineeringRuntimeInfo getReverseEngineeringRuntimeInfo() {
-		return info;
-	}
-	
 	public void close(Iterator<?> iterator) {
 		if(iterator instanceof ResultSetIterator) {
 			((ResultSetIterator)iterator).close();

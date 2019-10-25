@@ -3,6 +3,8 @@ package org.hibernate.tool.api.dialect;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 
 /**
@@ -22,7 +24,7 @@ public interface MetaDataDialect {
 	 * Configure the metadatadialect. 
 	 * @param info a {@link ReverseEngineeringRuntimeInfo} to extract Connection and SQLExceptionConverter and other runtime info
 	 */
-	public void configure(ReverseEngineeringRuntimeInfo info);
+	public void configure(ConnectionProvider connectionProvider, SQLExceptionConverter sqlExceptionConverter);
 	
 	/** 
 	 * Return iterator over the tables that mathces catalog, schema and table

@@ -53,7 +53,7 @@ public class JDBCReader {
 		try {
 			ReverseEngineeringRuntimeInfo info = 
 					ReverseEngineeringRuntimeInfo.createInstance(provider, sec, dbs);
-			getMetaDataDialect().configure(info);
+			getMetaDataDialect().configure(provider, sec);
 			revengStrategy.configure(info);
 			
 			Set<Table> hasIndices = new HashSet<Table>();

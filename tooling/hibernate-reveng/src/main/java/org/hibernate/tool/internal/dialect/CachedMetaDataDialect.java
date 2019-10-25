@@ -6,8 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 
 public class CachedMetaDataDialect implements MetaDataDialect {
 	
@@ -27,8 +28,10 @@ public class CachedMetaDataDialect implements MetaDataDialect {
 		delegate.close();
 	}
 
-	public void configure(ReverseEngineeringRuntimeInfo info) {
-        delegate.configure(info);       
+	public void configure(
+			ConnectionProvider connectionProvider, 
+			SQLExceptionConverter sqlExceptionConverter) {
+        delegate.configure(connectionProvider, sqlExceptionConverter);       
     }
 	
 	public void close(Iterator<?> iterator) {

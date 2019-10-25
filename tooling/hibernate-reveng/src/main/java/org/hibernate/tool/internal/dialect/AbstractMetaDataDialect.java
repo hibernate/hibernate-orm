@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.internal.reveng.JdbcBinderException;
 import org.jboss.logging.Logger;
 
@@ -38,9 +37,11 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 //	private ReverseEngineeringRuntimeInfo info;
 
 
-	public void configure(ReverseEngineeringRuntimeInfo info) {
-		this.connectionProvider = info.getConnectionProvider();	
-		this.exceptionConverter = info.getSQLExceptionConverter();
+	public void configure(
+			ConnectionProvider connectionProvider, 
+			SQLExceptionConverter sqlExceptionConverter) {
+		this.connectionProvider = connectionProvider;	
+		this.exceptionConverter = sqlExceptionConverter;
 	}
 	
 	public void close() {

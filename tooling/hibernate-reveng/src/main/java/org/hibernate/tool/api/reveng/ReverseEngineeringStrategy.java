@@ -26,7 +26,7 @@ public interface ReverseEngineeringStrategy {
 	 *  
 	 * @param runtimeInfo 
 	 */
-	public void configure(ReverseEngineeringRuntimeInfo runtimeInfo);
+	public void configure(DatabaseCollector databaseCollector);
 
 
 	/**

@@ -9,7 +9,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
+import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
@@ -71,8 +71,8 @@ public class DelegatingReverseEngineeringStrategy implements ReverseEngineeringS
 		return delegate==null?null:delegate.classNameToCompositeIdName(className);
 	}
 
-	public void configure(ReverseEngineeringRuntimeInfo runtimeInfo) {
-		if(delegate!=null) delegate.configure(runtimeInfo);		
+	public void configure(DatabaseCollector databaseCollector) {
+		if(delegate!=null) delegate.configure(databaseCollector);		
 	}
 
 	public void close() {

@@ -20,7 +20,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ProgressListener;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 
@@ -51,10 +50,8 @@ public class JDBCReader {
 		
 	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema, ProgressListener progress) {
 		try {
-			ReverseEngineeringRuntimeInfo info = 
-					ReverseEngineeringRuntimeInfo.createInstance(provider, sec, dbs);
 			getMetaDataDialect().configure(provider, sec);
-			revengStrategy.configure(info);
+			revengStrategy.configure(dbs);
 			
 			Set<Table> hasIndices = new HashSet<Table>();
 			

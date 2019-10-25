@@ -17,7 +17,7 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringRuntimeInfo;
+import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
@@ -35,7 +35,8 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 
 	private ReverseEngineeringSettings settings = new ReverseEngineeringSettings(this);
 
-	private ReverseEngineeringRuntimeInfo runtimeInfo;
+	private DatabaseCollector databaseCollector = null;
+	
 	static {
 		AUTO_OPTIMISTICLOCK_COLUMNS = new HashSet<String>();
 		AUTO_OPTIMISTICLOCK_COLUMNS.add("version");
@@ -176,8 +177,8 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 		return className + "Id"; 
 	}
 
-	public void configure(ReverseEngineeringRuntimeInfo rti) {
-		this.runtimeInfo = rti;		
+	public void configure(DatabaseCollector databaseCollector) {
+		this.databaseCollector = databaseCollector;		
 	}
 
 	public void close() {
@@ -220,7 +221,10 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 	}
 
 	public boolean isForeignKeyCollectionInverse(String name, TableIdentifier foreignKeyTable, List<?> columns, TableIdentifier foreignKeyReferencedTable, List<?> referencedColumns) {
-		Table fkTable = getRuntimeInfo().getTable(foreignKeyTable);
+		Table fkTable = databaseCollector.getTable(
+				foreignKeyTable.getSchema(),
+				foreignKeyTable.getCatalog(),
+				foreignKeyTable.getName());
 		if(fkTable==null) {
 			return true; // we don't know better
 		}
@@ -325,10 +329,6 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 
 	protected ReverseEngineeringStrategy getRoot() {
 		return settings.getRootStrategy();
-	}
-	
-	protected ReverseEngineeringRuntimeInfo getRuntimeInfo() {
-		return runtimeInfo;
 	}
 	
 	public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference) {

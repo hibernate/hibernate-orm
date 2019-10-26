@@ -1,4 +1,4 @@
-package org.hibernate.mvn;
+package org.hibernate.tool.maven;
 
 import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURCES;
 

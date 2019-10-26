@@ -1,4 +1,4 @@
-package org.hibernate.mvn;
+package org.hibernate.tool.maven;
 
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;

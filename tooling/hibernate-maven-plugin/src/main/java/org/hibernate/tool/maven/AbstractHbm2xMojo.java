@@ -1,4 +1,4 @@
-package org.hibernate.mvn;
+package org.hibernate.tool.maven;
 
 import java.io.File;
 import java.io.FileInputStream;

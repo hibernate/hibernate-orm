@@ -123,7 +123,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			}
 			else {
 
-				final boolean isEqual = !entityEntry.getPersister().getIdentifierType()
+				final boolean isEqual = entityEntry.getPersister().getIdentifierType()
 						.isEqual( requestedId, entityEntry.getId(), factory );
 
 				if ( isEqual ) {

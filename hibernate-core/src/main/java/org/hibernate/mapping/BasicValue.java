@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.sql.Types;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -17,6 +18,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.process.internal.EnumeratedValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
@@ -29,6 +31,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
@@ -42,8 +45,10 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.RowVersionTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -118,10 +123,15 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		this.propertyName = propertyName;
 	}
 
-	public void setEnumerationStyle(EnumType enumerationStyle) {
+	public void setEnumerationStyle(EnumType enumerationStyle, String enumJavaTypeName) {
 		this.enumerationStyle = enumerationStyle;
+		this.resolvedJavaClass = getBuildingContext().getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ClassLoaderService.class )
+				.classForName( enumJavaTypeName );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public EnumType getEnumerationStyle() {
 		return enumerationStyle;
 	}
@@ -157,6 +167,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		if ( explicitTypeName != null ) {
 			resolution = interpretExplicitlyNamedType(
 					explicitTypeName,
+					enumerationStyle,
+					resolvedJavaClass,
 					explicitJavaTypeAccess,
 					explicitSqlTypeAccess,
 					attributeConverterDescriptor,
@@ -178,6 +190,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					this,
 					() -> {
 						if ( resolvedJavaClass != null ) {
+							//noinspection unchecked
 							return getBuildingContext().getBootstrapContext()
 									.getTypeConfiguration()
 									.getJavaTypeDescriptorRegistry()
@@ -200,6 +213,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 								return basicType.getJavaTypeDescriptor();
 							}
 
+							//noinspection unchecked
 							return getBuildingContext().getBootstrapContext()
 									.getTypeConfiguration()
 									.getJavaTypeDescriptorRegistry()
@@ -228,8 +242,10 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	@SuppressWarnings("unchecked")
 	private static Resolution interpretExplicitlyNamedType(
 			String name,
-			Function<TypeConfiguration,JavaTypeDescriptor<?>> explicitJtdAccess,
-			Function<TypeConfiguration,SqlTypeDescriptor> explicitStdAccess,
+			EnumType enumerationStyle,
+			Class resolvedJavaClass,
+			Function<TypeConfiguration, JavaTypeDescriptor<?>> explicitJtdAccess,
+			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
 			ConverterDescriptor converterDescriptor,
 			MutabilityPlan explicitMutabilityPlan,
 			Properties localTypeParams,
@@ -269,6 +285,45 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					explicitMutabilityPlan,
 					stdIndicators,
 					context
+			);
+		}
+
+		if ( enumerationStyle != null ) {
+			assert resolvedJavaClass != null;
+			assert resolvedJavaClass.isEnum();
+
+			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final SqlTypeDescriptorRegistry stdRegistry = typeConfiguration.getSqlTypeDescriptorRegistry();
+
+			final EnumJavaTypeDescriptor domainJtd = (EnumJavaTypeDescriptor) jtdRegistry.getDescriptor( resolvedJavaClass );
+
+			final JavaTypeDescriptor jdbcJtd;
+			final SqlTypeDescriptor std;
+			final EnumValueConverter<?,?> valueConverter;
+
+			if ( enumerationStyle == EnumType.ORDINAL ) {
+				jdbcJtd = jtdRegistry.getDescriptor( Integer.class );
+				final SqlTypeDescriptor explicitStd = explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration );
+				std = explicitStd != null ? explicitStd : stdRegistry.getDescriptor( Types.INTEGER );
+				valueConverter = new OrdinalEnumValueConverter( domainJtd, std, jdbcJtd );
+			}
+			else {
+				jdbcJtd = jtdRegistry.getDescriptor( String.class );
+				std = jdbcJtd.getJdbcRecommendedSqlType( stdIndicators );
+				valueConverter = new NamedEnumValueConverter( domainJtd, std, jdbcJtd );
+			}
+
+			final CustomType valueMapper = new CustomType(
+					new org.hibernate.type.EnumType( resolvedJavaClass, valueConverter, typeConfiguration ),
+					typeConfiguration
+			);
+
+			return new EnumeratedValueResolution(
+					valueMapper,
+					domainJtd,
+					jdbcJtd,
+					std,
+					valueConverter
 			);
 		}
 

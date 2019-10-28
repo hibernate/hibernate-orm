@@ -36,6 +36,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	private final Object[] resultRow;
 
+	@SuppressWarnings("WeakerAccess")
 	public StandardRowReader(
 			List<DomainResultAssembler> resultAssemblers,
 			List<Initializer> initializers,
@@ -123,23 +124,23 @@ public class StandardRowReader<T> implements RowReader<T> {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// old
 
-		for ( Initializer initializer : initializers ) {
-			initializer.resolveKey( rowProcessingState );
+		for ( int i = 0; i < initializers.size(); i++ ) {
+			initializers.get( i ).resolveKey( rowProcessingState );
 		}
 
-		for ( Initializer initializer : initializers ) {
-			initializer.resolveInstance( rowProcessingState );
+		for ( int i = 0; i < initializers.size(); i++ ) {
+			initializers.get( i ).resolveInstance( rowProcessingState );
 		}
 
-		for ( Initializer initializer : initializers ) {
-			initializer.initializeInstance( rowProcessingState );
+		for ( int i = 0; i < initializers.size(); i++ ) {
+			initializers.get( i ).initializeInstance( rowProcessingState );
 		}
 	}
 
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
-		for ( Initializer initializer : initializers ) {
-			initializer.endLoading( processingState.getExecutionContext() );
+		for ( int i = 0; i < initializers.size(); i++ ) {
+			initializers.get( i ).endLoading( processingState.getExecutionContext() );
 		}
 
 		// todo : use Callback to execute AfterLoadActions

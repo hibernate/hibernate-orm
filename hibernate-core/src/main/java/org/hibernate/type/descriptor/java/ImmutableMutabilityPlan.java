@@ -16,6 +16,11 @@ import java.io.Serializable;
 public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
 	public static final ImmutableMutabilityPlan INSTANCE = new ImmutableMutabilityPlan();
 
+	public static <X> ImmutableMutabilityPlan<X> instance() {
+		//noinspection unchecked
+		return INSTANCE;
+	}
+
 	@Override
 	public boolean isMutable() {
 		return false;

@@ -6,12 +6,7 @@
  */
 package org.hibernate.sql.results.internal.domain.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockMode;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -37,8 +32,7 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 
 	private final EntityMappingType targetType;
 
-	private final List<DomainResult> attributeDomainResults;
-
+	@SuppressWarnings("WeakerAccess")
 	public AbstractEntityResultNode(
 			EntityValuedModelPart referencedModelPart,
 			LockMode lockMode,
@@ -47,6 +41,7 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 		this( referencedModelPart, lockMode, navigablePath, null, creationState );
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public AbstractEntityResultNode(
 			EntityValuedModelPart referencedModelPart,
 			LockMode lockMode,
@@ -93,21 +88,6 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 					creationState
 			);
 		}
-
-		// todo (6.0) : handle other special navigables such as discriminator, row-id, tenant-id, etc
-
-		attributeDomainResults = CollectionHelper.arrayList( entityDescriptor.getNumberOfAttributeMappings() );
-
-		entityDescriptor.visitAttributeMappings(
-				mapping -> attributeDomainResults.add(
-						mapping.createDomainResult(
-								navigablePath.append( mapping.getAttributeName() ),
-								entityTableGroup,
-								null,
-								creationState
-						)
-				)
-		);
 	}
 
 	@Override
@@ -129,14 +109,17 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 		return lockMode;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected DomainResult getIdentifierResult() {
 		return identifierResult;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected DomainResult getDiscriminatorResult() {
 		return discriminatorResult;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	protected DomainResult getVersionResult() {
 		return versionResult;
 	}

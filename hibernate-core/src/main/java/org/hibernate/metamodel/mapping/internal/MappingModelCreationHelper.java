@@ -10,29 +10,55 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.internal.StandardBagSemantics;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
+import org.hibernate.collection.internal.StandardListSemantics;
+import org.hibernate.collection.internal.StandardMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedSetSemantics;
+import org.hibernate.collection.internal.StandardSetSemantics;
+import org.hibernate.collection.internal.StandardSortedMapSemantics;
+import org.hibernate.collection.internal.StandardSortedSetSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.Array;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IdentifierBag;
+import org.hibernate.mapping.List;
+import org.hibernate.mapping.Map;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Set;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
@@ -41,8 +67,8 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -53,6 +79,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -580,4 +607,180 @@ public class MappingModelCreationHelper {
 
 		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
 	}
+
+	public static PluralAttributeMapping buildPluralAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			String tableExpression,
+			String[] attrColumnExpressions,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+
+		final Collection bootValueMapping = (Collection) bootProperty.getValue();
+
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+		final CollectionPersister collectionDescriptor = creationContext.getDomainModel().findCollectionDescriptor( bootValueMapping.getRole() );
+		assert collectionDescriptor != null;
+
+		final CollectionMappingType<?> collectionMappingType;
+		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
+
+		if ( bootValueMapping instanceof Array ) {
+			if ( bootValueMapping instanceof PrimitiveArray ) {
+				throw new NotYetImplementedFor6Exception();
+			}
+			else {
+				collectionMappingType = new CollectionMappingTypeImpl(
+						jtdRegistry.getDescriptor( Object[].class ),
+						StandardArraySemantics.INSTANCE
+				);
+			}
+		}
+		else if ( bootValueMapping instanceof Bag ) {
+			collectionMappingType = new CollectionMappingTypeImpl(
+					jtdRegistry.getDescriptor( java.util.Collection.class ),
+					StandardBagSemantics.INSTANCE
+			);
+		}
+		else if ( bootValueMapping instanceof IdentifierBag ) {
+			collectionMappingType = new CollectionMappingTypeImpl(
+					jtdRegistry.getDescriptor( java.util.Collection.class ),
+					StandardIdentifierBagSemantics.INSTANCE
+			);
+		}
+		else if ( bootValueMapping instanceof List ) {
+			collectionMappingType = new CollectionMappingTypeImpl(
+					jtdRegistry.getDescriptor( java.util.List.class ),
+					StandardListSemantics.INSTANCE
+			);
+		}
+		else if ( bootValueMapping instanceof Map ) {
+			if ( bootValueMapping.isSorted() ) {
+				collectionMappingType = new CollectionMappingTypeImpl(
+						jtdRegistry.getDescriptor( java.util.SortedMap.class ),
+						StandardSortedMapSemantics.INSTANCE
+				);
+			}
+			else {
+				collectionMappingType = new CollectionMappingTypeImpl(
+						jtdRegistry.getDescriptor( java.util.Map.class ),
+						bootValueMapping.hasOrder()
+								? StandardOrderedMapSemantics.INSTANCE
+								: StandardMapSemantics.INSTANCE
+				);
+			}
+		}
+		else if ( bootValueMapping instanceof Set ) {
+			if ( bootValueMapping.isSorted() ) {
+				collectionMappingType = new CollectionMappingTypeImpl(
+						jtdRegistry.getDescriptor( java.util.SortedSet.class ),
+						StandardSortedSetSemantics.INSTANCE
+				);
+			}
+			else {
+				collectionMappingType = new CollectionMappingTypeImpl(
+						jtdRegistry.getDescriptor( java.util.Set.class ),
+						bootValueMapping.hasOrder()
+								? StandardOrderedSetSemantics.INSTANCE
+								: StandardSetSemantics.INSTANCE
+				);
+			}
+		}
+		else {
+			throw new MappingException( "Unexpected org.hibernate.mapping.Collection impl : " +  bootValueMapping );
+		}
+
+		final StateArrayContributorMetadata contributorMetadata = new StateArrayContributorMetadata() {
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return ImmutableMutabilityPlan.instance();
+			}
+
+			@Override
+			public boolean isNullable() {
+				return bootProperty.isOptional();
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return bootProperty.isInsertable();
+			}
+
+			@Override
+			public boolean isUpdatable() {
+				return bootProperty.isUpdateable();
+			}
+
+			@Override
+			public boolean isIncludedInDirtyChecking() {
+				return false;
+			}
+
+			@Override
+			public boolean isIncludedInOptimisticLocking() {
+				return bootProperty.isOptimisticLocked();
+			}
+		};
+
+		final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
+				( (OuterJoinLoadable) declaringType ).getFetchMode( stateArrayPosition ),
+				collectionDescriptor.getCollectionType(),
+				creationContext.getSessionFactory()
+		);
+
+		return new PluralAttributeMappingImpl(
+				attrName,
+				propertyAccess,
+				entityMappingType -> contributorMetadata,
+				collectionMappingType,
+				stateArrayPosition,
+				tableExpression,
+				attrColumnExpressions,
+				null,
+				null,
+				new FetchStrategy(
+						FetchStrategyHelper.determineFetchTiming(
+								style,
+								collectionDescriptor.getCollectionType(),
+								creationContext.getSessionFactory()
+						),
+						style
+				),
+				cascadeStyle,
+				declaringType,
+				collectionDescriptor
+		);
+	}
+
+	private static class CollectionMappingTypeImpl implements CollectionMappingType {
+		private final JavaTypeDescriptor collectionJtd;
+		private final CollectionSemantics semantics;
+
+		@SuppressWarnings("WeakerAccess")
+		public CollectionMappingTypeImpl(
+				JavaTypeDescriptor collectionJtd,
+				CollectionSemantics semantics) {
+			this.collectionJtd = collectionJtd;
+			this.semantics = semantics;
+		}
+
+		@Override
+		public CollectionSemantics getCCollectionSemantics() {
+			return semantics;
+		}
+
+		@Override
+		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+			return collectionJtd;
+		}
+	}
+
 }

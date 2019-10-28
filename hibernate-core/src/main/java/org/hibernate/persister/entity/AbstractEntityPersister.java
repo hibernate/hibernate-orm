@@ -5338,12 +5338,25 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, int i) {
-		return getEntityTuplizer().getPropertyValue( object, i );
+		return attributeMappings.get( i ).getAttributeMetadataAccess()
+				.resolveAttributeMetadata( this )
+				.getPropertyAccess()
+				.getGetter()
+				.get( object );
 	}
 
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
-		return getEntityTuplizer().getPropertyValue( object, propertyName );
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			if ( attributeMappings.get( i ).getAttributeName().equals( propertyName ) ) {
+				return attributeMappings.get( i ).getAttributeMetadataAccess()
+						.resolveAttributeMetadata( this )
+						.getPropertyAccess()
+						.getGetter()
+						.get( object );
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -6309,6 +6322,19 @@ public abstract class AbstractEntityPersister
 					bootProperty,
 					declaringType,
 					(CompositeType) attrType,
+					tableExpression,
+					attrColumnNames,
+					propertyAccess,
+					tupleAttrDefinition.getCascadeStyle(),
+					creationProcess
+			);
+		}
+		else if ( attrType instanceof CollectionType ) {
+			return MappingModelCreationHelper.buildPluralAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					bootProperty,
+					declaringType,
 					tableExpression,
 					attrColumnNames,
 					propertyAccess,

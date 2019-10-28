@@ -49,6 +49,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.CharacterArrayNClobType;
 import org.hibernate.type.CharacterNCharType;
+import org.hibernate.type.EnumType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.PrimitiveCharacterArrayNClobType;
 import org.hibernate.type.SerializableToBlobType;
@@ -162,15 +163,15 @@ public class SimpleValueBinder {
 		}
 
 		Type annType = null;
-		if ( (!key && property.isAnnotationPresent( Type.class ))
-				|| (key && property.isAnnotationPresent( MapKeyType.class )) ) {
-			if ( key ) {
-				MapKeyType ann = property.getAnnotation( MapKeyType.class );
+
+		if ( key ) {
+			final MapKeyType ann = property.getAnnotation( MapKeyType.class );
+			if ( ann != null ) {
 				annType = ann.value();
 			}
-			else {
-				annType = property.getAnnotation( Type.class );
-			}
+		}
+		else {
+			annType = property.getAnnotation( Type.class );
 		}
 
 		if ( annType != null ) {
@@ -313,7 +314,8 @@ public class SimpleValueBinder {
 		}
 
 		if ( BinderHelper.ANNOTATION_STRING_DEFAULT.equals( type ) ) {
-			if ( returnedClassOrElement.isEnum() ) {
+			if ( this.enumerationStyle == null && returnedClassOrElement.isEnum() ) {
+				type = EnumType.class.getName();
 				this.enumerationStyle = determineEnumType( property, key );
 			}
 		}
@@ -439,15 +441,17 @@ public class SimpleValueBinder {
 		simpleValue = new BasicValue( buildingContext, table );
 
 		if ( enumerationStyle != null ) {
-			simpleValue.setEnumerationStyle( enumerationStyle );
+			simpleValue.setEnumerationStyle( enumerationStyle, returnedClassName );
 		}
 
 		if ( isVersion ) {
 			simpleValue.makeVersion();
 		}
+
 		if ( isNationalized ) {
 			simpleValue.makeNationalized();
 		}
+
 		if ( isLob ) {
 			simpleValue.makeLob();
 		}
@@ -502,9 +506,6 @@ public class SimpleValueBinder {
 					propertyName
 			);
 			simpleValue.setJpaAttributeConverterDescriptor( attributeConverterDescriptor );
-		}
-		else if ( enumerationStyle != null ) {
-			simpleValue.setEnumerationStyle( enumerationStyle );
 		}
 		else {
 

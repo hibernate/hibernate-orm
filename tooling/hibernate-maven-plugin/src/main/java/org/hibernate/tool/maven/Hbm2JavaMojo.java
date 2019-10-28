@@ -18,7 +18,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  * See: https://docs.jboss.org/tools/latest/en/hibernatetools/html_single/#d0e4821
  */
 @Mojo(name = "hbm2java", defaultPhase = GENERATE_SOURCES)
-public class Hbm2JavaMojo extends AbstractHbm2xMojo {
+public class Hbm2JavaMojo extends AbstractGenerationMojo {
 
     /** The directory into which the JPA entities will be generated. */
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/")

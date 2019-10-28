@@ -15,7 +15,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 
-public abstract class AbstractHbm2xMojo extends AbstractMojo {
+public abstract class AbstractGenerationMojo extends AbstractMojo {
 
     // For reveng strategy
     /** The default package name to use when mappings for classes are created. */

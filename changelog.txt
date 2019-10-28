@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.8.Final (October 28, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31804/tab/release-report-done
+
+** Bug
+    * [HHH-12965] - Hibernate Envers Audit tables are created with foreign key with the entity. Because of this I am not able to delete any entries from the entity tables.
+    * [HHH-13446] - java.lang.VerifyError from compile-time enhanced @Entity
+    * [HHH-13651] - NPE on flushing when ElementCollection field contains null element
+    * [HHH-13695] - DDL export forgets to close a Statement
+    * [HHH-13696] - Multiple OSGi bundles initializing concurrently would overlap classloaders
+
+** Improvement
+    * [HHH-13686] - Upgrade to Agroal 1.6
+
+
 Changes in 5.4.7.Final (October 21, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

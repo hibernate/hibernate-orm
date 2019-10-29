@@ -160,7 +160,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
 
 		entityEntryContext = new EntityEntryContext( this );
-		collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
 	}
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
@@ -247,7 +246,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext.clear();
 		parentsByChild = null;
 		entitySnapshotsByKey.clear();
-		collectionsByKey.clear();
+		collectionsByKey = null;
 		nonlazyCollections = null;
 		collectionEntries = null;
 		unownedCollections = null;
@@ -890,7 +889,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private void addCollection(PersistentCollection coll, CollectionEntry entry, Serializable key) {
 		getOrInitializeCollectionEntries().put( coll, entry );
 		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
-		final PersistentCollection old = collectionsByKey.put( collectionKey, coll );
+		final PersistentCollection old = addCollectionByKey( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {
 				throw new AssertionFailure( "bug adding collection twice" );
@@ -947,7 +946,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public PersistentCollection getCollection(CollectionKey collectionKey) {
-		return collectionsByKey.get( collectionKey );
+		return collectionsByKey == null ? null : collectionsByKey.get( collectionKey );
 	}
 
 	@Override
@@ -1099,7 +1098,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Map getCollectionsByKey() {
-		return collectionsByKey;
+		if ( collectionsByKey == null ) {
+			return Collections.emptyMap();
+		}
+		else {
+			return collectionsByKey;
+		}
 	}
 
 	@Override
@@ -1190,8 +1194,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public String toString() {
-		return "PersistenceContext[entityKeys=" + entitiesByKey.keySet()
+		if ( collectionsByKey == null ) {
+			return "PersistenceContext[entityKeys=" + entitiesByKey.keySet() + ",collectionKeys=[]]";
+		}
+		else {
+			return "PersistenceContext[entityKeys=" + entitiesByKey.keySet()
 				+ ",collectionKeys=" + collectionsByKey.keySet() + "]";
+		}
 	}
 
 	@Override
@@ -1569,13 +1578,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		entityEntryContext.serialize( oos );
 
-		oos.writeInt( collectionsByKey.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries" );
+		if ( collectionsByKey == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<CollectionKey,PersistentCollection> entry : collectionsByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( collectionsByKey.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries" );
+			}
+			for ( Map.Entry<CollectionKey, PersistentCollection> entry : collectionsByKey.entrySet() ) {
+				entry.getKey().serialize( oos );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		if ( collectionEntries == null ) {
@@ -1833,6 +1847,32 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		else {
 			return collectionEntries.remove( collection );
+		}
+	}
+
+	@Override
+	public void clearCollectionsByKey() {
+		if ( collectionsByKey != null ) {
+			//A valid alternative would be to set this to null, like we do on close.
+			//The difference being that in this case we expect the collection will be used again, so we bet that clear()
+			//might allow us to skip having to re-allocate the collection.
+			collectionsByKey.clear();
+		}
+	}
+
+	@Override
+	public PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection) {
+		if ( collectionsByKey == null ) {
+			collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
+		}
+		final PersistentCollection old = collectionsByKey.put( collectionKey, persistentCollection );
+		return old;
+	}
+
+	@Override
+	public void removeCollectionByKey(CollectionKey collectionKey) {
+		if ( collectionsByKey != null ) {
+			collectionsByKey.remove( collectionKey );
 		}
 	}
 

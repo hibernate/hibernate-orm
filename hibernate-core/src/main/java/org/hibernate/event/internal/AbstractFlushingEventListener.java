@@ -369,7 +369,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Post flush" );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		persistenceContext.getCollectionsByKey().clear();
+		persistenceContext.clearCollectionsByKey();
 		
 		// the database has changed now, so the subselect results need to be invalidated
 		// the batch fetching queues should also be cleared - especially the collection batch fetching one
@@ -390,7 +390,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								collectionEntry.getLoadedPersister(),
 								collectionEntry.getLoadedKey()
 						);
-						persistenceContext.getCollectionsByKey().put( collectionKey, persistentCollection );
+						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}
 				}, true
 		);

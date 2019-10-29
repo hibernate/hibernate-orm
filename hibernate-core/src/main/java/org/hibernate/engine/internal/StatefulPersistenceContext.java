@@ -157,8 +157,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		this.session = session;
 
 		entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
-		entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
-
 		entityEntryContext = new EntityEntryContext( this );
 	}
 
@@ -245,7 +243,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitiesByUniqueKey = null;
 		entityEntryContext.clear();
 		parentsByChild = null;
-		entitySnapshotsByKey.clear();
+		entitySnapshotsByKey = null;
 		collectionsByKey = null;
 		nonlazyCollections = null;
 		collectionEntries = null;
@@ -306,12 +304,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister) throws HibernateException {
 		final EntityKey key = session.generateEntityKey( id, persister );
-		final Object cached = entitySnapshotsByKey.get( key );
+		final Object cached = entitySnapshotsByKey == null ? null : entitySnapshotsByKey.get( key );
 		if ( cached != null ) {
 			return cached == NO_ROW ? null : (Object[]) cached;
 		}
 		else {
 			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
+			if ( entitySnapshotsByKey == null ) {
+				entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
+			}
 			entitySnapshotsByKey.put( key, snapshot == null ? NO_ROW : snapshot );
 			return snapshot;
 		}
@@ -370,7 +371,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object[] getCachedDatabaseSnapshot(EntityKey key) {
-		final Object snapshot = entitySnapshotsByKey.get( key );
+		final Object snapshot = entitySnapshotsByKey == null ? null : entitySnapshotsByKey.get( key );
 		if ( snapshot == NO_ROW ) {
 			throw new IllegalStateException(
 					"persistence context reported no row snapshot for "
@@ -412,7 +413,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		// Clear all parent cache
 		parentsByChild = null;
-		entitySnapshotsByKey.remove( key );
+		if ( entitySnapshotsByKey != null ) {
+			entitySnapshotsByKey.remove( key );
+		}
 		if ( nullifiableEntityKeys != null ) {
 			nullifiableEntityKeys.remove( key );
 		}
@@ -1567,13 +1570,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 
-		oos.writeInt( entitySnapshotsByKey.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries" );
+		if ( entitySnapshotsByKey == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<EntityKey,Object> entry : entitySnapshotsByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( entitySnapshotsByKey.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries" );
+			}
+			for ( Map.Entry<EntityKey,Object> entry : entitySnapshotsByKey.entrySet() ) {
+				entry.getKey().serialize( oos );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		entityEntryContext.serialize( oos );

@@ -384,8 +384,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEntity(EntityKey key, Object entity) {
 		entitiesByKey.put( key, entity );
-		if( batchFetchQueue != null ) {
-			getBatchFetchQueue().removeBatchLoadableEntityKey(key);
+		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
+		if ( fetchQueue != null ) {
+			fetchQueue.removeBatchLoadableEntityKey(key);
 		}
 	}
 
@@ -419,9 +420,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( nullifiableEntityKeys != null ) {
 			nullifiableEntityKeys.remove( key );
 		}
-		if( batchFetchQueue != null ) {
-			getBatchFetchQueue().removeBatchLoadableEntityKey( key );
-			getBatchFetchQueue().removeSubselect( key );
+		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
+		if ( fetchQueue != null ) {
+			fetchQueue.removeBatchLoadableEntityKey( key );
+			fetchQueue.removeSubselect( key );
 		}
 		return entity;
 	}
@@ -1044,9 +1046,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object removeProxy(EntityKey key) {
-		if ( batchFetchQueue != null ) {
-			batchFetchQueue.removeBatchLoadableEntityKey( key );
-			batchFetchQueue.removeSubselect( key );
+		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
+		if ( fetchQueue != null ) {
+			fetchQueue.removeBatchLoadableEntityKey( key );
+			fetchQueue.removeSubselect( key );
 		}
 		return removeProxyByKey( key );
 	}

@@ -81,9 +81,7 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
-			persistenceContext.getCollectionsByKey().remove(
-					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
-			);
+			persistenceContext.removeCollectionByKey( new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() ) );
 		}
 	}
 	

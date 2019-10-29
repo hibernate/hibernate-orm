@@ -525,7 +525,12 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the mapping from collection key to collection instance
+	 * @deprecated this method should be removed; alternative methods are available that better express the intent, allowing
+	 * for better optimisations. Not aggressively removing this as it's an SPI, but also useful for testing and other
+	 * contexts which are not performance sensitive.
+	 * N.B. This might return an immutable map: do not use for mutations!
 	 */
+	@Deprecated
 	Map getCollectionsByKey();
 
 	/**
@@ -768,6 +773,25 @@ public interface PersistenceContext {
 	 * @return the matching {@link CollectionEntry}, if any was removed.
 	 */
 	CollectionEntry removeCollectionEntry(PersistentCollection collection);
+
+	/**
+	 * Remove all state of the collections-by-key map.
+	 */
+	void clearCollectionsByKey();
+
+	/**
+	 * Adds a collection in the collections-by-key map.
+	 * @param collectionKey
+	 * @param persistentCollection
+	 * @return the previous collection, it the key was already mapped.
+	 */
+	PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection);
+
+	/**
+	 * Remove a collection-by-key mapping.
+	 * @param collectionKey the key to clear
+	 */
+	void removeCollectionByKey(CollectionKey collectionKey);
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

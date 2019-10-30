@@ -229,14 +229,23 @@ eclipse {
 			} else {
 				stringAttribute( key: 'org.eclipse.ui.externaltools.ATTR_LOCATION', value: file('../gradlew').absolutePath )
 			}
-			booleanAttribute( key:'org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND', value: false )
+			booleanAttribute( key: 'org.eclipse.debug.core.ATTR_REFRESH_RECURSIVE', value: false )
+			stringAttribute(
+					key: 'org.eclipse.debug.core.ATTR_REFRESH_SCOPE',
+					value: '\${working_set:<?xml version="1.0" encoding="UTF-8"?>\n' +
+					'<resources>\n' +
+					'<item path="/' + "${project.name}" + '/src/test/bundles" type="2"/>\n' +
+					'<item path="/' + "${project.name}" + '/src/test/resources" type="2"/>\n' +
+					'</resources>}'
+					)
+			booleanAttribute( key: 'org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND', value: false )
 			stringAttribute(
 				key: 'org.eclipse.ui.externaltools.ATTR_BUILD_SCOPE',
-				value: '\${working_set:<?xml version="1.0" encoding="UTF-8"?> \
-                        <resources> \
-                        <item path="/'+"${project.name}"+'/src/test/bundles" type="2"/> \
-                        <item path="/'+"${project.name}"+'/src/test/resources" type="2"/> \
-                        </resources>}'
+				value: '\${working_set:<?xml version="1.0" encoding="UTF-8"?>\n' +
+                       '<resources>\n' +
+                       '<item path="/' + "${project.name}" + '/src/test/bundles" type="2"/>\n' +
+                       '<item path="/' + "${project.name}" + '/src/test/resources" type="2"/>\n' +
+                       '</resources>}'
 			)
 			stringAttribute( key: 'org.eclipse.ui.externaltools.ATTR_RUN_BUILD_KINDS', value: 'incremental,auto,' )
 			stringAttribute( key: 'org.eclipse.ui.externaltools.ATTR_TOOL_ARGUMENTS', value: 'hibernate-core:processTestResources --no-daemon' )

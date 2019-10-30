@@ -19,7 +19,7 @@ import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_RESOU
  * See https://docs.jboss.org/tools/latest/en/hibernatetools/html_single/#d0e4651
  */
 @Mojo(name = "hbm2ddl", defaultPhase = GENERATE_RESOURCES)
-public class Hbm2DdlMojo extends AbstractGenerationMojo {
+public class GenerateDdlMojo extends AbstractGenerationMojo {
 
     /** The directory into which the DDLs will be generated. */
     @Parameter(defaultValue = "${project.build.directory}/generated-resources/")

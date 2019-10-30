@@ -37,7 +37,6 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
-import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -77,7 +76,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		EventSource session = event.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
+		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
 
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
@@ -397,6 +396,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContextInternal().getEntitiesByKey() ) );
+		session.getInterceptor().postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
 	}
+
 }

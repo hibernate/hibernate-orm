@@ -9,6 +9,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -486,7 +487,10 @@ public interface PersistenceContext {
 
 	/**
 	 * Get the mapping from key value to entity instance
+	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
+	 * for specific access needs. Consider using #iterateEntities instead.
 	 */
+	@Deprecated
 	Map getEntitiesByKey();
 
 	/**
@@ -792,6 +796,12 @@ public interface PersistenceContext {
 	 * @param collectionKey the key to clear
 	 */
 	void removeCollectionByKey(CollectionKey collectionKey);
+
+	/**
+	 * A read-only iterator on all entities managed by this persistence context
+	 * @return
+	 */
+	Iterator managedEntitiesIterator();
 
 	/**
 	 * Provides centralized access to natural-id-related functionality.

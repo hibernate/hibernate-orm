@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.stateless;
 
+import java.util.Collections;
 import java.util.function.Consumer;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -117,7 +118,15 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 		);
 		assertTrue(
 				"StatelessSession: PersistenceContext has not been cleared",
+				persistenceContextInternal.managedEntitiesIterator() == Collections.emptyIterator()
+		);
+		assertTrue(
+				"StatelessSession: PersistenceContext has not been cleared",
 				persistenceContextInternal.getCollectionsByKey().isEmpty()
+		);
+		assertTrue(
+				"StatelessSession: PersistenceContext has not been cleared",
+				persistenceContextInternal.getCollectionsByKey() == Collections.emptyMap()
 		);
 	}
 

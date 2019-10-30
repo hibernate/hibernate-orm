@@ -95,7 +95,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private SharedSessionContractImplementor session;
 
 	// Loaded entity instances, by EntityKey
-	private Map<EntityKey, Object> entitiesByKey;
+	private HashMap<EntityKey, Object> entitiesByKey;
 
 	// Loaded entity instances, by EntityUniqueKey
 	private Map<EntityUniqueKey, Object> entitiesByUniqueKey;
@@ -155,8 +155,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public StatefulPersistenceContext(SharedSessionContractImplementor session) {
 		this.session = session;
-
-		entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
 		entityEntryContext = new EntityEntryContext( this );
 	}
 
@@ -239,7 +237,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		arrayHolders = null;
-		entitiesByKey.clear();
+		entitiesByKey = null;
 		entitiesByUniqueKey = null;
 		entityEntryContext.clear();
 		parentsByChild = null;
@@ -383,33 +381,42 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addEntity(EntityKey key, Object entity) {
+		if ( entitiesByKey == null ) {
+			entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
+		}
 		entitiesByKey.put( key, entity );
 		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
 		if ( fetchQueue != null ) {
-			fetchQueue.removeBatchLoadableEntityKey(key);
+			fetchQueue.removeBatchLoadableEntityKey( key );
 		}
 	}
 
 	@Override
 	public Object getEntity(EntityKey key) {
-		return entitiesByKey.get( key );
+		return entitiesByKey == null ? null : entitiesByKey.get( key );
 	}
 
 	@Override
 	public boolean containsEntity(EntityKey key) {
-		return entitiesByKey.containsKey( key );
+		return entitiesByKey == null ? false : entitiesByKey.containsKey( key );
 	}
 
 	@Override
 	public Object removeEntity(EntityKey key) {
-		final Object entity = entitiesByKey.remove( key );
-		if ( entitiesByUniqueKey != null ) {
-			final Iterator itr = entitiesByUniqueKey.values().iterator();
-			while ( itr.hasNext() ) {
-				if ( itr.next() == entity ) {
-					itr.remove();
+		final Object entity;
+		if ( entitiesByKey != null ) {
+			entity = entitiesByKey.remove( key );
+			if ( entitiesByUniqueKey != null ) {
+				final Iterator itr = entitiesByUniqueKey.values().iterator();
+				while ( itr.hasNext() ) {
+					if ( itr.next() == entity ) {
+						itr.remove();
+					}
 				}
 			}
+		}
+		else {
+			entity = null;
 		}
 
 		// Clear all parent cache
@@ -757,6 +764,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
+		if ( entitiesByKey == null ) {
+			entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
+		}
 		entitiesByKey.put( key, entity );
 	}
 
@@ -1062,9 +1072,25 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return nullifiableEntityKeys;
 	}
 
+	/**
+	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
+	 * for specific access needs. Consider using #iterateEntities instead.
+	 * @return
+	 */
+	@Deprecated
 	@Override
 	public Map getEntitiesByKey() {
-		return entitiesByKey;
+		return entitiesByKey == null ? Collections.emptyMap() : entitiesByKey;
+	}
+
+	@Override
+	public Iterator managedEntitiesIterator() {
+		if ( entitiesByKey == null ) {
+			return Collections.emptyIterator();
+		}
+		else {
+			return entitiesByKey.values().iterator();
+		}
 	}
 
 	@Override
@@ -1200,13 +1226,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public String toString() {
-		if ( collectionsByKey == null ) {
-			return "PersistenceContext[entityKeys=" + entitiesByKey.keySet() + ",collectionKeys=[]]";
-		}
-		else {
-			return "PersistenceContext[entityKeys=" + entitiesByKey.keySet()
-				+ ",collectionKeys=" + collectionsByKey.keySet() + "]";
-		}
+		final String entityKeySet = entitiesByKey == null ? "[]" :  entitiesByKey.keySet().toString();
+		final String collectionsKeySet = collectionsByKey == null ? "[]" : collectionsByKey.keySet().toString();
+		return "PersistenceContext[entityKeys=" + entityKeySet + ", collectionKeys=" + collectionsKeySet + "]";
 	}
 
 	@Override
@@ -1503,7 +1525,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
-		final Object entity = entitiesByKey.remove( oldKey );
+		final Object entity = entitiesByKey == null ? null : entitiesByKey.remove( oldKey );
 		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
 		this.parentsByChild = null;
 
@@ -1536,13 +1558,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
-		oos.writeInt( entitiesByKey.size() );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries" );
+		if ( entitiesByKey == null ) {
+			oos.writeInt( 0 );
 		}
-		for ( Map.Entry<EntityKey,Object> entry : entitiesByKey.entrySet() ) {
-			entry.getKey().serialize( oos );
-			oos.writeObject( entry.getValue() );
+		else {
+			oos.writeInt( entitiesByKey.size() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries" );
+			}
+			for ( Map.Entry<EntityKey,Object> entry : entitiesByKey.entrySet() ) {
+				entry.getKey().serialize( oos );
+				oos.writeObject( entry.getValue() );
+			}
 		}
 
 		if ( entitiesByUniqueKey == null ) {

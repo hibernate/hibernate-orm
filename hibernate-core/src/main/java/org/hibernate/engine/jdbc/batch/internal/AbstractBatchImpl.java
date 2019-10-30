@@ -159,8 +159,12 @@ public abstract class AbstractBatchImpl implements Batch {
 			clearBatch( statement );
 			resourceRegistry.release( statement );
 		}
-		jdbcCoordinator.afterStatementExecution();
+		// IMPL NOTE: If the statements are not cleared and JTA is being used, then
+		//            jdbcCoordinator.afterStatementExecution() will abort the batch and a
+		//            warning will be logged. To avoid the warning, clear statements first,
+		//            before calling jdbcCoordinator.afterStatementExecution().
 		statements.clear();
+		jdbcCoordinator.afterStatementExecution();
 	}
 
 	protected void clearBatch(PreparedStatement statement) {

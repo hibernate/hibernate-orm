@@ -92,31 +92,42 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private static final int INIT_COLL_SIZE = 8;
 
+	/*
+		Eagerly Initialized Fields
+		the following fields are used in all circumstances, and are not worth (or not suited) to being converted into lazy
+	 */
 	private SharedSessionContractImplementor session;
+	private EntityEntryContext entityEntryContext;
+
+	/*
+		Everything else below should be carefully initialized only on first need;
+		this optimisation is very effective as null checks are free, while allocation costs
+		are very often the dominating cost of an application using ORM.
+		This is not general advice, but it's worth the added maintenance burden in this case
+		as this is a very central component of our library.
+	 */
 
 	// Loaded entity instances, by EntityKey
 	private HashMap<EntityKey, Object> entitiesByKey;
 
 	// Loaded entity instances, by EntityUniqueKey
-	private Map<EntityUniqueKey, Object> entitiesByUniqueKey;
-
-	private EntityEntryContext entityEntryContext;
+	private HashMap<EntityUniqueKey, Object> entitiesByUniqueKey;
 
 	// Entity proxies, by EntityKey
-	private ConcurrentMap<EntityKey, Object> proxiesByKey;
+	private ConcurrentReferenceHashMap<EntityKey, Object> proxiesByKey;
 
 	// Snapshots of current database state for entities
 	// that have *not* been loaded
-	private Map<EntityKey, Object> entitySnapshotsByKey;
+	private HashMap<EntityKey, Object> entitySnapshotsByKey;
 
 	// Identity map of array holder ArrayHolder instances, by the array instance
-	private Map<Object, PersistentCollection> arrayHolders;
+	private IdentityHashMap<Object, PersistentCollection> arrayHolders;
 
 	// Identity map of CollectionEntry instances, by the collection wrapper
 	private IdentityMap<PersistentCollection, CollectionEntry> collectionEntries;
 
 	// Collection wrappers, by the CollectionKey
-	private Map<CollectionKey, PersistentCollection> collectionsByKey;
+	private HashMap<CollectionKey, PersistentCollection> collectionsByKey;
 
 	// Set of EntityKeys of deleted objects
 	private HashSet<EntityKey> nullifiableEntityKeys;
@@ -126,15 +137,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// A list of collection wrappers that were instantiating during result set
 	// processing, that we will need to initialize at the end of the query
-	private List<PersistentCollection> nonlazyCollections;
+	private ArrayList<PersistentCollection> nonlazyCollections;
 
 	// A container for collections we load up when the owning entity is not
 	// yet loaded ... for now, this is purely transient!
-	private Map<CollectionKey,PersistentCollection> unownedCollections;
+	private HashMap<CollectionKey,PersistentCollection> unownedCollections;
 
 	// Parent entities cache by their child for cascading
 	// May be empty or not contains all relation
-	private Map<Object,Object> parentsByChild;
+	private IdentityHashMap<Object,Object> parentsByChild;
 
 	private int cascading;
 	private int loadCounter;
@@ -147,7 +158,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private LoadContexts loadContexts;
 	private BatchFetchQueue batchFetchQueue;
 
-
 	/**
 	 * Constructs a PersistentContext, bound to the given session.
 	 *
@@ -155,7 +165,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public StatefulPersistenceContext(SharedSessionContractImplementor session) {
 		this.session = session;
-		entityEntryContext = new EntityEntryContext( this );
+		this.entityEntryContext = new EntityEntryContext( this );
 	}
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {

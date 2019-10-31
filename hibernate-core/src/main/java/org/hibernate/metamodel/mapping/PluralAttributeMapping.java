@@ -6,15 +6,39 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.function.Consumer;
+
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.spi.FetchableContainer;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeMapping extends AttributeMapping, StateArrayContributorMapping {
+public interface PluralAttributeMapping
+		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer {
+
 	CollectionPersister getCollectionDescriptor();
 
-	ModelPart getValueDescriptor();
+	ForeignKeyDescriptor getKeyDescriptor();
 
-	ModelPart getIndexDescriptor();
+	CollectionPart getIndexDescriptor();
+
+	CollectionPart getElementDescriptor();
+
+	CollectionIdentifierDescriptor getIdentifierDescriptor();
+
+	@Override
+	default void visitKeyFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		final CollectionPart indexDescriptor = getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			fetchableConsumer.accept( indexDescriptor );
+		}
+	}
+
+	@Override
+	default void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		fetchableConsumer.accept( getElementDescriptor() );
+	}
 }

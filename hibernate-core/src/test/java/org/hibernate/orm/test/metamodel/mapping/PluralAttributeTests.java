@@ -6,13 +6,16 @@
  */
 package org.hibernate.orm.test.metamodel.mapping;
 
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.AttributeConverter;
 import javax.persistence.CascadeType;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -21,13 +24,19 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.DomainMetamodel;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -36,6 +45,7 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				PluralAttributeTests.SimpleEntity.class,
 				PluralAttributeTests.EntityContainingLists.class,
+				PluralAttributeTests.EntityContainingSets.class,
 				PluralAttributeTests.Component.class
 		}
 )
@@ -46,51 +56,50 @@ public class PluralAttributeTests {
 
 	@Test
 	public void testLists(SessionFactoryScope scope) {
-		System.out.println( "test" );
+		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingLists.class );
+
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 6 ) );
+
+		final AttributeMapping listOfBasics = containerEntityDescriptor.findAttributeMapping( "listOfBasics" );
+		assertThat( listOfBasics, notNullValue() );
+
+		final AttributeMapping listOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "listOfConvertedBasics" );
+		assertThat( listOfConvertedBasics, notNullValue() );
+
+
+		final AttributeMapping listOfEnums = containerEntityDescriptor.findAttributeMapping( "listOfEnums" );
+		assertThat( listOfEnums, notNullValue() );
+
+		final AttributeMapping listOfComponents = containerEntityDescriptor.findAttributeMapping( "listOfComponents" );
+		assertThat( listOfComponents, notNullValue() );
+
+		final AttributeMapping listOfEntities = containerEntityDescriptor.findAttributeMapping( "listOfEntities" );
+		assertThat( listOfEntities, notNullValue() );
 	}
 
-	@BeforeAll
-	public void createTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final EntityContainingLists entityContainingLists = new EntityContainingLists( 1, "first" );
+	@Test
+	public void testSets(SessionFactoryScope scope) {
+		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingSets.class );
 
-					entityContainingLists.addBasic( "abc" );
-					entityContainingLists.addBasic( "def" );
-					entityContainingLists.addBasic( "ghi" );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 6 ) );
 
-					entityContainingLists.addConvertedBasic( EnumValue.TWO );
+		final AttributeMapping setOfBasics = containerEntityDescriptor.findAttributeMapping( "setOfBasics" );
+		assertThat( setOfBasics, notNullValue() );
 
-					entityContainingLists.addEnum( EnumValue.ONE );
-					entityContainingLists.addEnum( EnumValue.THREE );
+		final AttributeMapping setOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "setOfConvertedBasics" );
+		assertThat( setOfConvertedBasics, notNullValue() );
 
-					entityContainingLists.addComponent( new Component( "first-a1", "first-another-a1" ) );
-					entityContainingLists.addComponent( new Component( "first-a2", "first-another-a2" ) );
 
-					entityContainingLists.addSimpleEntity( new SimpleEntity( 1, "simple-1" ) );
-					entityContainingLists.addSimpleEntity( new SimpleEntity( 2, "simple-2" ) );
+		final AttributeMapping setOfEnums = containerEntityDescriptor.findAttributeMapping( "setOfEnums" );
+		assertThat( setOfEnums, notNullValue() );
 
-					session.save( entityContainingLists );
-				}
-		);
-	}
+		final AttributeMapping setOfComponents = containerEntityDescriptor.findAttributeMapping( "setOfComponents" );
+		assertThat( setOfComponents, notNullValue() );
 
-	@AfterAll
-	public void deleteTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.doWork(
-						conn -> {
-							try ( Statement stmnt = conn.createStatement() ) {
-								stmnt.execute( "delete from EntityContainingLists_listOfEnums" );
-								stmnt.execute( "delete from EntityContainingLists_listOfConvertedBasics" );
-								stmnt.execute( "delete from EntityContainingLists_listOfComponents" );
-								stmnt.execute( "delete from EntityContainingLists_listOfBasics" );
-								stmnt.execute( "delete from entity_containing_lists_simple_entity" );
-								stmnt.execute( "delete from entity_containing_lists" );
-							}
-						}
-				)
-		);
+		final AttributeMapping setOfEntities = containerEntityDescriptor.findAttributeMapping( "setOfEntities" );
+		assertThat( setOfEntities, notNullValue() );
 	}
 
 	public enum EnumValue {
@@ -198,6 +207,7 @@ public class PluralAttributeTests {
 
 		@ElementCollection
 		@OrderColumn
+		@Convert( converter = Converter.class )
 		public List<EnumValue> getListOfConvertedBasics() {
 			return listOfConvertedBasics;
 		}
@@ -263,6 +273,127 @@ public class PluralAttributeTests {
 				listOfEntities = new ArrayList<>();
 			}
 			listOfEntities.add( value );
+		}
+	}
+
+	@Entity( name = "EntityContainingSets" )
+	@Table( name = "entity_containing_sets" )
+	public static class EntityContainingSets {
+		private Integer id;
+		private String name;
+
+		private Set<String> setOfBasics;
+		private Set<EnumValue> setOfConvertedBasics;
+		private Set<EnumValue> setOfEnums;
+		private Set<Component> setOfComponents;
+		private Set<SimpleEntity> setOfEntities;
+
+		public EntityContainingSets() {
+		}
+
+		public EntityContainingSets(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@ElementCollection
+		public Set<String> getSetOfBasics() {
+			return setOfBasics;
+		}
+
+		public void setSetOfBasics(Set<String> setOfBasics) {
+			this.setOfBasics = setOfBasics;
+		}
+
+		public void addBasic(String value) {
+			if ( setOfBasics == null ) {
+				setOfBasics = new HashSet<>();
+			}
+			setOfBasics.add( value );
+		}
+
+		@ElementCollection
+		@Convert( converter = Converter.class )
+		public Set<EnumValue> getSetOfConvertedBasics() {
+			return setOfConvertedBasics;
+		}
+
+		public void setSetOfConvertedBasics(Set<EnumValue> setOfConvertedBasics) {
+			this.setOfConvertedBasics = setOfConvertedBasics;
+		}
+
+		public void addConvertedBasic(EnumValue value) {
+			if ( setOfConvertedBasics == null ) {
+				setOfConvertedBasics = new HashSet<>();
+			}
+			setOfConvertedBasics.add( value );
+		}
+
+		@ElementCollection
+		@Enumerated( EnumType.STRING )
+		public Set<EnumValue> getSetOfEnums() {
+			return setOfEnums;
+		}
+
+		public void setSetOfEnums(Set<EnumValue> setOfEnums) {
+			this.setOfEnums = setOfEnums;
+		}
+
+		public void addEnum(EnumValue value) {
+			if ( setOfEnums == null ) {
+				setOfEnums = new HashSet<>();
+			}
+			setOfEnums.add( value );
+		}
+
+		@ElementCollection
+		@Embedded
+		public Set<Component> getSetOfComponents() {
+			return setOfComponents;
+		}
+
+		public void setSetOfComponents(Set<Component> setOfComponents) {
+			this.setOfComponents = setOfComponents;
+		}
+
+		public void addComponent(Component value) {
+			if ( setOfComponents == null ) {
+				setOfComponents = new HashSet<>();
+			}
+			setOfComponents.add( value );
+		}
+
+		@OneToMany( cascade = CascadeType.ALL )
+		public Set<SimpleEntity> getSetOfEntities() {
+			return setOfEntities;
+		}
+
+		public void setSetOfEntities(Set<SimpleEntity> setOfEntities) {
+			this.setOfEntities = setOfEntities;
+		}
+
+		public void addSimpleEntity(SimpleEntity value) {
+			if ( setOfEntities == null ) {
+				setOfEntities = new HashSet<>();
+			}
+			setOfEntities.add( value );
 		}
 	}
 

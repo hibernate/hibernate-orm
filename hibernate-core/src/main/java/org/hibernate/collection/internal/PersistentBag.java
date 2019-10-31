@@ -22,6 +22,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -128,6 +130,24 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		// the multiplicity would be broken ... so use an idbag instead
 		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
 		if ( element != null ) {
+			bag.add( element );
+		}
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert indexAssembler == null;
+		assert identifierAssembler == null;
+
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element != null ) {
+			//noinspection unchecked
 			bag.add( element );
 		}
 		return element;

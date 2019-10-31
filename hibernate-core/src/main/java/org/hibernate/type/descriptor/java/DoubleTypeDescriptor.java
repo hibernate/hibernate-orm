@@ -10,13 +10,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Double} handling.
  *
  * @author Steve Ebersole
  */
-public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
+public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> implements Primitive<Double> {
 	public static final DoubleTypeDescriptor INSTANCE = new DoubleTypeDescriptor();
 
 	public DoubleTypeDescriptor() {
@@ -71,15 +72,25 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Double.class.isInstance( value ) ) {
+		if ( value instanceof Double ) {
 			return (Double) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if ( value instanceof Number ) {
 			return ( (Number) value ).doubleValue();
 		}
-		else if ( String.class.isInstance( value ) ) {
+		else if ( value instanceof String ) {
 			return Double.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return double.class;
+	}
+
+	@Override
+	public Double getDefaultValue() {
+		return 0.0;
 	}
 }

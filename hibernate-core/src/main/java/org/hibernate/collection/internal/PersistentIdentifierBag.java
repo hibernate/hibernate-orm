@@ -22,6 +22,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -369,6 +371,30 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			//maintain correct duplication if loaded in a cartesian product
 			values.add( element );
 		}
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert indexAssembler == null;
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		final Object identifier = identifierAssembler.assemble( rowProcessingState );
+
+		final Object old = identifiers.put(
+				values.size(),
+				identifier
+		);
+
+		if ( old == null ) {
+			//maintain correct duplication if loaded in a cartesian product
+			values.add( element );
+		}
+
 		return element;
 	}
 

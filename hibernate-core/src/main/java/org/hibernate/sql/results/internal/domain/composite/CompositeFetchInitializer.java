@@ -27,4 +27,9 @@ public class CompositeFetchInitializer
 			AssemblerCreationState creationState) {
 		super( resultDescriptor, fetchParentAccess, initializerConsumer, creationState );
 	}
+
+	@Override
+	public Object getParentKey() {
+		return getFetchParentAccess().getParentKey();
+	}
 }

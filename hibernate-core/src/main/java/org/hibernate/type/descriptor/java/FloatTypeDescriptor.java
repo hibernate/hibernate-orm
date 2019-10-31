@@ -10,13 +10,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Float} handling.
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
+public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> implements Primitive<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {
@@ -81,5 +82,15 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
 			return Float.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return float.class;
+	}
+
+	@Override
+	public Float getDefaultValue() {
+		return 0F;
 	}
 }

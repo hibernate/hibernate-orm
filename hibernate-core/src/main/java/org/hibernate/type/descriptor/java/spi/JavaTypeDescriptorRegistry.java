@@ -39,6 +39,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	@SuppressWarnings("unused")
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
+		JavaTypeDescriptorBaseline.prime( this );
 	}
 
 

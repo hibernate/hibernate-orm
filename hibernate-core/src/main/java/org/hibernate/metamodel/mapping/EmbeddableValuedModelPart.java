@@ -14,12 +14,13 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.FetchableContainer;
 
 /**
  * @author Steve Ebersole
  */
-public interface EmbeddableValuedModelPart extends ModelPart, FetchableContainer, TableGroupJoinProducer {
+public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
 	EmbeddableMappingType getEmbeddableTypeDescriptor();
 
 	/**

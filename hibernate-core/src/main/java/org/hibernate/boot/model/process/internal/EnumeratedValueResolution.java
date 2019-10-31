@@ -36,7 +36,8 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 		this.domainJtd = domainJtd;
 		this.jdbcJtd = jdbcJtd;
 		this.std = std;
-		this.valueConverter = valueConverter;
+//		this.valueConverter = valueConverter;
+		this.valueConverter = null;
 	}
 
 	@Override

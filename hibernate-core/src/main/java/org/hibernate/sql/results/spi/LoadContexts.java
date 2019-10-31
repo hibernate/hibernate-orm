@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.spi;
 
-import java.sql.ResultSet;
-
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -18,7 +16,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 
 /**
  * Maintains a Stack of processing state related to performing load operations.
- * The sCollectionLoadContexttate is defined by {@link JdbcValuesSourceProcessingState} which
+ * The state is defined by {@link JdbcValuesSourceProcessingState} which
  * encapsulates the data to be processed by the load whether the data comes from
  * a ResultSet or second-level cache hit.
  *

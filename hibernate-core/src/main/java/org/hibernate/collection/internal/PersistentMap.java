@@ -22,6 +22,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 
@@ -176,7 +178,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object put(Object key, Object value) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
@@ -186,6 +187,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 			}
 		}
 		initialize( true );
+		//noinspection unchecked
 		final Object old = map.put( key, value );
 		// would be better to use the element-type to determine
 		// whether the old and the new are equal here; the problem being
@@ -198,7 +200,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object remove(Object key) {
 		if ( isPutQueueEnabled() ) {
 			final Object old = readElementByIndex( key );
@@ -218,7 +219,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void putAll(Map puts) {
 		if ( puts.size() > 0 ) {
 			initialize( true );
@@ -230,7 +230,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void clear() {
 		if ( isClearQueueEnabled() ) {
 			queueOperation( new Clear() );
@@ -245,34 +244,29 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set keySet() {
 		read();
 		return new SetProxy( map.keySet() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Collection values() {
 		read();
 		return new SetProxy( map.values() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set entrySet() {
 		read();
 		return new EntrySetProxy( map.entrySet() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean empty() {
 		return map.isEmpty();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public String toString() {
 		read();
 		return map.toString();
@@ -281,7 +275,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	private transient List<Object[]> loadingEntries;
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object readFrom(
 			ResultSet rs,
 			CollectionPersister persister,
@@ -295,6 +288,30 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 			}
 			loadingEntries.add( new Object[] { index, element } );
 		}
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert elementAssembler != null;
+		assert indexAssembler != null;
+		assert identifierAssembler == null;
+
+		final Object element = elementAssembler.assemble( rowProcessingState );
+
+		if ( element != null ) {
+			final Object index = indexAssembler.assemble( rowProcessingState );
+			if ( loadingEntries == null ) {
+				loadingEntries = new ArrayList<>();
+			}
+			loadingEntries.add( new Object[] { index, element } );
+		}
+
 		return element;
 	}
 

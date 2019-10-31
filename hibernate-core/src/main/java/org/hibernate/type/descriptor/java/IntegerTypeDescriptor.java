@@ -10,13 +10,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Integer} handling.
  *
  * @author Steve Ebersole
  */
-public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
+public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> implements Primitive<Integer> {
 	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
 
 	public IntegerTypeDescriptor() {
@@ -81,5 +82,15 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
 			return Integer.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return int.class;
+	}
+
+	@Override
+	public Integer getDefaultValue() {
+		return 0;
 	}
 }

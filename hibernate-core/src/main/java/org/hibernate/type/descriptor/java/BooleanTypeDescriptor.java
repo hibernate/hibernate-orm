@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -16,7 +17,7 @@ import static java.lang.Boolean.TRUE;
  *
  * @author Steve Ebersole
  */
-public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
+public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> implements Primitive<Boolean> {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	private final char characterValueTrue;
@@ -129,5 +130,15 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 
 	public Long toLong(Boolean value) {
 		return (long) toInt( value );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return boolean.class;
+	}
+
+	@Override
+	public Boolean getDefaultValue() {
+		return FALSE;
 	}
 }

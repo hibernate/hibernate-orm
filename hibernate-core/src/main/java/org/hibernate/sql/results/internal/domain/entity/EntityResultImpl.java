@@ -25,8 +25,6 @@ import org.hibernate.sql.results.spi.EntityResult;
 public class EntityResultImpl extends AbstractEntityResultNode implements EntityResult {
 	private final String resultVariable;
 
-
-
 	public EntityResultImpl(
 			NavigablePath navigablePath,
 			EntityValuedModelPart entityValuedModelPart,

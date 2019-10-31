@@ -102,6 +102,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			CompositeType compositeType,
 			MappingModelCreationProcess creationProcess) {
 		final String containingTableExpression = valueMapping.getContainingTableExpression();
+
 		final List<String> mappedColumnExpressions = valueMapping.getMappedColumnExpressions();
 
 		final Type[] subtypes = compositeType.getSubtypes();
@@ -194,6 +195,11 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return attributeMappings.size();
 	}
 
 	@Override

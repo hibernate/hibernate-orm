@@ -35,7 +35,10 @@ import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -49,6 +52,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -174,10 +178,15 @@ public class SmokeTests {
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
 					final MappingModelExpressable selectedExpressable = selectedExpression.getExpressionType();
-					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
-					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
-					assertThat( basicType.getJavaTypeDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.INTEGER ) );
+					//assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
+//					assertThat( basicType.getJavaTypeDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
+//					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.INTEGER ) );
+					assertThat( selectedExpressable, instanceOf( CustomType.class ) );
+					final CustomType basicType = (CustomType) selectedExpressable;
+					final EnumType enumType = (EnumType) basicType.getUserType();
+					assertThat( enumType.getEnumValueConverter().getRelationalJavaDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
+					assertThat( enumType.sqlTypes()[0], is( Types.INTEGER ) );
+
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
@@ -185,8 +194,10 @@ public class SmokeTests {
 					final BasicResult scalarDomainResult = (BasicResult) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
 					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
-					assertThat( assembler.getValueConverter(), notNullValue() );
-					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
+//					assertThat( assembler.getValueConverter(), notNullValue() );
+//					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
+					assertThat( assembler.getValueConverter(), nullValue() );
+
 					final NavigablePath expectedSelectedPath = new NavigablePath(
 							org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity.class.getName(),
 							"e"
@@ -202,9 +213,10 @@ public class SmokeTests {
 					);
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
-					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
-					assertThat( valueConverter, notNullValue() );
-					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
+//					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
+//					assertThat( valueConverter, notNullValue() );
+//					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
+					assertThat( ( (BasicResultAssembler) resultAssembler ).getValueConverter(), nullValue() );
 
 					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
 							.interpret( sqlAst );

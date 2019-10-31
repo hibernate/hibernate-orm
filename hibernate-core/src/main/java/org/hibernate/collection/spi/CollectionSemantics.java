@@ -9,6 +9,7 @@ package org.hibernate.collection.spi;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -22,6 +23,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Incubating
 public interface CollectionSemantics<C> {
 	/**
 	 * Get the classification of collections described by this semantic

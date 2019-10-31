@@ -15,6 +15,8 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
  * @author Steve Ebersole
  */
 public interface FetchableContainer extends ModelPartContainer {
+	int getNumberOfFetchables();
+
 	default void visitKeyFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {

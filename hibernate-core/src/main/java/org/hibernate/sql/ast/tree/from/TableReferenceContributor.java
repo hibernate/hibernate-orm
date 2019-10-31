@@ -6,19 +6,22 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
 /**
  * @author Steve Ebersole
  */
 public interface TableReferenceContributor {
-//	/**
-//	 * Apply the Tables mapped by this producer to the collector as TableReferences
-//	 */
-//	void applyTableReferenceJoins(
-//			ColumnReferenceQualifier lhs,
-//			JoinType joinType,
-//			SqlAliasBase sqlAliasBase,
-//			TableReferenceJoinCollector joinCollector);
+	/**
+	 * Apply the Tables mapped by this producer to the collector as TableReferences
+	 */
+	void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext);
 }

@@ -499,6 +499,7 @@ public abstract class BaseSqmToSqlAstConverter
 				creationContext
 		);
 
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 		fromClauseIndex.register( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
 		// add any additional join restrictions

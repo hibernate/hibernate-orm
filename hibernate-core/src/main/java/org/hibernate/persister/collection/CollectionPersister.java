@@ -14,17 +14,26 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -62,7 +71,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister extends CollectionDefinition {
+public interface CollectionPersister extends CollectionDefinition, TableReferenceContributor {
 	/**
 	 * Initialize the given collection with the given key
 	 * TODO: add owner argument!!
@@ -103,6 +112,21 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * Return the element class of an array, or null otherwise
 	 */
 	Class getElementClass();
+
+	/**
+	 * The value converter for the element values of this collection
+	 */
+	default BasicValueConverter getElementConverter() {
+		return null;
+	}
+
+	/**
+	 * The value converter for index values of this collection (effectively map keys only)
+	 */
+	default BasicValueConverter getIndexConverter() {
+		return null;
+	}
+
 	/**
 	 * Read the key from a row of the JDBC <tt>ResultSet</tt>
 	 */
@@ -332,4 +356,30 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * @see CollectionClassification#SORTED_SET
 	 */
 	Comparator<?> getSortingComparator();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// mapping model
+
+	@Override
+	default void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception(
+				"The persister used for this collection [" + getNavigableRole()
+						+ "] does not yet implement support for use in SQL AST creation;"
+						+ " should implement `TableReferenceContributor#applyTableReferences`"
+		);
+	}
+
+	default CollectionSemantics getCollectionSemantics() {
+		throw new NotYetImplementedFor6Exception(
+				"The persister used for this collection [" + getNavigableRole()
+						+ "] does not yet implement support for `"
+						+ CollectionSemantics.class.getName() + "`"
+		);
+	}
 }

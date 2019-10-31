@@ -13,14 +13,17 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.SqlResultsLogger;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -36,13 +39,24 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class BasicValuedCollectionPart implements BasicValuedModelPart {
+public class BasicValuedCollectionPart implements CollectionPart, BasicValuedModelPart {
+
+	private final CollectionPersister collectionDescriptor;
+	private final Nature nature;
+	private final BasicType mapper;
+	private final BasicValueConverter valueConverter;
+
+	private final String tableExpression;
+	private final String columnExpression;
+
 	public BasicValuedCollectionPart(
+			CollectionPersister collectionDescriptor,
 			Nature nature,
 			BasicType mapper,
 			BasicValueConverter valueConverter,
 			String tableExpression,
 			String columnExpression) {
+		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.mapper = mapper;
 		this.valueConverter = valueConverter;
@@ -50,14 +64,15 @@ public class BasicValuedCollectionPart implements BasicValuedModelPart {
 		this.columnExpression = columnExpression;
 	}
 
-	enum Nature { ELEMENT, INDEX }
+	@Override
+	public Nature getNature() {
+		return nature;
+	}
 
-	private final Nature nature;
-	private final BasicType mapper;
-	private final BasicValueConverter valueConverter;
-
-	private final String tableExpression;
-	private final String columnExpression;
+	@Override
+	public BasicType getPartTypeDescriptor() {
+		return mapper;
+	}
 
 	@Override
 	public String getContainingTableExpression() {
@@ -91,7 +106,9 @@ public class BasicValuedCollectionPart implements BasicValuedModelPart {
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor()
+				getJavaTypeDescriptor(),
+				valueConverter,
+				navigablePath
 		);
 	}
 
@@ -100,9 +117,9 @@ public class BasicValuedCollectionPart implements BasicValuedModelPart {
 
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( tableExpression, columnExpression ),
+						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), columnExpression ),
 						sqlAstProcessingState -> new ColumnReference(
-								tableGroup.resolveTableReference( tableExpression ).getIdentificationVariable(),
+								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnExpression,
 								mapper,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
@@ -148,6 +165,12 @@ public class BasicValuedCollectionPart implements BasicValuedModelPart {
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		SqlResultsLogger.INSTANCE.debugf(
+				"Generating Fetch for collection-part : `%s` -> `%s`",
+				collectionDescriptor.getRole(),
+				nature.getName()
+		);
+
 		final SqlSelection sqlSelection = resolveSqlSelection(
 				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( fetchablePath.getParent() ),
 				creationState

@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Byte} handling.
@@ -13,7 +14,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
+public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> implements Primitive<Byte> {
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
 
 	public ByteTypeDescriptor() {
@@ -58,6 +59,7 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Byte wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -73,5 +75,15 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 			return Byte.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return byte.class;
+	}
+
+	@Override
+	public Byte getDefaultValue() {
+		return 0;
 	}
 }

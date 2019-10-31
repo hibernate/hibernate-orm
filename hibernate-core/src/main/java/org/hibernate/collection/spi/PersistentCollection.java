@@ -16,6 +16,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -172,6 +174,13 @@ public interface PersistentCollection {
 	 */
 	Object readFrom(ResultSet rs, CollectionPersister role, CollectionAliases descriptor, Object owner)
 			throws HibernateException, SQLException;
+
+	Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException;
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the

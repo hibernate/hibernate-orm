@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface TableGroupProducer extends ModelPartContainer {
+public interface TableGroupProducer extends ModelPartContainer, TableReferenceContributor {
 	/**
 	 * Get the "stem" used as the base for generating SQL table aliases for table
 	 * references that are part of the TableGroup being generated

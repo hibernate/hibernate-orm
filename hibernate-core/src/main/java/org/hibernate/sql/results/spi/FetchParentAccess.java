@@ -19,6 +19,8 @@ import org.hibernate.query.NavigablePath;
 public interface FetchParentAccess {
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
+	Object getParentKey();
+
 	/**
 	 * Access to the fetch's parent instance.
 	 */

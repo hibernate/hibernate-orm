@@ -6,12 +6,17 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.function.Consumer;
+
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -20,7 +25,18 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
+import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -33,16 +49,17 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final PropertyAccess propertyAccess;
 	private final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess;
 
+	private final ForeignKeyDescriptor fkDescriptor;
+	private final CollectionPart elementDescriptor;
+	private final CollectionPart indexDescriptor;
+	private final CollectionIdentifierDescriptor identifierDescriptor;
+
 	private final FetchStrategy fetchStrategy;
-
-	private final String tableExpression;
-	private final String[] attrColumnExpressions;
-
-	private final ModelPart elementDescriptor;
-	private final ModelPart indexDescriptor;
-
 	private final CascadeStyle cascadeStyle;
+
 	private final CollectionPersister collectionDescriptor;
+
+	private final String sqlAliasStem;
 
 	@SuppressWarnings("WeakerAccess")
 	public PluralAttributeMappingImpl(
@@ -51,10 +68,10 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess,
 			CollectionMappingType collectionMappingType,
 			int stateArrayPosition,
-			String tableExpression,
-			String[] attrColumnExpressions,
-			ModelPart elementDescriptor,
-			ModelPart indexDescriptor,
+			ForeignKeyDescriptor fkDescriptor,
+			CollectionPart elementDescriptor,
+			CollectionPart indexDescriptor,
+			CollectionIdentifierDescriptor identifierDescriptor,
 			FetchStrategy fetchStrategy,
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
@@ -63,19 +80,25 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.propertyAccess = propertyAccess;
 		this.stateArrayContributorMetadataAccess = stateArrayContributorMetadataAccess;
 		this.stateArrayPosition = stateArrayPosition;
-		this.tableExpression = tableExpression;
-		this.attrColumnExpressions = attrColumnExpressions;
+		this.fkDescriptor = fkDescriptor;
 		this.elementDescriptor = elementDescriptor;
 		this.indexDescriptor = indexDescriptor;
+		this.identifierDescriptor = identifierDescriptor;
 		this.fetchStrategy = fetchStrategy;
 		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
-	}
 
+		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
+	}
 
 	@Override
 	public CollectionMappingType getMappedTypeDescriptor() {
 		return (CollectionMappingType) super.getMappedTypeDescriptor();
+	}
+
+	@Override
+	public ForeignKeyDescriptor getKeyDescriptor() {
+		return fkDescriptor;
 	}
 
 	@Override
@@ -84,13 +107,18 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
-	public ModelPart getValueDescriptor() {
+	public CollectionPart getElementDescriptor() {
 		return elementDescriptor;
 	}
 
 	@Override
-	public ModelPart getIndexDescriptor() {
+	public CollectionPart getIndexDescriptor() {
 		return indexDescriptor;
+	}
+
+	@Override
+	public CollectionIdentifierDescriptor getIdentifierDescriptor() {
+		return identifierDescriptor;
 	}
 
 	@Override
@@ -128,8 +156,119 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchablePath );
 
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( fetchTiming == FetchTiming.IMMEDIATE || selected ) {
+			final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
+					fetchablePath,
+					p -> {
+						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+								fetchablePath,
+								sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+								null,
+								JoinType.LEFT,
+								lockMode,
+								creationState.getSqlAliasBaseManager(),
+								creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+								creationState.getSqlAstCreationState().getCreationContext()
+						);
+						return tableGroupJoin.getJoinedGroup();
+					}
+			);
+
+			return new EagerCollectionFetch(
+					fetchablePath,
+					this,
+					fkDescriptor.createDomainResult( fetchablePath, collectionTableGroup, creationState ),
+					getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
+					fetchParent,
+					creationState
+			);
+		}
+
+
+		return new DelayedCollectionFetch(
+				fetchablePath,
+				this,
+				true,
+				fetchParent
+		);
+	}
+
+	@Override
+	public String getSqlAliasStem() {
+		return sqlAliasStem;
+	}
+
+	@Override
+	public TableGroupJoin createTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			JoinType joinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final String aliasRoot = explicitSourceAlias == null ? sqlAliasStem : explicitSourceAlias;
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
+
+		final TableGroupBuilder tableGroupBuilder = TableGroupBuilder.builder(
+				navigablePath,
+				this,
+				lockMode,
+				sqlAliasBase,
+				creationContext.getSessionFactory()
+		);
+
+		applyTableReferences(
+				sqlAliasBase,
+				joinType,
+				tableGroupBuilder,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		return new TableGroupJoin( navigablePath, joinType, tableGroupBuilder.build() );
+	}
+
+	@Override
+	public void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		getCollectionDescriptor().applyTableReferences( sqlAliasBase, baseJoinType, collector, sqlExpressionResolver, creationContext );
+	}
+
+	@Override
+	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromName( name );
+		if ( nature == CollectionPart.Nature.ELEMENT ) {
+			return elementDescriptor;
+		}
+		else if ( nature == CollectionPart.Nature.INDEX ) {
+			return indexDescriptor;
+		}
+
+		return null;
+	}
+
+	@Override
+	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		consumer.accept( elementDescriptor );
+		if ( indexDescriptor != null ) {
+			consumer.accept( indexDescriptor );
+		}
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return indexDescriptor == null ? 1 : 2;
+	}
+
+	@Override
+	public String toString() {
+		return "PluralAttribute(" + getCollectionDescriptor().getRole() + ")";
 	}
 }

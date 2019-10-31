@@ -22,4 +22,9 @@ public class CompositeRootInitializer extends AbstractCompositeInitializer {
 			AssemblerCreationState creationState) {
 		super( resultDescriptor, null, initializerConsumer, creationState );
 	}
+
+	@Override
+	public Object getParentKey() {
+		return null;
+	}
 }

@@ -21,6 +21,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -187,6 +189,31 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 			tempList.add( i, null );
 		}
 		tempList.set( index, element );
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert elementAssembler != null;
+		assert indexAssembler != null;
+		assert identifierAssembler == null;
+
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		final int index = (int) indexAssembler.assemble( rowProcessingState );
+
+		for ( int i = tempList.size(); i<=index; i++) {
+			//noinspection unchecked
+			tempList.add( i, null );
+		}
+
+		//noinspection unchecked
+		tempList.set( index, element );
+
 		return element;
 	}
 

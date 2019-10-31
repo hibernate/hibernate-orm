@@ -7,13 +7,14 @@
 package org.hibernate.type.descriptor.java;
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Character} handling.
  *
  * @author Steve Ebersole
  */
-public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> {
+public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> implements Primitive<Character> {
 	public static final CharacterTypeDescriptor INSTANCE = new CharacterTypeDescriptor();
 
 	public CharacterTypeDescriptor() {
@@ -65,5 +66,15 @@ public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> {
 			return (char) nbr.shortValue();
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return char.class;
+	}
+
+	@Override
+	public Character getDefaultValue() {
+		return 0;
 	}
 }

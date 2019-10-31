@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
@@ -29,17 +29,20 @@ import org.hibernate.sql.results.spi.Initializer;
 public class CompositeFetch extends AbstractFetchParent implements CompositeResultMappingNode, Fetch {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
+	private final boolean nullable;
 
 	public CompositeFetch(
 			NavigablePath navigablePath,
-			EmbeddedAttributeMapping embeddedAttribute,
+			EmbeddableValuedModelPart embeddedPartDescriptor,
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
+			boolean nullable,
 			DomainResultCreationState creationState) {
-		super( embeddedAttribute, navigablePath );
+		super( embeddedPartDescriptor, navigablePath );
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
+		this.nullable = nullable;
 
 		creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
 				getNavigablePath(),
@@ -49,38 +52,34 @@ public class CompositeFetch extends AbstractFetchParent implements CompositeResu
 		afterInitialize( creationState );
 	}
 
-	public EmbeddedAttributeMapping getEmbeddedAttributeMapping() {
-		return (EmbeddedAttributeMapping) super.getFetchContainer();
-	}
-
 	@Override
 	public FetchParent getFetchParent() {
 		return fetchParent;
 	}
 
 	@Override
-	public EmbeddedAttributeMapping getFetchContainer() {
-		return getEmbeddedAttributeMapping();
+	public EmbeddableValuedModelPart getFetchContainer() {
+		return (EmbeddableValuedModelPart) super.getFetchContainer();
 	}
 
 	@Override
-	public EmbeddedAttributeMapping getReferencedMappingContainer() {
-		return getEmbeddedAttributeMapping();
+	public EmbeddableValuedModelPart getReferencedMappingContainer() {
+		return getFetchContainer();
 	}
 
 	@Override
 	public Fetchable getFetchedMapping() {
-		return getEmbeddedAttributeMapping();
+		return getFetchContainer();
 	}
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return getEmbeddedAttributeMapping().getEmbeddableTypeDescriptor();
+		return getFetchContainer().getEmbeddableTypeDescriptor();
 	}
 
 	@Override
 	public boolean isNullable() {
-		return getEmbeddedAttributeMapping().getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable();
+		return nullable;
 	}
 
 	@Override

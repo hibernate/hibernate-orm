@@ -31,6 +31,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -67,7 +68,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 @SuppressWarnings("unchecked")
 public class StandardSqmSelectToSqlAstConverter
 		extends BaseSqmToSqlAstConverter
-		implements DomainResultCreationState, org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter {
+		implements DomainResultCreationState, SqmSelectToSqlAstConverter {
 	private final LoadQueryInfluencers fetchInfluencers;
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
@@ -155,7 +156,7 @@ public class StandardSqmSelectToSqlAstConverter
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfAttributeMappings() );
+		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
 
 		//noinspection Convert2Lambda
 		final Consumer<Fetchable> fetchableConsumer = new Consumer<Fetchable>() {
@@ -214,7 +215,7 @@ public class StandardSqmSelectToSqlAstConverter
 
 		if ( fetchedJoin != null ) {
 			// there was an explicit fetch in the SQM
-			//		there should be a TableGroupJoin registered n SqmJoin registered for this `fetchablePath` already
+			//		there should be a TableGroupJoin registered for this `fetchablePath` already
 			//		because it
 			assert getFromClauseIndex().getTableGroup( fetchablePath ) != null;
 

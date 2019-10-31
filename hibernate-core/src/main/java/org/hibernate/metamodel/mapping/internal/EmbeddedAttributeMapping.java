@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -39,7 +40,9 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.results.internal.domain.composite.CompositeFetch;
 import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -162,6 +165,7 @@ public class EmbeddedAttributeMapping
 				this,
 				fetchParent,
 				fetchTiming,
+				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);
 	}
@@ -246,7 +250,43 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
+	public void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		getEmbeddableTypeDescriptor().visitAttributeMappings(
+				attrMapping -> {
+					if ( attrMapping instanceof TableGroupProducer ) {
+						( (TableGroupProducer) attrMapping ).applyTableReferences(
+								sqlAliasBase,
+								baseJoinType,
+								collector,
+								sqlExpressionResolver,
+								creationContext
+						);
+					}
+					else if ( attrMapping.getMappedTypeDescriptor() instanceof TableGroupProducer ) {
+						( (TableGroupProducer) attrMapping.getMappedTypeDescriptor() ).applyTableReferences(
+								sqlAliasBase,
+								baseJoinType,
+								collector,
+								sqlExpressionResolver,
+								creationContext
+						);
+					}
+				}
+		);
+	}
+
+	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 }

@@ -20,6 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -58,6 +59,11 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -702,6 +708,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
 			return null;
+		}
+
+		@Override
+		public void applyTableReferences(
+				SqlAliasBase sqlAliasBase,
+				JoinType baseJoinType,
+				TableReferenceCollector collector,
+				SqlExpressionResolver sqlExpressionResolver,
+				SqlAstCreationContext creationContext) {
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 	}
 

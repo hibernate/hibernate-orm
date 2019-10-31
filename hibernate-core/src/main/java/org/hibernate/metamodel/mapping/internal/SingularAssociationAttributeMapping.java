@@ -7,12 +7,12 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -29,7 +29,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
-			MappingType type,
+			EntityMappingType type,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
 		super(
@@ -44,8 +44,13 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
+	public EntityMappingType getMappedTypeDescriptor() {
+		return (EntityMappingType) super.getMappedTypeDescriptor();
+	}
+
+	@Override
 	public EntityMappingType getEntityMappingType() {
-		return null;
+		return getMappedTypeDescriptor();
 	}
 
 	@Override
@@ -57,6 +62,11 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return getEntityMappingType().getNumberOfFetchables();
 	}
 }

@@ -34,7 +34,6 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
@@ -195,6 +194,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@SuppressWarnings("unused")
 	public Object getKeyValue() {
 		return entityKey.getIdentifier();
+	}
+
+	@Override
+	public Object getParentKey() {
+		return getKeyValue();
 	}
 
 	@Override

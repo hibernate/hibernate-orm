@@ -24,7 +24,10 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CustomType;
+import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -72,8 +75,12 @@ public class SmokeTests {
 			final BasicValuedSingularAttributeMapping genderAttrMapping = (BasicValuedSingularAttributeMapping) genderPart;
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
 			assert "gender".equals( genderAttrMapping.getMappedColumnExpression() );
-			assert genderAttrMapping.getConverter() != null;
-			assert genderAttrMapping.getConverter() instanceof OrdinalEnumValueConverter;
+			assert genderAttrMapping.getMappedTypeDescriptor() instanceof CustomType;
+			final UserType userType = ( (CustomType) genderAttrMapping.getMappedTypeDescriptor() ).getUserType();
+			assert userType instanceof org.hibernate.type.EnumType;
+			final EnumValueConverter converter = ( (org.hibernate.type.EnumType) userType ).getEnumValueConverter();
+			assert converter != null;
+			assert converter instanceof OrdinalEnumValueConverter;
 		}
 
 		{
@@ -82,8 +89,13 @@ public class SmokeTests {
 			final BasicValuedSingularAttributeMapping attrMapping = (BasicValuedSingularAttributeMapping) part;
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender2".equals( attrMapping.getMappedColumnExpression() );
-			assert attrMapping.getConverter() != null;
-			assert attrMapping.getConverter() instanceof NamedEnumValueConverter;
+
+			assert attrMapping.getMappedTypeDescriptor() instanceof CustomType;
+			final UserType userType = ( (CustomType) attrMapping.getMappedTypeDescriptor() ).getUserType();
+			assert userType instanceof org.hibernate.type.EnumType;
+			final EnumValueConverter converter = ( (org.hibernate.type.EnumType) userType ).getEnumValueConverter();
+			assert converter != null;
+			assert converter instanceof NamedEnumValueConverter;
 		}
 
 		{

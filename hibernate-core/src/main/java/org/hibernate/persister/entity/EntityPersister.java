@@ -38,8 +38,13 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -92,6 +97,11 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 */
 	@Deprecated
 	void generateEntityDefinition();
+
+	@Override
+	default int getNumberOfFetchables() {
+		return getNumberOfAttributeMappings();
+	}
 
 	/**
 	 * Finish the initialization of this object. {@link #prepareMappingModel}
@@ -906,6 +916,4 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	default boolean canIdentityInsertBeDelayed() {
 		return false;
 	}
-
-
 }

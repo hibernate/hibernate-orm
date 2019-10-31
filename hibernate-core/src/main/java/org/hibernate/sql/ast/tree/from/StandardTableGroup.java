@@ -6,13 +6,18 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +28,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 	public StandardTableGroup(
 			NavigablePath navigablePath,
-			RootTableGroupProducer tableGroupProducer,
+			TableGroupProducer tableGroupProducer,
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableJoins,
@@ -32,11 +37,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
-	}
-
-	@Override
-	public RootTableGroupProducer getModelPart() {
-		return (RootTableGroupProducer) super.getModelPart();
 	}
 
 	@Override

@@ -6,13 +6,14 @@
  */
 package org.hibernate.type.descriptor.java;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Descriptor for {@link Short} handling.
  *
  * @author Steve Ebersole
  */
-public class ShortTypeDescriptor extends AbstractTypeDescriptor<Short> {
+public class ShortTypeDescriptor extends AbstractTypeDescriptor<Short> implements Primitive<Short> {
 	public static final ShortTypeDescriptor INSTANCE = new ShortTypeDescriptor();
 
 	public ShortTypeDescriptor() {
@@ -71,5 +72,15 @@ public class ShortTypeDescriptor extends AbstractTypeDescriptor<Short> {
 			return Short.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Class getPrimitiveClass() {
+		return short.class;
+	}
+
+	@Override
+	public Short getDefaultValue() {
+		return 0;
 	}
 }

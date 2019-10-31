@@ -184,7 +184,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -1187,20 +1189,23 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase, sqlExpressionResolver );
-
-		final List<TableReferenceJoin> joins = new ArrayList<>(  );
-		resolveTableReferenceJoins( primaryTableReference, sqlAliasBase, tableReferenceJoinType, joins::add, sqlExpressionResolver );
-
-		return new StandardTableGroup(
+		final TableGroupBuilder builder = TableGroupBuilder.builder(
 				navigablePath,
 				this,
 				lockMode,
-				primaryTableReference,
-				joins,
 				sqlAliasBase,
-				getFactory()
+				creationContext.getSessionFactory()
 		);
+
+		applyTableReferences(
+				sqlAliasBase,
+				tableReferenceJoinType,
+				builder,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		return builder.build();
 	}
 
 	protected TableReference resolvePrimaryTableReference(
@@ -1224,6 +1229,33 @@ public abstract class AbstractEntityPersister
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			collector.accept(
 					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase, sqlExpressionResolver )
+			);
+		}
+	}
+
+	@Override
+	public void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			org.hibernate.sql.ast.JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final TableReference primaryTableReference = resolvePrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver
+		);
+
+		collector.applyPrimaryReference( primaryTableReference );
+
+		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
+			collector.addTableReferenceJoin(
+					createTableReferenceJoin(
+							i,
+							primaryTableReference,
+							baseJoinType,
+							sqlAliasBase,
+							sqlExpressionResolver
+					)
 			);
 		}
 	}
@@ -6481,6 +6513,11 @@ public abstract class AbstractEntityPersister
 		}
 
 		// otherwise, nothing to do
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return attributeMappings.size();
 	}
 
 	@Override

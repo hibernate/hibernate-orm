@@ -21,6 +21,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 
@@ -339,6 +341,27 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		if ( element != null ) {
 			tempList.add( element );
 		}
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert elementAssembler != null;
+		assert indexAssembler == null;
+		assert identifierAssembler == null;
+
+		final Object element = elementAssembler.assemble( rowProcessingState );
+
+		if ( element != null ) {
+			//noinspection unchecked
+			tempList.add( element );
+		}
+
 		return element;
 	}
 

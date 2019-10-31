@@ -6,9 +6,12 @@
  */
 package org.hibernate.collection.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.mapping.Collection;
 
 /**
+ * Resolve the collection semantics for the given mapped collection
+ *
  * todo (6.0) ...
  *
  * Ideally would act as the contract that allows pluggable resolution of
@@ -17,6 +20,7 @@ import org.hibernate.mapping.Collection;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface CollectionSemanticsResolver {
 	// really need some form of access to the attribute site
 	CollectionSemantics resolveRepresentation(Collection bootDescriptor);

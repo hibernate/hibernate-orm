@@ -20,6 +20,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -206,9 +208,9 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean containsAll(Collection coll) {
 		read();
+		//noinspection unchecked
 		return list.containsAll( coll );
 	}
 
@@ -262,9 +264,9 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean retainAll(Collection coll) {
 		initialize( true );
+		//noinspection unchecked
 		if ( list.retainAll( coll ) ) {
 			dirty();
 			return true;
@@ -275,7 +277,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void clear() {
 		if ( isClearQueueEnabled() ) {
 			queueOperation( new Clear() );
@@ -290,7 +291,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object get(int index) {
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
@@ -300,7 +300,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object set(int index, Object value) {
 		if (index<0) {
 			throw new ArrayIndexOutOfBoundsException("negative index");
@@ -310,6 +309,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 
 		if ( old==UNKNOWN ) {
 			write();
+			//noinspection unchecked
 			return list.set( index, value );
 		}
 		else {
@@ -319,7 +319,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object remove(int index) {
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
@@ -338,45 +337,40 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void add(int index, Object value) {
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
 		write();
+		//noinspection unchecked
 		list.add( index, value );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public int indexOf(Object value) {
 		read();
 		return list.indexOf( value );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public int lastIndexOf(Object value) {
 		read();
 		return list.lastIndexOf( value );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public ListIterator listIterator() {
 		read();
 		return new ListIteratorProxy( list.listIterator() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public ListIterator listIterator(int index) {
 		read();
 		return new ListIteratorProxy( list.listIterator( index ) );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public java.util.List subList(int from, int to) {
 		read();
 		return new ListProxy( list.subList( from, to ) );
@@ -406,6 +400,32 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		}
 
 		list.set( index, element );
+		return element;
+	}
+
+	@Override
+	public Object readFrom(
+			RowProcessingState rowProcessingState,
+			DomainResultAssembler elementAssembler,
+			DomainResultAssembler indexAssembler,
+			DomainResultAssembler identifierAssembler,
+			Object owner) throws HibernateException {
+		assert elementAssembler != null;
+		assert indexAssembler != null;
+		assert identifierAssembler == null;
+
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		final int index = (int) indexAssembler.assemble( rowProcessingState );
+
+		//pad with nulls from the current last element up to the new index
+		for ( int i = list.size(); i<=index; i++) {
+			//noinspection unchecked
+			list.add( i, null );
+		}
+
+		//noinspection unchecked
+		list.set( index, element );
+
 		return element;
 	}
 

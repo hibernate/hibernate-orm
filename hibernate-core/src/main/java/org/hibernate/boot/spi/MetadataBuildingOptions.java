@@ -25,6 +25,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
@@ -61,7 +62,8 @@ public interface MetadataBuildingOptions {
 	}
 
 	default CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// for now always return the standard one
+		return StandardCollectionSemanticsResolver.INSTANCE;
 	}
 
 	/**

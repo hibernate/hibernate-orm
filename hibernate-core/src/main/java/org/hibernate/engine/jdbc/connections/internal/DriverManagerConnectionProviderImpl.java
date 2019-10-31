@@ -215,6 +215,16 @@ public class DriverManagerConnectionProviderImpl
 	}
 	//CHECKSTYLE:END_ALLOW_FINALIZER
 
+	/**
+	 * Exposed to facilitate testing only.
+	 * @return
+	 */
+	public Properties getConnectionProperties() {
+		BasicConnectionCreator connectionCreator = (BasicConnectionCreator) this.state.pool.connectionCreator;
+		return connectionCreator.getConnectionProperties();
+	}
+
+
 	public static class PooledConnections {
 
 		private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<Connection>();

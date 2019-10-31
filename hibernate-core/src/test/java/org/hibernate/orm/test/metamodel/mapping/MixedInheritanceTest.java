@@ -7,13 +7,13 @@
 package org.hibernate.orm.test.metamodel.mapping;
 
 import java.util.List;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import javax.persistence.Table;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -33,47 +33,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel(
 		annotatedClasses = {
-				TablePerClassInheritanceWithConcreteRootTest.Customer.class,
-				TablePerClassInheritanceWithConcreteRootTest.DomesticCustomer.class,
-				TablePerClassInheritanceWithConcreteRootTest.ForeignCustomer.class,
-				TablePerClassInheritanceWithConcreteRootTest.Person.class
-
+				MixedInheritanceTest.Customer.class,
+				MixedInheritanceTest.DomesticCustomer.class,
+				MixedInheritanceTest.ForeignCustomer.class,
+				MixedInheritanceTest.Person.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class TablePerClassInheritanceWithConcreteRootTest {
-
-	@Test
-	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister customerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( Customer.class );
-		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( DomesticCustomer.class );
-		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( ForeignCustomer.class );
-
-		assert customerDescriptor instanceof UnionSubclassEntityPersister;
-
-		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert domesticCustomerDescriptor instanceof UnionSubclassEntityPersister;
-
-		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert foreignCustomerDescriptor instanceof UnionSubclassEntityPersister;
-
-		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-	}
+public class MixedInheritanceTest {
 
 	@Test
 	public void rootQueryExecutionTest(SessionFactoryScope scope) {
@@ -244,7 +212,9 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	}
 
 	@Entity(name = "Customer")
-	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@Table(name = "customer")
+	@DiscriminatorColumn(name = "cust_type")
 	public static class Customer extends Person {
 
 		private String name;
@@ -268,6 +238,7 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	}
 
 	@Entity(name = "DomesticCustomer")
+	@DiscriminatorValue("dc")
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -289,6 +260,7 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	}
 
 	@Entity(name = "ForeignCustomer")
+	@DiscriminatorValue("fc")
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 

@@ -40,6 +40,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -621,8 +622,6 @@ public class MappingModelCreationHelper {
 			int stateArrayPosition,
 			Property bootProperty,
 			ManagedMappingType declaringType,
-			String tableExpression,
-			String[] attrColumnExpressions,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
@@ -637,7 +636,7 @@ public class MappingModelCreationHelper {
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;
 
-		tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
+		String tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
 
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
@@ -647,6 +646,7 @@ public class MappingModelCreationHelper {
 		final ForeignKeyDescriptor keyDescriptor = interpretKeyDescriptor(
 				bootProperty,
 				bootValueMapping,
+				collectionDescriptor,
 				dialect,
 				creationProcess
 		);
@@ -848,6 +848,7 @@ public class MappingModelCreationHelper {
 	private static ForeignKeyDescriptor interpretKeyDescriptor(
 			Property bootProperty,
 			Collection bootValueMapping,
+			CollectionPersister collectionDescriptor,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final Type keyType = bootValueMapping.getKey().getType();
@@ -861,7 +862,46 @@ public class MappingModelCreationHelper {
 		}
 
 		throw new NotYetImplementedFor6Exception(
-				"Support for composite collection foreign-keys not yet implemented: " + bootValueMapping.getRole()
+				"Support for composite foreign-keys not yet implemented: " + bootValueMapping.getRole()
+		);
+	}
+
+	private static ForeignKeyDescriptor interpretKeyDescriptor(
+			Property bootProperty,
+			ToOne bootValueMapping,
+			EntityPersister referencedEntityDescriptor,
+			Dialect dialect,
+			MappingModelCreationProcess creationProcess) {
+		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
+			final EntityIdentifierMapping identifierMapping = referencedEntityDescriptor.getIdentifierMapping();
+			if ( identifierMapping instanceof BasicEntityIdentifierMapping ) {
+				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
+
+				assert bootValueMapping.getColumnSpan() == 1;
+				return new SimpleForeignKeyDescriptor(
+						bootValueMapping.getColumnIterator().next().getText( dialect ),
+						simpleIdMapping.getJdbcMapping()
+				);
+			}
+		}
+		else {
+			final AttributeMapping attributeMapping = referencedEntityDescriptor.findAttributeMapping(
+					bootValueMapping.getReferencedPropertyName()
+			);
+
+			if ( attributeMapping instanceof BasicValuedSingularAttributeMapping ) {
+				final BasicValuedSingularAttributeMapping basicMapping = (BasicValuedSingularAttributeMapping) attributeMapping;
+				assert bootValueMapping.getColumnSpan() == 1;
+				return new SimpleForeignKeyDescriptor(
+						bootValueMapping.getColumnIterator().next().getText( dialect ),
+						basicMapping.getJdbcMapping()
+				);
+			}
+		}
+
+		throw new NotYetImplementedFor6Exception(
+				"Support for composite foreign-keys not yet implemented: " +
+						bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 		);
 	}
 

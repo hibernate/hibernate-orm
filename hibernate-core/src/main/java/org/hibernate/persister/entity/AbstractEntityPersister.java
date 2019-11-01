@@ -6367,8 +6367,6 @@ public abstract class AbstractEntityPersister
 					stateArrayPosition,
 					bootProperty,
 					declaringType,
-					tableExpression,
-					attrColumnNames,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess

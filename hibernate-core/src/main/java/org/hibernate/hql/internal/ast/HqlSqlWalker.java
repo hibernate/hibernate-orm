@@ -509,7 +509,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
 
-			fromElement.setWithClauseFragment( "(" + sql.getSQL() + ")" );
+			fromElement.setWithClauseFragment( hqlSqlWithNode.getFirstChild(), "(" + sql.getSQL() + ")" );
 		}
 		catch (SemanticException e) {
 			throw e;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -69,6 +70,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	private boolean useWhereFragment = true;
 	private List<FromElement> destinations;
 	private boolean manyToMany;
+	private AST withClauseAst;
 	private String withClauseFragment;
 	private boolean dereferencedBySuperclassProperty;
 	private boolean dereferencedBySubclassProperty;
@@ -627,11 +629,16 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		isAllPropertyFetch = fetch;
 	}
 
+	public AST getWithClauseAst() {
+		return withClauseAst;
+	}
+
 	public String getWithClauseFragment() {
 		return withClauseFragment;
 	}
 
-	public void setWithClauseFragment(String withClauseFragment) {
+	public void setWithClauseFragment(AST ast, String withClauseFragment) {
+		this.withClauseAst = ast;
 		this.withClauseFragment = withClauseFragment;
 	}
 

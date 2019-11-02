@@ -55,6 +55,13 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    public void testDereferenceSuperClassAttributeInWithClause() {
+        doInJPA(this::sessionFactory, em -> {
+            em.createQuery("SELECT subB_0.id FROM SubB subB_0 LEFT JOIN subB_0.other subA_0 ON subA_0.id = subB_0.parent.id", Tuple.class).getResultList();
+        });
+    }
+
+    @Test
     public void testRootTypeJoinWithGroupJoins() {
         doInJPA(this::sessionFactory, em -> {
             List<Tuple> resultList = em.createQuery("SELECT subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 LEFT JOIN Super subA_0 ON subA_0.id = subB_0.parent.id ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)
@@ -99,13 +106,6 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
         return new Class<?>[] { Super.class, SubA.class, SubB.class };
     }
 
-    @Override
-    protected void configure(Configuration configuration) {
-        super.afterConfigurationBuilt( configuration );
-        // Uncomment to fix tests
-//        configuration.setProperty( AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES, "false" );
-    }
-
     @Entity(name = "Super")
     @Inheritance(strategy = InheritanceType.JOINED)
     public static class Super<SubType extends Super> {
@@ -133,6 +133,9 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
 
     @Entity(name = "SubB")
     public static class SubB extends Super<SubA> {
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        Super other;
 
         SubB() {}
 

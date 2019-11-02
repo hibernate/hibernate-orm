@@ -9,7 +9,7 @@ versus relational databases.  Hibernate is an Object/Relational Mapping (ORM) so
 term Object/Relational Mapping refers to the technique of mapping data between an object model representation to
 a relational data model representation.  See http://en.wikipedia.org/wiki/Object-relational_mapping for a good
 high-level discussion.  Also, Martin Fowler's link:$$http://martinfowler.com/bliki/OrmHate.html$$[OrmHate] article
-takes a look at many of the mismatch problems.
+takes a look at many of the mismatch problems. If you are completely new to database access in Java, see also link:$$https://www.marcobehler.com/guides/a-guide-to-accessing-databases-in-java$$[this guide] for a thorough overview of all your options and where Hibernate fits in.
 
 Although having a strong background in SQL is not required to use Hibernate, having a basic understanding of the
 concepts can help you understand Hibernate more quickly and fully.  An understanding of data modeling principles

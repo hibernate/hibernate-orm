@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -35,14 +34,15 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -130,6 +131,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
+//	private final String tableName;
+//
+//	private final String superClassTableName;
+
 	//INITIALIZATION:
 
 	public JoinedSubclassEntityPersister(
@@ -206,6 +211,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( optimisticLockStyle() == OptimisticLockStyle.ALL || optimisticLockStyle() == OptimisticLockStyle.DIRTY ) {
 			throw new MappingException( "optimistic-lock=all|dirty not supported for joined-subclass mappings [" + getEntityName() + "]" );
 		}
+
+//		final PersistentClass superclass = persistentClass.getSuperclass();
+//		if ( superclass != null ) {
+//			superClassTableName = determineTableName( superclass.getTable(), jdbcEnvironment );
+//		}
+//		else {
+//			superClassTableName = null;
+//		}
+//
+//		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
 
 		//MULTITABLES
 
@@ -1073,10 +1088,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return constraintOrderedKeyColumnNames;
 	}
 
-	public String getRootTableName() {
-		return naturalOrderTableNames[0];
-	}
-
 	public String getRootTableAlias(String drivingAlias) {
 		return generateTableAlias( drivingAlias, getTableId( getRootTableName(), tableNames ) );
 	}
@@ -1115,6 +1126,23 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
+	}
+
+	@Override
+	protected void buildDiscriminatorMapping() {
+		if ( hasSubclasses() ) {
+			super.buildDiscriminatorMapping();
+		}
+	}
+
+	@Override
+	protected List<Fetchable> getStaticFetchableList() {
+		if ( staticFetchableList == null ) {
+			staticFetchableList = new ArrayList<>( getAttributeMappings().size() );
+			visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+
+		}
+		return staticFetchableList;
 	}
 
 

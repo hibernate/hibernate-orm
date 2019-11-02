@@ -38,17 +38,25 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	public TableReference resolveTableReference(String tableExpression) {
 		assert tableExpression != null;
 
+		final TableReference tableReference = resolveTableReferenceInternal( tableExpression );
+		if ( tableReference == null ) {
+			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		}
+
+		return tableReference;
+	}
+
+	protected TableReference resolveTableReferenceInternal(String tableExpression) {
 		if ( getPrimaryTableReference().getTableExpression().equals( tableExpression ) ) {
 			return getPrimaryTableReference();
 		}
 
 		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression() == tableExpression ) {
+			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
 				return tableJoin.getJoinedTableReference();
 			}
 		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		return null;
 	}
 
 }

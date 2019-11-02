@@ -29,7 +29,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -181,8 +180,6 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -6098,7 +6095,7 @@ public abstract class AbstractEntityPersister
 
 	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
 	private List<AttributeMapping> attributeMappings;
-	private List<Fetchable> staticFetchableList;
+	protected List<Fetchable> staticFetchableList;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -6118,7 +6115,6 @@ public abstract class AbstractEntityPersister
 
 			this.identifierMapping = superMappingType.getIdentifierMapping();
 			this.versionMapping = superMappingType.getVersionMapping();
-			this.discriminatorMapping = superMappingType.getDiscriminatorMapping();
 			this.naturalIdMapping = superMappingType.getNaturalIdMapping();
 		}
 		else {
@@ -6553,7 +6549,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private List<Fetchable> getStaticFetchableList() {
+	protected List<Fetchable> getStaticFetchableList() {
 		if ( staticFetchableList == null ) {
 			staticFetchableList = new ArrayList<>( attributeMappings.size() );
 			visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );

@@ -38,7 +38,7 @@ public class GenerateJavaMojo extends AbstractGenerationMojo {
     private String templatePath;
 
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
-        Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.POJO);
+        Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.JAVA);
         pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
         pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDirectory);
         if (templatePath != null) {

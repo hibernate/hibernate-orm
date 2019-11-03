@@ -38,7 +38,7 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 	}
 
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.POJO);
+		return ExporterFactory.createExporter(ExporterType.JAVA);
 	}
 
 	public String getName() {

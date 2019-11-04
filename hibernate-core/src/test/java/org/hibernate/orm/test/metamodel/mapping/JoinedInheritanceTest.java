@@ -77,7 +77,6 @@ public class JoinedInheritanceTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void rootQueryExecutionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -34,21 +34,28 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMapping {
-	private final EntityPersister entityDescriptor;
+	private final EntityPersister entityPersister;
 
 	private final String tableExpression;
-	private final String mappedColumnExpression;
+	private String mappedColumnExpression;
 
 	private final BasicType mappingType;
 
 	public EntityDiscriminatorMappingImpl(
-			EntityPersister entityDescriptor,
+			EntityPersister entityPersister,
 			String tableExpression,
 			String mappedColumnExpression,
 			BasicType mappingType) {
-		this.entityDescriptor = entityDescriptor;
-		this.tableExpression = tableExpression;
+		this( entityPersister, tableExpression, mappingType );
 		this.mappedColumnExpression = mappedColumnExpression;
+	}
+
+	public EntityDiscriminatorMappingImpl(
+			EntityPersister entityPersister,
+			String tableExpression,
+			BasicType mappingType) {
+		this.entityPersister = entityPersister;
+		this.tableExpression = tableExpression;
 		this.mappingType = mappingType;
 	}
 
@@ -132,7 +139,7 @@ public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMappin
 		);
 	}
 
-	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
+	protected SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
@@ -168,5 +175,9 @@ public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMappin
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return mappingType.getJdbcMapping();
+	}
+
+	protected EntityPersister getEntityPersister(){
+		return entityPersister;
 	}
 }

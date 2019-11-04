@@ -108,7 +108,10 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -1780,6 +1783,34 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public CaseFragment createCaseFragment() {
 		return new ANSICaseFragment();
+	}
+
+	public void visitCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			StringBuilder sqlBuffer,
+			SqlAstWalker sqlAstWalker) {
+		sqlBuffer.append( "case " );
+
+		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
+			sqlBuffer.append( " when " );
+			whenFragment.getPredicate().accept( sqlAstWalker );
+			sqlBuffer.append( " then " );
+			whenFragment.getResult().accept( sqlAstWalker );
+		}
+
+		Expression otherwise = caseSearchedExpression.getOtherwise();
+		if ( otherwise != null ) {
+			sqlBuffer.append( " else " );
+			otherwise.accept( sqlAstWalker );
+		}
+
+		sqlBuffer.append( " end" );
+
+		String columnExpression = caseSearchedExpression.getColumnExpression();
+
+		if ( columnExpression != null ) {
+			sqlBuffer.append( " as " ).append( columnExpression );
+		}
 	}
 
 	/**

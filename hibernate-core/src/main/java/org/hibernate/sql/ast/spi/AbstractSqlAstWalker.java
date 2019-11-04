@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -83,9 +84,12 @@ public abstract class AbstractSqlAstWalker
 
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 
+	private final Dialect dialect;
+
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqlAstWalker(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
+		this.dialect = sessionFactory.getJdbcServices().getDialect();
 	}
 
 
@@ -426,9 +430,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
-		final boolean useSelectionPosition = getSessionFactory().getJdbcServices()
-				.getDialect()
-				.replaceResultVariableInOrderByClauseWithPosition();
+		final boolean useSelectionPosition = dialect.replaceResultVariableInOrderByClauseWithPosition();
 
 		if ( useSelectionPosition ) {
 			appendSql( Integer.toString( expression.getSelection().getJdbcResultSetIndex() ) );
@@ -740,19 +742,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		appendSql( "case " );
-
-		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			appendSql( " when " );
-			whenFragment.getPredicate().accept( this );
-			appendSql( " then " );
-			whenFragment.getResult().accept( this );
-		}
-
-		appendSql( " else " );
-		caseSearchedExpression.getOtherwise().accept( this );
-
-		appendSql( " end" );
+		dialect.visitCaseSearchedExpression( caseSearchedExpression, sqlBuffer, this );
 	}
 
 	@Override
@@ -843,7 +833,7 @@ public abstract class AbstractSqlAstWalker
 						appendSql(
 								literalFormatter.toJdbcLiteral(
 										queryLiteral.getValue(),
-										sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect(),
+										dialect,
 										null
 								)
 						);

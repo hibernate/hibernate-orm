@@ -64,8 +64,9 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 				creationState
 		);
 
-		if ( entityDescriptor.getDiscriminatorMapping() != null ) {
-			discriminatorResult = entityDescriptor.getDiscriminatorMapping().createDomainResult(
+		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
+		if ( discriminatorMapping != null ) {
+			discriminatorResult = discriminatorMapping.createDomainResult(
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 					entityTableGroup,
 					null,
@@ -88,6 +89,12 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 					creationState
 			);
 		}
+	}
+
+	protected EntityDiscriminatorMapping getDiscriminatorMapping(
+			EntityMappingType entityDescriptor,
+			TableGroup entityTableGroup) {
+		return entityDescriptor.getDiscriminatorMapping();
 	}
 
 	@Override

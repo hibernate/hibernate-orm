@@ -10,25 +10,39 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class CaseSearchedExpression implements Expression, DomainResultProducer {
-	private final MappingModelExpressable type;
+	private final BasicType type;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
+	private String columnExpression;
 
 	public CaseSearchedExpression(MappingModelExpressable type) {
-		this.type = type;
+		this.type = (BasicType) type;
+	}
+
+	public void setColumnExpression(String columnExpression) {
+		this.columnExpression = columnExpression;
+	}
+
+	public String getColumnExpression(){
+		return columnExpression;
 	}
 
 	public List<WhenFragment> getWhenFragments() {
@@ -52,17 +66,36 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 
-//		return new BasicResultImpl(
-//				resultVariable,
-//				creationState.getSqlExpressionResolver().resolveSqlSelection(
-//						this,
-//						getType().getJavaTypeDescriptor(),
-//						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-//				),
-//				getType()
-//		);
+		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				type.getExpressableJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
+		);
+
+		//noinspection unchecked
+		return new BasicResult(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				type.getExpressableJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaTypeDescriptor javaTypeDescriptor,
+			TypeConfiguration typeConfiguration) {
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this,
+				type.getJdbcMapping()
+		);
 	}
 
 	@Override

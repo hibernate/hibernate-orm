@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.Database;
@@ -42,14 +43,35 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.internal.JoinedSubclassDiscriminatorMappingImpl;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.internal.domain.entity.JoinedSubclassResultImpl;
+import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -130,9 +152,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
-//	private final String tableName;
-//
-//	private final String superClassTableName;
+	private final Map<String, String> discriminatorValuesByTableName;
+	private final Map<String, String> subclassNameByTableName;
 
 	//INITIALIZATION:
 
@@ -210,16 +231,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( optimisticLockStyle() == OptimisticLockStyle.ALL || optimisticLockStyle() == OptimisticLockStyle.DIRTY ) {
 			throw new MappingException( "optimistic-lock=all|dirty not supported for joined-subclass mappings [" + getEntityName() + "]" );
 		}
-
-//		final PersistentClass superclass = persistentClass.getSuperclass();
-//		if ( superclass != null ) {
-//			superClassTableName = determineTableName( superclass.getTable(), jdbcEnvironment );
-//		}
-//		else {
-//			superClassTableName = null;
-//		}
-//
-//		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
 
 		//MULTITABLES
 
@@ -513,6 +524,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		subclassClosure[subclassSpan - 1] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
+
+			discriminatorValuesByTableName = new HashMap<>( subclassSpan + 1 );
+			subclassNameByTableName = new HashMap<>( subclassSpan + 1);
+			discriminatorValuesByTableName.put( persistentClass.getTable().getName(),  discriminatorSQLString);
 			discriminatorValues = new String[subclassSpan];
 			discriminatorValues[subclassSpan - 1] = discriminatorSQLString;
 			notNullColumnTableNumbers = new int[subclassSpan];
@@ -529,6 +544,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			notNullColumnNames[subclassSpan - 1] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 		}
 		else {
+			subclassNameByTableName = Collections.EMPTY_MAP;
+			discriminatorValuesByTableName = Collections.EMPTY_MAP;
 			discriminatorValues = null;
 			notNullColumnTableNumbers = null;
 			notNullColumnNames = null;
@@ -539,6 +556,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( iter.hasNext() ) {
 			Subclass sc = (Subclass) iter.next();
 			subclassClosure[k] = sc.getEntityName();
+			subclassNameByTableName.put( sc.getTable().getName(), sc.getClassName() );
 			try {
 				if ( persistentClass.isPolymorphic() ) {
 					final Object discriminatorValue;
@@ -567,7 +585,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						// "foo.class = Bar" works in HQL
 						discriminatorValue = sc.getSubclassId();
 					}
-
+					discriminatorValuesByTableName.put( sc.getTable().getName(),  discriminatorValue.toString() );
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
 					discriminatorValues[k] = discriminatorValue.toString();
 					int id = getTableId(
@@ -1128,24 +1146,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected void buildDiscriminatorMapping() {
-		if ( hasSubclasses() ) {
-			super.buildDiscriminatorMapping();
-		}
-	}
-
-	@Override
-	protected List<Fetchable> getStaticFetchableList() {
-		if ( staticFetchableList == null ) {
-			staticFetchableList = new ArrayList<>( getAttributeMappings().size() );
-			visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
-
-		}
-		return staticFetchableList;
-	}
-
-
-	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new DynamicFilterAliasGenerator(subclassTableNameClosure, rootAlias);
 	}
@@ -1154,4 +1154,117 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public boolean canOmitSuperclassTableJoin() {
 		return true;
 	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		if ( hasSubclasses() ) {
+			//noinspection unchecked
+			return new JoinedSubclassResultImpl( navigablePath, this, resultVariable, creationState );
+		}
+		else {
+			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		}
+	}
+
+	@Override
+	public TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationContext creationContext) {
+		if ( hasSubclasses() ) {
+			tableReferenceJoinType = JoinType.LEFT;
+		}
+		return super.createRootTableGroup(
+				navigablePath,
+				explicitSourceAlias,
+				tableReferenceJoinType,
+				lockMode,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				additionalPredicateCollectorAccess,
+				creationContext
+		);
+	}
+
+	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
+		return new JoinedSubclassDiscriminatorMappingImpl(
+				this,
+				getRootTableName(),
+				getCaseSearchedExpression( tableGroup ),
+				(BasicType) getDiscriminatorType()
+		);
+	}
+
+	private CaseSearchedExpression getCaseSearchedExpression(TableGroup entityTableGroup) {
+		final TableReference primaryTableReference = entityTableGroup.getPrimaryTableReference();
+		final List<TableReferenceJoin> tableReferenceJoins = entityTableGroup.getTableReferenceJoins();
+		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
+		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
+
+		caseSearchedExpression.setColumnExpression( getDiscriminatorColumnName() );
+
+		tableReferenceJoins.forEach(
+				tableReferenceJoin -> {
+					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+					final EntityPersister entityDescriptor = getFactory().getMetamodel()
+							.findEntityDescriptor( subclassNameByTableName.get( joinedTableReference.getTableExpression() ) );
+					if ( entityDescriptor instanceof JoinedSubclassEntityPersister ) {
+						addWhen(
+								caseSearchedExpression,
+								joinedTableReference,
+								( (JoinedSubclassEntityPersister) entityDescriptor )
+										.getIdentifierColumnReferenceForCaseExpression( joinedTableReference ),
+								discriminatorType
+						);
+					}
+				}
+		);
+
+		addWhen(
+				caseSearchedExpression,
+				primaryTableReference,
+				getIdentifierColumnReferenceForCaseExpression( primaryTableReference ),
+				discriminatorType
+		);
+
+		return caseSearchedExpression;
+	}
+
+	private void addWhen(
+			CaseSearchedExpression caseSearchedExpression,
+			TableReference table,
+			ColumnReference identifierColumnReference,
+			BasicType resultType) {
+		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
+		final Expression expression =
+				new QueryLiteral<>(
+						discriminatorValuesByTableName.get( table.getTableExpression() ),
+						resultType,
+						Clause.SELECT
+				);
+
+		caseSearchedExpression.when( predicate, expression );
+	}
+
+	private ColumnReference getIdentifierColumnReferenceForCaseExpression(TableReference primaryTableReference) {
+		List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
+		JdbcMapping jdbcMapping = jdbcMappings.get( 0 );
+
+		return new ColumnReference(
+				primaryTableReference.getIdentificationVariable(),
+				getIdentifierColumnNames()[0],
+				jdbcMapping,
+				getFactory()
+		);
+	}
+
 }

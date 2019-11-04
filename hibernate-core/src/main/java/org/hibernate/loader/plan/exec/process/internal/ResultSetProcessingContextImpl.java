@@ -281,8 +281,9 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 
 		// managing the running list of registrations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		final int sizeHint = currentRowHydratedEntityRegistrationList.size();
 		if ( hydratedEntityRegistrationList == null ) {
-			hydratedEntityRegistrationList = new ArrayList<>();
+			hydratedEntityRegistrationList = new ArrayList<>( sizeHint );
 		}
 		hydratedEntityRegistrationList.addAll( currentRowHydratedEntityRegistrationList );
 

@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
@@ -140,8 +141,14 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// first, instantiate the entity instance to use as the proxy
-		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) persister.getEntityTuplizer().instantiate( identifier, session );
+		final EntityTuplizer entityTuplizer = persister.getEntityTuplizer();
+		final PersistentAttributeInterceptable entity = (PersistentAttributeInterceptable) entityTuplizer
+				.instantiate( identifier, session );
 
+		// clear the fields that are marked as dirty in the dirtyness tracker
+		if ( entity instanceof SelfDirtinessTracker ) {
+			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
+		}
 		// add the entity (proxy) instance to the PC
 		persistenceContext.addEnhancedProxy( entityKey, entity );
 

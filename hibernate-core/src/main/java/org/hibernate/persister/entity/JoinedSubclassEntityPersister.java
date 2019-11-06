@@ -6,6 +6,15 @@
  */
 package org.hibernate.persister.entity;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -34,7 +43,6 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
@@ -45,15 +53,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"

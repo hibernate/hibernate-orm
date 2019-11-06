@@ -42,7 +42,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;

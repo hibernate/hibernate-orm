@@ -18,8 +18,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Session;
-import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
@@ -27,7 +25,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
@@ -37,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
@@ -103,7 +100,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
 			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
 
-			final QueryParameterBindings bindings = ( (DomainParameterBindingContext) query ).getQueryParameterBindings();
+			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
 
 			final QueryParameterBinding<?> startBinding = bindings.getBinding( "start" );
 			assertThat( startBinding.getExplicitTemporalPrecision(), equalTo( TemporalType.TIMESTAMP ) );
@@ -121,7 +118,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
 			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
 
-			final QueryParameterBindings bindings = ( (DomainParameterBindingContext) query ).getQueryParameterBindings();
+			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
 
 			final QueryParameterBinding<?> startBinding = bindings.getBinding( "start" );
 			assertThat( startBinding.getExplicitTemporalPrecision(), equalTo( TemporalType.DATE ) );

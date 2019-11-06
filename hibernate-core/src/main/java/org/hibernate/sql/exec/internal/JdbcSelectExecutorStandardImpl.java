@@ -218,7 +218,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final List<Object[]> cachedResults;
 
 		final boolean queryCacheEnabled = executionContext.getSession().getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
-		final CacheMode cacheMode = resolveCacheMode( executionContext );
+		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
 		final JdbcValuesMapping jdbcValuesMapping = jdbcSelect.getJdbcValuesMappingProducer()
 				.resolve( resultSetAccess, executionContext.getSession().getFactory() );
@@ -241,7 +241,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			queryResultsCacheKey = QueryKey.from(
 					jdbcSelect.getSql(),
 					executionContext.getQueryOptions().getLimit(),
-					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+					executionContext.getQueryParameterBindings(),
 					executionContext.getSession()
 			);
 
@@ -287,17 +287,4 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 	}
 
-	private CacheMode resolveCacheMode(ExecutionContext executionContext) {
-		CacheMode cacheMode = executionContext.getQueryOptions().getCacheMode();
-		if ( cacheMode != null ) {
-			return cacheMode;
-		}
-
-		cacheMode = executionContext.getSession().getCacheMode();
-		if ( cacheMode != null ) {
-			return cacheMode;
-		}
-
-		return CacheMode.NORMAL;
-	}
 }

@@ -87,6 +87,11 @@ public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable
 	}
 
 	@Override
+	public String getPartName() {
+		return navigablePath.getLocalName();
+	}
+
+	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return referencedRoot.getResultJavaTypeDescriptor();
 	}

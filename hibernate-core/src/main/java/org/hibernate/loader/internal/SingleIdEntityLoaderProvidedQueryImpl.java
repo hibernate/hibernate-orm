@@ -7,10 +7,14 @@
 package org.hibernate.loader.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.SingleIdEntityLoader;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.named.NamedQueryProducer;
+import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 
 /**
  * Implementation of SingleIdEntityLoader for cases where the application has
@@ -19,22 +23,50 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
-	private final EntityPersister entityDescriptor;
-	private final String loadQueryName;
+	private final EntityMappingType entityDescriptor;
+	private final NamedQueryProducer namedQueryMemento;
 
-	public SingleIdEntityLoaderProvidedQueryImpl(EntityPersister entityDescriptor, String loadQueryName) {
+	public SingleIdEntityLoaderProvidedQueryImpl(
+			EntityMappingType entityDescriptor,
+			String loadQueryName,
+			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		this.loadQueryName = loadQueryName;
+
+		this.namedQueryMemento = resolveNamedQuery( loadQueryName, sessionFactory );
+		if ( namedQueryMemento == null ) {
+			throw new IllegalArgumentException( "Could not resolve named load-query [" + entityDescriptor.getEntityName() + "] : " + loadQueryName );
+		}
+	}
+
+	private static NamedQueryProducer resolveNamedQuery(
+			String queryName,
+			SessionFactoryImplementor sf) {
+		final NamedQueryRepository namedQueryRepository = sf.getQueryEngine().getNamedQueryRepository();
+
+		final NamedNativeQueryMemento nativeQueryMemento = namedQueryRepository.getNativeQueryMemento( queryName );
+		if ( nativeQueryMemento != null ) {
+			return nativeQueryMemento;
+		}
+
+		return namedQueryRepository.getHqlQueryMemento( queryName );
 	}
 
 	@Override
-	public EntityPersister getLoadable() {
+	public EntityMappingType getLoadable() {
 		return entityDescriptor;
 	}
 
 	@Override
 	public T load(Object pkValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		//noinspection unchecked
+		final QueryImplementor<T> query = namedQueryMemento.toQuery(
+				session,
+				entityDescriptor.getMappedJavaTypeDescriptor().getJavaType()
+		);
+
+		query.setParameter( 0, pkValue );
+
+		return query.uniqueResult();
 	}
 
 	@Override

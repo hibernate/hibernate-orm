@@ -44,5 +44,10 @@ public interface CollectionPart extends ModelPart, Fetchable {
 
 	Nature getNature();
 
-	ModelPart getPartTypeDescriptor();
+	MappingType getPartTypeDescriptor();
+
+	@Override
+	default String getPartName() {
+		return getNature().getName();
+	}
 }

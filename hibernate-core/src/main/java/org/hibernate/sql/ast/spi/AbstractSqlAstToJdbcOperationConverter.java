@@ -21,7 +21,7 @@ public class AbstractSqlAstToJdbcOperationConverter
 		extends AbstractSqlAstWalker
 		implements SqlAstToJdbcOperationConverter {
 
-	private final Set<String> affectedTableNames = new HashSet<>();
+	private final Set<String> affectedTableExpressions = new HashSet<>();
 
 	protected AbstractSqlAstToJdbcOperationConverter(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
@@ -33,16 +33,21 @@ public class AbstractSqlAstToJdbcOperationConverter
 	}
 
 	@Override
-	public Set<String> getAffectedTableNames() {
-		return affectedTableNames;
+	public Set<String> getAffectedTableExpressions() {
+		return affectedTableExpressions;
 	}
 
+	@Override
+	protected void renderTableReference(TableReference tableReference) {
+		super.renderTableReference( tableReference );
+		registerAffectedTable( tableReference );
+	}
 
 	protected void registerAffectedTable(TableReference tableReference) {
 		registerAffectedTable( tableReference.getTableExpression() );
 	}
 
 	protected void registerAffectedTable(String tableExpression) {
-		affectedTableNames.add( tableExpression );
+		affectedTableExpressions.add( tableExpression );
 	}
 }

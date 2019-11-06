@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.sql.ast.tree.expression.Expression;

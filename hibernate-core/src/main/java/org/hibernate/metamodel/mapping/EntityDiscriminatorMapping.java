@@ -11,4 +11,9 @@ package org.hibernate.metamodel.mapping;
  */
 public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart {
 	String ROLE_NAME = "{discriminator}";
+
+	@Override
+	default String getPartName() {
+		return ROLE_NAME;
+	}
 }

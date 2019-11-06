@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -50,12 +51,24 @@ public class ColumnReference implements Expression {
 		this.jdbcMapping = jdbcMapping;
 	}
 
+	public ColumnReference(
+			TableReference tableReference,
+			String columnExpression,
+			JdbcMapping jdbcMapping,
+			SessionFactoryImplementor sessionFactory) {
+		this( tableReference.getIdentificationVariable(), columnExpression, jdbcMapping, sessionFactory );
+	}
+
 	public String getExpressionText() {
 		return referenceExpression;
 	}
 
 	public String renderSqlFragment(SessionFactoryImplementor sessionFactory) {
 		return getExpressionText();
+	}
+
+	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
 	}
 
 	@Override

@@ -167,7 +167,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			final SqmSelectToSqlAstConverter sqmConverter = sqmTranslatorFactory.createSelectConverter(
 					executionContext.getQueryOptions(),
 					domainParameterXref,
-					executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+					executionContext.getQueryParameterBindings(),
 					executionContext.getLoadQueryInfluencers(),
 					sessionFactory
 			);
@@ -189,7 +189,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
+				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
 				// todo (6.0) : ugh.  this one is important

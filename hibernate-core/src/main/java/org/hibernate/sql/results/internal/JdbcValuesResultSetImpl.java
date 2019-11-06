@@ -15,6 +15,7 @@ import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
+import org.hibernate.sql.exec.internal.JdbcExecHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.internal.caching.QueryCachePutManager;
 import org.hibernate.sql.results.internal.caching.QueryCachePutManagerDisabledImpl;
@@ -64,7 +65,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private static int interpretNumberOfRowsToProcess(QueryOptions queryOptions) {
-		if ( queryOptions.getLimit() == null ) {
+		if ( queryOptions == null || queryOptions.getLimit() == null ) {
 			return -1;
 		}
 		final Limit limit = queryOptions.getLimit();
@@ -83,7 +84,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 				.getFactory()
 				.getSessionFactoryOptions()
 				.isQueryCacheEnabled();
-		final CacheMode cacheMode = queryOptions.getCacheMode();
+		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
 		if ( queryCacheEnabled && cacheMode.isPutEnabled() ) {
 			final QueryResultsCache queryCache = executionContext.getSession().getFactory()

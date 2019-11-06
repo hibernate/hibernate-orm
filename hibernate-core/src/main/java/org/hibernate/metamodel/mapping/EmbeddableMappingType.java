@@ -176,6 +176,11 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	}
 
 	@Override
+	public String getPartName() {
+		return getEmbeddedValueMapping().getPartName();
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -248,10 +253,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			Consumer<JdbcMapping> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		visitAttributeMappings(
-				attributeMapping -> {
-					attributeMapping.visitJdbcTypes( action, clause, typeConfiguration );
-				}
+		attributeMappings.forEach(
+				(s, attributeMapping) -> attributeMapping.visitJdbcTypes( action, clause, typeConfiguration )
 		);
 	}
 
@@ -273,9 +276,11 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	public void visitJdbcValues(
 			Object value,
 			Clause clause,
-			JdbcValuesConsumer valuesConsumer,
+			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		attributeMappings.forEach(
+				(s, attributeMapping) -> attributeMapping.visitJdbcValues( value, clause, consumer, session )
+		);
 	}
 
 	@Override

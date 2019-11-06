@@ -96,8 +96,12 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -219,16 +223,6 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public DomainParameterXref getDomainParameterXref() {
-		return domainParameterXref;
-	}
-
-	@Override
-	public QueryParameterBindings getDomainParameterBindings() {
-		return domainParameterBindings;
-	}
-
-	@Override
 	public LockMode determineLockMode(String identificationVariable) {
 		return queryOptions.getLockOptions().getEffectiveLockMode( identificationVariable );
 	}
@@ -287,8 +281,7 @@ public abstract class BaseSqmToSqlAstConverter
 						sqlQuerySpec,
 						processingStateStack.getCurrent(),
 						this,
-						currentClauseStack::getCurrent,
-						() -> (expression) -> {}
+						currentClauseStack::getCurrent
 				)
 		);
 
@@ -742,7 +735,13 @@ public abstract class BaseSqmToSqlAstConverter
 		this.jdbcParameters.addParameters( jdbcParametersForSqm );
 		this.jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
-		return new SqmParameterInterpretation( sqmParameter, jdbcParametersForSqm, valueMapping );
+		return new SqmParameterInterpretation(
+				sqmParameter,
+				domainParameterXref.getQueryParameter( sqmParameter ),
+				jdbcParametersForSqm,
+				valueMapping,
+				domainParameterBindings::getBinding
+		);
 	}
 
 	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {

@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;

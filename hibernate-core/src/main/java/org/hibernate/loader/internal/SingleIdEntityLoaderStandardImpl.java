@@ -6,81 +6,56 @@
  */
 package org.hibernate.loader.internal;
 
-import java.io.Serializable;
 import java.util.EnumMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.spi.InternalFetchProfile;
-import org.hibernate.loader.spi.SingleIdEntityLoader;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * Standard implementation of SingleIdEntityLoader
  *
  * @author Steve Ebersole
  */
-public class SingleIdEntityLoaderStandardImpl<T> implements SingleIdEntityLoader<T>, Preparable {
-	private final EntityPersister entityDescriptor;
+public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> implements Preparable {
+	private EnumMap<LockMode, SingleIdLoadPlan> selectByLockMode = new EnumMap<>( LockMode.class );
+	private EnumMap<InternalFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
 
-	private EnumMap<LockMode, JdbcSelect> selectByLockMode = new EnumMap<>( LockMode.class );
-	private EnumMap<InternalFetchProfile,JdbcSelect> selectByInternalCascadeProfile;
-
-	public SingleIdEntityLoaderStandardImpl(EntityPersister entityDescriptor) {
-		this.entityDescriptor = entityDescriptor;
-	}
-
-	public void prepare() {
-		// see `org.hibernate.persister.entity.AbstractEntityPersister#createLoaders`
+	public SingleIdEntityLoaderStandardImpl(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory) {
+		super( entityDescriptor, sessionFactory );
 	}
 
 	@Override
-	public EntityPersister getLoadable() {
-		return entityDescriptor;
+	public void prepare() {
+		// see `org.hibernate.persister.entity.AbstractEntityPersister#createLoaders`
+
 	}
 
 	@Override
 	public T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		// todo (6.0) : TEMPORARY - use the legacy loaders
+		final SingleIdLoadPlan<T> loadPlan = resolveLoadPlan( lockOptions, session );
 
-		//noinspection unchecked
-		return (T) BatchingEntityLoaderBuilder.getBuilder( session.getFactory() )
-				.buildLoader( (OuterJoinLoadable) entityDescriptor, -1, lockOptions.getLockMode(), session.getFactory(), session.getLoadQueryInfluencers() )
-				.load( (Serializable) key, null, session, lockOptions );
-
-
-		// todo (6.0) : see `org.hibernate.loader.internal.StandardSingleIdEntityLoader#load` in "upstream" 6.0 branch
-		//		- and integrate as much as possible with the `o.h.loader.plan` stuff leveraging the similarities
-		//		between the legacy LoadPlan stuff and DomainResult, Assembler, etc.
-//
-//		final JdbcSelect jdbcSelect = resolveJdbcSelect( lockOptions, session );
-//
-//		throw new NotYetImplementedFor6Exception( getClass() );
+		return loadPlan.load( key, lockOptions, session );
 	}
 
-	@Override
-	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	private JdbcSelect resolveJdbcSelect(
+	private SingleIdLoadPlan<T> resolveLoadPlan(
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
-		if ( entityDescriptor.isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
 			// special case of not-cacheable based on enabled filters effecting this load.
 			//
 			// This case is special because the filters need to be applied in order to
 			// 		properly restrict the SQL/JDBC results.  For this reason it has higher
 			// 		precedence than even "internal" fetch profiles.
-			return createJdbcSelect( lockOptions, loadQueryInfluencers, session.getFactory() );
+			return createLoadPlan( lockOptions, loadQueryInfluencers, session.getFactory() );
 		}
 
 		final InternalFetchProfile enabledInternalFetchProfile = loadQueryInfluencers.getEnabledInternalFetchProfile();
@@ -89,34 +64,56 @@ public class SingleIdEntityLoaderStandardImpl<T> implements SingleIdEntityLoader
 				if ( selectByInternalCascadeProfile == null ) {
 					selectByInternalCascadeProfile = new EnumMap<>( InternalFetchProfile.class );
 				}
-				return selectByInternalCascadeProfile.computeIfAbsent(
-						loadQueryInfluencers.getEnabledInternalFetchProfile(),
-						internalFetchProfileType -> createJdbcSelect( lockOptions, loadQueryInfluencers, session.getFactory() )
+				else {
+					final SingleIdLoadPlan existing = selectByInternalCascadeProfile.get( enabledInternalFetchProfile );
+					if ( existing != null ) {
+						//noinspection unchecked
+						return existing;
+					}
+				}
+
+				final SingleIdLoadPlan<T> plan = createLoadPlan(
+						lockOptions,
+						loadQueryInfluencers,
+						session.getFactory()
 				);
+				selectByInternalCascadeProfile.put( enabledInternalFetchProfile, plan );
+
+				return plan;
 			}
 		}
 
 		// otherwise see if the loader for the requested load can be cached - which
 		// 		also means we should look in the cache for an existing one
 
-		final boolean cacheable = determineIfCacheable( lockOptions, loadQueryInfluencers );
+		final boolean reusable = determineIfReusable( lockOptions, loadQueryInfluencers );
 
-		if ( cacheable ) {
-			return selectByLockMode.computeIfAbsent(
-					lockOptions.getLockMode(),
-					lockMode -> createJdbcSelect( lockOptions, loadQueryInfluencers, session.getFactory() )
+		if ( reusable ) {
+			final SingleIdLoadPlan existing = selectByLockMode.get( lockOptions.getLockMode() );
+			if ( existing != null ) {
+				//noinspection unchecked
+				return existing;
+			}
+
+			final SingleIdLoadPlan<T> plan = createLoadPlan(
+					lockOptions,
+					loadQueryInfluencers,
+					session.getFactory()
 			);
+			selectByLockMode.put( lockOptions.getLockMode(), plan );
+
+			return plan;
 		}
 
-		return createJdbcSelect( lockOptions, loadQueryInfluencers, session.getFactory() );
+		return createLoadPlan( lockOptions, loadQueryInfluencers, session.getFactory() );
 	}
 
-	private boolean determineIfCacheable(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
-		if ( entityDescriptor.isAffectedByEntityGraph( loadQueryInfluencers ) ) {
+	private boolean determineIfReusable(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
+		if ( getLoadable().isAffectedByEntityGraph( loadQueryInfluencers ) ) {
 			return false;
 		}
 
-		if ( entityDescriptor.isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
+		if ( getLoadable().isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
 			return false;
 		}
 
@@ -128,23 +125,24 @@ public class SingleIdEntityLoaderStandardImpl<T> implements SingleIdEntityLoader
 		return true;
 	}
 
-	private JdbcSelect createJdbcSelect(
+	private SingleIdLoadPlan<T> createLoadPlan(
 			LockOptions lockOptions,
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final MetamodelSelectBuilderProcess.SqlAstDescriptor sqlAstDescriptor = MetamodelSelectBuilderProcess.createSelect(
+				sessionFactory,
+				getLoadable(),
+				null,
+				getLoadable().getIdentifierMapping(),
+				null,
+				1,
+				queryInfluencers,
+				lockOptions
+		);
 
-//		final MetamodelSelectBuilder selectBuilder = new SelectByEntityIdentifierBuilder(
-//				entityDescriptor.getFactory(),
-//				entityDescriptor
-//		);
-//		final SqlAstSelectDescriptor selectDescriptor = selectBuilder
-//				.generateSelectStatement( 1, queryInfluencers, lockOptions );
-//
-//
-//		return SqlAstSelectToJdbcSelectConverter.interpret(
-//				selectDescriptor,
-//				sessionFactory
-//		);
+		return new SingleIdLoadPlan<>(
+				getLoadable().getIdentifierMapping(),
+				sqlAstDescriptor
+		);
 	}
 }

@@ -44,7 +44,7 @@ public class StandardSqlAstSelectTranslator
 						querySpec.getSelectClause().getSqlSelections(),
 						Collections.emptyList()
 				),
-				getAffectedTableNames()
+				getAffectedTableExpressions()
 		);
 	}
 
@@ -63,7 +63,7 @@ public class StandardSqlAstSelectTranslator
 						sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
 						sqlAstSelect.getDomainResultDescriptors()
 				),
-				sqlAstSelect.getAffectedTableExpressions()
+				getAffectedTableExpressions()
 		);
 	}
 

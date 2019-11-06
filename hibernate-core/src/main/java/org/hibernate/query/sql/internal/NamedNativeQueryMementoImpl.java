@@ -107,7 +107,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+	public NativeQueryImplementor toQuery(SharedSessionContractImplementor session) {
 		//noinspection unchecked
 		return toQuery( session, (Class) null );
 	}

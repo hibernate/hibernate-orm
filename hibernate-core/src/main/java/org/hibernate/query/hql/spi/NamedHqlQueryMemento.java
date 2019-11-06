@@ -15,14 +15,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.NamedQueryProducer;
 
 /**
  * NamedQueryMemento for HQL queries
  *
  * @author Steve Ebersole
  */
-public interface NamedHqlQueryMemento extends NamedQueryMemento {
+public interface NamedHqlQueryMemento extends NamedQueryProducer {
 	/**
 	 * Informational access to the HQL query string
 	 */

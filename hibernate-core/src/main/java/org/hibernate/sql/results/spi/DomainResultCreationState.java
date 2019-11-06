@@ -9,8 +9,8 @@ package org.hibernate.sql.results.spi;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 
 /**
  * @author Steve Ebersole

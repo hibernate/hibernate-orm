@@ -14,9 +14,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.sql.ConversionException;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqlAstProcessingState;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -34,19 +34,16 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 	private final SqlAstProcessingState parentState;
 	private final SqlAstCreationState creationState;
 	private final Supplier<Clause> currentClauseAccess;
-	private final Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess;
 
 	private final Map<String,Expression> expressionMap = new HashMap<>();
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,
 			SqlAstCreationState creationState,
-			Supplier<Clause> currentClauseAccess,
-			Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess) {
+			Supplier<Clause> currentClauseAccess) {
 		this.parentState = parentState;
 		this.creationState = creationState;
 		this.currentClauseAccess = currentClauseAccess;
-		this.resolvedExpressionConsumerAccess = resolvedExpressionConsumerAccess;
 	}
 
 
@@ -92,8 +89,6 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 		}
 
 		final Expression result = normalize( expression );
-
-		resolvedExpressionConsumerAccess.get().accept( result );
 
 		return result;
 	}

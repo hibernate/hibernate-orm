@@ -13,11 +13,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface MappingType extends ModelPart {
+public interface MappingType {
 	JavaTypeDescriptor getMappedJavaTypeDescriptor();
-
-	@Override
-	default JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
-	}
 }

@@ -9,12 +9,25 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.loader.spi.Loadable;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
@@ -25,7 +38,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingType extends ManagedMappingType {
+public interface EntityMappingType extends ManagedMappingType, Loadable {
 	/**
 	 * Safety-net.
 	 *
@@ -33,15 +46,30 @@ public interface EntityMappingType extends ManagedMappingType {
 	 */
 	EntityPersister getEntityPersister();
 
-	default String getEntityName() {
-		return getEntityPersister().getEntityName();
+	String getEntityName();
+
+	@Override
+	default String getPartName() {
+		return getEntityName();
+	}
+
+	@Override
+	default String getPathName() {
+		return getEntityName();
+	}
+
+	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedJavaTypeDescriptor();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
 
 	default AttributeMapping findDeclaredAttributeMapping(String name) {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
+		// or ?
+		//throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -89,7 +117,7 @@ public interface EntityMappingType extends ManagedMappingType {
 	EntityVersionMapping getVersionMapping();
 
 	default EntityDiscriminatorMapping getDiscriminatorMapping() {
-		return null;
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	NaturalIdMapping getNaturalIdMapping();
@@ -156,5 +184,81 @@ public interface EntityMappingType extends ManagedMappingType {
 		visitAttributeMappings(
 				attributeMapping -> mappingConsumer.accept( (StateArrayContributorMapping) attributeMapping )
 		);
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Loadable
+
+	@Override
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		return getEntityPersister().isAffectedByEnabledFilters( influencers );
+	}
+
+	@Override
+	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+		return getEntityPersister().isAffectedByEntityGraph( influencers );
+	}
+
+	@Override
+	default boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		return getEntityPersister().isAffectedByEnabledFetchProfiles( influencers );
+	}
+
+	@Override
+	default TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationContext creationContext) {
+		return getEntityPersister().createRootTableGroup(
+				navigablePath,
+				explicitSourceAlias,
+				tableReferenceJoinType,
+				lockMode,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				additionalPredicateCollectorAccess,
+				creationContext
+		);
+	}
+
+	@Override
+	default void applyTableReferences(
+			SqlAliasBase sqlAliasBase,
+			JoinType baseJoinType,
+			TableReferenceCollector collector,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		getEntityPersister().applyTableReferences( sqlAliasBase, baseJoinType, collector, sqlExpressionResolver, creationContext );
+	}
+
+	@Override
+	default int getNumberOfAttributeMappings() {
+		return getEntityPersister().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	default Collection<AttributeMapping> getAttributeMappings() {
+		return getEntityPersister().getAttributeMappings();
+	}
+
+	@Override
+	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		return getEntityPersister().getMappedJavaTypeDescriptor();
+	}
+
+	@Override
+	default String getSqlAliasStem() {
+		return getEntityPersister().getSqlAliasStem();
+	}
+
+	@Override
+	default int getNumberOfFetchables() {
+		return getEntityPersister().getNumberOfFetchables();
 	}
 }

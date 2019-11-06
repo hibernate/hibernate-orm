@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 
 /**
  * @author Steve Ebersole
@@ -32,7 +33,7 @@ public interface ExecutionContext {
 		return getSession().getLoadQueryInfluencers();
 	}
 
-	DomainParameterBindingContext getDomainParameterBindingContext();
+	QueryParameterBindings getQueryParameterBindings();
 
 	Callback getCallback();
 

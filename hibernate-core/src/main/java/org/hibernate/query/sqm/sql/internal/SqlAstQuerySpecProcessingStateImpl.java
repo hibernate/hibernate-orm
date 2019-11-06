@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.sql.SqlAstProcessingState;
-import org.hibernate.query.sqm.sql.SqlAstQuerySpecProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -37,9 +37,8 @@ public class SqlAstQuerySpecProcessingStateImpl
 			QuerySpec querySpec,
 			SqlAstProcessingState parent,
 			SqlAstCreationState creationState,
-			Supplier<Clause> currentClauseAccess,
-			Supplier<Consumer<Expression>> resolvedExpressionConsumerAccess) {
-		super( parent, creationState, currentClauseAccess, resolvedExpressionConsumerAccess );
+			Supplier<Clause> currentClauseAccess) {
+		super( parent, creationState, currentClauseAccess );
 		this.querySpec = querySpec;
 	}
 

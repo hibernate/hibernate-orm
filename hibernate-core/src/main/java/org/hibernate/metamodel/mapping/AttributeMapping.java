@@ -16,6 +16,11 @@ import org.hibernate.property.access.spi.PropertyAccess;
 public interface AttributeMapping extends ModelPart, ValueMapping {
 	String getAttributeName();
 
+	@Override
+	default String getPartName() {
+		return getAttributeName();
+	}
+
 	AttributeMetadataAccess getAttributeMetadataAccess();
 
 	ManagedMappingType getDeclaringType();

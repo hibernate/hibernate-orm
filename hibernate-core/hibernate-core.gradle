@@ -179,7 +179,9 @@ cleanEclipse {
 	project.delete '.externalToolBuilders'
 	project.delete 'hibernate-core-RunnableIdeTest.launch'
 }
+
 tasks.eclipse.dependsOn(cleanEclipse)
+
 eclipse {
 	project {
 		file {

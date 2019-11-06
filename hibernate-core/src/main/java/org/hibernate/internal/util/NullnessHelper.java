@@ -77,7 +77,7 @@ public class NullnessHelper {
 						return value;
 					}
 				}
-				else {
+				else if ( value != null ) {
 					return value;
 				}
 			}

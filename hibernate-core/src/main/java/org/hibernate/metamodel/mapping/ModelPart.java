@@ -6,16 +6,24 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Describes a mapping of related to any part of the app's domain model - e.g.
+ * Describes a mapping related to any part of the app's domain model - e.g.
  * an attribute, an entity identifier, collection elements, etc
  *
  * @see DomainResultProducer
@@ -27,6 +35,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public interface ModelPart extends MappingModelExpressable {
 	JavaTypeDescriptor getJavaTypeDescriptor();
+
+	String getPartName();
 
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
@@ -47,5 +57,33 @@ public interface ModelPart extends MappingModelExpressable {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	/**
+	 * Apply SQL selections for a specific reference to this ModelPart outside the domain query's root select clause.
+	 */
+	default void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default void visitColumns(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			ColumnConsumer consumer) {
+
+	}
+
+	@FunctionalInterface
+	interface ColumnConsumer {
+		// todo (6.0) : pass values `updateable`, `checkable`, etc
+		void accept(
+				String columnExpression,
+				String containingTableExpression,
+				JdbcMapping jdbcMapping);
 	}
 }

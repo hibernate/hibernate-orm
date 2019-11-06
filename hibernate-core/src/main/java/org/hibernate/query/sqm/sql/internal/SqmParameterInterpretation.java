@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.List;
+import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -28,16 +29,22 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
  */
 public class SqmParameterInterpretation implements Expression, DomainResultProducer {
 	private final SqmParameter sqmParameter;
+	private final QueryParameterImplementor<?> queryParameter;
 	private final MappingModelExpressable valueMapping;
+	private final Function<QueryParameterImplementor, QueryParameterBinding> queryParameterBindingResolver;
 
 	private final Expression resolvedExpression;
 
 	public SqmParameterInterpretation(
 			SqmParameter sqmParameter,
+			QueryParameterImplementor<?> queryParameter,
 			List<JdbcParameter> jdbcParameters,
-			MappingModelExpressable valueMapping) {
+			MappingModelExpressable valueMapping,
+			Function<QueryParameterImplementor, QueryParameterBinding> queryParameterBindingResolver) {
 		this.sqmParameter = sqmParameter;
+		this.queryParameter = queryParameter;
 		this.valueMapping = valueMapping;
+		this.queryParameterBindingResolver = queryParameterBindingResolver;
 
 		assert jdbcParameters != null;
 		assert jdbcParameters.size() > 0;
@@ -67,12 +74,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 
 		AllowableParameterType nodeType = sqmParameter.getNodeType();
 		if ( nodeType == null ) {
-			final QueryParameterImplementor<?> queryParameter = creationState.getSqlAstCreationState()
-					.getDomainParameterXref()
-					.getQueryParameter( sqmParameter );
-			final QueryParameterBinding<?> binding = creationState.getSqlAstCreationState()
-					.getDomainParameterBindings()
-					.getBinding( queryParameter );
+			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
 			nodeType = binding.getBindType();
 		}
 

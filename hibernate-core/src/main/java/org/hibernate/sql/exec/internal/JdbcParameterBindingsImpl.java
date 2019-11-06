@@ -25,9 +25,9 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	private Map<JdbcParameter, JdbcParameterBinding> bindingMap;
 
-	public JdbcParameterBindingsImpl(DomainParameterXref domainParameterXref) {
-		if ( domainParameterXref.getSqmParameterCount() > 0 ) {
-			bindingMap = new IdentityHashMap<>( domainParameterXref.getSqmParameterCount() );
+	public JdbcParameterBindingsImpl(int expectedParameterCount) {
+		if ( expectedParameterCount > 0 ) {
+			bindingMap = new IdentityHashMap<>( expectedParameterCount );
 		}
 	}
 

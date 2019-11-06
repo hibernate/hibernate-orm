@@ -8,6 +8,7 @@ package org.hibernate.loader.spi;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -17,7 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public interface SingleEntityLoader<T> extends Loader {
 	@Override
-	EntityPersister getLoadable();
+	EntityMappingType getLoadable();
 
 	/**
 	 * Load an entity by a primary or unique key value.

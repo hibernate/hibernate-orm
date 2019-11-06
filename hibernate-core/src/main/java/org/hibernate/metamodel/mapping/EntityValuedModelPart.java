@@ -87,8 +87,8 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	default void visitJdbcValues(
 			Object value,
 			Clause clause,
-			JdbcValuesConsumer valuesConsumer,
+			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		getEntityMappingType().visitJdbcValues( value, clause, valuesConsumer, session );
+		getEntityMappingType().visitJdbcValues( value, clause, consumer, session );
 	}
 }

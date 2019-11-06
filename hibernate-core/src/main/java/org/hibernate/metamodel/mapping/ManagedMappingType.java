@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Commonality in regards to the mapping type system for all managed domain
@@ -19,6 +20,10 @@ import org.hibernate.sql.results.spi.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
+	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedJavaTypeDescriptor();
+	}
 
 	/**
 	 * Get the number of attributes defined on this class and any supers

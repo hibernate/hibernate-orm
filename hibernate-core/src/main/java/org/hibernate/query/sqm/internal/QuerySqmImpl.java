@@ -56,7 +56,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.BasicType;
 
@@ -67,7 +66,7 @@ import org.hibernate.type.BasicType;
  */
 public class QuerySqmImpl<R>
 		extends AbstractQuery<R>
-		implements HqlQueryImplementor<R>, ExecutionContext, DomainParameterBindingContext {
+		implements HqlQueryImplementor<R>, ExecutionContext {
 
 	private final String hqlString;
 	private final SqmStatement sqmStatement;
@@ -269,7 +268,6 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
 	}
@@ -568,19 +566,10 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public DomainParameterBindingContext getDomainParameterBindingContext() {
-		return this;
-	}
-
-	@Override
 	public Callback getCallback() {
 		return afterLoadAction -> {};
 	}
 
-	@Override
-	public <T> List<T> getLoadIdentifiers() {
-		return null;
-	}
 
 	@Override
 	public NamedHqlQueryMemento toMemento(String name) {

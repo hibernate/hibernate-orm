@@ -73,11 +73,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			preparedStatement = statementCreator.apply( sql );
 
 			// set options
-			if ( executionContext.getQueryOptions().getFetchSize() != null ) {
-				preparedStatement.setFetchSize( executionContext.getQueryOptions().getFetchSize() );
-			}
-			if ( executionContext.getQueryOptions().getTimeout() != null ) {
-				preparedStatement.setQueryTimeout( executionContext.getQueryOptions().getTimeout() );
+			if ( executionContext.getQueryOptions() != null ) {
+				if ( executionContext.getQueryOptions().getFetchSize() != null ) {
+					preparedStatement.setFetchSize( executionContext.getQueryOptions().getFetchSize() );
+				}
+				if ( executionContext.getQueryOptions().getTimeout() != null ) {
+					preparedStatement.setQueryTimeout( executionContext.getQueryOptions().getTimeout() );
+				}
 			}
 
 			// todo : limit/offset

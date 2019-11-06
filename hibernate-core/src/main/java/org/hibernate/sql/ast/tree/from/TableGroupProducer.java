@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.query.sqm.sql.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 
 /**
  * Marker interface for anything which produces a TableGroup

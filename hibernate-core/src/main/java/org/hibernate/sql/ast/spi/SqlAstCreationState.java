@@ -4,16 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.sql;
+package org.hibernate.sql.ast.spi;
 
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 
@@ -33,10 +28,6 @@ public interface SqlAstCreationState {
 	FromClauseAccess getFromClauseAccess();
 
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
-
-	DomainParameterXref getDomainParameterXref();
-
-	QueryParameterBindings getDomainParameterBindings();
 
 	LockMode determineLockMode(String identificationVariable);
 

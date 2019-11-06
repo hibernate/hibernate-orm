@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +80,6 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -95,7 +93,7 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 @SuppressWarnings("WeakerAccess")
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
-		implements NativeQueryImplementor<R>, DomainParameterBindingContext, ExecutionContext {
+		implements NativeQueryImplementor<R>, ExecutionContext {
 	private final String sqlString;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -226,24 +224,12 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public DomainParameterBindingContext getDomainParameterBindingContext() {
-		return this;
-	}
-
-	@Override
 	public Callback getCallback() {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
-	}
-
-	@Override
-	public <T> List<T> getLoadIdentifiers() {
-		//noinspection unchecked
-		return (List) Collections.singletonList( collectionKey );
 	}
 
 	@Override

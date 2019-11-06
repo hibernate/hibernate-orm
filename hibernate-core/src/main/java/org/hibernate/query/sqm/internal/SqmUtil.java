@@ -26,7 +26,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -155,7 +155,9 @@ public class SqmUtil {
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
 			SqlAstCreationState sqlAstCreationState,
 			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref );
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
+				domainParameterXref.getSqmParameterCount()
+		);
 
 		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry :
 				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {

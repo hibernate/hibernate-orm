@@ -18,5 +18,5 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  * @author Steve Ebersole
  */
 public interface SqlAstToJdbcOperationConverter extends SqlAstWalker, SqlTypeDescriptorIndicators {
-	Set<String> getAffectedTableNames();
+	Set<String> getAffectedTableExpressions();
 }

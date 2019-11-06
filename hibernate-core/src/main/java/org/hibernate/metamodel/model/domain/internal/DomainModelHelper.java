@@ -6,33 +6,10 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import javax.persistence.metamodel.Bindable;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.Queryable;
-import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.spi.DomainMetamodel;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SqmTreeTransformationLogger;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.type.BasicType;
 
 /**
  * Helper containing utilities useful for domain model handling

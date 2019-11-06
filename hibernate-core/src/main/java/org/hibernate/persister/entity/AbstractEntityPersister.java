@@ -107,14 +107,18 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.internal.MultiIdEntityLoaderStandardImpl;
 import org.hibernate.loader.internal.NaturalIdLoaderStandardImpl;
 import org.hibernate.loader.internal.Preparable;
+import org.hibernate.loader.internal.SingleIdEntityLoaderLegacyBatch;
+import org.hibernate.loader.internal.SingleIdEntityLoaderPaddedBatch;
 import org.hibernate.loader.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.spi.Loader;
@@ -162,7 +166,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -228,6 +232,10 @@ public abstract class AbstractEntityPersister
 
 
 	private final String sqlAliasStem;
+
+	private final SingleIdEntityLoader singleIdEntityLoader;
+	private final MultiIdEntityLoader multiIdEntityLoader;
+	private final NaturalIdLoader naturalIdLoader;
 
 
 
@@ -318,9 +326,6 @@ public abstract class AbstractEntityPersister
 
 	private final Set<String> affectingFetchProfileNames = new HashSet<>();
 
-	private final SingleIdEntityLoader singleIdEntityLoader;
-	private final MultiIdEntityLoader multiIdEntityLoader;
-	private final NaturalIdLoader naturalIdLoader;
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
@@ -681,11 +686,17 @@ public abstract class AbstractEntityPersister
 		rowIdName = bootDescriptor.getRootTable().getRowId();
 
 		if ( bootDescriptor.getLoaderName() != null ) {
-			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl( this, bootDescriptor.getLoaderName() );
+			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl(
+					this,
+					bootDescriptor.getLoaderName(),
+					factory
+			);
 		}
-		// todo (6.0) : account for batch-size and batch-load strategies
+		else if ( batchSize > 1 ) {
+			singleIdEntityLoader = createBatchingIdEntityLoader( this, batchSize, factory );
+		}
 		else {
-			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl( this );
+			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl( this, factory );
 		}
 
 		multiIdEntityLoader = new MultiIdEntityLoaderStandardImpl( this );
@@ -991,6 +1002,28 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	private static SingleIdEntityLoader createBatchingIdEntityLoader(
+			EntityMappingType entityDescriptor,
+			int batchSize,
+			SessionFactoryImplementor factory) {
+		final BatchFetchStyle batchFetchStyle = factory.getSettings().getBatchFetchStyle();
+
+		switch ( batchFetchStyle ) {
+			case LEGACY: {
+				return new SingleIdEntityLoaderLegacyBatch( entityDescriptor, batchSize, factory );
+			}
+			case DYNAMIC: {
+				return new SingleIdEntityLoaderDynamicBatch( entityDescriptor, batchSize, factory );
+			}
+			case PADDED: {
+				return new SingleIdEntityLoaderPaddedBatch( entityDescriptor, batchSize, factory );
+			}
+			default: {
+				throw new UnsupportedOperationException( "BatchFetchStyle [" + batchFetchStyle.name() + "] not supported" );
+			}
+		}
+	}
+
 	@SuppressWarnings("RedundantIfStatement")
 	private boolean determineWhetherToInvalidateCache(
 			PersistentClass persistentClass,
@@ -1144,6 +1177,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public String getSqlAliasStem() {
 		return sqlAliasStem;
+	}
+
+	@Override
+	public String getPartName() {
+		return getEntityName();
 	}
 
 	@Override
@@ -1777,66 +1815,8 @@ public abstract class AbstractEntityPersister
 		return select;
 	}
 
-	public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session)
-			throws HibernateException {
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Getting current persistent state for: {0}", MessageHelper.infoString(
-							this,
-							id,
-							getFactory()
-					)
-			);
-		}
-
-		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( getSQLSnapshotSelectString() );
-			try {
-				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				//if ( isVersioned() ) getVersionType().nullSafeSet( ps, version, getIdentifierColumnSpan()+1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-				try {
-					//if there is no resulting row, return null
-					if ( !rs.next() ) {
-						return null;
-					}
-					//otherwise return the "hydrated" state (ie. associations are not resolved)
-					Type[] types = getPropertyTypes();
-					Object[] values = new Object[types.length];
-					boolean[] includeProperty = getPropertyUpdateability();
-					for ( int i = 0; i < types.length; i++ ) {
-						if ( includeProperty[i] ) {
-							values[i] = types[i].hydrate(
-									rs,
-									getPropertyAliases( "", i ),
-									session,
-									null
-							); //null owner ok??
-						}
-					}
-					return values;
-				}
-				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-				}
-			}
-			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"could not retrieve snapshot: " + MessageHelper.infoString( this, id, getFactory() ),
-					getSQLSnapshotSelectString()
-			);
-		}
-
+	public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		return singleIdEntityLoader.loadDatabaseSnapshot( id, session );
 	}
 
 	@Override
@@ -5246,6 +5226,10 @@ public abstract class AbstractEntityPersister
 		// clear the fields that are marked as dirty in the dirtyness tracker
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
+		}
+
+		if ( singleIdEntityLoader instanceof Preparable ) {
+			( (Preparable) singleIdEntityLoader ).prepare();
 		}
 	}
 

@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.sql;
 
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.Clause;
 
 /**

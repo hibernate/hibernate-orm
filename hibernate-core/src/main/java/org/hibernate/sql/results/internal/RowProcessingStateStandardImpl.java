@@ -9,13 +9,12 @@ package org.hibernate.sql.results.internal;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.JdbcValues;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
@@ -99,8 +98,8 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	}
 
 	@Override
-	public DomainParameterBindingContext getDomainParameterBindingContext() {
-		throw new NotYetImplementedFor6Exception();
+	public QueryParameterBindings getQueryParameterBindings() {
+		return getJdbcValuesSourceProcessingState().getExecutionContext().getQueryParameterBindings();
 	}
 
 	@Override

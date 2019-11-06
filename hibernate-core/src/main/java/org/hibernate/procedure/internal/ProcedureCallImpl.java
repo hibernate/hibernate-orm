@@ -52,14 +52,13 @@ import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 import org.jboss.logging.Logger;
 
@@ -70,7 +69,7 @@ import org.jboss.logging.Logger;
  */
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
-		implements ProcedureCallImplementor<R>, ResultContext, DomainParameterBindingContext {
+		implements ProcedureCallImplementor<R>, ResultContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			ProcedureCallImpl.class.getName()
@@ -230,28 +229,12 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public DomainParameterBindingContext getDomainParameterBindingContext() {
-		return this;
-	}
-
-	@Override
 	public QueryParameterBindings getParameterBindings() {
 		return paramBindings;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// DomainParameterBindingContext
-
-
-	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
-	}
-
-	@Override
-	public <T> List<T> getLoadIdentifiers() {
-		return Collections.emptyList();
 	}
 
 

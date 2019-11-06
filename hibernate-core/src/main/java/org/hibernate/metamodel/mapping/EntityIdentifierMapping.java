@@ -15,4 +15,9 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	String ROLE_LOCAL_NAME = "{id}";
 
 	PropertyAccess getPropertyAccess();
+
+	@Override
+	default String getPartName() {
+		return ROLE_LOCAL_NAME;
+	}
 }

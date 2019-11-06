@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.exec.spi.DomainParameterBindingContext;
 
 /**
  * @author Steve Ebersole
@@ -21,6 +20,4 @@ public interface ResultContext {
 	Set<String> getSynchronizedQuerySpaces();
 
 	QueryOptions getQueryOptions();
-
-	DomainParameterBindingContext getDomainParameterBindingContext();
 }

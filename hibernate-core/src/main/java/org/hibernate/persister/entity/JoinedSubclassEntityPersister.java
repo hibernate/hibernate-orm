@@ -1223,9 +1223,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext) {
-		if ( hasSubclasses() ) {
-			tableReferenceJoinType = JoinType.LEFT;
-		}
 		return super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
@@ -1267,14 +1264,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		tableReferenceJoins.forEach(
 				tableReferenceJoin -> {
 					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
-					final ColumnReference identifierColumnReference = getIdentifierColumnReference( joinedTableReference );
-					info.columnReferences.add( identifierColumnReference );
-					addWhen(
-							caseSearchedExpression,
-							joinedTableReference,
-							identifierColumnReference,
-							discriminatorType
-					);
+					if ( discriminatorValuesByTableName.containsKey( joinedTableReference.getTableExpression() ) ) {
+						final ColumnReference identifierColumnReference = getIdentifierColumnReference(
+								joinedTableReference );
+						info.columnReferences.add( identifierColumnReference );
+						addWhen(
+								caseSearchedExpression,
+								joinedTableReference,
+								identifierColumnReference,
+								discriminatorType
+						);
+					}
 				}
 		);
 

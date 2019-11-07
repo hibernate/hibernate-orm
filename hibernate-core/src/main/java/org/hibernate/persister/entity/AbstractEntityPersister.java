@@ -1287,7 +1287,7 @@ public abstract class AbstractEntityPersister
 					createTableReferenceJoin(
 							i,
 							primaryTableReference,
-							baseJoinType,
+							determineSubclassTableJoinType( i, true, true, null ),
 							sqlAliasBase,
 							sqlExpressionResolver
 					)
@@ -4251,18 +4251,36 @@ public abstract class AbstractEntityPersister
 		return join;
 	}
 
-	protected JoinType determineSubclassTableJoinType(
+	protected org.hibernate.sql.ast.JoinType determineSubclassTableJoinType(
 			int subclassTableNumber,
 			boolean canInnerJoin,
 			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
-		return determineSubclassTableJoinType(
-				subclassTableNumber,
-				canInnerJoin,
-				includeSubclasses,
-				treatAsDeclarations,
-				null
-		);
+		if ( isClassOrSuperclassTable( subclassTableNumber ) ) {
+			final boolean shouldInnerJoin = canInnerJoin
+					&& !isInverseTable( subclassTableNumber )
+					&& !isNullableTable( subclassTableNumber );
+			// the table is either this persister's driving table or (one of) its super class persister's driving
+			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
+			return shouldInnerJoin ? org.hibernate.sql.ast.JoinType.INNER : org.hibernate.sql.ast.JoinType.LEFT;
+		}
+
+		// otherwise we have a subclass table and need to look a little deeper...
+
+		// IMPL NOTE : By default includeSubclasses indicates that all subclasses should be joined and that each
+		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
+		// so we give TREAT-AS higher precedence...
+
+		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
+			return org.hibernate.sql.ast.JoinType.INNER;
+		}
+
+		if ( includeSubclasses
+				&& !isSubclassTableSequentialSelect( subclassTableNumber )
+				&& !isSubclassTableLazy( subclassTableNumber ) ) {
+			return org.hibernate.sql.ast.JoinType.LEFT;
+		}
+		return org.hibernate.sql.ast.JoinType.INNER;
 	}
 
 	protected JoinType determineSubclassTableJoinType(

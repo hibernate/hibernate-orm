@@ -2,7 +2,7 @@
  * Created on 2004-12-01
  *
  */
-package org.hibernate.tool.internal.export.pojo;
+package org.hibernate.tool.internal.export.java;
 
 import org.hibernate.tool.internal.export.common.GenericExporter;
 

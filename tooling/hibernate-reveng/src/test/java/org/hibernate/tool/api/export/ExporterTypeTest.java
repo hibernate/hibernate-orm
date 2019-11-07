@@ -9,7 +9,7 @@ public class ExporterTypeTest {
 	@Test
 	public void testExporterType() {
 		Assert.assertEquals(
-				"org.hibernate.tool.internal.export.pojo.POJOExporter",
+				"org.hibernate.tool.internal.export.java.POJOExporter",
 				ExporterType.JAVA.className());
 		Assert.assertEquals(
 				"org.hibernate.tool.internal.export.cfg.CfgExporter", 

@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 
 /**
  * Class used to manage the files created during the documentation generation

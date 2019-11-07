@@ -16,7 +16,7 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
+import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
 import org.jboss.logging.Logger;
 
 /**

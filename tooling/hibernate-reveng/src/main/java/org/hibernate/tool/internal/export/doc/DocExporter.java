@@ -19,7 +19,7 @@ import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.internal.export.common.AbstractExporter;
 import org.hibernate.tool.internal.export.common.TemplateProducer;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 
 /**
  * Exporter implementation that creates Hibernate Documentation.

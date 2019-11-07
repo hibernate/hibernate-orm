@@ -12,7 +12,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.internal.export.common.GenericExporter;
 import org.hibernate.tool.internal.export.common.TemplateProducer;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 
 /**
  * @author david and max

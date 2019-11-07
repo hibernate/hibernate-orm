@@ -9,7 +9,7 @@ public enum ExporterType {
 	GENERIC ("org.hibernate.tool.internal.export.common.GenericExporter"),
 	HBM ("org.hibernate.tool.internal.export.hbm.HbmExporter"),
 	HBM_LINT ("org.hibernate.tool.internal.export.lint.HbmLintExporter"),
-	JAVA ("org.hibernate.tool.internal.export.pojo.POJOExporter"),
+	JAVA ("org.hibernate.tool.internal.export.java.POJOExporter"),
 	QUERY ("org.hibernate.tool.internal.export.query.QueryExporter");
 	
 	private String className;

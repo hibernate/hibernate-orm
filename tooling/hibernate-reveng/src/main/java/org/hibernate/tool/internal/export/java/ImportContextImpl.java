@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.export.pojo;
+package org.hibernate.tool.internal.export.java;
 
 import java.util.HashMap;
 import java.util.Iterator;

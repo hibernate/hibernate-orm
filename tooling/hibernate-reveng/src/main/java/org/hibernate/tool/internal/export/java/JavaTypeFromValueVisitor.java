@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.export.pojo;
+package org.hibernate.tool.internal.export.java;
 
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;

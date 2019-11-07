@@ -11,8 +11,8 @@ import java.util.StringTokenizer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 
 
 public class GenericExporter extends AbstractExporter {

@@ -10,9 +10,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
+import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 import org.jboss.logging.Logger;
 
 /**

@@ -2,8 +2,8 @@ package org.hibernate.tool.internal.export.dao;
 
 import java.util.Map;
 
-import org.hibernate.tool.internal.export.pojo.POJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOExporter;
+import org.hibernate.tool.internal.export.java.POJOClass;
+import org.hibernate.tool.internal.export.java.POJOExporter;
 
 public class DaoExporter extends POJOExporter {
 

@@ -23,9 +23,9 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.export.common.ConfigurationNavigator;
-import org.hibernate.tool.internal.export.pojo.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.pojo.ComponentPOJOClass;
-import org.hibernate.tool.internal.export.pojo.POJOClass;
+import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
+import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
+import org.hibernate.tool.internal.export.java.POJOClass;
 import org.hibernate.type.Type;
 
 /**

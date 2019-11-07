@@ -111,7 +111,7 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
 			SessionImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 

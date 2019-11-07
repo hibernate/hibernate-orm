@@ -192,7 +192,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 
 	//end::events-Principal-example[]
 	public static class Principal {
-		public static boolean isAuthorized(String clazz, Serializable id) {
+		public static boolean isAuthorized(String clazz, Object id) {
 			return false;
 		}
 	}

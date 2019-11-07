@@ -67,7 +67,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		return null;
 	}
 

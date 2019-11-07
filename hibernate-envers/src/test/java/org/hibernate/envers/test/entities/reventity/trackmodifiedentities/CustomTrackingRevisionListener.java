@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
-import java.io.Serializable;
-
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionType;
 
@@ -17,7 +15,7 @@ import org.hibernate.envers.RevisionType;
 public class CustomTrackingRevisionListener implements EntityTrackingRevisionListener {
 	@Override
 	public void entityChanged(
-			Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+			Class entityClass, String entityName, Object entityId, RevisionType revisionType,
 			Object revisionEntity) {
 		((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType( entityClass.getName() );
 	}

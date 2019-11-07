@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.Session;
@@ -18,7 +17,7 @@ import org.hibernate.envers.RevisionType;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispatcher {
-	Serializable getEntityId();
+	Object getEntityId();
 
 	String getEntityName();
 

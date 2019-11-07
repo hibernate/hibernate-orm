@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.envers;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -238,7 +237,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 		@Override
 		public void entityChanged(Class entityClass,
 								  String entityName,
-								  Serializable entityId,
+								  Object entityId,
 								  RevisionType revisionType,
 								  Object revisionEntity ) {
 			String type = entityClass.getName();

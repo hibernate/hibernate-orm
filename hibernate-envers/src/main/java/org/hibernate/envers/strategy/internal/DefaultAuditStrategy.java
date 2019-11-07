@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.strategy.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.Session;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
@@ -43,7 +41,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Session session,
 			String entityName,
 			AuditEntitiesConfiguration auditEntitiesConfiguration,
-			Serializable id,
+			Object id,
 			Object data,
 			Object revision) {
 		session.save( auditEntitiesConfiguration.getAuditEntityName( entityName ), data );

@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id, EntityPersister entityPersister, Object[] state) {
+			Object id, EntityPersister entityPersister, Object[] state) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 
 		this.data = new HashMap<>();
@@ -48,7 +47,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 			SessionImplementor sessionImplementor,
 			String entityName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			Map<String, Object> data) {
 		super( sessionImplementor, entityName, enversService, id, RevisionType.ADD );
 

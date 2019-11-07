@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.revisioninfo;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,7 +47,7 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 	public void entityChanged(
 			Class entityClass,
 			String entityName,
-			Serializable entityId,
+			Object entityId,
 			RevisionType revisionType,
 			Object revisionEntity) {
 		super.entityChanged( entityClass, entityName, entityId, revisionType, revisionEntity );

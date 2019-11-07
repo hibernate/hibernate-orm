@@ -126,7 +126,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
 			SessionImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 
 		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );

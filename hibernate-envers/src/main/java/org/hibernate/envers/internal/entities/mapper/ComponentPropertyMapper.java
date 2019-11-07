@@ -171,7 +171,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 	public List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session, String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id) {
+			Serializable oldColl, Object id) {
 		return delegate.mapCollectionChanges( session, referencingPropertyName, newColl, oldColl, id );
 	}
 

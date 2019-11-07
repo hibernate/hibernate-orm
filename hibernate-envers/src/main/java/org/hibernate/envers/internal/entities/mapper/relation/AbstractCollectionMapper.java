@@ -105,7 +105,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			List<PersistentCollectionChangeData> collectionChanges,
 			Set<Object> changed,
 			RevisionType revisionType,
-			Serializable id) {
+			Object id) {
 		int ordinal = 0;
 
 		for ( Object changedObj : changed ) {
@@ -138,7 +138,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
 		if ( !propertyData.getName().equals( referencingPropertyName ) ) {
 			return null;
@@ -336,7 +336,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			SessionImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id);
+			Object id);
 
 	@Override
 	public boolean hasPropertiesWithModifiedFlag() {

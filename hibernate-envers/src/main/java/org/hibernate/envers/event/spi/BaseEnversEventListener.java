@@ -90,7 +90,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		// relDesc.getToEntityName() doesn't always return the entity name of the value - in case
 		// of subclasses, this will be root class, no the actual class. So it can't be used here.
 		String toEntityName;
-		Serializable id;
+		Object id;
 
 		if ( value instanceof HibernateProxy ) {
 			final HibernateProxy hibernateProxy = (HibernateProxy) value;

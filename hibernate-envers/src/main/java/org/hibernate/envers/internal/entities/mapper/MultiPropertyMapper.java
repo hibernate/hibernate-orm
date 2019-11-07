@@ -249,7 +249,7 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			SessionImplementor session,
 			String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id) {
+			Serializable oldColl, Object id) {
 		final Pair<PropertyMapper, String> pair = getMapperAndDelegatePropName( referencingPropertyName );
 		final PropertyMapper mapper = pair.getFirst();
 		if ( mapper != null ) {

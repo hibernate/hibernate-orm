@@ -9,7 +9,6 @@ package org.hibernate.envers.strategy.internal;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -141,7 +140,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			final Session session,
 			final String entityName,
 			final AuditEntitiesConfiguration audEntitiesCfg,
-			final Serializable id,
+			final Object id,
 			final Object data,
 			final Object revision) {
 		final String auditedEntityName = audEntitiesCfg.getAuditEntityName( entityName );

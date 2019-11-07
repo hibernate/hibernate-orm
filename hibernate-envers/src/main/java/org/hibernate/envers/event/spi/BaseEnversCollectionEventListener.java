@@ -17,6 +17,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
+import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
@@ -197,17 +198,17 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			AbstractCollectionEvent event,
 			RelationDescription rd) {
 		// First computing the relation changes
-		final List<PersistentCollectionChangeData> collectionChanges = getEnversService()
+		final ExtendedPropertyMapper propertyMapper = getEnversService()
 				.getEntitiesConfigurations()
 				.get( collectionEntityName )
-				.getPropertyMapper()
-				.mapCollectionChanges(
-						event.getSession(),
-						referencingPropertyName,
-						newColl,
-						oldColl,
-						event.getAffectedOwnerIdOrNull()
-				);
+				.getPropertyMapper();
+		final List<PersistentCollectionChangeData> collectionChanges = propertyMapper.mapCollectionChanges(
+				event.getSession(),
+				referencingPropertyName,
+				newColl,
+				oldColl,
+				event.getAffectedOwnerIdOrNull()
+		);
 
 		// Getting the id mapper for the related entity, as the work units generated will correspond to the related
 		// entities.

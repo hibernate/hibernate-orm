@@ -153,7 +153,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			String referencingPropertyName,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		return null;
 	}
 

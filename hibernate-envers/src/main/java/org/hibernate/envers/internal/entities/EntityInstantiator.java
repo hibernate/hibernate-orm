@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.entities;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +110,7 @@ public class EntityInstantiator {
 				final HibernateProxy hibernateProxy = (HibernateProxy) value;
 				final LazyInitializer initializer = hibernateProxy.getHibernateLazyInitializer();
 				final String entityName = initializer.getEntityName();
-				final Serializable entityId = initializer.getIdentifier();
+				final Object entityId = initializer.getIdentifier();
 				if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 					final String entityClassName = enversService.getEntitiesConfigurations().get( entityName ).getEntityClassName();
 					final Class entityClass = ReflectionTools.loadClass(

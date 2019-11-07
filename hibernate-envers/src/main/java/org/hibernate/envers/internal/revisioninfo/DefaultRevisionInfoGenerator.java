@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.revisioninfo;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Date;
 
@@ -84,7 +83,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	public void entityChanged(
 			Class entityClass,
 			String entityName,
-			Serializable entityId,
+			Object entityId,
 			RevisionType revisionType,
 			Object revisionInfo) {
 		if ( listenerManagedBean != null ) {

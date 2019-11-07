@@ -138,7 +138,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 			SessionImplementor session,
 			PersistentCollection newColl,
 			Serializable oldColl,
-			Serializable id) {
+			Object id) {
 		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<>();
 		final CollectionPersister collectionPersister = resolveCollectionPersister( session, newColl );
 

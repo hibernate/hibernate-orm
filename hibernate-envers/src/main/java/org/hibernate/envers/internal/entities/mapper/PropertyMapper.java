@@ -65,7 +65,7 @@ public interface PropertyMapper extends ModifiedFlagMapperSupport, DynamicCompon
 	List<PersistentCollectionChangeData> mapCollectionChanges(
 			SessionImplementor session, String referencingPropertyName,
 			PersistentCollection newColl,
-			Serializable oldColl, Serializable id);
+			Serializable oldColl, Object id);
 
 	void mapModifiedFlagsToMapFromEntity(
 			SessionImplementor session,

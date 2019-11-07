@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.internal.synchronization.work;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 			String entityName,
 			String collectionPropertyName,
 			EnversService enversService,
-			Serializable id,
+			Object id,
 			Object entity) {
 		super( session, entityName, enversService, id, RevisionType.MOD );
 

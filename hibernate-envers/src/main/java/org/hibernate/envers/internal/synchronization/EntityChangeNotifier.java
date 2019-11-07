@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.internal.synchronization;
 
-import java.io.Serializable;
-
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
@@ -39,7 +37,7 @@ public class EntityChangeNotifier {
 	 * @param vwu Performed work unit.
 	 */
 	public void entityChanged(Session session, Object currentRevisionData, AuditWorkUnit vwu) {
-		Serializable entityId = vwu.getEntityId();
+		Object entityId = vwu.getEntityId();
 		if ( entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId ) {
 			// Notify about a change in collection owner entity.
 			entityId = ( (PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId ).getOwnerId();

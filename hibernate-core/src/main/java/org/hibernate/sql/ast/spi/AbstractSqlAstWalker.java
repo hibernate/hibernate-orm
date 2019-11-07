@@ -742,7 +742,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		dialect.visitCaseSearchedExpression( caseSearchedExpression, sqlBuffer, this );
+		dialect.getCaseExpressionWalker().visitCaseSearchedExpression( caseSearchedExpression, sqlBuffer, this );
 	}
 
 	@Override

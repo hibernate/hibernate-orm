@@ -16,6 +16,8 @@ import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.CaseFragment;
+import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 
 /**
  * A dialect for Oracle 9i databases.
@@ -100,6 +102,11 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	public CaseFragment createCaseFragment() {
 		// Oracle did add support for ANSI CASE statements in 9i
 		return new ANSICaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return ANSICaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

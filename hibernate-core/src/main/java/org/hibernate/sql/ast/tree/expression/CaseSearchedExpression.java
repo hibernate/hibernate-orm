@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.CasePredicate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -53,7 +53,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		return otherwise;
 	}
 
-	public void when(Predicate predicate, Expression result) {
+	public void when(CasePredicate predicate, Expression result) {
 		whenFragments.add( new WhenFragment( predicate, result ) );
 	}
 
@@ -109,15 +109,15 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	public static class WhenFragment {
-		private final Predicate predicate;
+		private final CasePredicate predicate;
 		private final Expression result;
 
-		public WhenFragment(Predicate predicate, Expression result) {
+		public WhenFragment(CasePredicate predicate, Expression result) {
 			this.predicate = predicate;
 			this.result = result;
 		}
 
-		public Predicate getPredicate() {
+		public CasePredicate getPredicate() {
 			return predicate;
 		}
 

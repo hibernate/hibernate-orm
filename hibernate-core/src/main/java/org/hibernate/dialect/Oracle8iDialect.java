@@ -43,6 +43,8 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -296,6 +298,11 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return DecodeCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

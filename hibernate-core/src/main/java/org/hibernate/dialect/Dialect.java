@@ -108,6 +108,8 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -1785,32 +1787,15 @@ public abstract class Dialect implements ConversionContext {
 		return new ANSICaseFragment();
 	}
 
-	public void visitCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			StringBuilder sqlBuffer,
-			SqlAstWalker sqlAstWalker) {
-		sqlBuffer.append( "case " );
-
-		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			sqlBuffer.append( " when " );
-			whenFragment.getPredicate().accept( sqlAstWalker );
-			sqlBuffer.append( " then " );
-			whenFragment.getResult().accept( sqlAstWalker );
-		}
-
-		Expression otherwise = caseSearchedExpression.getOtherwise();
-		if ( otherwise != null ) {
-			sqlBuffer.append( " else " );
-			otherwise.accept( sqlAstWalker );
-		}
-
-		sqlBuffer.append( " end" );
-
-		String columnExpression = caseSearchedExpression.getColumnExpression();
-
-		if ( columnExpression != null ) {
-			sqlBuffer.append( " as " ).append( columnExpression );
-		}
+	/**
+	 * Create a {@link CaseExpressionWalker} responsible
+	 * for handling this dialect's variations in how CASE statements are
+	 * handled.
+	 *
+	 * @return This dialect's {@link CaseFragment} strategy.
+	 */
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return ANSICaseExpressionWalker.INSTANCE;
 	}
 
 	/**

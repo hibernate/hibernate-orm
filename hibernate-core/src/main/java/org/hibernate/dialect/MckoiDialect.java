@@ -22,6 +22,8 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.MckoiCaseExpressionWalker;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -106,6 +108,11 @@ public class MckoiDialect extends Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new MckoiCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return MckoiCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

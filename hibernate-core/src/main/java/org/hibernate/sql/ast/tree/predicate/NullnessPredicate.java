@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 /**
  * @author Steve Ebersole
  */
-public class NullnessPredicate implements Predicate {
+public class NullnessPredicate implements Predicate, CasePredicate {
 	private final Expression expression;
 	private final boolean negated;
 
@@ -37,5 +37,10 @@ public class NullnessPredicate implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitNullnessPredicate( this );
+	}
+
+	@Override
+	public Expression getLeftHandExpression() {
+		return expression;
 	}
 }

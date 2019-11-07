@@ -28,6 +28,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.DerbyCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -107,6 +109,11 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DerbyCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return DerbyCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

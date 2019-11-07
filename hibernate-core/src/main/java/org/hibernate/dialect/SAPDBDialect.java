@@ -19,6 +19,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -216,6 +218,11 @@ public class SAPDBDialect extends Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return DecodeCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

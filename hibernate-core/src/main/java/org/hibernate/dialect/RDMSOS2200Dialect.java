@@ -28,6 +28,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
@@ -361,6 +363,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return DecodeCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

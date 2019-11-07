@@ -14,6 +14,8 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.hibernate.sql.ast.spi.CaseExpressionWalker;
+import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 
 import org.jboss.logging.Logger;
 
@@ -52,6 +54,11 @@ public class OracleDialect extends Oracle9Dialect {
 	@Override
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
+	}
+
+	@Override
+	public CaseExpressionWalker getCaseExpressionWalker() {
+		return DecodeCaseExpressionWalker.INSTANCE;
 	}
 
 	@Override

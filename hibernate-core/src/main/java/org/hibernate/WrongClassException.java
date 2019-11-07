@@ -15,17 +15,16 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public class WrongClassException extends HibernateException {
-	private final Serializable identifier;
+	private final Object identifier;
 	private final String entityName;
 
 	/**
 	 * Constructs a WrongClassException using the supplied information.
-	 *
-	 * @param message A message explaining the exception condition
+	 *  @param message A message explaining the exception condition
 	 * @param identifier The identifier of the entity
 	 * @param entityName The entity-type requested
 	 */
-	public WrongClassException(String message, Serializable identifier, String entityName) {
+	public WrongClassException(String message, Object identifier, String entityName) {
 		super(
 				String.format(
 						"Object [id=%s] was not of the specified subclass [%s] : %s",
@@ -42,7 +41,7 @@ public class WrongClassException extends HibernateException {
 		return entityName;
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 }

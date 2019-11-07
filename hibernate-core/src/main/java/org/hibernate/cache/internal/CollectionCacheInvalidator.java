@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -123,14 +122,14 @@ public class CollectionCacheInvalidator
 				if ( !collectionPersister.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
 					int i = entityMetamodel.getPropertyIndex( mappedBy );
-					Serializable oldId = null;
+					Object oldId = null;
 					if ( oldState != null ) {
 						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
 						// old one
 						oldId = getIdentifier( session, oldState[i] );
 					}
 					Object ref = persister.getPropertyValue( entity, i );
-					Serializable id = getIdentifier( session, ref );
+					Object id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
 					if ( ( id != null && !id.equals( oldId ) ) || ( oldId != null && !oldId.equals( id ) ) ) {
@@ -163,8 +162,8 @@ public class CollectionCacheInvalidator
 		}
 	}
 
-	private Serializable getIdentifier(EventSource session, Object obj) {
-		Serializable id = null;
+	private Object getIdentifier(EventSource session, Object obj) {
+		Object id = null;
 		if ( obj != null ) {
 			id = session.getContextEntityIdentifier( obj );
 			if ( id == null ) {
@@ -174,7 +173,7 @@ public class CollectionCacheInvalidator
 		return id;
 	}
 
-	private void evict(Serializable id, CollectionPersister collectionPersister, EventSource session) {
+	private void evict(Object id, CollectionPersister collectionPersister, EventSource session) {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
@@ -192,7 +191,7 @@ public class CollectionCacheInvalidator
 		protected CollectionEvictCacheAction(
 				CollectionPersister persister,
 				PersistentCollection collection,
-				Serializable key,
+				Object key,
 				SharedSessionContractImplementor session) {
 			super( persister, collection, key, session );
 		}

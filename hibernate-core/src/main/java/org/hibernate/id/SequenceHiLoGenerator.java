@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -53,7 +52,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	}
 
 	@Override
-	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
+	public synchronized Object generate(final SharedSessionContractImplementor session, Object obj) {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages

@@ -6,7 +6,6 @@
  */
 package org.hibernate.metadata;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -158,7 +157,7 @@ public interface ClassMetadata {
 	 * instead
 	 */
 	@Deprecated
-	default Object instantiate(Serializable id, SessionImplementor session) {
+	default Object instantiate(Object id, SessionImplementor session) {
 		return instantiate( id, (SharedSessionContractImplementor) session );
 	}
 
@@ -170,7 +169,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The instantiated entity.
 	 */
-	Object instantiate(Serializable id, SharedSessionContractImplementor session);
+	Object instantiate(Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Get the value of a particular (named) property
@@ -200,10 +199,11 @@ public interface ClassMetadata {
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
+	 * @return
 	 */
 	@Deprecated
 	@SuppressWarnings( {"JavaDoc"})
-	Serializable getIdentifier(Object object) throws HibernateException;
+	Object getIdentifier(Object object) throws HibernateException;
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
@@ -216,7 +216,7 @@ public interface ClassMetadata {
 	 * @deprecated Use {@link #getIdentifier(Object, SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
-	default Serializable getIdentifier(Object entity, SessionImplementor session) {
+	default Object getIdentifier(Object entity, SessionImplementor session) {
 		return getIdentifier( entity, (SharedSessionContractImplementor) session );
 	}
 
@@ -228,7 +228,7 @@ public interface ClassMetadata {
 	 *
 	 * @return The identifier
 	 */
-	Serializable getIdentifier(Object entity, SharedSessionContractImplementor session);
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
 	/**
 	 * Inject the identifier value into the given entity.
@@ -237,21 +237,20 @@ public interface ClassMetadata {
 	 * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
 	 *
-	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SharedSessionContractImplementor)} instead
+	 * @deprecated Use {@link #setIdentifier(Object, Object, SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
-	default void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+	default void setIdentifier(Object entity, Object id, SessionImplementor session) {
 		setIdentifier( entity, id, (SharedSessionContractImplementor) session );
 	}
 
 	/**
 	 * Inject the identifier value into the given entity.
-	 *
-	 * @param entity The entity to inject with the identifier value.
+	 *  @param entity The entity to inject with the identifier value.
 	 * @param id The value to be injected as the identifier.
 	 * @param session The session from which is requests originates
 	 */
-	void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session);
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 
 	/**

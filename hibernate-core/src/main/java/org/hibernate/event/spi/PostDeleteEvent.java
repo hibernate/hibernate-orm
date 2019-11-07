@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -18,16 +16,15 @@ import org.hibernate.persister.entity.EntityPersister;
 public class PostDeleteEvent extends AbstractEvent {
 	private Object entity;
 	private EntityPersister persister;
-	private Serializable id;
+	private Object id;
 	private Object[] deletedState;
 	
 	public PostDeleteEvent(
-			Object entity, 
-			Serializable id,
+			Object entity,
+			Object id,
 			Object[] deletedState,
 			EntityPersister persister,
-			EventSource source
-	) {
+			EventSource source) {
 		super(source);
 		this.entity = entity;
 		this.id = id;
@@ -35,15 +32,18 @@ public class PostDeleteEvent extends AbstractEvent {
 		this.deletedState = deletedState;
 	}
 	
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
+
 	public EntityPersister getPersister() {
 		return persister;
 	}
+
 	public Object getEntity() {
 		return entity;
 	}
+
 	public Object[] getDeletedState() {
 		return deletedState;
 	}

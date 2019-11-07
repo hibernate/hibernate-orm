@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.loader.spi.InternalFetchProfile;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -35,6 +34,7 @@ import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.loader.spi.InternalFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -148,7 +148,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				EntityEntry entry = persistenceContext.getEntry( entity );
 				if ( entry == null ) {
 					EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-					Serializable id = persister.getIdentifier( entity, source );
+					Object id = persister.getIdentifier( entity, source );
 					if ( id != null ) {
 						final EntityKey key = source.generateEntityKey( id, persister );
 						final Object managedEntity = persistenceContext.getEntity( key );
@@ -218,7 +218,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final String entityName = event.getEntityName();
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
 
-		final Serializable id = persister.hasIdentifierProperty()
+		final Object id = persister.hasIdentifierProperty()
 				? persister.getIdentifier( entity, session )
 				: null;
 
@@ -286,13 +286,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		final String entityName = persister.getEntityName();
 
-		Serializable id = event.getRequestedId();
+		Object id = event.getRequestedId();
 		if ( id == null ) {
 			id = persister.getIdentifier( entity, source );
 		}
 		else {
 			// check that entity id = requestedId
-			Serializable entityId = persister.getIdentifier( entity, source );
+			Object entityId = persister.getIdentifier( entity, source );
 			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getFactory() ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
@@ -432,7 +432,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		EntityEntry entry = persistenceContext.getEntry( entity );
 		if ( entry == null ) {
-			Serializable id = persister.getIdentifier( entity, source );
+			Object id = persister.getIdentifier( entity, source );
 			if ( id != null ) {
 				final EntityKey key = source.generateEntityKey( id, persister );
 				final Object managedEntity = persistenceContext.getEntity( key );

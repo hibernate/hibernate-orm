@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.hibernate.HibernateException;
@@ -24,8 +23,8 @@ public class IdentifierBagType extends CollectionType {
 
 	@Override
 	public PersistentCollection instantiate(
-		SharedSessionContractImplementor session,
-		CollectionPersister persister, Serializable key)
+			SharedSessionContractImplementor session,
+			CollectionPersister persister, Object key)
 		throws HibernateException {
 
 		return new PersistentIdentifierBag( session );

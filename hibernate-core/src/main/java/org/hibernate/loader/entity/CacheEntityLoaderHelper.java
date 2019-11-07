@@ -6,8 +6,6 @@
  */
 package org.hibernate.loader.entity;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.WrongClassException;
@@ -266,7 +264,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 
 	private Object convertCacheEntryToEntity(
 			CacheEntry entry,
-			Serializable entityId,
+			Object entityId,
 			EntityPersister persister,
 			LoadEvent event,
 			EntityKey entityKey) {
@@ -309,7 +307,11 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		final Type[] types = subclassPersister.getPropertyTypes();
 		// initializes the entity by (desired) side-effect
 		values = ( (StandardCacheEntryImpl) entry ).assemble(
-				entity, entityId, subclassPersister, session.getInterceptor(), session
+				entity,
+				entityId,
+				subclassPersister,
+				session.getInterceptor(),
+				session
 		);
 		if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
 			TypeHelper.deepCopy(

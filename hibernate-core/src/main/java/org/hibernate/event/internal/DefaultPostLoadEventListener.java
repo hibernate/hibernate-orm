@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
@@ -69,7 +71,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 
 		if ( event.getPersister().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
-			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
+			( (Lifecycle) event.getEntity() ).onLoad( session, (Serializable) event.getId() );
 		}
 
 	}

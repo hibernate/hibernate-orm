@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -30,8 +28,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 	/**
 	 * Constructs a CollectionUpdateAction
-	 *
-	 * @param collection The collection to update
+	 *  @param collection The collection to update
 	 * @param persister The collection persister
 	 * @param id The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty
@@ -40,7 +37,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	public CollectionUpdateAction(
 				final PersistentCollection collection,
 				final CollectionPersister persister,
-				final Serializable id,
+				final Object id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
@@ -49,7 +46,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		final Serializable id = getKey();
+		final Object id = getKey();
 		final SharedSessionContractImplementor session = getSession();
 		final CollectionPersister persister = getPersister();
 		final PersistentCollection collection = getCollection();

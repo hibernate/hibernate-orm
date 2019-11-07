@@ -67,7 +67,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	private int cachedSize = -1;
 
 	private String role;
-	private Serializable key;
+	private Object key;
 	// collections detect changes made via their public interface and mark
 	// themselves as dirty as a performance optimization
 	private boolean dirty;
@@ -102,7 +102,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public final Serializable getKey() {
+	public final Object getKey() {
 		return key;
 	}
 
@@ -521,7 +521,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
-	public void setSnapshot(Serializable key, String role, Serializable snapshot) {
+	public void setSnapshot(Object key, String role, Serializable snapshot) {
 		this.key = key;
 		this.role = role;
 		this.storedSnapshot = snapshot;
@@ -711,7 +711,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// change it). Don't access the CollectionEntry in this.session because that could result
 		// in multi-threaded access to this.session.
 		final String roleCurrent = role;
-		final Serializable keyCurrent = key;
+		final Object keyCurrent = key;
 
 		final StringBuilder sb = new StringBuilder( "Collection : " );
 		if ( roleCurrent != null ) {
@@ -1261,7 +1261,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 					currentSaving.add( current );
 				}
 				else {
-					final Serializable currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					final Object currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(
 							entityName,
 							current,
 							session
@@ -1274,7 +1274,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		// iterate over the *old* list
 		for ( Object old : oldElements ) {
 			if ( !currentSaving.contains( old ) ) {
-				final Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
+				final Object oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
 				if ( !currentIds.contains( useIdDirect ? oldId : new TypedValue( idType, oldId ) ) ) {
 					res.add( old );
 				}
@@ -1311,10 +1311,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			final EntityPersister entityPersister = session.getFactory().getEntityPersister( entityName );
 			final Type idType = entityPersister.getIdentifierType();
 
-			final Serializable idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );
+			final Object idOfCurrent = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, entityInstance, session );
 			final Iterator itr = list.iterator();
 			while ( itr.hasNext() ) {
-				final Serializable idOfOld = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, itr.next(), session );
+				final Object idOfOld = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, itr.next(), session );
 				if ( idType.isEqual( idOfCurrent, idOfOld, session.getFactory() ) ) {
 					itr.remove();
 					break;

@@ -73,9 +73,9 @@ public class LegacyBatchingCollectionInitializerBuilder extends AbstractBatching
 		}
 
 		@Override
-		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
+		public void initialize(Object id, SharedSessionContractImplementor session)	throws HibernateException {
 			final CollectionPersister collectionPersister = getCollectionPersister();
-			Serializable[] batch = session.getPersistenceContext().getBatchFetchQueue()
+			Object[] batch = session.getPersistenceContext().getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister, id, batchSizes[0] );
 
 			final Type keyType = collectionPersister.getKeyType();

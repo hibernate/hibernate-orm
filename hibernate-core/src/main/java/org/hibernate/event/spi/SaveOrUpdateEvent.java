@@ -18,11 +18,11 @@ import org.hibernate.engine.spi.EntityEntry;
 public class SaveOrUpdateEvent extends AbstractEvent {
 
 	private Object object;
-	private Serializable requestedId;
+	private Object requestedId;
 	private String entityName;
 	private Object entity;
 	private EntityEntry entry;
-	private Serializable resultId;
+	private Object resultId;
 
 	public SaveOrUpdateEvent(String entityName, Object original, EventSource source) {
 		this(original, source);
@@ -57,11 +57,11 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.object = object;
 	}
 
-	public Serializable getRequestedId() {
+	public Object getRequestedId() {
 		return requestedId;
 	}
 
-	public void setRequestedId(Serializable requestedId) {
+	public void setRequestedId(Object requestedId) {
 		this.requestedId = requestedId;
 	}
 
@@ -89,11 +89,11 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 		this.entry = entry;
 	}
 
-	public Serializable getResultId() {
+	public Object getResultId() {
 		return resultId;
 	}
 
-	public void setResultId(Serializable resultId) {
+	public void setResultId(Object resultId) {
 		this.resultId = resultId;
 	}
 }

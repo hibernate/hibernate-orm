@@ -214,7 +214,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {
 			final StaleObjectStateException sose = (StaleObjectStateException) e;
-			final Serializable identifier = sose.getIdentifier();
+			final Object identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
 					final Object entity = sharedSessionContract.internalLoad( sose.getEntityName(), identifier, false, true);

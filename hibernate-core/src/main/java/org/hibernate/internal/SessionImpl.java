@@ -494,16 +494,19 @@ public final class SessionImpl
 		if ( object == null ) {
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
+
 		if ( object instanceof HibernateProxy ) {
 			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation( this );
 			if ( object == null ) {
 				return LockMode.NONE;
 			}
 		}
-		EntityEntry e = persistenceContext.getEntry( object );
+
+		final EntityEntry e = persistenceContext.getEntry( object );
 		if ( e == null ) {
 			throw new TransientObjectException( "Given object not associated with the session" );
 		}
+
 		if ( e.getStatus() != Status.MANAGED ) {
 			throw new ObjectDeletedException(
 					"The given object was deleted",
@@ -511,6 +514,7 @@ public final class SessionImpl
 					e.getPersister().getEntityName()
 			);
 		}
+
 		return e.getLockMode();
 	}
 
@@ -576,16 +580,16 @@ public final class SessionImpl
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Serializable save(Object obj) throws HibernateException {
+	public Object save(Object obj) throws HibernateException {
 		return save( null, obj );
 	}
 
 	@Override
-	public Serializable save(String entityName, Object object) throws HibernateException {
+	public Object save(String entityName, Object object) throws HibernateException {
 		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
 
-	private Serializable fireSave(final SaveOrUpdateEvent event) {
+	private Object fireSave(final SaveOrUpdateEvent event) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		checkNoUnresolvedActionsBeforeOperation();
@@ -898,7 +902,7 @@ public final class SessionImpl
 	// load()/get() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void load(Object object, Serializable id) throws HibernateException {
+	public void load(Object object, Object id) throws HibernateException {
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		if ( event == null ) {
@@ -925,22 +929,22 @@ public final class SessionImpl
 	}
 
 	@Override
-	public <T> T load(Class<T> entityClass, Serializable id) throws HibernateException {
+	public <T> T load(Class<T> entityClass, Object id) throws HibernateException {
 		return this.byId( entityClass ).getReference( id );
 	}
 
 	@Override
-	public Object load(String entityName, Serializable id) throws HibernateException {
+	public Object load(String entityName, Object id) throws HibernateException {
 		return this.byId( entityName ).getReference( id );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Serializable id) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id) throws HibernateException {
 		return this.byId( entityClass ).load( id );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id) throws HibernateException {
+	public Object get(String entityName, Object id) throws HibernateException {
 		return this.byId( entityName ).load( id );
 	}
 
@@ -950,7 +954,7 @@ public final class SessionImpl
 	 * Do NOT return a proxy.
 	 */
 	@Override
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			EntityPersister persister = getFactory().getMetamodel().entityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
@@ -973,7 +977,7 @@ public final class SessionImpl
 	@Override
 	public final Object internalLoad(
 			String entityName,
-			Serializable id,
+			Object id,
 			boolean eager,
 			boolean nullable) {
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
@@ -1031,7 +1035,7 @@ public final class SessionImpl
 	/**
 	 * Helper to avoid creating many new instances of LoadEvent: it's an allocation hot spot.
 	 */
-	private LoadEvent recycleEventInstance(final LoadEvent event, final Serializable id, final String entityName) {
+	private LoadEvent recycleEventInstance(final LoadEvent event, final Object id, final String entityName) {
 		if ( event == null ) {
 			return new LoadEvent( id, entityName, true, this );
 		}
@@ -1047,32 +1051,32 @@ public final class SessionImpl
 	}
 
 	@Override
-	public <T> T load(Class<T> entityClass, Serializable id, LockMode lockMode) throws HibernateException {
+	public <T> T load(Class<T> entityClass, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
 	@Override
-	public <T> T load(Class<T> entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
+	public <T> T load(Class<T> entityClass, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityClass ).with( lockOptions ).getReference( id );
 	}
 
 	@Override
-	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
+	public Object load(String entityName, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
 	@Override
-	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
+	public Object load(String entityName, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityName ).with( lockOptions ).getReference( id );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Serializable id, LockMode lockMode) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityClass ).with( lockOptions ).load( id );
 	}
 
@@ -1082,7 +1086,7 @@ public final class SessionImpl
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
+	public Object get(String entityName, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}
 
@@ -1358,7 +1362,7 @@ public final class SessionImpl
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
-	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
+	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = getInterceptor().instantiate(
@@ -1401,7 +1405,7 @@ public final class SessionImpl
 
 	// not for internal use:
 	@Override
-	public Serializable getIdentifier(Object object) throws HibernateException {
+	public Object getIdentifier(Object object) throws HibernateException {
 		checkOpen();
 		checkTransactionSynchStatus();
 		if ( object instanceof HibernateProxy ) {
@@ -1425,7 +1429,7 @@ public final class SessionImpl
 	 * is a bit stricter than getEntityIdentifierIfNotUnsaved().
 	 */
 	@Override
-	public Serializable getContextEntityIdentifier(Object object) {
+	public Object getContextEntityIdentifier(Object object) {
 		checkOpenOrWaitingForAutoClose();
 		if ( object instanceof HibernateProxy ) {
 			return getProxyIdentifier( object );
@@ -1436,7 +1440,7 @@ public final class SessionImpl
 		}
 	}
 
-	private Serializable getProxyIdentifier(Object proxy) {
+	private Object getProxyIdentifier(Object proxy) {
 		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
 	}
 
@@ -2203,7 +2207,7 @@ public final class SessionImpl
 		}
 
 		@Override
-		public final T getReference(Serializable id) {
+		public final T getReference(Object id) {
 			return perform( () -> doGetReference( id ) );
 		}
 
@@ -2245,7 +2249,7 @@ public final class SessionImpl
 		}
 
 		@SuppressWarnings("unchecked")
-		protected T doGetReference(Serializable id) {
+		protected T doGetReference(Object id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.LOAD );
@@ -2271,17 +2275,17 @@ public final class SessionImpl
 		}
 
 		@Override
-		public final T load(Serializable id) {
+		public final T load(Object id) {
 			return perform( () -> doLoad( id ) );
 		}
 
 		@Override
-		public Optional<T> loadOptional(Serializable id) {
+		public Optional<T> loadOptional(Object id) {
 			return Optional.ofNullable( perform( () -> doLoad( id ) ) );
 		}
 
 		@SuppressWarnings("unchecked")
-		protected final T doLoad(Serializable id) {
+		protected final T doLoad(Object id) {
 			if ( this.lockOptions != null ) {
 				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.GET );
@@ -2402,7 +2406,7 @@ public final class SessionImpl
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <K extends Serializable> List<T> multiLoad(K... ids) {
+		public <K> List<T> multiLoad(K... ids) {
 			return perform( () -> entityPersister.multiLoad( ids, SessionImpl.this, this ) );
 		}
 
@@ -2445,8 +2449,8 @@ public final class SessionImpl
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <K extends Serializable> List<T> multiLoad(List<K> ids) {
-			return perform( () -> entityPersister.multiLoad( ids.toArray( new Serializable[ ids.size() ] ), SessionImpl.this, this ) );
+		public <K> List<T> multiLoad(List<K> ids) {
+			return perform( () -> entityPersister.multiLoad( ids.toArray( new Object[0] ), SessionImpl.this, this ) );
 		}
 	}
 
@@ -2482,7 +2486,7 @@ public final class SessionImpl
 			this.synchronizationEnabled = synchronizationEnabled;
 		}
 
-		protected final Serializable resolveNaturalId(Map<String, Object> naturalIdParameters) {
+		protected final Object resolveNaturalId(Map<String, Object> naturalIdParameters) {
 			performAnyNeededCrossReferenceSynchronizations();
 
 			final ResolveNaturalIdEvent event =
@@ -2513,7 +2517,7 @@ public final class SessionImpl
 
 			final PersistenceContext persistenceContext = getPersistenceContextInternal();
 			final boolean debugEnabled = log.isDebugEnabled();
-			for ( Serializable pk : persistenceContext.getNaturalIdHelper()
+			for ( Object pk : persistenceContext.getNaturalIdHelper()
 					.getCachedPkResolutions( entityPersister ) ) {
 				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
 				final Object entity = persistenceContext.getEntity( entityKey );
@@ -2594,7 +2598,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public final T getReference() {
-			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
+			final Object entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2604,7 +2608,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public final T load() {
-			final Serializable entityId = resolveNaturalId( this.naturalIdParameters );
+			final Object entityId = resolveNaturalId( this.naturalIdParameters );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2669,7 +2673,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public T getReference(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
+			final Object entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}
@@ -2679,7 +2683,7 @@ public final class SessionImpl
 		@Override
 		@SuppressWarnings("unchecked")
 		public T load(Object naturalIdValue) {
-			final Serializable entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
+			final Object entityId = resolveNaturalId( getNaturalIdParameters( naturalIdValue ) );
 			if ( entityId == null ) {
 				return null;
 			}

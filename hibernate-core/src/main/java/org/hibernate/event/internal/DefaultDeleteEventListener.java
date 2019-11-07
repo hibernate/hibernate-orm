@@ -89,7 +89,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		final EntityPersister persister;
-		final Serializable id;
+		final Object id;
 		final Object version;
 
 		if ( entityEntry == null ) {
@@ -191,7 +191,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		EventSource source = event.getSession();
 		String entityName = event.getEntityName();
 		EntityPersister persister = source.getEntityPersister( entityName, event.getObject() );
-		Serializable id =  persister.getIdentifier( event.getObject(), source );
+		Object id =  persister.getIdentifier( event.getObject(), source );
 		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
 		throw new IllegalArgumentException("Removing a detached instance "+ entityName + "#" + id);
 	}
@@ -273,7 +273,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		session.getInterceptor().onDelete(
 				entity,
-				entityEntry.getId(),
+				(Serializable) entityEntry.getId(),
 				deletedState,
 				persister.getPropertyNames(),
 				propTypes

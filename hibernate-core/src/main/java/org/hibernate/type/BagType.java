@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -24,7 +23,7 @@ public class BagType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key)
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
 	throws HibernateException {
 		return new PersistentBag( session );
 	}

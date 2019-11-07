@@ -5,7 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.proxy;
-import java.io.Serializable;
 
 /**
  * Delegate to handle the scenario of an entity not found by a specified id.
@@ -13,5 +12,5 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface EntityNotFoundDelegate {
-	public void handleEntityNotFound(String entityName, Serializable id);
+	public void handleEntityNotFound(String entityName, Object id);
 }

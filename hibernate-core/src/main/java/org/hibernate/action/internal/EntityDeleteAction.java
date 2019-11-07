@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -39,8 +37,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	/**
 	 * Constructs an EntityDeleteAction.
-	 *
-	 * @param id The entity identifier
+	 *  @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param version The current entity version
 	 * @param instance The entity instance
@@ -49,7 +46,7 @@ public class EntityDeleteAction extends EntityAction {
 	 * @param session The session
 	 */
 	public EntityDeleteAction(
-			final Serializable id,
+			final Object id,
 			final Object[] state,
 			final Object version,
 			final Object instance,
@@ -71,7 +68,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		final Serializable id = getId();
+		final Object id = getId();
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();

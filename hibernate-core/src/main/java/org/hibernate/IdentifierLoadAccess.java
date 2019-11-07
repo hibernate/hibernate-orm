@@ -6,7 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 import org.hibernate.graph.GraphSemantic;
@@ -55,7 +54,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	T getReference(Serializable id);
+	T getReference(Object id);
 
 	/**
 	 * Return the persistent instance with the given identifier, or null if there is no such persistent instance.
@@ -66,7 +65,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return The persistent instance or {@code null}
 	 */
-	T load(Serializable id);
+	T load(Object id);
 
 	/**
 	 * Same semantic as {@link #load} except that here {@link Optional} is returned to
@@ -76,5 +75,5 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @return The persistent instance, if one, wrapped in Optional
 	 */
-	Optional<T> loadOptional(Serializable id);
+	Optional<T> loadOptional(Object id);
 }

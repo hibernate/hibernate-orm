@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -50,7 +49,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) {
+	public Object generate(SharedSessionContractImplementor session, Object obj) {
 		return format( getIP() ) + sep
 				+ format( getJVM() ) + sep
 				+ format( getHiTime() ) + sep

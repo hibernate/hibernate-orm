@@ -106,7 +106,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -247,9 +247,8 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public Serializable disassemble(CollectionPersister persister)
-			throws HibernateException {
-		final Serializable[] result = new Serializable[ values.size() * 2 ];
+	public Object disassemble(CollectionPersister persister) {
+		final Object[] result = new Object[ values.size() * 2 ];
 		int i = 0;
 		for ( int j=0; j< values.size(); j++ ) {
 			final Object value = values.get( j );
@@ -429,7 +428,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
 				//TODO: native ids
-				final Serializable id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				final Object id = persister.getIdentifierGenerator().generate( getSession(), entry );
 				identifiers.put( loc, id );
 			}
 		}

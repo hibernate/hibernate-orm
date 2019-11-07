@@ -17,20 +17,19 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public class UnresolvableObjectException extends HibernateException {
-	private final Serializable identifier;
+	private final Object identifier;
 	private final String entityName;
 
 	/**
 	 * Constructs an UnresolvableObjectException using the specified information.
-	 *
-	 * @param identifier The identifier of the entity which could not be resolved
+	 *  @param identifier The identifier of the entity which could not be resolved
 	 * @param entityName The name of the entity which could not be resolved
 	 */
-	public UnresolvableObjectException(Serializable identifier, String entityName) {
+	public UnresolvableObjectException(Object identifier, String entityName) {
 		this( "No row with the given identifier exists", identifier, entityName );
 	}
 
-	protected UnresolvableObjectException(String message, Serializable identifier, String clazz) {
+	protected UnresolvableObjectException(String message, Object identifier, String clazz) {
 		super( message );
 		this.identifier = identifier;
 		this.entityName = clazz;
@@ -45,14 +44,14 @@ public class UnresolvableObjectException extends HibernateException {
 	 *
 	 * @throws UnresolvableObjectException Thrown if entity is null
 	 */
-	public static void throwIfNull(Object entity, Serializable identifier, String entityName)
+	public static void throwIfNull(Object entity, Object identifier, String entityName)
 			throws UnresolvableObjectException {
 		if ( entity == null ) {
 			throw new UnresolvableObjectException( identifier, entityName );
 		}
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 

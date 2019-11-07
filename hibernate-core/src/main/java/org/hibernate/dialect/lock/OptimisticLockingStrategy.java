@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.OptimisticLockException;
@@ -44,7 +42,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}

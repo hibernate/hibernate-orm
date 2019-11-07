@@ -6,7 +6,6 @@
  */
 package org.hibernate.proxy;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -63,5 +62,5 @@ public interface ProxyFactory {
 	 * @throws HibernateException Indicates problems generating the requested
 	 * proxy.
 	 */
-	HibernateProxy getProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	HibernateProxy getProxy(Object id, SharedSessionContractImplementor session) throws HibernateException;
 }

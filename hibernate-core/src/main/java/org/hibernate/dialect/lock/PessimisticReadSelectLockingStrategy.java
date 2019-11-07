@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,7 +52,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 	}
 
 	@Override
-	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
 		try {

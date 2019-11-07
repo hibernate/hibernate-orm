@@ -13,12 +13,12 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -46,7 +46,7 @@ public class BatchFetchQueue {
 
 	/**
 	 * Used to hold information about the entities that are currently eligible for batch-fetching.  Ultimately
-	 * used by {@link #getEntityBatch} to build entity load batches.
+	 * used by {@link #getBatchLoadableEntityIds} to build entity load batches.
 	 * <p/>
 	 * A Map structure is used to segment the keys by entity type since loading can only be done for a particular entity
 	 * type at a time.
@@ -179,20 +179,15 @@ public class BatchFetchQueue {
 	 * Get a batch of unloaded identifiers for this class, using a slightly
 	 * complex algorithm that tries to grab keys registered immediately after
 	 * the given key.
-	 *
-	 * @param persister The persister for the entities being loaded.
-	 * @param id The identifier of the entity currently demanding load.
-	 * @param batchSize The maximum number of keys to return
-	 * @return an array of identifiers, of length batchSize (possibly padded with nulls)
 	 */
-	public Serializable[] getEntityBatch(
-			final EntityPersister persister,
-			final Serializable id,
-			final int batchSize,
-			final EntityMode entityMode) {
+	public Object[] getBatchLoadableEntityIds(
+			final EntityMappingType entityDescriptor,
+			final Object loadingId,
+			final int maxBatchSize) {
 
-		final Serializable[] ids = new Serializable[batchSize];
-		ids[0] = id; //first element of array is reserved for the actual instance we are loading!
+		final Object[] ids = new Object[maxBatchSize];
+		// make sure we load the id being loaded in the batch!
+		ids[0] = loadingId;
 
 		if ( batchLoadableEntityKeys == null ) {
 			return ids;
@@ -204,22 +199,24 @@ public class BatchFetchQueue {
 
 		// TODO: this needn't exclude subclasses...
 
-		LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( persister.getEntityName() );
+		LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
 		if ( set != null ) {
 			for ( EntityKey key : set ) {
 				if ( checkForEnd && i == end ) {
-					//the first id found after the given id
+					// the first id found after the given id
 					return ids;
 				}
-				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier() ) ) {
+
+				if ( entityDescriptor.getEntityPersister().getIdentifierType().isEqual( loadingId, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {
-					if ( !isCached( key, persister ) ) {
+					if ( !isCached( key, entityDescriptor.getEntityPersister() ) ) {
 						ids[i++] = key.getIdentifier();
 					}
 				}
-				if ( i == batchSize ) {
+
+				if ( i == maxBatchSize ) {
 					i = 1; // end of array, start filling again from start
 					if ( end != -1 ) {
 						checkForEnd = true;
@@ -227,7 +224,9 @@ public class BatchFetchQueue {
 				}
 			}
 		}
-		return ids; //we ran out of ids to try
+
+		//we ran out of ids to try
+		return ids;
 	}
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
@@ -290,12 +289,12 @@ public class BatchFetchQueue {
 	 * @param batchSize the maximum number of keys to return
 	 * @return an array of collection keys, of length batchSize (padded with nulls)
 	 */
-	public Serializable[] getCollectionBatch(
+	public Object[] getCollectionBatch(
 			final CollectionPersister collectionPersister,
-			final Serializable id,
+			final Object id,
 			final int batchSize) {
 
-		final Serializable[] keys = new Serializable[batchSize];
+		final Object[] keys = new Object[batchSize];
 		keys[0] = id;
 
 		if ( batchLoadableCollections == null ) {
@@ -357,7 +356,7 @@ public class BatchFetchQueue {
 		return keys; //we ran out of keys to try
 	}
 
-	private boolean isCached(Serializable collectionKey, CollectionPersister persister) {
+	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		SharedSessionContractImplementor session = context.getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
 			CollectionDataAccess cache = persister.getCacheAccessStrategy();

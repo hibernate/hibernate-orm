@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.criteria.CriteriaDelete;
@@ -79,7 +78,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	ActionQueue getActionQueue();
 
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	void forceFlush(EntityEntry e) throws HibernateException;
 

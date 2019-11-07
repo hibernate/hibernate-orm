@@ -20,7 +20,6 @@ import javax.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -235,7 +234,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a Query:
-	 * @see Query#setReadOnly(boolean)
+	 * @see org.hibernate.query.Query#setReadOnly(boolean)
 	 *
 	 * @param readOnly true, the default for loaded entities/proxies is read-only;
 	 *                 false, the default for loaded entities/proxies is modifiable
@@ -252,7 +251,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @throws TransientObjectException if the instance is transient or associated with
 	 * a different session
 	 */
-	Serializable getIdentifier(Object object);
+	Object getIdentifier(Object object);
 
 	/**
 	 * Check if this entity is associated with this Session.  This form caters to
@@ -281,7 +280,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(Class, Serializable, LockOptions)}
+	 * Convenient form of {@link #load(Class, Object, LockOptions)}
 	 *
 	 * @param theClass a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -289,9 +288,9 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @see #load(Class, Serializable, LockOptions)
+	 * @see #load(Class, Object, LockOptions)
 	 */
-	<T> T load(Class<T> theClass, Serializable id, LockMode lockMode);
+	<T> T load(Class<T> theClass, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -302,13 +301,13 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * @param lockOptions contains the lock level
 	 * @return the persistent instance or proxy
 	 */
-	<T> T load(Class<T> theClass, Serializable id, LockOptions lockOptions);
+	<T> T load(Class<T> theClass, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(String, Serializable, LockOptions)}
+	 * Convenient form of {@link #load(String, Object, LockOptions)}
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -316,9 +315,9 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the persistent instance or proxy
 	 *
-	 * @see #load(String, Serializable, LockOptions)
+	 * @see #load(String, Object, LockOptions)
 	 */
-	Object load(String entityName, Serializable id, LockMode lockMode);
+	Object load(String entityName, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -330,7 +329,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	Object load(String entityName, Serializable id, LockOptions lockOptions);
+	Object load(String entityName, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -346,7 +345,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	<T> T load(Class<T> theClass, Serializable id);
+	<T> T load(Class<T> theClass, Object id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -362,16 +361,13 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the persistent instance or proxy
 	 */
-	Object load(String entityName, Serializable id);
+	Object load(String entityName, Object id);
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given transient
 	 * instance.
-	 *
-	 * @param object an "empty" instance of the persistent class
-	 * @param id a valid identifier of an existing persistent instance of the class
 	 */
-	void load(Object object, Serializable id);
+	void load(Object object, Object id);
 
 	/**
 	 * Persist the state of the given detached instance, reusing the current
@@ -404,7 +400,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the generated identifier
 	 */
-	Serializable save(Object object);
+	Object save(Object object);
 
 	/**
 	 * Persist the given transient instance, first assigning a generated identifier. (Or
@@ -417,7 +413,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return the generated identifier
 	 */
-	Serializable save(String entityName, Object object);
+	Object save(String entityName, Object object);
 
 	/**
 	 * Either {@link #save(Object)} or {@link #update(Object)} the given
@@ -693,7 +689,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 */
-	<T> T get(Class<T> entityType, Serializable id);
+	<T> T get(Class<T> entityType, Object id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -701,7 +697,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #get(Class, Serializable, LockOptions)}
+	 * Convenient form of {@link #get(Class, Object, LockOptions)}
 	 *
 	 * @param entityType The entity type
 	 * @param id an identifier
@@ -709,9 +705,9 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(Class, Serializable, LockOptions)
+	 * @see #get(Class, Object, LockOptions)
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockMode lockMode);
+	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -725,7 +721,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 */
-	<T> T get(Class<T> entityType, Serializable id, LockOptions lockOptions);
+	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
@@ -737,7 +733,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 */
-	Object get(String entityName, Serializable id);
+	Object get(String entityName, Object id);
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -745,7 +741,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
 	 * Obtain the specified lock mode if the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #get(String, Serializable, LockOptions)}
+	 * Convenient form of {@link #get(String, Object, LockOptions)}
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -753,7 +749,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @see #get(String, Serializable, LockOptions)
+	 * @see #get(String, Object, LockOptions)
 	 */
 	Object get(String entityName, Serializable id, LockMode lockMode);
 
@@ -769,7 +765,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return a persistent instance or null
 	 */
-	Object get(String entityName, Serializable id, LockOptions lockOptions);
+	Object get(String entityName, Object id, LockOptions lockOptions);
 
 	/**
 	 * Return the entity name for a persistent entity.
@@ -936,7 +932,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a Query:
-	 * @see Query#setReadOnly(boolean)
+	 * @see org.hibernate.query.Query#setReadOnly(boolean)
 	 * 
 	 * @param entityOrProxy an entity or HibernateProxy
 	 * @param readOnly {@code true} if the entity or proxy should be made read-only; {@code false} if the entity or

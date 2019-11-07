@@ -13,7 +13,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -305,7 +304,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister) throws HibernateException {
+	public Object[] getDatabaseSnapshot(Object id, EntityPersister persister) throws HibernateException {
 		final EntityKey key = session.generateEntityKey( id, persister );
 		final Object cached = entitySnapshotsByKey.get( key );
 		if ( cached != null ) {
@@ -319,7 +318,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object[] getNaturalIdSnapshot(Serializable id, EntityPersister persister) throws HibernateException {
+	public Object[] getNaturalIdSnapshot(Object id, EntityPersister persister) throws HibernateException {
 		if ( !persister.hasNaturalIdentifier() ) {
 			return null;
 		}
@@ -489,7 +488,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
@@ -599,7 +598,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void reassociateProxy(Object value, Serializable id) throws MappingException {
+	public void reassociateProxy(Object value, Object id) throws MappingException {
 		if ( value instanceof HibernateProxy ) {
 			LOG.debugf( "Setting proxy identifier: %s", id );
 			final HibernateProxy proxy = (HibernateProxy) value;
@@ -757,7 +756,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getCollectionOwner(Serializable key, CollectionPersister collectionPersister) throws MappingException {
+	public Object getCollectionOwner(Object key, CollectionPersister collectionPersister) throws MappingException {
 		// todo : we really just need to add a split in the notions of:
 		//		1) collection key
 		//		2) collection owner key
@@ -771,11 +770,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		//
 		//		1) The incoming key could be the entity itself...
 		if ( ownerPersister.isInstance( key ) ) {
-			final Serializable owenerId = ownerPersister.getIdentifier( key, session );
-			if ( owenerId == null ) {
+			final Object ownerId = ownerPersister.getIdentifier( key, session );
+			if ( ownerId == null ) {
 				return null;
 			}
-			return getEntity( session.generateEntityKey( owenerId, ownerPersister ) );
+			return getEntity( session.generateEntityKey( ownerId, ownerPersister ) );
 		}
 
 		final CollectionType collectionType = collectionPersister.getCollectionType();
@@ -811,7 +810,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			//			We could also possibly see if the referenced property is a natural id since we already have caching
 			//			in place of natural id snapshots.  BUt really its better to just do it the right way ^^ if we start
 			// 			going that route
-			final Serializable ownerId = ownerPersister.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
+			final Object ownerId = ownerPersister.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
 			return getEntity( session.generateEntityKey( ownerId, ownerPersister ) );
 		}
 
@@ -829,7 +828,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		Object loadedOwner = null;
 		// TODO: an alternative is to check if the owner has changed; if it hasn't then
 		// return collection.getOwner()
-		final Serializable entityId = getLoadedCollectionOwnerIdOrNull( ce );
+		final Object entityId = getLoadedCollectionOwnerIdOrNull( ce );
 		if ( entityId != null ) {
 			loadedOwner = getCollectionOwner( entityId, ce.getLoadedPersister() );
 		}
@@ -837,7 +836,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Serializable getLoadedCollectionOwnerIdOrNull(PersistentCollection collection) {
+	public Object getLoadedCollectionOwnerIdOrNull(PersistentCollection collection) {
 		return getLoadedCollectionOwnerIdOrNull( getCollectionEntry( collection ) );
 	}
 
@@ -847,7 +846,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @param ce The collection entry
 	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
 	 */
-	private Serializable getLoadedCollectionOwnerIdOrNull(CollectionEntry ce) {
+	private Object getLoadedCollectionOwnerIdOrNull(CollectionEntry ce) {
 		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
@@ -857,7 +856,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Serializable id) {
+	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Object id) {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		addCollection( collection, ce, id );
 		if ( persister.getBatchSize() > 1 ) {
@@ -882,12 +881,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	/**
 	 * Add a collection to the cache, with a given collection entry.
-	 *
-	 * @param coll The collection for which we are adding an entry.
-	 * @param entry The entry representing the collection.
-	 * @param key The key of the collection's entry.
 	 */
-	private void addCollection(PersistentCollection coll, CollectionEntry entry, Serializable key) {
+	private void addCollection(PersistentCollection coll, CollectionEntry entry, Object key) {
 		getOrInitializeCollectionEntries().put( coll, entry );
 		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
 		final PersistentCollection old = collectionsByKey.put( collectionKey, coll );
@@ -937,7 +932,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection collection, Serializable id)
+	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection collection, Object id)
 			throws HibernateException {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		ce.postInitialize( collection );
@@ -1200,7 +1195,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
+	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 		final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( entityName );
 		final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( collectionRole );
@@ -1487,7 +1482,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
+	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Object generatedId) {
 		final Object entity = entitiesByKey.remove( oldKey );
 		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
 		this.parentsByChild = null;
@@ -1764,17 +1759,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private HashMap<String,List<Serializable>> insertedKeysMap;
+	private HashMap<String,List<Object>> insertedKeysMap;
 
 	@Override
-	public void registerInsertedKey(EntityPersister persister, Serializable id) {
+	public void registerInsertedKey(EntityPersister persister, Object id) {
 		// we only are worried about registering these if the persister defines caching
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
 			}
 			final String rootEntityName = persister.getRootEntityName();
-			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
+			List<Object> insertedEntityIds = insertedKeysMap.get( rootEntityName );
 			if ( insertedEntityIds == null ) {
 				insertedEntityIds = new ArrayList<>();
 				insertedKeysMap.put( rootEntityName, insertedEntityIds );
@@ -1784,11 +1779,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
+	public boolean wasInsertedDuringTransaction(EntityPersister persister, Object id) {
 		// again, we only really care if the entity is cached
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
-				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				final List<Object> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
 				}
@@ -1857,7 +1852,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void cacheNaturalIdCrossReferenceFromLoad(
 				EntityPersister persister,
-				Serializable id,
+				Object id,
 				Object[] naturalIdValues) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
@@ -1880,7 +1875,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void manageLocalNaturalIdCrossReference(
 				EntityPersister persister,
-				Serializable id,
+				Object id,
 				Object[] state,
 				Object[] previousState,
 				CachedNaturalIdValueSource source) {
@@ -1899,7 +1894,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void manageSharedNaturalIdCrossReference(
 				EntityPersister persister,
-				final Serializable id,
+				final Object id,
 				Object[] state,
 				Object[] previousState,
 				CachedNaturalIdValueSource source) {
@@ -1922,7 +1917,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		private void managedSharedCacheEntries(
 				EntityPersister persister,
-				final Serializable id,
+				final Object id,
 				Object[] naturalIdValues,
 				Object[] previousNaturalIdValues,
 				CachedNaturalIdValueSource source) {
@@ -2041,7 +2036,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] state) {
+		public Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Object id, Object[] state) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return null;
@@ -2060,7 +2055,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues) {
+		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Object id, Object[] naturalIdValues) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return;
@@ -2088,12 +2083,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
+		public Object[] findCachedNaturalId(EntityPersister persister, Object pk) {
 			return getNaturalIdXrefDelegate().findCachedNaturalId( locateProperPersister( persister ), pk );
 		}
 
 		@Override
-		public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+		public Object findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
 			return getNaturalIdXrefDelegate().findCachedNaturalIdResolution( locateProperPersister( persister ), naturalIdValues );
 		}
 
@@ -2131,12 +2126,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public Collection<Serializable> getCachedPkResolutions(EntityPersister entityPersister) {
+		public Collection<Object> getCachedPkResolutions(EntityPersister entityPersister) {
 			return getNaturalIdXrefDelegate().getCachedPkResolutions( entityPersister );
 		}
 
 		@Override
-		public void handleSynchronization(EntityPersister persister, Serializable pk, Object entity) {
+		public void handleSynchronization(EntityPersister persister, Object pk, Object entity) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return;

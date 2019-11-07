@@ -69,8 +69,8 @@ public class PaddedBatchingCollectionInitializerBuilder extends BatchingCollecti
 		}
 
 		@Override
-		public void initialize(Serializable id, SharedSessionContractImplementor session)	throws HibernateException {
-			final Serializable[] batch = session.getPersistenceContextInternal()
+		public void initialize(Object id, SharedSessionContractImplementor session)	throws HibernateException {
+			final Object[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, batchSizes[0] );
 			final int numberOfIds = ArrayHelper.countNonNull( batch );
@@ -93,7 +93,7 @@ public class PaddedBatchingCollectionInitializerBuilder extends BatchingCollecti
 			final Serializable[] idsToLoad = new Serializable[ batchSizes[indexToUse] ];
 			System.arraycopy( batch, 0, idsToLoad, 0, numberOfIds );
 			for ( int i = numberOfIds; i < batchSizes[indexToUse]; i++ ) {
-				idsToLoad[i] = id;
+				idsToLoad[i] = (Serializable) id;
 			}
 
 			loaders[indexToUse].loadCollectionBatch( session, idsToLoad, collectionPersister().getKeyType() );

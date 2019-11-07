@@ -33,7 +33,6 @@ import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -71,8 +70,6 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.FetchingScrollableResultsImpl;
-import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.entity.CascadeEntityLoader;
@@ -86,7 +83,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
@@ -790,7 +786,7 @@ public abstract class Loader {
 		final int entitySpan = persisters.length;
 
 		final int numberOfPersistersToProcess;
-		final Serializable optionalId = queryParameters.getOptionalId();
+		final Object optionalId = queryParameters.getOptionalId();
 		if ( isSingleRowLoader() && optionalId != null ) {
 			keys[entitySpan - 1] = session.generateEntityKey( optionalId, persisters[entitySpan - 1] );
 			// skip the last persister below...
@@ -912,7 +908,7 @@ public abstract class Loader {
 						null; //if null, owner will be retrieved from session
 
 				final CollectionPersister collectionPersister = collectionPersisters[i];
-				final Serializable key;
+				final Object key;
 				if ( owner == null ) {
 					key = null;
 				}
@@ -1378,7 +1374,7 @@ public abstract class Loader {
 	 */
 	private void readCollectionElement(
 			final Object optionalOwner,
-			final Serializable optionalKey,
+			final Object optionalKey,
 			final CollectionPersister persister,
 			final CollectionAliases descriptor,
 			final ResultSet rs,
@@ -2517,7 +2513,7 @@ public abstract class Loader {
 	 */
 	public final void loadCollection(
 			final SharedSessionContractImplementor session,
-			final Serializable id,
+			final Object id,
 			final Type type) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
@@ -2526,7 +2522,7 @@ public abstract class Loader {
 			);
 		}
 
-		Serializable[] ids = new Serializable[] {id};
+		Object[] ids = new Object[] {id};
 		try {
 			doQueryAndInitializeNonLazyCollections(
 					session,

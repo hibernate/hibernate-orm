@@ -74,13 +74,14 @@ import org.hibernate.type.Type;
 public interface CollectionPersister extends CollectionDefinition, TableReferenceContributor {
 	/**
 	 * Initialize the given collection with the given key
-	 * TODO: add owner argument!!
 	 */
-	void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException;
+	void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException;
+
 	/**
 	 * Is this collection role cacheable
 	 */
 	boolean hasCache();
+
 	/**
 	 * Get the cache
 	 */
@@ -139,21 +140,19 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 			ResultSet rs,
 			Object owner,
 			String[] columnAliases,
-			SharedSessionContractImplementor session)
-		throws HibernateException, SQLException;
+			SharedSessionContractImplementor session) throws SQLException;
 	/**
 	 * Read the index from a row of the JDBC <tt>ResultSet</tt>
 	 */
-	Object readIndex(ResultSet rs, String[] columnAliases, SharedSessionContractImplementor session)
-		throws HibernateException, SQLException;
+	Object readIndex(ResultSet rs, String[] columnAliases, SharedSessionContractImplementor session) throws SQLException;
+
 	/**
 	 * Read the identifier from a row of the JDBC <tt>ResultSet</tt>
 	 */
 	Object readIdentifier(
 			ResultSet rs,
 			String columnAlias,
-			SharedSessionContractImplementor session)
-		throws HibernateException, SQLException;
+			SharedSessionContractImplementor session) throws SQLException;
 	/**
 	 * Is this an array or primitive values?
 	 */
@@ -192,72 +191,75 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 	/**
 	 * Completely remove the persistent state of the collection
 	 */
-	void remove(Serializable id, SharedSessionContractImplementor session)
-		throws HibernateException;
+	void remove(Object id, SharedSessionContractImplementor session);
+
 	/**
 	 * (Re)create the collection's persistent state
 	 */
 	void recreate(
 			PersistentCollection collection,
-			Serializable key,
-			SharedSessionContractImplementor session)
-		throws HibernateException;
+			Object key,
+			SharedSessionContractImplementor session);
+
 	/**
 	 * Delete the persistent state of any elements that were removed from
 	 * the collection
 	 */
 	void deleteRows(
 			PersistentCollection collection,
-			Serializable key,
-			SharedSessionContractImplementor session)
-		throws HibernateException;
+			Object key,
+			SharedSessionContractImplementor session);
+
 	/**
 	 * Update the persistent state of any elements that were modified
 	 */
 	void updateRows(
 			PersistentCollection collection,
-			Serializable key,
-			SharedSessionContractImplementor session)
-		throws HibernateException;
+			Object key,
+			SharedSessionContractImplementor session);
+
 	/**
 	 * Insert the persistent state of any new collection elements
 	 */
 	void insertRows(
 			PersistentCollection collection,
-			Serializable key,
-			SharedSessionContractImplementor session)
-		throws HibernateException;
+			Object key,
+			SharedSessionContractImplementor session);
 	
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
 	void processQueuedOps(
 			PersistentCollection collection,
-			Serializable key,
-			SharedSessionContractImplementor session)
-			throws HibernateException;
+			Object key,
+			SharedSessionContractImplementor session);
 	
 	/**
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")
 	 */
 	String getRole();
+
 	/**
 	 * Get the persister of the entity that "owns" this collection
 	 */
 	EntityPersister getOwnerEntityPersister();
+
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
 	IdentifierGenerator getIdentifierGenerator();
+
 	/**
 	 * Get the type of the surrogate key
 	 */
 	Type getIdentifierType();
+
 	/**
 	 * Does this collection implement "orphan delete"?
 	 */
 	boolean hasOrphanDelete();
+
 	/**
 	 * Is this an ordered collection? (An ordered collection is
 	 * ordered by the initialization operation, not by sorting
@@ -336,10 +338,10 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 	String getIdentifierColumnAlias(String suffix);
 	
 	boolean isExtraLazy();
-	int getSize(Serializable key, SharedSessionContractImplementor session);
-	boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session);
-	boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session);
-	Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner);
+	int getSize(Object key, SharedSessionContractImplementor session);
+	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
+	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);
+	Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner);
 	int getBatchSize();
 
 	/**

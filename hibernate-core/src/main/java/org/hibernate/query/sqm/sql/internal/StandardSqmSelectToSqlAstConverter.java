@@ -30,7 +30,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -42,6 +41,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -97,7 +97,6 @@ public class StandardSqmSelectToSqlAstConverter
 	public SqmSelectInterpretation interpret(SqmSelectStatement statement) {
 		return new SqmSelectInterpretation(
 				visitSelectStatement( statement ),
-				getFromClauseIndex().getAffectedTableNames(),
 				getJdbcParamsBySqmParam()
 		);
 	}
@@ -120,11 +119,7 @@ public class StandardSqmSelectToSqlAstConverter
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
 
-		return new SelectStatement(
-				querySpec,
-				domainResults,
-				getFromClauseIndex().getAffectedTableNames()
-		);
+		return new SelectStatement( querySpec, domainResults );
 	}
 
 

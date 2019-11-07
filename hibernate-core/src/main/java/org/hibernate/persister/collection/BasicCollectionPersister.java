@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,7 +31,6 @@ import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectCollectionLoader;
 import org.hibernate.mapping.Collection;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
@@ -139,7 +137,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session) {
+	protected void doProcessQueuedOps(PersistentCollection collection, Object id, SharedSessionContractImplementor session) {
 		// nothing to do
 	}
 
@@ -189,7 +187,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private BasicBatchKey updateBatchKey;
 
 	@Override
-	protected int doUpdateRows(Serializable id, PersistentCollection collection, SharedSessionContractImplementor session)
+	protected int doUpdateRows(Object id, PersistentCollection collection, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( ArrayHelper.isAllFalse( elementColumnIsSettable ) ) {
 			return 0;
@@ -259,7 +257,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	private int doUpdateRow(
-			Serializable id,
+			Object id,
 			PersistentCollection collection,
 			SharedSessionContractImplementor session,
 			Expectation expectation, boolean callable, boolean useBatch, List elements, String sql, int count, int i)

@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
@@ -34,17 +32,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	/**
 	 * Constructs an AbstractEntityInsertAction object.
-	 *
-	 * @param id - the entity ID
+	 *  @param id - the entity ID
 	 * @param state - the entity state
 	 * @param instance - the entity
 	 * @param isVersionIncrementDisabled - true, if version increment should
-	 *                                     be disabled; false, otherwise
+*                                     be disabled; false, otherwise
 	 * @param persister - the entity persister
 	 * @param session - the session
 	 */
 	protected AbstractEntityInsertAction(
-			Serializable id,
+			Object id,
 			Object[] state,
 			Object instance,
 			boolean isVersionIncrementDisabled,
@@ -180,7 +177,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @param generatedId The generated entity identifier
 	 */
-	public void handleNaturalIdPostSaveNotifications(Serializable generatedId) {
+	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
 		final PersistenceContext.NaturalIdHelper naturalIdHelper = getSession().getPersistenceContextInternal().getNaturalIdHelper();
 		if ( isEarlyInsert() ) {
 			// with early insert, we still need to add a local (transactional) natural id cross-reference

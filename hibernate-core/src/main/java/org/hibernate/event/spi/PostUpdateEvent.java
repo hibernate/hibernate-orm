@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -20,13 +18,13 @@ public class PostUpdateEvent extends AbstractEvent {
 	private EntityPersister persister;
 	private Object[] state;
 	private Object[] oldState;
-	private Serializable id;
+	private Object id;
 	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
 	private final int[] dirtyProperties;
 	
 	public PostUpdateEvent(
-			Object entity, 
-			Serializable id,
+			Object entity,
+			Object id,
 			Object[] state,
 			Object[] oldState,
 			int[] dirtyProperties,
@@ -45,15 +43,19 @@ public class PostUpdateEvent extends AbstractEvent {
 	public Object getEntity() {
 		return entity;
 	}
-	public Serializable getId() {
+
+	public Object getId() {
 		return id;
 	}
+
 	public Object[] getOldState() {
 		return oldState;
 	}
+
 	public EntityPersister getPersister() {
 		return persister;
 	}
+
 	public Object[] getState() {
 		return state;
 	}

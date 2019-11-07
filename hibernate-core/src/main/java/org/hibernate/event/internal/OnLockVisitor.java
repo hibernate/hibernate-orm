@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -26,7 +24,7 @@ import org.hibernate.type.CollectionType;
  */
 public class OnLockVisitor extends ReattachVisitor {
 
-	public OnLockVisitor(EventSource session, Serializable key, Object owner) {
+	public OnLockVisitor(EventSource session, Object key, Object owner) {
 		super( session, key, owner );
 	}
 
@@ -42,7 +40,7 @@ public class OnLockVisitor extends ReattachVisitor {
 		if ( collection instanceof PersistentCollection ) {
 			final PersistentCollection persistentCollection = (PersistentCollection) collection;
 			if ( persistentCollection.setCurrentSession( session ) ) {
-				if ( isOwnerUnchanged( persistentCollection, persister, extractCollectionKeyFromOwner( persister ) ) ) {
+				if ( isOwnerUnchanged( persister, extractCollectionKeyFromOwner( persister ), persistentCollection ) ) {
 					// a "detached" collection that originally belonged to the same entity
 					if ( persistentCollection.isDirty() ) {
 						throw new HibernateException( "reassociated object has dirty collection" );

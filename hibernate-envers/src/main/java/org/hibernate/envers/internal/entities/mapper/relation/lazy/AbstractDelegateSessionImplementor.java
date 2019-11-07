@@ -6,8 +6,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -23,7 +21,7 @@ public abstract class AbstractDelegateSessionImplementor extends SessionDelegato
 	public abstract Object doImmediateLoad(String entityName);
 
 	@Override
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		return doImmediateLoad( entityName );
 	}
 }

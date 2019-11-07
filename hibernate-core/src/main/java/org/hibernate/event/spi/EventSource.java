@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ public interface EventSource extends SessionImplementor {
 	 * Instantiate an entity instance, using either an interceptor,
 	 * or the given persister
 	 */
-	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**
 	 * Force an immediate flush

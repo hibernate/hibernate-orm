@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -110,7 +109,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Class returnClass;
 	private int keySize;
 
-	public synchronized Serializable generate(final SharedSessionContractImplementor session, Object obj) {
+	public synchronized Object generate(final SharedSessionContractImplementor session, Object obj) {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedTableGenerator( getClass().getName() );
 
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()

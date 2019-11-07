@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,8 +25,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 
 	/**
 	 * Constructs a CollectionRecreateAction
-	 *
-	 * @param collection The collection being recreated
+	 *  @param collection The collection being recreated
 	 * @param persister The collection persister
 	 * @param id The collection key
 	 * @param session The session
@@ -36,7 +33,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	public CollectionRecreateAction(
 			final PersistentCollection collection,
 			final CollectionPersister persister,
-			final Serializable id,
+			final Object id,
 			final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
 	}

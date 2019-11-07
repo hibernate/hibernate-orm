@@ -110,7 +110,7 @@ public class NativeQueryImpl<R>
 	private List<NativeQueryReturnBuilder> queryReturnBuilders;
 	private boolean autoDiscoverTypes;
 
-	private Serializable collectionKey;
+	private Object collectionKey;
 	private NativeQueryInterpreter nativeQueryInterpreter;
 
 	/**
@@ -527,7 +527,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor setCollectionKey(Serializable key) {
+	public NativeQueryImplementor setCollectionKey(Object key) {
 		this.collectionKey = key;
 		return this;
 	}

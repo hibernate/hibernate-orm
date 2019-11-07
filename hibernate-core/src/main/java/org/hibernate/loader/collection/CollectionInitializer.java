@@ -6,8 +6,6 @@
  */
 package org.hibernate.loader.collection;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -21,5 +19,5 @@ public interface CollectionInitializer {
 	/**
 	 * Initialize the given collection
 	 */
-	void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	void initialize(Object id, SharedSessionContractImplementor session) throws HibernateException;
 }

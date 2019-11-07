@@ -160,7 +160,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		 */
 		public static final JpaEntityNotFoundDelegate INSTANCE = new JpaEntityNotFoundDelegate();
 
-		public void handleEntityNotFound(String entityName, Serializable id) {
+		public void handleEntityNotFound(String entityName, Object id) {
 			throw new EntityNotFoundException( "Unable to find " + entityName  + " with id " + id );
 		}
 	}

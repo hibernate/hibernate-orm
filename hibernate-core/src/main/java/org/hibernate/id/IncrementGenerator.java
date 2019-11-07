@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +46,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private IntegralDataTypeHolder previousValueHolder;
 
 	@Override
-	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public synchronized Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
 			initializePreviousValueHolder( session );
 		}

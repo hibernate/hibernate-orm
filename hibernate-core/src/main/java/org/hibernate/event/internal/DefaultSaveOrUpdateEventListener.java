@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -51,7 +49,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	public void onSaveOrUpdate(SaveOrUpdateEvent event) {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
-		final Serializable requestedId = event.getRequestedId();
+		final Object requestedId = event.getRequestedId();
 
 		if ( requestedId != null ) {
 			//assign the requested id to the proxy, *before*
@@ -81,7 +79,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		return source.getPersistenceContextInternal().reassociateIfUninitializedProxy( object );
 	}
 
-	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
+	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		EntityState entityState = getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
@@ -100,7 +98,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 		}
 	}
 
-	protected Serializable entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
+	protected Object entityIsPersistent(SaveOrUpdateEvent event) throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Ignoring persistent instance" );
 		}
@@ -116,9 +114,9 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 			final SessionFactoryImplementor factory = event.getSession().getFactory();
 
-			Serializable requestedId = event.getRequestedId();
+			Object requestedId = event.getRequestedId();
 
-			Serializable savedId;
+			Object savedId;
 			if ( requestedId == null ) {
 				savedId = entityEntry.getId();
 			}
@@ -159,7 +157,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @return The entity's identifier after saving.
 	 */
-	protected Serializable entityIsTransient(SaveOrUpdateEvent event) {
+	protected Object entityIsTransient(SaveOrUpdateEvent event) {
 
 		LOG.trace( "Saving transient instance" );
 
@@ -175,7 +173,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			}
 		}
 
-		Serializable id = saveWithGeneratedOrRequestedId( event );
+		Object id = saveWithGeneratedOrRequestedId( event );
 
 		source.getPersistenceContextInternal().reassociateProxy( event.getObject(), id );
 
@@ -189,7 +187,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @return The entity's identifier value after saving.
 	 */
-	protected Serializable saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
+	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
 		return saveWithGeneratedId(
 				event.getEntity(),
 				event.getEntityName(),
@@ -242,13 +240,13 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 *
 	 * @throws TransientObjectException If the entity is considered transient.
 	 */
-	protected Serializable getUpdateId(
+	protected Object getUpdateId(
 			Object entity,
 			EntityPersister persister,
-			Serializable requestedId,
+			Object requestedId,
 			SessionImplementor session) {
 		// use the id assigned to the instance
-		Serializable id = persister.getIdentifier( entity, session );
+		Object id = persister.getIdentifier( entity, session );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated

@@ -766,11 +766,11 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
+	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
 		getAppropriateInitializer( key, session ).initialize( key, session );
 	}
 
-	protected CollectionInitializer getAppropriateInitializer(Serializable key, SharedSessionContractImplementor session) {
+	protected CollectionInitializer getAppropriateInitializer(Object key, SharedSessionContractImplementor session) {
 		if ( queryLoaderName != null ) {
 			// if there is a user-specified loader, return that
 			// TODO: filters!?
@@ -788,30 +788,24 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private CollectionInitializer getSubselectInitializer(Serializable key, SharedSessionContractImplementor session) {
-
+	private CollectionInitializer getSubselectInitializer(Object key, SharedSessionContractImplementor session) {
 		if ( !isSubselectLoadable() ) {
 			return null;
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		SubselectFetch subselect = persistenceContext.getBatchFetchQueue()
-				.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
+		SubselectFetch subselect = persistenceContext.getBatchFetchQueue().getSubselect(
+				session.generateEntityKey( key, getOwnerEntityPersister() )
+		);
 
 		if ( subselect == null ) {
 			return null;
 		}
 		else {
-
 			// Take care of any entities that might have
 			// been evicted!
-			Iterator iter = subselect.getResult().iterator();
-			while ( iter.hasNext() ) {
-				if ( !persistenceContext.containsEntity( (EntityKey) iter.next() ) ) {
-					iter.remove();
-				}
-			}
+			subselect.getResult().removeIf( o -> !persistenceContext.containsEntity( (EntityKey) o ) );
 
 			// Run a subquery loader
 			return createSubselectInitializer( subselect, session );
@@ -992,7 +986,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Write the key to a JDBC <tt>PreparedStatement</tt>
 	 */
-	protected int writeKey(PreparedStatement st, Serializable key, int i, SharedSessionContractImplementor session)
+	protected int writeKey(PreparedStatement st, Object key, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
 		if ( key == null ) {
@@ -1310,7 +1304,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey removeBatchKey;
 
 	@Override
-	public void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public void remove(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) {
@@ -1391,7 +1385,7 @@ public abstract class AbstractCollectionPersister
 	protected BasicBatchKey recreateBatchKey;
 
 	@Override
-	public void recreate(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void recreate(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1513,7 +1507,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey deleteBatchKey;
 
 	@Override
-	public void deleteRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void deleteRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1630,7 +1624,7 @@ public abstract class AbstractCollectionPersister
 	private BasicBatchKey insertBatchKey;
 
 	@Override
-	public void insertRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void insertRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( isInverse ) {
@@ -1851,7 +1845,7 @@ public abstract class AbstractCollectionPersister
 	protected abstract String generateInsertRowString();
 
 	@Override
-	public void updateRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void updateRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
@@ -1865,12 +1859,10 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SharedSessionContractImplementor session)
-			throws HibernateException;
+	protected abstract int doUpdateRows(Object key, PersistentCollection collection, SharedSessionContractImplementor session);
 
 	@Override
-	public void processQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
-			throws HibernateException {
+	public void processQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session) {
 		if ( collection.hasQueuedOperations() ) {
 			doProcessQueuedOps( collection, key, session );
 		}
@@ -1885,7 +1877,7 @@ public abstract class AbstractCollectionPersister
 	 * @param session The session
 	 * @throws HibernateException
 	 *
-	 * @deprecated Use {@link #doProcessQueuedOps(org.hibernate.collection.spi.PersistentCollection, java.io.Serializable, org.hibernate.engine.spi.SharedSessionContractImplementor)}
+	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
 	 */
 	@Deprecated
 	protected void doProcessQueuedOps(PersistentCollection collection, Serializable key,
@@ -1894,7 +1886,7 @@ public abstract class AbstractCollectionPersister
 		doProcessQueuedOps( collection, key, session );
 	}
 
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+	protected abstract void doProcessQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 			throws HibernateException;
 
 	@Override
@@ -2066,7 +2058,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public int getSize(Serializable key, SharedSessionContractImplementor session) {
+	public int getSize(Object key, SharedSessionContractImplementor session) {
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			PreparedStatement st = jdbcCoordinator
@@ -2098,16 +2090,16 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
+	public boolean indexExists(Object key, Object index, SharedSessionContractImplementor session) {
 		return exists( key, incrementIndexByBase( index ), getIndexType(), sqlDetectRowByIndexString, session );
 	}
 
 	@Override
-	public boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
+	public boolean elementExists(Object key, Object element, SharedSessionContractImplementor session) {
 		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
-	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
+	private boolean exists(Object key, Object indexOrElement, Type indexOrElementType, String sql, SharedSessionContractImplementor session) {
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			PreparedStatement st = jdbcCoordinator
@@ -2143,7 +2135,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
+	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			PreparedStatement st = jdbcCoordinator

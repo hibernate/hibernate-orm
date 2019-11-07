@@ -8,9 +8,7 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -38,13 +36,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	 */
 	private Map<NavigablePath, SqmAttributeJoin> fetchesByPath;
 
-	private final Set<String> affectedTableNames = new HashSet<>();
-
 	public FromClauseIndex() {
-	}
-
-	public Set<String> getAffectedTableNames() {
-		return affectedTableNames;
 	}
 
 	public void register(SqmPath<?> sqmPath, TableGroup tableGroup) {
@@ -78,12 +70,6 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 
 	public boolean isResolved(SqmFrom fromElement) {
 		return tableGroupMap.containsKey( fromElement.getNavigablePath() );
-	}
-
-	@Override
-	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-		super.registerTableGroup( navigablePath, tableGroup );
-		tableGroup.applyAffectedTableNames( affectedTableNames::add );
 	}
 
 	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {

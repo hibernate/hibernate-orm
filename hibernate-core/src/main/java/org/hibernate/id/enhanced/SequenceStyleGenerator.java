@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -516,7 +515,7 @@ public class SequenceStyleGenerator
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
 

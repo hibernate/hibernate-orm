@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa.test.ejb3configuration.id;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -16,7 +14,7 @@ import org.hibernate.id.IdentifierGenerator;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class FunkyIdGenerator implements IdentifierGenerator {
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		throw new FunkyException();
 	}
 }

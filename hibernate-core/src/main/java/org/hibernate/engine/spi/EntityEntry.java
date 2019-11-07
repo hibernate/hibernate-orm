@@ -8,7 +8,6 @@ package org.hibernate.engine.spi;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -34,7 +33,7 @@ public interface EntityEntry {
 
 	void setStatus(Status status);
 
-	Serializable getId();
+	Object getId();
 
 	Object[] getLoadedState();
 

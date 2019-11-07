@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
@@ -328,7 +326,7 @@ public final class ForeignKeys {
 	 *
 	 * @throws TransientObjectException if the entity is transient (does not yet have an identifier)
 	 */
-	public static Serializable getEntityIdentifierIfNotUnsaved(
+	public static Object getEntityIdentifierIfNotUnsaved(
 			final String entityName,
 			final Object object,
 			final SharedSessionContractImplementor session) throws TransientObjectException {
@@ -336,7 +334,7 @@ public final class ForeignKeys {
 			return null;
 		}
 		else {
-			Serializable id = session.getContextEntityIdentifier( object );
+			Object id = session.getContextEntityIdentifier( object );
 			if ( id == null ) {
 				// context-entity-identifier returns null explicitly if the entity
 				// is not associated with the persistence context; so make some

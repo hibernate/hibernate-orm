@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ReplicationMode;
@@ -67,7 +65,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		/*if ( persister.isUnsaved(entity, source) ) {
 			throw new TransientObjectException("transient instance passed to replicate()");
 		}*/
-		Serializable id = persister.getIdentifier( entity, source );
+		Object id = persister.getIdentifier( entity, source );
 		if ( id == null ) {
 			throw new TransientObjectException( "instance with null id passed to replicate()" );
 		}
@@ -144,7 +142,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	@Override
 	protected boolean visitCollectionsBeforeSave(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
 			Type[] types,
 			EventSource source) {
@@ -157,7 +155,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	@Override
 	protected boolean substituteValuesIfNecessary(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
 			EntityPersister persister,
 			SessionImplementor source) {
@@ -171,7 +169,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 	private void performReplication(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object version,
 			EntityPersister persister,
 			ReplicationMode replicationMode,

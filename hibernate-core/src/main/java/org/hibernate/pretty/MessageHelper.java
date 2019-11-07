@@ -6,8 +6,6 @@
  */
 package org.hibernate.pretty;
 
-import java.io.Serializable;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -39,7 +37,7 @@ public final class MessageHelper {
 	 * @param id The entity id value.
 	 * @return An info string, in the form [FooBar#1].
 	 */
-	public static String infoString(String entityName, Serializable id) {
+	public static String infoString(String entityName, Object id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( entityName == null ) {

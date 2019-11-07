@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.HashSet;
 
 import org.hibernate.collection.internal.PersistentSet;
@@ -22,7 +21,7 @@ public class SetType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
 		return new PersistentSet( session );
 	}
 

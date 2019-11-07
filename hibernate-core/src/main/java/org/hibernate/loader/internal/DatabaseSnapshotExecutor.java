@@ -7,10 +7,8 @@
 package org.hibernate.loader.internal;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -199,11 +197,7 @@ class DatabaseSnapshotExecutor {
 				}
 		);
 
-		final Set<String> tableNames = new HashSet<>();
-		rootTableGroup.applyAffectedTableNames( tableNames::add );
-
-		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec, domainResults, tableNames );
-
+		final SelectStatement selectStatement = new SelectStatement( rootQuerySpec, domainResults );
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();

@@ -29,7 +29,7 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 	private final Object[] orderedNaturalIdValues;
 	private final LockOptions lockOptions;
 
-	private Serializable entityId;
+	private Object entityId;
 
 	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityPersister entityPersister, EventSource source) {
 		this( naturalIdValues, entityPersister, new LockOptions(), source );
@@ -110,11 +110,11 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 		return lockOptions;
 	}
 
-	public Serializable getEntityId() {
+	public Object getEntityId() {
 		return entityId;
 	}
 
-	public void setEntityId(Serializable entityId) {
+	public void setEntityId(Object entityId) {
 		this.entityId = entityId;
 	}
 }

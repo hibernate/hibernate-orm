@@ -9,11 +9,9 @@ package org.hibernate.engine.internal;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
@@ -43,7 +41,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Sanne Grinovero  <sanne@hibernate.org>
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
-	protected final Serializable id;
+	protected final Object id;
 	protected Object[] loadedState;
 	protected Object version;
 	protected final EntityPersister persister; // permanent but we only need the entityName state in a non transient way
@@ -78,34 +76,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 */
 	private transient int compressedState;
 
-	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
-	 */
-	@Deprecated
 	public AbstractEntityEntry(
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
-			final Object version,
-			final LockMode lockMode,
-			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final EntityMode entityMode,
-			final String tenantId,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
-		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, persistenceContext
-		);
-	}
-
-	public AbstractEntityEntry(
-			final Status status,
-			final Object[] loadedState,
-			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
@@ -196,7 +171,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 

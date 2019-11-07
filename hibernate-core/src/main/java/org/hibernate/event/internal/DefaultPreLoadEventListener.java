@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;
@@ -19,16 +21,14 @@ import org.hibernate.persister.entity.EntityPersister;
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
 	
 	public void onPreLoad(PreLoadEvent event) {
-		EntityPersister persister = event.getPersister();
-		event.getSession()
-			.getInterceptor()
-			.onLoad( 
-					event.getEntity(), 
-					event.getId(), 
-					event.getState(), 
-					persister.getPropertyNames(), 
-					persister.getPropertyTypes() 
-				);
+		final EntityPersister persister = event.getPersister();
+		event.getSession().getInterceptor().onLoad(
+				event.getEntity(),
+				(Serializable) event.getId(),
+				event.getState(),
+				persister.getPropertyNames(),
+				persister.getPropertyTypes()
+		);
 	}
 	
 }

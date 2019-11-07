@@ -121,7 +121,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param currentId The identifier value to inject into the entity.
 	 * @param currentVersion The version value to inject into the entity.
 	 *
-	 * @deprecated Use {@link #resetIdentifier(Object, Serializable, Object, SharedSessionContractImplementor)} instead
+	 * @deprecated Use {@link #resetIdentifier(Object, Object, Object, SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -130,13 +130,12 @@ public interface EntityTuplizer extends Tuplizer {
 	/**
 	 * Inject the given identifier and version into the entity, in order to
 	 * "roll back" to their original values.
-	 *
-	 * @param entity The entity for which to reset the id/version values
+	 *  @param entity The entity for which to reset the id/version values
 	 * @param currentId The identifier value to inject into the entity.
 	 * @param currentVersion The version value to inject into the entity.
 	 * @param session The session from which the request originated
 	 */
-	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session);
+	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
     /**
      * Extract the value of the version property from the given entity.

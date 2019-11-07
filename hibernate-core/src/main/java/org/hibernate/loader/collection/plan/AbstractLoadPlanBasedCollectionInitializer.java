@@ -67,7 +67,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 	}
 
 	@Override
-	public void initialize(Serializable id, SharedSessionContractImplementor session)
+	public void initialize(Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Loading collection: %s",
@@ -75,7 +75,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 		}
 
 
-		final Serializable[] ids = new Serializable[]{id};
+		final Serializable[] ids = new Serializable[] {(Serializable) id};
 		try {
 			final QueryParameters qp = new QueryParameters();
 			qp.setPositionalParameterTypes( new Type[]{ collectionPersister.getKeyType() } );

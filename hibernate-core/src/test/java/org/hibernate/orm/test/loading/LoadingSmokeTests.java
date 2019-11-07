@@ -7,6 +7,10 @@
 package org.hibernate.orm.test.loading;
 
 import org.hibernate.Hibernate;
+import org.hibernate.loader.internal.SingleIdEntityLoaderStandardImpl;
+import org.hibernate.loader.spi.SingleIdEntityLoader;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -20,6 +24,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,6 +62,17 @@ public class LoadingSmokeTests {
 					assertThat( Hibernate.isInitialized( gotten ), is( true ) );
 					assertThat( gotten.getId(), is( 1 ) );
 					assertThat( gotten.getData(), is( "first" ) );
+
+					final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) session.getSessionFactory()
+							.getDomainModel()
+							.getEntityDescriptor( BasicEntity.class );
+
+					final SingleIdEntityLoader singleIdEntityLoader = entityDescriptor.getSingleIdEntityLoader();
+					assertThat( singleIdEntityLoader, instanceOf( SingleIdEntityLoaderStandardImpl.class ) );
+					assertThat(
+							( (SingleIdEntityLoaderStandardImpl) singleIdEntityLoader ).getNonReusablePlansGenerated().get(),
+							is( 0 )
+					);
 				}
 		);
 	}

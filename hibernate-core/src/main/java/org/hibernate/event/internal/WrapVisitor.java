@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -32,11 +30,11 @@ import org.hibernate.type.Type;
 public class WrapVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
 	private Object entity;
-	private Serializable id;
+	private Object id;
 
 	private boolean substitute;
 
-	public WrapVisitor(Object entity, Serializable id, EventSource session) {
+	public WrapVisitor(Object entity, Object id, EventSource session) {
 		super( session );
 		this.entity = entity;
 		this.id = id;

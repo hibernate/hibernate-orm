@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -54,7 +52,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 
 		if ( object instanceof HibernateProxy ) {
 			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			final Serializable id = li.getIdentifier();
+			final Object id = li.getIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}

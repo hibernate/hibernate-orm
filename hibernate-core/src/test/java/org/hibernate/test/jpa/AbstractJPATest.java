@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.jpa;
 
-import java.io.Serializable;
 import java.util.IdentityHashMap;
 import javax.persistence.EntityNotFoundException;
 
@@ -87,7 +86,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	// mimic specific exception aspects of the JPA environment ~~~~~~~~~~~~~~~~
 
 	private static class JPAEntityNotFoundDelegate implements EntityNotFoundDelegate {
-		public void handleEntityNotFound(String entityName, Serializable id) {
+		public void handleEntityNotFound(String entityName, Object id) {
 			throw new EntityNotFoundException("Unable to find " + entityName  + " with id " + id);
 		}
 	}

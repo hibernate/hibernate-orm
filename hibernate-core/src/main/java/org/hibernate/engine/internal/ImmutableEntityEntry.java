@@ -32,45 +32,11 @@ import org.hibernate.persister.entity.EntityPersister;
  * @see org.hibernate.annotations.Immutable
  */
 public final class ImmutableEntityEntry extends AbstractEntityEntry {
-
-	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
-	 */
-	@Deprecated
 	public ImmutableEntityEntry(
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
-			final Object version,
-			final LockMode lockMode,
-			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final EntityMode entityMode,
-			final String tenantId,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
-		this(
-				status,
-				loadedState,
-				rowId,
-				id,
-				version,
-				lockMode,
-				existsInDatabase,
-				persister,
-				disableVersionIncrement,
-				// purposefully do not pass along the session/persistence-context : HHH-10251
-				null
-		);
-	}
-
-	public ImmutableEntityEntry(
-			final Status status,
-			final Object[] loadedState,
-			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,

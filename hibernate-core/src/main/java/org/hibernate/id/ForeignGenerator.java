@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -21,7 +20,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.internal.CoreLogging.logger;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -79,7 +77,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor sessionImplementor, Object object) {
+	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
 		// needs to be a Session for the #save and #contains calls below...
 		final Session session = ( Session ) sessionImplementor;
 
@@ -102,7 +100,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 			foreignValueSourceType = (EntityType) persister.getPropertyType( PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyName );
 		}
 
-		Serializable id;
+		Object id;
 		try {
 			id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					foreignValueSourceType.getAssociatedEntityName(),

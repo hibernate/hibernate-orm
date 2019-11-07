@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.io.Closeable;
-import java.io.Serializable;
 import java.sql.Connection;
 
 import org.hibernate.annotations.Remove;
@@ -42,7 +41,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return The identifier of the inserted entity
 	 */
-	Serializable insert(Object entity);
+	Object insert(Object entity);
 
 	/**
 	 * Insert a row.
@@ -52,7 +51,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return the identifier of the instance
 	 */
-	Serializable insert(String entityName, Object entity);
+	Object insert(String entityName, Object entity);
 
 	/**
 	 * Update a row.
@@ -92,7 +91,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(String entityName, Serializable id);
+	Object get(String entityName, Object id);
 
 	/**
 	 * Retrieve a row.
@@ -102,7 +101,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Serializable id);
+	Object get(Class entityClass, Object id);
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
@@ -113,7 +112,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(String entityName, Serializable id, LockMode lockMode);
+	Object get(String entityName, Object id, LockMode lockMode);
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
@@ -124,7 +123,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Serializable id, LockMode lockMode);
+	Object get(Class entityClass, Object id, LockMode lockMode);
 
 	/**
 	 * Refresh the entity instance state from the database.

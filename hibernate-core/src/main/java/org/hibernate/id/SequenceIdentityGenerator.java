@@ -46,7 +46,7 @@ public class SequenceIdentityGenerator
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SequenceIdentityGenerator.class );
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
+	public Object generate(SharedSessionContractImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 

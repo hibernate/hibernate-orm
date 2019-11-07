@@ -261,10 +261,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	public Serializable disassemble(CollectionPersister persister)
-			throws HibernateException {
+	public Object disassemble(CollectionPersister persister) {
 		final int length = bag.size();
-		final Serializable[] result = new Serializable[length];
+		final Object[] result = new Object[length];
 		for ( int i=0; i<length; i++ ) {
 			result[i] = persister.getElementType().disassemble( bag.get( i ), getSession(), null );
 		}
@@ -273,7 +272,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;

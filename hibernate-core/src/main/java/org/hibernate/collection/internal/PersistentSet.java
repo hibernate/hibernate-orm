@@ -146,7 +146,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
+	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
@@ -388,9 +388,8 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
-		final Serializable[] result = new Serializable[ set.size() ];
+	public Object disassemble(CollectionPersister persister) throws HibernateException {
+		final Object[] result = new Object[ set.size() ];
 		final Iterator itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {

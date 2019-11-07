@@ -1400,7 +1400,7 @@ public abstract class AbstractEntityPersister
 
 				// see if there is already a collection instance associated with the session
 				// 		NOTE : can this ever happen?
-				final Serializable key = getCollectionKey( persister, entity, entry, session );
+				final Object key = getCollectionKey( persister, entity, entry, session );
 				PersistentCollection collection = persistenceContext.getCollection( new CollectionKey( persister, key ) );
 				if ( collection == null ) {
 					collection = collectionType.instantiate( session, persister, key );
@@ -1434,7 +1434,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		final Serializable id = session.getContextEntityIdentifier( entity );
+		final Object id = session.getContextEntityIdentifier( entity );
 		if ( entry == null ) {
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
@@ -1466,11 +1466,11 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		return initializeLazyPropertiesFromDatastore( fieldName, entity, session, id, entry );
+		return initializeLazyPropertiesFromDatastore( entity, id, entry, fieldName, session );
 
 	}
 
-	protected Serializable getCollectionKey(
+	protected Object getCollectionKey(
 			CollectionPersister persister,
 			Object owner,
 			EntityEntry ownerEntry,
@@ -1487,16 +1487,13 @@ public abstract class AbstractEntityPersister
 			return persister.getOwnerEntityPersister().getIdentifier( owner, session );
 		}
 		else {
-			return (Serializable) persister.getOwnerEntityPersister().getPropertyValue( owner, collectionType.getLHSPropertyName() );
+			return persister.getOwnerEntityPersister().getPropertyValue( owner, collectionType.getLHSPropertyName() );
 		}
 	}
 
 	private Object initializeLazyPropertiesFromDatastore(
-			final String fieldName,
-			final Object entity,
-			final SharedSessionContractImplementor session,
-			final Serializable id,
-			final EntityEntry entry) {
+			final Object entity, final Object id, final EntityEntry entry, final String fieldName,
+			final SharedSessionContractImplementor session) {
 
 		if ( !hasLazyProperties() ) {
 			throw new AssertionFailure( "no lazy properties" );
@@ -1815,12 +1812,12 @@ public abstract class AbstractEntityPersister
 		return select;
 	}
 
-	public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		return singleIdEntityLoader.loadDatabaseSnapshot( id, session );
 	}
 
 	@Override
-	public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SharedSessionContractImplementor session)
+	public Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
@@ -2079,7 +2076,7 @@ public abstract class AbstractEntityPersister
 				.toStatementString();
 	}
 
-	public Object forceVersionIncrement(Serializable id, Object currentVersion, SharedSessionContractImplementor session) {
+	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
 		if ( !isVersioned() ) {
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
 		}
@@ -2148,7 +2145,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Retrieve the version number
 	 */
-	public Object getCurrentVersion(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Getting version: {0}", MessageHelper.infoString( this, id, getFactory() ) );
@@ -2211,7 +2208,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void lock(
-			Serializable id,
+			Object id,
 			Object version,
 			Object object,
 			LockMode lockMode,
@@ -2220,7 +2217,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void lock(
-			Serializable id,
+			Object id,
 			Object version,
 			Object object,
 			LockOptions lockOptions,
@@ -2810,7 +2807,7 @@ public abstract class AbstractEntityPersister
 
 	protected boolean check(
 			int rows,
-			Serializable id,
+			Object id,
 			int tableNumber,
 			Expectation expectation,
 			PreparedStatement statement) throws HibernateException {
@@ -3151,7 +3148,7 @@ public abstract class AbstractEntityPersister
 	 * Marshall the fields of a persistent instance to a prepared statement
 	 */
 	protected int dehydrate(
-			final Serializable id,
+			final Object id,
 			final Object[] fields,
 			final Object rowId,
 			final boolean[] includeProperty,
@@ -3197,7 +3194,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private int dehydrateId(
-			final Serializable id,
+			final Object id,
 			final Object rowId,
 			final PreparedStatement ps,
 			final SharedSessionContractImplementor session,
@@ -3403,7 +3400,7 @@ public abstract class AbstractEntityPersister
 	 * in cases where the identifier value is known before the insert occurs.
 	 */
 	protected void insert(
-			final Serializable id,
+			final Object id,
 			final Object[] fields,
 			final boolean[] notNull,
 			final int j,
@@ -3506,7 +3503,7 @@ public abstract class AbstractEntityPersister
 	 * Perform an SQL UPDATE or SQL INSERT
 	 */
 	protected void updateOrInsert(
-			final Serializable id,
+			final Object id,
 			final Object[] fields,
 			final Object[] oldFields,
 			final Object rowId,
@@ -3560,7 +3557,7 @@ public abstract class AbstractEntityPersister
 	private BasicBatchKey updateBatchKey;
 
 	protected boolean update(
-			final Serializable id,
+			final Object id,
 			final Object[] fields,
 			final Object[] oldFields,
 			final Object rowId,
@@ -3697,7 +3694,7 @@ public abstract class AbstractEntityPersister
 	 * Perform an SQL DELETE
 	 */
 	protected void delete(
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final int j,
 			final Object object,
@@ -3832,7 +3829,7 @@ public abstract class AbstractEntityPersister
 	 * Update an object
 	 */
 	public void update(
-			final Serializable id,
+			final Object id,
 			final Object[] fields,
 			int[] dirtyFields,
 			final boolean hasDirtyCollection,
@@ -3974,7 +3971,7 @@ public abstract class AbstractEntityPersister
 		return id;
 	}
 
-	public void insert(Serializable id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+	public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
 		// apply any pre-insert in-memory value generation
 		preInsertInMemoryValueGeneration( fields, object, session );
 
@@ -4009,7 +4006,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Delete an object
 	 */
-	public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
+	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
 		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
@@ -4605,7 +4602,7 @@ public abstract class AbstractEntityPersister
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
 	 */
-	public Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
+	public Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
 		return load( id, optionalObject, new LockOptions().setLockMode( lockMode ), session );
 	}
 
@@ -4613,7 +4610,7 @@ public abstract class AbstractEntityPersister
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
 	 */
-	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
+	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
@@ -4621,6 +4618,10 @@ public abstract class AbstractEntityPersister
 		}
 
 		return singleIdEntityLoader.load( id, lockOptions, session );
+	}
+
+	public SingleIdEntityLoader getSingleIdEntityLoader() {
+		return singleIdEntityLoader;
 	}
 
 	@Override
@@ -4680,7 +4681,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+	public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
 		return multiIdEntityLoader.load( ids, loadOptions, session );
 	}
 
@@ -4980,7 +4981,7 @@ public abstract class AbstractEntityPersister
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final NaturalIdHelper naturalIdHelper = persistenceContext.getNaturalIdHelper();
-		final Serializable id = getIdentifier( entity, session );
+		final Object id = getIdentifier( entity, session );
 
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
@@ -5004,7 +5005,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Serializable id;
+		final Object id;
 		if ( canExtractIdOutOfEntity() ) {
 			id = getIdentifier( entity, session );
 		}
@@ -5165,7 +5166,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getOptimisticLockStyle();
 	}
 
-	public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		return representationStrategy.getProxyFactory().getProxy( id, session );
 	}
 
@@ -5373,17 +5374,17 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Serializable getIdentifier(Object object) {
+	public Object getIdentifier(Object object) {
 		return getIdentifier( object, null );
 	}
 
 	@Override
-	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
+	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return (Serializable) identifierMapping.getPropertyAccess().getGetter().get( entity );
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
+	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		identifierMapping.getPropertyAccess().getSetter().set( entity, id, factory );
 	}
 
@@ -5398,7 +5399,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+	public Object instantiate(Object id, SharedSessionContractImplementor session) {
 		Object instance = getRepresentationStrategy().getInstantiator().instantiate( session );
 		identifierMapping.getPropertyAccess().getSetter().set( instance, id, factory );
 
@@ -5418,7 +5419,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void resetIdentifier(
 			Object entity,
-			Serializable currentId,
+			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
 		getEntityTuplizer().resetIdentifier( entity, currentId, currentVersion, session );
@@ -5484,7 +5485,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void processInsertGeneratedProperties(
-			Serializable id,
+			Object id,
 			Object entity,
 			Object[] state,
 			SharedSessionContractImplementor session) {
@@ -5502,7 +5503,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void processUpdateGeneratedProperties(
-			Serializable id,
+			Object id,
 			Object entity,
 			Object[] state,
 			SharedSessionContractImplementor session) {
@@ -5520,7 +5521,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void processGeneratedProperties(
-			Serializable id,
+			Object id,
 			Object entity,
 			Object[] state,
 			SharedSessionContractImplementor session,
@@ -5635,7 +5636,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
-	public Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session)
+	public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( !hasNaturalIdentifier() ) {
 			throw new MappingException(

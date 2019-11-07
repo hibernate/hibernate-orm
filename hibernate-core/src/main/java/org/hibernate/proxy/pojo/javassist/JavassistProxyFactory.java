@@ -107,7 +107,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 
 	@Override
 	public HibernateProxy getProxy(
-			Serializable id,
+			Object id,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final JavassistLazyInitializer initializer = new JavassistLazyInitializer(
 				entityName,

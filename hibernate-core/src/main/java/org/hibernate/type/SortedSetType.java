@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.TreeSet;
 
@@ -26,7 +25,7 @@ public class SortedSetType extends SetType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key) {
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
 		PersistentSortedSet set = new PersistentSortedSet(session);
 		set.setComparator(comparator);
 		return set;

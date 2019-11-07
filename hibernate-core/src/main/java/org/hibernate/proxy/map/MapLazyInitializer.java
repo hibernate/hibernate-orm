@@ -19,7 +19,7 @@ import org.hibernate.proxy.AbstractLazyInitializer;
  */
 public class MapLazyInitializer extends AbstractLazyInitializer implements Serializable {
 
-	MapLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
+	MapLazyInitializer(String entityName, Object id, SharedSessionContractImplementor session) {
 		super( entityName, id, session );
 	}
 

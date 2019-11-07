@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -624,7 +623,7 @@ public class HSQLDialect extends Dialect {
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();

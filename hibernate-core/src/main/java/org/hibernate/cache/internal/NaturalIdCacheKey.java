@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class NaturalIdCacheKey implements Serializable {
-	private final Serializable[] naturalIdValues;
+	private final Object[] naturalIdValues;
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
@@ -114,7 +114,7 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public Serializable[] getNaturalIdValues() {
+	public Object[] getNaturalIdValues() {
 		return naturalIdValues;
 	}
 

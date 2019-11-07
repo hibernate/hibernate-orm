@@ -6,11 +6,9 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -40,7 +38,7 @@ public class DefaultResolveNaturalIdEventListener
 
 	@Override
 	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException {
-		final Serializable entityId = resolveNaturalId( event );
+		final Object entityId = resolveNaturalId( event );
 		event.setEntityId( entityId );
 	}
 
@@ -54,7 +52,7 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The loaded entity, or null.
 	 */
-	protected Serializable resolveNaturalId(final ResolveNaturalIdEvent event) {
+	protected Object resolveNaturalId(final ResolveNaturalIdEvent event) {
 		final EntityPersister persister = event.getEntityPersister();
 
 		if ( LOG.isTraceEnabled() ) {
@@ -65,7 +63,7 @@ public class DefaultResolveNaturalIdEventListener
 			);
 		}
 
-		Serializable entityId = resolveFromCache( event );
+		Object entityId = resolveFromCache( event );
 		if ( entityId != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
@@ -95,7 +93,7 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The entity from the cache, or null.
 	 */
-	protected Serializable resolveFromCache(final ResolveNaturalIdEvent event) {
+	protected Object resolveFromCache(final ResolveNaturalIdEvent event) {
 		return event.getSession().getPersistenceContextInternal().getNaturalIdHelper().findCachedNaturalIdResolution(
 				event.getEntityPersister(),
 				event.getOrderedNaturalIdValues()
@@ -110,7 +108,7 @@ public class DefaultResolveNaturalIdEventListener
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
-	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
+	protected Object loadFromDatasource(final ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final StatisticsImplementor statistics = factory.getStatistics();
@@ -120,7 +118,7 @@ public class DefaultResolveNaturalIdEventListener
 			startTime = System.nanoTime();
 		}
 
-		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
+		final Object pk = event.getEntityPersister().loadEntityIdByNaturalId(
 				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				session

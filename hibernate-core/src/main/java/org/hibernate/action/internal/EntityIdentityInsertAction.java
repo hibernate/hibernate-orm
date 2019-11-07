@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
@@ -34,7 +32,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
 	private EntityKey entityKey;
-	private Serializable generatedId;
+	private Object generatedId;
 
 	/**
 	 * Constructs an EntityIdentityInsertAction
@@ -176,7 +174,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 				eventSource()
 		);
 		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
-			if ( PostCommitInsertEventListener.class.isInstance( listener ) ) {
+			if ( listener instanceof PostCommitInsertEventListener ) {
 				if ( success ) {
 					listener.onPostInsert( event );
 				}
@@ -210,7 +208,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	 *
 	 * @return The generated identifier
 	 */
-	public final Serializable getGeneratedId() {
+	public final Object getGeneratedId() {
 		return generatedId;
 	}
 

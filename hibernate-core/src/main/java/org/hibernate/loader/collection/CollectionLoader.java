@@ -6,8 +6,6 @@
  */
 package org.hibernate.loader.collection;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -45,7 +43,7 @@ public class CollectionLoader extends OuterJoinLoader implements CollectionIniti
 	}
 
 	@Override
-	public void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public void initialize(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		loadCollection( session, id, getKeyType() );
 	}
 

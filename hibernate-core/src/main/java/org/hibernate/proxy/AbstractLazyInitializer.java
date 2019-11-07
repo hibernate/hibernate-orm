@@ -6,8 +6,6 @@
  */
 package org.hibernate.proxy;
 
-import java.io.Serializable;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
@@ -34,7 +32,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractLazyInitializer.class );
 
 	private String entityName;
-	private Serializable id;
+	private Object id;
 	private Object target;
 	private boolean initialized;
 	private boolean readOnly;
@@ -62,12 +60,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	/**
 	 * Main constructor.
-	 *
-	 * @param entityName The name of the entity being proxied.
+	 *  @param entityName The name of the entity being proxied.
 	 * @param id The identifier of the entity being proxied.
 	 * @param session The session owning the proxy.
 	 */
-	protected AbstractLazyInitializer(String entityName, Serializable id, SharedSessionContractImplementor session) {
+	protected AbstractLazyInitializer(String entityName, Object id, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
 		// initialize other fields depending on session state
@@ -85,7 +82,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final Serializable getIdentifier() {
+	public final Object getIdentifier() {
 		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
 			initialize();
 		}
@@ -99,7 +96,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
-	public final void setIdentifier(Serializable id) {
+	public final void setIdentifier(Object id) {
 		this.id = id;
 	}
 
@@ -145,7 +142,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private static EntityKey generateEntityKeyOrNull(Serializable id, SharedSessionContractImplementor s, String entityName) {
+	private static EntityKey generateEntityKeyOrNull(Object id, SharedSessionContractImplementor s, String entityName) {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}

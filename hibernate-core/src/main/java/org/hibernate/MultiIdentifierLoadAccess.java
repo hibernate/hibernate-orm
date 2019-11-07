@@ -6,7 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.graph.GraphSemantic;
@@ -107,12 +106,12 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * and {@link #enableReturnOfDeletedEntities} for options which effect
 	 * the size and "shape" of the return list.
 	 *
-	 * @param ids The ids to load
 	 * @param <K> The identifier type
 	 *
+	 * @param ids The ids to load
 	 * @return The persistent entities.
 	 */
-	<K extends Serializable> List<T> multiLoad(K... ids);
+	<K> List<T> multiLoad(K... ids);
 
 	/**
 	 * Perform a load of multiple entities by identifiers.  See {@link #enableOrderedReturn}
@@ -124,5 +123,5 @@ public interface MultiIdentifierLoadAccess<T> {
 	 *
 	 * @return The persistent entities.
 	 */
-	<K extends Serializable> List<T> multiLoad(List<K> ids);
+	<K> List<T> multiLoad(List<K> ids);
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -39,7 +37,7 @@ public class LoadEvent extends AbstractEvent {
 		}
 	};
 
-	private Serializable entityId;
+	private Object entityId;
 	private String entityClassName;
 	private Object instanceToLoad;
 	private LockOptions lockOptions;
@@ -47,40 +45,41 @@ public class LoadEvent extends AbstractEvent {
 	private Object result;
 	private PostLoadEvent postLoadEvent;
 
-	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
+	public LoadEvent(Object entityId, Object instanceToLoad, EventSource source) {
 		this( entityId, null, instanceToLoad, DEFAULT_LOCK_OPTIONS, false, source );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
+	public LoadEvent(Object entityId, String entityClassName, LockMode lockMode, EventSource source) {
 		this( entityId, entityClassName, null, lockMode, false, source );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, LockOptions lockOptions, EventSource source) {
+	public LoadEvent(Object entityId, String entityClassName, LockOptions lockOptions, EventSource source) {
 		this( entityId, entityClassName, null, lockOptions, false, source );
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
+	public LoadEvent(Object entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
 		this( entityId, entityClassName, null, DEFAULT_LOCK_OPTIONS, isAssociationFetch, source );
-	}
-	
-	public boolean isAssociationFetch() {
-		return isAssociationFetch;
 	}
 
 	private LoadEvent(
-			Serializable entityId,
+			Object entityId,
 			String entityClassName,
 			Object instanceToLoad,
 			LockMode lockMode,
 			boolean isAssociationFetch,
 			EventSource source) {
-		this( entityId, entityClassName, instanceToLoad,
+		this(
+				entityId,
+				entityClassName,
+				instanceToLoad,
 				lockMode == DEFAULT_LOCK_MODE ? DEFAULT_LOCK_OPTIONS : new LockOptions().setLockMode( lockMode ),
-				isAssociationFetch, source );
+				isAssociationFetch,
+				source
+		);
 	}
 
 	private LoadEvent(
-			Serializable entityId,
+			Object entityId,
 			String entityClassName,
 			Object instanceToLoad,
 			LockOptions lockOptions,
@@ -108,11 +107,11 @@ public class LoadEvent extends AbstractEvent {
 		this.postLoadEvent = new PostLoadEvent( source );
 	}
 
-	public Serializable getEntityId() {
+	public Object getEntityId() {
 		return entityId;
 	}
 
-	public void setEntityId(Serializable entityId) {
+	public void setEntityId(Object entityId) {
 		this.entityId = entityId;
 	}
 
@@ -122,6 +121,10 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setEntityClassName(String entityClassName) {
 		this.entityClassName = entityClassName;
+	}
+
+	public boolean isAssociationFetch() {
+		return isAssociationFetch;
 	}
 
 	public Object getInstanceToLoad() {

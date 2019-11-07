@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.cid;
 
-import java.io.Serializable;
-
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 
@@ -22,7 +20,7 @@ public class PurchaseRecordIdGenerator implements IdentifierGenerator {
 	private static int nextPurchaseSequence = 3;
 
 	@Override
-	public Serializable generate(SharedSessionContractImplementor s, Object obj) {
+	public Object generate(SharedSessionContractImplementor s, Object obj) {
 		return new PurchaseRecord.Id(
 				nextPurchaseNumber++, 
 				String.valueOf(nextPurchaseSequence++));

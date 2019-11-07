@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -69,7 +68,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 	@Override
 	public void lock(
-			Serializable id,
+			Object id,
 			Object version,
 			Object object,
 			int timeout,

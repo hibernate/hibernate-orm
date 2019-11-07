@@ -120,22 +120,26 @@ public class LazyLoadingTest
 	@Test
 	@TestForIssue( jiraKey = "HHH-11838")
 	public void testGetIdOneToOne() {
-		Serializable clientId = doInHibernate(this::sessionFactory, s -> {
-			Address address = new Address();
-			s.save(address);
-			Client client = new Client(address);
-			return s.save(client);
-		});
+		final Object clientId = sessionFactory().fromTransaction(
+				session -> {
+					Address address = new Address();
+					session.save(address);
+					Client client = new Client(address);
+					return session.save( client );
+				}
+		);
 
-		Serializable addressId = doInHibernate(this::sessionFactory, s -> {
-			Client client = s.get(Client.class, clientId);
-			Address address = client.getAddress();
-			address.getId();
-			assertThat(Hibernate.isInitialized(address), is(true));
-			address.getStreet();
-			assertThat(Hibernate.isInitialized(address), is(true));
-			return address.getId();
-		});
+		final Long addressId = sessionFactory().fromTransaction(
+				session -> {
+					Client client = session.get( Client.class, clientId );
+					Address address = client.getAddress();
+					address.getId();
+					assertThat( Hibernate.isInitialized( address ), is( true ) );
+					address.getStreet();
+					assertThat( Hibernate.isInitialized( address ), is( true ) );
+					return address.getId();
+				}
+		);
 
 		doInHibernate(this::sessionFactory, s -> {
 			Address address = s.get(Address.class, addressId);

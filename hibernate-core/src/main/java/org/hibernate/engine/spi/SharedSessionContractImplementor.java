@@ -224,7 +224,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The entity key
 	 */
-	EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+	EntityKey generateEntityKey(Object id, EntityPersister persister);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.
@@ -257,14 +257,14 @@ public interface SharedSessionContractImplementor
 	 * <p/>
 	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
 	 */
-	Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
+	Object internalLoad(String entityName, Object id, boolean eager, boolean nullable)
 			throws HibernateException;
 
 	/**
 	 * Load an instance immediately. This method is only called when lazily initializing a proxy.
 	 * Do not return the proxy.
 	 */
-	Object immediateLoad(String entityName, Serializable id) throws HibernateException;
+	Object immediateLoad(String entityName, Object id) throws HibernateException;
 
 
 	/**
@@ -284,8 +284,9 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Return the identifier of the persistent object, or null if
 	 * not associated with the session
+	 * @return
 	 */
-	Serializable getContextEntityIdentifier(Object object);
+	Object getContextEntityIdentifier(Object object);
 
 	/**
 	 * The best guess entity name for an entity not in an association

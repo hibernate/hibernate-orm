@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -561,7 +560,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public Serializable generate(final SharedSessionContractImplementor session, final Object obj) {
+	public Object generate(final SharedSessionContractImplementor session, final Object obj) {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();

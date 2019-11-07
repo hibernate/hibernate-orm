@@ -70,9 +70,9 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @return The id used to save the entity.
 	 */
-	protected Serializable saveWithRequestedId(
+	protected Object saveWithRequestedId(
 			Object entity,
-			Serializable requestedId,
+			Object requestedId,
 			String entityName,
 			Object anything,
 			EventSource source) {
@@ -104,7 +104,7 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable saveWithGeneratedId(
+	protected Object saveWithGeneratedId(
 			Object entity,
 			String entityName,
 			Object anything,
@@ -117,7 +117,7 @@ public abstract class AbstractSaveEventListener
 		}
 
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
+		Object generatedId = persister.getIdentifierGenerator().generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}
@@ -159,9 +159,9 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable performSave(
+	protected Object performSave(
 			Object entity,
-			Serializable id,
+			Object id,
 			EntityPersister persister,
 			boolean useIdentityColumn,
 			Object anything,
@@ -235,7 +235,7 @@ public abstract class AbstractSaveEventListener
 	 * @return The id used to save the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
-	protected Serializable performSaveOrReplicate(
+	protected Object performSaveOrReplicate(
 			Object entity,
 			EntityKey key,
 			EntityPersister persister,
@@ -244,7 +244,7 @@ public abstract class AbstractSaveEventListener
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-		Serializable id = key == null ? null : key.getIdentifier();
+		Object id = key == null ? null : key.getIdentifier();
 
 		boolean inTrx = source.isTransactionInProgress();
 		boolean shouldDelayIdentityInserts = !inTrx && !requiresImmediateIdAccess;
@@ -289,15 +289,21 @@ public abstract class AbstractSaveEventListener
 				source
 		);
 
-		AbstractEntityInsertAction insert = addInsertAction(
-				values, id, entity, persister, useIdentityColumn, source, shouldDelayIdentityInserts
+		final AbstractEntityInsertAction insert = addInsertAction(
+				values,
+				id,
+				entity,
+				persister,
+				useIdentityColumn,
+				source,
+				shouldDelayIdentityInserts
 		);
 
 		// postpone initializing id in case the insert has non-nullable transient dependencies
 		// that are not resolved until cascadeAfterSave() is executed
 		cascadeAfterSave( source, persister, entity, anything );
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( !EntityIdentityInsertAction.class.isInstance( insert ) ) {
+			if ( !(insert instanceof EntityIdentityInsertAction) ) {
 				throw new IllegalStateException(
 						"Insert should be using an identity column, but action is of unexpected type: " +
 								insert.getClass().getName()
@@ -322,7 +328,7 @@ public abstract class AbstractSaveEventListener
 
 	private AbstractEntityInsertAction addInsertAction(
 			Object[] values,
-			Serializable id,
+			Object id,
 			Object entity,
 			EntityPersister persister,
 			boolean useIdentityColumn,
@@ -336,9 +342,15 @@ public abstract class AbstractSaveEventListener
 			return insert;
 		}
 		else {
-			Object version = Versioning.getVersion( values, persister );
-			EntityInsertAction insert = new EntityInsertAction(
-					id, values, entity, version, persister, isVersionIncrementDisabled(), source
+			final Object version = Versioning.getVersion( values, persister );
+			final EntityInsertAction insert = new EntityInsertAction(
+					id,
+					values,
+					entity,
+					version,
+					persister,
+					isVersionIncrementDisabled(),
+					source
 			);
 			source.getActionQueue().addAction( insert );
 			return insert;
@@ -362,7 +374,7 @@ public abstract class AbstractSaveEventListener
 
 	protected boolean visitCollectionsBeforeSave(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
 			Type[] types,
 			EventSource source) {
@@ -387,13 +399,13 @@ public abstract class AbstractSaveEventListener
 	 */
 	protected boolean substituteValuesIfNecessary(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] values,
 			EntityPersister persister,
 			SessionImplementor source) {
 		boolean substitute = source.getInterceptor().onSave(
 				entity,
-				id,
+				(Serializable) id,
 				values,
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()

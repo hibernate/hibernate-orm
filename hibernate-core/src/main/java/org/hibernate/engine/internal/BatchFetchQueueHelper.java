@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -69,17 +70,20 @@ public class BatchFetchQueueHelper {
 	/**
 	 * Remove the entity key with the specified {@code id} and {@code persister} from
 	 * the batch loadable entities {@link BatchFetchQueue}.
-	 *
-	 * @param id - the ID for the entity to be removed
-	 * @param persister - the entity persister
-	 * @param session - the session
 	 */
 	public static void removeBatchLoadableEntityKey(
-			Serializable id,
+			Object id,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		final EntityKey entityKey = session.generateEntityKey( id, persister );
 		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
+	}
+
+	public static void removeBatchLoadableEntityKey(
+			Object id,
+			EntityMappingType entityMappingType,
+			SharedSessionContractImplementor session) {
+		removeBatchLoadableEntityKey( id, entityMappingType.getEntityPersister(), session );
 	}
 }

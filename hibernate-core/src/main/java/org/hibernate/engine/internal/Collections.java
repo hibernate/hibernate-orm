@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
@@ -69,7 +67,7 @@ public final class Collections {
 		// do a check
 		final boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
 		if ( hasOrphanDelete ) {
-			Serializable ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
+			Object ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
 			if ( ownerId == null ) {
 				// the owning entity may have been deleted and its identifier unset due to
 				// identifier-rollback; in which case, try to look up its identifier from

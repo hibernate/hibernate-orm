@@ -73,12 +73,11 @@ public interface PersistentCollection {
 
 	/**
 	 * After flushing, re-init snapshot state.
-	 *
-	 * @param key The collection instance key (fk value).
+	 *  @param key The collection instance key (fk value).
 	 * @param role The collection role
 	 * @param snapshot The snapshot state
 	 */
-	void setSnapshot(Serializable key, String role, Serializable snapshot);
+	void setSnapshot(Object key, String role, Serializable snapshot);
 
 	/**
 	 * After flushing, clear any "queued" additions, since the
@@ -143,12 +142,11 @@ public interface PersistentCollection {
 
 	/**
 	 * Read the state of the collection from a disassembled cached value
-	 *
-	 * @param persister The collection persister
+	 *  @param persister The collection persister
 	 * @param disassembled The disassembled cached state
 	 * @param owner The collection owner
 	 */
-	void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner);
+	void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner);
 
 	/**
 	 * Iterate all collection entries, during update of the database
@@ -260,7 +258,7 @@ public interface PersistentCollection {
 	 *
 	 * @return The disassembled state
 	 */
-	Serializable disassemble(CollectionPersister persister) ;
+	Object disassemble(CollectionPersister persister) ;
 
 	/**
 	 * Do we need to completely recreate this collection when it changes?
@@ -379,7 +377,7 @@ public interface PersistentCollection {
 	 *
 	 * @return the current collection key value
 	 */
-	Serializable getKey();
+	Object getKey();
 
 	/**
 	 * Get the current role name

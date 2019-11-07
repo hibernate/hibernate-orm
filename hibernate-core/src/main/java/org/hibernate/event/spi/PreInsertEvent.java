@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -22,8 +20,7 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
-	 *
-	 * @param entity The entity to be inserted.
+	 *  @param entity The entity to be inserted.
 	 * @param id The id to use in the insertion.
 	 * @param state The state to be inserted.
 	 * @param persister The entity's persister.
@@ -31,7 +28,7 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 	 */
 	public PreInsertEvent(
 			Object entity,
-			Serializable id,
+			Object id,
 			Object[] state,
 			EntityPersister persister,
 			EventSource source) {

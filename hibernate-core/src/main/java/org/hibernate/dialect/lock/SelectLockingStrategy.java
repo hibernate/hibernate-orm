@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +47,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 
 	@Override
 	public void lock(
-			Serializable id,
+			Object id,
 			Object version,
 			Object object,
 			int timeout,

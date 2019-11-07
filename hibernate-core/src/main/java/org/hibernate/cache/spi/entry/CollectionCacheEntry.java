@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Gavin King
  */
 public class CollectionCacheEntry implements Serializable {
-	private final Serializable state;
+	private final Object state;
 
 	/**
 	 * Constructs a CollectionCacheEntry

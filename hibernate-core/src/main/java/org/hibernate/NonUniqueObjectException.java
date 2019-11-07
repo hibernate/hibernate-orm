@@ -18,17 +18,16 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public class NonUniqueObjectException extends HibernateException {
-	private final Serializable identifier;
+	private final Object identifier;
 	private final String entityName;
 
 	/**
 	 * Constructs a NonUniqueObjectException using the given information.
-	 *
-	 * @param message A message explaining the exception condition
+	 *  @param message A message explaining the exception condition
 	 * @param entityId The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
-	public NonUniqueObjectException(String message, Serializable entityId, String entityName) {
+	public NonUniqueObjectException(String message, Object entityId, String entityName) {
 		super( message );
 		this.entityName = entityName;
 		this.identifier = entityId;
@@ -36,11 +35,10 @@ public class NonUniqueObjectException extends HibernateException {
 
 	/**
 	 * Constructs a NonUniqueObjectException using the given information, using a standard message.
-	 *
-	 * @param entityId The identifier of the entity
+	 *  @param entityId The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
-	public NonUniqueObjectException(Serializable entityId, String entityName) {
+	public NonUniqueObjectException(Object entityId, String entityName) {
 		this(
 				"A different object with the same identifier value was already associated with the session",
 				entityId,
@@ -52,7 +50,7 @@ public class NonUniqueObjectException extends HibernateException {
 		return entityName;
 	}
 
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return identifier;
 	}
 

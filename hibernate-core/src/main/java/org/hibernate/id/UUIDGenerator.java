@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -97,7 +96,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		}
 	}
 
-	public Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
 }

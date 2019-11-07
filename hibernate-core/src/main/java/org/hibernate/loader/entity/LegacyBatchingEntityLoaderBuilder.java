@@ -81,9 +81,9 @@ public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuild
 
 		@Override
 		public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
-			final Serializable[] batch = session.getPersistenceContextInternal()
+			final Object[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
-					.getEntityBatch( persister(), id, batchSizes[0], persister().getEntityMode() );
+					.getBatchLoadableEntityIds( persister(), id, batchSizes[0] );
 
 			for ( int i = 0; i < batchSizes.length-1; i++) {
 				final int smallBatchSize = batchSizes[i];

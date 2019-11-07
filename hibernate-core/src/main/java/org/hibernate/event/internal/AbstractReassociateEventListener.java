@@ -43,7 +43,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 	 *
 	 * @return An EntityEntry representing the entity within this session.
 	 */
-	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityPersister persister) {
+	protected final EntityEntry reassociate(AbstractEvent event, Object object, Object id, EntityPersister persister) {
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(

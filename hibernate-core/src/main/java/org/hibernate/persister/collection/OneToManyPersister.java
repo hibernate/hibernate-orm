@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -181,21 +180,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void recreate(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void recreate(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	public void insertRows(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	public void insertRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SharedSessionContractImplementor session)
+	protected void doProcessQueuedOps(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		writeIndex( collection, collection.queuedAdditionIterator(), id, false, session );
 	}
@@ -203,7 +202,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private void writeIndex(
 			PersistentCollection collection,
 			Iterator entries,
-			Serializable id,
+			Object id,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
@@ -322,7 +321,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private BasicBatchKey insertRowBatchKey;
 
 	@Override
-	protected int doUpdateRows(Serializable id, PersistentCollection collection, SharedSessionContractImplementor session) {
+	protected int doUpdateRows(Object id, PersistentCollection collection, SharedSessionContractImplementor session) {
 
 		// we finish all the "removes" first to take care of possible unique
 		// constraints and so that we can take better advantage of batching
@@ -589,7 +588,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
+	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
 				.loadElement( session, key, incrementIndexByBase( index ) );
 	}

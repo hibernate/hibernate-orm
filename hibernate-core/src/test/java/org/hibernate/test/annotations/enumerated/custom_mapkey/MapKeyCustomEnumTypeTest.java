@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.annotations.enumerated.custom_mapkey;
 
-import java.io.Serializable;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -121,7 +119,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		// ordinal
 		EntityMapEnum entityMapEnum = new EntityMapEnum();
 		entityMapEnum.ordinalMap.put( Common.A2, "Common.A2" );
-		Serializable id = save( entityMapEnum );
+		Object id = save( entityMapEnum );
 
 		EntityMapEnum found = assertFindEntityMapEnum(
 				entityMapEnum, "from EntityMapEnum ee where key(ee.ordinalMap)=1",
@@ -231,7 +229,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		// ordinal
 		EntityMapEnum entityMapEnum = new EntityMapEnum();
 		entityMapEnum.ordinalMap.put( Common.A1, "Common.A1" );
-		Serializable id = save( entityMapEnum );
+		Object id = save( entityMapEnum );
 
 		EntityMapEnum found = assertFindCriteria(
 				entityMapEnum,
@@ -309,11 +307,11 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		return openSession();
 	}
 
-	private Serializable save(Object o) {
+	private Object save(Object o) {
 		Session session = openNewSession();
 		session.getTransaction().begin();
 
-		Serializable id = session.save( o );
+		Object id = session.save( o );
 
 		session.getTransaction().commit();
 		session.close();
@@ -321,7 +319,7 @@ public class MapKeyCustomEnumTypeTest extends BaseNonConfigCoreFunctionalTestCas
 		return id;
 	}
 
-	private void delete(Serializable id) {
+	private void delete(Object id) {
 		Session session = openNewSession();
 		session.getTransaction().begin();
 

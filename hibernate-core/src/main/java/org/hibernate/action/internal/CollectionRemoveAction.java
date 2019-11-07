@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -44,7 +42,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	public CollectionRemoveAction(
 				final PersistentCollection collection,
 				final CollectionPersister persister,
-				final Serializable id,
+				final Object id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
 		super( persister, collection, id, session );
@@ -74,7 +72,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	public CollectionRemoveAction(
 				final Object affectedOwner,
 				final CollectionPersister persister,
-				final Serializable id,
+				final Object id,
 				final boolean emptySnapshot,
 				final SharedSessionContractImplementor session) {
 		super( persister, null, id, session );

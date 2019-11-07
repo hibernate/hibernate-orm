@@ -402,7 +402,7 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * @param session The session from which the request originated.
 	 * @return The natural-id snapshot.
 	 */
-	Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session);
+	Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Determine which identifier generation strategy is used for this entity.
@@ -421,22 +421,22 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 
 	/**
 	 * Load the id for the entity based on the natural id.
+	 * @return
 	 */
-	Serializable loadEntityIdByNaturalId(
-			Object[] naturalIdValues, LockOptions lockOptions,
+	Object loadEntityIdByNaturalId(
+			Object[] naturalIdValues,
+			LockOptions lockOptions,
 			SharedSessionContractImplementor session);
 
 	/**
 	 * Load an instance of the persistent class.
 	 */
-	Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session)
-	throws HibernateException;
+	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
 
 	/**
 	 * Load an instance of the persistent class.
 	 */
-	Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
-	throws HibernateException;
+	Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
 	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
@@ -447,43 +447,38 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List multiLoad(Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions);
+	List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Serializable id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session)
-	throws HibernateException;
+	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session)
-	throws HibernateException;
+	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an instance
 	 */
-	void insert(Serializable id, Object[] fields, Object object, SharedSessionContractImplementor session)
-	throws HibernateException;
+	void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an instance, using a natively generated identifier (optional operation)
 	 */
-	Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
-	throws HibernateException;
+	Object insert(Object[] fields, Object object, SharedSessionContractImplementor session);
 
 	/**
 	 * Delete a persistent instance
 	 */
-	void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)
-	throws HibernateException;
+	void delete(Object id, Object version, Object object, SharedSessionContractImplementor session);
 
 	/**
 	 * Update a persistent instance
 	 */
 	void update(
-			Serializable id,
+			Object id,
 			Object[] fields,
 			int[] dirtyFields,
 			boolean hasDirtyCollection,
@@ -491,8 +486,7 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 			Object oldVersion,
 			Object object,
 			Object rowId,
-			SharedSessionContractImplementor session
-	) throws HibernateException;
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Get the Hibernate types of the class properties
@@ -628,18 +622,18 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * resolving identifiers
 	 * @return null if there is no row in the database
 	 */
-	Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
-	Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SharedSessionContractImplementor session);
+	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
 
 	/**
 	 * Get the current version of the object, or return null if there is no row for
 	 * the given identifier. In the case of unversioned data, return any object
 	 * if the row exists.
 	 */
-	Object getCurrentVersion(Serializable id, SharedSessionContractImplementor session) throws HibernateException;
+	Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
-	Object forceVersionIncrement(Serializable id, Object currentVersion, SharedSessionContractImplementor session) throws HibernateException;
+	Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Has the class actually been bytecode instrumented?
@@ -689,18 +683,17 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	/**
 	 * Create a new proxy instance
 	 */
-	Object createProxy(Serializable id, SharedSessionContractImplementor session)
-	throws HibernateException;
+	Object createProxy(Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Is this a new transient instance?
 	 */
-	Boolean isTransient(Object object, SharedSessionContractImplementor session) throws HibernateException;
+	Boolean isTransient(Object object, SharedSessionContractImplementor session);
 
 	/**
 	 * Return the values of the insertable properties of the object (including backrefs)
 	 */
-	Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session) throws HibernateException;
+	Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SharedSessionContractImplementor session);
 
 	/**
 	 * Perform a select to retrieve the values of any generated properties
@@ -711,13 +704,9 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.
-	 *
-	 * @param id The entity's id value.
-	 * @param entity The entity for which to get the state.
-	 * @param state
-	 * @param session The session
 	 */
-	void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session);
+	void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session);
+
 	/**
 	 * Perform a select to retrieve the values of any generated properties
 	 * back from the database, injecting these generated values into the
@@ -727,13 +716,8 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * Note, that because we update the PersistenceContext here, callers
 	 * need to take care that they have already written the initial snapshot
 	 * to the PersistenceContext before calling this method.
-	 *
-	 * @param id The entity's id value.
-	 * @param entity The entity for which to get the state.
-	 * @param state
-	 * @param session The session
 	 */
-	void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session);
+	void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -787,27 +771,17 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
 	 */
 	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
-	Serializable getIdentifier(Object object) throws HibernateException;
+	Object getIdentifier(Object object) throws HibernateException;
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
-	 *
-	 * @param entity The entity for which to get the identifier
-	 * @param session The session from which the request originated
-	 *
-	 * @return The identifier
 	 */
-	Serializable getIdentifier(Object entity, SharedSessionContractImplementor session);
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
     /**
      * Inject the identifier value into the given entity.
-     *
-     * @param entity The entity to inject with the identifier value.
-     * @param id The value to be injected as the identifier.
-	 * @param session The session from which is requests originates
-     */
-	void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session);
+	 */
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Get the version number (or timestamp) from the object's version property (or return null if not versioned)
@@ -822,7 +796,7 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 *
 	 * @return The instantiated entity.
 	 */
-	Object instantiate(Serializable id, SharedSessionContractImplementor session);
+	Object instantiate(Object id, SharedSessionContractImplementor session);
 
 	/**
 	 * Is the given object an instance of this entity?
@@ -836,13 +810,8 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 
 	/**
 	 * Set the identifier and version of the given instance back to its "unsaved" value.
-	 *
-	 * @param entity The entity instance
-	 * @param currentId The currently assigned identifier value.
-	 * @param currentVersion The currently assigned version value.
-	 * @param session The session from which the request originated.
 	 */
-	void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session);
+	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
 	/**
 	 * A request has already identified the entity-name of this persister as the mapping for the given instance.

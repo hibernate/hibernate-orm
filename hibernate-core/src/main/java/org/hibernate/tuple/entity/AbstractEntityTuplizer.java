@@ -36,7 +36,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
@@ -396,7 +395,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					}
 					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
 					final EntityKey entityKey = session.generateEntityKey(
-							(Serializable) extractedValues[i],
+							extractedValues[i],
 							metamodel.entityPersister( associatedEntityName )
 					);
 					// it is conceivable there is a proxy, so check that first
@@ -422,7 +421,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 	}
 
-	private static Serializable determineEntityId(
+	private static Object determineEntityId(
 			Object entity,
 			AssociationType associationType,
 			SharedSessionContractImplementor session,
@@ -431,7 +430,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			return null;
 		}
 
-		if ( HibernateProxy.class.isInstance( entity ) ) {
+		if ( entity instanceof HibernateProxy ) {
 			// entity is a proxy, so we know it is not transient; just return ID from proxy
 			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
 		}
@@ -494,7 +493,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public void resetIdentifier(
 			Object entity,
-			Serializable currentId,
+			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
 		//noinspection StatementWithEmptyBody

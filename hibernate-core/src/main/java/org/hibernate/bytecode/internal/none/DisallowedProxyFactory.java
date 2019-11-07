@@ -6,7 +6,6 @@
  */
 package org.hibernate.bytecode.internal.none;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
@@ -32,7 +31,7 @@ final class DisallowedProxyFactory implements ProxyFactory {
 	}
 
 	@Override
-	public HibernateProxy getProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public HibernateProxy getProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		throw new HibernateException( "Generation of HibernateProxy instances at runtime is not allowed when the configured BytecodeProvider is 'none'; your model requires a more advanced BytecodeProvider to be enabled." );
 	}
 

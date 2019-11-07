@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Collections;
 import java.util.List;
 import javax.transaction.SystemException;
 
@@ -25,8 +24,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -80,16 +77,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Serializable insert(Object entity) {
+	public Object insert(Object entity) {
 		checkOpen();
 		return insert( null, entity );
 	}
 
 	@Override
-	public Serializable insert(String entityName, Object entity) {
+	public Object insert(String entityName, Object entity) {
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
-		Serializable id = persister.getIdentifierGenerator().generate( this, entity );
+		Object id = persister.getIdentifierGenerator().generate( this, entity );
 		Object[] state = persister.getPropertyValues( entity );
 		if ( persister.isVersioned() ) {
 			boolean substitute = Versioning.seedVersion(
@@ -125,7 +122,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void delete(String entityName, Object entity) {
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
-		Serializable id = persister.getIdentifier( entity, this );
+		Object id = persister.getIdentifier( entity, this );
 		Object version = persister.getVersion( entity );
 		persister.delete( id, version, entity, this );
 	}
@@ -143,7 +140,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void update(String entityName, Object entity) {
 		checkOpen();
 		EntityPersister persister = getEntityPersister( entityName, entity );
-		Serializable id = persister.getIdentifier( entity, this );
+		Object id = persister.getIdentifier( entity, this );
 		Object[] state = persister.getPropertyValues( entity );
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -162,22 +159,22 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	// loading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object get(Class entityClass, Serializable id) {
+	public Object get(Class entityClass, Object id) {
 		return get( entityClass.getName(), id );
 	}
 
 	@Override
-	public Object get(Class entityClass, Serializable id, LockMode lockMode) {
+	public Object get(Class entityClass, Object id, LockMode lockMode) {
 		return get( entityClass.getName(), id, lockMode );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id) {
+	public Object get(String entityName, Object id) {
 		return get( entityName, id, LockMode.NONE );
 	}
 
 	@Override
-	public Object get(String entityName, Serializable id, LockMode lockMode) {
+	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
 		Object result = getFactory().getMetamodel().entityPersister( entityName )
@@ -206,7 +203,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityPersister persister = this.getEntityPersister( entityName, entity );
-		final Serializable id = persister.getIdentifier( entity, this );
+		final Object id = persister.getIdentifier( entity, this );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( persister, id, this.getFactory() ) );
 		}
@@ -246,7 +243,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		if ( getPersistenceContextInternal().isLoadFinished() ) {
 			throw new SessionException( "proxies cannot be fetched by a stateless session" );
 		}
@@ -272,7 +269,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object internalLoad(
 			String entityName,
-			Serializable id,
+			Object id,
 			boolean eager,
 			boolean nullable) throws HibernateException {
 		checkOpen();
@@ -439,7 +436,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Serializable getContextEntityIdentifier(Object object) {
+	public Object getContextEntityIdentifier(Object object) {
 		checkOpen();
 		return null;
 	}
@@ -496,7 +493,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	protected Object load(String entityName, Serializable identifier) {
+	protected Object load(String entityName, Object identifier) {
 		return null;
 	}
 

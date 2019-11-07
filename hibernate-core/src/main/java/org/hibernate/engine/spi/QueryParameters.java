@@ -88,6 +88,13 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
+			final Object[] collectionKeys) {
+		this( positionalParameterTypes, positionalParameterValues, null, (Serializable[]) collectionKeys );
+	}
+
+	public QueryParameters(
+			final Type[] positionalParameterTypes,
+			final Object[] positionalParameterValues,
 			final Serializable[] collectionKeys) {
 		this( positionalParameterTypes, positionalParameterValues, null, collectionKeys );
 	}

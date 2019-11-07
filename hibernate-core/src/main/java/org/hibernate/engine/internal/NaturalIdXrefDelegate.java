@@ -70,7 +70,7 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @return {@code true} if a new entry was actually added; {@code false} otherwise.
 	 */
-	public boolean cacheNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public boolean cacheNaturalIdCrossReference(EntityPersister persister, Object pk, Object[] naturalIdValues) {
 		validateNaturalId( persister, naturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
@@ -90,10 +90,10 @@ public class NaturalIdXrefDelegate {
 	 * @param persister The persister representing the entity type.
 	 * @param pk The primary key value
 	 * @param naturalIdValues The natural id value(s)
-	 * 
+	 *
 	 * @return The cached values, if any.  May be different from incoming values.
 	 */
-	public Object[] removeNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public Object[] removeNaturalIdCrossReference(EntityPersister persister, Object pk, Object[] naturalIdValues) {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
@@ -130,10 +130,10 @@ public class NaturalIdXrefDelegate {
 	 * @param persister The persister representing the entity type.
 	 * @param pk The primary key value
 	 * @param naturalIdValues The natural id value(s) to check
-	 * 
+	 *
 	 * @return {@code true} if the given naturalIdValues match the current cached values; {@code false} otherwise.
 	 */
-	public boolean sameAsCached(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public boolean sameAsCached(EntityPersister persister, Object pk, Object[] naturalIdValues) {
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		return entityNaturalIdResolutionCache != null
 				&& entityNaturalIdResolutionCache.sameAsCached( pk, naturalIdValues );
@@ -174,10 +174,10 @@ public class NaturalIdXrefDelegate {
 	 *
 	 * @param persister The persister representing the entity type.
 	 * @param pk The entity primary key
-	 * 
-	 * @return The corresponding cross-referenced natural id values, or {@code null} if none 
+	 *
+	 * @return The corresponding cross-referenced natural id values, or {@code null} if none
 	 */
-	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk) {
+	public Object[] findCachedNaturalId(EntityPersister persister, Object pk) {
 		persister = locatePersisterForKey( persister );
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
@@ -204,13 +204,13 @@ public class NaturalIdXrefDelegate {
 	 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
 	 * 		or {@code null} if none 
 	 */
-	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
+	public Object findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues) {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 
-		Serializable pk;
+		Object pk;
 		final CachedNaturalId cachedNaturalId = new CachedNaturalId( persister, naturalIdValues );
 		if ( entityNaturalIdResolutionCache != null ) {
 			pk = entityNaturalIdResolutionCache.naturalIdToPkMap.get( cachedNaturalId );
@@ -301,10 +301,10 @@ public class NaturalIdXrefDelegate {
 	 * 
 	 * @see org.hibernate.NaturalIdLoadAccess#setSynchronizationEnabled
 	 */
-	public Collection<Serializable> getCachedPkResolutions(EntityPersister persister) {
+	public Collection<Object> getCachedPkResolutions(EntityPersister persister) {
 		persister = locatePersisterForKey( persister );
 
-		Collection<Serializable> pks = null;
+		Collection<Object> pks = null;
 
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache != null ) {
@@ -423,8 +423,8 @@ public class NaturalIdXrefDelegate {
 	private static class NaturalIdResolutionCache implements Serializable {
 		private final EntityPersister persister;
 
-		private Map<Serializable, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
-		private Map<CachedNaturalId, Serializable> naturalIdToPkMap = new ConcurrentHashMap<>();
+		private Map<Object, CachedNaturalId> pkToNaturalIdMap = new ConcurrentHashMap<>();
+		private Map<CachedNaturalId, Object> naturalIdToPkMap = new ConcurrentHashMap<>();
 
 		private List<CachedNaturalId> invalidNaturalIdList;
 
@@ -436,7 +436,7 @@ public class NaturalIdXrefDelegate {
 			return persister;
 		}
 
-		public boolean sameAsCached(Serializable pk, Object[] naturalIdValues) {
+		public boolean sameAsCached(Object pk, Object[] naturalIdValues) {
 			if ( pk == null ) {
 				return false;
 			}
@@ -449,7 +449,7 @@ public class NaturalIdXrefDelegate {
 			return false;
 		}
 
-		public boolean cache(Serializable pk, Object[] naturalIdValues) {
+		public boolean cache(Object pk, Object[] naturalIdValues) {
 			if ( pk == null ) {
 				return false;
 			}

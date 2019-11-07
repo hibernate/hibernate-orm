@@ -71,7 +71,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 
 	@Override
 	public HibernateProxy getProxy(
-			Serializable id,
+			Object id,
 			SharedSessionContractImplementor session) throws HibernateException {
 		final ByteBuddyInterceptor interceptor = new ByteBuddyInterceptor(
 				entityName,

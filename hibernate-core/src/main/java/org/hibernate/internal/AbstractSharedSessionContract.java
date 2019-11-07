@@ -9,7 +9,6 @@ package org.hibernate.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.TimeZone;
@@ -518,7 +517,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
+	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return new EntityKey( id, persister );
 	}
 
@@ -842,7 +841,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return procedureCall;
 	}
 
-	protected abstract Object load(String entityName, Serializable identifier);
+	protected abstract Object load(String entityName, Object identifier);
 
 	@Override
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {

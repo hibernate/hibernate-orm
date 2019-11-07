@@ -67,7 +67,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final Class idClass = persister.getIdentifierType().getReturnedClass();
 		if ( idClass != null &&
 				!idClass.isInstance( event.getEntityId() ) &&
-				!DelayedPostInsertIdentifier.class.isInstance( event.getEntityId() ) ) {
+				!(event.getEntityId() instanceof DelayedPostInsertIdentifier) ) {
 			checkIdClass( persister, event, loadType, idClass );
 		}
 

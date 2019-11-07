@@ -6,7 +6,6 @@
  */
 package org.hibernate.mapping;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -504,7 +503,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 
 		@Override
-		public Serializable locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
+		public Object locateGenerationContext(SharedSessionContractImplementor session, Object incomingObject) {
 			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
 		}
 	}

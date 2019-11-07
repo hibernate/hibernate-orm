@@ -7,6 +7,7 @@
 package org.hibernate.loader.internal;
 
 import java.util.EnumMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -26,9 +27,16 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	private EnumMap<LockMode, SingleIdLoadPlan> selectByLockMode = new EnumMap<>( LockMode.class );
 	private EnumMap<InternalFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
 
+	private AtomicInteger nonReusablePlansGenerated = new AtomicInteger();
+
+	public AtomicInteger getNonReusablePlansGenerated() {
+		return nonReusablePlansGenerated;
+	}
+
 	public SingleIdEntityLoaderStandardImpl(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
+		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, sessionFactory );
 	}
 
@@ -55,6 +63,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			// This case is special because the filters need to be applied in order to
 			// 		properly restrict the SQL/JDBC results.  For this reason it has higher
 			// 		precedence than even "internal" fetch profiles.
+			nonReusablePlansGenerated.incrementAndGet();
 			return createLoadPlan( lockOptions, loadQueryInfluencers, session.getFactory() );
 		}
 
@@ -78,7 +87,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 						session.getFactory()
 				);
 				selectByInternalCascadeProfile.put( enabledInternalFetchProfile, plan );
-
 				return plan;
 			}
 		}
@@ -105,6 +113,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			return plan;
 		}
 
+		nonReusablePlansGenerated.incrementAndGet();
 		return createLoadPlan( lockOptions, loadQueryInfluencers, session.getFactory() );
 	}
 

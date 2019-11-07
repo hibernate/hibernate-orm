@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -85,13 +84,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final EntityEntry e = persistenceContext.getEntry( object );
 		final EntityPersister persister;
-		final Serializable id;
+		final Object id;
 
 		if ( e == null ) {
-			persister = source.getEntityPersister(
-					event.getEntityName(),
-					object
-			); //refresh() does not pass an entityName
+			//refresh() does not pass an entityName
+			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
@@ -187,7 +184,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			Object object,
 			EntityEntry e,
 			EntityPersister persister,
-			Serializable id,
+			Object id,
 			PersistenceContext persistenceContext) {
 
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
@@ -248,11 +245,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		return result;
 	}
 
-	private void evictCachedCollections(EntityPersister persister, Serializable id, EventSource source) {
+	private void evictCachedCollections(EntityPersister persister, Object id, EventSource source) {
 		evictCachedCollections( persister.getPropertyTypes(), id, source );
 	}
 
-	private void evictCachedCollections(Type[] types, Serializable id, EventSource source)
+	private void evictCachedCollections(Type[] types, Object id, EventSource source)
 			throws HibernateException {
 		final ActionQueue actionQueue = source.getActionQueue();
 		final SessionFactoryImplementor factory = source.getFactory();

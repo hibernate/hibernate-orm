@@ -6,24 +6,22 @@
  */
 package org.hibernate.test.annotations.enumerated;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.query.Query;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 
@@ -85,7 +83,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		// persist
 		EntityEnum entityEnum = new EntityEnum();
 		entityEnum.setOrdinal( Common.A2 );
-		Serializable id = session.save( entityEnum );
+		Object id = session.save( entityEnum );
 
 		session.getTransaction().commit();
 		session.close();
@@ -239,7 +237,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		// persist
 		EntityEnum entityEnum = new EntityEnum();
 		entityEnum.setOrdinal( Common.A1 );
-		Serializable id = session.save( entityEnum );
+		Object id = session.save( entityEnum );
 
 		session.getTransaction().commit();
 		session.close();
@@ -453,7 +451,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		EntityEnum entityEnum = new EntityEnum();
 		entityEnum.setString( Common.B2 );
 		entityEnum.getSet().add( Common.B2 );
-		Serializable id = session.save( entityEnum );
+		Object id = session.save( entityEnum );
 
 		session.getTransaction().commit();
 		session.close();

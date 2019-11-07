@@ -260,7 +260,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object[] getNaturalIdentifierSnapshot(Serializable id, SharedSessionContractImplementor session) {
+		public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
 			return new Object[0];
 		}
 
@@ -281,31 +281,31 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
+		public Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session) {
 			return null;
 		}
 
 		@Override
 		public List multiLoad(
-				Serializable[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
+				Object[] ids, SharedSessionContractImplementor session, MultiLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void insert(Serializable id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -314,12 +314,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session) {
+		public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
 		}
 
 		@Override
 		public void update(
-				Serializable id,
+				Object id,
 				Object[] fields,
 				int[] dirtyFields,
 				boolean hasDirtyCollection,
@@ -462,22 +462,22 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object[] getDatabaseSnapshot(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			return new Object[0];
 		}
 
 		@Override
-		public Serializable getIdByUniqueKey(Serializable key, String uniquePropertyName, SharedSessionContractImplementor session) {
+		public Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session) {
 			throw new UnsupportedOperationException( "not supported" );
 		}
 
 		@Override
-		public Object getCurrentVersion(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object forceVersionIncrement(Serializable id, Object currentVersion, SharedSessionContractImplementor session) {
+		public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -511,7 +511,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object createProxy(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			return null;
 		}
 
@@ -526,11 +526,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -582,7 +582,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Serializable id, SharedSessionContractImplementor session) {
+		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -591,7 +591,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object instantiate(Serializable id, SharedSessionContractImplementor session) {
+		public Object instantiate(Object id, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -606,7 +606,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SharedSessionContractImplementor session) {
+		public void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -735,7 +735,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;
 		}
 
-		public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
+		public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
@@ -838,26 +838,26 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void remove(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public void remove(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void recreate(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+		public void recreate(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void deleteRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+		public void deleteRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void updateRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+		public void updateRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void insertRows(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+		public void insertRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
@@ -942,19 +942,19 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public int getSize(Serializable key, SharedSessionContractImplementor session) {
+		public int getSize(Object key, SharedSessionContractImplementor session) {
 			return 0;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session) {
+		public boolean indexExists(Object key, Object index, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean elementExists(Serializable key, Object element, SharedSessionContractImplementor session) {
+		public boolean elementExists(Object key, Object element, SharedSessionContractImplementor session) {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public Object getElementByIndex(Serializable key, Object index, SharedSessionContractImplementor session, Object owner) {
+		public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
@@ -974,7 +974,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void processQueuedOps(PersistentCollection collection, Serializable key, SharedSessionContractImplementor session)
+		public void processQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 		}
 	}

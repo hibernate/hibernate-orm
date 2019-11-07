@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sql.spi;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -40,7 +39,7 @@ import org.hibernate.query.spi.QueryImplementor;
  */
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
-	NativeQueryImplementor setCollectionKey(Serializable key);
+	NativeQueryImplementor setCollectionKey(Object key);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - NativeQuery

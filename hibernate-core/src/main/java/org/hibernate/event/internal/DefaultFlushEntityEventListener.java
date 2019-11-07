@@ -60,21 +60,22 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * make sure user didn't mangle the id
 	 */
-	public void checkId(Object object, EntityPersister persister, Serializable id, SessionImplementor session)
+	public void checkId(Object object, EntityPersister persister, Object id, SessionImplementor session)
 			throws HibernateException {
 
-		if ( id != null && id instanceof DelayedPostInsertIdentifier ) {
+		if ( id instanceof DelayedPostInsertIdentifier ) {
 			// this is a situation where the entity id is assigned by a post-insert generator
 			// and was saved outside the transaction forcing it to be delayed
 			return;
 		}
 
 		if ( persister.canExtractIdOutOfEntity() ) {
+			final Object oid = persister.getIdentifier( object, session );
 
-			Serializable oid = persister.getIdentifier( object, session );
 			if ( id == null ) {
 				throw new AssertionFailure( "null id in " + persister.getEntityName() + " entry (don't flush the Session after an exception occurs)" );
 			}
+
 			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 				throw new HibernateException(
 						"identifier of an instance of " + persister.getEntityName() + " was altered from "
@@ -82,7 +83,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				);
 			}
 		}
-
 	}
 
 	private void checkNaturalId(
@@ -370,7 +370,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		final boolean answerFromInterceptor =  session.getInterceptor().onFlushDirty(
 				entity,
-				entry.getId(),
+				(Serializable) entry.getId(),
 				values,
 				entry.getLoadedState(),
 				persister.getPropertyNames(),
@@ -511,12 +511,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final SessionImplementor session = event.getSession();
 		final EntityEntry entry = event.getEntityEntry();
 		final EntityPersister persister = entry.getPersister();
-		final Serializable id = entry.getId();
+		final Object id = entry.getId();
 		final Object[] loadedState = entry.getLoadedState();
 
 		int[] dirtyProperties = session.getInterceptor().findDirty(
 				entity,
-				id,
+				(Serializable) id,
 				values,
 				loadedState,
 				persister.getPropertyNames(),
@@ -606,7 +606,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 				else {
 					// dirty check against the database snapshot, if possible/necessary
-					final Object[] databaseSnapshot = getDatabaseSnapshot( session, persister, id );
+					final Object[] databaseSnapshot = getDatabaseSnapshot( persister, id, session );
 					if ( databaseSnapshot != null ) {
 						dirtyProperties = persister.findModified( databaseSnapshot, values, entity, session );
 						dirtyCheckPossible = true;
@@ -673,7 +673,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		@Override
 		public Object getLoadedValue() {
 			if ( databaseSnapshot == null ) {
-				databaseSnapshot = getDatabaseSnapshot( event.getSession(), persister, event.getEntityEntry().getId() );
+				databaseSnapshot = getDatabaseSnapshot( persister, event.getEntityEntry().getId(), event.getSession() );
 			}
 			return databaseSnapshot[index];
 		}
@@ -693,7 +693,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
-	private void logDirtyProperties(Serializable id, int[] dirtyProperties, EntityPersister persister) {
+	private void logDirtyProperties(Object id, int[] dirtyProperties, EntityPersister persister) {
 		if ( dirtyProperties != null && dirtyProperties.length > 0 && LOG.isTraceEnabled() ) {
 			final String[] allPropertyNames = persister.getPropertyNames();
 			final String[] dirtyPropertyNames = new String[dirtyProperties.length];
@@ -708,17 +708,18 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
-	private Object[] getDatabaseSnapshot(SessionImplementor session, EntityPersister persister, Serializable id) {
+	private Object[] getDatabaseSnapshot(
+			EntityPersister persister,
+			Object id,
+			SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.isSelectBeforeUpdateRequired() ) {
-			Object[] snapshot = persistenceContext
-					.getDatabaseSnapshot( id, persister );
+			Object[] snapshot = persistenceContext.getDatabaseSnapshot( id, persister );
 			if ( snapshot == null ) {
 				//do we even really need this? the update will fail anyway....
 				final StatisticsImplementor statistics = session.getFactory().getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
-					statistics
-							.optimisticFailure( persister.getEntityName() );
+					statistics.optimisticFailure( persister.getEntityName() );
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}

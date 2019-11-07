@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
 /**
  * Thrown when <tt>Session.load()</tt> fails to select a row with
  * the given primary key (identifier value). This exception might not
@@ -24,11 +22,14 @@ import java.io.Serializable;
 public class ObjectNotFoundException extends UnresolvableObjectException {
 	/**
 	 * Constructs a ObjectNotFoundException using the given information.
-	 *
-	 * @param identifier The identifier of the entity
+	 *  @param identifier The identifier of the entity
 	 * @param entityName The name of the entity
 	 */
-	public ObjectNotFoundException(Serializable identifier, String entityName) {
+	public ObjectNotFoundException(Object identifier, String entityName) {
 		super( identifier, entityName );
+	}
+
+	public ObjectNotFoundException(String entityName, Object identifier) {
+		this( identifier, entityName );
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,7 +32,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 		this.persister = persister;
 	}
 
-	public void initialize(Serializable key, SharedSessionContractImplementor session) throws HibernateException {
+	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
 		LOG.debugf( "Initializing collection: %s using named query: %s", persister.getRole(), queryName );
 
 		NativeQueryImplementor nativeQuery = session.getNamedNativeQuery( queryName );

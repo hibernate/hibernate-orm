@@ -58,7 +58,7 @@ public class SubselectOneToManyLoader extends OneToManyLoader {
 	}
 
 	@Override
-	public void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+	public void initialize(Object id, SharedSessionContractImplementor session) throws HibernateException {
 		loadCollectionSubselect( 
 				session, 
 				keys, 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -60,7 +59,7 @@ public class CustomCollectionType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key)
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
 	throws HibernateException {
 		return userType.instantiate( session, persister );
 	}

@@ -6,9 +6,7 @@
  */
 package org.hibernate.proxy.map;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -35,7 +33,7 @@ public class MapProxyFactory implements ProxyFactory {
 	}
 
 	@Override
-	public HibernateProxy getProxy(final Serializable id, final SharedSessionContractImplementor session) {
+	public HibernateProxy getProxy(final Object id, final SharedSessionContractImplementor session) {
 		return new MapProxy( new MapLazyInitializer( entityName, id, session ) );
 	}
 

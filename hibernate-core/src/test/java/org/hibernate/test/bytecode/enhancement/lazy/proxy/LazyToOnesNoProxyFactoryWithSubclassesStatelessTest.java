@@ -352,7 +352,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatelessTest extends BaseNon
 		@Override
 		public void resetIdentifier(
 				Object entity,
-				Serializable currentId,
+				Object currentId,
 				Object currentVersion,
 				SharedSessionContractImplementor session) {
 			pojoEntityTuplizer.resetIdentifier( entity, currentId, currentVersion, session );

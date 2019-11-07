@@ -23,24 +23,17 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
  */
 public class SqmSelectInterpretation {
 	private final SelectStatement sqlAst;
-	private final Set<String> affectedTableNames;
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam;
 
 	public SqmSelectInterpretation(
 			SelectStatement sqlAst,
-			Set<String> affectedTableNames,
 			Map<SqmParameter, List<JdbcParameter>> jdbcParamsBySqmParam) {
 		this.sqlAst = sqlAst;
-		this.affectedTableNames = affectedTableNames;
 		this.jdbcParamsBySqmParam = jdbcParamsBySqmParam;
 	}
 
 	public SelectStatement getSqlAst() {
 		return sqlAst;
-	}
-
-	public Set<String> getAffectedTableNames() {
-		return affectedTableNames;
 	}
 
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {

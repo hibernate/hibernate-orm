@@ -334,7 +334,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return super.getHashCode( x );
 		}
 
-		final Serializable id;
+		final Object id;
 		if ( x instanceof HibernateProxy ) {
 			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
 		}
@@ -344,7 +344,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				id = persister.getIdentifier( x );
 			}
 			else {
-				id = (Serializable) x;
+				id = x;
 			}
 		}
 		return persister.getIdentifierType().getHashCode( id, factory );
@@ -363,7 +363,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		final Class mappedClass = persister.getMappedClass();
-		Serializable xid;
+		Object xid;
 		if ( x instanceof HibernateProxy ) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
 					.getIdentifier();
@@ -378,10 +378,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 		}
 
-		Serializable yid;
+		Object yid;
 		if ( y instanceof HibernateProxy ) {
-			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer()
-					.getIdentifier();
+			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
@@ -510,7 +509,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		final StringBuilder result = new StringBuilder().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
-			final Serializable id;
+			final Object id;
 			if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = (HibernateProxy) value;
 				id = proxy.getHibernateLazyInitializer().getIdentifier();

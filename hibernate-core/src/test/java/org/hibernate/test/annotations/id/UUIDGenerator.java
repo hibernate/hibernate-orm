@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.id;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.UUID;
 
@@ -24,7 +23,7 @@ import org.hibernate.id.IdentifierGenerator;
  */
 public class UUIDGenerator implements IdentifierGenerator {
     @Override
-    public Serializable generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
+    public Object generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
         UUID uuid = UUID.randomUUID();
         String sud = uuid.toString();
         System.out.println("uuid="+uuid);

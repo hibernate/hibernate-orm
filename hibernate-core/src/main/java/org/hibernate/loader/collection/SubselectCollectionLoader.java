@@ -59,7 +59,7 @@ public class SubselectCollectionLoader extends BasicCollectionLoader {
 	}
 
 	@Override
-	public void initialize(Serializable id, SharedSessionContractImplementor session)
+	public void initialize(Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		loadCollectionSubselect( 
 				session, 

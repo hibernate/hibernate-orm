@@ -82,9 +82,9 @@ public class DynamicBatchingCollectionInitializerBuilder extends BatchingCollect
 		}
 
 		@Override
-		public void initialize(Serializable id, SharedSessionContractImplementor session) throws HibernateException {
+		public void initialize(Object id, SharedSessionContractImplementor session) throws HibernateException {
 			// first, figure out how many batchable ids we have...
-			final Serializable[] batch = session.getPersistenceContextInternal()
+			final Object[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getCollectionBatch( collectionPersister(), id, maxBatchSize );
 			final int numberOfIds = ArrayHelper.countNonNull( batch );

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
@@ -26,10 +24,10 @@ import org.hibernate.type.Type;
 public abstract class ReattachVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ReattachVisitor.class );
 
-	private final Serializable ownerIdentifier;
+	private final Object ownerIdentifier;
 	private final Object owner;
 
-	public ReattachVisitor(EventSource session, Serializable ownerIdentifier, Object owner) {
+	public ReattachVisitor(EventSource session, Object ownerIdentifier, Object owner) {
 		super( session );
 		this.ownerIdentifier = ownerIdentifier;
 		this.owner = owner;
@@ -40,7 +38,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The entity's identifier.
 	 */
-	final Serializable getOwnerIdentifier() {
+	final Object getOwnerIdentifier() {
 		return ownerIdentifier;
 	}
 
@@ -78,7 +76,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @throws HibernateException
 	 */
-	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source)
+	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
@@ -99,11 +97,11 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
-	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
+	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
 		if ( role.getCollectionType().useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}
-		return (Serializable) role.getOwnerEntityPersister().getPropertyValue(
+		return role.getOwnerEntityPersister().getPropertyValue(
 				owner,
 				role.getCollectionType().getLHSPropertyName()
 		);

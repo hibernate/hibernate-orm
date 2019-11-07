@@ -51,8 +51,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 	/**
 	 * Constructs an EntityUpdateAction
-	 *
-	 * @param id The entity identifier
+	 *  @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param dirtyProperties The indexes (in reference to state) properties with dirty state
 	 * @param hasDirtyCollection Were any collections dirty?
@@ -65,7 +64,7 @@ public final class EntityUpdateAction extends EntityAction {
 	 * @param session The session
 	 */
 	public EntityUpdateAction(
-			final Serializable id,
+			final Object id,
 			final Object[] state,
 			final int[] dirtyProperties,
 			final boolean hasDirtyCollection,
@@ -85,7 +84,7 @@ public final class EntityUpdateAction extends EntityAction {
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
-		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, previousState, session, id );
+		this.previousNaturalIdValues = determinePreviousNaturalIdValues( persister, id, previousState, session );
 		session.getPersistenceContextInternal().getNaturalIdHelper().manageLocalNaturalIdCrossReference(
 				persister,
 				id,
@@ -97,9 +96,8 @@ public final class EntityUpdateAction extends EntityAction {
 
 	private Object[] determinePreviousNaturalIdValues(
 			EntityPersister persister,
-			Object[] previousState,
-			SharedSessionContractImplementor session,
-			Serializable id) {
+			Object id, Object[] previousState,
+			SharedSessionContractImplementor session) {
 		if ( ! persister.hasNaturalIdentifier() ) {
 			return null;
 		}
@@ -114,7 +112,7 @@ public final class EntityUpdateAction extends EntityAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		final Serializable id = getId();
+		final Object id = getId();
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();

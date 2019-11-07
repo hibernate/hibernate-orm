@@ -123,7 +123,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 */
 	public Object[] assemble(
 			final Object instance,
-			final Serializable id,
+			final Object id,
 			final EntityPersister persister,
 			final Interceptor interceptor,
 			final EventSource session) throws HibernateException {

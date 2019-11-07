@@ -6,7 +6,6 @@
  */
 package org.hibernate.id;
 
-import java.io.Serializable;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -26,9 +25,9 @@ import org.hibernate.type.Type;
 public class Assigned implements IdentifierGenerator, Configurable {
 	private String entityName;
 
-	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
+	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {
 		//TODO: cache the persister, this shows up in yourkit
-		final Serializable id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
+		final Object id = session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
 		if ( id == null ) {
 			throw new IdentifierGenerationException(
 					"ids for this class must be manually assigned before calling save(): " + entityName

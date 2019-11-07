@@ -6,7 +6,6 @@
  */
 package org.hibernate.proxy.pojo.javassist;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -36,7 +35,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			String entityName,
 			Class persistentClass,
 			Class[] interfaces,
-			Serializable id,
+			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,

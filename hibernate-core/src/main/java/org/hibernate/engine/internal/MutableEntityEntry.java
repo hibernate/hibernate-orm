@@ -54,7 +54,7 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final Status status,
 			final Object[] loadedState,
 			final Object rowId,
-			final Serializable id,
+			final Object id,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,

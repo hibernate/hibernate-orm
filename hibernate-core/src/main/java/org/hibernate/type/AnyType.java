@@ -259,7 +259,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return resolveAny( holder.entityName, holder.id, session );
 	}
 
-	private Object resolveAny(String entityName, Serializable id, SharedSessionContractImplementor session)
+	private Object resolveAny(String entityName, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		return entityName==null || id==null
 				? null
@@ -275,7 +275,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value,	int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		Serializable id;
+		Object id;
 		String entityName;
 		if ( value == null ) {
 			id = null;
@@ -347,7 +347,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 		else {
 			final String entityName = session.bestGuessEntityName( original );
-			final Serializable id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
+			final Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
 			return session.internalLoad( entityName, id, eager, false );
 		}
 	}
@@ -403,7 +403,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		};
 	}
 
-	private Serializable getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
+	private Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		try {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					session.bestGuessEntityName( value ),
@@ -511,9 +511,9 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	 */
 	public static final class ObjectTypeCacheEntry implements Serializable {
 		final String entityName;
-		final Serializable id;
+		final Object id;
 
-		ObjectTypeCacheEntry(String entityName, Serializable id) {
+		ObjectTypeCacheEntry(String entityName, Object id) {
 			this.entityName = entityName;
 			this.id = id;
 		}

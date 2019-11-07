@@ -10,9 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
-import org.hibernate.bytecode.internal.bytebuddy.ProxyFactoryFactoryImpl;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
@@ -32,7 +30,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private final CompositeType componentIdType;
 
 	/**
-	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Serializable, Boolean, String, boolean, Method, Method, CompositeType)} instead.
+	 * @deprecated use {@link #SerializableProxy(String, Class, Class[], Object, Boolean, String, boolean, Method, Method, CompositeType)} instead.
 	 */
 	@Deprecated
 	public SerializableProxy(
@@ -54,7 +52,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			String entityName,
 			Class persistentClass,
 			Class[] interfaces,
-			Serializable id,
+			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
 			boolean allowLoadOutsideTransaction,
@@ -93,7 +91,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	@Override
-	protected Serializable getId() {
+	protected Object getId() {
 		return super.getId();
 	}
 

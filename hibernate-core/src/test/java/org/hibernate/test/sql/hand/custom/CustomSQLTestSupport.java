@@ -47,7 +47,7 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		Organization jboss = new Organization( "JBoss" );
 		Person gavin = new Person( "Gavin" );
 		Employment emp = new Employment( gavin, jboss, "AU" );
-		Serializable orgId = s.save( jboss );
+		Object orgId = s.save( jboss );
 		s.save( ifa );
 		s.save( gavin );
 		s.save( emp );

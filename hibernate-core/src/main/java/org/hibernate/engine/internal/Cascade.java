@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -323,7 +322,7 @@ public final class Cascade {
 						if ( valueEntry != null ) {
 							final String entityName = valueEntry.getPersister().getEntityName();
 							if ( LOG.isTraceEnabled() ) {
-								final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
+								final Object id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
 								final String description = MessageHelper.infoString( entityName, id );
 								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}

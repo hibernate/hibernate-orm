@@ -397,9 +397,9 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				Object optionalObject,
 				SharedSessionContractImplementor session,
 				LockOptions lockOptions) {
-			final Serializable[] batch = session.getPersistenceContextInternal()
+			final Object[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
-					.getEntityBatch( persister(), id, maxBatchSize, persister().getEntityMode() );
+					.getBatchLoadableEntityIds( persister(), id, maxBatchSize );
 
 			final int numberOfIds = ArrayHelper.countNonNull( batch );
 			if ( numberOfIds <= 1 ) {

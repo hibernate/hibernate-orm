@@ -138,7 +138,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param key The owner key.
 	 * @return The instantiated collection.
 	 */
-	public abstract PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Serializable key);
+	public abstract PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key);
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) throws SQLException {
@@ -272,8 +272,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		//what if the collection was null, and then later had elements added? seems unsafe
 		//session.getPersistenceContext().getCollectionEntry( (PersistentCollection) value ).getKey();
 
-		final Serializable key = getKeyOfOwner(owner, session);
-		if (key==null) {
+		final Object key = getKeyOfOwner(owner, session);
+		if ( key == null ) {
 			return null;
 		}
 		else {
@@ -398,7 +398,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The collection owner's key
 	 */
-	public Serializable getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+	public Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
 		final PersistenceContext pc = session.getPersistenceContextInternal();
 
 		EntityEntry entityEntry = pc.getEntry( owner );
@@ -451,8 +451,8 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The collection owner's id, if it can be obtained from the key;
 	 * otherwise, null is returned
 	 */
-	public Serializable getIdOfOwnerOrNull(Serializable key, SharedSessionContractImplementor session) {
-		Serializable ownerId = null;
+	public Object getIdOfOwnerOrNull(Object key, SharedSessionContractImplementor session) {
+		Object ownerId = null;
 		if ( foreignKeyPropertyName == null ) {
 			ownerId = key;
 		}
@@ -493,7 +493,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		return resolveKey( getKeyOfOwner( owner, session ), session, owner, overridingEager );
 	}
 
-	private Object resolveKey(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
+	private Object resolveKey(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 		// if (key==null) throw new AssertionFailure("owner identifier unknown when re-assembling
 		// collection reference");
 		return key == null ? null : // TODO: can this case really occur??
@@ -798,7 +798,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param owner The collection owner
 	 * @return The collection
 	 */
-	public Object getCollection(Serializable key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
+	public Object getCollection(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 
 		final CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

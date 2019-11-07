@@ -6,7 +6,6 @@
  */
 package org.hibernate.proxy.pojo;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,7 +33,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	protected BasicLazyInitializer(
 			String entityName,
 			Class persistentClass,
-			Serializable id,
+			Object id,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType,
@@ -74,7 +73,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 			}
 			else if ( method.equals( setIdentifierMethod ) ) {
 				initialize();
-				setIdentifier( (Serializable) args[0] );
+				setIdentifier( args[0] );
 				return INVOKE_IMPLEMENTATION;
 			}
 		}

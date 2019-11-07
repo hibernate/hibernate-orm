@@ -8,9 +8,7 @@ package org.hibernate.loader.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
@@ -114,7 +112,6 @@ public class MetamodelSelectBuilderProcess {
 
 	private SqlAstDescriptor execute() {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
-		final Set<String> affectedTables = new HashSet<>();
 		final List<DomainResult> domainResults;
 
 		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
@@ -141,7 +138,6 @@ public class MetamodelSelectBuilderProcess {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
-		rootTableGroup.applyAffectedTableNames( affectedTables::add );
 
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
 			domainResults = new ArrayList<>();
@@ -196,7 +192,7 @@ public class MetamodelSelectBuilderProcess {
 		);
 
 		return new SqlAstDescriptorImpl(
-				new SelectStatement( rootQuerySpec, domainResults, affectedTables ),
+				new SelectStatement( rootQuerySpec, domainResults ),
 				jdbcParameters
 		);
 	}
@@ -364,26 +360,27 @@ public class MetamodelSelectBuilderProcess {
 
 		return fetches;
 	}
+
+	static class SqlAstDescriptorImpl implements SqlAstDescriptor {
+		private final SelectStatement sqlAst;
+		private final List<JdbcParameter> jdbcParameters;
+
+		public SqlAstDescriptorImpl(
+				SelectStatement sqlAst,
+				List<JdbcParameter> jdbcParameters) {
+			this.sqlAst = sqlAst;
+			this.jdbcParameters = jdbcParameters;
+		}
+
+		@Override
+		public SelectStatement getSqlAst() {
+			return sqlAst;
+		}
+
+		@Override
+		public List<JdbcParameter> getJdbcParameters() {
+			return jdbcParameters;
+		}
+	}
 }
 
-class SqlAstDescriptorImpl implements MetamodelSelectBuilderProcess.SqlAstDescriptor {
-	private final SelectStatement sqlAst;
-	private final List<JdbcParameter> jdbcParameters;
-
-	public SqlAstDescriptorImpl(
-			SelectStatement sqlAst,
-			List<JdbcParameter> jdbcParameters) {
-		this.sqlAst = sqlAst;
-		this.jdbcParameters = jdbcParameters;
-	}
-
-	@Override
-	public SelectStatement getSqlAst() {
-		return sqlAst;
-	}
-
-	@Override
-	public List<JdbcParameter> getJdbcParameters() {
-		return jdbcParameters;
-	}
-}

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -17,7 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PostLoadEvent extends AbstractEvent {
 	private Object entity;
-	private Serializable id;
+	private Object id;
 	private EntityPersister persister;
 
 	public PostLoadEvent(EventSource session) {
@@ -38,7 +36,7 @@ public class PostLoadEvent extends AbstractEvent {
 		return persister;
 	}
 	
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 
@@ -47,7 +45,7 @@ public class PostLoadEvent extends AbstractEvent {
 		return this;
 	}
 	
-	public PostLoadEvent setId(Serializable id) {
+	public PostLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
 	}

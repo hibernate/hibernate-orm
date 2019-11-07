@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -100,7 +98,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 *         false otherwise.
 	 */
 	private boolean initializeCollectionFromCache(
-			Serializable id,
+			Object id,
 			CollectionPersister persister,
 			PersistentCollection collection,
 			SessionImplementor source) {

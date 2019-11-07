@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -65,8 +63,7 @@ public final class TwoPhaseLoad {
 	 * Add the "hydrated state" (an array) of an uninitialized entity to the session. We don't try
 	 * to resolve any associations yet, because there might be other entities waiting to be
 	 * read from the JDBC result set we are currently processing
-	 *
-	 * @param persister The persister for the hydrated entity
+	 *  @param persister The persister for the hydrated entity
 	 * @param id The entity identifier
 	 * @param values The entity values
 	 * @param rowId The rowId for the entity
@@ -76,7 +73,7 @@ public final class TwoPhaseLoad {
 	 */
 	public static void postHydrate(
 			final EntityPersister persister,
-			final Serializable id,
+			final Object id,
 			final Object[] values,
 			final Object rowId,
 			final Object object,
@@ -169,7 +166,7 @@ public final class TwoPhaseLoad {
 			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
-		final Serializable id = entityEntry.getId();
+		final Object id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
 
 		final boolean debugEnabled = LOG.isDebugEnabled();

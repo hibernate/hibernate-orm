@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,7 +28,7 @@ public class MapType extends CollectionType {
 	public PersistentCollection instantiate(
 			SharedSessionContractImplementor session,
 			CollectionPersister persister,
-			Serializable key) {
+			Object key) {
 		return new PersistentMap( session );
 	}
 

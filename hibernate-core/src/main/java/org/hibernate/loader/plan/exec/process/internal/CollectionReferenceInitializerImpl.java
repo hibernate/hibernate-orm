@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
@@ -86,7 +85,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 
 			}
 			else {
-				final Serializable optionalKey = findCollectionOwnerKey( context );
+				final Object optionalKey = findCollectionOwnerKey( context );
 
 				if ( optionalKey != null ) {
 					// we did not find a collection element in the result set, so we
@@ -142,7 +141,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 		return collectionOwner;
 	}
 
-	protected Serializable findCollectionOwnerKey(ResultSetProcessingContextImpl context) {
+	protected Object findCollectionOwnerKey(ResultSetProcessingContextImpl context) {
 		Object owner = context.getOwnerProcessingState( (Fetch) collectionReference ).getEntityInstance();
 
 		return collectionReference.getCollectionPersister().getCollectionType().getKeyOfOwner(

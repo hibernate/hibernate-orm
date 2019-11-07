@@ -269,8 +269,8 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		Organization ifa = new Organization( "IFA" );
 		Organization jboss = new Organization( "JBoss" );
 
-		Serializable idIfa = s.save( ifa );
-		Serializable idJBoss = s.save( jboss );
+		Object idIfa = s.save( ifa );
+		Object idJBoss = s.save( jboss );
 
 		s.flush();
 
@@ -349,8 +349,8 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		Organization jboss = new Organization("JBoss");
 		Person gavin = new Person("Gavin");
 		Employment emp = new Employment(gavin, jboss, "AU");
-		Serializable orgId = s.save(jboss);
-		Serializable orgId2 = s.save(ifa);
+		Object orgId = s.save(jboss);
+		Object orgId2 = s.save(ifa);
 		s.save(gavin);
 		s.save(emp);
 		t.commit();
@@ -502,8 +502,8 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		Organization jboss = new Organization("JBoss");
 		Person gavin = new Person("Gavin");
 		Employment emp = new Employment(gavin, jboss, "AU");
-		Serializable orgId = s.save(jboss);
-		Serializable orgId2 = s.save(ifa);
+		Object orgId = s.save(jboss);
+		Object orgId2 = s.save(ifa);
 		s.save(gavin);
 		s.save(emp);
 		t.commit();
@@ -637,7 +637,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		Organization jboss = new Organization( "JBoss" );
 		Person me = new Person( "Steve" );
 		Employment emp = new Employment( me, jboss, "US" );
-		Serializable jbossId = s.save( jboss );
+		Object jbossId = s.save( jboss );
 		s.save( me );
 		s.save( emp );
 		s.getTransaction().commit();

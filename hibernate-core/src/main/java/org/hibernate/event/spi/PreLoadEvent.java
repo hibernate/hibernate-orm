@@ -19,7 +19,7 @@ import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntityInformation {
 	private Object entity;
 	private Object[] state;
-	private Serializable id;
+	private Object id;
 	private EntityPersister persister;
 
 	public PreLoadEvent(EventSource session) {
@@ -38,7 +38,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		return entity;
 	}
 	
-	public Serializable getId() {
+	public Object getId() {
 		return id;
 	}
 	
@@ -55,7 +55,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		return this;
 	}
 	
-	public PreLoadEvent setId(Serializable id) {
+	public PreLoadEvent setId(Object id) {
 		this.id = id;
 		return this;
 	}
@@ -76,7 +76,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	}
 
 	@Override
-	public Serializable getIdentifier() {
+	public Object getIdentifier() {
 		return id;
 	}
 }

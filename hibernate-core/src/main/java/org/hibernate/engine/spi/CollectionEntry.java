@@ -41,7 +41,7 @@ public final class CollectionEntry implements Serializable {
 	// "loaded" means the reference that is consistent
 	// with the current database state
 	private transient CollectionPersister loadedPersister;
-	private Serializable loadedKey;
+	private Object loadedKey;
 
 	// ATTRIBUTES USED ONLY DURING FLUSH CYCLE
 
@@ -58,7 +58,7 @@ public final class CollectionEntry implements Serializable {
 
 	// "current" means the reference that was found during flush()
 	private transient CollectionPersister currentPersister;
-	private transient Serializable currentKey;
+	private transient Object currentKey;
 
 	/**
 	 * For newly wrapped collections, or dereferenced collection wrappers
@@ -82,7 +82,7 @@ public final class CollectionEntry implements Serializable {
 	public CollectionEntry(
 			final PersistentCollection collection,
 			final CollectionPersister loadedPersister,
-			final Serializable loadedKey,
+			final Object loadedKey,
 			final boolean ignore ) {
 		this.ignore = ignore;
 
@@ -99,7 +99,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For uninitialized detached collections
 	 */
-	public CollectionEntry(CollectionPersister loadedPersister, Serializable loadedKey) {
+	public CollectionEntry(CollectionPersister loadedPersister, Object loadedKey) {
 		// detached collection wrappers that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -241,7 +241,7 @@ public final class CollectionEntry implements Serializable {
 		collection.postAction();
 	}
 
-	public Serializable getKey() {
+	public Object getKey() {
 		return getLoadedKey();
 	}
 
@@ -343,11 +343,11 @@ public final class CollectionEntry implements Serializable {
 	 * This is only available late during the flush
 	 * cycle
 	 */
-	public Serializable getCurrentKey() {
+	public Object getCurrentKey() {
 		return currentKey;
 	}
 
-	public void setCurrentKey(Serializable currentKey) {
+	public void setCurrentKey(Object currentKey) {
 		this.currentKey = currentKey;
 	}
 
@@ -358,7 +358,7 @@ public final class CollectionEntry implements Serializable {
 		return loadedPersister;
 	}
 
-	public Serializable getLoadedKey() {
+	public Object getLoadedKey() {
 		return loadedKey;
 	}
 

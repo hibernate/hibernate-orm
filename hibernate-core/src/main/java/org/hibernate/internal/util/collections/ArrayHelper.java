@@ -417,6 +417,16 @@ public final class ArrayHelper {
 		return i;
 	}
 
+	public static int countNonNull(Object[] array) {
+		int i = 0;
+		for ( Object element : array ) {
+			if ( element != null ) {
+				i++;
+			}
+		}
+		return i;
+	}
+
 	public static String[] reverse(String[] source) {
 		final int length = source.length;
 		final String[] destination = new String[length];

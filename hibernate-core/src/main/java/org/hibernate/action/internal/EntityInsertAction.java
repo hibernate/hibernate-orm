@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -41,8 +39,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	/**
 	 * Constructs an EntityInsertAction.
-	 *
-	 * @param id The entity identifier
+	 *  @param id The entity identifier
 	 * @param state The current (extracted) entity state
 	 * @param instance The entity instance
 	 * @param version The current entity version value
@@ -51,7 +48,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	 * @param session The session
 	 */
 	public EntityInsertAction(
-			Serializable id,
+			Object id,
 			Object[] state,
 			Object instance,
 			Object version,
@@ -79,7 +76,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		final EntityPersister persister = getPersister();
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
-		final Serializable id = getId();
+		final Object id = getId();
 
 		final boolean veto = preInsert();
 

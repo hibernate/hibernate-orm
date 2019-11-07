@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.lock;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
@@ -44,7 +42,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	}
 
 	@Override
-	public void lock(Serializable id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}

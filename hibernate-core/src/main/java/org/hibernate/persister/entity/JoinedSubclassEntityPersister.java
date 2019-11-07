@@ -62,16 +62,15 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.CasePredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.JoinedSubclassResultImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -1196,15 +1195,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
+		CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
 		return new JoinedSubclassDiscriminatorMappingImpl(
 				this,
 				getRootTableName(),
-				getCaseSearchedExpression( tableGroup ),
+				info.caseSearchedExpression,
+				info.columnReferences,
 				(BasicType) getDiscriminatorType()
 		);
 	}
 
-	private CaseSearchedExpression getCaseSearchedExpression(TableGroup entityTableGroup) {
+	private class CaseSearchedExpressionInfo{
+		CaseSearchedExpression caseSearchedExpression;
+		List<ColumnReference> columnReferences = new ArrayList<>(  );
+	}
+
+	private CaseSearchedExpressionInfo getCaseSearchedExpression(TableGroup entityTableGroup) {
+		CaseSearchedExpressionInfo info = new CaseSearchedExpressionInfo();
+
 		final TableReference primaryTableReference = entityTableGroup.getPrimaryTableReference();
 		final List<TableReferenceJoin> tableReferenceJoins = entityTableGroup.getTableReferenceJoins();
 		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
@@ -1215,28 +1223,26 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		tableReferenceJoins.forEach(
 				tableReferenceJoin -> {
 					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
-					final EntityPersister entityDescriptor = getFactory().getMetamodel()
-							.findEntityDescriptor( subclassNameByTableName.get( joinedTableReference.getTableExpression() ) );
-					if ( entityDescriptor instanceof JoinedSubclassEntityPersister ) {
-						addWhen(
-								caseSearchedExpression,
-								joinedTableReference,
-								( (JoinedSubclassEntityPersister) entityDescriptor )
-										.getIdentifierColumnReferenceForCaseExpression( joinedTableReference ),
-								discriminatorType
-						);
-					}
+					final ColumnReference identifierColumnReference = getIdentifierColumnReference( joinedTableReference );
+					info.columnReferences.add( identifierColumnReference );
+					addWhen(
+							caseSearchedExpression,
+							joinedTableReference,
+							identifierColumnReference,
+							discriminatorType
+					);
 				}
 		);
 
 		addWhen(
 				caseSearchedExpression,
 				primaryTableReference,
-				getIdentifierColumnReferenceForCaseExpression( primaryTableReference ),
+				getIdentifierColumnReference( primaryTableReference ),
 				discriminatorType
 		);
 
-		return caseSearchedExpression;
+		info.caseSearchedExpression = caseSearchedExpression;
+		return info;
 	}
 
 	private void addWhen(
@@ -1244,7 +1250,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			TableReference table,
 			ColumnReference identifierColumnReference,
 			BasicType resultType) {
-		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
+		final CasePredicate predicate = new NullnessPredicate( identifierColumnReference, true );
 		final Expression expression =
 				new QueryLiteral<>(
 						discriminatorValuesByTableName.get( table.getTableExpression() ),
@@ -1255,14 +1261,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		caseSearchedExpression.when( predicate, expression );
 	}
 
-	private ColumnReference getIdentifierColumnReferenceForCaseExpression(TableReference primaryTableReference) {
-		List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
-		JdbcMapping jdbcMapping = jdbcMappings.get( 0 );
+	private ColumnReference getIdentifierColumnReference(TableReference tableReference) {
+		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
 
 		return new ColumnReference(
-				primaryTableReference.getIdentificationVariable(),
+				tableReference.getIdentificationVariable(),
 				getIdentifierColumnNames()[0],
-				jdbcMapping,
+				jdbcMappings.get( 0 ),
 				getFactory()
 		);
 	}

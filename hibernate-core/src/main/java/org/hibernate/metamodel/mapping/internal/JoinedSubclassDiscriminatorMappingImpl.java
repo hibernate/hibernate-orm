@@ -6,10 +6,13 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.List;
+
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.type.BasicType;
@@ -20,21 +23,36 @@ import org.hibernate.type.BasicType;
 public class JoinedSubclassDiscriminatorMappingImpl extends EntityDiscriminatorMappingImpl {
 
 	private final CaseSearchedExpression caseSearchedExpression;
+	private final List<ColumnReference> columnReferences;
 
 	public JoinedSubclassDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
 			String tableExpression,
 			CaseSearchedExpression caseSearchedExpression,
+			List<ColumnReference> columnReferences,
 			BasicType mappingType) {
 		super( entityDescriptor, tableExpression, mappingType );
 		this.caseSearchedExpression = caseSearchedExpression;
-	}
 
+		this.columnReferences = columnReferences;
+	}
 
 	@Override
 	protected SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
+		// need to add the columns of the ids used in the case expression
+		columnReferences.forEach(
+				columnReference ->
+						expressionResolver.resolveSqlSelection(
+								columnReference,
+								getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
+								creationState.getSqlAstCreationState()
+										.getCreationContext()
+										.getDomainModel()
+										.getTypeConfiguration()
+						)
+		);
 
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(

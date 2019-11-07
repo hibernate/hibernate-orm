@@ -25,15 +25,22 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 
 		List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 		int caseNumber = whenFragments.size();
+		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
 			if ( i != 0 ) {
 				sqlBuffer.append( ", " );
+				whenFragment.getPredicate().getLeftHandExpression().accept( sqlAstWalker );
+				sqlBuffer.append( ", " );
+				whenFragment.getResult().accept( sqlAstWalker );
 			}
-			whenFragment.getPredicate().getLeftHandExpression().accept( sqlAstWalker );
-			sqlBuffer.append( ", " );
-			whenFragment.getResult().accept( sqlAstWalker );
+			else {
+				whenFragment.getPredicate().getLeftHandExpression().accept( sqlAstWalker );
+				firstWhenFragment = whenFragment;
+			}
 		}
+		sqlBuffer.append( ", " );
+		firstWhenFragment.getResult().accept( sqlAstWalker );
 
 		Expression otherwise = caseSearchedExpression.getOtherwise();
 		if ( otherwise != null ) {
@@ -41,7 +48,7 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 			otherwise.accept( sqlAstWalker );
 		}
 
-		sqlBuffer.append( "')'" );
+		sqlBuffer.append( ')' );
 
 		final String columnExpression = caseSearchedExpression.getColumnExpression();
 

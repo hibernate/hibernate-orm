@@ -112,6 +112,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.predicate.CasePredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -1371,7 +1372,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		for ( SqmCaseSearched.WhenFragment whenFragment : expression.getWhenFragments() ) {
 			result.when(
-					(Predicate) whenFragment.getPredicate().accept( this ),
+					(CasePredicate) whenFragment.getPredicate().accept( this ),
 					(Expression) whenFragment.getResult().accept( this )
 			);
 		}

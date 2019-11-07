@@ -18,7 +18,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,6 +29,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -88,22 +88,26 @@ public class JoinedInheritanceTest {
 						).list();
 
 						assertThat( results.size(), is( 2 ) );
-
+						boolean foundDomesticCustomer = false;
+						boolean foundForeignCustomer = false;
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
 								final DomesticCustomer customer = (DomesticCustomer) result;
 								assertThat( customer.getName(), is( "domestic" ) );
 								assertThat( ( customer ).getTaxId(), is( "123" ) );
+								foundDomesticCustomer = true;
 							}
 							else {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
 								assertThat( ( customer ).getVat(), is( "987" ) );
+								foundForeignCustomer = true;
 							}
 						}
-
+						assertTrue( foundDomesticCustomer );
+						assertTrue( foundForeignCustomer );
 					}
 				}
 		);

@@ -1,21 +1,22 @@
+plugins {
+	id 'org.hibernate.build.xjc' version '2.0.0-SNAPSHOT'
+}
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-import groovy.xml.*
-import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.plugins.ide.eclipse.model.SourceFolder
-import org.gradle.plugins.ide.eclipse.model.Library
+
+import groovy.xml.MarkupBuilder
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
-import java.io.StringWriter
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: Antlr4Plugin
 apply plugin: 'hibernate-matrix-testing'
-
-apply plugin: 'org.hibernate.build.gradle.xjc'
 
 description = 'Hibernate\'s core ORM functionality'
 
@@ -45,11 +46,15 @@ dependencies {
     //      3) hibernate-commons-annotations
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
-    antlr( libraries.antlr )
 
     // JAXB
     compile( libraries.jaxb_api )
     compile( libraries.jaxb_runtime )
+
+	// Antlr
+	antlr( libraries.antlr )
+
+	// xjc plugin
     xjc( libraries.jaxb_runtime )
     xjc( libraries.jaxb_xjc )
     xjc( libraries.jaxb2_basics )
@@ -59,6 +64,8 @@ dependencies {
     provided( libraries.jacc )
     provided( libraries.validation )
     provided( libraries.ant )
+	provided( libraries.cdi )
+
 	eclipseConfig( compileOnly( libraries.ant ) )
 	eclipseConfig( compileOnly( libraries.logging_annotations ) )
 	eclipseConfig( runtime( libraries.junit ) )
@@ -70,8 +77,6 @@ dependencies {
 	runtime( libraries.junit5_vintage )
 	runtime( libraries.junit5_jupiter )
 	
-    provided( libraries.cdi )
-
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )

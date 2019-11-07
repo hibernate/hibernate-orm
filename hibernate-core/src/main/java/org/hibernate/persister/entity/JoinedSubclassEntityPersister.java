@@ -8,12 +8,15 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -43,10 +46,14 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.internal.JoinedSubclassDiscriminatorMappingImpl;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.property.access.spi.Setter;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
@@ -55,6 +62,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -1166,6 +1174,42 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		}
+	}
+
+	@Override
+	public void setPropertyValues(Object object, Object[] values) {
+		if ( accessOptimizer != null ) {
+			accessOptimizer.setPropertyValues( object, values );
+		}
+		else {
+			if ( hasSubclasses() ) {
+				visitAttributeMappings(
+						attribute -> {
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
+						}
+				);
+			}
+			else {
+				visitFetchables(
+						fetchable -> {
+							final AttributeMapping attribute = (AttributeMapping) fetchable;
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
+
+						},
+						null
+				);
+			}
 		}
 	}
 

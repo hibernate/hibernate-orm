@@ -63,6 +63,8 @@ eclipse {
 						//println( 'NOT INCLUDING: ' + item )
 					}
 				}
+				println( 'newSourceSet:' )
+				println( newSourceSet )
 				
 				def hibernateCore = new ProjectDependency('/hibernate-core')
 				newSourceSet += [

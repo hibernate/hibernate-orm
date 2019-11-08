@@ -27,6 +27,10 @@ public class SqlAstTreeHelper {
 			return incomingRestriction;
 		}
 
+		if ( incomingRestriction == null ) {
+			return baseRestriction;
+		}
+
 		final Junction combinedPredicate;
 
 		if ( baseRestriction instanceof Junction ) {

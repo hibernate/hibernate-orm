@@ -77,6 +77,19 @@ public class SqmUpdateStatement<T>
 		return whereClause;
 	}
 
+	@Override
+	public void applyPredicate(SqmPredicate predicate) {
+		if ( predicate == null ) {
+			return;
+		}
+
+		if ( whereClause == null ) {
+			whereClause = new SqmWhereClause( nodeBuilder() );
+		}
+
+		whereClause.applyPredicate( predicate );
+	}
+
 	public void setWhereClause(SqmWhereClause whereClause) {
 		this.whereClause = whereClause;
 	}

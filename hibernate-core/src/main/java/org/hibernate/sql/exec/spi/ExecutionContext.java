@@ -7,24 +7,16 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public interface ExecutionContext {
-	default Object resolveEntityInstance(EntityKey entityKey, boolean eager) {
-		return StandardEntityInstanceResolver.resolveEntityInstance(
-				entityKey,
-				eager,
-				getSession()
-		);
-	}
-
 	SharedSessionContractImplementor getSession();
 
 	QueryOptions getQueryOptions();
@@ -42,5 +34,13 @@ public interface ExecutionContext {
 	 */
 	default CollectionKey getCollectionKey() {
 		return null;
+	}
+
+	/**
+	 * Hook to allow delaying calls to {@link LogicalConnectionImplementor#afterStatement()}.
+	 * Mainly used in the case of batching and multi-table mutations
+	 */
+	default void afterStatement(LogicalConnectionImplementor logicalConnection) {
+		logicalConnection.afterStatement();
 	}
 }

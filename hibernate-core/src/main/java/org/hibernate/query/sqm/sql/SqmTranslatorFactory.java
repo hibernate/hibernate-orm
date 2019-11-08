@@ -10,14 +10,21 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
 /**
+ * Factory for various
  * @author Steve Ebersole
  */
 public interface SqmTranslatorFactory {
 	SqmSelectToSqlAstConverter createSelectConverter(
+			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
+			LoadQueryInfluencers influencers,
+			SqlAstCreationContext creationContext);
+
+	SimpleSqmDeleteToSqlAstConverter createSimpleDeleteConverter(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,

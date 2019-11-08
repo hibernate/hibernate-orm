@@ -21,7 +21,7 @@
  * == From HQL/JPQL
  *
  * `SemanticQueryProducer` defines just a single method for producing SQM based on HQL:
- * {@link org.hibernate.query.hql.HqlTranslator#interpret}.
+ * {@link org.hibernate.query.hql.HqlTranslator#translate}.
  * See {@link org.hibernate.query.hql.internal} for details
  *
  *

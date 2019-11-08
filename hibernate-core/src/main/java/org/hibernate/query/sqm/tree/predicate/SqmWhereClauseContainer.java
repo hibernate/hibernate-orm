@@ -13,4 +13,6 @@ package org.hibernate.query.sqm.tree.predicate;
  */
 public interface SqmWhereClauseContainer {
 	SqmWhereClause getWhereClause();
+
+	void applyPredicate(SqmPredicate accept);
 }

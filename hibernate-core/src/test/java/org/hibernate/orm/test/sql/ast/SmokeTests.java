@@ -16,7 +16,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
+import org.hibernate.query.sqm.sql.SqmSelectInterpretation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.spi.SqlSelection;

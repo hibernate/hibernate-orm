@@ -38,7 +38,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 	}
 
 	@Override
-	public SqmStatement interpret(String query) {
+	public SqmStatement translate(String query) {
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
 		// then we perform semantic analysis and build the semantic representation...

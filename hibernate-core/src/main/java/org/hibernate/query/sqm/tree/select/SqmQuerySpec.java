@@ -86,6 +86,19 @@ public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWher
 		this.whereClause = whereClause;
 	}
 
+	@Override
+	public void applyPredicate(SqmPredicate predicate) {
+		if ( predicate == null ) {
+			return;
+		}
+
+		if ( whereClause == null ) {
+			whereClause = new SqmWhereClause( nodeBuilder() );
+		}
+
+		whereClause.applyPredicate( predicate );
+	}
+
 	public SqmGroupByClause getGroupByClause() {
 		return groupByClause;
 	}

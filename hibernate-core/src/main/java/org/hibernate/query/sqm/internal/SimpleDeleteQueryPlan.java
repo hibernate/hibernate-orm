@@ -6,57 +6,109 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteInterpretation;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.ast.SqlAstDeleteTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-//import org.hibernate.sql.ast.consume.spi.SqlDeleteToJdbcDeleteConverter;
-//import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteInterpretation;
-//import org.hibernate.sql.ast.produce.sqm.spi.SqmDeleteToSqlAstConverterSimple;
-//import org.hibernate.sql.exec.internal.JdbcMutationExecutorImpl;
-//import org.hibernate.sql.exec.spi.ExecutionContext;
-//import org.hibernate.sql.exec.spi.JdbcMutation;
-//
-//import static org.hibernate.query.internal.QueryHelper.buildJdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
-	private final SqmDeleteStatement sqmStatement;
+	private final SqmDeleteStatement sqmDelete;
 	private final DomainParameterXref domainParameterXref;
 
-	public SimpleDeleteQueryPlan(SqmDeleteStatement sqmStatement) {
-		this.sqmStatement = sqmStatement;
-		domainParameterXref = DomainParameterXref.from( sqmStatement );
+	private JdbcDelete jdbcDelete;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
-		// todo (6.0) : here is where we need to perform the conversion into SQL AST
+	public SimpleDeleteQueryPlan(
+			SqmDeleteStatement sqmDelete,
+			DomainParameterXref domainParameterXref) {
+		this.sqmDelete = sqmDelete;
+		this.domainParameterXref = domainParameterXref;
 	}
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		final SqmDeleteInterpretation sqmInterpretation = SqmDeleteToSqlAstConverterSimple.interpret(
-//				sqmStatement,
-//				executionContext.getQueryOptions(),
-//				domainParameterXref,
-//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//				executionContext.getSession()
-//		);
-//
-//		// the converter should enforce this, simple assertion here
-//		assert sqmInterpretation.getSqlDeletes().size() == 1;
-//
-//		final JdbcMutation jdbcDelete = SqlDeleteToJdbcDeleteConverter.interpret(
-//				sqmInterpretation.getSqlDeletes().get( 0 ),
-//				executionContext.getSession().getSessionFactory()
-//		);
-//
-//
-//		return JdbcMutationExecutorImpl.WITH_AFTER_STATEMENT_CALL.execute(
-//				jdbcDelete,
-//				buildJdbcParameterBindings( sqmStatement, sqmInterpretation, executionContext ),
-//				executionContext
-//		);
+		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final JdbcServices jdbcServices = factory.getJdbcServices();
+
+		if ( jdbcDelete == null ) {
+			final QueryEngine queryEngine = factory.getQueryEngine();
+
+			final SqmTranslatorFactory converterFactory = queryEngine.getSqmTranslatorFactory();
+			final SimpleSqmDeleteToSqlAstConverter converter = converterFactory.createSimpleDeleteConverter(
+					executionContext.getQueryOptions(),
+					domainParameterXref,
+					executionContext.getQueryParameterBindings(),
+					executionContext.getLoadQueryInfluencers(),
+					factory
+			);
+
+			final SimpleSqmDeleteInterpretation sqmInterpretation = converter.interpret( sqmDelete );
+
+			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+
+			final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteConverter( factory );
+
+			jdbcDelete = sqlAstTranslator.translate( sqmInterpretation.getSqlAst() );
+
+			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+					domainParameterXref,
+					sqmInterpretation::getJdbcParamsBySqmParam
+			);
+
+		}
+
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				executionContext.getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				// todo (6.0) : ugh.  this one is important
+				null,
+				executionContext.getSession()
+		);
+
+		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
+				.getJdbcCoordinator()
+				.getLogicalConnection();
+
+		return jdbcServices.getJdbcDeleteExecutor().execute(
+				jdbcDelete,
+				jdbcParameterBindings,
+				sql -> {
+					try {
+						return logicalConnection.getPhysicalConnection().prepareStatement( sql );
+					}
+					catch (SQLException e) {
+						throw jdbcServices.getSqlExceptionHelper().convert(
+								e,
+								"Error performing DELETE",
+								sql
+						);
+					}
+				},
+				(integer, preparedStatement) -> {},
+				executionContext
+		);
 	}
 }

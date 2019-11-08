@@ -67,8 +67,4 @@ public class StandardSqlAstSelectTranslator
 		);
 	}
 
-	@Override
-	public void visitSelectQuery(SelectStatement selectQuery) {
-		visitQuerySpec( selectQuery.getQuerySpec() );
-	}
 }

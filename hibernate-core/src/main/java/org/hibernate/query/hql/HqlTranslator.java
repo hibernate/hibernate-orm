@@ -28,7 +28,7 @@ public interface HqlTranslator {
 	 *
 	 * @return The semantic representation of the incoming query.
 	 */
-	SqmStatement interpret(String hql);
+	SqmStatement translate(String hql);
 
 	/**
 	 * Give the translator a chance to "shut down" if it needs to

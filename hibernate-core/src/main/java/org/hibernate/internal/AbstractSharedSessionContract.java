@@ -618,7 +618,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					queryString,
 					interpretationCache.resolveHqlInterpretation(
 							queryString,
-							s -> queryEngine.getHqlTranslator().interpret( queryString )
+							s -> queryEngine.getHqlTranslator().translate( queryString )
 					),
 					resultClass,
 					this

@@ -414,7 +414,7 @@ public abstract class BaseSqmToSqlAstConverter
 		return null;
 	}
 
-	Predicate additionalRestrictions;
+	protected Predicate additionalRestrictions;
 
 	@SuppressWarnings("WeakerAccess")
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {

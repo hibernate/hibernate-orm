@@ -343,12 +343,17 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		parameterCollector = deleteStatement;
 
-		processingStateStack.push( new SqmDmlCreationProcessingState( deleteStatement, this ) );
+		final SqmDmlCreationProcessingState sqmDeleteCreationState = new SqmDmlCreationProcessingState(
+				deleteStatement,
+				this
+		);
+
+		sqmDeleteCreationState.getPathRegistry().register( root );
+
+		processingStateStack.push( sqmDeleteCreationState );
 		try {
 			if ( ctx.whereClause() != null && ctx.whereClause().predicate() != null ) {
-				deleteStatement.getWhereClause().setPredicate(
-						(SqmPredicate) ctx.whereClause().predicate().accept( this )
-				);
+				deleteStatement.applyPredicate( (SqmPredicate) ctx.whereClause().predicate().accept( this ) );
 			}
 
 			return deleteStatement;
@@ -792,6 +797,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		log.debugf( "Attempting to resolve path [%s] as entity reference...", entityName );
 		EntityDomainType reference = null;
 		try {
+			entityName = creationContext.getJpaMetamodel().qualifyImportableName( entityName );
 			reference = creationContext.getJpaMetamodel().entity( entityName );
 		}
 		catch (Exception ignore) {

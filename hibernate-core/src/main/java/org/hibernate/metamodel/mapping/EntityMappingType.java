@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.spi.Loadable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -107,6 +108,10 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 		}
 
 		return false;
+	}
+
+	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
+		return getEntityPersister().getSqmMultiTableMutationStrategy();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -26,6 +26,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class ColumnReference implements Expression {
+	private final String qualifier;
+	private final String columnExpression;
 	private final String referenceExpression;
 	private final JdbcMapping jdbcMapping;
 
@@ -34,20 +36,11 @@ public class ColumnReference implements Expression {
 			String columnExpression,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
-		this(
-				qualifier == null
-						? columnExpression
-						: qualifier + "." + columnExpression,
-				jdbcMapping,
-				sessionFactory
-		);
-	}
-
-	public ColumnReference(
-			String referenceExpression,
-			JdbcMapping jdbcMapping,
-			SessionFactoryImplementor sessionFactory) {
-		this.referenceExpression = referenceExpression;
+		this.qualifier = qualifier;
+		this.columnExpression = columnExpression;
+		this.referenceExpression = qualifier == null
+				? columnExpression
+				: qualifier + "." + columnExpression;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -57,6 +50,14 @@ public class ColumnReference implements Expression {
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this( tableReference.getIdentificationVariable(), columnExpression, jdbcMapping, sessionFactory );
+	}
+
+	public String getQualifier() {
+		return qualifier;
+	}
+
+	public String getColumnExpression() {
+		return columnExpression;
 	}
 
 	public String getExpressionText() {

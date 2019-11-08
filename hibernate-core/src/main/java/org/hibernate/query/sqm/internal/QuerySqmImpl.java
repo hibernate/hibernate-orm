@@ -46,7 +46,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -92,7 +92,7 @@ public class QuerySqmImpl<R>
 
 		final SessionFactoryImplementor factory = producer.getFactory();
 
-		this.sqmStatement = factory.getQueryEngine().getHqlTranslator().interpret( hqlString );
+		this.sqmStatement = factory.getQueryEngine().getHqlTranslator().translate( hqlString );
 
 		if ( resultType != null ) {
 			if ( sqmStatement instanceof SqmDmlStatement ) {
@@ -532,7 +532,7 @@ public class QuerySqmImpl<R>
 			return buildUpdateQueryPlan();
 		}
 
-		throw new NotYetImplementedException( "Query#executeUpdate not yet implemented" );
+		throw new NotYetImplementedException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "not yet supported" );
 	}
 
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
@@ -541,13 +541,19 @@ public class QuerySqmImpl<R>
 		final String entityNameToDelete = sqmDelete.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
 
-		final DeleteHandler deleteHandler = entityDescriptor.getSqmMultiTableMutationStrategy().buildDeleteHandler(
-				sqmDelete,
-				domainParameterXref,
-				this::getSessionFactory
-		);
-
-		return new DeleteQueryPlanImpl( sqmDelete, deleteHandler, this );
+		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
+		if ( multiTableStrategy == null ) {
+			return new SimpleDeleteQueryPlan( sqmDelete, domainParameterXref );
+		}
+		else {
+			return new MultiTableDeleteQueryPlan(
+					multiTableStrategy.buildDeleteHandler(
+							sqmDelete,
+							domainParameterXref,
+							this::getSessionFactory
+					)
+			);
+		}
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {

@@ -187,7 +187,6 @@ public class EmbeddedAttributeMapping
 			SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( attrColumnNames.length );
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-
 		getEmbeddableTypeDescriptor().visitJdbcTypes(
 				new Consumer<JdbcMapping>() {
 					private int index = 0;

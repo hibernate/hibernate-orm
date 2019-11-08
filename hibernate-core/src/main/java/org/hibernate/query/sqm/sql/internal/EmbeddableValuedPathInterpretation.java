@@ -45,6 +45,7 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(
 						tableGroup,
+
 						converter.getCurrentClauseStack().getCurrent(),
 						converter,
 						converter

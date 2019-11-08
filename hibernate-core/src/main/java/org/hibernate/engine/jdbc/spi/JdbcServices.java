@@ -14,6 +14,8 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.Service;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
 /**
@@ -83,5 +85,13 @@ public interface JdbcServices extends Service {
 	 */
 	default JdbcSelectExecutor getJdbcSelectExecutor() {
 		return JdbcSelectExecutorStandardImpl.INSTANCE;
+	}
+
+	default JdbcMutationExecutor getJdbcDeleteExecutor() {
+		return StandardJdbcMutationExecutor.INSTANCE;
+	}
+
+	default JdbcMutationExecutor getJdbcUpdateExecutor() {
+		return StandardJdbcMutationExecutor.INSTANCE;
 	}
 }

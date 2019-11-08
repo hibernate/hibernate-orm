@@ -27,7 +27,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.internal.SqmSelectInterpretation;
+import org.hibernate.query.sqm.sql.SqmSelectInterpretation;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;

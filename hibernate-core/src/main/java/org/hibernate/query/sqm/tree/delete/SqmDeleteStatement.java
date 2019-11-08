@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 
 /**
  * @author Steve Ebersole
@@ -59,6 +60,18 @@ public class SqmDeleteStatement<T>
 	@Override
 	public SqmWhereClause getWhereClause() {
 		return whereClause;
+	}
+
+	@Override
+	public void applyPredicate(SqmPredicate predicate) {
+		if ( predicate == null ) {
+			return;
+		}
+		if ( whereClause == null ) {
+			whereClause = new SqmWhereClause( nodeBuilder() );
+		}
+
+		whereClause.applyPredicate( predicate );
 	}
 
 	public void setWhereClause(SqmWhereClause whereClause) {

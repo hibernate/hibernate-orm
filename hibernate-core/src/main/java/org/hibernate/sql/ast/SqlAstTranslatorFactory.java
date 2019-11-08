@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 public interface SqlAstTranslatorFactory {
 	SqlAstSelectTranslator buildSelectConverter(SessionFactoryImplementor sessionFactory);
+	SqlAstDeleteTranslator buildDeleteConverter(SessionFactoryImplementor sessionFactory);
 
 	// todo (6.0) : update, delete, etc
 }

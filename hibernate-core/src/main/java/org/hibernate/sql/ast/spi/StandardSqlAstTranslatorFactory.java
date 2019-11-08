@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.SqlAstSelectTranslator;
 
@@ -17,5 +18,10 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	@Override
 	public SqlAstSelectTranslator buildSelectConverter(SessionFactoryImplementor sessionFactory) {
 		return new StandardSqlAstSelectTranslator( sessionFactory);
+	}
+
+	@Override
+	public SqlAstDeleteTranslator buildDeleteConverter(SessionFactoryImplementor sessionFactory) {
+		return new StandardSqlAstDeleteTranslator( sessionFactory );
 	}
 }

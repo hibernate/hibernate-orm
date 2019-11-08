@@ -4,12 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.sql.internal;
+package org.hibernate.query.sqm.sql;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -21,7 +21,7 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
  *
  * @author Steve Ebersole
  */
-public class SqmSelectInterpretation {
+public class SqmSelectInterpretation implements SqmInterpretation {
 	private final SelectStatement sqlAst;
 	private final Map<SqmParameter,List<JdbcParameter>> jdbcParamsBySqmParam;
 
@@ -32,10 +32,12 @@ public class SqmSelectInterpretation {
 		this.jdbcParamsBySqmParam = jdbcParamsBySqmParam;
 	}
 
+	@Override
 	public SelectStatement getSqlAst() {
 		return sqlAst;
 	}
 
+	@Override
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamsBySqmParam;
 	}

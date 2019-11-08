@@ -28,13 +28,15 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -158,6 +160,21 @@ public class QueryEngine {
 						domainParameterBindings,
 						influencers,
 						creationContext
+				);
+			}
+
+			@Override
+			public SimpleSqmDeleteToSqlAstConverter createSimpleDeleteConverter(
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers influencers,
+					SqlAstCreationContext creationContext) {
+				return new StandardSqmDeleteToSqlAstConverter(
+						creationContext,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings
 				);
 			}
 		};

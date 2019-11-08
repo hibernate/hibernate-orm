@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
@@ -17,10 +16,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 public class MultiTableDeleteQueryPlan implements NonSelectQueryPlan {
 	private final DeleteHandler deleteHandler;
 
-	public MultiTableDeleteQueryPlan(
-			SqmDeleteStatement sqmDeleteStatement,
-			DeleteHandler deleteHandler,
-			ExecutionContext executionContext) {
+	public MultiTableDeleteQueryPlan(DeleteHandler deleteHandler) {
 		this.deleteHandler = deleteHandler;
 	}
 

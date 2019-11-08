@@ -86,6 +86,15 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void release() {
+		if ( jdbcStatement != null ) {
+			try {
+				jdbcStatement.close();
+				jdbcStatement = null;
+			}
+			catch (SQLException e) {
+				throw ddlTransactionIsolator.getJdbcContext().getSqlExceptionHelper().convert( e, "Unable to close JDBC Statement after DDL execution" );
+			}
+		}
 		if ( releaseAfterUse ) {
 			ddlTransactionIsolator.release();
 		}

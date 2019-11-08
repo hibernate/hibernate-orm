@@ -417,6 +417,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		SPECIAL_PROPERTIES.add( AvailableSettings.ISOLATION );
 		SPECIAL_PROPERTIES.add( AvailableSettings.DRIVER );
 		SPECIAL_PROPERTIES.add( AvailableSettings.USER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT );
 
 		ISOLATION_VALUE_MAP = new ConcurrentHashMap<String, Integer>();
 		ISOLATION_VALUE_MAP.put( "TRANSACTION_NONE", Connection.TRANSACTION_NONE );

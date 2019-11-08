@@ -58,6 +58,8 @@ public class H2Dialect extends Dialect {
 
 	private final LimitHandler limitHandler;
 
+	private final boolean dropConstraints;
+
 //	private final String querySequenceString;
 //	private final SequenceInformationExtractor sequenceInformationExtractor;
 
@@ -87,6 +89,11 @@ public class H2Dialect extends Dialect {
 		if ( !( version > 120 || buildId >= 139 ) ) {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version / 100, version % 100 / 10, buildId );
 		}
+
+		// Prior to 1.4.200 we didn't need to drop constraints before
+		// dropping tables, that just lead to error messages about
+		// missing tables when we don't have a schema in the database
+		dropConstraints = version > 140 && buildId >= 200;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
@@ -186,6 +193,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return dropConstraints;
 	}
 
 	@Override
@@ -342,9 +354,7 @@ public class H2Dialect extends Dialect {
 	
 	@Override
 	public boolean dropConstraints() {
-		// We don't need to drop constraints before dropping tables, that just leads to error
-		// messages about missing tables when we don't have a schema in the database
-		return false;
+		return dropConstraints;
 	}
 
 	@Override

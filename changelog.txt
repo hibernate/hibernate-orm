@@ -3,6 +3,18 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.14.Final (November 7th, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31801/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13307] - On release of batch it still contained JDBC statements using JTA
+    * [HHH-13633] - Bugs join-fetching a collection when scrolling with a stateless session using enhancement as proxy
+    * [HHH-13634] - PersistenceContext can get cleared before load completes using StatelessSessionImpl
+    * [HHH-13640] - Uninitialized HibernateProxy mapped as NO_PROXY gets initialized when reloaded with enhancement-as-proxy enabled
+    * [HHH-13653] - Uninitialized entity does not get initialized when a setter is called with enhancement-as-proxy enabled
+    * [HHH-13698] - Hibernate does not recognize MySQL 8 error code 3572 as PessimisticLockException
 
 Changes in 5.3.13.Final (October 8th, 2019)
 ------------------------------------------------------------------------------------------------------------------------

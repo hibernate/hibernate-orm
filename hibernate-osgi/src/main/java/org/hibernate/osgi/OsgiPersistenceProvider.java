@@ -85,15 +85,23 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		final Map settings = generateSettings( properties );
 
 		// OSGi ClassLoaders must implement BundleReference
+		final ClassLoader classLoader = info.getClassLoader();
 		settings.put(
 				org.hibernate.cfg.AvailableSettings.SCANNER,
-				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() )
+				new OsgiScanner( ( (BundleReference) classLoader).getBundle() )
 		);
 
-		osgiClassLoader.addClassLoader( info.getClassLoader() );
-		
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settings,
-				new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) ).build();
+		osgiClassLoader.addClassLoader( classLoader );
+
+		final ClassLoader prevCL = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader( classLoader );
+			return Bootstrap.getEntityManagerFactoryBuilder( info, settings,
+					new OSGiClassLoaderServiceImpl( osgiClassLoader, osgiServiceUtil ) ).build();
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader( prevCL );
+		}
 	}
 
 	@SuppressWarnings("unchecked")

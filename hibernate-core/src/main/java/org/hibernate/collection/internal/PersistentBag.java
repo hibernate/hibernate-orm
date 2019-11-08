@@ -11,11 +11,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -68,6 +69,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public PersistentBag(SessionImplementor session) {
 		this( (SharedSessionContractImplementor) session );
 	}
+
 	/**
 	 * Constructs a PersistentBag
 	 *
@@ -95,7 +97,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * @param coll The base elements.
 	 *
 	 * @deprecated {@link #PersistentBag(SharedSessionContractImplementor, Collection)}
-	 *             should be used instead.
+	 * should be used instead.
 	 */
 	@Deprecated
 	public PersistentBag(SessionImplementor session, Collection coll) {
@@ -128,7 +130,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			throws HibernateException, SQLException {
 		// note that if we load this collection from a cartesian product
 		// the multiplicity would be broken ... so use an idbag instead
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() ) ;
+		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 		if ( element != null ) {
 			bag.add( element );
 		}
@@ -159,7 +161,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final List<Object> sn = (List<Object>) getSnapshot();
@@ -199,7 +201,8 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 						instance,
 						instancesBag,
 						elementType,
-						countOccurrences( instance, instancesSn, elementType ) ) ) {
+						countOccurrences( instance, instancesSn, elementType )
+				) ) {
 					return false;
 				}
 			}
@@ -213,7 +216,28 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * @return Map of "equality" hashCode to List of objects
 	 */
 	private Map<Integer, List<Object>> groupByEqualityHash(List<Object> searchedBag, Type elementType) {
-		return searchedBag.stream().collect( Collectors.groupingBy( elementType::getHashCode ) );
+		if ( searchedBag.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+		Map<Integer, List<Object>> map = new HashMap<>();
+		for ( Object o : searchedBag ) {
+			map.computeIfAbsent( nullableHashCode( o, elementType ), k -> new ArrayList<>() ).add( o );
+		}
+		return map;
+	}
+
+	/**
+	 * @param o
+	 * @param elementType
+	 * @return the default elementType hashcode of the object o, or null if the object is null
+	 */
+	private Integer nullableHashCode(Object o, Type elementType) {
+		if ( o == null ) {
+			return null;
+		}
+		else {
+			return elementType.getHashCode( o );
+		}
 	}
 
 	@Override
@@ -264,7 +288,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public Object disassemble(CollectionPersister persister) {
 		final int length = bag.size();
 		final Object[] result = new Object[length];
-		for ( int i=0; i<length; i++ ) {
+		for ( int i = 0; i < length; i++ ) {
 			result[i] = persister.getElementType().disassemble( bag.get( i ), getSession(), null );
 		}
 		return result;
@@ -306,13 +330,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		final ArrayList deletes = new ArrayList();
 		final List sn = (List) getSnapshot();
 		final Iterator olditer = sn.iterator();
-		int i=0;
+		int i = 0;
 		while ( olditer.hasNext() ) {
 			final Object old = olditer.next();
 			final Iterator newiter = bag.iterator();
 			boolean found = false;
-			if ( bag.size()>i && elementType.isSame( old, bag.get( i++ ) ) ) {
-			//a shortcut if its location didn't change!
+			if ( bag.size() > i && elementType.isSame( old, bag.get( i++ ) ) ) {
+				//a shortcut if its location didn't change!
 				found = true;
 			}
 			else {
@@ -368,7 +392,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : bag.isEmpty();
+		return readSize() ? getCachedSize() == 0 : bag.isEmpty();
 	}
 
 	@Override
@@ -431,7 +455,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean addAll(Collection values) {
-		if ( values.size()==0 ) {
+		if ( values.size() == 0 ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {
@@ -442,14 +466,14 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			for ( Object value : values ) {
 				queueOperation( new SimpleAdd( value ) );
 			}
-			return values.size()>0;
+			return values.size() > 0;
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean removeAll(Collection c) {
-		if ( c.size()>0 ) {
+		if ( c.size() > 0 ) {
 			initialize( true );
 			if ( bag.removeAll( c ) ) {
 				elementRemoved = true;
@@ -486,7 +510,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		}
 		else {
 			initialize( true );
-			if ( ! bag.isEmpty() ) {
+			if ( !bag.isEmpty() ) {
 				bag.clear();
 				dirty();
 			}
@@ -495,7 +519,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		throw new UnsupportedOperationException("Bags don't have indexes");
+		throw new UnsupportedOperationException( "Bags don't have indexes" );
 	}
 
 	@Override
@@ -608,7 +632,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	public boolean entryExists(Object entry, int i) {
-		return entry!=null;
+		return entry != null;
 	}
 
 	@Override
@@ -622,8 +646,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 * JVM instance comparison to do the equals.
 	 * The semantic is broken not to have to initialize a
 	 * collection for a simple equals() operation.
-	 * @see java.lang.Object#equals(java.lang.Object)
 	 *
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 * <p>
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -649,7 +674,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 		@Override
 		public Object getOrphan() {
-			throw new UnsupportedOperationException("queued clear cannot be used with orphan delete");
+			throw new UnsupportedOperationException( "queued clear cannot be used with orphan delete" );
 		}
 	}
 

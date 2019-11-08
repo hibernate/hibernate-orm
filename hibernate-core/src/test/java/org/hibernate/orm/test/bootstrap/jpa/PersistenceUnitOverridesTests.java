@@ -18,12 +18,16 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
@@ -88,6 +92,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final DataSource integrationDataSource = new DataSourceStub( "integrationDataSource" );
 
 		final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		puInfo.getProperties().setProperty( AvailableSettings.HQL_BULK_ID_STRATEGY, MultiTableBulkIdStrategyStub.class.getName() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				puInfo,
@@ -273,6 +279,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final Map integrationOverrides = new HashMap();
 		//noinspection unchecked
 		integrationOverrides.put( AvailableSettings.JPA_JTA_DATASOURCE, integrationDataSource );
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		integrationOverrides.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
 		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
@@ -318,6 +326,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final DataSource override = new DataSourceStub( "integrationDataSource" );
 		final Map<String,Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_NON_JTA_DATASOURCE, override );
+		// todo (6.0) : fix for Oracle see HHH-13432
+//		integrationSettings.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 
@@ -502,4 +512,34 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			this.name = name;
 		}
 	}
+
+//	public static class MultiTableBulkIdStrategyStub implements MultiTableBulkIdStrategy {
+//
+//		@Override
+//		public void prepare(
+//				JdbcServices jdbcServices,
+//				JdbcConnectionAccess connectionAccess,
+//				MetadataImplementor metadata,
+//				SessionFactoryOptions sessionFactoryOptions) {
+//
+//		}
+//
+//		@Override
+//		public void release(
+//				JdbcServices jdbcServices, JdbcConnectionAccess connectionAccess) {
+//
+//		}
+//
+//		@Override
+//		public UpdateHandler buildUpdateHandler(
+//				SessionFactoryImplementor factory, HqlSqlWalker walker) {
+//			return null;
+//		}
+//
+//		@Override
+//		public DeleteHandler buildDeleteHandler(
+//				SessionFactoryImplementor factory, HqlSqlWalker walker) {
+//			return null;
+//		}
+//	}
 }

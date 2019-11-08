@@ -37,7 +37,6 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
-import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -77,7 +76,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		EventSource session = event.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
+		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
 
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
@@ -369,7 +368,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		LOG.trace( "Post flush" );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		persistenceContext.getCollectionsByKey().clear();
+		persistenceContext.clearCollectionsByKey();
 		
 		// the database has changed now, so the subselect results need to be invalidated
 		// the batch fetching queues should also be cleared - especially the collection batch fetching one
@@ -390,13 +389,14 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 								collectionEntry.getLoadedPersister(),
 								collectionEntry.getLoadedKey()
 						);
-						persistenceContext.getCollectionsByKey().put( collectionKey, persistentCollection );
+						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}
 				}, true
 		);
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContextInternal().getEntitiesByKey() ) );
+		session.getInterceptor().postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
 	}
+
 }

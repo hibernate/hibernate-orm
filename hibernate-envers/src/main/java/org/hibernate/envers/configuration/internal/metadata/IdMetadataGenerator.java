@@ -311,9 +311,7 @@ public final class IdMetadataGenerator {
 		// HHH-11107
 		// Use FK hbm magic value 'none' to skip making foreign key constraints between the Envers
 		// schema and the base table schema when a @ManyToOne is present in an identifier.
-		if ( mapper == null ) {
-			manyToOneElement.addAttribute( "foreign-key", "none" );
-		}
+		manyToOneElement.addAttribute( "foreign-key", "none" );
 
 		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );
 

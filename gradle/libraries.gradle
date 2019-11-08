@@ -14,7 +14,7 @@ ext {
     junit5Version = '5.3.1'
 
     h2Version = '1.4.196'
-    bytemanVersion = '4.0.3' //Compatible with JDK10
+    bytemanVersion = '4.0.8' //Compatible with JDK14
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '5.1.0.Final'
@@ -26,7 +26,9 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.24.0-GA'
-    byteBuddyVersion = '1.9.11'
+    byteBuddyVersion = '1.10.2'
+
+    agroalVersion = '1.6'
 
     geolatteVersion = '1.4.0'
 
@@ -146,8 +148,8 @@ ext {
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:3.2.0",
             vibur:           "org.vibur:vibur-dbcp:22.2",
-            agroal_api:      "io.agroal:agroal-api:1.4",
-            agroal_pool:     "io.agroal:agroal-pool:1.4",
+            agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
+            agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
 
             atomikos:         "com.atomikos:transactions:4.0.6",
             atomikos_jta:     "com.atomikos:transactions-jta:4.0.6",

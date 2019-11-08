@@ -58,9 +58,10 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		String mappedBy = getMappedBy( persistentField, targetEntity, enhancementContext );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
 			log.infof(
-					"Could not find bi-directional association for field [%s#%s]",
+					"Bi-directional association not managed for field [%s#%s]: Could not find target field in [%s]",
 					managedCtClass.getName(),
-					persistentField.getName()
+					persistentField.getName(),
+					targetEntity.getCanonicalName()
 			);
 			return implementation;
 		}
@@ -101,7 +102,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
 				log.infof(
-						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
+						"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
 						managedCtClass.getName(),
 						persistentField.getName()
 				);
@@ -145,7 +146,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 			if ( targetClass == null ) {
 				log.infof(
-						"Could not find type of bi-directional association for field [%s#%s]",
+						"Bi-directional association not managed for field [%s#%s]: Could not find target type",
 						managedCtClass.getName(),
 						persistentField.getName()
 				);
@@ -163,7 +164,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 	private static TypeDescription.Generic target(AnnotatedFieldDescription persistentField) {
 		AnnotationDescription.Loadable<Access> access = persistentField.getDeclaringType().asErasure().getDeclaredAnnotations().ofType( Access.class );
-		if ( access != null && access.loadSilent().value() == AccessType.FIELD ) {
+		if ( access != null && access.load().value() == AccessType.FIELD ) {
 			return persistentField.getType();
 		}
 		else {
@@ -183,7 +184,20 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			return getMappedByManyToMany( target, targetEntity, context );
 		}
 		else {
-			return mappedBy;
+			// HHH-13446 - mappedBy from annotation may not be a valid bi-directional association, verify by calling isValidMappedBy()
+			return isValidMappedBy( target, targetEntity, mappedBy, context ) ? mappedBy : "";
+		}
+	}
+	
+	private static boolean isValidMappedBy(AnnotatedFieldDescription persistentField, TypeDescription targetEntity, String mappedBy, ByteBuddyEnhancementContext context) {
+		try {
+			FieldDescription f = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity ).locate( mappedBy ).getField();
+			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( context, f );
+
+			return context.isPersistentField( annotatedF ) && persistentField.getDeclaringType().asErasure().isAssignableTo( entityType( f.getType() ) );
+		}
+		catch ( IllegalStateException e ) {
+			return false;
 		}
 	}
 

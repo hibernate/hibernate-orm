@@ -45,6 +45,8 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 
 		final String sql = jdbcMutation.getSql();
 		try {
+			jdbcServices.getSqlStatementLogger().logStatement( sql );
+
 			// prepare the query
 			final PreparedStatement preparedStatement = statementCreator.apply( sql );
 
@@ -64,9 +66,16 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 							executionContext
 					);
 				}
-				int rows = preparedStatement.executeUpdate();
-				expectationCheck.accept( rows, preparedStatement );
-				return rows;
+
+				executionContext.getSession().getEventListenerManager().jdbcExecuteStatementStart();
+				try {
+					int rows = preparedStatement.executeUpdate();
+					expectationCheck.accept( rows, preparedStatement );
+					return rows;
+				}
+				finally {
+					executionContext.getSession().getEventListenerManager().jdbcExecuteStatementEnd();
+				}
 			}
 			finally {
 				logicalConnection.getResourceRegistry().release( preparedStatement );

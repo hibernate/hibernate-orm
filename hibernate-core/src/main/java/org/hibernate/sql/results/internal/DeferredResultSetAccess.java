@@ -97,7 +97,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				);
 			}
 
-			resultSet = preparedStatement.executeQuery();
+			executionContext.getSession().getEventListenerManager().jdbcExecuteStatementStart();
+			try {
+				resultSet = preparedStatement.executeQuery();
+			}
+			finally {
+				executionContext.getSession().getEventListenerManager().jdbcExecuteStatementEnd();
+			}
 			logicalConnection.getResourceRegistry().register( resultSet, preparedStatement );
 
 		}

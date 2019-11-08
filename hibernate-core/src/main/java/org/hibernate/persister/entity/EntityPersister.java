@@ -166,7 +166,7 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * has multiple tables.  Returns {@code null} to indicate that the entity
 	 * does not define multiple tables
 	 */
-	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
+	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

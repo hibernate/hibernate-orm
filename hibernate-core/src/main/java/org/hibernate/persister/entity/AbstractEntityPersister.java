@@ -166,6 +166,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
@@ -237,7 +238,7 @@ public abstract class AbstractEntityPersister
 	private final MultiIdEntityLoader multiIdEntityLoader;
 	private final NaturalIdLoader naturalIdLoader;
 
-
+	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 
 
 
@@ -6184,6 +6185,21 @@ public abstract class AbstractEntityPersister
 		else {
 			accessOptimizer = null;
 		}
+
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+
+		if ( isMultiTable() ) {
+			sqmMultiTableMutationStrategy = null;
+			//sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect().getFallbackSqmMutationStrategy( this )
+		}
+		else {
+			sqmMultiTableMutationStrategy = null;
+		}
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
+		return sqmMultiTableMutationStrategy;
 	}
 
 	protected int getStateArrayInitialPosition(MappingModelCreationProcess creationProcess) {

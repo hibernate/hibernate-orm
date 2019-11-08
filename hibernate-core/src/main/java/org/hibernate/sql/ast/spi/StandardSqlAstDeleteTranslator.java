@@ -32,7 +32,9 @@ public class StandardSqlAstDeleteTranslator
 		appendSql( "delete from " );
 		appendSql( sqlAst.getTargetTable().getTableExpression() );
 
-		sqlAst.getRestriction().accept( this );
+		if ( sqlAst.getRestriction() != null ) {
+			sqlAst.getRestriction().accept( this );
+		}
 
 		return new JdbcDelete() {
 			@Override

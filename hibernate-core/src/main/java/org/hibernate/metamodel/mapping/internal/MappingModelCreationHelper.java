@@ -40,7 +40,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -647,6 +646,7 @@ public class MappingModelCreationHelper {
 				bootProperty,
 				bootValueMapping,
 				collectionDescriptor,
+				declaringType,
 				dialect,
 				creationProcess
 		);
@@ -849,14 +849,29 @@ public class MappingModelCreationHelper {
 			Property bootProperty,
 			Collection bootValueMapping,
 			CollectionPersister collectionDescriptor,
+			ManagedMappingType declaringType,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final Type keyType = bootValueMapping.getKey().getType();
 
+		final ModelPart fkTarget;
+		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
+		if ( lhsPropertyName == null ) {
+			fkTarget = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
+		}
+		else {
+			fkTarget = declaringType.findAttributeMapping( lhsPropertyName );
+		}
+
 		if ( keyType instanceof BasicType ) {
 			assert bootValueMapping.getKey().getColumnSpan() == 1;
+			assert fkTarget instanceof BasicValuedModelPart;
+			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
+
 			return new SimpleForeignKeyDescriptor(
 					bootValueMapping.getKey().getColumnIterator().next().getText( dialect ),
+					simpleFkTarget.getContainingTableExpression(),
+					simpleFkTarget.getMappedColumnExpression(),
 					(BasicType) keyType
 			);
 		}
@@ -872,31 +887,24 @@ public class MappingModelCreationHelper {
 			EntityPersister referencedEntityDescriptor,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
-			final EntityIdentifierMapping identifierMapping = referencedEntityDescriptor.getIdentifierMapping();
-			if ( identifierMapping instanceof BasicEntityIdentifierMapping ) {
-				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
 
-				assert bootValueMapping.getColumnSpan() == 1;
-				return new SimpleForeignKeyDescriptor(
-						bootValueMapping.getColumnIterator().next().getText( dialect ),
-						simpleIdMapping.getJdbcMapping()
-				);
-			}
+		final ModelPart fkTarget;
+		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
+			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
-			final AttributeMapping attributeMapping = referencedEntityDescriptor.findAttributeMapping(
-					bootValueMapping.getReferencedPropertyName()
-			);
+			fkTarget = referencedEntityDescriptor.findSubPart( bootValueMapping.getReferencedPropertyName() );
+		}
 
-			if ( attributeMapping instanceof BasicValuedSingularAttributeMapping ) {
-				final BasicValuedSingularAttributeMapping basicMapping = (BasicValuedSingularAttributeMapping) attributeMapping;
-				assert bootValueMapping.getColumnSpan() == 1;
-				return new SimpleForeignKeyDescriptor(
-						bootValueMapping.getColumnIterator().next().getText( dialect ),
-						basicMapping.getJdbcMapping()
-				);
-			}
+		if ( fkTarget instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
+
+			return new SimpleForeignKeyDescriptor(
+					bootValueMapping.getColumnIterator().next().getText( dialect ),
+					simpleFkTarget.getContainingTableExpression(),
+					simpleFkTarget.getMappedColumnExpression(),
+					simpleFkTarget.getJdbcMapping()
+			);
 		}
 
 		throw new NotYetImplementedFor6Exception(

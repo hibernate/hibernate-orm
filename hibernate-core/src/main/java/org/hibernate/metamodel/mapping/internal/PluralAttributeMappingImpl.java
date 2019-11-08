@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
 import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -161,9 +162,10 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 					fetchablePath,
 					p -> {
+						final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() );
 						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 								fetchablePath,
-								sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+								lhsTableGroup,
 								null,
 								JoinType.LEFT,
 								lockMode,
@@ -171,6 +173,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 								creationState.getSqlAstCreationState().getSqlExpressionResolver(),
 								creationState.getSqlAstCreationState().getCreationContext()
 						);
+
+						lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+						sqlAstCreationState.getFromClauseAccess().registerTableGroup( fetchablePath, tableGroupJoin.getJoinedGroup() );
+
 						return tableGroupJoin.getJoinedGroup();
 					}
 			);
@@ -228,7 +235,23 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				creationContext
 		);
 
-		return new TableGroupJoin( navigablePath, joinType, tableGroupBuilder.build() );
+		final TableGroup tableGroup = tableGroupBuilder.build();
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				navigablePath,
+				joinType,
+				tableGroup,
+				getKeyDescriptor().generateJoinPredicate(
+						lhs,
+						tableGroup,
+						joinType,
+						sqlExpressionResolver,
+						creationContext
+				)
+		);
+
+		lhs.addTableGroupJoin( tableGroupJoin );
+
+		return tableGroupJoin;
 	}
 
 	@Override

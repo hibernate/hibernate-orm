@@ -6150,7 +6150,6 @@ public abstract class AbstractEntityPersister
 								runtimeAttrDefinition,
 								bootProperty,
 								stateArrayPosition++,
-								this,
 								creationProcess
 						)
 				);
@@ -6311,7 +6310,6 @@ public abstract class AbstractEntityPersister
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,
-			ManagedMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
 
 		final String attrName = tupleAttrDefinition.getName();
@@ -6333,7 +6331,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					stateArrayPosition,
 					bootProperty,
-					declaringType,
+					this,
 					(BasicType) attrType,
 					tableExpression,
 					attrColumnNames[0],
@@ -6347,7 +6345,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					stateArrayPosition,
 					bootProperty,
-					declaringType,
+					this,
 					(CompositeType) attrType,
 					tableExpression,
 					attrColumnNames,
@@ -6361,7 +6359,7 @@ public abstract class AbstractEntityPersister
 					attrName,
 					stateArrayPosition,
 					bootProperty,
-					declaringType,
+					this,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess

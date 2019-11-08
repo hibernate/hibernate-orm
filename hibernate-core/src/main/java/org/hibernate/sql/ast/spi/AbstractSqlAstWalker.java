@@ -1015,7 +1015,9 @@ public abstract class AbstractSqlAstWalker
 //		}
 //
 		comparisonPredicate.getLeftHandExpression().accept( this );
+		appendSql( " " );
 		appendSql( comparisonPredicate.getOperator().sqlText() );
+		appendSql( " " );
 		comparisonPredicate.getRightHandExpression().accept( this );
 	}
 

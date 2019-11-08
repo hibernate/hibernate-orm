@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
 public class MetamodelSelectBuilderProcess {
 	private static final Logger log = Logger.getLogger( MetamodelSelectBuilderProcess.class );
 
-	interface SqlAstDescriptor {
+	public interface SqlAstDescriptor {
 		SelectStatement getSqlAst();
 		List<JdbcParameter> getJdbcParameters();
 	}

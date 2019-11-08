@@ -7,7 +7,11 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 
@@ -16,4 +20,11 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
  */
 public interface ForeignKeyDescriptor {
 	DomainResult createDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState);
+
+	Predicate generateJoinPredicate(
+			TableGroup lhs,
+			TableGroup tableGroup,
+			JoinType joinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext);
 }

@@ -16,14 +16,11 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.exec.spi.Callback;
 
-import org.hibernate.testing.junit5.StandardTags;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.junit.jupiter.api.Tag;
 
 /**
  * @author Steve Ebersole
  */
-@Tag(StandardTags.SQM)
 public abstract class BaseSqmUnitTest
 		extends BaseSessionFactoryFunctionalTest
 		implements SqlAstCreationContext, Callback {

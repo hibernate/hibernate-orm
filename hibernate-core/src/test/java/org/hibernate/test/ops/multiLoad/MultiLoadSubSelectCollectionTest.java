@@ -29,7 +29,6 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +85,7 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 	@TestForIssue( jiraKey = "HHH-12740" )
 	public void testSubselect() {
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 
 
 					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids(56) );

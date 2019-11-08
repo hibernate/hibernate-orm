@@ -20,7 +20,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -59,7 +58,7 @@ public class MaxInExpressionParameterPaddingTest extends BaseEntityManagerFuncti
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			for ( int i = 0; i < MAX_COUNT; i++ ) {
 				Person person = new Person();
 				person.setId( i );

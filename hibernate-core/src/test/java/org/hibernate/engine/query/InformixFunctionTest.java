@@ -13,7 +13,6 @@ import org.hibernate.dialect.InformixDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -127,7 +126,7 @@ public class InformixFunctionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-10800" )
 	public void testCurrentTimestamp() throws Exception {
-		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+		doInHibernate( this::sessionFactory, session -> {
 			int tries = 2;
 			while ( tries-- > 0 ) {
 				Timestamp timestamp = (Timestamp) session.createQuery(

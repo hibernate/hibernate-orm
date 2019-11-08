@@ -29,7 +29,6 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -93,7 +92,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 
 	public void doBatchInsertUpdateJoined(int nEntities, int nBeforeFlush) {
 
-		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
 				e.getId();
@@ -111,7 +110,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 				"select e from Employee e" )
@@ -123,7 +122,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 				"select e from Employee e" )
@@ -155,7 +154,7 @@ public class SequenceJoinedSubclassBatchingTest extends BaseCoreFunctionalTestCa
 		} );
 
 
-		doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)s -> {
+		doInHibernate( this::sessionFactory, s -> {
 			int i = 0;
 			ScrollableResults sr = s.createQuery(
 					"select e from Employee e" )

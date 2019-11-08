@@ -2419,7 +2419,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		//noinspection unchecked
 		return getFunctionTemplate("trim").makeSqmFunctionExpression(
-				(List<SqmTypedNode<?>>)(Object)asList(
+				asList(
 						interpretTrimSpecification( ctx.trimSpecification() ),
 						visitTrimCharacter( ctx.trimCharacter() ),
 						source

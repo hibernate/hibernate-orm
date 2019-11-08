@@ -32,7 +32,6 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -119,7 +118,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManager
 
 		final int ITERATIONS = 51;
 
-		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			for ( int i = 1; i <= ITERATIONS; i++ ) {
 				ApplicationConfiguration model = new ApplicationConfiguration();
 

@@ -21,7 +21,6 @@ import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -55,7 +54,7 @@ public class SQLServerDialectPaginationTest extends BaseEntityManagerFunctionalT
 	@Test
 	public void testPaginationQuery() {
 		// prepare some test data
-		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			for ( int i = 1; i <= 20; ++i ) {
 				final SimpleEntity entity = new SimpleEntity( i, "Entity" + i );
 				entityManager.persist( entity );

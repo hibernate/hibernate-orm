@@ -32,7 +32,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -132,7 +131,7 @@ public class LoadANonExistingEntityTest extends BaseNonConfigCoreFunctionalTestC
 	@Before
 	public void setUpData() {
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						final Employee employee = new Employee();
 						employee.id = i + 1;

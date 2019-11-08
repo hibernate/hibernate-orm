@@ -16,7 +16,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
@@ -47,7 +46,7 @@ public class InClauseParameterPaddingTest extends BaseEntityManagerFunctionalTes
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, (TransactionUtil.JPATransactionVoidFunction)entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			for ( int i = 1; i < 10; i++ ) {
 				Person person = new Person();
 				person.setId( i );

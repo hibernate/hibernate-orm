@@ -17,8 +17,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
+
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -39,9 +38,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-@Tags({
-	@Tag("RunnableIdeTest"),
-})
 public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Override

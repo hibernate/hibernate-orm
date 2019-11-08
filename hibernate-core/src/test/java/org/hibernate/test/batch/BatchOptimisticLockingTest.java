@@ -20,7 +20,6 @@ import javax.persistence.Version;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -68,7 +67,7 @@ public class BatchOptimisticLockingTest extends
 		} );
 
 		try {
-			doInHibernate( this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+			doInHibernate( this::sessionFactory, session -> {
 				List<Person> persons = session.createQuery( "select p from Person p").getResultList();
 
 				for ( int i = 0; i < persons.size(); i++ ) {

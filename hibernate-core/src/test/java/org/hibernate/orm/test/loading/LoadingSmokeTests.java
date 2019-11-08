@@ -20,8 +20,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -38,9 +36,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 @SessionFactoryFunctionalTesting
 @SuppressWarnings("WeakerAccess")
-@Tags({
-	@Tag("RunnableIdeTest"),
-})
 public class LoadingSmokeTests {
 	@Test
 	public void testBasicLoad(SessionFactoryScope scope) {

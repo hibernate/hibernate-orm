@@ -39,7 +39,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +67,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		statistics.clear();
 
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 						employees.add( session.load( Employee.class, i + 1 ) );
@@ -94,7 +93,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		statistics.clear();
 
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
 						Employee employee = session.get( Employee.class, i + 1 );
 						assertNull( employee.employer );
@@ -116,7 +115,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		statistics.clear();
 
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						Employee employee = session.get( Employee.class, i + 1 );
 						Employer employer = new Employer();
@@ -128,7 +127,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 		);
 
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						Employee employee = session.get( Employee.class, i + 1 );
 						assertTrue( Hibernate.isInitialized( employee.employer ) );
@@ -150,7 +149,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 	@Before
 	public void setUpData() {
 		doInHibernate(
-				this::sessionFactory, (TransactionUtil.HibernateTransactionConsumer)session -> {
+				this::sessionFactory, session -> {
 					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
 						final Employee employee = new Employee();
 						employee.id = i + 1;

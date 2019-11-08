@@ -14,9 +14,6 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ClassFile;
-
 import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
 import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.spi.ArchiveContext;
@@ -24,12 +21,26 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.boot.archive.spi.ArchiveException;
 
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
+
 /**
  * Defines handling and filtering for class file entries within an archive
  *
  * @author Steve Ebersole
  */
 public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
+
+	private final static DotName CONVERTER = DotName.createSimple( Converter.class.getName() );
+
+	private final static DotName[] MODELS = {
+			DotName.createSimple( Entity.class.getName() ),
+			DotName.createSimple( MappedSuperclass.class.getName() ),
+			DotName.createSimple( Embeddable.class.getName() )
+	};
+
 	private final ScanResultCollector resultCollector;
 
 	public ClassFileArchiveEntryHandler(ScanResultCollector resultCollector) {
@@ -38,14 +49,8 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 
 	@Override
 	public void handleEntry(ArchiveEntry entry, ArchiveContext context) {
-		// Ultimately we'd like to leverage Jandex here as long term we want to move to
-		// using Jandex for annotation processing.  But even then, Jandex atm does not have
-		// any facility for passing a stream and conditionally indexing it into an Index or
-		// returning existing ClassInfo objects.
-		//
-		// So not sure we can ever not do this unconditional input stream read :(
-		final ClassFile classFile = toClassFile( entry );
-		final ClassDescriptor classDescriptor = toClassDescriptor( classFile, entry );
+
+		final ClassDescriptor classDescriptor = toClassDescriptor( entry );
 
 		if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.OTHER ) {
 			return;
@@ -54,45 +59,41 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 		resultCollector.handleClass( classDescriptor, context.isRootUrl() );
 	}
 
-	private ClassFile toClassFile(ArchiveEntry entry) {
-		final InputStream inputStream = entry.getStreamAccess().accessInputStream();
-		final DataInputStream dataInputStream = new DataInputStream( inputStream );
-		try {
-			return new ClassFile( dataInputStream );
+	private ClassDescriptor toClassDescriptor(ArchiveEntry entry) {
+		try (InputStream inputStream = entry.getStreamAccess().accessInputStream()) {
+			Indexer indexer = new Indexer();
+			ClassInfo classInfo = indexer.index( inputStream );
+			Index index = indexer.complete();
+			return toClassDescriptor( classInfo, index, entry );
 		}
 		catch (IOException e) {
-			throw new ArchiveException( "Could not build ClassFile", e );
-		}
-		finally {
-			try {
-				dataInputStream.close();
-			}
-			catch (Exception ignore) {
-			}
-
-			try {
-				inputStream.close();
-			}
-			catch (IOException ignore) {
-			}
+			throw new ArchiveException( "Could not build ClassInfo", e );
 		}
 	}
 
-	private ClassDescriptor toClassDescriptor(ClassFile classFile, ArchiveEntry entry) {
+	private ClassDescriptor toClassDescriptor(ClassInfo classInfo, Index index, ArchiveEntry entry) {
 		ClassDescriptor.Categorization categorization = ClassDescriptor.Categorization.OTHER;
 
-		final AnnotationsAttribute visibleAnnotations = (AnnotationsAttribute) classFile.getAttribute( AnnotationsAttribute.visibleTag );
-		if ( visibleAnnotations != null ) {
-			if ( visibleAnnotations.getAnnotation( Entity.class.getName() ) != null
-					|| visibleAnnotations.getAnnotation( MappedSuperclass.class.getName() ) != null
-					|| visibleAnnotations.getAnnotation( Embeddable.class.getName() ) != null ) {
-				categorization = ClassDescriptor.Categorization.MODEL;
-			}
-			else if ( visibleAnnotations.getAnnotation( Converter.class.getName() ) != null ) {
-				categorization = ClassDescriptor.Categorization.CONVERTER;
-			}
+		if ( isModel( index ) ) {
+			categorization = ClassDescriptor.Categorization.MODEL;
+		}
+		else if ( isConverter( index ) ) {
+			categorization = ClassDescriptor.Categorization.CONVERTER;
 		}
 
-		return new ClassDescriptorImpl( classFile.getName(), categorization, entry.getStreamAccess() );
+		return new ClassDescriptorImpl( classInfo.name().toString(), categorization, entry.getStreamAccess() );
+	}
+
+	private boolean isConverter(Index index) {
+		return !index.getAnnotations( CONVERTER ).isEmpty();
+	}
+
+	private boolean isModel(Index index) {
+		for ( DotName model : MODELS ) {
+			if ( !index.getAnnotations( model ).isEmpty() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

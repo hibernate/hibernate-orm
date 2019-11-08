@@ -13,17 +13,45 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 
 description = 'Hibernate\'s core ORM functionality'
 
+ext {
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+}
+
+sourceSets.main {
+    java.srcDir project.jaxbTargetDir
+}
+
+sourceSets {
+    // resources inherently exclude sources
+    test {
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
+    }
+
+    testJavassist {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+        }
+    }
+}
+
 configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
+
+    //Configures the compile and runtime configurations for our javassist tests
+    //and includes the dependencies of the test task.
+    testJavassistCompile.extendsFrom testCompile
+    testJavassistRuntime.extendsFrom testRuntime
 }
 
 dependencies {
 
     compile( libraries.jpa )
-    // Javassist is no longer the default enhancer but still required for other purposes, e.g. Scanning
-    compile( libraries.javassist )
+    provided( libraries.javassist )
     // Could be made optional?
     compile( libraries.byteBuddy )
     compile( libraries.antlr )
@@ -98,6 +126,10 @@ dependencies {
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
+
+    // Additional tests requiring Javassist
+    // folder in src/javassist/java
+    testJavassistCompile libraries.javassist
 }
 
 jar {
@@ -136,19 +168,6 @@ jar {
 //            'org.hibernate.boot.registry.classloading.internal',
 //            '*'
     }
-}
-
-ext {
-	jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
-}
-
-sourceSets.main {
-    java.srcDir project.jaxbTargetDir
-}
-
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
 //idea {
@@ -226,3 +245,17 @@ test {
         //println "Starting test: " + descriptor
     }
 }
+
+//Create the task that runs the integration tests found from the
+//configured source directory and uses the correct classpath.
+task testJavassist(type: Test) {
+    testClassesDirs = sourceSets.testJavassist.output.classesDirs
+    classpath = sourceSets.testJavassist.runtimeClasspath
+    //If you want to ensure that integration tests are run every time when you invoke
+    //this task, uncomment the following line.
+    //outputs.upToDateWhen { false }
+}
+
+check.dependsOn testJavassist
+testJavassist.mustRunAfter test
+

@@ -18,8 +18,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -37,9 +35,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @ServiceRegistry
-@SessionFactory@Tags({
-	@Tag("RunnableIdeTest"),
-})
+@SessionFactory
 public class MappedSuperclassInheritanceTest {
 
 	@Test

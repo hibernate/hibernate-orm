@@ -20,7 +20,7 @@ import org.hibernate.type.BasicType;
 /**
  * @author Andrea Boriero
  */
-public class JoinedSubclassDiscriminatorMappingImpl extends EntityDiscriminatorMappingImpl {
+public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscriminatorMapping {
 
 	private final CaseSearchedExpression caseSearchedExpression;
 	private final List<ColumnReference> columnReferences;
@@ -28,12 +28,13 @@ public class JoinedSubclassDiscriminatorMappingImpl extends EntityDiscriminatorM
 	public JoinedSubclassDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
 			String tableExpression,
+			String mappedColumExpression,
 			CaseSearchedExpression caseSearchedExpression,
 			List<ColumnReference> columnReferences,
 			BasicType mappingType) {
-		super( entityDescriptor, tableExpression, mappingType );
-		this.caseSearchedExpression = caseSearchedExpression;
+		super( entityDescriptor, tableExpression, mappedColumExpression, mappingType );
 
+		this.caseSearchedExpression = caseSearchedExpression;
 		this.columnReferences = columnReferences;
 	}
 

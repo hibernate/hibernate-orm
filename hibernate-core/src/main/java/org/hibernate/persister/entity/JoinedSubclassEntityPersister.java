@@ -1240,6 +1240,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return new JoinedSubclassDiscriminatorMappingImpl(
 				this,
 				getRootTableName(),
+				getDiscriminatorColumnName(),
 				info.caseSearchedExpression,
 				info.columnReferences,
 				(BasicType) getDiscriminatorType()

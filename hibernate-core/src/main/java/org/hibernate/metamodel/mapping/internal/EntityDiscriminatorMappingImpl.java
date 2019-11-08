@@ -6,141 +6,32 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.query.sqm.sql.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.basic.BasicResult;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMapping {
-	private final EntityPersister entityPersister;
-
-	private final String tableExpression;
-	private String mappedColumnExpression;
-
-	private final BasicType mappingType;
+public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorMapping {
 
 	public EntityDiscriminatorMappingImpl(
-			EntityPersister entityPersister,
+			EntityPersister entityDescriptor,
 			String tableExpression,
 			String mappedColumnExpression,
 			BasicType mappingType) {
-		this( entityPersister, tableExpression, mappingType );
-		this.mappedColumnExpression = mappedColumnExpression;
-	}
-
-	public EntityDiscriminatorMappingImpl(
-			EntityPersister entityPersister,
-			String tableExpression,
-			BasicType mappingType) {
-		this.entityPersister = entityPersister;
-		this.tableExpression = tableExpression;
-		this.mappingType = mappingType;
+		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
 	}
 
 	@Override
-	public String getContainingTableExpression() {
-		return tableExpression;
-	}
-
-	@Override
-	public String getMappedColumnExpression() {
-		return mappedColumnExpression;
-	}
-
-	@Override
-	public BasicValueConverter getConverter() {
-		return null;
-	}
-
-	@Override
-	public String getFetchableName() {
-		return ROLE_NAME;
-	}
-
-	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
-	}
-
-	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
-
-		//noinspection unchecked
-		return new BasicResult(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				getJavaTypeDescriptor(),
-				navigablePath
-		);
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		resolveSqlSelection( tableGroup, creationState );
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			LockMode lockMode,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-				fetchParent.getNavigablePath()
-		);
-
-		assert tableGroup != null;
-
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
-
-		return new BasicFetch(
-				sqlSelection.getValuesArrayPosition(),
-				fetchParent,
-				fetchablePath,
-				this,
-				false,
-				getConverter(),
-				fetchTiming,
-				creationState
-		);
-	}
-
 	protected SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
-		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
+				.getSqlExpressionResolver();
 
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
 
@@ -153,31 +44,12 @@ public class EntityDiscriminatorMappingImpl implements EntityDiscriminatorMappin
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
 								getMappedColumnExpression(),
-								mappingType.getJdbcMapping(),
+								getJdbcMapping(),
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
 				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
-	}
-
-	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
-	}
-
-	@Override
-	public MappingType getMappedTypeDescriptor() {
-		return mappingType;
-	}
-
-	@Override
-	public JdbcMapping getJdbcMapping() {
-		return mappingType.getJdbcMapping();
-	}
-
-	protected EntityPersister getEntityPersister(){
-		return entityPersister;
 	}
 }

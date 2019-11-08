@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.sql.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;

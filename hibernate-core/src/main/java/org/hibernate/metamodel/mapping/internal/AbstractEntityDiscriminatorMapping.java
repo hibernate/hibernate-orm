@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;

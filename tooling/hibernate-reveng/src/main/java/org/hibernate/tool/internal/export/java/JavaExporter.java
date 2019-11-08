@@ -9,7 +9,7 @@ import org.hibernate.tool.internal.export.common.GenericExporter;
 /**
  * @author max
  */
-public class POJOExporter extends GenericExporter {
+public class JavaExporter extends GenericExporter {
 
 	private static final String POJO_JAVACLASS_FTL = "pojo/Pojo.ftl";
 
@@ -18,7 +18,7 @@ public class POJOExporter extends GenericExporter {
     	getProperties().put(FILE_PATTERN, "{package-name}/{class-name}.java");
 	}
 
-	public POJOExporter() {
+	public JavaExporter() {
 		init();		
 	}
     

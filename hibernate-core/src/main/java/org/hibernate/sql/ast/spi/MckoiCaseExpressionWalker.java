@@ -39,11 +39,5 @@ public class MckoiCaseExpressionWalker implements CaseExpressionWalker {
 			sqlBuffer.append( "null" );
 		}
 		sqlBuffer.append(buf2);
-
-		final String columnExpression = caseSearchedExpression.getColumnExpression();
-
-		if ( columnExpression != null ) {
-			sqlBuffer.append( " as " ).append( columnExpression );
-		}
 	}
 }

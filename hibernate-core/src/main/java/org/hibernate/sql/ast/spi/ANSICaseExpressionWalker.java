@@ -36,11 +36,5 @@ public class ANSICaseExpressionWalker implements CaseExpressionWalker {
 		}
 
 		sqlBuffer.append( " end" );
-
-		final String columnExpression = caseSearchedExpression.getColumnExpression();
-
-		if ( columnExpression != null ) {
-			sqlBuffer.append( " as " ).append( columnExpression );
-		}
 	}
 }

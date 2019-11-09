@@ -31,18 +31,9 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
-	private String columnExpression;
 
 	public CaseSearchedExpression(MappingModelExpressable type) {
 		this.type = (BasicType) type;
-	}
-
-	public void setColumnExpression(String columnExpression) {
-		this.columnExpression = columnExpression;
-	}
-
-	public String getColumnExpression(){
-		return columnExpression;
 	}
 
 	public List<WhenFragment> getWhenFragments() {

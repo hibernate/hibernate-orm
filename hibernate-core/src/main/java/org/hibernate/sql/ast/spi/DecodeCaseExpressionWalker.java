@@ -49,11 +49,5 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 		}
 
 		sqlBuffer.append( ')' );
-
-		final String columnExpression = caseSearchedExpression.getColumnExpression();
-
-		if ( columnExpression != null ) {
-			sqlBuffer.append( " as " ).append( columnExpression );
-		}
 	}
 }

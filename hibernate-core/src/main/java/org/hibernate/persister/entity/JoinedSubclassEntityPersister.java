@@ -1260,8 +1260,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
 
-		caseSearchedExpression.setColumnExpression( getDiscriminatorColumnName() );
-
 		tableReferenceJoins.forEach(
 				tableReferenceJoin -> {
 					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();

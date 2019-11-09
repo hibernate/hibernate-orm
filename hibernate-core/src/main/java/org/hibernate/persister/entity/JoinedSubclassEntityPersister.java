@@ -70,7 +70,6 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.CasePredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.JoinedSubclassResultImpl;
@@ -1293,7 +1292,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			TableReference table,
 			ColumnReference identifierColumnReference,
 			BasicType resultType) {
-		final CasePredicate predicate = new NullnessPredicate( identifierColumnReference, true );
+		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
 		final Expression expression =
 				new QueryLiteral<>(
 						discriminatorValuesByTableName.get( table.getTableExpression() ),

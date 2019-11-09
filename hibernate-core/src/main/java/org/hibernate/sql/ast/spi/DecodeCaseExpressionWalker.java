@@ -39,7 +39,7 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 				whenFragment.getResult().accept( sqlAstWalker );
 			}
 			else {
-				predicate.getLeftHandExpression().accept( sqlAstWalker );
+				getLeftHandExpression( predicate ).accept( sqlAstWalker );
 				firstWhenFragment = whenFragment;
 			}
 		}

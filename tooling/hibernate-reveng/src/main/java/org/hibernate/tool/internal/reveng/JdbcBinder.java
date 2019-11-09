@@ -104,6 +104,11 @@ public class JdbcBinder {
 		metadataCollector = mdbc.getMetadataCollector();
 		this.metadata = ((InFlightMetadataCollectorImpl)metadataCollector).buildMetadataInstance(mdbc);
 	}
+	
+	public Metadata readFromDatabase(Metadata metadata) {
+		readFromDatabase(null, null, new BinderMapping(metadata));
+		return metadata;
+	}
 
 	/**
 	 *

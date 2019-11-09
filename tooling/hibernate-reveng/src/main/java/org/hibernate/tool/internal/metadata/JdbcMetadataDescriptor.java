@@ -2,7 +2,6 @@ package org.hibernate.tool.internal.metadata;
 
 import java.util.Properties;
 
-import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -15,15 +14,10 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JdbcBinder;
-import org.hibernate.type.Type;
 
 public class JdbcMetadataDescriptor implements MetadataDescriptor {
 	
@@ -79,11 +73,7 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 				metadataBuildingContext, 
 				reverseEngineeringStrategy, 
 				(Boolean)this.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS));
-		binder.readFromDatabase(
-				null, 
-				null, 
-				buildMapping(metadata));	
-		return metadata;
+		return binder.readFromDatabase(metadata);
 	}
 	
 	private InFlightMetadataCollectorImpl getMetadataCollector(
@@ -94,36 +84,4 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 			metadataBuildingOptions);	
 	}
 	
-	private Mapping buildMapping(final Metadata metadata) {
-		return new Mapping() {
-			/**
-			 * Returns the identifier type of a mapped class
-			 */
-			public Type getIdentifierType(String persistentClass) throws MappingException {
-				final PersistentClass pc = metadata.getEntityBinding(persistentClass);
-				if (pc==null) throw new MappingException("persistent class not known: " + persistentClass);
-				return pc.getIdentifier().getType();
-			}
-
-			public String getIdentifierPropertyName(String persistentClass) throws MappingException {
-				final PersistentClass pc = metadata.getEntityBinding(persistentClass);
-				if (pc==null) throw new MappingException("persistent class not known: " + persistentClass);
-				if ( !pc.hasIdentifierProperty() ) return null;
-				return pc.getIdentifierProperty().getName();
-			}
-
-            public Type getReferencedPropertyType(String persistentClass, String propertyName) throws MappingException
-            {
-				final PersistentClass pc = metadata.getEntityBinding(persistentClass);
-				if (pc==null) throw new MappingException("persistent class not known: " + persistentClass);
-				Property prop = pc.getProperty(propertyName);
-				if (prop==null)  throw new MappingException("property not known: " + persistentClass + '.' + propertyName);
-				return prop.getType();
-			}
-
-			public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-				return null;
-			}
-		};
-	}
 }

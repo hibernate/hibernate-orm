@@ -29,4 +29,13 @@ public class HqlDeleteExecutionTests {
 				session -> session.createQuery( "delete BasicEntity" ).executeUpdate()
 		);
 	}
+
+	@Test
+	public void testSimpleRestrictedDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete BasicEntity where data = :filter" )
+						.setParameter( "filter", "abc" )
+						.executeUpdate()
+		);
+	}
 }

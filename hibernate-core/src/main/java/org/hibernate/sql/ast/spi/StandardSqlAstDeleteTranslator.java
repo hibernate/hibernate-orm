@@ -33,6 +33,7 @@ public class StandardSqlAstDeleteTranslator
 		appendSql( sqlAst.getTargetTable().getTableExpression() );
 
 		if ( sqlAst.getRestriction() != null ) {
+			appendSql( " where " );
 			sqlAst.getRestriction().accept( this );
 		}
 

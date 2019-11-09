@@ -10,6 +10,9 @@ import java.util.List;
 
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * @author Andrea Boriero
@@ -28,14 +31,15 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
+			Predicate predicate = whenFragment.getPredicate();
 			if ( i != 0 ) {
 				sqlBuffer.append( ", " );
-				whenFragment.getPredicate().getLeftHandExpression().accept( sqlAstWalker );
+				getLeftHandExpression( predicate ).accept( sqlAstWalker );
 				sqlBuffer.append( ", " );
 				whenFragment.getResult().accept( sqlAstWalker );
 			}
 			else {
-				whenFragment.getPredicate().getLeftHandExpression().accept( sqlAstWalker );
+				predicate.getLeftHandExpression().accept( sqlAstWalker );
 				firstWhenFragment = whenFragment;
 			}
 		}
@@ -49,5 +53,13 @@ public class DecodeCaseExpressionWalker implements CaseExpressionWalker {
 		}
 
 		sqlBuffer.append( ')' );
+	}
+
+	protected Expression getLeftHandExpression(Predicate predicate) {
+		if ( predicate instanceof NullnessPredicate ) {
+			return ( (NullnessPredicate) predicate ).getExpression();
+		}
+		assert predicate instanceof ComparisonPredicate;
+		return ( (ComparisonPredicate) predicate ).getLeftHandExpression();
 	}
 }

@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 /**
  * @author Steve Ebersole
  */
-public class ComparisonPredicate implements Predicate, CasePredicate {
+public class ComparisonPredicate implements Predicate {
 	private final Expression leftHandExpression;
 	private ComparisonOperator operator;
 	private final Expression rightHandExpression;
@@ -27,7 +27,6 @@ public class ComparisonPredicate implements Predicate, CasePredicate {
 		this.rightHandExpression = rightHandExpression;
 	}
 
-	@Override
 	public Expression getLeftHandExpression() {
 		return leftHandExpression;
 	}

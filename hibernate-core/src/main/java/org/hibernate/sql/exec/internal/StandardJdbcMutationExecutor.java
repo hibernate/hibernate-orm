@@ -40,13 +40,10 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				.getJdbcCoordinator()
 				.getLogicalConnection();
 
-		final JdbcServices jdbcServices = executionContext.getSession().getFactory().getServiceRegistry().getService(
-				JdbcServices.class );
+		final JdbcServices jdbcServices = executionContext.getSession().getJdbcServices();
 
 		final String sql = jdbcMutation.getSql();
 		try {
-			jdbcServices.getSqlStatementLogger().logStatement( sql );
-
 			// prepare the query
 			final PreparedStatement preparedStatement = statementCreator.apply( sql );
 

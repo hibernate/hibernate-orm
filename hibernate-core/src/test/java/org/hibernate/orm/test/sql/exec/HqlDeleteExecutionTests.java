@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.orm.test.metamodel.mapping.SecondaryTableTests;
+import org.hibernate.orm.test.metamodel.mapping.inheritance.joined.JoinedInheritanceTest;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,7 +29,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SuppressWarnings("WeakerAccess")
 @DomainModel(
 		standardModels = StandardDomainModel.GAMBIT,
-		annotatedClasses = SecondaryTableTests.SimpleEntityWithSecondaryTables.class
+		annotatedClasses = {
+				SecondaryTableTests.SimpleEntityWithSecondaryTables.class,
+				JoinedInheritanceTest.Customer.class,
+				JoinedInheritanceTest.DomesticCustomer.class,
+				JoinedInheritanceTest.ForeignCustomer.class
+		}
 )
 @ServiceRegistry
 @SessionFactory( exportSchema = true )
@@ -107,6 +113,94 @@ public class HqlDeleteExecutionTests {
 		);
 		scope.inTransaction(
 				session -> session.createQuery( "delete SimpleEntityWithSecondaryTables" ).executeUpdate()
+		);
+	}
+
+
+	@Test
+	public void testJoinedSubclassRootDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete Customer" ).executeUpdate()
+		);
+	}
+
+	@Test
+	public void testJoinedSubclassRootRestrictedDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete Customer where name = 'abc'" ).executeUpdate()
+		);
+	}
+
+	@Test
+	@FailureExpected( reason = "No idea why this one fails. H2 complains inserting the temp table that one of the PK values we select is NULL" )
+	public void testJoinedSubclassRootRestrictedDeleteResults(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.save(
+							new JoinedInheritanceTest.ForeignCustomer( 1, "Adventures Abroad", "123" )
+					);
+					session.save(
+							new JoinedInheritanceTest.DomesticCustomer( 2, "Domestic Wonders", "456" )
+					);
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final int rows = session.createQuery( "delete Customer where name = 'Adventures Abroad'" ).executeUpdate();
+					assertThat( rows, is( 1 ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final int rows = session.createQuery( "delete from Customer" ).executeUpdate();
+					assertThat( rows, is( 1 ) );
+				}
+		);
+	}
+
+
+	@Test
+	public void testJoinedSubclassLeafDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete ForeignCustomer" ).executeUpdate()
+		);
+		scope.inTransaction(
+				session -> session.createQuery( "delete DomesticCustomer" ).executeUpdate()
+		);
+	}
+
+	@Test
+	public void testJoinedSubclassLeafRestrictedDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createQuery( "delete ForeignCustomer where name = 'abc'" ).executeUpdate()
+		);
+		scope.inTransaction(
+				session -> session.createQuery( "delete DomesticCustomer where name = 'abc'" ).executeUpdate()
+		);
+	}
+
+	@Test
+	@FailureExpected( reason = "No idea why this one fails. H2 complains inserting the temp table that one of the PK values we select is NULL" )
+	public void testJoinedSubclassLeafRestrictedDeleteResult(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.save(
+							new JoinedInheritanceTest.ForeignCustomer( 1, "Adventures Abroad", "123" )
+					);
+					session.save(
+							new JoinedInheritanceTest.DomesticCustomer( 2, "Domestic Wonders", "456" )
+					);
+				}
+		);
+
+		scope.inTransaction(
+				session -> session.createQuery( "delete ForeignCustomer where name = 'Adventures Abroad'" ).executeUpdate()
+		);
+
+		scope.inTransaction(
+				session -> session.createQuery( "delete DomesticCustomer where name = 'Domestic Wonders'" ).executeUpdate()
 		);
 	}
 

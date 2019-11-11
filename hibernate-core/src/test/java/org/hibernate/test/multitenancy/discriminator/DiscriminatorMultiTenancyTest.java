@@ -193,9 +193,10 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		}
 	}
 
-	public void doInHibernate(String tenant,
-			Consumer<Session> function) {
+	public void doInHibernate(String tenant, Consumer<Session> function) {
 		currentTenantResolver.currentTenantIdentifier = tenant;
-		TransactionUtil.doInHibernate( this::sessionFactory, tenant, function);
+		//Careful: do not use the #doInHibernate version of the method which takes a tenant: the goal of these tests is
+		// to verify that the CurrentTenantIdentifierResolver is being applied!
+		TransactionUtil.doInHibernate( this::sessionFactory, function);
 	}
 }

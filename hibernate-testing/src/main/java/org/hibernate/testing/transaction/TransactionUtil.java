@@ -35,6 +35,8 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 
+import org.junit.Assert;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,6 +45,28 @@ import org.jboss.logging.Logger;
 public class TransactionUtil {
 
 	private static final Logger log = Logger.getLogger( TransactionUtil.class );
+
+	public static void doInHibernate(Supplier<SessionFactory> factorySupplier, Consumer<Session> function) {
+		final SessionFactory sessionFactory = factorySupplier.get();
+		Assert.assertNotNull( "SessionFactory is null in test!", sessionFactory );
+		//Make sure any error is propagated
+		try ( Session session = sessionFactory.openSession() ) {
+			final Transaction txn = session.getTransaction();
+			txn.begin();
+			try {
+				function.accept( session );
+			}
+			catch (Throwable e) {
+				try {
+					txn.rollback();
+				}
+				finally {
+					throw e;
+				}
+			}
+			txn.commit();
+		}
+	}
 
 	/**
 	 * Hibernate transaction function

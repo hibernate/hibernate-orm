@@ -380,10 +380,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 
 			this.defaultSessionOpenOptions = withOptions();
-			this.temporarySessionOpenOptions = withOptions()
-					.autoClose( false )
-					.flushMode( FlushMode.MANUAL )
-					.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
+			this.temporarySessionOpenOptions = buildTemporarySessionOpenOptions();
 			this.fastSessionServices = new FastSessionServices( this );
 
 			this.observer.sessionFactoryCreated( this );
@@ -404,6 +401,13 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			close();
 			throw e;
 		}
+	}
+
+	private SessionBuilder buildTemporarySessionOpenOptions() {
+		return withOptions()
+				.autoClose( false )
+				.flushMode( FlushMode.MANUAL )
+				.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
 	}
 
 	private void prepareEventListeners(MetadataImplementor metadata) {
@@ -481,11 +485,26 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	public Session openSession() throws HibernateException {
-		return this.defaultSessionOpenOptions.openSession();
+		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
+		//We can only use reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
+		if ( currentTenantIdentifierResolver != null ) {
+			return this.withOptions().openSession();
+		}
+		else {
+			return this.defaultSessionOpenOptions.openSession();
+		}
 	}
 
 	public Session openTemporarySession() throws HibernateException {
-		return this.temporarySessionOpenOptions.openSession();
+		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
+		//We can only use reuse the defaultSessionOpenOptions as a constant when there is no TenantIdentifierResolver
+		if ( currentTenantIdentifierResolver != null ) {
+			return buildTemporarySessionOpenOptions()
+					.openSession();
+		}
+		else {
+			return this.temporarySessionOpenOptions.openSession();
+		}
 	}
 
 	public Session getCurrentSession() throws HibernateException {
@@ -1423,8 +1442,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
 
-			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
-				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+			CurrentTenantIdentifierResolver tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			if ( tenantIdentifierResolver != null ) {
+				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
 			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
 		}

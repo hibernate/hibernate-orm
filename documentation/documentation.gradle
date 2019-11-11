@@ -63,6 +63,7 @@ dependencies {
 	testRuntime( libraries.mariadb )
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.hana )
+	testRuntime( libraries.cockroachdb )
 
 	testCompile( project( ':hibernate-jcache' ) )
 	testRuntime( libraries.ehcache3 )

@@ -120,6 +120,14 @@ ext {
                         'jdbc.user'  : 'VLAD',
                         'jdbc.pass'  : 'V1ad_test',
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
-                ]
+                ],
+                cockroachdb : [
+                        'db.dialect' : 'org.hibernate.dialect.CockroachDB192Dialect',
+                        // CockroachDB uses the same pgwire protocol as PostgreSQL, so the driver is the same.
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'root',
+                        'jdbc.pass'  : '',
+                        'jdbc.url'   : 'jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable'
+                ],
         ]
 }

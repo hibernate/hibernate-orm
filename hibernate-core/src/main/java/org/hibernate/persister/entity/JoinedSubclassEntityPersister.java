@@ -1235,15 +1235,20 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
-		CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
-		return new JoinedSubclassDiscriminatorMappingImpl(
-				this,
-				getRootTableName(),
-				getDiscriminatorColumnName(),
-				info.caseSearchedExpression,
-				info.columnReferences,
-				(BasicType) getDiscriminatorType()
-		);
+		if ( explicitDiscriminatorColumnName == null ) {
+			CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
+			return new JoinedSubclassDiscriminatorMappingImpl(
+					this,
+					getRootTableName(),
+					getDiscriminatorColumnName(),
+					info.caseSearchedExpression,
+					info.columnReferences,
+					(BasicType) getDiscriminatorType()
+			);
+		}
+		else {
+			return getDiscriminatorMapping();
+		}
 	}
 
 	private class CaseSearchedExpressionInfo{

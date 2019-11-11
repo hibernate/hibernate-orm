@@ -16,9 +16,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +28,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -39,56 +35,14 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				MixedInheritanceTest.Customer.class,
-				MixedInheritanceTest.DomesticCustomer.class,
-				MixedInheritanceTest.ForeignCustomer.class,
-				MixedInheritanceTest.ItalianCustomer.class
+				JoinedInheritanceWithExplicitDiscriminatorTest.Customer.class,
+				JoinedInheritanceWithExplicitDiscriminatorTest.DomesticCustomer.class,
+				JoinedInheritanceWithExplicitDiscriminatorTest.ForeignCustomer.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class MixedInheritanceTest {
-	@Test
-	public void basicTest(SessionFactoryScope scope) {
-		final EntityPersister customerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( Customer.class );
-		final EntityPersister domesticCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( DomesticCustomer.class );
-		final EntityPersister foreignCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( ForeignCustomer.class );
-
-		final EntityPersister italianCustomerDescriptor = scope.getSessionFactory()
-				.getMetamodel()
-				.findEntityDescriptor( ItalianCustomer.class );
-
-		assert customerDescriptor instanceof JoinedSubclassEntityPersister;
-
-		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert domesticCustomerDescriptor instanceof JoinedSubclassEntityPersister;
-
-		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert foreignCustomerDescriptor instanceof JoinedSubclassEntityPersister;
-
-		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert italianCustomerDescriptor instanceof JoinedSubclassEntityPersister;
-
-		assert italianCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !italianCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert italianCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-	}
-
+public class JoinedInheritanceWithExplicitDiscriminatorTest {
 	@Test
 	public void rootQueryExecutionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -100,37 +54,27 @@ public class MixedInheritanceTest {
 								Customer.class
 						).list();
 
-						assertThat( results.size(), is( 3 ) );
+						assertThat( results.size(), is( 2 ) );
 						boolean foundDomesticCustomer = false;
 						boolean foundForeignCustomer = false;
-						boolean foundItalianCustomer = false;
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
 								final DomesticCustomer customer = (DomesticCustomer) result;
 								assertThat( customer.getName(), is( "domestic" ) );
-								assertThat( customer.getTaxId(), is( "123" ) );
+								assertThat( ( customer ).getTaxId(), is( "123" ) );
 								foundDomesticCustomer = true;
 							}
-							else if ( result.getId() == 2 ) {
+							else {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
-								assertThat( customer.getVat(), is( "987" ) );
+								assertThat( ( customer ).getVat(), is( "987" ) );
 								foundForeignCustomer = true;
-							}
-							else {
-								assertThat( result.getId(), is( 3 ) );
-								final ItalianCustomer customer = (ItalianCustomer) result;
-								assertThat( customer.getName(), is( "italian" ) );
-								assertThat( customer.getVat(), is( "100" ) );
-								assertThat( customer.getCode(), is( "IT" ) );
-								foundItalianCustomer = true;
 							}
 						}
 						assertTrue( foundDomesticCustomer );
 						assertTrue( foundForeignCustomer );
-						assertTrue( foundItalianCustomer );
 					}
 				}
 		);
@@ -153,30 +97,15 @@ public class MixedInheritanceTest {
 					}
 
 					{
-						final List<ForeignCustomer> results = session.createQuery(
+						final ForeignCustomer result = session.createQuery(
 								"select c from ForeignCustomer c",
 								ForeignCustomer.class
-						).list();
+						).uniqueResult();
 
-						assertEquals( results.size(), 2 );
-
-						for ( ForeignCustomer foreignCustomer : results ) {
-							if ( foreignCustomer.getId() == 2 ) {
-								assertTrue( foreignCustomer instanceof ForeignCustomer );
-								assertThat( foreignCustomer.getName(), is( "foreign" ) );
-								assertThat( foreignCustomer.getVat(), is( "987" ) );
-							}
-							else {
-								assertTrue( foreignCustomer instanceof ItalianCustomer );
-								ItalianCustomer italianCustomer = (ItalianCustomer) foreignCustomer;
-								assertThat( italianCustomer.getId(), is( 3 ) );
-								assertThat( italianCustomer.getName(), is( "italian" ) );
-								assertThat( italianCustomer.getVat(), is( "100" ) );
-								assertThat( italianCustomer.getCode(), is( "IT" ) );
-
-							}
-						}
-
+						assertThat( result, notNullValue() );
+						assertThat( result.getId(), is( 2 ) );
+						assertThat( result.getName(), is( "foreign" ) );
+						assertThat( result.getVat(), is( "987" ) );
 					}
 				}
 		);
@@ -188,7 +117,6 @@ public class MixedInheritanceTest {
 				session -> {
 					session.persist( new DomesticCustomer( 1, "domestic", "123" ) );
 					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
-					session.persist( new ItalianCustomer( 3, "italian", "100", "IT" ) );
 				}
 		);
 	}
@@ -202,7 +130,6 @@ public class MixedInheritanceTest {
 								Statement statement = work.createStatement();
 								try {
 									statement.execute( "delete from DomesticCustomer" );
-									statement.execute( "delete from ItalianCustomer" );
 									statement.execute( "delete from ForeignCustomer" );
 									statement.execute( "delete from Customer" );
 								}
@@ -211,6 +138,12 @@ public class MixedInheritanceTest {
 								}
 							}
 					);
+//					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
+//							cust -> session.delete( cust )
+//					);
+//					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
+//							cust -> session.delete( cust )
+//					);
 				}
 		);
 	}
@@ -218,6 +151,7 @@ public class MixedInheritanceTest {
 	@Entity(name = "Customer")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	@Table(name = "Customer")
+	@DiscriminatorColumn(name = "cust_disc")
 	public static abstract class Customer {
 		private Integer id;
 		private String name;
@@ -250,6 +184,7 @@ public class MixedInheritanceTest {
 
 	@Entity(name = "DomesticCustomer")
 	@Table(name = "DomesticCustomer")
+	@DiscriminatorValue( "dc" )
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -272,9 +207,7 @@ public class MixedInheritanceTest {
 
 	@Entity(name = "ForeignCustomer")
 	@Table(name = "ForeignCustomer")
-	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-	@DiscriminatorColumn(name = "cust_type")
-	@DiscriminatorValue("FC")
+	@DiscriminatorValue( "fc" )
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 
@@ -292,28 +225,6 @@ public class MixedInheritanceTest {
 
 		public void setVat(String vat) {
 			this.vat = vat;
-		}
-	}
-
-	@Entity(name = "ItalianCustomer")
-	@DiscriminatorValue("IFC")
-	public static class ItalianCustomer extends ForeignCustomer {
-		private String code;
-
-		public ItalianCustomer() {
-		}
-
-		public ItalianCustomer(Integer id, String name, String vat, String code) {
-			super( id, name, vat );
-			this.code = code;
-		}
-
-		public String getCode() {
-			return code;
-		}
-
-		public void setCode(String code) {
-			this.code = code;
 		}
 	}
 }

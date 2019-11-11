@@ -280,4 +280,5 @@ public class MixedInheritanceTest {
 			this.vat = vat;
 		}
 	}
+
 }

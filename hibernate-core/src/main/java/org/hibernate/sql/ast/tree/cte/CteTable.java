@@ -11,11 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -41,11 +41,11 @@ public class CteTable {
 
 	private final List<CteColumn> cteColumns;
 
-	public CteTable(EntityMappingType entityDescriptor, BootstrapContext bootstrapContext) {
+	public CteTable(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
 
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( bootstrapContext.getTypeConfiguration() );
+		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( runtimeModelCreationContext.getTypeConfiguration() );
 		cteColumns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().visitColumns(
 				(columnExpression, containingTableExpression, jdbcMapping) -> cteColumns.add(

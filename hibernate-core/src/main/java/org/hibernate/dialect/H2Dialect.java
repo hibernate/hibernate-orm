@@ -33,7 +33,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.Queryable;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -372,7 +372,9 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
 				AfterUseAction.NONE,

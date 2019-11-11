@@ -34,6 +34,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -393,7 +394,9 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions

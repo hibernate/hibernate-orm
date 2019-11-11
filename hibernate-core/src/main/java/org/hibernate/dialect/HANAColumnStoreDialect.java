@@ -11,6 +11,7 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -48,7 +49,9 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {

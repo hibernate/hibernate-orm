@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
@@ -27,6 +26,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -284,7 +284,9 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
 				() -> new TempIdTableExporter() {

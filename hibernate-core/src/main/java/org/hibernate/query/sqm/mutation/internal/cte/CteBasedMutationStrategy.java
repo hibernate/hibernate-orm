@@ -8,9 +8,9 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.Locale;
 
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
@@ -89,10 +89,10 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	public CteBasedMutationStrategy(
 			EntityPersister rootDescriptor,
-			BootstrapContext bootstrapContext) {
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
 
-		final Dialect dialect = bootstrapContext.getTypeConfiguration()
+		final Dialect dialect = runtimeModelCreationContext.getTypeConfiguration()
 				.getSessionFactory()
 				.getServiceRegistry()
 				.getService( JdbcServices.class )
@@ -120,7 +120,7 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.cteTable = new CteTable( rootDescriptor, bootstrapContext );
+		this.cteTable = new CteTable( rootDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override

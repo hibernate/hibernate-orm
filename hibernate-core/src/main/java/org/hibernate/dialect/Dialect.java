@@ -93,6 +93,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -1515,7 +1516,9 @@ public abstract class Dialect implements ConversionContext {
 		return getCreateTableString();
 	}
 
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

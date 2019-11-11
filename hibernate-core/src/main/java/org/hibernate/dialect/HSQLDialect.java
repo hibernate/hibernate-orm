@@ -43,7 +43,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
@@ -504,7 +504,9 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		// Hibernate uses this information for temporary tables that it uses for its own operations

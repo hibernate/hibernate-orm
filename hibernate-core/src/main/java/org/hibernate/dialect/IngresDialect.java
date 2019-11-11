@@ -18,7 +18,7 @@ import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -271,7 +271,9 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new GlobalTemporaryTableBulkIdStrategy(

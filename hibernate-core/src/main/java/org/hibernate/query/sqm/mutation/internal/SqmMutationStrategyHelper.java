@@ -19,7 +19,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -78,7 +77,7 @@ public class SqmMutationStrategyHelper {
 		return serviceRegistry.getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
-				.getFallbackSqmMutationStrategy( runtimeRootEntityDescriptor );
+				.getFallbackSqmMutationStrategy( runtimeRootEntityDescriptor, );
 	}
 
 	/**

@@ -164,9 +164,9 @@ public class MappedFetchTests {
 				session -> session.doWork(
 						connection -> {
 							try ( Statement statement = connection.createStatement() ) {
-								statement.execute( "delete nick_names" );
-								statement.execute( "delete simple_entity" );
-								statement.execute( "delete root_entity" );
+								statement.execute( "delete from nick_names" );
+								statement.execute( "delete from simple_entity" );
+								statement.execute( "delete from root_entity" );
 							}
 						}
 				)

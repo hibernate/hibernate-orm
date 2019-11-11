@@ -25,6 +25,7 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -214,7 +215,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( entityDescriptor, basename -> "#" + basename ),
 //				// sql-server, at least needed this dropped after use; strange!

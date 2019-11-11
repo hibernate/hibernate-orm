@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.PostgresUUIDType;
@@ -33,7 +34,9 @@ public class PostgreSQL82Dialect extends PostgreSQL81Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new LocalTemporaryTableBulkIdStrategy(

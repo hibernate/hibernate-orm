@@ -11,6 +11,7 @@ import java.sql.Types;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
@@ -36,7 +37,9 @@ public class DB297Dialect extends DB2Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions

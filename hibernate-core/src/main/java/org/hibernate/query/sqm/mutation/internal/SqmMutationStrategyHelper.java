@@ -7,30 +7,46 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.query.sqm.sql.SqmSelectTranslation;
+import org.hibernate.query.sqm.sql.SqmSelectTranslator;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctivePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * @author Steve Ebersole
@@ -49,7 +65,7 @@ public class SqmMutationStrategyHelper {
 	 * entity hierarchy.
 	 */
 	public static SqmMultiTableMutationStrategy resolveStrategy(
-			RootClass bootRootEntityDescriptor,
+			RootClass bootEntityDescriptor,
 			EntityPersister runtimeRootEntityDescriptor,
 			SessionFactoryOptions options,
 			ServiceRegistry serviceRegistry) {
@@ -213,43 +229,59 @@ public class SqmMutationStrategyHelper {
 	 * or UPDATE SQM query
 	 */
 	public static List<Object> selectMatchingIds(
-			DomainParameterXref domainParameterXref,
 			SqmDeleteOrUpdateStatement sqmDeleteStatement,
+			DomainParameterXref domainParameterXref,
 			ExecutionContext executionContext) {
-		throw new NotYetImplementedFor6Exception( SqmMutationStrategyHelper.class );
+		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final QueryEngine queryEngine = factory.getQueryEngine();
+		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
 
-//		final SqmQuerySpec sqmIdSelectQuerySpec = SqmIdSelectGenerator.generateSqmEntityIdSelect(
-//				sqmDeleteStatement,
-//				executionContext.getSession().getSessionFactory()
-//		);
-//
-//		final SqmSelectToSqlAstConverter sqmConverter = new SqmSelectToSqlAstConverter(
-//				executionContext.getQueryOptions(),
-//				domainParameterXref,
-//				executionContext.getDomainParameterBindingContext().getQueryParameterBindings(),
-//				executionContext.getLoadQueryInfluencers(),
-//				executionContext.getCallback(),
-//				executionContext.getSession().getSessionFactory()
-//		);
-//
-//		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( sqmIdSelectQuerySpec );
-//
-//		final SqmSelectInterpretation sqmSelectInterpretation = sqmConverter.interpret( sqmIdSelect );
-//
-//		final JdbcSelect jdbcSelect = SqlAstSelectToJdbcSelectConverter.interpret(
-//				sqmSelectInterpretation,
-//				executionContext.getSession().getSessionFactory()
-//		);
-//
-//		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
-//				jdbcSelect,
-//				QueryHelper.buildJdbcParameterBindings(
-//						domainParameterXref,
-//						SqmConsumeHelper.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
-//						executionContext
-//				),
-//				executionContext,
-//				row -> row[0]
-//		);
+		final SqmSelectTranslator selectConverter = sqmTranslatorFactory.createSelectTranslator(
+				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getQueryParameterBindings(),
+				executionContext.getLoadQueryInfluencers(),
+				factory
+		);
+
+		final SqmQuerySpec sqmIdSelectQuerySpec = SqmIdSelectGenerator.generateSqmEntityIdSelect(
+				sqmDeleteStatement,
+				executionContext,
+				factory
+		);
+
+		final SqmSelectStatement sqmIdSelect = new SqmSelectStatement( factory.getNodeBuilder() );
+		//noinspection unchecked
+		sqmIdSelect.setQuerySpec( sqmIdSelectQuerySpec );
+
+		final SqmSelectTranslation sqmInterpretation = selectConverter.translate( sqmIdSelect );
+
+		final JdbcServices jdbcServices = factory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( factory ).translate( sqmInterpretation.getSqlAst() );
+
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+				domainParameterXref,
+				sqmInterpretation::getJdbcParamsBySqmParam
+		);
+
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				executionContext.getQueryParameterBindings(),
+				domainParameterXref,
+				jdbcParamsXref,
+				// todo (6.0) : ugh.  this one is important
+				null,
+				executionContext.getSession()
+		);
+
+
+		return factory.getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				row -> row
+		);
 	}
 }

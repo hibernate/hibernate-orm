@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -22,6 +23,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -59,12 +61,14 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final CascadeStyle cascadeStyle;
 
 	private final CollectionPersister collectionDescriptor;
+	private final String separateCollectionTable;
 
 	private final String sqlAliasStem;
 
 	@SuppressWarnings("WeakerAccess")
 	public PluralAttributeMappingImpl(
 			String attributeName,
+			Collection bootDescriptor,
 			PropertyAccess propertyAccess,
 			StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess,
 			CollectionMappingType collectionMappingType,
@@ -90,6 +94,13 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.collectionDescriptor = collectionDescriptor;
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
+
+		if ( bootDescriptor.isOneToMany() ) {
+			separateCollectionTable = null;
+		}
+		else {
+			separateCollectionTable = ( (Joinable) collectionDescriptor ).getTableName();
+		}
 	}
 
 	@Override
@@ -120,6 +131,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	@Override
 	public CollectionIdentifierDescriptor getIdentifierDescriptor() {
 		return identifierDescriptor;
+	}
+
+	@Override
+	public String getSeparateCollectionTable() {
+		return separateCollectionTable;
 	}
 
 	@Override

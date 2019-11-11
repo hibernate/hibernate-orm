@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 /**
@@ -36,7 +36,7 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 
 //		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {

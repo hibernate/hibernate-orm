@@ -41,4 +41,6 @@ public interface PluralAttributeMapping
 	default void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
 		fetchableConsumer.accept( getElementDescriptor() );
 	}
+
+	String getSeparateCollectionTable();
 }

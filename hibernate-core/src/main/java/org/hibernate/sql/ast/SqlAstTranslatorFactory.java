@@ -9,11 +9,25 @@ package org.hibernate.sql.ast;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * Factory for obtaining single-use SQL AST translators
+ *
  * @author Steve Ebersole
  */
 public interface SqlAstTranslatorFactory {
-	SqlAstSelectTranslator buildSelectConverter(SessionFactoryImplementor sessionFactory);
-	SqlAstDeleteTranslator buildDeleteConverter(SessionFactoryImplementor sessionFactory);
+	/**
+	 * Builds a single-use select translator
+	 */
+	SqlAstSelectTranslator buildSelectTranslator(SessionFactoryImplementor sessionFactory);
 
-	// todo (6.0) : update, delete, etc
+	/**
+	 * Builds a single-use delete translator
+	 */
+	SqlAstDeleteTranslator buildDeleteTranslator(SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * Builds a single-use delete translator
+	 */
+	SqlAstInsertSelectTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory);
+
+	// todo (6.0) : update, insert, etc
 }

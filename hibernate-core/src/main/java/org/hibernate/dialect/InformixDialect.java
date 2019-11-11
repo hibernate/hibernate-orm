@@ -11,6 +11,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -25,7 +26,11 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -279,24 +284,23 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				() -> new TempIdTableExporter() {
+					@Override
+					protected String getCreateCommand() {
+						return "create temp table";
+					}
 
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "create temp table";
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						return "with no log";
-//					}
-//				},
-//				AfterUseAction.CLEAN,
-//				null
-//		);
+					@Override
+					protected String getCreateOptions() {
+						return "with no log";
+					}
+				},
+				AfterUseAction.NONE,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 	
 	@Override

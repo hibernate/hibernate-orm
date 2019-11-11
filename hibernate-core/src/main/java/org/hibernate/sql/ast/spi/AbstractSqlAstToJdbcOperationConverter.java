@@ -17,11 +17,11 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 /**
  * @author Steve Ebersole
  */
-public class AbstractSqlAstToJdbcOperationConverter
+public abstract class AbstractSqlAstToJdbcOperationConverter
 		extends AbstractSqlAstWalker
 		implements SqlAstToJdbcOperationConverter {
 
-	private final Set<String> affectedTableExpressions = new HashSet<>();
+	private final Set<String> affectedTableNames = new HashSet<>();
 
 	protected AbstractSqlAstToJdbcOperationConverter(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
@@ -33,8 +33,8 @@ public class AbstractSqlAstToJdbcOperationConverter
 	}
 
 	@Override
-	public Set<String> getAffectedTableExpressions() {
-		return affectedTableExpressions;
+	public Set<String> getAffectedTableNames() {
+		return affectedTableNames;
 	}
 
 	@Override
@@ -48,6 +48,6 @@ public class AbstractSqlAstToJdbcOperationConverter
 	}
 
 	protected void registerAffectedTable(String tableExpression) {
-		affectedTableExpressions.add( tableExpression );
+		affectedTableNames.add( tableExpression );
 	}
 }

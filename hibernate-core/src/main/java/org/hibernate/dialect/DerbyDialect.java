@@ -13,7 +13,7 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -24,7 +24,11 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
@@ -590,31 +594,27 @@ public class DerbyDialect extends DB2Dialect {
 	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
 	 * </pre>
 	 *
-	 * {@link DB2Dialect} returns a {@link org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy} that
+	 * {@link DB2Dialect} returns a {@link org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy} that
 	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
 	 * see HHH-10238.
-	 * </p>
-	 * @return
-	 * @param runtimeRootEntityDescriptor
 	 */
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		return new LocalTemporaryTableBulkIdStrategy(new IdTableSupportStandardImpl() {
-//			@Override
-//			public String generateIdTableName(String baseName) {
-//				return "session." + super.generateIdTableName( baseName );
-//			}
-//
-//			@Override
-//			public String getCreateIdTableCommand() {
-//				return "declare global temporary table";
-//			}
-//
-//			@Override
-//			public String getCreateIdTableStatementOptions() {
-//				return "not logged";
-//			}
-//		}, AfterUseAction.CLEAN, null);
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				() -> new TempIdTableExporter() {
+					@Override
+					protected String getCreateCommand() {
+						return "declare global temporary table";
+					}
+
+					@Override
+					protected String getCreateOptions() {
+						return "not logged";
+					}
+				},
+				AfterUseAction.CLEAN,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 }

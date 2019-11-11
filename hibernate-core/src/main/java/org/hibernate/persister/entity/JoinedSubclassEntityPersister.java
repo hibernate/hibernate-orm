@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -1248,6 +1249,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			return getDiscriminatorMapping();
+		}
+	}
+
+	@Override
+	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+		final AtomicInteger tablePositionWrapper = new AtomicInteger(  );
+
+		for ( String tableName : constraintOrderedTableNames ) {
+			final int tablePosition = tablePositionWrapper.getAndIncrement();
+
+			consumer.consume(
+					tableName,
+					() -> columnConsumer -> {
+						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
+						for ( String column : keyColumnNames ) {
+							columnConsumer.accept( column, tableName, null );
+						}
+					}
+			);
 		}
 	}
 

@@ -16,8 +16,8 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.sql.SqmSelectInterpretation;
-import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmSelectTranslation;
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.StandardSqlAstSelectTranslator;
@@ -77,7 +77,7 @@ public class SmokeTests {
 					//noinspection unchecked
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
-					final StandardSqmSelectToSqlAstConverter sqmConverter = new StandardSqmSelectToSqlAstConverter(
+					final StandardSqmSelectTranslator sqmConverter = new StandardSqmSelectTranslator(
 							hqlQuery.getQueryOptions(),
 							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
@@ -85,7 +85,7 @@ public class SmokeTests {
 							scope.getSessionFactory()
 					);
 
-					final SqmSelectInterpretation sqmInterpretation = sqmConverter.interpret( sqmStatement );
+					final SqmSelectTranslation sqmInterpretation = sqmConverter.translate( sqmStatement );
 					final SelectStatement sqlAst = sqmInterpretation.getSqlAst();
 
 					final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
@@ -112,7 +112,7 @@ public class SmokeTests {
 					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
 					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
-							.interpret( sqlAst );
+							.translate( sqlAst );
 
 					assertThat(
 							jdbcSelectOperation.getSql(),
@@ -131,7 +131,7 @@ public class SmokeTests {
 					//noinspection unchecked
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
-					final StandardSqmSelectToSqlAstConverter sqmConverter = new StandardSqmSelectToSqlAstConverter(
+					final StandardSqmSelectTranslator sqmConverter = new StandardSqmSelectTranslator(
 							hqlQuery.getQueryOptions(),
 							( (QuerySqmImpl) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
@@ -139,7 +139,7 @@ public class SmokeTests {
 							scope.getSessionFactory()
 					);
 
-					final SqmSelectInterpretation sqmInterpretation = sqmConverter.interpret( sqmStatement );
+					final SqmSelectTranslation sqmInterpretation = sqmConverter.translate( sqmStatement );
 					final SelectStatement sqlAst = sqmInterpretation.getSqlAst();
 
 					final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
@@ -214,7 +214,7 @@ public class SmokeTests {
 					assertThat( ( (BasicResultAssembler) resultAssembler ).getValueConverter(), nullValue() );
 
 					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
-							.interpret( sqlAst );
+							.translate( sqlAst );
 
 					assertThat(
 							jdbcSelectOperation.getSql(),

@@ -92,7 +92,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -101,6 +101,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -110,10 +111,7 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.ANSICaseExpressionWalker;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -1517,7 +1515,7 @@ public abstract class Dialect implements ConversionContext {
 		return getCreateTableString();
 	}
 
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -3114,7 +3112,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Note that {@link SessionFactoryOptions#getSqmTranslatorFactory()} has higher
 	 * precedence as it comes directly from the user config
 	 *
-	 * @see org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter
+	 * @see StandardSqmSelectTranslator
 	 * @see QueryEngine#getSqmTranslatorFactory()
 	 */
 	public SqmTranslatorFactory getSqmTranslatorFactory() {

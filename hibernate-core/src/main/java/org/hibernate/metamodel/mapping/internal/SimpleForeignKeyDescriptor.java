@@ -6,10 +6,17 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -23,21 +30,26 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
+	private final String keyColumnContainingTable;
 	private final String keyColumnExpression;
 	private final String targetColumnContainingTable;
 	private final String targetColumnExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public SimpleForeignKeyDescriptor(
+			String keyColumnContainingTable,
 			String keyColumnExpression,
 			String targetColumnContainingTable,
 			String targetColumnExpression,
 			JdbcMapping jdbcMapping) {
+		this.keyColumnContainingTable = keyColumnContainingTable;
 		this.keyColumnExpression = keyColumnExpression;
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpression = targetColumnExpression;
@@ -113,5 +125,52 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 				ComparisonOperator.EQUAL,
 				keyReference
 		);
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return jdbcMapping.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public void visitReferringColumns(ColumnConsumer consumer) {
+		consumer.accept( keyColumnContainingTable, keyColumnExpression, jdbcMapping );
+	}
+
+	@Override
+	public void visitTargetColumns(ColumnConsumer consumer) {
+		consumer.accept( targetColumnContainingTable, targetColumnExpression, jdbcMapping );
+	}
+
+	@Override
+	public void visitColumnMappings(FkColumnMappingConsumer consumer) {
+		consumer.consume( keyColumnContainingTable, keyColumnExpression, targetColumnContainingTable, targetColumnExpression, jdbcMapping );
+	}
+
+	@Override
+	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+		return 1;
+	}
+
+	@Override
+	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+		return Collections.singletonList( jdbcMapping );
+	}
+
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action,
+			Clause clause,
+			TypeConfiguration typeConfiguration) {
+		action.accept( jdbcMapping );
+	}
+
+	@Override
+	public void visitJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( value, jdbcMapping );
 	}
 }

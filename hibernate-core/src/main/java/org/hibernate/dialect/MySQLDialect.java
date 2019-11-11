@@ -17,6 +17,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -33,7 +34,11 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -343,24 +348,24 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType rootEntityDescriptor) {
 
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "create temporary table if not exists";
-//					}
-//
-//					@Override
-//					public String getDropIdTableCommand() {
-//						return "drop temporary table";
-//					}
-//				},
-//				AfterUseAction.DROP,
-//				TempTableDdlTransactionHandling.NONE
-//		);
+		return new LocalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				() -> new TempIdTableExporter() {
+					@Override
+					protected String getCreateCommand() {
+						return "create temporary table if not exists";
+					}
+
+					@Override
+					protected String getDropCommand() {
+						return "drop temporary table";
+					}
+				},
+				AfterUseAction.NONE,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 
 	@Override

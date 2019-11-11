@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteInterpretation;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslation;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -55,7 +55,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			final QueryEngine queryEngine = factory.getQueryEngine();
 
 			final SqmTranslatorFactory converterFactory = queryEngine.getSqmTranslatorFactory();
-			final SimpleSqmDeleteToSqlAstConverter converter = converterFactory.createSimpleDeleteConverter(
+			final SimpleSqmDeleteTranslator converter = converterFactory.createSimpleDeleteTranslator(
 					executionContext.getQueryOptions(),
 					domainParameterXref,
 					executionContext.getQueryParameterBindings(),
@@ -63,12 +63,12 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					factory
 			);
 
-			final SimpleSqmDeleteInterpretation sqmInterpretation = converter.interpret( sqmDelete );
+			final SimpleSqmDeleteTranslation sqmInterpretation = converter.translate( sqmDelete );
 
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-			final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteConverter( factory );
+			final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( factory );
 
 			jdbcDelete = sqlAstTranslator.translate( sqmInterpretation.getSqlAst() );
 

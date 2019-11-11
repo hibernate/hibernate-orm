@@ -11,12 +11,16 @@ import java.util.function.Consumer;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.query.sqm.SqmPathSource;
+
 /**
  * Extension to the JPA {@link IdentifiableType} contract
  *
  * @author Steve Ebersole
  */
 public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, IdentifiableType<J> {
+	SqmPathSource getIdentifierDescriptor();
+
 	@Override
 	<Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> type);
 

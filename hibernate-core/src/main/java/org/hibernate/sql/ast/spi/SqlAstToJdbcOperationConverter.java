@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.Set;
 
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
@@ -18,5 +19,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
  * @author Steve Ebersole
  */
 public interface SqlAstToJdbcOperationConverter extends SqlAstWalker, SqlTypeDescriptorIndicators {
-	Set<String> getAffectedTableExpressions();
+	Set<String> getAffectedTableNames();
+
+	JdbcOperation translate(CteStatement cteStatement);
 }

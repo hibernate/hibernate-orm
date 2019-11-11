@@ -8,6 +8,7 @@ package org.hibernate.sql.ast;
 
 import org.hibernate.sql.ast.spi.SqlAstToJdbcOperationConverter;
 import org.hibernate.sql.ast.spi.SqlSelectAstWalker;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 
@@ -16,4 +17,6 @@ import org.hibernate.sql.exec.spi.JdbcDelete;
  */
 public interface SqlAstDeleteTranslator extends SqlSelectAstWalker, SqlAstToJdbcOperationConverter {
 	JdbcDelete translate(DeleteStatement sqlAst);
+
+	JdbcDelete translate(CteStatement cteStatement);
 }

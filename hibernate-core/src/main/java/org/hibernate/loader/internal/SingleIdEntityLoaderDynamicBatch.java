@@ -99,7 +99,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectConverter( sessionFactory ).interpret( sqlAstDescriptor.getSqlAst() );
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAstDescriptor.getSqlAst() );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				getLoadable().getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )

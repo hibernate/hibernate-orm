@@ -12,6 +12,6 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 /**
  * @author Steve Ebersole
  */
-public interface SimpleSqmDeleteToSqlAstConverter extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
-	SimpleSqmDeleteInterpretation interpret(SqmDeleteStatement statement);
+public interface SimpleSqmDeleteTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+	SimpleSqmDeleteTranslation translate(SqmDeleteStatement statement);
 }

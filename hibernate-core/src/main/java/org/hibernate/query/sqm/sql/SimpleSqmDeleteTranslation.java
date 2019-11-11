@@ -16,11 +16,11 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 /**
  * @author Steve Ebersole
  */
-public class SimpleSqmDeleteInterpretation implements SqmInterpretation {
+public class SimpleSqmDeleteTranslation implements SqmTranslation {
 	private final DeleteStatement sqlAst;
 	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap;
 
-	public SimpleSqmDeleteInterpretation(
+	public SimpleSqmDeleteTranslation(
 			DeleteStatement sqlAst,
 			Map<SqmParameter, List<JdbcParameter>> jdbcParamMap) {
 		this.sqlAst = sqlAst;

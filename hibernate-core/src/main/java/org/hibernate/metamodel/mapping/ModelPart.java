@@ -7,16 +7,11 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -70,20 +65,8 @@ public interface ModelPart extends MappingModelExpressable {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	default void visitColumns(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			ColumnConsumer consumer) {
+	default void visitColumns(ColumnConsumer consumer) {
 
 	}
 
-	@FunctionalInterface
-	interface ColumnConsumer {
-		// todo (6.0) : pass values `updateable`, `checkable`, etc
-		void accept(
-				String columnExpression,
-				String containingTableExpression,
-				JdbcMapping jdbcMapping);
-	}
 }

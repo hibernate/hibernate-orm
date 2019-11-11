@@ -33,11 +33,13 @@ import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
+import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
+import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.StandardSqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteTranslator;
+import org.hibernate.query.sqm.sql.internal.StandardSqmInsertSelectTranslator;
+import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
@@ -145,16 +147,15 @@ public class QueryEngine {
 			return dialect.getSqmTranslatorFactory();
 		}
 
-		//noinspection Convert2Lambda
 		return new SqmTranslatorFactory() {
 			@Override
-			public SqmSelectToSqlAstConverter createSelectConverter(
+			public SqmSelectTranslator createSelectTranslator(
 					QueryOptions queryOptions,
 					DomainParameterXref domainParameterXref,
 					QueryParameterBindings domainParameterBindings,
 					LoadQueryInfluencers influencers,
 					SqlAstCreationContext creationContext) {
-				return new StandardSqmSelectToSqlAstConverter(
+				return new StandardSqmSelectTranslator(
 						queryOptions,
 						domainParameterXref,
 						domainParameterBindings,
@@ -164,13 +165,28 @@ public class QueryEngine {
 			}
 
 			@Override
-			public SimpleSqmDeleteToSqlAstConverter createSimpleDeleteConverter(
+			public SimpleSqmDeleteTranslator createSimpleDeleteTranslator(
 					QueryOptions queryOptions,
 					DomainParameterXref domainParameterXref,
 					QueryParameterBindings domainParameterBindings,
 					LoadQueryInfluencers influencers,
 					SqlAstCreationContext creationContext) {
-				return new StandardSqmDeleteToSqlAstConverter(
+				return new StandardSqmDeleteTranslator(
+						creationContext,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings
+				);
+			}
+
+			@Override
+			public SqmInsertSelectTranslator createInsertSelectTranslator(
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers influencers,
+					SqlAstCreationContext creationContext) {
+				return new StandardSqmInsertSelectTranslator(
 						creationContext,
 						queryOptions,
 						domainParameterXref,

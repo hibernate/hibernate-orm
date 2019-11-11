@@ -7,11 +7,11 @@
 package org.hibernate.query.sqm.sql;
 
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectToSqlAstConverter extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
-	SqmSelectInterpretation interpret(SqmSelectStatement statement);
+public interface SqmInsertSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+	SqmInsertSelectTranslation translate(SqmInsertSelectStatement statement);
 }

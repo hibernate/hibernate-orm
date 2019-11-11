@@ -16,6 +16,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -129,12 +130,8 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public void visitColumns(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			ColumnConsumer consumer) {
-		getEmbeddableTypeDescriptor().visitColumns( navigablePath, tableGroup, creationState, consumer );
+	public void visitColumns(ColumnConsumer consumer) {
+		getEmbeddableTypeDescriptor().visitColumns( consumer );
 	}
 
 	@Override

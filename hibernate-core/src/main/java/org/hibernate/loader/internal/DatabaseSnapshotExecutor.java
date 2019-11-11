@@ -100,9 +100,6 @@ class DatabaseSnapshotExecutor {
 
 		final NavigablePath idPath = rootPath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				idPath,
-				rootTableGroup,
-				state,
 				(col, tab, jdbcMapping) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );
 
@@ -151,9 +148,6 @@ class DatabaseSnapshotExecutor {
 				contributorMapping -> {
 					final NavigablePath attrPath = rootPath.append( contributorMapping.getAttributeName() );
 					contributorMapping.visitColumns(
-							attrPath,
-							rootTableGroup,
-							state,
 							(columnExpression, containingTableExpression, jdbcMapping) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
 										containingTableExpression );
@@ -203,7 +197,7 @@ class DatabaseSnapshotExecutor {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		jdbcSelect = sqlAstTranslatorFactory.buildSelectConverter( sessionFactory ).interpret( selectStatement );
+		jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( selectStatement );
 	}
 
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {

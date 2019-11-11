@@ -13,6 +13,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -214,5 +215,10 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		action.accept( getJdbcMapping() );
+	}
+
+	@Override
+	public void visitColumns(ColumnConsumer consumer) {
+		consumer.accept( mappedColumnExpression, tableExpression, jdbcMapping );
 	}
 }

@@ -25,6 +25,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -46,6 +47,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -134,6 +136,11 @@ public class MappingModelCreationHelper {
 			@Override
 			public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
 				return 1;
+			}
+
+			@Override
+			public void visitColumns(ColumnConsumer consumer) {
+				consumer.accept( getMappedColumnExpression(), getContainingTableExpression(), getJdbcMapping() );
 			}
 
 			@Override
@@ -635,7 +642,7 @@ public class MappingModelCreationHelper {
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;
 
-		String tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
+		final String tableExpression = ( (Joinable) collectionDescriptor ).getTableName();
 
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
@@ -823,6 +830,7 @@ public class MappingModelCreationHelper {
 
 		return new PluralAttributeMappingImpl(
 				attrName,
+				bootValueMapping,
 				propertyAccess,
 				entityMappingType -> contributorMetadata,
 				collectionMappingType,
@@ -869,6 +877,7 @@ public class MappingModelCreationHelper {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
 			return new SimpleForeignKeyDescriptor(
+					bootValueMapping.getKey().getTable().getName(),
 					bootValueMapping.getKey().getColumnIterator().next().getText( dialect ),
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),
@@ -896,10 +905,19 @@ public class MappingModelCreationHelper {
 			fkTarget = referencedEntityDescriptor.findSubPart( bootValueMapping.getReferencedPropertyName() );
 		}
 
+		final JdbcServices jdbcServices = creationProcess.getCreationContext().getSessionFactory().getJdbcServices();
+
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
 			return new SimpleForeignKeyDescriptor(
+					creationProcess.getCreationContext()
+							.getBootstrapContext()
+							.getMetadataBuildingOptions()
+							.getPhysicalNamingStrategy().toPhysicalTableName(
+									bootValueMapping.getTable().getNameIdentifier(),
+									jdbcServices.getJdbcEnvironment()
+					).getText(),
 					bootValueMapping.getColumnIterator().next().getText( dialect ),
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),

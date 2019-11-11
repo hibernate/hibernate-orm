@@ -18,7 +18,7 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
  *
  * @author Steve Ebersole
  */
-public interface SqmInterpretation {
+public interface SqmTranslation {
 	Statement getSqlAst();
 	Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam();
 }

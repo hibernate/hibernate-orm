@@ -30,13 +30,15 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SqmSelectInterpretation;
-import org.hibernate.query.sqm.sql.SqmSelectToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmQuerySpecTranslation;
+import org.hibernate.query.sqm.sql.SqmSelectTranslation;
+import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.JoinType;
@@ -67,9 +69,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author John O'Hara
  */
 @SuppressWarnings("unchecked")
-public class StandardSqmSelectToSqlAstConverter
+public class StandardSqmSelectTranslator
 		extends BaseSqmToSqlAstConverter
-		implements DomainResultCreationState, SqmSelectToSqlAstConverter {
+		implements DomainResultCreationState, SqmSelectTranslator {
 	private final LoadQueryInfluencers fetchInfluencers;
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
@@ -78,7 +80,7 @@ public class StandardSqmSelectToSqlAstConverter
 
 	private GraphImplementor<?> currentJpaGraphNode;
 
-	public StandardSqmSelectToSqlAstConverter(
+	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
@@ -95,9 +97,17 @@ public class StandardSqmSelectToSqlAstConverter
 	}
 
 	@Override
-	public SqmSelectInterpretation interpret(SqmSelectStatement statement) {
-		return new SqmSelectInterpretation(
-				visitSelectStatement( statement ),
+	public SqmSelectTranslation translate(SqmSelectStatement sqmStatement) {
+		return new SqmSelectTranslation(
+				visitSelectStatement( sqmStatement ),
+				getJdbcParamsBySqmParam()
+		);
+	}
+
+	@Override
+	public SqmQuerySpecTranslation translate(SqmQuerySpec querySpec) {
+		return new SqmQuerySpecTranslation(
+				visitQuerySpec( querySpec ),
 				getJdbcParamsBySqmParam()
 		);
 	}
@@ -304,7 +314,7 @@ public class StandardSqmSelectToSqlAstConverter
 					joined,
 					lockMode,
 					alias,
-					StandardSqmSelectToSqlAstConverter.this
+					StandardSqmSelectTranslator.this
 			);
 		}
 		catch (RuntimeException e) {

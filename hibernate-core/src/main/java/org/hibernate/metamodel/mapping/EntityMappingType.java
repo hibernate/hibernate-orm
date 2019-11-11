@@ -152,6 +152,14 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 		// by default do nothing
 	}
 
+	default void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	interface ConstraintOrderedTableConsumer {
+		void consume(String tableExpression, Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier);
+	}
+
 
 	@Override
 	default void visitAttributeMappings(Consumer<AttributeMapping> action) {

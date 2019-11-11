@@ -10,12 +10,20 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
+import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
@@ -36,6 +44,8 @@ public abstract class AbstractIdentifiableType<J>
 	private final boolean hasIdClass;
 	private SingularPersistentAttribute<J,?> id;
 	private Set<SingularPersistentAttribute<? super J,?>> idClassAttributes;
+	private SqmPathSource identifierDescriptor;
+
 
 	private final boolean isVersioned;
 	private SingularPersistentAttribute<J, ?> versionAttribute;
@@ -64,6 +74,11 @@ public abstract class AbstractIdentifiableType<J>
 	@SuppressWarnings("unchecked")
 	public InFlightAccessImpl getInFlightAccess() {
 		return (InFlightAccessImpl) super.getInFlightAccess();
+	}
+
+	@Override
+	public SqmPathSource getIdentifierDescriptor() {
+		return identifierDescriptor;
 	}
 
 	public boolean hasIdClass() {
@@ -173,7 +188,6 @@ public abstract class AbstractIdentifiableType<J>
 	 *
 	 * @return IdClass attributes or {@code null}
 	 */
-	@SuppressWarnings("unchecked")
 	public Set<SingularPersistentAttribute<? super J, ?>> getIdClassAttributesSafely() {
 		if ( !hasIdClass() ) {
 			return null;
@@ -335,6 +349,47 @@ public abstract class AbstractIdentifiableType<J>
 		@Override
 		public void finishUp() {
 			managedTypeAccess.finishUp();
+
+			identifierDescriptor = interpretIdDescriptor();
+		}
+	}
+
+	private static final Logger log = Logger.getLogger( AbstractIdentifiableType.class );
+
+	private SqmPathSource interpretIdDescriptor() {
+		log.tracef( "Interpreting domain-model identifier descriptor" );
+
+		if ( getSuperType() != null ) {
+			return getSuperType().getIdentifierDescriptor();
+		}
+		else if ( id != null ) {
+			// simple id or aggregate composite id
+			final SimpleDomainType<?> type = id.getType();
+			if ( type instanceof BasicDomainType ) {
+				//noinspection unchecked
+				return new BasicSqmPathSource(
+						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						(BasicDomainType) type,
+						Bindable.BindableType.SINGULAR_ATTRIBUTE
+				);
+			}
+			else {
+				assert type instanceof EmbeddableDomainType;
+				final EmbeddableDomainType compositeType = (EmbeddableDomainType) type;
+				//noinspection unchecked
+				return new EmbeddedSqmPathSource(
+						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						compositeType,
+						Bindable.BindableType.SINGULAR_ATTRIBUTE
+				);
+			}
+		}
+		else if ( idClassAttributes != null && ! idClassAttributes.isEmpty() ) {
+			// non-aggregate composite id
+			throw new NotYetImplementedFor6Exception( getClass() );
+		}
+		else {
+			throw new UnsupportedOperationException( "Could not build SqmPathSource for entity identifier : " + getTypeName() );
 		}
 	}
 }

@@ -18,7 +18,9 @@ import org.hibernate.sql.results.spi.DomainResultCreationState;
 /**
  * @author Steve Ebersole
  */
-public interface ForeignKeyDescriptor {
+public interface ForeignKeyDescriptor extends VirtualModelPart {
+	String PART_NAME = "{fk}";
+
 	DomainResult createDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
@@ -27,4 +29,32 @@ public interface ForeignKeyDescriptor {
 			JoinType joinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
+
+	@Override
+	default String getPartName() {
+		return PART_NAME;
+	}
+
+	/**
+	 * Visits the FK "referring" columns
+	 */
+	@Override
+	default void visitColumns(ColumnConsumer consumer) {
+		visitReferringColumns( consumer );
+	}
+
+	void visitReferringColumns(ColumnConsumer consumer);
+
+	void visitTargetColumns(ColumnConsumer consumer);
+
+	void visitColumnMappings(FkColumnMappingConsumer consumer);
+
+	interface FkColumnMappingConsumer {
+		void consume(
+				String referringTable,
+				String referringColumn,
+				String targetTable,
+				String targetColumn,
+				JdbcMapping jdbcMapping);
+	}
 }

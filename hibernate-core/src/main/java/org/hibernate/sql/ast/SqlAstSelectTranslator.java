@@ -20,10 +20,10 @@ public interface SqlAstSelectTranslator extends SqlSelectAstWalker, SqlAstToJdbc
 	/**
 	 * Translate the SelectStatement into the executable JdbcSelect
 	 */
-	JdbcSelect interpret(SelectStatement selectStatement);
+	JdbcSelect translate(SelectStatement selectStatement);
 
 	/**
 	 * Translate the QuerySpec into the executable JdbcSelect
 	 */
-	JdbcSelect interpret(QuerySpec querySpec);
+	JdbcSelect translate(QuerySpec querySpec);
 }

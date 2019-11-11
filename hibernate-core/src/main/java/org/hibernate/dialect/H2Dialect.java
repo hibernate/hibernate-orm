@@ -10,8 +10,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.JDBCException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -32,7 +32,11 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -368,26 +372,12 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "create cached local temporary table if not exists";
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						// actually 2 different options are specified here:
-//						//		1) [on commit drop] - says to drop the table on transaction commit
-//						//		2) [transactional] - says to not perform an implicit commit of any current transaction
-//						return "on commit drop transactional";					}
-//				},
-//				AfterUseAction.CLEAN,
-//				TempTableDdlTransactionHandling.NONE
-//		);
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				AfterUseAction.NONE,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 
 	@Override

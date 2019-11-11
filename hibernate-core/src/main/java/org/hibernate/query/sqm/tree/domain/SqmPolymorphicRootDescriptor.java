@@ -391,6 +391,11 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
+	public SqmPathSource getIdentifierDescriptor() {
+		return null;
+	}
+
+	@Override
 	public <Y> SingularPersistentAttribute<? super T, Y> getId(Class<Y> type) {
 		throw new UnsupportedOperationException(  );
 	}

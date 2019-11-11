@@ -130,6 +130,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -166,6 +167,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
@@ -6189,12 +6192,38 @@ public abstract class AbstractEntityPersister
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 
 		if ( isMultiTable() ) {
-			sqmMultiTableMutationStrategy = null;
-			//sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect().getFallbackSqmMutationStrategy( this )
+			sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
+					this,
+					creationProcess
+			);
 		}
 		else {
 			sqmMultiTableMutationStrategy = null;
 		}
+	}
+
+	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
+			AbstractEntityPersister entityMappingDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		assert entityMappingDescriptor.isMultiTable();
+
+		if ( entityMappingDescriptor.getSuperMappingType() != null ) {
+			return entityMappingDescriptor.getSuperMappingType().getSqmMultiTableMutationStrategy();
+		}
+
+		// we need the boot model so we can have access to the Table
+		final RootClass entityBootDescriptor = (RootClass) creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityMappingDescriptor.getRootEntityName() );
+		final Table rootTable = entityBootDescriptor.getRootTable();
+
+		return SqmMutationStrategyHelper.resolveStrategy(
+				entityBootDescriptor,
+				entityMappingDescriptor,
+				creationProcess.getCreationContext().getSessionFactory().getSessionFactoryOptions() ,
+				creationProcess.getCreationContext().getSessionFactory().getServiceRegistry()
+		);
+
 	}
 
 	@Override

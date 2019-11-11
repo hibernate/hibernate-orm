@@ -252,9 +252,6 @@ public class MetamodelSelectBuilderProcess {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberOfKeyColumns );
 
 			keyPart.visitColumns(
-					keyPath,
-					rootTableGroup,
-					sqlAstCreationState,
 					(columnExpression, containingTableExpression, jdbcMapping) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
 						columnReferences.add(

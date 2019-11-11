@@ -6,16 +6,21 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import java.util.Locale;
+
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
  * @asciidoc
@@ -79,9 +84,43 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SHORT_NAME = "cte";
 	public static final String TABLE_NAME = "id_cte";
 
+	private final EntityPersister rootDescriptor;
+	private final CteTable cteTable;
+
 	public CteBasedMutationStrategy(
 			EntityPersister rootDescriptor,
 			BootstrapContext bootstrapContext) {
+		this.rootDescriptor = rootDescriptor;
+
+		final Dialect dialect = bootstrapContext.getTypeConfiguration()
+				.getSessionFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect();
+
+		if ( !dialect.supportsNonQueryWithCTE() ) {
+			throw new UnsupportedOperationException(
+					getClass().getSimpleName() +
+							" can only be used with Dialects that support CTE that can take UPDATE or DELETE statements as well"
+			);
+		}
+
+		if ( !dialect.supportsValuesList() ) {
+			throw new UnsupportedOperationException(
+					getClass().getSimpleName() +
+							" can only be used with Dialects that support VALUES lists"
+			);
+		}
+
+		if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
+			throw new UnsupportedOperationException(
+					getClass().getSimpleName() +
+							" can only be used with Dialects that support IN clause row-value expressions (for composite identifiers)"
+			);
+		}
+
+		this.cteTable = new CteTable( rootDescriptor, bootstrapContext );
 	}
 
 	@Override
@@ -89,7 +128,28 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			SqmUpdateStatement sqmUpdateStatement,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		checkMatch( sqmUpdateStatement, creationContext );
+
+		return new CteUpdateHandler( cteTable, sqmUpdateStatement, domainParameterXref, this, creationContext );
+	}
+
+	private void checkMatch(SqmDeleteOrUpdateStatement sqmStatement, HandlerCreationContext creationContext) {
+		final String targetEntityName = sqmStatement.getTarget().getEntityName();
+		final EntityPersister targetEntityDescriptor = creationContext.getSessionFactory()
+				.getDomainModel()
+				.getEntityDescriptor( targetEntityName );
+
+		if ( targetEntityDescriptor != rootDescriptor && ! rootDescriptor.isSubclassEntityName( targetEntityDescriptor.getEntityName() ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Target of query [%s] did not match configured entity [%s]",
+							targetEntityName,
+							rootDescriptor.getEntityName()
+					)
+			);
+		}
+
 	}
 
 	@Override
@@ -97,6 +157,8 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		checkMatch( sqmDeleteStatement, creationContext );
+
+		return new CteDeleteHandler( cteTable, sqmDeleteStatement, domainParameterXref, this, creationContext );
 	}
 }

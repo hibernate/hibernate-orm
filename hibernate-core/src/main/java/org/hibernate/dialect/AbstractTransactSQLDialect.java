@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CharIndexFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -24,7 +24,10 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -211,20 +214,13 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityPersister runtimeRootEntityDescriptor) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String generateIdTableName(String baseName) {
-//						return "#" + baseName;
-//					}
-//				},
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( entityDescriptor, basename -> "#" + basename ),
 //				// sql-server, at least needed this dropped after use; strange!
-//				AfterUseAction.DROP,
-//				TempTableDdlTransactionHandling.NONE
-//		);
+				AfterUseAction.DROP,
+				TempTableDdlTransactionHandling.NONE
+		);
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.spi;
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 
@@ -27,7 +28,7 @@ public abstract class AbstractMutationHandler implements Handler {
 		return sqmDeleteOrUpdateStatement;
 	}
 
-	public EntityPersister getEntityDescriptor() {
+	public EntityMappingType getEntityDescriptor() {
 		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
 				.getReferencedPathSource()
 				.getHibernateEntityName();

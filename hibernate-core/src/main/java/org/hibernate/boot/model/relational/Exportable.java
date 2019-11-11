@@ -19,5 +19,5 @@ public interface Exportable {
 	 *
 	 * @return The exporting identifier.
 	 */
-	public String getExportIdentifier();
+	String getExportIdentifier();
 }

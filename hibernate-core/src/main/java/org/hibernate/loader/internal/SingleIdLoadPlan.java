@@ -50,7 +50,7 @@ class SingleIdLoadPlan<T> {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectConverter( sessionFactory ).interpret( sqlAstDescriptor.getSqlAst() );
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAstDescriptor.getSqlAst() );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				restrictivePart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() )

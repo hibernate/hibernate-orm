@@ -8,14 +8,15 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteInterpretation;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslation;
+import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.Clause;
@@ -25,15 +26,22 @@ import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.exec.spi.JdbcDelete;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardSqmDeleteToSqlAstConverter
+public class StandardSqmDeleteTranslator
 		extends BaseSqmToSqlAstConverter
-		implements SimpleSqmDeleteToSqlAstConverter {
+		implements SimpleSqmDeleteTranslator {
 
-	public StandardSqmDeleteToSqlAstConverter(
+	public static JdbcDelete translate(
+			SqmDeleteStatement statement,
+			SessionFactoryImplementor factory) {
+		return null;
+	}
+
+	public StandardSqmDeleteTranslator(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
@@ -42,9 +50,9 @@ public class StandardSqmDeleteToSqlAstConverter
 	}
 
 	@Override
-	public SimpleSqmDeleteInterpretation interpret(SqmDeleteStatement statement) {
+	public SimpleSqmDeleteTranslation translate(SqmDeleteStatement statement) {
 		final DeleteStatement deleteStatement = visitDeleteStatement( statement );
-		return new SimpleSqmDeleteInterpretation(
+		return new SimpleSqmDeleteTranslation(
 				deleteStatement,
 				getJdbcParamsBySqmParam()
 		);

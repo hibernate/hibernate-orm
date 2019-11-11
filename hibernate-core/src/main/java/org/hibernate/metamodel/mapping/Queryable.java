@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 

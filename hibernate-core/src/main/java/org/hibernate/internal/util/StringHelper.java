@@ -119,6 +119,13 @@ public final class StringHelper {
 		return new String( buffer );
 	}
 
+	public static void repeat(String string, int times, String separator, StringBuilder buffer) {
+		buffer.append( string );
+		for ( int i = 1; i < times; i++ ) {
+			buffer.append( separator ).append( string );
+		}
+	}
+
 	public static String replace(String template, String placeholder, String replacement) {
 		return replace( template, placeholder, replacement, false );
 	}

@@ -17,14 +17,21 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
  * @author Steve Ebersole
  */
 public interface SqmTranslatorFactory {
-	SqmSelectToSqlAstConverter createSelectConverter(
+	SqmSelectTranslator createSelectTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers influencers,
 			SqlAstCreationContext creationContext);
 
-	SimpleSqmDeleteToSqlAstConverter createSimpleDeleteConverter(
+	SimpleSqmDeleteTranslator createSimpleDeleteTranslator(
+			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
+			LoadQueryInfluencers influencers,
+			SqlAstCreationContext creationContext);
+
+	SqmInsertSelectTranslator createInsertSelectTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,

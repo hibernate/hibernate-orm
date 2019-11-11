@@ -8,12 +8,15 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.Collections;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstSelectTranslator;
 import org.hibernate.sql.ast.SqlTreePrinter;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.JdbcValuesMappingProducerStandard;
 
@@ -28,13 +31,17 @@ public class StandardSqlAstSelectTranslator
 		extends AbstractSqlAstToJdbcOperationConverter
 		implements SqlAstSelectTranslator {
 
-	@SuppressWarnings("WeakerAccess")
 	public StandardSqlAstSelectTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}
 
 	@Override
-	public JdbcSelect interpret(QuerySpec querySpec) {
+	public JdbcSelect translate(CteStatement cteStatement) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public JdbcSelect translate(QuerySpec querySpec) {
 		visitQuerySpec( querySpec );
 
 		return new JdbcSelect(
@@ -44,12 +51,12 @@ public class StandardSqlAstSelectTranslator
 						querySpec.getSelectClause().getSqlSelections(),
 						Collections.emptyList()
 				),
-				getAffectedTableExpressions()
+				getAffectedTableNames()
 		);
 	}
 
 	@Override
-	public JdbcSelect interpret(SelectStatement sqlAstSelect) {
+	public JdbcSelect translate(SelectStatement sqlAstSelect) {
 		if ( SqlAstTreeLogger.DEBUG_ENABLED ) {
 			SqlTreePrinter.print( sqlAstSelect );
 		}
@@ -63,7 +70,7 @@ public class StandardSqlAstSelectTranslator
 						sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
 						sqlAstSelect.getDomainResultDescriptors()
 				),
-				getAffectedTableExpressions()
+				getAffectedTableNames()
 		);
 	}
 

@@ -6,12 +6,13 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.exec.spi.JdbcDelete;
@@ -20,9 +21,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 /**
  * @author Steve Ebersole
  */
-public class StandardSqlAstDeleteTranslator
-		extends AbstractSqlAstToJdbcOperationConverter
-		implements SqlAstDeleteTranslator {
+public class StandardSqlAstDeleteTranslator extends AbstractSqlAstToJdbcOperationConverter implements SqlAstDeleteTranslator {
 	public StandardSqlAstDeleteTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}
@@ -50,7 +49,7 @@ public class StandardSqlAstDeleteTranslator
 
 			@Override
 			public Set<String> getAffectedTableNames() {
-				return getAffectedTableExpressions();
+				return getAffectedTableNames();
 			}
 		};
 	}
@@ -59,5 +58,49 @@ public class StandardSqlAstDeleteTranslator
 	public void visitColumnReference(ColumnReference columnReference) {
 		// generally we do not want to render the qualifier
 		appendSql( columnReference.getColumnExpression() );
+	}
+
+	@Override
+	public JdbcDelete translate(CteStatement sqlAst) {
+		assert sqlAst.getCteConsumer() instanceof DeleteStatement;
+
+		appendSql( "with " );
+		appendSql( sqlAst.getCteLabel() );
+
+		appendSql( " (" );
+
+		String separator = "";
+
+		for ( int i = 0; i < sqlAst.getCteTable().getCteColumns().size(); i++ ) {
+			final CteColumn cteColumn = sqlAst.getCteTable().getCteColumns().get( i );
+			appendSql( separator );
+			appendSql( cteColumn.getColumnExpression() );
+			separator = ", ";
+		}
+
+		appendSql( ") as (" );
+
+		visitQuerySpec( sqlAst.getCteDefinition() );
+
+		appendSql( ") " );
+
+		translate( (DeleteStatement) sqlAst.getCteConsumer() );
+
+		return new JdbcDelete() {
+			@Override
+			public String getSql() {
+				return StandardSqlAstDeleteTranslator.this.getSql();
+			}
+
+			@Override
+			public List<JdbcParameterBinder> getParameterBinders() {
+				return StandardSqlAstDeleteTranslator.this.getParameterBinders();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
+			}
+		};
 	}
 }

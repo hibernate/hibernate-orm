@@ -1259,22 +1259,21 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
 
-		tableReferenceJoins.forEach(
-				tableReferenceJoin -> {
-					final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
-					if ( discriminatorValuesByTableName.containsKey( joinedTableReference.getTableExpression() ) ) {
-						final ColumnReference identifierColumnReference = getIdentifierColumnReference(
-								joinedTableReference );
-						info.columnReferences.add( identifierColumnReference );
-						addWhen(
-								caseSearchedExpression,
-								joinedTableReference,
-								identifierColumnReference,
-								discriminatorType
-						);
-					}
-				}
-		);
+		for ( int i = tableReferenceJoins.size() - 1; i >= 0; i-- ) {
+			final TableReferenceJoin tableReferenceJoin = tableReferenceJoins.get( i );
+			final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+			if ( discriminatorValuesByTableName.containsKey( joinedTableReference.getTableExpression() ) ) {
+				final ColumnReference identifierColumnReference = getIdentifierColumnReference(
+						joinedTableReference );
+				info.columnReferences.add( identifierColumnReference );
+				addWhen(
+						caseSearchedExpression,
+						joinedTableReference,
+						identifierColumnReference,
+						discriminatorType
+				);
+			}
+		}
 
 		addWhen(
 				caseSearchedExpression,

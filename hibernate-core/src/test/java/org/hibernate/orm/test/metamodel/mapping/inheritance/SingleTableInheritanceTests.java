@@ -4,16 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.metamodel.mapping;
+package org.hibernate.orm.test.metamodel.mapping.inheritance;
 
 import java.util.List;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.Table;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -29,21 +31,19 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @author Andrea Boriero
+ * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = {
-				TablePerClassInheritanceWithConcreteRootTest.Customer.class,
-				TablePerClassInheritanceWithConcreteRootTest.DomesticCustomer.class,
-				TablePerClassInheritanceWithConcreteRootTest.ForeignCustomer.class,
-				TablePerClassInheritanceWithConcreteRootTest.Person.class
-
+				SingleTableInheritanceTests.Customer.class,
+				SingleTableInheritanceTests.DomesticCustomer.class,
+				SingleTableInheritanceTests.ForeignCustomer.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class TablePerClassInheritanceWithConcreteRootTest {
-
+public class SingleTableInheritanceTests {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister customerDescriptor = scope.getSessionFactory()
@@ -56,22 +56,16 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 				.getMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
-		assert customerDescriptor instanceof UnionSubclassEntityPersister;
-
 		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert domesticCustomerDescriptor instanceof UnionSubclassEntityPersister;
+		assert ! customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
+		assert ! customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
 		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
-		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
-
-		assert foreignCustomerDescriptor instanceof UnionSubclassEntityPersister;
+		assert ! domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
 		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
-		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
+		assert ! foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert foreignCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 	}
 
@@ -86,69 +80,23 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 								Customer.class
 						).list();
 
-						assertThat( results.size(), is( 3 ) );
+						assertThat( results.size(), is( 2 ) );
 
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
 								final DomesticCustomer customer = (DomesticCustomer) result;
 								assertThat( customer.getName(), is( "domestic" ) );
-								assertThat( ( customer ).getTaxId(), is( "123" ) );
+								assertThat( (customer).getTaxId(), is( "123" ) );
 							}
-							else if ( result.getId() == 2 ) {
+							else {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
-								assertThat( ( customer ).getVat(), is( "987" ) );
-							}
-							else {
-								assertThat( result.getId(), is( 3 ) );
-								final Customer customer = result;
-								assertThat( customer.getName(), is( "customer" ) );
+								assertThat( (customer).getVat(), is( "987" ) );
 							}
 						}
 
-					}
-				}
-		);
-	}
-
-	@Test
-	public void rootQueryExecutionTest2(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					{
-						// [name, taxId, vat]
-						final List<Person> results = session.createQuery(
-								"select p from Person p",
-								Person.class
-						).list();
-
-						assertThat( results.size(), is( 4 ) );
-
-						for ( Person result : results ) {
-							if ( result.getId() == 1 ) {
-								assertThat( result, instanceOf( DomesticCustomer.class ) );
-								final DomesticCustomer customer = (DomesticCustomer) result;
-								assertThat( customer.getName(), is( "domestic" ) );
-								assertThat( ( customer ).getTaxId(), is( "123" ) );
-							}
-							else if ( result.getId() == 2 ) {
-								assertThat( result.getId(), is( 2 ) );
-								final ForeignCustomer customer = (ForeignCustomer) result;
-								assertThat( customer.getName(), is( "foreign" ) );
-								assertThat( ( customer ).getVat(), is( "987" ) );
-							}
-							else if ( result.getId() == 3 ) {
-								final Customer customer = (Customer) result;
-								assertThat( customer.getName(), is( "customer" ) );
-							}
-							else {
-								assertThat( result.getId(), is( 4 ) );
-								Person person = result;
-								assertThat( person.getAge(), is( 23 ) );
-							}
-						}
 					}
 				}
 		);
@@ -189,11 +137,6 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Person person = new Person( 4 );
-					person.setAge( 23 );
-					session.persist( person );
-
-					session.persist( new Customer( 3, "customer" ) );
 					session.persist( new DomesticCustomer( 1, "domestic", "123" ) );
 					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
 				}
@@ -204,25 +147,30 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 	public void cleanupTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person", Person.class ).list().forEach(
+					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
+							cust -> session.delete( cust )
+					);
+					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
 							cust -> session.delete( cust )
 					);
 				}
 		);
 	}
 
-	@Entity(name = "Person")
-	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	public static class Person {
+	@Entity( name = "Customer" )
+	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
+	@Table( name = "customer" )
+	@DiscriminatorColumn( name = "cust_type" )
+	public static abstract class Customer {
 		private Integer id;
+		private String name;
 
-		private int age;
-
-		Person() {
+		public Customer() {
 		}
 
-		public Person(Integer id) {
+		public Customer(Integer id, String name) {
 			this.id = id;
+			this.name = name;
 		}
 
 		@Id
@@ -234,30 +182,6 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 			this.id = id;
 		}
 
-		public int getAge() {
-			return age;
-		}
-
-		public void setAge(int age) {
-			this.age = age;
-		}
-	}
-
-	@Entity(name = "Customer")
-	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	public static class Customer extends Person {
-
-		private String name;
-
-		public Customer() {
-		}
-
-		public Customer(Integer id, String name) {
-			super( id );
-			this.name = name;
-		}
-
-
 		public String getName() {
 			return name;
 		}
@@ -267,7 +191,8 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 		}
 	}
 
-	@Entity(name = "DomesticCustomer")
+	@Entity( name = "DomesticCustomer" )
+	@DiscriminatorValue( "dc" )
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -288,7 +213,8 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 		}
 	}
 
-	@Entity(name = "ForeignCustomer")
+	@Entity( name = "ForeignCustomer" )
+	@DiscriminatorValue( "fc" )
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 
@@ -308,4 +234,6 @@ public class TablePerClassInheritanceWithConcreteRootTest {
 			this.vat = vat;
 		}
 	}
+
 }
+

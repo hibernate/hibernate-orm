@@ -4,20 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.metamodel.mapping.joined;
+package org.hibernate.orm.test.metamodel.mapping.inheritance.tableperclass;
 
-import java.sql.Statement;
 import java.util.List;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.Table;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -25,33 +21,27 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
 @DomainModel(
 		annotatedClasses = {
-				MixedInheritanceTest.Customer.class,
-				MixedInheritanceTest.DomesticCustomer.class,
-				MixedInheritanceTest.ForeignCustomer.class,
-				MixedInheritanceTest.ItalianForeignCustomer.class
+				TablePerClassInheritanceWithAbstractRootTest.Customer.class,
+				TablePerClassInheritanceWithAbstractRootTest.DomesticCustomer.class,
+				TablePerClassInheritanceWithAbstractRootTest.ForeignCustomer.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-@Tags({
-		@Tag("RunnableIdeTest"),
-})
-public class MixedInheritanceTest {
+public class TablePerClassInheritanceWithAbstractRootTest {
+
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		final EntityPersister customerDescriptor = scope.getSessionFactory()
@@ -64,19 +54,19 @@ public class MixedInheritanceTest {
 				.getMetamodel()
 				.findEntityDescriptor( ForeignCustomer.class );
 
-		assert customerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert customerDescriptor instanceof UnionSubclassEntityPersister;
 
 		assert customerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !customerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert domesticCustomerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert domesticCustomerDescriptor instanceof UnionSubclassEntityPersister;
 
 		assert domesticCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert domesticCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
 		assert !domesticCustomerDescriptor.isTypeOrSuperType( foreignCustomerDescriptor );
 
-		assert foreignCustomerDescriptor instanceof JoinedSubclassEntityPersister;
+		assert foreignCustomerDescriptor instanceof UnionSubclassEntityPersister;
 
 		assert foreignCustomerDescriptor.isTypeOrSuperType( customerDescriptor );
 		assert !foreignCustomerDescriptor.isTypeOrSuperType( domesticCustomerDescriptor );
@@ -95,26 +85,22 @@ public class MixedInheritanceTest {
 						).list();
 
 						assertThat( results.size(), is( 2 ) );
-						boolean foundDomesticCustomer = false;
-						boolean foundForeignCustomer = false;
+
 						for ( Customer result : results ) {
 							if ( result.getId() == 1 ) {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
 								final DomesticCustomer customer = (DomesticCustomer) result;
 								assertThat( customer.getName(), is( "domestic" ) );
 								assertThat( ( customer ).getTaxId(), is( "123" ) );
-								foundDomesticCustomer = true;
 							}
 							else {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
 								assertThat( ( customer ).getVat(), is( "987" ) );
-								foundForeignCustomer = true;
 							}
 						}
-						assertTrue( foundDomesticCustomer );
-						assertTrue( foundForeignCustomer );
+
 					}
 				}
 		);
@@ -165,26 +151,18 @@ public class MixedInheritanceTest {
 	public void cleanupTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.doWork(
-							work -> {
-								Statement statement = work.createStatement();
-								try {
-									statement.execute( "delete from DomesticCustomer" );
-									statement.execute( "delete from ForeignCustomer" );
-									statement.execute( "delete from Customer" );
-								}
-								finally {
-									statement.close();
-								}
-							}
+					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
+							cust -> session.delete( cust )
+					);
+					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
+							cust -> session.delete( cust )
 					);
 				}
 		);
 	}
 
 	@Entity(name = "Customer")
-	@Inheritance(strategy = InheritanceType.JOINED)
-	@Table(name = "Customer")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class Customer {
 		private Integer id;
 		private String name;
@@ -216,7 +194,6 @@ public class MixedInheritanceTest {
 	}
 
 	@Entity(name = "DomesticCustomer")
-	@Table(name = "DomesticCustomer")
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -238,10 +215,6 @@ public class MixedInheritanceTest {
 	}
 
 	@Entity(name = "ForeignCustomer")
-	@Table(name = "ForeignCustomer")
-	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-	@DiscriminatorColumn( name = "cust_type" )
-	@DiscriminatorValue("FC")
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 
@@ -259,28 +232,6 @@ public class MixedInheritanceTest {
 
 		public void setVat(String vat) {
 			this.vat = vat;
-		}
-	}
-
-	@Entity(name = "ItalianForeignCustomer")
-	@DiscriminatorValue("IFC")
-	public static class ItalianForeignCustomer extends ForeignCustomer{
-		private String code;
-
-		public ItalianForeignCustomer() {
-		}
-
-		public ItalianForeignCustomer(Integer id, String name, String vat, String code) {
-			super( id, name, vat );
-			this.code = code;
-		}
-
-		public String getCode() {
-			return code;
-		}
-
-		public void setCode(String code) {
-			this.code = code;
 		}
 	}
 }

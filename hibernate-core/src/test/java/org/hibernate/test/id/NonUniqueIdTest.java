@@ -32,15 +32,19 @@ public class NonUniqueIdTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Before
 	public void setup() {
+		// Drop and recreate table so it has no primary key. The drop is done in a separate transaction because
+		// some databases do not support dropping and recreating in the same transaction.
 		doInHibernate(
 				this::sessionFactory,
 				session -> {
-					// drop and recreate table so it has no primary key
-
 					session.createNativeQuery(
 							"DROP TABLE CATEGORY"
 					).executeUpdate();
-
+				}
+		);
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
 					session.createNativeQuery(
 							"create table CATEGORY( id integer not null, name varchar(255) )"
 					).executeUpdate();

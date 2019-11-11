@@ -18,6 +18,7 @@ import javax.persistence.Lob;
 import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.NClobProxy;
@@ -37,7 +38,8 @@ import static org.junit.Assert.fail;
         value = {
                 PostgreSQL81Dialect.class,
                 MySQL5Dialect.class,
-                AbstractHANADialect.class
+                AbstractHANADialect.class,
+                CockroachDB192Dialect.class
         },
         comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695"
 )

@@ -6220,8 +6220,7 @@ public abstract class AbstractEntityPersister
 		return SqmMutationStrategyHelper.resolveStrategy(
 				entityBootDescriptor,
 				entityMappingDescriptor,
-				creationProcess.getCreationContext().getSessionFactory().getSessionFactoryOptions() ,
-				creationProcess.getCreationContext().getSessionFactory().getServiceRegistry()
+				creationProcess.getCreationContext()
 		);
 
 	}

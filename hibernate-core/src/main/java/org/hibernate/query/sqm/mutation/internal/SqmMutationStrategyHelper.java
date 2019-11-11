@@ -14,7 +14,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -40,7 +41,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -64,20 +64,20 @@ public class SqmMutationStrategyHelper {
 	 * entity hierarchy.
 	 */
 	public static SqmMultiTableMutationStrategy resolveStrategy(
-			RootClass bootEntityDescriptor,
-			EntityPersister runtimeRootEntityDescriptor,
-			SessionFactoryOptions options,
-			ServiceRegistry serviceRegistry) {
-		// todo (6.0) : Planned support for per-entity config
-
-		if ( options.getSqmMultiTableMutationStrategy() != null ) {
-			return options.getSqmMultiTableMutationStrategy();
+			RootClass entityBootDescriptor,
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+		final SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
+		final SqmMultiTableMutationStrategy specifiedStrategy = options.getSqmMultiTableMutationStrategy();
+		if ( specifiedStrategy != null ) {
+			return specifiedStrategy;
 		}
 
-		return serviceRegistry.getService( JdbcServices.class )
+		return sessionFactory.getServiceRegistry().getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect()
-				.getFallbackSqmMutationStrategy( runtimeRootEntityDescriptor, );
+				.getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	/**

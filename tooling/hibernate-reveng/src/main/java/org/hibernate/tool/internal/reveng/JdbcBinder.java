@@ -19,7 +19,13 @@ import java.util.Set;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
+import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
@@ -44,6 +50,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
@@ -61,6 +68,37 @@ import org.jboss.logging.Logger;
  *
  */
 public class JdbcBinder {
+	
+	
+	public static JdbcBinder create(
+			Properties properties, 
+			ReverseEngineeringStrategy reverseEngineeringStrategy) {
+		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySettings(properties)
+				.build();
+		MetadataBuildingOptionsImpl metadataBuildingOptions = 
+				new MetadataBuildingOptionsImpl( serviceRegistry );	
+		BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
+				serviceRegistry, 
+				metadataBuildingOptions);
+		metadataBuildingOptions.setBootstrapContext(bootstrapContext);
+		InFlightMetadataCollectorImpl metadataCollector = 
+				new InFlightMetadataCollectorImpl(
+						bootstrapContext,
+						metadataBuildingOptions);
+		MetadataBuildingContext metadataBuildingContext = 
+				new MetadataBuildingContextRootImpl(
+						bootstrapContext,
+						metadataBuildingOptions, 
+						metadataCollector);
+		return new JdbcBinder(
+				serviceRegistry, 
+				properties, 
+				metadataBuildingContext, 
+				reverseEngineeringStrategy, 
+				(Boolean)properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS));
+		
+	}
 
 	private Properties properties;
 	private static final Logger log = Logger.getLogger(JdbcBinder.class);
@@ -103,6 +141,13 @@ public class JdbcBinder {
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		metadataCollector = mdbc.getMetadataCollector();
 		this.metadata = ((InFlightMetadataCollectorImpl)metadataCollector).buildMetadataInstance(mdbc);
+	}
+	
+	public Metadata readFromDatabase() {
+		MetadataImpl metadata = ((InFlightMetadataCollectorImpl)metadataCollector)
+				.buildMetadataInstance(mdbc);
+		metadata.getTypeConfiguration().scope(mdbc);
+		return readFromDatabase(metadata);
 	}
 	
 	public Metadata readFromDatabase(Metadata metadata) {

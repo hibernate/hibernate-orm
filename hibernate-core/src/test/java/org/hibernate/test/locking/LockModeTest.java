@@ -201,6 +201,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testRefreshWithExplicitHigherLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id );

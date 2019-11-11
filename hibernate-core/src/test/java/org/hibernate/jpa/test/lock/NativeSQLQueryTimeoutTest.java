@@ -6,15 +6,14 @@
  */
 package org.hibernate.jpa.test.lock;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.hibernate.type.IntegerType;
 import org.junit.Test;
 
 import java.util.Map;
@@ -27,6 +26,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL82Dialect.class)
+@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
 @TestForIssue( jiraKey = "HHH-13493")
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
@@ -46,6 +46,7 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 
 				fail("Should have thrown lock timeout exception!");
 			} catch (Exception expected) {
+				expected.printStackTrace();
 				assertTrue(
 					ExceptionUtil.rootCause(expected)
 						.getMessage().contains("canceling statement due to user request")

@@ -6,6 +6,7 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.dialect.CockroachDBNewDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -278,6 +279,14 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsMixedTypeArithmetic implements DialectCheck {
+		public boolean isMatch(Dialect dialect) { return dialect.supportsMixedTypeArithmetic(); }
+	}
+
+	public static class SupportsLoFunctions implements DialectCheck {
+		public boolean isMatch(Dialect dialect) { return  dialect.supportsLoFunctions(); }
+	}
+
 	public static class SupportsNClob implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
@@ -285,7 +294,8 @@ abstract public class DialectChecks {
 				dialect instanceof DB2Dialect ||
 				dialect instanceof PostgreSQL81Dialect ||
 				dialect instanceof SybaseDialect ||
-				dialect instanceof MySQLDialect
+				dialect instanceof MySQLDialect ||
+				dialect instanceof CockroachDBNewDialect
 			);
 		}
 	}

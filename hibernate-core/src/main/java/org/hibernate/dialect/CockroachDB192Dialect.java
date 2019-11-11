@@ -1,31 +1,23 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.PositionSubstringFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.identity.CockroachDB1920IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.PostgreSQL81IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -34,29 +26,21 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
-import org.hibernate.hql.spi.id.local.AfterUseAction;
-import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
-import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * An SQL dialect for Postgres
- * <p/>
- * For discussion of BLOB support in Postgres, as of 8.4, have a peek at
- * <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
- * For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
- *
- * @author Gavin King
+ * An SQL dialect for CockroachDB 19.2 and later. This is the first dialect for CockroachDB. It is largely adapted
+ * from the PostgreSQL dialects, with changes where appropriate.
  */
-@SuppressWarnings("deprecation")
-public class PostgreSQL81Dialect extends Dialect {
+public class CockroachDB192Dialect extends Dialect {
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -76,10 +60,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		}
 	};
 
-	/**
-	 * Constructs a PostgreSQL81Dialect
-	 */
-	public PostgreSQL81Dialect() {
+	public CockroachDB192Dialect() {
 		super();
 		registerColumnType( Types.BIT, "bool" );
 		registerColumnType( Types.BIGINT, "int8" );
@@ -98,9 +79,10 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );
 		registerColumnType( Types.CLOB, "text" );
-		registerColumnType( Types.BLOB, "oid" );
+		registerColumnType( Types.BLOB, "bytea" );
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
 		registerColumnType( Types.OTHER, "uuid" );
+		registerColumnType( Types.JAVA_OBJECT, "json" );
 
 		registerFunction( "abs", new StandardSQLFunction("abs") );
 		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
@@ -120,11 +102,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerFunction( "radians", new StandardSQLFunction("radians", StandardBasicTypes.DOUBLE) );
 		registerFunction( "degrees", new StandardSQLFunction("degrees", StandardBasicTypes.DOUBLE) );
 
-		registerFunction( "stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
-		registerFunction( "variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
-
 		registerFunction( "random", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
-		registerFunction( "rand", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
 
 		registerFunction( "round", new StandardSQLFunction("round") );
 		registerFunction( "trunc", new StandardSQLFunction("trunc") );
@@ -136,7 +114,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
 		registerFunction( "initcap", new StandardSQLFunction("initcap") );
-		registerFunction( "to_ascii", new StandardSQLFunction("to_ascii") );
 		registerFunction( "quote_ident", new StandardSQLFunction("quote_ident", StandardBasicTypes.STRING) );
 		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", StandardBasicTypes.STRING) );
 		registerFunction( "md5", new StandardSQLFunction("md5", StandardBasicTypes.STRING) );
@@ -147,24 +124,15 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		registerFunction( "age", new StandardSQLFunction("age") );
 		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_time", StandardBasicTypes.TIME, false) );
 		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
 		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "localtime", new NoArgSQLFunction("localtime", StandardBasicTypes.TIME, false) );
-		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", StandardBasicTypes.TIMESTAMP, false) );
 		registerFunction( "now", new NoArgSQLFunction("now", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", StandardBasicTypes.STRING) );
 
 		registerFunction( "current_user", new NoArgSQLFunction("current_user", StandardBasicTypes.STRING, false) );
 		registerFunction( "session_user", new NoArgSQLFunction("session_user", StandardBasicTypes.STRING, false) );
 		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
 		registerFunction( "current_database", new NoArgSQLFunction("current_database", StandardBasicTypes.STRING, true) );
 		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", StandardBasicTypes.STRING, true) );
-
-		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.DATE) );
-		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction( "to_number", new StandardSQLFunction("to_number", StandardBasicTypes.BIG_DECIMAL) );
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(","||",")" ) );
 
@@ -178,22 +146,21 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+
 		SqlTypeDescriptor descriptor;
-		switch ( sqlCode ) {
+		switch (sqlCode) {
 			case Types.BLOB: {
-				// Force BLOB binding.  Otherwise, byte[] fields annotated
-				// with @Lob will attempt to use
-				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-				// dialect uses oid for Blobs, byte arrays cannot be used.
-				descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				// Make BLOBs use byte[] storage.
+				descriptor = VarbinaryTypeDescriptor.INSTANCE;
 				break;
 			}
 			case Types.CLOB: {
-				descriptor = ClobTypeDescriptor.CLOB_BINDING;
+				// Make CLOBs use string storage.
+				descriptor = VarcharTypeDescriptor.INSTANCE;
 				break;
 			}
 			default: {
-				descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
+				descriptor = super.getSqlTypeDescriptorOverride(sqlCode);
 				break;
 			}
 		}
@@ -219,11 +186,6 @@ public class PostgreSQL81Dialect extends Dialect {
 	public String getCreateSequenceString(String sequenceName) {
 		//starts with 1, implicitly
 		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
 	}
 
 	@Override
@@ -345,11 +307,6 @@ public class PostgreSQL81Dialect extends Dialect {
 		return true;
 	}
 
-	/**
-	 * Workaround for postgres bug #1453
-	 * <p/>
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		String typeName = getTypeName( sqlType, 1, 1, 0 );
@@ -364,25 +321,6 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public boolean supportsCommentOn() {
 		return true;
-	}
-
-	@Override
-	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-		return new LocalTemporaryTableBulkIdStrategy(
-				new IdTableSupportStandardImpl() {
-					@Override
-					public String getCreateIdTableCommand() {
-						return "create temporary table";
-					}
-
-					@Override
-					public String getCreateIdTableStatementOptions() {
-						return "on commit drop";
-					}
-				},
-				AfterUseAction.CLEAN,
-				null
-		);
 	}
 
 	@Override
@@ -416,8 +354,7 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	/**
-	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Originally contributed by Denny Bartelt.
+	 * Constraint-name extractor for CockroachDB constraint violation exceptions.
 	 */
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override
@@ -425,7 +362,7 @@ public class PostgreSQL81Dialect extends Dialect {
 			final int sqlState = Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) );
 			switch (sqlState) {
 				// CHECK VIOLATION
-				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+				case 23514: return extractUsingTemplate( "failed to satisfy CHECK constraint ","\"", sqle.getMessage() );
 				// UNIQUE VIOLATION
 				case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
 				// FOREIGN KEY VIOLATION
@@ -464,28 +401,10 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		// Register the type of the out param - PostgreSQL uses Types.OTHER
-		statement.registerOutParameter( col++, Types.OTHER );
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		ps.execute();
-		return (ResultSet) ps.getObject( 1 );
-	}
-
-	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
 
-	/**
-	 * only necessary for postgre < 7.4  See http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
-	 * <p/>
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
 		if ( initialValue < 0 && incrementSize > 0 ) {
@@ -528,7 +447,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	@Override
 	public boolean supportsExpectedLobUsagePattern() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -542,81 +461,8 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
-			return " for update nowait";
-		}
-		else {
-			return " for update";
-		}
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
-			return String.format( " for update of %s nowait", aliases );
-		}
-		else {
-			return " for update of " + aliases;
-		}
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
-			return " for share nowait";
-		}
-		else {
-			return " for share";
-		}
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
-			return String.format( " for share of %s nowait", aliases );
-		}
-		else {
-			return " for share of " + aliases;
-		}
-	}
-
-	@Override
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
-	}
-
-	@Override
-	public String getForUpdateNowaitString() {
-		return getForUpdateString() + " nowait ";
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString( aliases ) + " nowait ";
-	}
-
-	@Override
-	public CallableStatementSupport getCallableStatementSupport() {
-		return PostgresCallableStatementSupport.INSTANCE;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
-		if ( position != 1 ) {
-			throw new UnsupportedOperationException( "PostgreSQL only supports REF_CURSOR parameters as the first parameter" );
-		}
-		return (ResultSet) statement.getObject( 1 );
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
-		throw new UnsupportedOperationException( "PostgreSQL only supports accessing REF_CURSOR parameters by position" );
 	}
 
 	@Override
@@ -625,18 +471,8 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new PostgreSQL81IdentityColumnSupport();
-	}
-
-	@Override
 	public boolean supportsNationalizedTypes() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
 	}
 
 	@Override
@@ -650,7 +486,160 @@ public class PostgreSQL81Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLoFunctions() {
+	public boolean supportsIfExistsBeforeTableName() {
 		return true;
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// CockroachDB UUID type is the same as PostgreSQL.
+		typeContributions.contributeType( PostgresUUIDType.INSTANCE );
+	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence if exists " + sequenceName;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
+
+	@Override
+	public String getForUpdateString() {
+		return " for update";
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return getForUpdateSkipLockedString();
+		}
+		else {
+			return super.getWriteLockString( timeout );
+		}
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return getForUpdateSkipLockedString( aliases );
+		}
+		else {
+			return super.getWriteLockString( aliases, timeout );
+		}
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return " for share skip locked";
+		}
+		else {
+			return super.getReadLockString( timeout );
+		}
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		if ( timeout == LockOptions.SKIP_LOCKED ) {
+			return String.format( " for share of %s skip locked", aliases );
+		}
+		else {
+			return super.getReadLockString( aliases, timeout );
+		}
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return " for update skip locked";
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getForUpdateString() + " of " + aliases + " skip locked";
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait ";
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return getForUpdateString( aliases ) + " nowait ";
+	}
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		// CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+		// A later version will add support, so the syntax for locks is added above.
+		return false;
+	}
+
+	@Override
+	public boolean supportsNoWait() {
+		// CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+		// A later version will add support, so the syntax for locks is added above.
+		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new CockroachDB1920IdentityColumnSupport();
+	}
+
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		// A later version of CockroachDB will support the same temp table syntax as PostgreSQL.
+		return new InlineIdsInClauseBulkIdStrategy();
+	}
+
+	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsMixedTypeArithmetic() {
+		return false;
+	}
+
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsLoFunctions() {
+		return false;
 	}
 }

@@ -41,9 +41,12 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
+					session.createSQLQuery( "DROP TABLE IF EXISTS MAIN_TABLE cascade" ).executeUpdate();
+				}
+		);
 
-					session.createSQLQuery( "DROP TABLE MAIN_TABLE" ).executeUpdate();
-
+		doInHibernate(
+				this::sessionFactory, session -> {
 					session.createSQLQuery(
 							"create table MAIN_TABLE( " +
 									"ID integer not null, NAME varchar(255) not null, CODE varchar(10) not null, " +

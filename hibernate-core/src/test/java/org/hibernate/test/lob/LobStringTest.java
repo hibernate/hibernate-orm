@@ -17,10 +17,13 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.CockroachDBNewDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,7 +37,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect({ PostgreSQL81Dialect.class, CockroachDBNewDialect.class })
 public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	private static final int LONG_STRING_SIZE = 3999;
@@ -90,6 +93,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
+	@RequiresDialectFeature(DialectChecks.SupportsLoFunctions.class)
 	public void testUsingStringLobAnnotatedPropertyInNativeQuery() {
 		doInHibernate( this::sessionFactory, session -> {
 						   final List<TestEntity> results = session.createNativeQuery(
@@ -116,6 +120,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
+	@RequiresDialectFeature(DialectChecks.SupportsLoFunctions.class)
 	public void testSelectStringLobAnnotatedInNativeQuery() {
 		doInHibernate( this::sessionFactory, session -> {
 						   final List<String> results = session.createNativeQuery(
@@ -133,6 +138,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
+	@RequiresDialectFeature(DialectChecks.SupportsLoFunctions.class)
 	public void testUsingLobPropertyInNativeQuery() {
 		doInHibernate( this::sessionFactory, session -> {
 						   final List<String> results = session.createNativeQuery(
@@ -150,6 +156,7 @@ public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11477")
+	@RequiresDialectFeature(DialectChecks.SupportsLoFunctions.class)
 	public void testSelectClobPropertyInNativeQuery() {
 		doInHibernate( this::sessionFactory, session -> {
 						   final List<byte[]> results = session.createNativeQuery(

@@ -28,10 +28,7 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.*;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -145,6 +142,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testPessimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -170,6 +168,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testPessimisticForcedIncrementSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

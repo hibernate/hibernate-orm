@@ -85,6 +85,7 @@ dependencies {
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
+	testRuntime( libraries.cockroachdb )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 

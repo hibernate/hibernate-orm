@@ -67,6 +67,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 
 	@Test(timeout = 1000 * 30) //30 seconds
 	@TestForIssue(jiraKey = "HHH-11617")
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {

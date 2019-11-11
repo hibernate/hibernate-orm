@@ -30,10 +30,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
@@ -249,6 +252,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -392,6 +396,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testMultiTableGeneratedId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -515,6 +520,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testMultiTableCollections() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -587,6 +593,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testMultiTableManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

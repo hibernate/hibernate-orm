@@ -6,17 +6,19 @@
  */
 package org.hibernate.test.bytecode.enhancement.javassist;
 
-import javassist.CtClass;
-import org.hibernate.bytecode.enhance.internal.javassist.EnhancerImpl;
-import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import javassist.CtClass;
+
+import org.hibernate.bytecode.enhance.internal.javassist.EnhancerImpl;
+import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;

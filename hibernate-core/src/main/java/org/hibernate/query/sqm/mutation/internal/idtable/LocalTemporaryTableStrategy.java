@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -44,11 +45,12 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 
 	public LocalTemporaryTableStrategy(
 			IdTable idTable,
+			Function<Integer, String> databaseTypeNameResolver,
 			AfterUseAction afterUseAction,
 			TempTableDdlTransactionHandling ddlTransactionHandling) {
 		this(
 				idTable,
-				() -> new TempIdTableExporter( true ),
+				() -> new TempIdTableExporter( true, databaseTypeNameResolver ),
 				afterUseAction,
 				ddlTransactionHandling
 		);
@@ -87,7 +89,7 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 				idTable,
 				idTableExporterAccess,
 				BeforeUseAction.CREATE,
-				AfterUseAction.NONE,
+				afterUseAction,
 				ddlTransactionHandling,
 				domainParameterXref,
 				creationContext

@@ -132,7 +132,6 @@ public class HqlDeleteExecutionTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "No idea why this one fails. H2 complains inserting the temp table that one of the PK values we select is NULL" )
 	public void testJoinedSubclassRootRestrictedDeleteResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -156,6 +155,13 @@ public class HqlDeleteExecutionTests {
 				session -> {
 					final int rows = session.createQuery( "delete from Customer" ).executeUpdate();
 					assertThat( rows, is( 1 ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final int rows = session.createQuery( "delete from Customer" ).executeUpdate();
+					assertThat( rows, is( 0 ) );
 				}
 		);
 	}
@@ -182,7 +188,6 @@ public class HqlDeleteExecutionTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "No idea why this one fails. H2 complains inserting the temp table that one of the PK values we select is NULL" )
 	public void testJoinedSubclassLeafRestrictedDeleteResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -196,11 +201,27 @@ public class HqlDeleteExecutionTests {
 		);
 
 		scope.inTransaction(
-				session -> session.createQuery( "delete ForeignCustomer where name = 'Adventures Abroad'" ).executeUpdate()
+				session -> {
+					final int rows = session.createQuery( "delete ForeignCustomer where name = 'Adventures Abroad'" )
+							.executeUpdate();
+					assertThat( rows, is( 1 ) );
+				}
 		);
 
 		scope.inTransaction(
-				session -> session.createQuery( "delete DomesticCustomer where name = 'Domestic Wonders'" ).executeUpdate()
+				session -> {
+					final int rows = session.createQuery( "delete DomesticCustomer where name = 'Domestic Wonders'" )
+							.executeUpdate();
+					assertThat( rows, is( 1 ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final int rows = session.createQuery( "delete Customer" )
+							.executeUpdate();
+					assertThat( rows, is( 0 ) );
+				}
 		);
 	}
 

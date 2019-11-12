@@ -13,6 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -32,10 +33,29 @@ public class StandardSqlAstInsertSelectTranslator
 	public JdbcInsert translate(InsertSelectStatement sqlAst) {
 		appendSql( "insert into " );
 		appendSql( sqlAst.getTargetTable().getTableExpression() );
-		appendSql( " " );
 
-		// todo (6.0) : for now we do not provide an explicit target columns (VALUES) list - we should...
-		//		it works for our limited usage of insert-select
+		appendSql( " (" );
+		boolean firstPass = true;
+
+		final List<ColumnReference> targetColumnReferences = sqlAst.getTargetColumnReferences();
+		if ( targetColumnReferences == null ) {
+			renderImplicitTargetColumnSpec();
+		}
+		else {
+			for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
+				if ( firstPass ) {
+					firstPass = false;
+				}
+				else {
+					appendSql( ", " );
+				}
+
+				final ColumnReference columnReference = targetColumnReferences.get( i );
+				appendSql( columnReference.getColumnExpression() );
+			}
+		}
+
+		appendSql( ") " );
 
 		visitQuerySpec( sqlAst.getSourceSelectStatement() );
 
@@ -55,6 +75,9 @@ public class StandardSqlAstInsertSelectTranslator
 				return StandardSqlAstInsertSelectTranslator.this.getAffectedTableNames();
 			}
 		};
+	}
+
+	private void renderImplicitTargetColumnSpec() {
 	}
 
 	@Override

@@ -289,7 +289,7 @@ public class InformixDialect extends Dialect {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
-				() -> new TempIdTableExporter() {
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {
 						return "create temp table";

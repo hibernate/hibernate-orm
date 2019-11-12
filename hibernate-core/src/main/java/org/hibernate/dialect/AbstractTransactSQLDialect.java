@@ -221,6 +221,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( entityDescriptor, basename -> "#" + basename ),
 //				// sql-server, at least needed this dropped after use; strange!
+				this::getTypeName,
 				AfterUseAction.DROP,
 				TempTableDdlTransactionHandling.NONE
 		);

@@ -49,12 +49,16 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.UUIDCharType;
 
+import org.jboss.logging.Logger;
+
 /**
  * Support for {@link Handler} implementations
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractTableBasedHandler extends AbstractMutationHandler {
+	private static final Logger log = Logger.getLogger( AbstractTableBasedHandler.class );
+
 	private final IdTable idTable;
 	private final TempTableDdlTransactionHandling ddlTransactionHandling;
 	private final BeforeUseAction beforeUseAction;
@@ -151,6 +155,7 @@ public abstract class AbstractTableBasedHandler extends AbstractMutationHandler 
 		try {
 			// 1) save the matching ids into the id table
 			final int affectedRowCount = saveMatchingIdsIntoIdTable( executionContext );
+			log.debugf( "insert for matching ids resulted in %s rows", affectedRowCount );
 
 			// 2) perform the actual individual update or deletes, using
 			// 		inclusion in the id-table as restriction
@@ -230,6 +235,12 @@ public abstract class AbstractTableBasedHandler extends AbstractMutationHandler 
 		insertSelectStatement.setTargetTable( idTableReference );
 		insertSelectStatement.setSourceSelectStatement( sqmIdSelectTranslation.getSqlAst() );
 
+		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
+			final IdTableColumn column = idTable.getIdTableColumns().get( i );
+			insertSelectStatement.addTargetColumnReferences(
+					new ColumnReference( idTableReference, column.getColumnName(), column.getJdbcMapping(), factory )
+			);
+		}
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();

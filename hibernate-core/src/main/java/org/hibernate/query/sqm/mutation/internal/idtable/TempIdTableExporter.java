@@ -16,13 +16,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 @SuppressWarnings("WeakerAccess")
 public class TempIdTableExporter implements IdTableExporter {
 	private final boolean isLocal;
+	private final Function<Integer, String> databaseTypeNameResolver;
 
-	public TempIdTableExporter() {
-		this( true );
-	}
-
-	public TempIdTableExporter(boolean isLocal) {
+	public TempIdTableExporter(
+			boolean isLocal,
+			Function<Integer, String> databaseTypeNameResolver) {
 		this.isLocal = isLocal;
+		this.databaseTypeNameResolver = databaseTypeNameResolver;
 	}
 
 	protected String getCreateCommand() {
@@ -57,7 +57,12 @@ public class TempIdTableExporter implements IdTableExporter {
 			}
 
 			buffer.append( column.getColumnName() ).append( ' ' );
-			buffer.append( column.getSqlTypeDefinition() );
+			final String databaseTypeName = databaseTypeNameResolver.apply(
+					column.getJdbcMapping().getSqlTypeDescriptor().getSqlType()
+			);
+
+			buffer.append( " " ).append( databaseTypeName ).append( " " );
+
 			// id values cannot be null
 			buffer.append( " not null" );
 		}

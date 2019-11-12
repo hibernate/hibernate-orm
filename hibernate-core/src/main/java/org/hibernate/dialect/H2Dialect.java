@@ -377,7 +377,8 @@ public class H2Dialect extends Dialect {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
-				AfterUseAction.NONE,
+				this::getTypeName,
+				AfterUseAction.CLEAN,
 				TempTableDdlTransactionHandling.NONE
 		);
 	}

@@ -11,6 +11,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
+import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -605,7 +606,7 @@ public class DerbyDialect extends DB2Dialect {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
 				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
-				() -> new TempIdTableExporter() {
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {
 						return "declare global temporary table";

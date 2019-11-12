@@ -34,12 +34,17 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import org.jboss.logging.Logger;
+
 /**
 * @author Steve Ebersole
 */
 public class TableBasedDeleteHandler
 		extends AbstractTableBasedHandler
 		implements DeleteHandler {
+
+	private static final Logger log = Logger.getLogger( TableBasedDeleteHandler.class );
+
 
 	public TableBasedDeleteHandler(
 			SqmDeleteStatement sqmDeleteStatement,
@@ -70,6 +75,8 @@ public class TableBasedDeleteHandler
 
 	@Override
 	protected void performMutations(ExecutionContext executionContext) {
+		log.trace( "performMutations - " + getEntityDescriptor().getEntityName() );
+
 		// create the selection of "matching ids" from the id-table.  this is used as the subquery in
 		// used to restrict the deletions from each table
 		final QuerySpec idTableSelectSubQuerySpec = createIdTableSubQuery( executionContext );
@@ -119,6 +126,8 @@ public class TableBasedDeleteHandler
 			Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSelectSubQuery,
 			ExecutionContext executionContext) {
+		log.trace( "deleteFrom - " + tableExpression );
+
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( getEntityDescriptor() );
@@ -155,15 +164,18 @@ public class TableBasedDeleteHandler
 		final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( factory );
 		final JdbcDelete jdbcDelete = sqlAstTranslator.translate( deleteStatement );
 
-		jdbcServices.getJdbcDeleteExecutor().execute(
+		final int rows = jdbcServices.getJdbcDeleteExecutor().execute(
 				jdbcDelete,
 				JdbcParameterBindings.NO_BINDINGS,
 				sql -> executionContext.getSession()
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {},
+				(integer, preparedStatement) -> {
+				},
 				executionContext
 		);
+
+		log.debugf( "delete-from `%s` : %s rows", tableExpression, rows );
 	}
 }

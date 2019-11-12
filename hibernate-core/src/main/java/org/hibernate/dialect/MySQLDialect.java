@@ -354,7 +354,7 @@ public class MySQLDialect extends Dialect {
 
 		return new LocalTemporaryTableStrategy(
 				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
-				() -> new TempIdTableExporter() {
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {
 						return "create temporary table if not exists";

@@ -77,7 +77,7 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 					idTable,
 					ddlTransactionHandling,
 					domainParameterXref,
-					BeforeUseAction.NONE,
+					BeforeUseAction.CREATE,
 					afterUseAction,
 					sessionContractImplementor -> null,
 					creationContext

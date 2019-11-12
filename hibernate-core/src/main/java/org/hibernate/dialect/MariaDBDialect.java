@@ -6,11 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-
 /**
  * @author Vlad Mihalcea
  */
@@ -21,18 +16,6 @@ public class MariaDBDialect extends MySQL5Dialect {
 
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteBasedMutationStrategy( rootEntityDescriptor.getEntityPersister(), runtimeModelCreationContext );
 	}
 
 	@Override

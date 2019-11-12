@@ -365,7 +365,7 @@ public class MySQLDialect extends Dialect {
 						return "drop temporary table";
 					}
 				},
-				AfterUseAction.NONE,
+				AfterUseAction.DROP,
 				TempTableDdlTransactionHandling.NONE
 		);
 	}

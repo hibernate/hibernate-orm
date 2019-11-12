@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -913,6 +914,7 @@ public class MappingModelCreationHelper {
 
 		final ModelPart fkTarget;
 		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
+			referencedEntityDescriptor.prepareMappingModel( creationProcess );
 			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
@@ -924,15 +926,26 @@ public class MappingModelCreationHelper {
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
+			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+			String keyColumnExpression;
+			final Identifier identifier = creationProcess.getCreationContext()
+					.getBootstrapContext()
+					.getMetadataBuildingOptions()
+					.getPhysicalNamingStrategy().toPhysicalTableName(
+							bootValueMapping.getTable().getNameIdentifier(),
+							jdbcServices.getJdbcEnvironment()
+					);
+
+			if ( columnIterator.hasNext() ) {
+				keyColumnExpression = columnIterator.next().getText( dialect );
+			}
+			else {
+				// case of ToOne with @PrimaryKeyJoinColumn
+				keyColumnExpression = identifier.getText();
+			}
 			return new SimpleForeignKeyDescriptor(
-					creationProcess.getCreationContext()
-							.getBootstrapContext()
-							.getMetadataBuildingOptions()
-							.getPhysicalNamingStrategy().toPhysicalTableName(
-									bootValueMapping.getTable().getNameIdentifier(),
-									jdbcServices.getJdbcEnvironment()
-					).getText(),
-					bootValueMapping.getColumnIterator().next().getText( dialect ),
+					identifier.getText(),
+					keyColumnExpression,
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),
 					simpleFkTarget.getJdbcMapping()

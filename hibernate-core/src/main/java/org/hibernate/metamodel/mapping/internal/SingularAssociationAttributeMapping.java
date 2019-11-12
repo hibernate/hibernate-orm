@@ -6,11 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -27,15 +23,14 @@ import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetch;
 import org.hibernate.sql.results.internal.domain.entity.EntityFetchImpl;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -78,7 +73,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	@Override
 	public EntityMappingType getEntityMappingType() {
-		return (EntityMappingType)getMappedTypeDescriptor();
+		return getMappedTypeDescriptor();
 	}
 
 	@Override
@@ -96,24 +91,26 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess()
 					.getTableGroup( fetchParent.getNavigablePath() );
 
-			// todo (6.0) : determine the correct JoinType
-			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-					fetchablePath,
-					lhsTableGroup,
-					null,
-					JoinType.INNER,
-					lockMode,
-					creationState.getSqlAliasBaseManager(),
-					creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-					creationState.getSqlAstCreationState().getCreationContext()
-			);
+			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
+				// todo (6.0) : determine the correct JoinType
+				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+						fetchablePath,
+						lhsTableGroup,
+						null,
+						JoinType.INNER,
+						lockMode,
+						creationState.getSqlAliasBaseManager(),
+						creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+						creationState.getSqlAstCreationState().getCreationContext()
+				);
 
-			lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+				lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
-			sqlAstCreationState.getFromClauseAccess().registerTableGroup(
-					fetchablePath,
-					tableGroupJoin.getJoinedGroup()
-			);
+				sqlAstCreationState.getFromClauseAccess().registerTableGroup(
+						fetchablePath,
+						tableGroupJoin.getJoinedGroup()
+				);
+			}
 
 			return new EntityFetchImpl(
 					fetchParent,
@@ -181,6 +178,15 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		);
 
 		lhs.addTableGroupJoin( tableGroupJoin );
+
+		final Predicate predicate = foreignKeyDescriptor.generateJoinPredicate(
+				lhs,
+				tableGroup,
+				joinType,
+				sqlExpressionResolver,
+				creationContext
+		);
+		tableGroupJoin.applyPredicate( predicate );
 
 		return tableGroupJoin;
 	}

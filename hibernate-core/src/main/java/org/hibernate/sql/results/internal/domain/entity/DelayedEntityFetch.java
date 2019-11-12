@@ -6,19 +6,16 @@
  */
 package org.hibernate.sql.results.internal.domain.entity;
 
-import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParentAccess;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityInitializer;
@@ -81,7 +78,7 @@ public class DelayedEntityFetch implements Fetch {
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		EntityInitializer entityInitializer = new DelayedEntityFectInitializer(
+		EntityInitializer entityInitializer = new DelayedEntityFetchInitializer(
 				parentAccess,
 				navigablePath,
 				(EntityPersister) fetchedAttribute.getMappedTypeDescriptor()
@@ -91,7 +88,7 @@ public class DelayedEntityFetch implements Fetch {
 
 	}
 
-	private static class DelayedEntityFectInitializer extends AbstractFetchParentAccess implements EntityInitializer {
+	private static class DelayedEntityFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 		private final FetchParentAccess parentAccess;
 		private final NavigablePath navigablePath;
@@ -99,7 +96,7 @@ public class DelayedEntityFetch implements Fetch {
 
 		private Object entityInstance;
 
-		protected DelayedEntityFectInitializer(
+		protected DelayedEntityFetchInitializer(
 				FetchParentAccess parentAccess,
 				NavigablePath fetchedNavigable,
 				EntityPersister concreteDescriptor

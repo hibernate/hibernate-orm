@@ -64,8 +64,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 		if ( tableReference == null ) {
 			for ( TableReferenceJoin tableJoin : tableJoins ) {
 				if ( tableJoin.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
-					tableReference = tableJoin.getJoinedTableReference();
+					return tableJoin.getJoinedTableReference();
 				}
+			}
+		}
+		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
+				return primaryTableReference;
 			}
 		}
 		return tableReference;

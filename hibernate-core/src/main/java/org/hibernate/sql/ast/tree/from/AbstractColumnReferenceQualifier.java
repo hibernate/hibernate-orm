@@ -56,6 +56,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 				return tableJoin.getJoinedTableReference();
 			}
 		}
+
 		return null;
 	}
 

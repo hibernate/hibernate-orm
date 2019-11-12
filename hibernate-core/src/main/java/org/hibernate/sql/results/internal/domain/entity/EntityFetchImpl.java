@@ -52,8 +52,12 @@ public class EntityFetchImpl implements Fetch {
 		this.navigablePath = navigablePath;
 		this.fkResult = fkResult;
 
-		entityResult = new EntityResultImpl( navigablePath,
-											 (EntityValuedModelPart) fetchedAttribute.getMappedTypeDescriptor(), null, creationState );
+		entityResult = new EntityResultImpl(
+				navigablePath,
+				(EntityValuedModelPart) fetchedAttribute.getMappedTypeDescriptor(),
+				null,
+				creationState
+		);
 
 	}
 

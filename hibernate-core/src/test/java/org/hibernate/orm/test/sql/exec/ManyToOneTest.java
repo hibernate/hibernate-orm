@@ -75,6 +75,7 @@ public class ManyToOneTest {
 				session -> {
 					SimpleEntity simpleEntity = new SimpleEntity();
 					simpleEntity.setId( 1 );
+					simpleEntity.setName( "Fab" );
 					session.save( simpleEntity );
 					OtherEntity otherEntity = new OtherEntity();
 					otherEntity.setId( 2 );

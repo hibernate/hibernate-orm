@@ -6198,8 +6198,6 @@ public abstract class AbstractEntityPersister
 			accessOptimizer = null;
 		}
 
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-
 		if ( isMultiTable() ) {
 			sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
 					this,

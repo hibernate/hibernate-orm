@@ -18,13 +18,10 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  * @author Steve Ebersole
  */
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
-	private final SqmQuerySource querySource;
-
 	private SqmQuerySpec selectQuerySpec;
 
 	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
-		super( targetRoot, nodeBuilder );
-		querySource = SqmQuerySource.HQL;
+		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
 	}
 
 	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -34,9 +31,9 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 						null,
 						nodeBuilder
 				),
+				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
-		querySource = SqmQuerySource.CRITERIA;
 	}
 
 	public SqmQuerySpec getSelectQuerySpec() {
@@ -50,11 +47,6 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitInsertSelectStatement( this );
-	}
-
-	@Override
-	public SqmQuerySource getQuerySource() {
-		return querySource;
 	}
 
 	@Override

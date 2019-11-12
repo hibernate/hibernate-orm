@@ -32,7 +32,7 @@ public class CteTableGroup implements TableGroup {
 	private final TableReference cteTableReference;
 
 	public CteTableGroup(TableReference cteTableReference) {
-		this.navigablePath = new NavigablePath( CteBasedMutationStrategy.SHORT_NAME );
+		this.navigablePath = new NavigablePath( CteBasedMutationStrategy.TABLE_NAME );
 		this.cteTableReference = cteTableReference;
 	}
 

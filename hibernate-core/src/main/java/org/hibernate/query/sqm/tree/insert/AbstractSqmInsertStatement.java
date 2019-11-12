@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -24,12 +25,12 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatement<T> implements SqmInsertStatement<T> {
 	private List<SqmPath> insertionTargetPaths;
 
-	protected AbstractSqmInsertStatement(NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+	protected AbstractSqmInsertStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		super( querySource, nodeBuilder );
 	}
 
-	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
-		super( targetRoot, nodeBuilder );
+	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		super( targetRoot, querySource, nodeBuilder );
 	}
 
 	@Override

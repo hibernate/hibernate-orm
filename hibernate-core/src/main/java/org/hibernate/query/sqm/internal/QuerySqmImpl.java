@@ -47,7 +47,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -562,13 +561,19 @@ public class QuerySqmImpl<R>
 		final String entityNameToUpdate = sqmStatement.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
 
-		final UpdateHandler updateHandler = entityDescriptor.getSqmMultiTableMutationStrategy().buildUpdateHandler(
-				sqmStatement,
-				domainParameterXref,
-				this::getSessionFactory
-		);
-
-		return new UpdateQueryPlanImpl( sqmStatement, updateHandler, this );
+		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
+		if ( multiTableStrategy == null ) {
+			return new SimpleUpdateQueryPlan( sqmStatement, domainParameterXref );
+		}
+		else {
+			return new MultiTableUpdateQueryPlan(
+					multiTableStrategy.buildUpdateHandler(
+							sqmStatement,
+							domainParameterXref,
+							this::getSessionFactory
+					)
+			);
+		}
 	}
 
 	@Override

@@ -54,8 +54,8 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		if ( jdbcDelete == null ) {
 			final QueryEngine queryEngine = factory.getQueryEngine();
 
-			final SqmTranslatorFactory converterFactory = queryEngine.getSqmTranslatorFactory();
-			final SimpleSqmDeleteTranslator converter = converterFactory.createSimpleDeleteTranslator(
+			final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
+			final SimpleSqmDeleteTranslator translator = translatorFactory.createSimpleDeleteTranslator(
 					executionContext.getQueryOptions(),
 					domainParameterXref,
 					executionContext.getQueryParameterBindings(),
@@ -63,7 +63,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					factory
 			);
 
-			final SimpleSqmDeleteTranslation sqmInterpretation = converter.translate( sqmDelete );
+			final SimpleSqmDeleteTranslation sqmInterpretation = translator.translate( sqmDelete );
 
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();

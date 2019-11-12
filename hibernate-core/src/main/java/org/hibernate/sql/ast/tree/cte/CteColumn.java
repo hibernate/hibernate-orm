@@ -7,24 +7,19 @@
 package org.hibernate.sql.ast.tree.cte;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.tree.cte.CteTable;
 
 /**
+ * Information about a column in the CTE table
+ *
  * @author Steve Ebersole
  */
 public class CteColumn {
-	private final CteTable cteTable;
 	private final String columnExpression;
 	private final JdbcMapping jdbcMapping;
 
-	public CteColumn(CteTable cteTable, String columnExpression, JdbcMapping jdbcMapping) {
-		this.cteTable = cteTable;
+	public CteColumn(String columnExpression, JdbcMapping jdbcMapping) {
 		this.columnExpression = columnExpression;
 		this.jdbcMapping = jdbcMapping;
-	}
-
-	public CteTable getCteTable() {
-		return cteTable;
 	}
 
 	public String getColumnExpression() {

@@ -12,6 +12,6 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 /**
  * @author Steve Ebersole
  */
-public interface SqmInsertSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+public interface SqmInsertSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, SqmTranslator {
 	SqmInsertSelectTranslation translate(SqmInsertSelectStatement statement);
 }

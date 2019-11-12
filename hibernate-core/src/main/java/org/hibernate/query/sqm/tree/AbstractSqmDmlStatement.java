@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -18,12 +19,12 @@ public abstract class AbstractSqmDmlStatement<E>
 		implements SqmDmlStatement<E> {
 	private SqmRoot<E> target;
 
-	public AbstractSqmDmlStatement(NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+	public AbstractSqmDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		super( querySource, nodeBuilder );
 	}
 
-	public AbstractSqmDmlStatement(SqmRoot<E> target, NodeBuilder nodeBuilder) {
-		this( nodeBuilder );
+	public AbstractSqmDmlStatement(SqmRoot<E> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		this( querySource, nodeBuilder );
 		this.target = target;
 	}
 

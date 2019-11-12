@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.delete;
 
 import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -15,7 +16,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class DeleteStatement implements MutationStatement {
+public class DeleteStatement implements MutationStatement, CteConsumer {
 	private final TableReference targetTable;
 	private final Predicate restriction;
 

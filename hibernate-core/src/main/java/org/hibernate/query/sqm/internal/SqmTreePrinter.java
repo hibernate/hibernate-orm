@@ -12,6 +12,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogger;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
@@ -281,6 +283,20 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			);
 		}
 
+		return null;
+	}
+
+	@Override
+	public Object visitCteStatement(SqmCteStatement sqmCteStatement) {
+		if ( DEBUG_ENABLED ) {
+			logIndented( "cte" );
+		}
+
+		return null;
+	}
+
+	@Override
+	public Object visitCteConsumer(SqmCteConsumer consumer) {
 		return null;
 	}
 

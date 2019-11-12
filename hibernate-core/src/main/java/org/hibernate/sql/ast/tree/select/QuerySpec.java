@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -21,7 +22,7 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec implements SqlAstNode, PredicateContainer {
+public class QuerySpec implements SqlAstNode, PredicateContainer, CteConsumer {
 	private final boolean isRoot;
 
 	private final FromClause fromClause;

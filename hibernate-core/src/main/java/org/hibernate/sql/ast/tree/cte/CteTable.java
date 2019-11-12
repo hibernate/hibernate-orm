@@ -13,9 +13,9 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
 import org.hibernate.sql.ast.Clause;
@@ -29,33 +29,36 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Describes the CTE and exposes ways to consume it
+ * Describes the table definition for the CTE - its name amd its columns
  *
  * @author Steve Ebersole
  */
 public class CteTable {
-	private final EntityMappingType entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final List<CteColumn> cteColumns;
 
-	public CteTable(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-		this.entityDescriptor = entityDescriptor;
+	public CteTable(EntityMappingType entityDescriptor, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
 
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( runtimeModelCreationContext.getTypeConfiguration() );
+		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( typeConfiguration );
 		cteColumns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().visitColumns(
 				(columnExpression, containingTableExpression, jdbcMapping) -> cteColumns.add(
 						new CteColumn(
-								this,
 								"cte_" + columnExpression,
 								jdbcMapping
 						)
 				)
 		);
+	}
+
+	public CteTable(List<CteColumn> cteColumns, SessionFactoryImplementor sessionFactory) {
+		this.cteColumns = cteColumns;
+		this.sessionFactory = sessionFactory;
 	}
 
 	public String getTableExpression() {
@@ -68,12 +71,14 @@ public class CteTable {
 
 	public QuerySpec createCteDefinition(
 			List<?> matchingIds,
+			Bindable bindable,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
 
 		final TableReference tableValueConstructorReference = createCteDefinitionTableValueCtor(
 				matchingIds,
+				bindable,
 				jdbcParameterBindings,
 				executionContext
 		);
@@ -96,7 +101,8 @@ public class CteTable {
 	}
 
 	private TableReference createCteDefinitionTableValueCtor(
-			List<?> matchingIds,
+			List<?> matchingValues,
+			Bindable bindable,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		// use `DerivedTable` as the TableValueConstructor
@@ -106,17 +112,14 @@ public class CteTable {
 
 		final StringBuilder tableValueCtorExpressionBuffer = new StringBuilder( "values(" );
 		String rowSeparator = "";
-		int idProcessedCount = 0;
-		for ( Object matchingId : matchingIds ) {
+		for ( Object matchingId : matchingValues ) {
 			tableValueCtorExpressionBuffer.append( rowSeparator );
 
 			tableValueCtorExpressionBuffer.append( '(' );
 			StringHelper.repeat( "?", numberOfColumns, ",", tableValueCtorExpressionBuffer );
 			tableValueCtorExpressionBuffer.append( ')' );
 
-			final int currentIdPosition = idProcessedCount;
-
-			entityDescriptor.getIdentifierMapping().visitJdbcValues(
+			bindable.visitJdbcValues(
 					matchingId,
 					Clause.IRRELEVANT,
 					(value, type) -> {
@@ -141,7 +144,6 @@ public class CteTable {
 			);
 
 			rowSeparator = ", ";
-			idProcessedCount++;
 		}
 
 		tableValueCtorExpressionBuffer.append( ')' );

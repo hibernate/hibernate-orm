@@ -81,6 +81,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( getDomainParameterXref().getQueryParameterCount() );
 		final QuerySpec cteDefinitionQuerySpec = getCteTable().createCteDefinition(
 				ids,
+				getEntityDescriptor().getIdentifierMapping(),
 				jdbcParameterBindings,
 				executionContext
 		);

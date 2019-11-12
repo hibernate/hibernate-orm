@@ -13,10 +13,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstSelectTranslator;
 import org.hibernate.sql.ast.SqlTreePrinter;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.JdbcValuesMappingProducerStandard;
 
@@ -36,7 +36,31 @@ public class StandardSqlAstSelectTranslator
 	}
 
 	@Override
-	public JdbcSelect translate(CteStatement cteStatement) {
+	public JdbcSelect translate(CteStatement sqlAst) {
+		assert sqlAst.getCteConsumer() instanceof QuerySpec;
+
+		appendSql( "with " );
+		appendSql( sqlAst.getCteLabel() );
+
+		appendSql( " (" );
+
+		String separator = "";
+
+		for ( int i = 0; i < sqlAst.getCteTable().getCteColumns().size(); i++ ) {
+			final CteColumn cteColumn = sqlAst.getCteTable().getCteColumns().get( i );
+			appendSql( separator );
+			appendSql( cteColumn.getColumnExpression() );
+			separator = ", ";
+		}
+
+		appendSql( ") as (" );
+
+		visitQuerySpec( sqlAst.getCteDefinition() );
+
+		appendSql( ") " );
+
+		translate( (QuerySpec) sqlAst.getCteConsumer() );
+
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

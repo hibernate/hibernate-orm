@@ -7,19 +7,18 @@
 package org.hibernate.sql.ast.tree.update;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 
 /**
  * @author Steve Ebersole
  */
-public class UpdateStatement implements MutationStatement {
+public class UpdateStatement implements MutationStatement, CteConsumer {
 	private final TableReference targetTable;
 	private final List<Assignment> assignments;
 	private final Predicate restriction;

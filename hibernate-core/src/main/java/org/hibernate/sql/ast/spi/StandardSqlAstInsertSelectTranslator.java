@@ -9,14 +9,14 @@ package org.hibernate.sql.ast.spi;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.exec.spi.JdbcInsert;
-import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
@@ -81,7 +81,46 @@ public class StandardSqlAstInsertSelectTranslator
 	}
 
 	@Override
-	public JdbcOperation translate(CteStatement cteStatement) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public JdbcInsert translate(CteStatement sqlAst) {
+		assert sqlAst.getCteConsumer() instanceof DeleteStatement;
+
+		appendSql( "with " );
+		appendSql( sqlAst.getCteLabel() );
+
+		appendSql( " (" );
+
+		String separator = "";
+
+		for ( int i = 0; i < sqlAst.getCteTable().getCteColumns().size(); i++ ) {
+			final CteColumn cteColumn = sqlAst.getCteTable().getCteColumns().get( i );
+			appendSql( separator );
+			appendSql( cteColumn.getColumnExpression() );
+			separator = ", ";
+		}
+
+		appendSql( ") as (" );
+
+		visitQuerySpec( sqlAst.getCteDefinition() );
+
+		appendSql( ") " );
+
+		translate( (InsertSelectStatement) sqlAst.getCteConsumer() );
+
+		return new JdbcInsert() {
+			@Override
+			public String getSql() {
+				return StandardSqlAstInsertSelectTranslator.this.getSql();
+			}
+
+			@Override
+			public List<JdbcParameterBinder> getParameterBinders() {
+				return StandardSqlAstInsertSelectTranslator.this.getParameterBinders();
+			}
+
+			@Override
+			public Set<String> getAffectedTableNames() {
+				return StandardSqlAstInsertSelectTranslator.this.getAffectedTableNames();
+			}
+		};
 	}
 }

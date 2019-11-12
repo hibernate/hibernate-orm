@@ -7,6 +7,8 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
@@ -95,6 +97,10 @@ public interface SemanticQueryWalker<T> {
 	T visitDeleteStatement(SqmDeleteStatement<?> statement);
 
 	T visitSelectStatement(SqmSelectStatement<?> statement);
+
+	T visitCteStatement(SqmCteStatement sqmCteStatement);
+
+	T visitCteConsumer(SqmCteConsumer consumer);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

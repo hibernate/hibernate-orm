@@ -18,11 +18,12 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -32,9 +33,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
  */
 public class SqmUpdateStatement<T>
 		extends AbstractSqmDmlStatement<T>
-		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaUpdate<T> {
-	private final SqmQuerySource querySource;
-
+		implements SqmDeleteOrUpdateStatement<T>, SqmCteConsumer, JpaCriteriaUpdate<T> {
 	private SqmSetClause setClause;
 	private SqmWhereClause whereClause;
 
@@ -43,8 +42,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	public SqmUpdateStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super( target, nodeBuilder );
-		this.querySource = querySource;
+		super( target, querySource, nodeBuilder );
 	}
 
 	public SqmUpdateStatement(Class<T> targetEntity, SqmCriteriaNodeBuilder nodeBuilder) {
@@ -57,11 +55,6 @@ public class SqmUpdateStatement<T>
 				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
-	}
-
-	@Override
-	public SqmQuerySource getQuerySource() {
-		return querySource;
 	}
 
 	public SqmSetClause getSetClause() {

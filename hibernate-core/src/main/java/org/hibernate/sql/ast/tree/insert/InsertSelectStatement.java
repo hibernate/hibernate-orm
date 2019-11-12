@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -20,7 +21,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class InsertSelectStatement implements MutationStatement {
+public class InsertSelectStatement implements MutationStatement, CteConsumer {
 	private static final Logger log = Logger.getLogger( InsertSelectStatement.class );
 
 	private TableReference targetTable;

@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.function.SqmExtractUnit;
 import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.function.SqmStar;
 import org.hibernate.query.sqm.function.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
@@ -139,6 +141,33 @@ public class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 		visitRootPath( statement.getTarget() );
 		visitWhereClause( statement.getWhereClause() );
 		return statement;
+	}
+
+	@Override
+	public Object visitCteStatement(SqmCteStatement sqmCteStatement) {
+		visitCteConsumer( sqmCteStatement.getCteConsumer() );
+		return sqmCteStatement;
+	}
+
+	@Override
+	public Object visitCteConsumer(SqmCteConsumer consumer) {
+		if ( consumer instanceof SqmQuerySpec ) {
+			return visitQuerySpec( ( (SqmQuerySpec) consumer ) );
+		}
+
+		if ( consumer instanceof SqmDeleteStatement ) {
+			return visitDeleteStatement( ( (SqmDeleteStatement) consumer ) );
+		}
+
+		if ( consumer instanceof SqmUpdateStatement ) {
+			visitUpdateStatement( (SqmUpdateStatement) consumer );
+		}
+
+		if ( consumer instanceof SqmInsertSelectStatement ) {
+			visitInsertSelectStatement( (SqmInsertSelectStatement) consumer );
+		}
+
+		throw new UnsupportedOperationException( "Unsupported SqmCteConsumer : " + consumer );
 	}
 
 	@Override

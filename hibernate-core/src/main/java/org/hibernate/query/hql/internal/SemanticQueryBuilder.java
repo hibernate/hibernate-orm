@@ -50,6 +50,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
@@ -131,9 +132,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
-import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.atn.PredictionMode;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.hql.internal.HqlParser.IDENTIFIER;
@@ -339,7 +338,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				creationContext.getNodeBuilder()
 		);
 
-		final SqmDeleteStatement<?> deleteStatement = new SqmDeleteStatement<>( root, creationContext.getNodeBuilder() );
+		final SqmDeleteStatement<?> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
 
 		parameterCollector = deleteStatement;
 

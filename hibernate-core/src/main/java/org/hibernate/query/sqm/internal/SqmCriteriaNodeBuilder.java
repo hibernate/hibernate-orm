@@ -53,6 +53,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.produce.function.SqmFunctionTemplate;
 import org.hibernate.query.sqm.function.SqmCastTarget;
 import org.hibernate.query.sqm.function.SqmDistinct;
@@ -174,7 +175,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder {
 
 	@Override
 	public <T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity) {
-		return new SqmDeleteStatement<>( targetEntity, this );
+		return new SqmDeleteStatement<>( targetEntity, SqmQuerySource.CRITERIA, this );
 	}
 
 	@Override

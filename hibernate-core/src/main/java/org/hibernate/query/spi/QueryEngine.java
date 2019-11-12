@@ -34,12 +34,14 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
+import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslator;
 import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
 import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteTranslator;
 import org.hibernate.query.sqm.sql.internal.StandardSqmInsertSelectTranslator;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
+import org.hibernate.query.sqm.sql.internal.StandardSqmUpdateTranslator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
@@ -191,6 +193,21 @@ public class QueryEngine {
 						queryOptions,
 						domainParameterXref,
 						domainParameterBindings
+				);
+			}
+
+			@Override
+			public SimpleSqmUpdateTranslator createSimpleUpdateTranslator(
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings queryParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SessionFactoryImplementor factory) {
+				return new StandardSqmUpdateTranslator(
+						factory,
+						queryOptions,
+						domainParameterXref,
+						queryParameterBindings
 				);
 			}
 		};

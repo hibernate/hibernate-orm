@@ -120,7 +120,7 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.cteTable = new CteTable( rootDescriptor, runtimeModelCreationContext );
+		this.cteTable = new CteTable( rootDescriptor, runtimeModelCreationContext.getTypeConfiguration() );
 	}
 
 	@Override

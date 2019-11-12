@@ -18,9 +18,9 @@ public class CteStatement implements Statement {
 	private final String cteLabel;
 	private final CteTable cteTable;
 	private final QuerySpec cteDefinition;
-	private final Statement cteConsumer;
+	private final CteConsumer cteConsumer;
 
-	public CteStatement(QuerySpec cteDefinition, String cteLabel, CteTable cteTable, Statement cteConsumer) {
+	public CteStatement(QuerySpec cteDefinition, String cteLabel, CteTable cteTable, CteConsumer cteConsumer) {
 		this.cteDefinition = cteDefinition;
 		this.cteLabel = cteLabel;
 		this.cteTable = cteTable;
@@ -39,7 +39,7 @@ public class CteStatement implements Statement {
 		return cteDefinition;
 	}
 
-	public Statement getCteConsumer() {
+	public CteConsumer getCteConsumer() {
 		return cteConsumer;
 	}
 }

@@ -15,38 +15,39 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmDeleteStatement<T>
 		extends AbstractSqmDmlStatement<T>
-		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaDelete<T> {
+		implements SqmDeleteOrUpdateStatement<T>, SqmCteConsumer, JpaCriteriaDelete<T> {
 	private final SqmQuerySource querySource;
 
 	private SqmWhereClause whereClause;
 
-	public SqmDeleteStatement(SqmRoot<T> target, NodeBuilder nodeBuilder) {
-		super( target, nodeBuilder );
+	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+		super( target, querySource, nodeBuilder );
 		this.querySource = SqmQuerySource.HQL;
 
 	}
 
-	public SqmDeleteStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
 						null,
 						nodeBuilder
 				),
+				querySource,
 				nodeBuilder
 		);
 		this.querySource = SqmQuerySource.CRITERIA;

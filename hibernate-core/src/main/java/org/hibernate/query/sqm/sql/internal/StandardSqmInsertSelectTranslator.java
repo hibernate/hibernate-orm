@@ -16,9 +16,11 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmInsertSelectTranslation;
 import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
@@ -39,6 +41,11 @@ public class StandardSqmInsertSelectTranslator
 	@Override
 	public SqmInsertSelectTranslation translate(SqmInsertSelectStatement sqmStatement) {
 		return new SqmInsertSelectTranslation( visitInsertSelectStatement( sqmStatement ), getJdbcParamsBySqmParam() );
+	}
+
+	@Override
+	public CteStatement translate(SqmCteStatement sqmCte) {
+		return visitCteStatement( sqmCte );
 	}
 
 	@Override

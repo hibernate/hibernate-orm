@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+public interface SqmSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, SqmTranslator {
 	SqmSelectTranslation translate(SqmSelectStatement sqmStatement);
 	SqmQuerySpecTranslation translate(SqmQuerySpec sqmQuerySpec);
 }

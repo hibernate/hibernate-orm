@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -46,6 +45,10 @@ import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstQuerySpecProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.cte.SqmCteTable;
+import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -102,6 +105,10 @@ import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -269,6 +276,44 @@ public abstract class BaseSqmToSqlAstConverter
 		throw new AssertionFailure( "SelectStatement not supported" );
 	}
 
+	@Override
+	public CteStatement visitCteStatement(SqmCteStatement sqmCteStatement) {
+		final CteTable cteTable = createCteTable( sqmCteStatement );
+
+		return new CteStatement(
+				visitQuerySpec( sqmCteStatement.getCteDefinition() ),
+				sqmCteStatement.getCteLabel(),
+				cteTable,
+				visitCteConsumer( sqmCteStatement.getCteConsumer() )
+		);
+	}
+
+	protected CteTable createCteTable(SqmCteStatement sqmCteStatement) {
+		final SqmCteTable sqmCteTable = sqmCteStatement.getCteTable();
+		final List<SqmCteTableColumn> sqmCteColumns = sqmCteTable.getColumns();
+		final List<CteColumn> sqlCteColumns = new ArrayList<>( sqmCteColumns.size() );
+
+		for ( int i = 0; i < sqmCteColumns.size(); i++ ) {
+			final SqmCteTableColumn sqmCteTableColumn = sqmCteColumns.get( i );
+
+			sqlCteColumns.add(
+					new CteColumn(
+							sqmCteTableColumn.getColumnName(),
+							sqmCteTableColumn.getType()
+					)
+			);
+		}
+
+		return new CteTable(
+				sqlCteColumns,
+				getCreationContext().getSessionFactory()
+		);
+	}
+
+	@Override
+	public CteConsumer visitCteConsumer(SqmCteConsumer consumer) {
+		return (CteConsumer) super.visitCteConsumer( consumer );
+	}
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec sqmQuerySpec) {

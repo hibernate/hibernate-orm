@@ -6,44 +6,46 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslation;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
+import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslation;
+import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslator;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.update.SqmSetClause;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardSqmDeleteTranslator
+public class StandardSqmUpdateTranslator
 		extends BaseSqmToSqlAstConverter
-		implements SimpleSqmDeleteTranslator {
+		implements SimpleSqmUpdateTranslator {
 
-	public static JdbcDelete translate(
-			SqmDeleteStatement statement,
-			SessionFactoryImplementor factory) {
-		return null;
-	}
 
-	public StandardSqmDeleteTranslator(
+	public StandardSqmUpdateTranslator(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
@@ -52,17 +54,17 @@ public class StandardSqmDeleteTranslator
 	}
 
 	@Override
-	public SimpleSqmDeleteTranslation translate(SqmDeleteStatement statement) {
-		final DeleteStatement deleteStatement = visitDeleteStatement( statement );
-		return new SimpleSqmDeleteTranslation(
-				deleteStatement,
+	public SimpleSqmUpdateTranslation translate(SqmUpdateStatement sqmUpdate) {
+		final UpdateStatement sqlUpdateAst = visitUpdateStatement( sqmUpdate );
+		return new SimpleSqmUpdateTranslation(
+				sqlUpdateAst,
 				getJdbcParamsBySqmParam()
 		);
 	}
 
 	@Override
-	public DeleteStatement visitDeleteStatement(SqmDeleteStatement statement) {
-		final String entityName = statement.getTarget().getEntityName();
+	public UpdateStatement visitUpdateStatement(SqmUpdateStatement sqmStatement) {
+		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = getCreationContext().getDomainModel().getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -93,7 +95,7 @@ public class StandardSqmDeleteTranslator
 			}
 
 			Predicate suppliedPredicate = null;
-			final SqmWhereClause whereClause = statement.getWhereClause();
+			final SqmWhereClause whereClause = sqmStatement.getWhereClause();
 			if ( whereClause != null && whereClause.getPredicate() != null ) {
 				getCurrentClauseStack().push( Clause.WHERE );
 				try {
@@ -104,8 +106,9 @@ public class StandardSqmDeleteTranslator
 				}
 			}
 
-			return new DeleteStatement(
+			return new UpdateStatement(
 					rootTableGroup.getPrimaryTableReference(),
+					visitSetClause( sqmStatement.getSetClause() ),
 					SqlAstTreeHelper.combinePredicates( suppliedPredicate, additionalRestrictions )
 			);
 		}
@@ -115,8 +118,34 @@ public class StandardSqmDeleteTranslator
 	}
 
 	@Override
+	public List<Assignment> visitSetClause(SqmSetClause setClause) {
+		final List<Assignment> assignments = new ArrayList<>();
+
+		for ( SqmAssignment sqmAssignment : setClause.getAssignments() ) {
+			final SqmPathInterpretation assignedPathInterpretation = (SqmPathInterpretation) sqmAssignment.getTargetPath().accept( this );
+			assignedPathInterpretation.getExpressionType().visitColumns(
+					(columnExpression, containingTableExpression, jdbcMapping) -> {
+						final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						assignments.add(
+								new Assignment(
+										new ColumnReference(
+												containingTableExpression,
+												columnExpression,
+												jdbcMapping,
+												getCreationContext().getSessionFactory()
+										),
+										jdbcParameter
+								)
+						);
+					}
+			);
+		}
+
+		return assignments;
+	}
+
+	@Override
 	public CteStatement translate(SqmCteStatement sqmCte) {
-		visitCteStatement( sqmCte );
-		return null;
+		return visitCteStatement( sqmCte );
 	}
 }

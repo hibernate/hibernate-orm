@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmQuerySpecTranslation;
 import org.hibernate.query.sqm.sql.SqmSelectTranslation;
 import org.hibernate.query.sqm.sql.SqmSelectTranslator;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -45,6 +46,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -431,6 +433,11 @@ public class StandardSqmSelectTranslator
 //		final JavaTypeDescriptor jtd = typeConfiguration
 //				.getJavaTypeDescriptorRegistry()
 //				.getOrMakeJavaDescriptor( namedClass );
+	}
+
+	@Override
+	public CteStatement translate(SqmCteStatement sqmCte) {
+		return visitCteStatement( sqmCte );
 	}
 
 

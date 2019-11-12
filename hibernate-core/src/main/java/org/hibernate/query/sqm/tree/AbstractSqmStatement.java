@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -22,11 +23,21 @@ import org.hibernate.query.sqm.internal.ParameterCollector;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements SqmStatement<T>, ParameterCollector {
-	public AbstractSqmStatement(NodeBuilder builder) {
+	private final SqmQuerySource querySource;
+
+	public AbstractSqmStatement(
+			SqmQuerySource querySource,
+			NodeBuilder builder) {
 		super( builder );
+		this.querySource = querySource;
 	}
 
 	private Set<SqmParameter<?>> parameters;
+
+	@Override
+	public SqmQuerySource getQuerySource() {
+		return querySource;
+	}
 
 	@Override
 	public void addParameter(SqmParameter parameter) {

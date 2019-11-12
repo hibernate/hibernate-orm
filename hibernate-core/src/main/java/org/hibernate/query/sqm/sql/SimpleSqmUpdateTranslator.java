@@ -7,11 +7,11 @@
 package org.hibernate.query.sqm.sql;
 
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 /**
  * @author Steve Ebersole
  */
-public interface SimpleSqmDeleteTranslator extends SqmTranslator, SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
-	SimpleSqmDeleteTranslation translate(SqmDeleteStatement statement);
+public interface SimpleSqmUpdateTranslator extends SqmTranslator, SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+	SimpleSqmUpdateTranslation translate(SqmUpdateStatement sqmUpdate);
 }

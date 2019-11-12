@@ -22,6 +22,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromClauseContainer;
@@ -36,7 +37,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Steve Ebersole
  */
-public class SqmQuerySpec<T> implements SqmNode, SqmFromClauseContainer, SqmWhereClauseContainer, JpaQueryStructure<T> {
+public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseContainer, SqmWhereClauseContainer, JpaQueryStructure<T> {
 	private final NodeBuilder nodeBuilder;
 
 	private SqmFromClause fromClause;

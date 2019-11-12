@@ -28,12 +28,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 public abstract class AbstractSqmSelectQuery<T>
 		extends AbstractSqmNode
 		implements SqmSelectQuery<T> {
-
 	private SqmQuerySpec<T> sqmQuerySpec;
 	private Class resultType;
 
-
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		super( builder );
 		this.sqmQuerySpec = new SqmQuerySpec( builder );
@@ -41,13 +38,9 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSelectQuery(SqmQuerySpec<T> sqmQuerySpec, NodeBuilder builder) {
-		super( builder );
-		this.sqmQuerySpec = sqmQuerySpec;
-		this.resultType = sqmQuerySpec.getSelectClause().getJavaType();
+		this( (Class) sqmQuerySpec.getSelectClause().getJavaType(), builder );
 	}
-
 
 	@Override
 	public Class getResultType() {

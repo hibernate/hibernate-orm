@@ -41,11 +41,13 @@ import org.hibernate.sql.results.spi.FetchParent;
 public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
 		implements EntityValuedModelPart, TableGroupJoinProducer {
 	private final String sqlAliasStem;
+	private final boolean isNullable;
 	private final ForeignKeyDescriptor foreignKeyDescriptor;
 
 	public SingularAssociationAttributeMapping(
 			String name,
 			int stateArrayPosition,
+			boolean isNullable,
 			ForeignKeyDescriptor foreignKeyDescriptor,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
@@ -62,7 +64,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				propertyAccess
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
-
+		this.isNullable = isNullable;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
 	}
 
@@ -92,12 +94,19 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 					.getTableGroup( fetchParent.getNavigablePath() );
 
 			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
-				// todo (6.0) : determine the correct JoinType
+				// todo (6.0) : verify the JoinType si correct
+				JoinType joinType;
+				if ( isNullable ) {
+					joinType = JoinType.LEFT;
+				}
+				else {
+					joinType = JoinType.INNER;
+				}
 				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 						fetchablePath,
 						lhsTableGroup,
 						null,
-						JoinType.INNER,
+						joinType,
 						lockMode,
 						creationState.getSqlAliasBaseManager(),
 						creationState.getSqlAstCreationState().getSqlExpressionResolver(),

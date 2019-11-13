@@ -13,9 +13,11 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
+import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
@@ -84,6 +86,7 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -1132,8 +1135,8 @@ public class MappingModelCreationHelper {
 				cascadeStyle,
 				creationProcess
 		);
-		final Dialect dialect = creationProcess.getCreationContext()
-				.getSessionFactory()
+		SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		final Dialect dialect = sessionFactory
 				.getJdbcServices()
 				.getJdbcEnvironment()
 				.getDialect();
@@ -1146,12 +1149,30 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 		// todo (6.0) : determine the correct FetchStrategy
+
+
+		final AssociationType type = (AssociationType) bootProperty.getType();
+		final FetchStyle fetchStyle = FetchStrategyHelper
+				.determineFetchStyleByMetadata(
+						bootProperty.getValue().getFetchMode(),
+						type,
+						sessionFactory
+				);
+
+		final FetchTiming fetchTiming = FetchStrategyHelper.
+				determineFetchTiming( fetchStyle, type,
+									  sessionFactory
+				);
+
+		final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
+
 		return new SingularAssociationAttributeMapping(
 				attrName,
 				stateArrayPosition,
+				bootProperty.getValue().isNullable(),
 				foreignKeyDescriptor,
 				stateArrayContributorMetadataAccess,
-				FetchStrategy.IMMEDIATE_JOIN,
+				fetchStrategy,
 				entityPersister,
 				declaringType,
 				propertyAccess

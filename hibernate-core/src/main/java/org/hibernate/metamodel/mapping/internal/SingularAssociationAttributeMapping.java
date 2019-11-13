@@ -29,7 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetch;
+import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetchImpl;
 import org.hibernate.sql.results.internal.domain.entity.EntityFetchImpl;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -87,14 +87,13 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess()
+				.getTableGroup( fetchParent.getNavigablePath() );
+
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
-			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-
-			TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess()
-					.getTableGroup( fetchParent.getNavigablePath() );
-
 			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
-				// todo (6.0) : verify the JoinType si correct
+				// todo (6.0) : verify the JoinType is correct
 				JoinType joinType;
 				if ( isNullable ) {
 					joinType = JoinType.LEFT;
@@ -132,12 +131,13 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			);
 		}
 
-		return new DelayedEntityFetch(
+		return new DelayedEntityFetchImpl(
 				fetchParent,
 				this,
 				lockMode,
-				!selected,
+				isNullable,
 				fetchablePath,
+				foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState ),
 				creationState
 		);
 	}

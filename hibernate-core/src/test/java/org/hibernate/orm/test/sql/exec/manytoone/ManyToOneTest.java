@@ -35,17 +35,17 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				LazyManyToOneTest.SimpleEntity.class,
-				LazyManyToOneTest.OtherEntity.class,
-				LazyManyToOneTest.AnotherSimpleEntity.class
+				ManyToOneTest.SimpleEntity.class,
+				ManyToOneTest.OtherEntity.class,
+				ManyToOneTest.AnotherSimpleEntity.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class LazyManyToOneTest {
+public class ManyToOneTest {
 
 	@Test
-	public void testSelect(SessionFactoryScope scope) {
+	public void testHqlSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					OtherEntity otherEntity = session.
@@ -53,14 +53,51 @@ public class LazyManyToOneTest {
 							.uniqueResult();
 
 					assertThat( otherEntity.getName(), is( "Bar" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertFalse( Hibernate.isInitialized( simpleEntity ) );
+
+					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
+					// the ManyToOne is eager but the value is null so a second query is not executed
+					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
+
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
+
+					assertTrue( Hibernate.isInitialized( simpleEntity ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					OtherEntity otherEntity = session.
+							createQuery( "from OtherEntity", OtherEntity.class )
+							.uniqueResult();
+					AnotherSimpleEntity anotherSimpleEntity = new AnotherSimpleEntity();
+					anotherSimpleEntity.setId( 3 );
+					anotherSimpleEntity.setName( "other" );
+					session.save( anotherSimpleEntity );
+					otherEntity.setAnotherSimpleEntity( anotherSimpleEntity );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					OtherEntity otherEntity = session.
+							createQuery( "from OtherEntity", OtherEntity.class )
+							.uniqueResult();
+
+					assertThat( otherEntity.getName(), is( "Bar" ) );
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertFalse( Hibernate.isInitialized( simpleEntity ) );
+
+					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
+					// the ManyToOne is eager but the value is not null so a second query is executed
+					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
 				}
 		);
 	}
 
 	@Test
-	public void testSelectWithFetchJoin(SessionFactoryScope scope) {
+	public void testHQLSelectWithFetchJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					OtherEntity otherEntity = session.
@@ -71,7 +108,8 @@ public class LazyManyToOneTest {
 					assertTrue( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
 					assertThat( otherEntity.getSimpleEntity(), notNullValue() );
 					assertThat( otherEntity.getSimpleEntity().getName(), is( "Fab" ) );
-					assertFalse( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
+					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
+					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
 				}
 		);
 	}
@@ -81,19 +119,21 @@ public class LazyManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					OtherEntity otherEntity = session.
-							createQuery( "from OtherEntity o join fetch o.simpleEntity left join fetch o.anotherSimpleEntity", OtherEntity.class )
+							createQuery(
+									"from OtherEntity o join fetch o.simpleEntity left join fetch o.anotherSimpleEntity",
+									OtherEntity.class
+							)
 							.uniqueResult();
 
 					assertThat( otherEntity.getName(), is( "Bar" ) );
 					assertTrue( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
 					assertThat( otherEntity.getSimpleEntity(), notNullValue() );
 					assertThat( otherEntity.getSimpleEntity().getName(), is( "Fab" ) );
-					assertTrue (Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
-					assertThat( otherEntity.getAnotherSimpleEntity(), nullValue(  ) );
+					assertTrue( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
+					assertThat( otherEntity.getAnotherSimpleEntity(), nullValue() );
 				}
 		);
 	}
-
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
@@ -104,6 +144,23 @@ public class LazyManyToOneTest {
 					assertThat( otherEntity.getName(), is( "Bar" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
 					assertTrue( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testDelete(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.remove( session.get( OtherEntity.class, 2 ) );
+				}
+
+		);
+		scope.inTransaction(
+				session -> {
+					assertThat( session.get( OtherEntity.class, 2 ), nullValue() );
+					assertThat( session.get( SimpleEntity.class, 1 ), notNullValue() );
+					assertThat( session.get( AnotherSimpleEntity.class, 3 ), notNullValue() );
 				}
 		);
 	}
@@ -145,6 +202,7 @@ public class LazyManyToOneTest {
 	public static class OtherEntity {
 		private Integer id;
 		private String name;
+
 		private SimpleEntity simpleEntity;
 
 		private AnotherSimpleEntity anotherSimpleEntity;

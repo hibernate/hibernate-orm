@@ -21,9 +21,9 @@ import org.hibernate.FetchMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -49,11 +49,9 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
@@ -73,96 +71,58 @@ public class JdbcBinder {
 	public static JdbcBinder create(
 			Properties properties, 
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		return new JdbcBinder(properties, reverseEngineeringStrategy);
+	}
+	
+	private static final Logger log = Logger.getLogger(JdbcBinder.class);
+
+	private final Properties properties;
+	private final MetadataBuildingContext metadataBuildingContext;	
+	private final InFlightMetadataCollector metadataCollector;	
+	private final ReverseEngineeringStrategy revengStrategy;
+	
+	private boolean preferBasicCompositeIds;
+	private final StandardServiceRegistry serviceRegistry;
+	private final String defaultCatalog;
+	private final String defaultSchema;
+	
+	public JdbcBinder(
+			Properties properties,
+			ReverseEngineeringStrategy reverseEngineeringStrategy) {
+		this.properties = properties;
+		this.revengStrategy = reverseEngineeringStrategy;
+		this.serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings(properties)
 				.build();
 		MetadataBuildingOptionsImpl metadataBuildingOptions = 
-				new MetadataBuildingOptionsImpl( serviceRegistry );	
+				new MetadataBuildingOptionsImpl(serviceRegistry);	
 		BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry, 
 				metadataBuildingOptions);
 		metadataBuildingOptions.setBootstrapContext(bootstrapContext);
-		InFlightMetadataCollectorImpl metadataCollector = 
+		this.metadataCollector = 
 				new InFlightMetadataCollectorImpl(
 						bootstrapContext,
 						metadataBuildingOptions);
-		MetadataBuildingContext metadataBuildingContext = 
-				new MetadataBuildingContextRootImpl(
-						bootstrapContext,
-						metadataBuildingOptions, 
-						metadataCollector);
-		return new JdbcBinder(
-				serviceRegistry, 
-				properties, 
-				metadataBuildingContext, 
-				reverseEngineeringStrategy, 
-				(Boolean)properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS));
-		
-	}
-
-	private Properties properties;
-	private static final Logger log = Logger.getLogger(JdbcBinder.class);
-
-	private final MetadataBuildingContext mdbc;
-	
-	private final InFlightMetadataCollector metadataCollector;
-	
-	private Metadata metadata;
-
-	private ReverseEngineeringStrategy revengStrategy;
-	
-	private boolean preferBasicCompositeIds;
-	private final ServiceRegistry serviceRegistry;
-	private final String defaultCatalog;
-	private final String defaultSchema;
-
-	/**
-	 * @param mappings
-	 * @param configuration
-	 */
-	public JdbcBinder(ServiceRegistry serviceRegistry, Properties properties, MetadataBuildingContext mdbc, ReverseEngineeringStrategy revengStrategy, boolean preferBasicCompositeIds) {
-		this(serviceRegistry, properties, mdbc, revengStrategy);
-		this.preferBasicCompositeIds = preferBasicCompositeIds;
-	}
-	
-	/**
-	 * @param mappings
-	 * @param configuration
-	 */
-	public JdbcBinder(ServiceRegistry serviceRegistry, Properties properties, MetadataBuildingContext mdbc, ReverseEngineeringStrategy revengStrategy) {
-		this.serviceRegistry = serviceRegistry;
-		this.mdbc = mdbc;
-		this.properties = properties;
-		this.revengStrategy = revengStrategy;
-		this.preferBasicCompositeIds = Boolean.getBoolean(
-				properties.getProperty(
-						ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS));
+		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(bootstrapContext, metadataBuildingOptions, metadataCollector);
+		this.preferBasicCompositeIds = (Boolean)properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		metadataCollector = mdbc.getMetadataCollector();
-		this.metadata = ((InFlightMetadataCollectorImpl)metadataCollector).buildMetadataInstance(mdbc);
 	}
-	
+
 	public Metadata readFromDatabase() {
 		MetadataImpl metadata = ((InFlightMetadataCollectorImpl)metadataCollector)
-				.buildMetadataInstance(mdbc);
-		metadata.getTypeConfiguration().scope(mdbc);
-		return readFromDatabase(metadata);
-	}
-	
-	public Metadata readFromDatabase(Metadata metadata) {
+				.buildMetadataInstance(metadataBuildingContext);
+		metadata.getTypeConfiguration().scope(metadataBuildingContext);
 		readFromDatabase(null, null, new BinderMapping(metadata));
 		return metadata;
 	}
-
-	/**
-	 *
-	 */
+	
 	public void readFromDatabase(String catalog, String schema, Mapping mapping) {
 		try {
 			DatabaseCollector collector = readDatabaseSchema(catalog, schema);
 			createPersistentClasses(collector, mapping); //move this to a different step!
-			((InFlightMetadataCollectorImpl)metadataCollector).processSecondPasses(mdbc);
+			((InFlightMetadataCollectorImpl)metadataCollector).processSecondPasses(metadataBuildingContext);
 		}
 		catch (SQLException e) {
 			JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
@@ -224,7 +184,7 @@ public class JdbcBinder {
 			}
 
 	    	
-			RootClass rc = new RootClass(mdbc);
+			RootClass rc = new RootClass(metadataBuildingContext);
 			TableIdentifier tableIdentifier = TableIdentifier.create(table);
 			String className = revengStrategy.tableToClassName( tableIdentifier );
 			log.debug("Building entity " + className + " based on " + tableIdentifier);
@@ -333,7 +293,7 @@ public class JdbcBinder {
     private Property bindOneToOne(PersistentClass rc, Table targetTable,
             ForeignKey fk, Set<Column> processedColumns, boolean constrained, boolean inverseProperty) {
 
-        OneToOne value = new OneToOne(mdbc, targetTable, rc);
+        OneToOne value = new OneToOne(metadataBuildingContext, targetTable, rc);
         value.setReferencedEntityName(revengStrategy
                 .tableToClassName(TableIdentifier.create(targetTable)));
 
@@ -388,7 +348,7 @@ public class JdbcBinder {
      * @param propName
      */
     private Property bindManyToOne(String propertyName, boolean mutable, Table table, ForeignKey fk, Set<Column> processedColumns) {
-        ManyToOne value = new ManyToOne(mdbc, table);
+        ManyToOne value = new ManyToOne(metadataBuildingContext, table);
         value.setReferencedEntityName( fk.getReferencedEntityName() );
 		Iterator<Column> columns = fk.getColumnIterator();
         while ( columns.hasNext() ) {
@@ -508,7 +468,7 @@ public class JdbcBinder {
 
 		Table collectionTable = foreignKey.getTable();
 
-		Collection collection = new org.hibernate.mapping.Set(mdbc, rc); // MASTER TODO: allow overriding collection type
+		Collection collection = new org.hibernate.mapping.Set(metadataBuildingContext, rc); // MASTER TODO: allow overriding collection type
 
 		collection.setCollectionTable(collectionTable); // CHILD+
 
@@ -524,7 +484,7 @@ public class JdbcBinder {
 
         if(manyToMany) {
 
-        	ManyToOne element = new ManyToOne(mdbc, collection.getCollectionTable() );
+        	ManyToOne element = new ManyToOne(metadataBuildingContext, collection.getCollectionTable() );
         	//TODO: find the other foreignkey and choose the other side.
         	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
         	List<ForeignKey> keys = new ArrayList<ForeignKey>();
@@ -558,10 +518,10 @@ public class JdbcBinder {
         } else {
         	String tableToClassName = bindCollection( rc, foreignKey, null, collection );
 
-        	OneToMany oneToMany = new OneToMany(mdbc, collection.getOwner() );
+        	OneToMany oneToMany = new OneToMany(metadataBuildingContext, collection.getOwner() );
 
 			oneToMany.setReferencedEntityName( tableToClassName ); // Child
-        	metadataCollector.addSecondPass( new JdbcCollectionSecondPass(mdbc, collection) );
+        	metadataCollector.addSecondPass( new JdbcCollectionSecondPass(metadataBuildingContext, collection) );
 
         	collection.setElement(oneToMany);
         }
@@ -577,7 +537,7 @@ public class JdbcBinder {
 				.getValue();
 		}
 
-		SimpleValue keyValue = new DependantValue(mdbc, collectionTable, referencedKeyValue );
+		SimpleValue keyValue = new DependantValue(metadataBuildingContext, collectionTable, referencedKeyValue );
 		//keyValue.setForeignKeyName("none"); // Avoid creating the foreignkey
 		//key.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue("on-delete") ) );
 		Iterator<Column> columnIterator = foreignKey.getColumnIterator();
@@ -653,10 +613,6 @@ public class JdbcBinder {
 		collectionRole = BinderUtils.makeUnique(rc,collectionRole);
 
 		String fullRolePath = StringHelper.qualify(rc.getEntityName(), collectionRole);
-		if (metadata.getCollectionBinding(fullRolePath)!=null) {
-		    log.debug(fullRolePath + " found twice!");
-		}
-
 		collection.setRole(fullRolePath);  // Master.setOfChildren+
 		collection.setInverse(collectionInverse); // TODO: allow overriding this
 		collection.setLazy(collectionLazy);
@@ -907,7 +863,7 @@ public class JdbcBinder {
 	}
 
 	private SimpleValue bindColumnToSimpleValue(Table table, Column column, Mapping mapping, boolean generatedIdentifier) {
-		SimpleValue value = new SimpleValue(mdbc, table);
+		SimpleValue value = new SimpleValue(metadataBuildingContext, table);
 		value.addColumn(column);
 		value.setTypeName(guessAndAlignType(table, column, mapping, generatedIdentifier));
 		return value;
@@ -999,7 +955,7 @@ public class JdbcBinder {
 	 * @return
 	 */
 	private SimpleValue handleCompositeKey(RootClass rc, Set<Column> processedColumns, List<Column> keyColumns, Mapping mapping) {
-		Component pkc = new Component(mdbc, rc);
+		Component pkc = new Component(metadataBuildingContext, rc);
         pkc.setMetaAttributes(Collections.EMPTY_MAP);
         pkc.setEmbedded(false);
 

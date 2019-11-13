@@ -289,7 +289,7 @@ public class ManyToOneTest {
 			this.simpleEntity = simpleEntity;
 		}
 
-		@ManyToOne(fetch = FetchType.EAGER)
+		@ManyToOne
 		public AnotherSimpleEntity getAnotherSimpleEntity() {
 			return anotherSimpleEntity;
 		}

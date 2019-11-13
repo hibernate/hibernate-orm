@@ -6,13 +6,13 @@
  */
 package org.hibernate.boot.model.naming;
 
+import static java.util.Comparator.comparing;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -77,29 +77,11 @@ public class NamingHelper {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder()
-				.append( "table`" ).append( tableName ).append( "`" )
-				.append( "references`" ).append( referencedTableName ).append( "`" );
+		StringBuilder sb = new StringBuilder(64)
+				.append( "table`" ).append( tableName ).append( '`' )
+				.append( "references`" ).append( referencedTableName ).append( '`' );
 
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
-
-		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( "`" );
-		}
-		return prefix + hashedName( sb.toString() );
+		return generateColumnsHash( prefix, sb, columnNames );
 	}
 
 	/**
@@ -112,26 +94,8 @@ public class NamingHelper {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
-
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Identifier[] alphabeticalColumns = columnNames.clone();
-		Arrays.sort(
-				alphabeticalColumns,
-				new Comparator<Identifier>() {
-					@Override
-					public int compare(Identifier o1, Identifier o2) {
-						return o1.getCanonicalName().compareTo( o2.getCanonicalName() );
-					}
-				}
-		);
-		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( "`" );
-		}
-		return prefix + hashedName( sb.toString() );
+		StringBuilder sb = new StringBuilder(64).append( "table`" ).append( tableName ).append( '`' );
+		return generateColumnsHash( prefix, sb, columnNames );
 	}
 
 	/**
@@ -173,5 +137,14 @@ public class NamingHelper {
 		catch ( NoSuchAlgorithmException|UnsupportedEncodingException e ) {
 			throw new HibernateException( "Unable to generate a hashed name!", e );
 		}
+	}
+
+	private String generateColumnsHash(String prefix, StringBuilder sb, Identifier[] columnNames) {
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		Arrays.stream( columnNames )
+				.sorted()
+				.forEachOrdered( columnName -> sb.append( "column`" ).append( columnName ).append( '`' ) );
+		return prefix + hashedName( sb.toString() );
 	}
 }

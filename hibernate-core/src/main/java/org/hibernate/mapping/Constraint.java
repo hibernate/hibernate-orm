@@ -5,19 +5,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+import static java.util.Comparator.comparing;
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
@@ -51,22 +48,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, Column... columns) {
-		// Use a concatenation that guarantees uniqueness, even if identical names
-		// exist between all table and column identifiers.
-
-		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
-
-		// Ensure a consistent ordering of columns, regardless of the order
-		// they were bound.
-		// Clone the list, as sometimes a set of order-dependent Column
-		// bindings are given.
-		Column[] alphabeticalColumns = columns.clone();
-		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
-		for ( Column column : alphabeticalColumns ) {
-			String columnName = column == null ? "" : column.getName();
-			sb.append( "column`" ).append( columnName ).append( "`" );
+		Identifier tableName = table.getNameIdentifier();
+		Identifier[] columnNames = new Identifier[columns.length];
+		for (int i = 0; i < columns.length; i++) {
+			Column column = columns[i];
+			columnNames[i] = Identifier.toIdentifier(column.getName());
 		}
-		return prefix + hashedName( sb.toString() );
+		return NamingHelper.INSTANCE.generateHashedConstraintName(prefix, tableName, columnNames);
 	}
 
 	/**
@@ -75,7 +63,13 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+		Identifier tableName = table.getNameIdentifier();
+		Identifier[] columnNames = new Identifier[columns.size()];
+		for (int i = 0; i < columns.size(); i++) {
+			Column column = columns.get(i);
+			columnNames[i] = Identifier.toIdentifier(column.getName());
+		}
+		return NamingHelper.INSTANCE.generateHashedConstraintName(prefix, tableName, columnNames);
 	}
 
 	/**
@@ -89,28 +83,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The hased name.
 	 */
 	public static String hashedName(String s) {
-		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
-		}
-	}
-
-	private static class ColumnComparator implements Comparator<Column> {
-		public static ColumnComparator INSTANCE = new ColumnComparator();
-
-		public int compare(Column col1, Column col2) {
-			return col1.getName().compareTo( col2.getName() );
-		}
+		return NamingHelper.INSTANCE.hashedName(s);
 	}
 
 	public void addColumn(Column column) {

@@ -27,6 +27,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -154,7 +155,7 @@ import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
  */
 public abstract class BaseSqmToSqlAstConverter
 		extends BaseSemanticQueryWalker
-		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess {
+		implements SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, FromClauseAccess {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -198,6 +199,19 @@ public abstract class BaseSqmToSqlAstConverter
 
 	protected Stack<SqlAstProcessingState> getProcessingStateStack() {
 		return processingStateStack;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// FromClauseAccess
+
+	@Override
+	public TableGroup findTableGroup(NavigablePath navigablePath) {
+		return fromClauseIndex.findTableGroup( navigablePath );
+	}
+
+	@Override
+	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
+		throw new UnsupportedOperationException();
 	}
 
 
@@ -748,7 +762,11 @@ public abstract class BaseSqmToSqlAstConverter
 	public Expression visitLiteral(SqmLiteral literal) {
 		return new QueryLiteral(
 				literal.getLiteralValue(),
-				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable( literal, this ),
+				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
+						literal,
+						getCreationContext().getDomainModel(),
+						getFromClauseAccess()::findTableGroup
+				),
 				getCurrentClauseStack().getCurrent()
 		);
 	}
@@ -796,7 +814,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 		if ( sqmExpression instanceof SqmPath ) {
 			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
-			return SqmMappingModelHelper.resolveMappingModelExpressable( sqmExpression, this );
+			return SqmMappingModelHelper.resolveMappingModelExpressable(
+					sqmExpression,
+					getCreationContext().getDomainModel(),
+					getFromClauseAccess()::findTableGroup
+			);
 		}
 
 
@@ -856,7 +878,7 @@ public abstract class BaseSqmToSqlAstConverter
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
 	}
 
-	private final Stack<Supplier<MappingModelExpressable>> inferableTypeAccessStack = new StandardStack<>(
+	protected final Stack<Supplier<MappingModelExpressable>> inferableTypeAccessStack = new StandardStack<>(
 			() -> null
 	);
 

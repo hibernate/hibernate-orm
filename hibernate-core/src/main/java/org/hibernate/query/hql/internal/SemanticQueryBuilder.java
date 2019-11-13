@@ -304,24 +304,25 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				visitIdentificationVariableDef( ctx.identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
+
 		final SqmUpdateStatement<?> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
-
 		parameterCollector = updateStatement;
+		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
+				updateStatement,
+				this
+		);
+		processingStateStack.push( processingState );
+		processingState.getPathRegistry().register( root );
 
-		processingStateStack.push( new SqmDmlCreationProcessingState( updateStatement, this ) );
 		try {
-			updateStatement.getWhereClause().setPredicate(
-					(SqmPredicate) ctx.whereClause().predicate().accept( this )
-			);
-
 			for ( HqlParser.AssignmentContext assignmentContext : ctx.setClause().assignment() ) {
-				final SqmPath stateField = consumeDomainPath( assignmentContext.dotIdentifierSequence() );
-				// todo : validate "state field" expression
-				updateStatement.getSetClause().addAssignment(
-						stateField,
+				updateStatement.applyAssignment(
+						consumeDomainPath( assignmentContext.dotIdentifierSequence() ),
 						(SqmExpression) assignmentContext.expression().accept( this )
 				);
 			}
+
+			updateStatement.applyPredicate( visitWhereClause( ctx.whereClause() ) );
 
 			return updateStatement;
 		}
@@ -1055,7 +1056,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmPredicate visitWhereClause(HqlParser.WhereClauseContext ctx) {
+		if ( ctx == null || ctx.predicate() == null ) {
+			return null;
+		}
+
 		return (SqmPredicate) ctx.predicate().accept( this );
+
 	}
 
 	@Override

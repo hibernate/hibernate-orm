@@ -36,7 +36,11 @@ public class SqmTupleInterpretation<T> extends SqlTuple {
 		return new SqmTupleInterpretation<>(
 				sqmTuple,
 				groupedSqlExpressions,
-				SqmMappingModelHelper.resolveMappingModelExpressable( sqmTuple, sqlAstCreationState )
+				SqmMappingModelHelper.resolveMappingModelExpressable(
+						sqmTuple,
+						sqlAstCreationState.getCreationContext().getDomainModel(),
+						sqlAstCreationState.getFromClauseAccess()::findTableGroup
+				)
 		);
 	}
 

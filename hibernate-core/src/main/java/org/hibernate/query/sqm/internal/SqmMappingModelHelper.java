@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.function.Function;
 import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -25,9 +26,9 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -102,9 +103,10 @@ public class SqmMappingModelHelper {
 
 	public static MappingModelExpressable resolveMappingModelExpressable(
 			SqmTypedNode<?> sqmNode,
-			SqlAstCreationState creationState) {
+			DomainMetamodel domainModel,
+			Function<NavigablePath,TableGroup> tableGroupLocator) {
 		if ( sqmNode instanceof SqmPath ) {
-			return resolveSqmPath( (SqmPath) sqmNode, creationState );
+			return resolveSqmPath( (SqmPath) sqmNode, domainModel, tableGroupLocator );
 		}
 
 		final SqmExpressable<?> nodeType = sqmNode.getNodeType();
@@ -115,8 +117,10 @@ public class SqmMappingModelHelper {
 		throw new NotYetImplementedFor6Exception( DomainModelHelper.class );
 	}
 
-	private static ModelPart resolveSqmPath(SqmPath<?> sqmPath, SqlAstCreationState creationState) {
-		final DomainMetamodel domainModel = creationState.getCreationContext().getDomainModel();
+	private static ModelPart resolveSqmPath(
+			SqmPath<?> sqmPath,
+			DomainMetamodel domainModel,
+			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
 		if ( sqmPath instanceof SqmTreatedPath ) {
 			final SqmTreatedPath treatedPath = (SqmTreatedPath) sqmPath;
@@ -133,7 +137,7 @@ public class SqmMappingModelHelper {
 			return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
 		}
 
-		final TableGroup lhsTableGroup = creationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
 		return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 	}
 

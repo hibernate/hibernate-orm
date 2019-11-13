@@ -9,15 +9,15 @@ package org.hibernate.sql.ast;
 import org.hibernate.sql.ast.spi.SqlAstToJdbcOperationConverter;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.exec.spi.JdbcDelete;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.exec.spi.JdbcUpdate;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqlAstDeleteTranslator extends SqlAstWalker, SqlAstToJdbcOperationConverter {
-	JdbcDelete translate(DeleteStatement sqlAst);
+public interface SqlAstUpdateTranslator extends SqlAstWalker, SqlAstToJdbcOperationConverter {
+	JdbcUpdate translate(UpdateStatement sqlAst);
 
 	@Override
-	JdbcDelete translate(CteStatement cteStatement);
+	JdbcUpdate translate(CteStatement cteStatement);
 }

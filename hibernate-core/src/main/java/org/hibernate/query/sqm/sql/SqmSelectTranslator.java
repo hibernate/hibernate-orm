@@ -9,11 +9,12 @@ package org.hibernate.query.sqm.sql;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectTranslator extends SqmToSqlAstConverter, JdbcParameterBySqmParameterAccess, SqmTranslator {
+public interface SqmSelectTranslator extends SqmToSqlAstConverter, FromClauseAccess, JdbcParameterBySqmParameterAccess, SqmTranslator {
 	SqmSelectTranslation translate(SqmSelectStatement sqmStatement);
 	SqmQuerySpecTranslation translate(SqmQuerySpec sqmQuerySpec);
 }

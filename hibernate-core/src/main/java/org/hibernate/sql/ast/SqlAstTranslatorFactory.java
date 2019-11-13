@@ -25,9 +25,11 @@ public interface SqlAstTranslatorFactory {
 	SqlAstDeleteTranslator buildDeleteTranslator(SessionFactoryImplementor sessionFactory);
 
 	/**
-	 * Builds a single-use delete translator
+	 * Builds a single-use insert-select translator
 	 */
 	SqlAstInsertSelectTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory);
 
-	// todo (6.0) : update, insert, etc
+	SqlAstUpdateTranslator buildUpdateTranslator(SessionFactoryImplementor sessionFactory);
+
+	// todo (6.0) : CTE
 }

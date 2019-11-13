@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
@@ -36,11 +37,11 @@ public class ColumnReference implements Expression {
 			String columnExpression,
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
-		this.qualifier = qualifier;
+		this.qualifier = StringHelper.nullIfEmpty( qualifier );
 		this.columnExpression = columnExpression;
-		this.referenceExpression = qualifier == null
+		this.referenceExpression = this.qualifier == null
 				? columnExpression
-				: qualifier + "." + columnExpression;
+				: this.qualifier + "." + columnExpression;
 		this.jdbcMapping = jdbcMapping;
 	}
 

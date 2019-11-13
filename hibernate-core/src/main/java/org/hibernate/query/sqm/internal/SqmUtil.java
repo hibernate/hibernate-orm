@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -21,7 +22,9 @@ import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -32,6 +35,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -153,7 +157,8 @@ public class SqmUtil {
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
-			SqlAstCreationState sqlAstCreationState,
+			DomainMetamodel domainModel,
+			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				domainParameterXref.getSqmParameterCount()
@@ -176,7 +181,11 @@ public class SqmUtil {
 				final List<JdbcParameter> jdbcParams = jdbcParamMap.get( sqmParameter );
 
 				if ( ! domainParamBinding.isBound() ) {
-					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable( sqmParameter, sqlAstCreationState );
+					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
+							sqmParameter,
+							domainModel,
+							tableGroupLocator
+					);
 					mappingExpressable.visitJdbcTypes(
 							new Consumer<JdbcMapping>() {
 								int position = 0;

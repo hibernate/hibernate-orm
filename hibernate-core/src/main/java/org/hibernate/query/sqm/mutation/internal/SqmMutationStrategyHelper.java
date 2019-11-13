@@ -270,8 +270,8 @@ public class SqmMutationStrategyHelper {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				// todo (6.0) : ugh.  this one is important
-				null,
+				factory.getDomainModel(),
+				selectConverter.getFromClauseAccess()::findTableGroup,
 				executionContext.getSession()
 		);
 

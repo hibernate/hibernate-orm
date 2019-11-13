@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +20,9 @@ import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -37,6 +36,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 	private final DomainParameterXref domainParameterXref;
 
 	private JdbcDelete jdbcDelete;
+	private FromClauseAccess tableGroupAccess;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
@@ -65,6 +65,8 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 			final SimpleSqmDeleteTranslation sqmInterpretation = translator.translate( sqmDelete );
 
+			tableGroupAccess = translator.getFromClauseAccess();
+
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
@@ -83,30 +85,18 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				// todo (6.0) : ugh.  this one is important
-				null,
+				factory.getDomainModel(),
+				tableGroupAccess::findTableGroup,
 				executionContext.getSession()
 		);
-
-		final LogicalConnectionImplementor logicalConnection = executionContext.getSession()
-				.getJdbcCoordinator()
-				.getLogicalConnection();
 
 		return jdbcServices.getJdbcDeleteExecutor().execute(
 				jdbcDelete,
 				jdbcParameterBindings,
-				sql -> {
-					try {
-						return logicalConnection.getPhysicalConnection().prepareStatement( sql );
-					}
-					catch (SQLException e) {
-						throw jdbcServices.getSqlExceptionHelper().convert(
-								e,
-								"Error performing DELETE",
-								sql
-						);
-					}
-				},
+				sql -> executionContext.getSession()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
 				executionContext
 		);

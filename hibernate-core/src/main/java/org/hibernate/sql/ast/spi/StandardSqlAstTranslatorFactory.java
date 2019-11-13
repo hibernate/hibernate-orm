@@ -6,12 +6,12 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.SqlAstSelectTranslator;
+import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 
 /**
  * @author Steve Ebersole
@@ -30,5 +30,10 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	@Override
 	public SqlAstInsertSelectTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory) {
 		return new StandardSqlAstInsertSelectTranslator( sessionFactory );
+	}
+
+	@Override
+	public SqlAstUpdateTranslator buildUpdateTranslator(SessionFactoryImplementor sessionFactory) {
+		return new StandardSqlAstUpdateTranslator( sessionFactory );
 	}
 }

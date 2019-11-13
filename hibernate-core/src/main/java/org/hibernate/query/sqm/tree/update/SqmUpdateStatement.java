@@ -24,6 +24,8 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteConsumer;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -155,5 +157,12 @@ public class SqmUpdateStatement<T>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitUpdateStatement( this );
+	}
+
+	public void applyAssignment(SqmPath targetPath, SqmExpression value) {
+		if ( setClause == null ) {
+			setClause = new SqmSetClause();
+		}
+		setClause.addAssignment( new SqmAssignment( targetPath, value ) );
 	}
 }

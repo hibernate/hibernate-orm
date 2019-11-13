@@ -397,7 +397,11 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		appendSql( columnReference.renderSqlFragment( getSessionFactory() ) );
+		if ( columnReference.getQualifier() != null ) {
+			appendSql( columnReference.getQualifier() );
+			appendSql( "." );
+		}
+		appendSql( columnReference.getColumnExpression() );
 	}
 
 	@Override

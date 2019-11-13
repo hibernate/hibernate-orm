@@ -256,7 +256,8 @@ public abstract class AbstractTableBasedHandler extends AbstractMutationHandler 
 						domainParameterXref,
 						sqmIdSelectTranslation::getJdbcParamsBySqmParam
 				),
-				sqmTranslator,
+				factory.getDomainModel(),
+				sqmTranslator.getFromClauseAccess()::findTableGroup,
 				executionContext.getSession()
 		);
 

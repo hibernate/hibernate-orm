@@ -83,6 +83,8 @@ public class DelayedEntityFetchImpl implements Fetch {
 		EntityInitializer entityInitializer = new DelayedEntityFetchInitializer(
 				parentAccess,
 				navigablePath,
+				fetchedAttribute.getMappedFetchStrategy(),
+				lockMode,
 				(EntityPersister) fetchedAttribute.getMappedTypeDescriptor(),
 				fkResult.createResultAssembler( collector, creationState )
 		);

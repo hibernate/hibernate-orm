@@ -8,7 +8,10 @@ package org.hibernate.sql.results.internal.domain.entity;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParentAccess;
@@ -25,6 +28,8 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 
 	private final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
+	private FetchStrategy mappedFetchedStrategy;
+	private LockMode lockMode;
 	private final EntityPersister concreteDescriptor;
 	private final DomainResultAssembler fkValueAssembler;
 
@@ -35,11 +40,15 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 	protected DelayedEntityFetchInitializer(
 			FetchParentAccess parentAccess,
 			NavigablePath fetchedNavigable,
+			FetchStrategy mappedFetchedStrategy,
+			LockMode lockMode,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler fkValueAssembler
 	) {
 		this.parentAccess = parentAccess;
 		this.navigablePath = fetchedNavigable;
+		this.mappedFetchedStrategy = mappedFetchedStrategy;
+		this.lockMode = lockMode;
 		this.concreteDescriptor = concreteDescriptor;
 		this.fkValueAssembler = fkValueAssembler;
 	}
@@ -66,19 +75,24 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 			entityInstance = null;
 		}
 		else {
-			if ( concreteDescriptor.hasProxy() ) {
-				entityInstance = concreteDescriptor.createProxy(
-						fkValue,
-						rowProcessingState.getSession()
-				);
+			if ( mappedFetchedStrategy.getTiming() != FetchTiming.IMMEDIATE ) {
+				if ( concreteDescriptor.hasProxy() ) {
+					entityInstance = concreteDescriptor.createProxy(
+							fkValue,
+							rowProcessingState.getSession()
+					);
+				}
+				else if ( concreteDescriptor
+						.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading() ) {
+					entityInstance = concreteDescriptor.instantiate(
+							fkValue,
+							rowProcessingState.getSession()
+					);
+				}
 			}
-			else if ( concreteDescriptor
-					.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading() ) {
-				entityInstance = concreteDescriptor.instantiate(
-						fkValue,
-						rowProcessingState.getSession()
-				);
+			else {
+				entityInstance = concreteDescriptor.load( fkValue, null, lockMode, rowProcessingState.getSession() );
 			}
 
 			notifyParentResolutionListeners( entityInstance );

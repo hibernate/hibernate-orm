@@ -14,28 +14,19 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityInitializer;
-import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.Initializer;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class DelayedEntityFetchImpl implements Fetch {
+public class DelayedEntityFetchImpl extends AbstractEntityFecth {
 
-	private FetchParent fetchParent;
-	private SingularAssociationAttributeMapping fetchedAttribute;
-	private final LockMode lockMode;
-	private final NavigablePath navigablePath;
-	private final boolean nullable;
 	private DomainResult fkResult;
-	private final DomainResultCreationState creationState;
 
 	public DelayedEntityFetchImpl(
 			FetchParent fetchParent,
@@ -45,50 +36,23 @@ public class DelayedEntityFetchImpl implements Fetch {
 			NavigablePath navigablePath,
 			DomainResult fkResult,
 			DomainResultCreationState creationState) {
-		this.fetchParent = fetchParent;
-		this.fetchedAttribute = fetchedAttribute;
-		this.lockMode = lockMode;
-		this.nullable = nullable;
-		this.navigablePath = navigablePath;
+		super( fetchParent, fetchedAttribute, navigablePath, nullable, lockMode );
 		this.fkResult = fkResult;
-		this.creationState = creationState;
-
 	}
 
 	@Override
-	public FetchParent getFetchParent() {
-		return fetchParent;
-	}
-
-	@Override
-	public Fetchable getFetchedMapping() {
-		return fetchedAttribute;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
-	}
-
-	@Override
-	public boolean isNullable() {
-		return nullable;
-	}
-
-	@Override
-	public DomainResultAssembler createAssembler(
+	protected EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		EntityInitializer entityInitializer = new DelayedEntityFetchInitializer(
+		final SingularAssociationAttributeMapping fetchedAttribute = (SingularAssociationAttributeMapping) getFetchedMapping();
+		return new DelayedEntityFetchInitializer(
 				parentAccess,
-				navigablePath,
+				getNavigablePath(),
 				fetchedAttribute.getMappedFetchStrategy(),
-				lockMode,
+				getLockMode(),
 				(EntityPersister) fetchedAttribute.getMappedTypeDescriptor(),
 				fkResult.createResultAssembler( collector, creationState )
 		);
-		collector.accept( entityInitializer );
-		return new EntityAssembler( fetchedAttribute.getJavaTypeDescriptor(), entityInitializer );
 	}
 }

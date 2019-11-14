@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetchImpl;
-import org.hibernate.sql.results.internal.domain.entity.EntityFetchImpl;
+import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -120,13 +120,12 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				);
 			}
 
-			return new EntityFetchImpl(
+			return new EntityFetch(
 					fetchParent,
 					this,
 					lockMode,
 					!selected,
 					fetchablePath,
-					foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState ),
 					creationState
 			);
 		}

@@ -47,7 +47,7 @@ public class EntityWithManyToOneJoinTableTest {
 //	}
 
 	@Test
-	@FailureExpected
+//	@FailureExpected
 	public void testSave(SessionFactoryScope scope) {
 		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
 

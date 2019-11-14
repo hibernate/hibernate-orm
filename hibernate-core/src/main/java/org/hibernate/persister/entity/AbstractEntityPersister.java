@@ -5411,7 +5411,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return (Serializable) identifierMapping.getPropertyAccess().getGetter().get( entity );
+		return identifierMapping.getPropertyAccess().getGetter().get( entity );
 	}
 
 	@Override

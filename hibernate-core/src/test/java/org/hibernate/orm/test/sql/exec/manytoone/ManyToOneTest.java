@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 public class ManyToOneTest {
 
 	@Test
-	public void testHqlSelect(SessionFactoryScope scope) {
+	public void testHqlSelectWithoutJoin(SessionFactoryScope scope) {
 		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 		scope.inTransaction(
@@ -56,7 +56,7 @@ public class ManyToOneTest {
 							createQuery( "from OtherEntity", OtherEntity.class )
 							.uniqueResult();
 
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 
 					assertThat( otherEntity.getName(), is( "Bar" ) );
 					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
@@ -67,7 +67,7 @@ public class ManyToOneTest {
 					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
 
 					assertThat( simpleEntity.getName(), is( "Fab" ) );
-					assertThat( statistics.getPrepareStatementCount(), is(2L) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
 					assertTrue( Hibernate.isInitialized( simpleEntity ) );
 				}
@@ -94,15 +94,43 @@ public class ManyToOneTest {
 							createQuery( "from OtherEntity", OtherEntity.class )
 							.uniqueResult();
 					// the ManyToOne is eager but the value is not null so a second query is executed
-					assertThat( statistics.getPrepareStatementCount(), is(2L) );
-
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 					assertThat( otherEntity.getName(), is( "Bar" ) );
+
 					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
 					assertFalse( Hibernate.isInitialized( simpleEntity ) );
 
 					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
 					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
-					assertThat( statistics.getPrepareStatementCount(), is(2L) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHQLSelectWithJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					OtherEntity otherEntity = session.
+							createQuery( "from OtherEntity o join o.simpleEntity", OtherEntity.class )
+							.uniqueResult();
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( otherEntity.getName(), is( "Bar" ) );
+
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertFalse( Hibernate.isInitialized( simpleEntity ) );
+					assertThat( simpleEntity, notNullValue() );
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
+					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
 	}
@@ -116,16 +144,19 @@ public class ManyToOneTest {
 					OtherEntity otherEntity = session.
 							createQuery( "from OtherEntity o join fetch o.simpleEntity", OtherEntity.class )
 							.uniqueResult();
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
-
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 					assertThat( otherEntity.getName(), is( "Bar" ) );
-					assertTrue( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
-					assertThat( otherEntity.getSimpleEntity(), notNullValue() );
-					assertThat( otherEntity.getSimpleEntity().getName(), is( "Fab" ) );
+
+
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertTrue( Hibernate.isInitialized( simpleEntity ) );
+					assertThat( simpleEntity, notNullValue() );
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
+
 					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
 					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
 
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
@@ -142,15 +173,19 @@ public class ManyToOneTest {
 									OtherEntity.class
 							)
 							.uniqueResult();
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
-
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 					assertThat( otherEntity.getName(), is( "Bar" ) );
-					assertTrue( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
-					assertThat( otherEntity.getSimpleEntity(), notNullValue() );
-					assertThat( otherEntity.getSimpleEntity().getName(), is( "Fab" ) );
+
+
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertTrue( Hibernate.isInitialized( simpleEntity ) );
+					assertThat( simpleEntity, notNullValue() );
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
+
 					assertTrue( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
 					assertThat( otherEntity.getAnotherSimpleEntity(), nullValue() );
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 
@@ -172,18 +207,22 @@ public class ManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					OtherEntity otherEntity = session.
-							createQuery( "from OtherEntity o join fetch o.simpleEntity left join fetch o.anotherSimpleEntity", OtherEntity.class )
+							createQuery(
+									"from OtherEntity o join fetch o.simpleEntity left join fetch o.anotherSimpleEntity",
+									OtherEntity.class
+							)
 							.uniqueResult();
 					// the ManyToOne is eager but the value is not null so a second query is executed
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
-
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 					assertThat( otherEntity.getName(), is( "Bar" ) );
+
 					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
 					assertTrue( Hibernate.isInitialized( simpleEntity ) );
 
 					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
 					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
@@ -195,11 +234,12 @@ public class ManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					OtherEntity otherEntity = session.get( OtherEntity.class, 2 );
-
 					assertThat( otherEntity.getName(), is( "Bar" ) );
+
 					assertFalse( Hibernate.isInitialized( otherEntity.getSimpleEntity() ) );
 					assertTrue( Hibernate.isInitialized( otherEntity.getAnotherSimpleEntity() ) );
-					assertThat( statistics.getPrepareStatementCount(), is(1L) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}

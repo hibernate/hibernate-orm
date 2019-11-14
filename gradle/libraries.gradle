@@ -52,7 +52,7 @@ ext {
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
-            jandex:         'org.jboss:jandex:2.0.5.Final',
+            jandex:         'org.jboss:jandex:2.1.1.Final',
             classmate:      'com.fasterxml:classmate:1.5.1',
 
             // Dom4J

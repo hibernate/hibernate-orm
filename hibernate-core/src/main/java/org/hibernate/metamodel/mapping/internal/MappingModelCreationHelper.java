@@ -1148,8 +1148,6 @@ public class MappingModelCreationHelper {
 				dialect,
 				creationProcess
 		);
-		// todo (6.0) : determine the correct FetchStrategy
-
 
 		final AssociationType type = (AssociationType) bootProperty.getType();
 		final FetchStyle fetchStyle = FetchStrategyHelper
@@ -1159,10 +1157,7 @@ public class MappingModelCreationHelper {
 						sessionFactory
 				);
 
-		final FetchTiming fetchTiming = FetchStrategyHelper.
-				determineFetchTiming( fetchStyle, type,
-									  sessionFactory
-				);
+		final FetchTiming fetchTiming = FetchStrategyHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
 
 		final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
 

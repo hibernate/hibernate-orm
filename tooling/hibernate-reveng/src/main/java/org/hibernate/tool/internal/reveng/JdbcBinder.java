@@ -5,7 +5,6 @@
 package org.hibernate.tool.internal.reveng;
 
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,7 +29,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -113,45 +111,19 @@ public class JdbcBinder {
 	public Metadata readFromDatabase() {
 		MetadataImpl metadata = ((InFlightMetadataCollectorImpl)metadataCollector)
 				.buildMetadataInstance(metadataBuildingContext);
-		metadata.getTypeConfiguration().scope(metadataBuildingContext);
-		readFromDatabase(null, null, new BinderMapping(metadata));
+		metadata.getTypeConfiguration().scope(metadataBuildingContext);		
+	    Mapping mapping = new BinderMapping(metadata);
+	    // use default from settings 
+	    String catalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+	    String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+	    JDBCReader reader = JdbcReaderFactory.newJDBCReader(properties,revengStrategy,serviceRegistry);
+	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
+        reader.readDatabaseSchema(collector, catalog, schema);
+        createPersistentClasses(collector, mapping); //move this to a different step!
+		((InFlightMetadataCollectorImpl)metadataCollector).processSecondPasses(metadataBuildingContext);		
 		return metadata;
 	}
 	
-	public void readFromDatabase(String catalog, String schema, Mapping mapping) {
-		try {
-			DatabaseCollector collector = readDatabaseSchema(catalog, schema);
-			createPersistentClasses(collector, mapping); //move this to a different step!
-			((InFlightMetadataCollectorImpl)metadataCollector).processSecondPasses(metadataBuildingContext);
-		}
-		catch (SQLException e) {
-			JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
-			throw jdbcServices.getSqlExceptionHelper().convert(e, "Reading from database", null);
-		}
-	}
-
-	/**
-	 * Read JDBC Metadata from the database. Does not create any classes or other ORM releated structures.
-	 *
-	 * @param catalog
-	 * @param schema
-	 * @return
-	 * @throws SQLException
-	 */
-	public DatabaseCollector readDatabaseSchema(String catalog, String schema) throws SQLException {
-	  	 // use default from settings if nothing else specified.
-	     catalog = catalog!=null ? catalog : properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-	     schema = schema!=null ? schema : properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-
-	     JDBCReader reader = JdbcReaderFactory.newJDBCReader(properties,revengStrategy,serviceRegistry);
-	     DatabaseCollector dbs = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
-
-	     reader.readDatabaseSchema(dbs, catalog, schema);
-	     return dbs;
-	}
-
-
-
 	/**
 	 * @param manyToOneCandidates
 	 * @param mappings2

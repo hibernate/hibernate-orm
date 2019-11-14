@@ -3352,8 +3352,8 @@ public final class SessionImpl
 				// Just log the exception and return null.
 				if ( log.isDebugEnabled() ) {
 					log.debug( "JDBCException was thrown for a transaction marked for rollback; " +
-									   "this is probably due to IronJacamar failing fast after " +
-									   "transaction was marked for rollback.", e );
+									"this is probably due to an operation failing fast due to the " +
+									"transaction marked for rollback.", e );
 				}
 				return null;
 			}

@@ -134,6 +134,11 @@ public class JoinProcessor implements SqlTokenTypes {
 		// Find tables referenced by FromReferenceNodes
 		collectReferencedTables( new ASTIterator( query ), result );
 		for (FromElement fromElement : (List<FromElement>) query.getFromClause().getFromElements()) {
+			// For joins, we want to add the table where the association key is mapped as well as that could be a supertype that we need to join
+			String role = fromElement.getRole();
+			if ( role != null ) {
+				result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
+			}
 			AST withClauseAst = fromElement.getWithClauseAst();
 			if ( withClauseAst != null ) {
 				collectReferencedTables( new ASTIterator( withClauseAst ), result );

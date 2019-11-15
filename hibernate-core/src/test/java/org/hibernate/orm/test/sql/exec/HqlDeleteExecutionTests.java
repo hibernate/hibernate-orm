@@ -73,7 +73,6 @@ public class HqlDeleteExecutionTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "Saving of entities with secondary tables is broken atm" )
 	public void testSimpleMultiTableRestrictedDeleteResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

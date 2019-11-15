@@ -131,8 +131,6 @@ class DatabaseSnapshotExecutor {
 							sessionFactory.getTypeConfiguration()
 					);
 
-					rootQuerySpec.getSelectClause().addSqlSelection( sqlSelection );
-
 					//noinspection unchecked
 					domainResults.add(
 							new BasicResult(
@@ -146,14 +144,11 @@ class DatabaseSnapshotExecutor {
 
 		entityDescriptor.visitStateArrayContributors(
 				contributorMapping -> {
-					final NavigablePath attrPath = rootPath.append( contributorMapping.getAttributeName() );
+					rootPath.append( contributorMapping.getAttributeName() );
 					contributorMapping.visitColumns(
 							(columnExpression, containingTableExpression, jdbcMapping) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
 										containingTableExpression );
-
-								final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-								jdbcParameters.add( jdbcParameter );
 
 								final ColumnReference columnReference = (ColumnReference) state.getSqlExpressionResolver()
 										.resolveSqlExpression(
@@ -175,8 +170,6 @@ class DatabaseSnapshotExecutor {
 												jdbcMapping.getJavaTypeDescriptor(),
 												sessionFactory.getTypeConfiguration()
 										);
-
-								rootQuerySpec.getSelectClause().addSqlSelection( sqlSelection );
 
 								//noinspection unchecked
 								domainResults.add(

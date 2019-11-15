@@ -8,6 +8,8 @@ package org.hibernate.orm.test.sql.exec.manytoone;
 
 import java.util.Calendar;
 
+import org.hibernate.stat.spi.StatisticsImplementor;
+
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneJoinTable;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,9 +18,11 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -32,24 +36,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @ServiceRegistry
-@SessionFactory
+@SessionFactory(generateStatistics = true)
 public class EntityWithManyToOneJoinTableTest {
 
-//	@AfterEach
-//	public void tearDown(SessionFactoryScope scope) {
-//		scope.inTransaction(
-//				session -> {
-//					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
-//					session.delete( loaded );
-//					session.delete( loaded.getOther() );
-//				}
-//		);
-//	}
-
-	@Test
-//	@FailureExpected
-	public void testSave(SessionFactoryScope scope) {
-		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable(
+				1,
+				"first",
+				Integer.MAX_VALUE
+		);
 
 		SimpleEntity other = new SimpleEntity(
 				2,
@@ -63,8 +59,41 @@ public class EntityWithManyToOneJoinTableTest {
 		entity.setOther( other );
 
 		scope.inTransaction( session -> {
+			session.save( entity );
 			session.save( other );
 		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from EntityWithManyToOneJoinTable" ).executeUpdate();
+					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected
+	public void testSaveInDifferentTransactions(SessionFactoryScope scope) {
+		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 3, "second", Integer.MAX_VALUE );
+
+		SimpleEntity other = new SimpleEntity(
+				4,
+				Calendar.getInstance().getTime(),
+				Calendar.getInstance().toInstant(),
+				Integer.MAX_VALUE -1 ,
+				Long.MAX_VALUE,
+				null
+		);
+
+		entity.setOther( other );
+
+		scope.inTransaction( session -> {
+			session.save( other );
+		} );
+
 		scope.inTransaction( session -> {
 			session.save( entity );
 		} );
@@ -78,41 +107,53 @@ public class EntityWithManyToOneJoinTableTest {
 					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
 				}
 		);
+	}
 
+	@Test
+	@FailureExpected
+	public void testHqlSelect(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
-					assert loaded != null;
-					assertThat( loaded.getSomeInteger(), equalTo( Integer.MAX_VALUE ) );
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e where e.id = 2",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 2 ) );
+					assertThat( result.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectAField(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final String value = session.createQuery(
+							"select e.name from EntityWithManyToOneJoinTable e where e.other.id = 2",
+							String.class
+					).uniqueResult();
+					assertThat( value, equalTo( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
 
 	@Test
 	@FailureExpected
-	public void testHqlSelect(SessionFactoryScope scope) {
-		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
-
-		SimpleEntity other = new SimpleEntity(
-				2,
-				Calendar.getInstance().getTime(),
-				null,
-				Integer.MAX_VALUE,
-				Long.MAX_VALUE,
-				null
-		);
-
-		entity.setOther( other );
-
-		scope.inTransaction( session -> {
-			session.save( other );
-			session.save( entity );
-		} );
-
+	public void testHqlSelectWithJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					final String value = session.createQuery(
-							"select e.name from EntityWithManyToOneJoinTable e where e.other.id = 2",
+							"select from EntityWithManyToOneJoinTable e where e.id = 2",
 							String.class
 					).uniqueResult();
 					assertThat( value, equalTo( "first" ) );

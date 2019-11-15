@@ -6109,7 +6109,7 @@ public abstract class AbstractEntityPersister
 	private EntityVersionMapping versionMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 
-	private SortedMap<String, AttributeMapping> declaredAttributeMappings = new TreeMap<>();
+	private Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
 	private List<AttributeMapping> attributeMappings;
 	protected List<Fetchable> staticFetchableList;
 
@@ -6222,7 +6222,6 @@ public abstract class AbstractEntityPersister
 		final RootClass entityBootDescriptor = (RootClass) creationProcess.getCreationContext()
 				.getBootModel()
 				.getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		final Table rootTable = entityBootDescriptor.getRootTable();
 
 		return SqmMutationStrategyHelper.resolveStrategy(
 				entityBootDescriptor,

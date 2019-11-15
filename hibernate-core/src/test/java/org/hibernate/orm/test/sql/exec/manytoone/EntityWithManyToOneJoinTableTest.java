@@ -8,6 +8,7 @@ package org.hibernate.orm.test.sql.exec.manytoone;
 
 import java.util.Calendar;
 
+import org.hibernate.Hibernate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -25,6 +26,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -71,6 +74,7 @@ public class EntityWithManyToOneJoinTableTest {
 				session -> {
 					session.createQuery( "delete from EntityWithManyToOneJoinTable" ).executeUpdate();
 					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+					session.createQuery( "delete from BasicEntity" ).executeUpdate();
 				}
 		);
 	}
@@ -126,9 +130,59 @@ public class EntityWithManyToOneJoinTableTest {
 
 					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 
-					assertThat( result.getOther().getSomeInteger(), is( Integer.MAX_VALUE ) );
+					SimpleEntity other = result.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other.getSomeInteger(), is( Integer.MAX_VALUE ) );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					// it is null so able to initialize
+					assertTrue( Hibernate.isInitialized( result.getLazyOther() ) );
+
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e where e.id = 1",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					BasicEntity basicEntity = new BasicEntity( 5, "basic" );
+
+					result.setLazyOther( basicEntity );
+
+					session.save( basicEntity );
+				}
+		);
+
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e where e.id = 1",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					SimpleEntity other = result.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other.getSomeInteger(), is( Integer.MAX_VALUE ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					BasicEntity lazyOther = result.getLazyOther();
+					assertFalse( Hibernate.isInitialized( lazyOther ) );
+					assertThat( lazyOther.getId(), is( 5 ) );
+					assertThat( lazyOther.getData(), is( "basic" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
 				}
 		);
 	}
@@ -196,6 +250,70 @@ public class EntityWithManyToOneJoinTableTest {
 					assertThat( result.getOther().getSomeInteger(), is( Integer.MAX_VALUE ) );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testGet(SessionFactoryScope scope){
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					EntityWithManyToOneJoinTable result = session.get(
+							EntityWithManyToOneJoinTable.class,
+							1
+					);
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+
+					assertTrue( Hibernate.isInitialized( result.getOther()) );
+					assertTrue( Hibernate.isInitialized( result.getLazyOther()) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e where e.id = 1",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					BasicEntity basicEntity = new BasicEntity( 5, "basic" );
+
+					result.setLazyOther( basicEntity );
+
+					session.save( basicEntity );
+				}
+		);
+
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e where e.id = 1",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					SimpleEntity other = result.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other.getSomeInteger(), is( Integer.MAX_VALUE ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					BasicEntity lazyOther = result.getLazyOther();
+					assertFalse( Hibernate.isInitialized( lazyOther ) );
+					assertThat( lazyOther.getId(), is( 5 ) );
+					assertThat( lazyOther.getData(), is( "basic" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
 				}
 		);
 	}

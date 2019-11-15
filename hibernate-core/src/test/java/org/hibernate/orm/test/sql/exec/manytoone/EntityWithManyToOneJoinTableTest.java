@@ -10,10 +10,10 @@ import java.util.Calendar;
 
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneJoinTable;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(
 		annotatedClasses = {
 				EntityWithManyToOneJoinTable.class,
-				SimpleEntity.class
+				SimpleEntity.class,
+				BasicEntity.class
 		}
 )
 @ServiceRegistry
@@ -75,7 +76,6 @@ public class EntityWithManyToOneJoinTableTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void testSaveInDifferentTransactions(SessionFactoryScope scope) {
 		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 3, "second", Integer.MAX_VALUE );
 
@@ -83,7 +83,7 @@ public class EntityWithManyToOneJoinTableTest {
 				4,
 				Calendar.getInstance().getTime(),
 				Calendar.getInstance().toInstant(),
-				Integer.MAX_VALUE -1 ,
+				Integer.MAX_VALUE - 1,
 				Long.MAX_VALUE,
 				null
 		);
@@ -110,22 +110,25 @@ public class EntityWithManyToOneJoinTableTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void testHqlSelect(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneJoinTable result = session.createQuery(
-							"select e from EntityWithManyToOneJoinTable e where e.id = 2",
+							"select e from EntityWithManyToOneJoinTable e where e.id = 1",
 							EntityWithManyToOneJoinTable.class
 					).uniqueResult();
 
 					assertThat( result, notNullValue() );
-					assertThat( result.getId(), is( 2 ) );
+					assertThat( result.getId(), is( 1 ) );
 					assertThat( result.getName(), is( "first" ) );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					assertThat( result.getOther().getSomeInteger(), is( Integer.MAX_VALUE ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
 	}
@@ -140,6 +143,7 @@ public class EntityWithManyToOneJoinTableTest {
 							"select e.name from EntityWithManyToOneJoinTable e where e.other.id = 2",
 							String.class
 					).uniqueResult();
+
 					assertThat( value, equalTo( "first" ) );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
@@ -148,29 +152,63 @@ public class EntityWithManyToOneJoinTableTest {
 	}
 
 	@Test
-	@FailureExpected
 	public void testHqlSelectWithJoin(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final String value = session.createQuery(
-							"select from EntityWithManyToOneJoinTable e where e.id = 2",
-							String.class
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e join e.other where e.id = 1",
+							EntityWithManyToOneJoinTable.class
 					).uniqueResult();
-					assertThat( value, equalTo( "first" ) );
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					assertThat( result.getOther().getId(), is( 2 ) );
+					assertThat( result.getOther().getSomeInteger(), is( Integer.MAX_VALUE ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
 	}
 
 	@Test
-	@FailureExpected
+	public void testHqlSelectWithJoinFetch(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneJoinTable result = session.createQuery(
+							"select e from EntityWithManyToOneJoinTable e join fetch e.other where e.id = 1",
+							EntityWithManyToOneJoinTable.class
+					).uniqueResult();
+
+					assertThat( result, notNullValue() );
+					assertThat( result.getId(), is( 1 ) );
+					assertThat( result.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertThat( result.getOther().getId(), is( 2 ) );
+					assertThat( result.getOther().getSomeInteger(), is( Integer.MAX_VALUE ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 1, "first", Integer.MAX_VALUE );
+		EntityWithManyToOneJoinTable entity = new EntityWithManyToOneJoinTable( 2, "second", Integer.MAX_VALUE );
 
 		SimpleEntity other = new SimpleEntity(
-				2,
+				4,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MAX_VALUE,
+				100,
 				Long.MAX_VALUE,
 				null
 		);
@@ -183,17 +221,17 @@ public class EntityWithManyToOneJoinTableTest {
 		} );
 
 		SimpleEntity anOther = new SimpleEntity(
-				3,
+				5,
 				Calendar.getInstance().getTime(),
 				null,
-				Integer.MIN_VALUE,
+				Integer.MIN_VALUE + 5,
 				Long.MIN_VALUE,
 				null
 		);
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
+					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 2 );
 					assert loaded != null;
 					session.save( anOther );
 					loaded.setOther( anOther );
@@ -202,10 +240,10 @@ public class EntityWithManyToOneJoinTableTest {
 
 		scope.inTransaction(
 				session -> {
-					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 1 );
+					final EntityWithManyToOneJoinTable loaded = session.get( EntityWithManyToOneJoinTable.class, 2 );
 
 					assertThat( loaded.getOther(), notNullValue() );
-					assertThat( loaded.getOther().getId(), equalTo( 3 ) );
+					assertThat( loaded.getOther().getId(), equalTo( 5 ) );
 				}
 		);
 	}

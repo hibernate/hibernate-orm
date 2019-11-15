@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
@@ -63,14 +64,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final TableReference keyTableKeyReference = getKeyTableReference( tableGroup, tableGroup );
+
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
+								keyTableKeyReference,
 								keyColumnExpression
 						),
 						s -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								keyTableKeyReference,
 								keyColumnExpression,
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
@@ -95,25 +98,27 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 			JoinType joinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final TableReference tableReference = lhs.resolveTableReference( targetColumnContainingTable );
+		final TableReference targetTableReference = lhs.resolveTableReference( targetColumnContainingTable );
 
 		final ColumnReference targetReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-				SqlExpressionResolver.createColumnReferenceKey( tableReference, keyColumnExpression ),
+				SqlExpressionResolver.createColumnReferenceKey( targetTableReference, keyColumnExpression ),
 				s -> new ColumnReference(
-						tableReference.getIdentificationVariable(),
+						targetTableReference.getIdentificationVariable(),
 						targetColumnExpression,
 						jdbcMapping,
 						creationContext.getSessionFactory()
 				)
 		);
 
+		final TableReference keyTableKeyReference = getKeyTableReference( lhs, tableGroup );
+
 		final ColumnReference keyReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
-						tableGroup.getPrimaryTableReference(),
+						keyTableKeyReference,
 						keyColumnExpression
 				),
 				s -> new ColumnReference(
-						tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+						keyTableKeyReference.getIdentificationVariable(),
 						keyColumnExpression,
 						jdbcMapping,
 						creationContext.getSessionFactory()
@@ -125,6 +130,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 				ComparisonOperator.EQUAL,
 				keyReference
 		);
+	}
+
+	protected TableReference getKeyTableReference(TableGroup lhs, TableGroup tableGroup) {
+		for ( TableReferenceJoin tableJoin : lhs.getTableReferenceJoins() ) {
+			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( keyColumnContainingTable ) ) {
+				return tableJoin.getJoinedTableReference();
+			}
+		}
+		return tableGroup.getPrimaryTableReference();
 	}
 
 	@Override
@@ -144,7 +158,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public void visitColumnMappings(FkColumnMappingConsumer consumer) {
-		consumer.consume( keyColumnContainingTable, keyColumnExpression, targetColumnContainingTable, targetColumnExpression, jdbcMapping );
+		consumer.consume(
+				keyColumnContainingTable,
+				keyColumnExpression,
+				targetColumnContainingTable,
+				targetColumnExpression,
+				jdbcMapping
+		);
 	}
 
 	@Override

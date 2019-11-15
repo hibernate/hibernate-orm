@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.domain.gambit;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
@@ -22,6 +23,7 @@ public class EntityWithManyToOneJoinTable {
 	private String name;
 	private SimpleEntity other;
 	private Integer someInteger;
+	private BasicEntity lazyOther;
 
 	public EntityWithManyToOneJoinTable() {
 	}
@@ -57,6 +59,16 @@ public class EntityWithManyToOneJoinTable {
 
 	public void setOther(SimpleEntity other) {
 		this.other = other;
+	}
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinTable(name = "ENTITY_ANOTHER")
+	public BasicEntity getLazyOther() {
+		return lazyOther;
+	}
+
+	public void setLazyOther(BasicEntity lazyOther) {
+		this.lazyOther = lazyOther;
 	}
 
 	public Integer getSomeInteger() {

@@ -18,4 +18,9 @@ public interface PostInsertIdentifierGenerator extends IdentifierGenerator {
 			PostInsertIdentityPersister persister,
 			Dialect dialect,
 			boolean isGetGeneratedKeysEnabled) throws HibernateException;
+
+	@Override
+	default boolean supportsJdbcBatchInserts() {
+		return false;
+	}
 }

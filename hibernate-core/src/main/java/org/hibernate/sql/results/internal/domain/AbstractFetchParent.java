@@ -14,6 +14,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -68,7 +69,9 @@ public abstract class AbstractFetchParent implements FetchParent {
 	public Fetch findFetch(String fetchableName) {
 		if ( fetches != null ) {
 			for ( Fetch fetch : fetches ) {
-				if ( fetch.getFetchedMapping().getFetchableName().equals( fetchableName ) ) {
+				final Fetchable fetchedMapping = fetch.getFetchedMapping();
+				if ( fetchedMapping != null && fetchedMapping
+						.getFetchableName().equals( fetchableName ) ) {
 					return fetch;
 				}
 			}

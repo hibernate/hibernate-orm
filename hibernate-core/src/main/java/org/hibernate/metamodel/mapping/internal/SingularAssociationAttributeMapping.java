@@ -14,6 +14,8 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
@@ -34,6 +36,7 @@ import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.FetchableContainer;
 
 /**
  * @author Steve Ebersole
@@ -43,6 +46,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final ForeignKeyDescriptor foreignKeyDescriptor;
+	private String mappedBy;
 
 	public SingularAssociationAttributeMapping(
 			String name,
@@ -66,6 +70,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = isNullable;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
+		this.mappedBy =  null;
 	}
 
 	@Override
@@ -218,6 +223,23 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				sqlExpressionResolver,
 				creationContext
 		);
+	}
+
+	@Override
+	public boolean isCircular(FetchParent fetchParent) {
+		NavigablePath navigablePath = fetchParent.getNavigablePath();
+		if ( navigablePath.getParent() == null ) {
+			return false;
+		}
+		else {
+			NavigablePath parentParentNavigablePath = navigablePath.getParent();
+			if ( parentParentNavigablePath.getLocalName().equals( getMappedTypeDescriptor().getEntityName() ) ) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	}
 
 }

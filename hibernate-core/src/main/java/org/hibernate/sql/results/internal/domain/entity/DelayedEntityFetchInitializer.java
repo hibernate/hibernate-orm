@@ -92,7 +92,7 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 				}
 			}
 			else {
-				entityInstance = concreteDescriptor.load( fkValue, null, lockMode, rowProcessingState.getSession() );
+				entityInstance = rowProcessingState.getSession().immediateLoad( concreteDescriptor.getEntityName(), fkValue );
 			}
 
 			notifyParentResolutionListeners( entityInstance );

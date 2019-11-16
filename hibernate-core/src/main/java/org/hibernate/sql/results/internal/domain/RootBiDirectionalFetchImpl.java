@@ -17,7 +17,6 @@ import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.BiDirectionalFetch;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.EntityResult;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
@@ -32,16 +31,19 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 	private final NavigablePath navigablePath;
+	private Fetchable fetchable;
+	private NavigablePath referencedNavigablePath;
 	private final FetchParent fetchParent;
-	private final EntityResult referencedRoot;
 
 	public RootBiDirectionalFetchImpl(
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			EntityResult referencedRoot) {
+			Fetchable fetchable,
+			NavigablePath referencedNavigablePath) {
 		this.fetchParent = fetchParent;
-		this.referencedRoot = referencedRoot;
 		this.navigablePath = navigablePath;
+		this.fetchable = fetchable;
+		this.referencedNavigablePath = referencedNavigablePath;
 	}
 
 	@Override
@@ -51,7 +53,7 @@ public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable
 
 	@Override
 	public NavigablePath getReferencedPath() {
-		return referencedRoot.getNavigablePath();
+		return referencedNavigablePath;
 	}
 
 	@Override
@@ -76,7 +78,7 @@ public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				getReferencedPath(),
-				referencedRoot.getResultJavaTypeDescriptor()
+				fetchable.getJavaTypeDescriptor()
 		);
 	}
 
@@ -93,7 +95,7 @@ public class RootBiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return referencedRoot.getResultJavaTypeDescriptor();
+		return fetchable.getJavaTypeDescriptor();
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import java.util.SortedSet;
 import java.util.function.Consumer;
 
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -90,6 +91,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -895,6 +897,7 @@ public class MappingModelCreationHelper {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
 			return new SimpleForeignKeyDescriptor(
+					( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
 					bootValueMapping.getKey().getTable().getName(),
 					bootValueMapping.getKey().getColumnIterator().next().getText( dialect ),
 					simpleFkTarget.getContainingTableExpression(),
@@ -947,6 +950,7 @@ public class MappingModelCreationHelper {
 				keyColumnExpression = identifier.getText();
 			}
 			return new SimpleForeignKeyDescriptor(
+					((AssociationType)bootValueMapping.getType()).getForeignKeyDirection(),
 					identifier.getText(),
 					keyColumnExpression,
 					simpleFkTarget.getContainingTableExpression(),

@@ -9,6 +9,8 @@ package org.hibernate.testing.orm.domain.gambit;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 
@@ -52,7 +54,14 @@ public class EntityWithManyToOneJoinTable {
 	}
 
 	@ManyToOne
-	@JoinTable(name = "ENTITY_OTHER")
+	@JoinTable(name = "ENTITY_OTHER",
+			joinColumns =  {
+					@JoinColumn( name = "LHS_ID")
+			},
+			inverseJoinColumns = {
+					@JoinColumn(name="RHS_ID")
+	}
+	)
 	public SimpleEntity getOther() {
 		return other;
 	}

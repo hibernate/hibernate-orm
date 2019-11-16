@@ -6,11 +6,11 @@
  */
 package org.hibernate.orm.test.sql.exec.manytoone;
 
-import java.sql.Statement;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
@@ -280,21 +280,16 @@ public class ManyToOneTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session ->
-						session.doWork(
-								work -> {
-									Statement statement = work.createStatement();
-									statement.execute( "delete from mapping_other_entity" );
-									statement.execute( "delete from mapping_another_simple_entity" );
-									statement.execute( "delete from mapping_simple_entity" );
-									statement.close();
-								}
-						)
+				session -> {
+					session.createQuery( "delete from OtherEntity" ).executeUpdate();
+					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+					session.createQuery( "delete from AnotherSimpleEntity" ).executeUpdate();
+				}
 		);
 	}
 
 	@Entity(name = "OtherEntity")
-	@Table(name = "mapping_other_entity")
+	@Table(name = "other_entity")
 	public static class OtherEntity {
 		private Integer id;
 		private String name;
@@ -340,7 +335,7 @@ public class ManyToOneTest {
 	}
 
 	@Entity(name = "SimpleEntity")
-	@Table(name = "mapping_simple_entity")
+	@Table(name = "simple_entity")
 	public static class SimpleEntity {
 		private Integer id;
 		private String name;
@@ -364,7 +359,7 @@ public class ManyToOneTest {
 	}
 
 	@Entity(name = "AnotherSimpleEntity")
-	@Table(name = "mapping_another_simple_entity")
+	@Table(name = "another_simple_entity")
 	public static class AnotherSimpleEntity {
 		private Integer id;
 		private String name;

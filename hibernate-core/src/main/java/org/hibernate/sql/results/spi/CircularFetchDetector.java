@@ -24,15 +24,14 @@ public class CircularFetchDetector {
 			return null;
 		}
 
-		assert fetchParent instanceof Fetch;
-		final Fetch fetchParentAsFetch = (Fetch) fetchParent;
+		if ( fetchParent instanceof Fetch ) {
+			final Fetch fetchParentAsFetch = (Fetch) fetchParent;
 
-		final NavigablePath parentParentPath = fetchParent.getNavigablePath().getParent();
-		assert fetchParent.getNavigablePath().getParent() != null;
+			final NavigablePath parentParentPath = fetchParent.getNavigablePath().getParent();
+			assert fetchParent.getNavigablePath().getParent() != null;
 
-		assert fetchParentAsFetch.getFetchParent().getNavigablePath().equals( parentParentPath );
+			assert fetchParentAsFetch.getFetchParent().getNavigablePath().equals( parentParentPath );
 
-		if ( fetchParentAsFetch.getFetchParent() instanceof Fetch ) {
 			return new BiDirectionalFetchImpl(
 					fetchParent.getNavigablePath().append( fetchable.getFetchableName() ),
 					fetchParent,
@@ -40,15 +39,15 @@ public class CircularFetchDetector {
 			);
 		}
 		else {
-			assert fetchParentAsFetch instanceof EntityResult;
 
 			// note : the "`fetchParentAsFetch` is `RootBiDirectionalFetchImpl`" case would
 			// 		be handled in the `Fetch` block since `RootBiDirectionalFetchImpl` is a Fetch
 
 			return new RootBiDirectionalFetchImpl(
-					fetchParent.getNavigablePath().append( fetchable.getFetchableName() ),
+					new NavigablePath( fetchable.getJavaTypeDescriptor().getJavaType().getName() ),
 					fetchParent,
-					(EntityResult) fetchParentAsFetch
+					fetchable,
+					fetchParent.getNavigablePath()
 			);
 		}
 	}

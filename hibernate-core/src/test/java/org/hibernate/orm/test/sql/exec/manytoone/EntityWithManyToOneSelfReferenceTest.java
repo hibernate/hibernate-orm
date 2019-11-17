@@ -8,6 +8,9 @@ package org.hibernate.orm.test.sql.exec.manytoone;
 
 import java.util.List;
 
+import org.hibernate.Hibernate;
+import org.hibernate.stat.spi.StatisticsImplementor;
+
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -19,8 +22,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -65,48 +71,125 @@ public class EntityWithManyToOneSelfReferenceTest {
 	}
 
 	@Test
-	public void testHqlSelect(SessionFactoryScope scope) {
+	public void testHqlSelectImplicitJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference queryResult = session.createQuery(
 							"select e from EntityWithManyToOneSelfReference e where e.other.name = 'first'",
 							EntityWithManyToOneSelfReference.class
 					).uniqueResult();
-					assertThat( queryResult.getName(), equalTo( "second" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+					assertThat( queryResult.getName(), is( "second" ) );
+
+					EntityWithManyToOneSelfReference other = queryResult.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
-
 	}
 
 	@Test
-	@FailureExpected
 	public void testGetEntity(SessionFactoryScope scope) {
-
-
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
 							EntityWithManyToOneSelfReference.class,
 							2
 					);
-					assert loaded != null;
-					assertThat( loaded.getName(), equalTo( "second" ) );
-					assert loaded.getOther() != null;
-					assertThat( loaded.getOther().getName(), equalTo( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertThat( loaded, notNullValue() );
+					assertThat( loaded.getName(), is( "second" ) );
+
+					EntityWithManyToOneSelfReference other = loaded.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other.getName(), is( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
 							EntityWithManyToOneSelfReference.class,
 							1
 					);
-					assert loaded != null;
-					assertThat( loaded.getName(), equalTo( "first" ) );
-					assertThat( loaded.getOther(), nullValue() );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					assertThat( loaded, notNullValue() );
+					assertThat( loaded.getName(), is( "first" ) );
+
+					EntityWithManyToOneSelfReference other = loaded.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other, nullValue() );
 				}
 		);
+	}
+
+	@Test
+	public void testHqlSelectField(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final String value = session.createQuery(
+							"select e.name from EntityWithManyToOneSelfReference e where e.other.name = 'first'",
+							String.class
+					).uniqueResult();
+					assertThat( value, equalTo( "second" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectWithJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneSelfReference result = session.createQuery(
+							"select e from EntityWithManyToOneSelfReference e join e.other o where o.name = 'first'",
+							EntityWithManyToOneSelfReference.class
+					).uniqueResult();
+					assertThat( result.getName(), equalTo( "second" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					assertTrue( Hibernate.isInitialized( result.getOther() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectWithFetchJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithManyToOneSelfReference result = session.createQuery(
+							"select e from EntityWithManyToOneSelfReference e join fetch e.other k where k.name = 'first'",
+							EntityWithManyToOneSelfReference.class
+					).uniqueResult();
+					assertThat( result.getName(), equalTo( "second" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertTrue( Hibernate.isInitialized( result.getOther() ) );
+				}
+		);
+	}
+
+	@Test
+	@FailureExpected
+	public void testGetByMultipleIds(SessionFactoryScope scope) {
 
 		scope.inTransaction(
 				session -> {
@@ -133,18 +216,5 @@ public class EntityWithManyToOneSelfReferenceTest {
 					assertThat( loaded.getOther().getName(), equalTo( "first" ) );
 				}
 		);
-
-		// todo (6.0) : the restriction here uses the wrong table alias...
-		scope.inTransaction(
-				session -> {
-					final String value = session.createQuery(
-							"select e.name from EntityWithManyToOneSelfReference e where e.other.name = 'first'",
-							String.class
-					).uniqueResult();
-					assertThat( value, equalTo( "second" ) );
-				}
-		);
-
-
 	}
 }

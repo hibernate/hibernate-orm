@@ -65,7 +65,11 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		if ( fetchesByPath == null ) {
 			fetchesByPath = new HashMap<>();
 		}
-		fetchesByPath.put( sqmJoin.getNavigablePath(), sqmJoin );
+		NavigablePath navigablePath = sqmJoin.getNavigablePath();
+		fetchesByPath.put( navigablePath, sqmJoin );
+		if ( containsAlias( navigablePath ) ) {
+			fetchesByPath.put( getPathWithoutAlias(navigablePath), sqmJoin );
+		}
 	}
 
 	public boolean isResolved(SqmFrom fromElement) {

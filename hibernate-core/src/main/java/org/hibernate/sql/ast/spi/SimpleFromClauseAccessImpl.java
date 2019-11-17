@@ -20,18 +20,26 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  */
 public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
+	private final Map<NavigablePath, TableGroup> tableGroupMapNoAlias = new HashMap<>();
 
 	public SimpleFromClauseAccessImpl() {
 	}
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		return tableGroupMap.get( navigablePath );
+		TableGroup tableGroup = tableGroupMap.get( navigablePath );
+		if ( tableGroup == null && !containsAlias( navigablePath ) ) {
+			return tableGroupMapNoAlias.get( navigablePath );
+		}
+		return tableGroup;
 	}
 
 	@Override
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
 		final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
+		if ( containsAlias( navigablePath ) ) {
+			tableGroupMapNoAlias.put( getPathWithoutAlias( navigablePath ), tableGroup );
+		}
 		if ( previous != null ) {
 			SqlTreeCreationLogger.LOGGER.debugf(
 					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",
@@ -42,4 +50,13 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 		}
 	}
 
+	protected boolean containsAlias(NavigablePath navigablePath) {
+		return navigablePath.getLocalName().endsWith( ")" );
+	}
+
+	protected NavigablePath getPathWithoutAlias(NavigablePath navigablePath) {
+		final String fullPath = navigablePath.getFullPath();
+		final String navigableName = fullPath.substring( fullPath.lastIndexOf( '.' ) + 1, fullPath.lastIndexOf( '(' ) );
+		return new NavigablePath( navigablePath.getParent(), navigableName );
+	}
 }

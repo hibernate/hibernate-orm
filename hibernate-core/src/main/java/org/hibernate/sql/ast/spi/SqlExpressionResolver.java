@@ -48,7 +48,7 @@ public interface SqlExpressionResolver {
 		final String qualifier = tableReference.getIdentificationVariable() == null
 				? tableReference.getTableExpression()
 				: tableReference.getIdentificationVariable();
-		return qualifier + '.' + columnExpression;
+		return qualifier + columnExpression;
 	}
 
 	/**

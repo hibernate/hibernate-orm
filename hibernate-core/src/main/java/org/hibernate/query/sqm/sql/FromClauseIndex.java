@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
 public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
-	private Map<NavigablePath, TableGroupJoin> tableGroupJoinMap;
+//	private Map<NavigablePath, TableGroupJoin> tableGroupJoinMap;
 	private final Map<String, TableGroup> tableGroupByAliasXref = new HashMap<>();
 
 	/**
@@ -76,9 +76,9 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		return tableGroupMap.containsKey( fromElement.getNavigablePath() );
 	}
 
-	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {
-		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
-	}
+//	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {
+//		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
+//	}
 
 	public SqmAttributeJoin findFetchedJoinByPath(NavigablePath path) {
 		return fetchesByPath == null ? null : fetchesByPath.get( path );

@@ -934,24 +934,24 @@ public class MappingModelCreationHelper {
 
 			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
 			String keyColumnExpression;
-			final Identifier identifier = creationProcess.getCreationContext()
+
+			final Identifier tableIdentifier = creationProcess.getCreationContext()
 					.getBootstrapContext()
 					.getMetadataBuildingOptions()
 					.getPhysicalNamingStrategy().toPhysicalTableName(
 							bootValueMapping.getTable().getNameIdentifier(),
 							jdbcServices.getJdbcEnvironment()
 					);
-
 			if ( columnIterator.hasNext() ) {
 				keyColumnExpression = columnIterator.next().getText( dialect );
 			}
 			else {
 				// case of ToOne with @PrimaryKeyJoinColumn
-				keyColumnExpression = identifier.getText();
+				keyColumnExpression = bootValueMapping.getTable().getColumn( 0 ).getName();
 			}
 			return new SimpleForeignKeyDescriptor(
 					((AssociationType)bootValueMapping.getType()).getForeignKeyDirection(),
-					identifier.getText(),
+					tableIdentifier.getText(),
 					keyColumnExpression,
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),

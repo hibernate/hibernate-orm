@@ -8,17 +8,24 @@ package org.hibernate.orm.test.sql.exec.onetoone;
 
 import java.util.Calendar;
 
+import org.hibernate.Hibernate;
+import org.hibernate.stat.spi.StatisticsImplementor;
+
 import org.hibernate.testing.orm.domain.gambit.EntityWithOneToOneSharingPrimaryKey;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
@@ -31,12 +38,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @ServiceRegistry
 @SessionFactory(generateStatistics = true)
-@FailureExpected
 public class EntityWithOneToOneSharingPrimaryKeyTest {
 
-	@Test
-	public void testOperations(SessionFactoryScope scope) {
-
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
 		SimpleEntity other = new SimpleEntity(
 				2,
 				Calendar.getInstance().getTime(),
@@ -55,22 +60,42 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 		entity.setOther( other );
 
 		scope.inTransaction(
-
 				session -> {
 					session.save( other );
 					session.save( entity );
-				} );
+				}
+		);
+	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from EntityWithOneToOneSharingPrimaryKey" ).executeUpdate();
+					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	public void testGet(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOneSharingPrimaryKey loaded = session.get(
 							EntityWithOneToOneSharingPrimaryKey.class,
 							2
 					);
-					assert loaded != null;
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertThat( loaded, notNullValue() );
 					assertThat( loaded.getName(), equalTo( "first" ) );
-					assert loaded.getOther() != null;
-					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
+
+					SimpleEntity other = loaded.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other, notNullValue() );
+					assertThat( other.getId(), equalTo( 2 ) );
 				}
 		);
 
@@ -80,10 +105,70 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 							SimpleEntity.class,
 							2
 					);
-					assert loaded != null;
+					assertThat( loaded, notNullValue() );
 				}
 		);
+	}
 
+	@Test
+	public void testHqlSelectWithImplicitJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithOneToOneSharingPrimaryKey value = session.createQuery(
+							"select e from EntityWithOneToOneSharingPrimaryKey e where e.other.id = 2",
+							EntityWithOneToOneSharingPrimaryKey.class
+					).uniqueResult();
+					assertThat( value.getName(), equalTo( "first" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					assertTrue( Hibernate.isInitialized( value.getOther() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectWithJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithOneToOneSharingPrimaryKey value = session.createQuery(
+							"select e from EntityWithOneToOneSharingPrimaryKey e join e.other t where t.id = 2",
+							EntityWithOneToOneSharingPrimaryKey.class
+					).uniqueResult();
+					assertThat( value.getName(), equalTo( "first" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
+					assertTrue( Hibernate.isInitialized( value.getOther() ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectFetchWithJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithOneToOneSharingPrimaryKey value = session.createQuery(
+							"select e from EntityWithOneToOneSharingPrimaryKey e join fetch e.other t where t.id = 2",
+							EntityWithOneToOneSharingPrimaryKey.class
+					).uniqueResult();
+					assertThat( value.getName(), equalTo( "first" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertTrue( Hibernate.isInitialized( value.getOther() ) );
+
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectAField(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final String value = session.createQuery(
@@ -91,6 +176,7 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 							String.class
 					).uniqueResult();
 					assertThat( value, equalTo( "first" ) );
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}

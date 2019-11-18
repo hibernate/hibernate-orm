@@ -84,7 +84,7 @@ public class JdbcBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	public JdbcBinder(
+	private JdbcBinder(
 			Properties properties,
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
 		this.properties = properties;

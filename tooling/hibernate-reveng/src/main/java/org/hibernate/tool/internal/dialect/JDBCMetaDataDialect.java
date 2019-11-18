@@ -26,7 +26,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			
 			ResultSet tableRs = getMetaData().getTables(catalog , schema , table, new String[] { "TABLE", "VIEW" });
 			
-			return new ResultSetIterator(tableRs, getSQLExceptionConverter()) {
+			return new ResultSetIterator(tableRs) {
 				
 				Map<String, Object> element = new HashMap<String, Object>();
 				protected Map<String, Object> convertRow(ResultSet tableResultSet) throws SQLException {
@@ -61,7 +61,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			log.debug("getIndexInfo(" + catalog + "." + schema + "." + table + ")");
 			ResultSet tableRs = getMetaData().getIndexInfo(catalog , schema , table, false, true);
 			
-			return new ResultSetIterator(tableRs, getSQLExceptionConverter()) {
+			return new ResultSetIterator(tableRs) {
 				
 				Map<String, Object> element = new HashMap<String, Object>();
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
@@ -98,7 +98,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			log.debug("getColumns(" + catalog + "." + schema + "." + table + "." + column + ")");
 			ResultSet tableRs = getMetaData().getColumns(catalog, schema, table, column);
 			
-			return new ResultSetIterator(tableRs, getSQLExceptionConverter()) {
+			return new ResultSetIterator(tableRs) {
 				
 				Map<String, Object> element = new HashMap<String, Object>();
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
@@ -131,7 +131,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			log.debug("getPrimaryKeys(" + catalog + "." + schema + "." + table + ")");
 			ResultSet tableRs = getMetaData().getPrimaryKeys(catalog, schema, table);
 			
-			return new ResultSetIterator(tableRs, getSQLExceptionConverter()) {
+			return new ResultSetIterator(tableRs) {
 				
 				Map<String, Object> element = new HashMap<String, Object>();
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {
@@ -160,7 +160,7 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 			log.debug("getExportedKeys(" + catalog + "." + schema + "." + table + ")");
 			ResultSet tableRs = getMetaData().getExportedKeys(catalog, schema, table);
 			
-			return new ResultSetIterator(tableRs, getSQLExceptionConverter()) {
+			return new ResultSetIterator(tableRs) {
 				
 				Map<String, Object> element = new HashMap<String, Object>();
 				protected Map<String, Object> convertRow(ResultSet rs) throws SQLException {

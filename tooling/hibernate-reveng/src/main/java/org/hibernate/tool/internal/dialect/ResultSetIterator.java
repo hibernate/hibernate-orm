@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.hibernate.exception.spi.SQLExceptionConverter;
-
 
 /**
  * Iterator over a resultset; intended usage only for metadata reading.  
@@ -21,24 +19,17 @@ public abstract class ResultSetIterator implements Iterator<Map<String, Object>>
 
 	protected boolean endOfRows = false;
 
-	private SQLExceptionConverter sec;
-
 	private Statement statement = null;
 
-	protected ResultSetIterator(ResultSet resultset, SQLExceptionConverter sec) {
-		this(null, resultset, sec);
+	protected ResultSetIterator(ResultSet resultset) {
+		this(null, resultset);
 	}
 
-	public ResultSetIterator(Statement stmt, ResultSet resultset, SQLExceptionConverter exceptionConverter) {
+	public ResultSetIterator(Statement stmt, ResultSet resultset) {
 		this.rs = resultset;
-		this.sec = exceptionConverter;
 		this.statement  = stmt;		
 	}
 
-	protected SQLExceptionConverter getSQLExceptionConverter() {
-		return sec;
-	}
-	
 	public boolean hasNext() {
 		try {
 			advance();

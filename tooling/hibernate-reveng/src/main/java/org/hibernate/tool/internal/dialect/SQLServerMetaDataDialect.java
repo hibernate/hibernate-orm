@@ -33,7 +33,7 @@ public class SQLServerMetaDataDialect extends JDBCMetaDataDialect {
 				
 				final String sc = schema;
 				final String cat = catalog;
-				return new ResultSetIterator(statement.executeQuery(), getSQLExceptionConverter()) {
+				return new ResultSetIterator(statement.executeQuery()) {
 					
 					Map<String, Object> element = new HashMap<String, Object>();
 					protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException {

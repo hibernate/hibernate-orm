@@ -264,8 +264,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			
 			ResultSet tableRs = getTableResultSet( schema, table );
 
-			return new ResultSetIterator(null, tableRs,
-					getSQLExceptionConverter()) {
+			return new ResultSetIterator(null, tableRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
@@ -313,8 +312,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			ResultSet indexRs;
 			indexRs = getIndexInfoResultSet( schema, table );
 
-			return new ResultSetIterator(null, indexRs,
-					getSQLExceptionConverter()) {
+			return new ResultSetIterator(null, indexRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
@@ -358,8 +356,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			ResultSet columnRs;
 			columnRs = getColumnsResultSet( schema, table, column );
 
-			return new ResultSetIterator(null, columnRs,
-					getSQLExceptionConverter()) {
+			return new ResultSetIterator(null, columnRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
@@ -405,8 +402,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 			ResultSet pkeyRs;
 			pkeyRs = getPrimaryKeysResultSet( schema, table );
 
-			return new ResultSetIterator(null, pkeyRs,
-					getSQLExceptionConverter()) {
+			return new ResultSetIterator(null, pkeyRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 
@@ -447,8 +443,7 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 
 			ResultSet pExportRs = getExportedKeysResultSet( schema, table );
 
-			return new ResultSetIterator(null, pExportRs,
-					getSQLExceptionConverter()) {
+			return new ResultSetIterator(null, pExportRs) {
 
 				Map<String, Object> element = new HashMap<String, Object>();
 

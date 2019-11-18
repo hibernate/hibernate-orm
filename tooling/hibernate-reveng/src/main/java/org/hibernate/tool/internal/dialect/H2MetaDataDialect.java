@@ -77,7 +77,7 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 									
 				PreparedStatement statement = getConnection().prepareStatement( sql );
 				
-				return new ResultSetIterator(statement.executeQuery(), getSQLExceptionConverter()) {
+				return new ResultSetIterator(statement.executeQuery()) {
 					
 					Map<String, Object> element = new HashMap<String, Object>();
 					protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException {

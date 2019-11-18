@@ -39,8 +39,7 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 				
 				final String sc = schema;
 				final String cat = catalog;
-				return new ResultSetIterator(getMetaData().getTables(catalog, schema, table, new String[]{"TABLE"}),
-						getSQLExceptionConverter()) {
+				return new ResultSetIterator(getMetaData().getTables(catalog, schema, table, new String[]{"TABLE"})) {
 					
 					Map<String, Object> element = new HashMap<String, Object>();
 					protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException{

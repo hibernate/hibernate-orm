@@ -85,7 +85,6 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
@@ -93,6 +92,7 @@ import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.type.AnyType;
@@ -2397,7 +2397,12 @@ public abstract class AbstractCollectionPersister
 		else {
 			// we do have a "collection table" - apply it first
 			collector.applySecondaryTableReferences(
-					new TableReference( qualifiedTableName, sqlAliasBase.generateNewAlias(), false, getFactory() ),
+					new TableReference(
+							qualifiedTableName,
+							sqlAliasBase.generateNewAlias(),
+							false,
+							getFactory()
+					),
 					baseJoinType,
 					(lhs, rhs, joinType) -> {
 						// create the join-predicate between the owner table and the collection table

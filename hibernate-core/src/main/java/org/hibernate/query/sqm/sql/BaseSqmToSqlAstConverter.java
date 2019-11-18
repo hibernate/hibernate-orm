@@ -783,7 +783,7 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
-	private Expression consumeSqmParameter(SqmParameter sqmParameter) {
+	protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 

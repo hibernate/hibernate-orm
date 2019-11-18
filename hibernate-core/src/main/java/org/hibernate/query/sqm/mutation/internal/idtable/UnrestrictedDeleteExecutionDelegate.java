@@ -7,17 +7,11 @@
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -29,39 +23,28 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 /**
  * @author Steve Ebersole
  */
-public class UnrestrictedTableBasedDeleteHandler extends TableBasedDeleteHandler  implements DeleteHandler {
-	public UnrestrictedTableBasedDeleteHandler(
-			SqmDeleteStatement sqmDeleteStatement,
-			IdTable idTable,
-			TempTableDdlTransactionHandling ddlTransactionHandling,
-			DomainParameterXref domainParameterXref,
-			BeforeUseAction beforeUseAction,
-			AfterUseAction afterUseAction,
-			Function<SharedSessionContractImplementor, String> sessionUidAccess,
-			HandlerCreationContext creationContext) {
-		super(
-				sqmDeleteStatement,
-				idTable,
-				() -> null,
-				beforeUseAction,
-				afterUseAction,
-				ddlTransactionHandling,
-				domainParameterXref,
-				creationContext
-		);
+public class UnrestrictedDeleteExecutionDelegate implements TableBasedDeleteHandler.ExecutionDelegate {
+	private final EntityMappingType entityDescriptor;
+
+	public UnrestrictedDeleteExecutionDelegate(EntityMappingType entityDescriptor) {
+		this.entityDescriptor = entityDescriptor;
 	}
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		final AtomicInteger rows = new AtomicInteger();
+		// NOTE : we want the number of rows returned from this method to be the number of rows deleted
+		// 		from the root table of the entity hierarchy,  which happens to be the last table we
+		// 		will visit
+		final AtomicInteger result = new AtomicInteger();
 
-		getEntityDescriptor().visitConstraintOrderedTables(
+		entityDescriptor.visitConstraintOrderedTables(
 				(tableExpression, tableKeyColumnsVisitationSupplier) -> {
-					rows.set( deleteFrom( tableExpression, executionContext ) );
+					final int rows = deleteFrom( tableExpression, executionContext );
+					result.set( rows );
 				}
 		);
 
-		return rows.get();
+		return result.get();
 	}
 
 	private int deleteFrom(
@@ -81,7 +64,7 @@ public class UnrestrictedTableBasedDeleteHandler extends TableBasedDeleteHandler
 		final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( factory );
 		final JdbcDelete jdbcDelete = sqlAstTranslator.translate( deleteStatement );
 
-		return jdbcServices.getJdbcDeleteExecutor().execute(
+		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,
 				JdbcParameterBindings.NO_BINDINGS,
 				sql -> executionContext.getSession()

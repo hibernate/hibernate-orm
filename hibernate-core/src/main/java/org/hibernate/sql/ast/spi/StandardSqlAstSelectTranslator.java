@@ -28,7 +28,7 @@ import org.hibernate.sql.results.internal.JdbcValuesMappingProducerStandard;
  * @author Steve Ebersole
  */
 public class StandardSqlAstSelectTranslator
-		extends AbstractSqlAstToJdbcOperationConverter
+		extends AbstractSqlAstTranslator
 		implements SqlAstSelectTranslator {
 
 	public StandardSqlAstSelectTranslator(SessionFactoryImplementor sessionFactory) {

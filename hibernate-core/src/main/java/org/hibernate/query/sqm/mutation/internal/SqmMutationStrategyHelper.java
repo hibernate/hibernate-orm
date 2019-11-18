@@ -245,7 +245,6 @@ public class SqmMutationStrategyHelper {
 
 		final SqmQuerySpec sqmIdSelectQuerySpec = SqmIdSelectGenerator.generateSqmEntityIdSelect(
 				sqmDeleteStatement,
-				executionContext,
 				factory
 		);
 

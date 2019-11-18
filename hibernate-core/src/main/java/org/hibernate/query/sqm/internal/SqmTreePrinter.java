@@ -102,6 +102,20 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger LOGGER = QueryLogger.subLogger( "sqm.ast" );
 	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
 
+	public static void logTree(SqmQuerySpec sqmQuerySpec, String header) {
+		if ( ! DEBUG_ENABLED ) {
+			return;
+		}
+
+		final SqmTreePrinter treePrinter = new SqmTreePrinter();
+
+		treePrinter.visitQuerySpec( sqmQuerySpec );
+
+		final String title = header != null ? header : "SqmQuerySpec Tree";
+
+		LOGGER.debugf( "%s :\n%s", title, treePrinter.buffer.toString() );
+	}
+
 	public static void logTree(SqmStatement sqmStatement) {
 		if ( ! DEBUG_ENABLED ) {
 			return;
@@ -122,7 +136,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			printer.visitInsertSelectStatement( (SqmInsertSelectStatement) sqmStatement );
 		}
 
-		LOGGER.debugf( "Semantic Query (SQM) Tree :\n%s", printer.buffer.toString() );
+		LOGGER.debugf( "SqmStatement Tree :\n%s", printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();

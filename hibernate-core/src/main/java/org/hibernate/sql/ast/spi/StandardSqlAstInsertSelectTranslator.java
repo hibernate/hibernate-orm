@@ -23,7 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
  * @author Steve Ebersole
  */
 public class StandardSqlAstInsertSelectTranslator
-		extends AbstractSqlAstToJdbcOperationConverter
+		extends AbstractSqlAstTranslator
 		implements SqlAstInsertSelectTranslator {
 	public StandardSqlAstInsertSelectTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );

@@ -21,7 +21,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 /**
  * @author Steve Ebersole
  */
-public class StandardSqlAstDeleteTranslator extends AbstractSqlAstToJdbcOperationConverter implements SqlAstDeleteTranslator {
+public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator implements SqlAstDeleteTranslator {
 	public StandardSqlAstDeleteTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}

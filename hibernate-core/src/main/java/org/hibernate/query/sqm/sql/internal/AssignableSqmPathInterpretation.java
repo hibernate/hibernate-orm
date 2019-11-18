@@ -10,12 +10,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 
 /**
  * @author Steve Ebersole
  */
-public interface AssignableSqmPathInterpretation<T> extends SqmPathInterpretation<T> {
+public interface AssignableSqmPathInterpretation<T> extends SqmPathInterpretation<T>, Assignable {
 	// need to be able to collect assignments per-table, including
 	// 		SqmParameter -> JdbcParameter mapping
 

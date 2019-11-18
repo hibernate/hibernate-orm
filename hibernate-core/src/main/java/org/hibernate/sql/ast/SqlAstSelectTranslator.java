@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast;
 
-import org.hibernate.sql.ast.spi.SqlAstToJdbcOperationConverter;
-import org.hibernate.sql.ast.spi.SqlSelectAstWalker;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -15,7 +13,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 /**
  * @author Steve Ebersole
  */
-public interface SqlAstSelectTranslator extends SqlSelectAstWalker, SqlAstToJdbcOperationConverter {
+public interface SqlAstSelectTranslator extends SqlAstTranslator {
 
 	/**
 	 * Translate the SelectStatement into the executable JdbcSelect

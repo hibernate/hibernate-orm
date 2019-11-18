@@ -7,8 +7,11 @@
 
 package org.hibernate.sql.ast.tree.expression;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -17,6 +20,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -26,7 +30,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class ColumnReference implements Expression {
+public class ColumnReference implements Expression, Assignable {
 	private final String qualifier;
 	private final String columnExpression;
 	private final String referenceExpression;
@@ -122,5 +126,15 @@ public class ColumnReference implements Expression {
 	@Override
 	public int hashCode() {
 		return referenceExpression.hashCode();
+	}
+
+	@Override
+	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		columnReferenceConsumer.accept( this );
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		return Collections.singletonList( this );
 	}
 }

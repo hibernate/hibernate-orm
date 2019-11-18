@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.mutation.internal.idtable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
@@ -61,7 +61,16 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 			SqmUpdateStatement sqmUpdateStatement,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new TableBasedUpdateHandler(
+				sqmUpdateStatement,
+				domainParameterXref, idTable,
+				SharedSessionContractImplementor::getTenantIdentifier,
+				idTableExporterAccess,
+				BeforeUseAction.CREATE,
+				afterUseAction,
+				ddlTransactionHandling,
+				creationContext
+		);
 	}
 
 	@Override
@@ -69,29 +78,15 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			HandlerCreationContext creationContext) {
-		if ( sqmDeleteStatement.getWhereClause() == null
-				|| sqmDeleteStatement.getWhereClause().getPredicate() == null ) {
-			// optimization - special handler not needing the temp table
-			return new UnrestrictedTableBasedDeleteHandler(
-					sqmDeleteStatement,
-					idTable,
-					ddlTransactionHandling,
-					domainParameterXref,
-					BeforeUseAction.CREATE,
-					afterUseAction,
-					sessionContractImplementor -> null,
-					creationContext
-			);
-		}
-
 		return new TableBasedDeleteHandler(
 				sqmDeleteStatement,
+				domainParameterXref,
 				idTable,
+				SharedSessionContractImplementor::getTenantIdentifier,
 				idTableExporterAccess,
 				BeforeUseAction.CREATE,
 				afterUseAction,
 				ddlTransactionHandling,
-				domainParameterXref,
 				creationContext
 		);
 	}

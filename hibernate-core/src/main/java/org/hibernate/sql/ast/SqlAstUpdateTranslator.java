@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast;
 
-import org.hibernate.sql.ast.spi.SqlAstToJdbcOperationConverter;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
@@ -15,7 +13,7 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
 /**
  * @author Steve Ebersole
  */
-public interface SqlAstUpdateTranslator extends SqlAstWalker, SqlAstToJdbcOperationConverter {
+public interface SqlAstUpdateTranslator extends SqlAstTranslator {
 	JdbcUpdate translate(UpdateStatement sqlAst);
 
 	@Override

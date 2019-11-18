@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -23,14 +24,25 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
  * @author Steve Ebersole
  */
 public class StandardSqlAstUpdateTranslator
-		extends AbstractSqlAstToJdbcOperationConverter
+		extends AbstractSqlAstTranslator
 		implements SqlAstUpdateTranslator {
+	private final Dialect dialect;
+
 	public StandardSqlAstUpdateTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
+
+		// todo (6.0) : use the Dialect to determine how to handle column references
+		//		- specifically should they use the table-alias, the table-expression
+		//			or neither for its qualifier
+		dialect = getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect();
 	}
+
+	private String updatingTableAlias;
 
 	@Override
 	public JdbcUpdate translate(UpdateStatement sqlAst) {
+		updatingTableAlias = sqlAst.getTargetTable().getIdentificationVariable();
+
 		appendSql( "update " );
 		appendSql( sqlAst.getTargetTable().getTableExpression() );
 
@@ -45,7 +57,17 @@ public class StandardSqlAstUpdateTranslator
 			}
 
 			final Assignment assignment = sqlAst.getAssignments().get( i );
-			assignment.getColumnReference().accept( this );
+			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+			if ( columnReferences.size() == 1 ) {
+				columnReferences.get( 0 ).accept( this );
+			}
+			else {
+				appendSql( " (" );
+				for ( int cri = 0; cri < columnReferences.size(); cri++ ) {
+					columnReferences.get( cri ).accept( this );
+				}
+				appendSql( ") " );
+			}
 			appendSql( " = " );
 			assignment.getAssignedValue().accept( this );
 		}
@@ -75,7 +97,17 @@ public class StandardSqlAstUpdateTranslator
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		super.visitColumnReference( columnReference );
+		if ( updatingTableAlias != null && updatingTableAlias.equals( columnReference.getQualifier() ) ) {
+			// todo (6.0) : use the Dialect to determine how to handle column references
+			//		- specifically should they use the table-alias, the table-expression
+			//			or neither for its qualifier
+
+			// for now, use the unqualified form
+			appendSql( columnReference.getColumnExpression() );
+		}
+		else {
+			super.visitColumnReference( columnReference );
+		}
 	}
 
 	@Override

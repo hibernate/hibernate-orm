@@ -71,7 +71,12 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		final List<Object> ids = selectMatchingIds( executionContext );
+		final List<Object> ids = SqmMutationStrategyHelper.selectMatchingIds(
+				getSqmDeleteOrUpdateStatement(),
+				getDomainParameterXref(),
+				executionContext
+		);
+
 		if ( ids == null || ids.isEmpty() ) {
 			return 0;
 		}
@@ -133,14 +138,6 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		return ids.size();
 	}
 
-	private List<Object> selectMatchingIds(ExecutionContext executionContext) {
-		return SqmMutationStrategyHelper.selectMatchingIds(
-				getSqmDeleteOrUpdateStatement(),
-				getDomainParameterXref(),
-				executionContext
-		);
-	}
-
 	protected void executeDelete(
 			QuerySpec cteDefinition,
 			String targetTable,
@@ -158,7 +155,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 				executionContext
 		);
 
-		final SessionFactoryImplementor sessionFactory = getCreationContext().getSessionFactory();
+		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 
 		final JdbcDelete jdbcDelete = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory )
 				.translate( cteStatement );
@@ -168,7 +165,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 				.getJdbcCoordinator()
 				.getLogicalConnection();
 
-		sessionFactory.getJdbcServices().getJdbcDeleteExecutor().execute(
+		sessionFactory.getJdbcServices().getJdbcMutationExecutor().execute(
 				jdbcDelete,
 				jdbcParameterBindings,
 				sql -> {

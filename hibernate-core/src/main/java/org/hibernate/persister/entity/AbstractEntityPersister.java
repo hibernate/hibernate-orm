@@ -1227,13 +1227,7 @@ public abstract class AbstractEntityPersister
 			SqlExpressionResolver sqlExpressionResolver,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase;
-		if ( aliasBaseGenerator == null ) {
-			sqlAliasBase = null;
-		}
-		else {
-			sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-		}
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
 		final TableGroupBuilder builder = TableGroupBuilder.builder(
 				navigablePath,

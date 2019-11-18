@@ -8,10 +8,10 @@ package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 
 /**
  * @author Steve Ebersole

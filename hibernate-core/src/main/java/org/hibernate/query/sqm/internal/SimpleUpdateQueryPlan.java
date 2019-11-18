@@ -90,7 +90,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				executionContext.getSession()
 		);
 
-		return jdbcServices.getJdbcUpdateExecutor().execute(
+		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,
 				jdbcParameterBindings,
 				sql -> executionContext.getSession()

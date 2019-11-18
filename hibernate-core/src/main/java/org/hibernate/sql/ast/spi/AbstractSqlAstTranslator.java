@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -17,13 +18,13 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqlAstToJdbcOperationConverter
+public abstract class AbstractSqlAstTranslator
 		extends AbstractSqlAstWalker
-		implements SqlAstToJdbcOperationConverter {
+		implements SqlAstTranslator {
 
 	private final Set<String> affectedTableNames = new HashSet<>();
 
-	protected AbstractSqlAstToJdbcOperationConverter(SessionFactoryImplementor sessionFactory) {
+	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}
 

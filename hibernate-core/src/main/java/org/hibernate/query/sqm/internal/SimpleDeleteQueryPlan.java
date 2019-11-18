@@ -90,7 +90,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				executionContext.getSession()
 		);
 
-		return jdbcServices.getJdbcDeleteExecutor().execute(
+		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,
 				jdbcParameterBindings,
 				sql -> executionContext.getSession()

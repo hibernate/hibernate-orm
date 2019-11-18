@@ -247,7 +247,13 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		getEntityPersister().applyTableReferences( sqlAliasBase, baseJoinType, collector, sqlExpressionResolver, creationContext );
+		getEntityPersister().applyTableReferences(
+				sqlAliasBase,
+				baseJoinType,
+				collector,
+				sqlExpressionResolver,
+				creationContext
+		);
 	}
 
 	@Override

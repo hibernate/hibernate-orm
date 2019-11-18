@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -131,5 +133,15 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 	@Override
 	public String toString() {
 		return "BasicValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
+	}
+
+	@Override
+	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		columnReferenceConsumer.accept( columnReference );
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		return Collections.singletonList( columnReference );
 	}
 }

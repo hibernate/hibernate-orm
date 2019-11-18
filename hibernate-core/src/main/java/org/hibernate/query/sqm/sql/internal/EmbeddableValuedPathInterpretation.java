@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -17,7 +19,9 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.results.spi.DomainResult;
@@ -45,7 +49,6 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(
 						tableGroup,
-
 						converter.getCurrentClauseStack().getCurrent(),
 						converter,
 						converter
@@ -113,5 +116,31 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 	@Override
 	public String toString() {
 		return "EmbeddableValuedPathInterpretation(" + sqmPath.getNavigablePath().getFullPath() + ')';
+	}
+
+	@Override
+	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		if ( sqlExpression instanceof ColumnReference ) {
+			columnReferenceConsumer.accept( (ColumnReference) sqlExpression );
+		}
+		else if ( sqlExpression instanceof SqlTuple ) {
+			final SqlTuple sqlTuple = (SqlTuple) sqlExpression;
+			for ( Expression expression : sqlTuple.getExpressions() ) {
+				if ( ! ( expression instanceof ColumnReference ) ) {
+					throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
+				}
+				columnReferenceConsumer.accept( (ColumnReference) expression );
+			}
+		}
+		else {
+			// error or warning...
+		}
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		final List<ColumnReference> results = new ArrayList<>();
+		visitColumnReferences( results::add );
+		return results;
 	}
 }

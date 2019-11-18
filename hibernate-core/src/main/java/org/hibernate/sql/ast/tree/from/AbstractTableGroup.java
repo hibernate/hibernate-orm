@@ -15,8 +15,6 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
  * @author Steve Ebersole
@@ -120,19 +118,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
-		}
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void renderTableReference(
-			TableReference tableBinding,
-			SqlAppender sqlAppender,
-			@SuppressWarnings("unused") SqlAstWalker walker) {
-		sqlAppender.appendSql( tableBinding.getTableExpression() );
-
-		final String identificationVariable = tableBinding.getIdentificationVariable();
-		if ( identificationVariable != null ) {
-			sqlAppender.appendSql( " as " + identificationVariable );
 		}
 	}
 

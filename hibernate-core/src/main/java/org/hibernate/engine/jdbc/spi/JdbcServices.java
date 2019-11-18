@@ -87,15 +87,7 @@ public interface JdbcServices extends Service {
 		return JdbcSelectExecutorStandardImpl.INSTANCE;
 	}
 
-	default JdbcMutationExecutor getJdbcDeleteExecutor() {
-		return StandardJdbcMutationExecutor.INSTANCE;
-	}
-
-	default JdbcMutationExecutor getJdbcUpdateExecutor() {
-		return StandardJdbcMutationExecutor.INSTANCE;
-	}
-
-	default JdbcMutationExecutor getJdbcInsertExecutor() {
+	default JdbcMutationExecutor getJdbcMutationExecutor() {
 		return StandardJdbcMutationExecutor.INSTANCE;
 	}
 }

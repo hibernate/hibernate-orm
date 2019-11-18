@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.mutation.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 
 /**
@@ -15,13 +15,22 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
  */
 public abstract class AbstractMutationHandler implements Handler {
 	private final SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement;
-	private final HandlerCreationContext creationContext;
+
+	private final SessionFactoryImplementor sessionFactory;
+	private final EntityMappingType entityDescriptor;
 
 	public AbstractMutationHandler(
 			SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement,
 			HandlerCreationContext creationContext) {
 		this.sqmDeleteOrUpdateStatement = sqmDeleteOrUpdateStatement;
-		this.creationContext = creationContext;
+		this.sessionFactory = creationContext.getSessionFactory();
+
+		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
+				.getReferencedPathSource()
+				.getHibernateEntityName();
+
+		this.entityDescriptor = sessionFactory.getMetamodel().getEntityDescriptor( entityName );
+
 	}
 
 	public SqmDeleteOrUpdateStatement getSqmDeleteOrUpdateStatement() {
@@ -29,15 +38,10 @@ public abstract class AbstractMutationHandler implements Handler {
 	}
 
 	public EntityMappingType getEntityDescriptor() {
-		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
-				.getReferencedPathSource()
-				.getHibernateEntityName();
-
-		return creationContext.getSessionFactory().getMetamodel().getEntityDescriptor( entityName );
-
+		return entityDescriptor;
 	}
 
-	public HandlerCreationContext getCreationContext() {
-		return creationContext;
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 }

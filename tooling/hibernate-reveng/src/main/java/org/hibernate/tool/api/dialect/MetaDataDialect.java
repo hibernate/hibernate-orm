@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 
 /**
  * Interface for fetching metadata from databases.
@@ -22,9 +21,8 @@ public interface MetaDataDialect {
 	/**
 	 * Configure the metadatadialect. 
 	 * @param connectionProvider a {@link ConnectionProvider} 
-     * @param sqlExceptionConverter a {@link SQLExceptionConverter}
 	 */
-	public void configure(ConnectionProvider connectionProvider, SQLExceptionConverter sqlExceptionConverter);
+	public void configure(ConnectionProvider connectionProvider);
 	
 	/** 
 	 * Return iterator over the tables that mathces catalog, schema and table

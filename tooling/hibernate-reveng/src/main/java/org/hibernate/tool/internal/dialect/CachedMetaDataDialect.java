@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 
 public class CachedMetaDataDialect implements MetaDataDialect {
@@ -29,9 +28,8 @@ public class CachedMetaDataDialect implements MetaDataDialect {
 	}
 
 	public void configure(
-			ConnectionProvider connectionProvider, 
-			SQLExceptionConverter sqlExceptionConverter) {
-        delegate.configure(connectionProvider, sqlExceptionConverter);       
+			ConnectionProvider connectionProvider) {
+        delegate.configure(connectionProvider);       
     }
 	
 	public void close(Iterator<?> iterator) {

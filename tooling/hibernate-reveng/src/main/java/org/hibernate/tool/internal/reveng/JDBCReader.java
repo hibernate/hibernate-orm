@@ -50,7 +50,7 @@ public class JDBCReader {
 		
 	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema, ProgressListener progress) {
 		try {
-			getMetaDataDialect().configure(provider, sec);
+			getMetaDataDialect().configure(provider);
 			revengStrategy.configure(dbs);
 			
 			Set<Table> hasIndices = new HashSet<Table>();

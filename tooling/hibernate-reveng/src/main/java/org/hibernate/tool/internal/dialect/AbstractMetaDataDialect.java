@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.jboss.logging.Logger;
 
@@ -33,8 +32,7 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 	private ConnectionProvider connectionProvider = null;
 
 	public void configure(
-			ConnectionProvider connectionProvider, 
-			SQLExceptionConverter sqlExceptionConverter) {
+			ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;	
 	}
 	

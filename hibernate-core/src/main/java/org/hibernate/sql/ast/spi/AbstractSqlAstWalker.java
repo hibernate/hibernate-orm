@@ -293,6 +293,30 @@ public abstract class AbstractSqlAstWalker
 //		}
 
 		renderTableReference( tableGroup.getPrimaryTableReference() );
+
+		renderTableReferenceJoins( tableGroup );
+
+//		if ( tableGroup.getGroupAlias() !=  null ) {
+//			sqlAppender.appendSql( CLOSE_PARENTHESIS );
+//			sqlAppender.appendSql( AS_KEYWORD );
+//			sqlAppender.appendSql( tableGroup.getGroupAlias() );
+//		}
+
+		processTableGroupJoins( tableGroup );
+	}
+
+	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
+		// NOTE : commented out blocks render the TableGroup as a CTE
+
+//		if ( tableGroup.getGroupAlias() !=  null ) {
+//			sqlAppender.appendSql( OPEN_PARENTHESIS );
+//		}
+
+		renderTableReference( tableGroup.getPrimaryTableReference() );
+
+		appendSql( " on " );
+		predicate.accept( this );
+
 		renderTableReferenceJoins( tableGroup );
 
 //		if ( tableGroup.getGroupAlias() !=  null ) {
@@ -355,17 +379,11 @@ public abstract class AbstractSqlAstWalker
 			appendSql( tableGroupJoin.getJoinType().getText() );
 			appendSql( " join " );
 
-			renderTableGroup( joinedGroup );
-
-			clauseStack.push( Clause.WHERE );
-			try {
-				if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-					appendSql( " on " );
-					tableGroupJoin.getPredicate().accept( this );
-				}
+			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
+				renderTableGroup( joinedGroup, tableGroupJoin.getPredicate() );
 			}
-			finally {
-				clauseStack.pop();
+			else {
+				renderTableGroup( joinedGroup );
 			}
 		}
 	}

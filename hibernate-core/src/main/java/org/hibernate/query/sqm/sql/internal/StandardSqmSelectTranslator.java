@@ -172,7 +172,8 @@ public class StandardSqmSelectTranslator
 			public void accept(Fetchable fetchable) {
 				final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
 						fetchParent,
-						fetchable
+						fetchable,
+						getSqlAstCreationState().getCurrentProcessingState()
 				);
 
 				if ( biDirectionalFetch != null ) {

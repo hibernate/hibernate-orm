@@ -8,11 +8,15 @@ package org.hibernate.sql.results.internal.domain;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.BiDirectionalFetch;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
@@ -23,30 +27,23 @@ import org.hibernate.sql.results.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Implementation of BiDirectionalFetch for the `oa` case - the bi-dir fetch
- * refers to another fetch (`a`)
- *
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class BiDirectionalFetchImpl implements BiDirectionalFetch {
+public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 	private final NavigablePath navigablePath;
+	private Fetchable fetchable;
+	private NavigablePath referencedNavigablePath;
 	private final FetchParent fetchParent;
-	private final Fetch referencedFetch;
 
-	/**
-	 * Create the bi-dir fetch
-	 *
-	 * @param navigablePath `Person(p).address.owner.address`
-	 * @param fetchParent The parent for the `oa` fetch is `o`
-	 * @param referencedFetch `RootBiDirectionalFetchImpl(a)` (because `a` is itself also a bi-dir fetch referring to the `p root)
-	 */
 	public BiDirectionalFetchImpl(
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			Fetch referencedFetch) {
-		this.navigablePath = navigablePath;
+			Fetchable fetchable,
+			NavigablePath referencedNavigablePath) {
 		this.fetchParent = fetchParent;
-		this.referencedFetch = referencedFetch;
+		this.navigablePath = navigablePath;
+		this.fetchable = fetchable;
+		this.referencedNavigablePath = referencedNavigablePath;
 	}
 
 	@Override
@@ -56,7 +53,7 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 
 	@Override
 	public NavigablePath getReferencedPath() {
-		return referencedFetch.getNavigablePath();
+		return referencedNavigablePath;
 	}
 
 	@Override
@@ -66,7 +63,7 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 
 	@Override
 	public Fetchable getFetchedMapping() {
-		return referencedFetch.getFetchedMapping();
+		return fetchable;
 	}
 
 	@Override
@@ -81,8 +78,40 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				getReferencedPath(),
-				referencedFetch.getFetchedMapping().getJavaTypeDescriptor()
+				fetchable.getJavaTypeDescriptor()
 		);
+	}
+
+	@Override
+	public String getFetchableName() {
+		return fetchable.getFetchableName();
+	}
+
+	@Override
+	public String getPartName() {
+		return fetchable.getFetchableName();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return fetchable.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public FetchStrategy getMappedFetchStrategy() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			LockMode lockMode,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 
 	private static class CircularFetchAssembler implements DomainResultAssembler {
@@ -98,7 +127,13 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch {
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			return rowProcessingState.resolveInitializer( circularPath ).getInitializedInstance();
+			Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
+			if ( initializer.getInitializedInstance() == null ) {
+				initializer.resolveKey( rowProcessingState );
+				initializer.resolveInstance( rowProcessingState );
+				initializer.initializeInstance( rowProcessingState );
+			}
+			return initializer.getInitializedInstance();
 		}
 
 		@Override

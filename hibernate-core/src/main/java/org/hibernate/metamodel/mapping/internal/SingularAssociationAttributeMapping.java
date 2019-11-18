@@ -13,8 +13,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -24,6 +26,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
@@ -36,7 +39,6 @@ import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.FetchableContainer;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +48,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final ForeignKeyDescriptor foreignKeyDescriptor;
-	private String mappedBy;
 
 	public SingularAssociationAttributeMapping(
 			String name,
@@ -70,7 +71,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = isNullable;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		this.mappedBy =  null;
 	}
 
 	@Override
@@ -226,17 +226,40 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
-	public boolean isCircular(FetchParent fetchParent) {
-		NavigablePath navigablePath = fetchParent.getNavigablePath();
-		if ( navigablePath.getParent() == null ) {
+	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
+		final NavigablePath navigablePath = fetchParent.getNavigablePath();
+
+		final NavigablePath parent = navigablePath.getParent();
+		if ( parent == null ) {
 			return false;
 		}
 		else {
-			NavigablePath parentParentNavigablePath = navigablePath.getParent();
-			if ( parentParentNavigablePath.getLocalName().equals( getMappedTypeDescriptor().getEntityName() ) ) {
+			final String entityName = getMappedTypeDescriptor().getEntityName();
+			if ( parent.getLocalName().equals( entityName ) ) {
 				return true;
 			}
 			else {
+				NavigablePath parentOfParent = parent.getParent();
+				if ( parentOfParent == null ) {
+					return false;
+				}
+				else {
+					if ( parentOfParent.getParent() != null ) {
+						return false;
+					}
+					else {
+						final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
+								.getCreationContext()
+								.getDomainModel()
+								.findEntityDescriptor( parentOfParent.getFullPath() );
+						final String parentEntityName = entityDescriptor.findSubPart( parent.getLocalName() ).getJavaTypeDescriptor()
+								.getJavaType()
+								.getName();
+						if ( parentEntityName.equals( entityName ) ) {
+							return true;
+						}
+					}
+				}
 				return false;
 			}
 		}

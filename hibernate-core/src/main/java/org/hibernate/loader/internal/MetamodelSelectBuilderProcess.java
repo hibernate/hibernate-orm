@@ -299,7 +299,8 @@ public class MetamodelSelectBuilderProcess {
 
 			final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
 					fetchParent,
-					fetchable
+					fetchable,
+					creationState
 			);
 
 			if ( biDirectionalFetch != null ) {

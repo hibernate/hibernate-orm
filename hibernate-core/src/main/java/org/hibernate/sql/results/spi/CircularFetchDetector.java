@@ -8,8 +8,8 @@ package org.hibernate.sql.results.spi;
 
 
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.results.internal.domain.BiDirectionalFetchImpl;
-import org.hibernate.sql.results.internal.domain.RootBiDirectionalFetchImpl;
 
 /**
  * Maintains state while processing a Fetch graph to be able to detect
@@ -19,35 +19,26 @@ import org.hibernate.sql.results.internal.domain.RootBiDirectionalFetchImpl;
  */
 public class CircularFetchDetector {
 
-	public Fetch findBiDirectionalFetch(FetchParent fetchParent, Fetchable fetchable) {
-		if ( ! fetchable.isCircular( fetchParent ) ) {
+	public Fetch findBiDirectionalFetch(FetchParent fetchParent, Fetchable fetchable, SqlAstProcessingState creationState) {
+		if ( !fetchable.isCircular( fetchParent, creationState ) ) {
 			return null;
 		}
 
-		if ( fetchParent instanceof Fetch ) {
-			final Fetch fetchParentAsFetch = (Fetch) fetchParent;
-
-			final NavigablePath parentParentPath = fetchParent.getNavigablePath().getParent();
-			assert fetchParent.getNavigablePath().getParent() != null;
-
-			assert fetchParentAsFetch.getFetchParent().getNavigablePath().equals( parentParentPath );
-
+		final NavigablePath navigablePath = fetchParent.getNavigablePath();
+		if ( navigablePath.getParent().getParent() == null ) {
 			return new BiDirectionalFetchImpl(
-					fetchParent.getNavigablePath().append( fetchable.getFetchableName() ),
+					navigablePath,
 					fetchParent,
-					fetchParentAsFetch
+					fetchable,
+					fetchParent.getNavigablePath().getParent()
 			);
 		}
 		else {
-
-			// note : the "`fetchParentAsFetch` is `RootBiDirectionalFetchImpl`" case would
-			// 		be handled in the `Fetch` block since `RootBiDirectionalFetchImpl` is a Fetch
-
-			return new RootBiDirectionalFetchImpl(
-					new NavigablePath( fetchable.getJavaTypeDescriptor().getJavaType().getName() ),
+			return new BiDirectionalFetchImpl(
+					navigablePath.append( fetchable.getFetchableName() ),
 					fetchParent,
 					fetchable,
-					fetchParent.getNavigablePath()
+					navigablePath.getParent()
 			);
 		}
 	}

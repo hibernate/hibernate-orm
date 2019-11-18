@@ -11,6 +11,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +35,7 @@ public interface Fetchable extends ModelPart {
 			String resultVariable,
 			DomainResultCreationState creationState);
 
-	default boolean isCircular(FetchParent fetchParent){
+	default boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState){
 		return false;
 	}
 

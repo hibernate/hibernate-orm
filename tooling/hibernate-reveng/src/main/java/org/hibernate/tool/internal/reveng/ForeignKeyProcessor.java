@@ -30,7 +30,7 @@ public class ForeignKeyProcessor {
 			String defaultCatalog, 
 			DatabaseCollector dbs, 
 			Table referencedTable, 
-			ProgressListener progress) throws JdbcBinderException {
+			ProgressListener progress) {
 		// foreign key name to list of columns
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
 		// foreign key name to Table
@@ -99,7 +99,7 @@ public class ForeignKeyProcessor {
 				else {
 					Object previousTable = dependentTables.get(fkName);
 					if(fkTable != previousTable) {
-						throw new JdbcBinderException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
+						throw new RuntimeException("Foreign key name (" + fkName + ") mapped to different tables! previous: " + previousTable + " current:" + fkTable);
 					}
 				}
 				

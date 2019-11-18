@@ -183,7 +183,7 @@ public class JdbcMetadataBuilder {
 				// TODO: detect this and generate a "permutation" of it ?
 				PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
 				Table table2 = class1.getTable();
-				throw new JdbcBinderException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
+				throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
 			}
 			metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
 
@@ -468,7 +468,7 @@ public class JdbcMetadataBuilder {
 			}
 
         	if(keys.size()>1) {
-        		throw new JdbcBinderException("more than one other foreign key to choose from!"); // todo: handle better ?
+        		throw new RuntimeException("more than one other foreign key to choose from!"); // todo: handle better ?
         	}
 
         	ForeignKey fk = (ForeignKey) keys.get( 0 );
@@ -877,7 +877,7 @@ public class JdbcMetadataBuilder {
 				" column: " + 
 				column.getQuotedName();
 		if(sqlTypeCode==null) {
-			throw new JdbcBinderException("sqltype is null for " + location);
+			throw new RuntimeException("sqltype is null for " + location);
 		}
 
 		String preferredHibernateType = revengStrategy.columnToHibernateTypeName(
@@ -893,7 +893,7 @@ public class JdbcMetadataBuilder {
 			int[] wantedSqlTypes = wantedType.sqlTypes(mapping);
 
 			if(wantedSqlTypes.length>1) {
-				throw new JdbcBinderException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");
+				throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");
 			}
 
 			int wantedSqlType = wantedSqlTypes[0];
@@ -909,7 +909,7 @@ public class JdbcMetadataBuilder {
 
 
 		if(preferredHibernateType==null) {
-			throw new JdbcBinderException("Could not find javatype for " + typeCodeName(sqlTypeCode.intValue()));
+			throw new RuntimeException("Could not find javatype for " + typeCodeName(sqlTypeCode.intValue()));
 		}
 
 		return preferredHibernateType;
@@ -950,7 +950,7 @@ public class JdbcMetadataBuilder {
             if (element instanceof Column) {
                 Column column = (Column) element;
                 if ( processedColumns.contains(column) ) {
-                    throw new JdbcBinderException("Binding column twice for primary key should not happen: " + column);
+                    throw new RuntimeException("Binding column twice for primary key should not happen: " + column);
                 }
 				else {
                     checkColumn(column);
@@ -973,7 +973,7 @@ public class JdbcMetadataBuilder {
                 processedColumns.addAll(fkfc.columns);
             }
 			else {
-				throw new JdbcBinderException("unknown thing");
+				throw new RuntimeException("unknown thing");
 			}
 
             markAsUseInEquals(property);

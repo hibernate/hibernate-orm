@@ -76,8 +76,7 @@ public class BasicColumnProcessor {
 				column.setName(quote(columnName, metaDataDialect));
 				Column existing = table.getColumn(column);
 				if(existing!=null) {
-					// TODO: should we just pick it up and fill it up with whatever we get from the db instead ?
-					throw new JdbcBinderException(column + " already exists in " + qualify);
+					throw new RuntimeException(column + " already exists in " + qualify);
 				}
 								
 				//TODO: column.setSqlType(sqlTypeName); //this does not work 'cos the precision/scale/length are not retured in TYPE_NAME

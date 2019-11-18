@@ -55,7 +55,7 @@ public class IndexProcessor {
 						}
 				
 						if(indexes.containsKey(indexName) ) {
-							throw new JdbcBinderException("UniqueKey exists also as Index! ");
+							throw new RuntimeException("UniqueKey exists also as Index! ");
 						}
 						Column column = getColumn(metaDataDialect, table, columnName);
 						key.addColumn(column);
@@ -81,7 +81,7 @@ public class IndexProcessor {
 						}
 						
 						if(uniquekeys.containsKey(indexName) ) {
-							throw new JdbcBinderException("Index exists also as Unique! ");
+							throw new RuntimeException("Index exists also as Unique! ");
 						}
 						Column column = getColumn(metaDataDialect, table, columnName);
 						index.addColumn(column);

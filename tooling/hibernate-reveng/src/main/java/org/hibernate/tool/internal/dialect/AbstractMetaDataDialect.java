@@ -14,7 +14,6 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.internal.reveng.JdbcBinderException;
 import org.jboss.logging.Logger;
 
 /**
@@ -59,13 +58,13 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 		connectionProvider = null;		
 	}
 	
-	protected DatabaseMetaData getMetaData() throws JdbcBinderException {
+	protected DatabaseMetaData getMetaData() {
 		if (metaData == null) {
 			try {
 				metaData = getConnection().getMetaData();				
 			} 
 			catch (SQLException e) {
-				throw getSQLExceptionConverter().convert(e, "Getting database metadata", null);
+				throw new RuntimeException("Getting database metadata", e);
 			}
 		}
 		return metaData;

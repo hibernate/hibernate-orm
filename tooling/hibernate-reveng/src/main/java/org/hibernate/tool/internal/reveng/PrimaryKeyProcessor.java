@@ -52,13 +52,13 @@ public class PrimaryKeyProcessor {
 					key.setName(name);
 					key.setTable(table);
 					if(table.getPrimaryKey()!=null) {
-						throw new JdbcBinderException(table + " already has a primary key!"); //TODO: ignore ?
+						throw new RuntimeException(table + " already has a primary key!"); //TODO: ignore ?
 					}
 					table.setPrimaryKey(key);
 				} 
 				else {
 					if(!(name==key.getName() ) && name!=null && !name.equals(key.getName() ) ) {
-						throw new JdbcBinderException("Duplicate names found for primarykey. Existing name: " + key.getName() + " JDBC name: " + name + " on table " + table);
+						throw new RuntimeException("Duplicate names found for primarykey. Existing name: " + key.getName() + " JDBC name: " + name + " on table " + table);
 					}	      		
 				}
 				
@@ -97,7 +97,7 @@ public class PrimaryKeyProcessor {
 	      		key.setName(new Alias(15, "PK").toAliasString( table.getName()));
 	      		key.setTable(table);
 	      		if(table.getPrimaryKey()!=null) {
-	      			throw new JdbcBinderException(table + " already has a primary key!"); //TODO: ignore ?
+	      			throw new RuntimeException(table + " already has a primary key!"); //TODO: ignore ?
 	      		}
 	      		table.setPrimaryKey(key);
 	      		t = new ArrayList<String>(userPrimaryKey);

@@ -38,7 +38,7 @@ public class JdbcMetadataDescriptor implements MetadataDescriptor {
 	public Metadata createMetadata() {
 		return JdbcMetadataBuilder
 				.create(properties, reverseEngineeringStrategy)
-				.readFromDatabase();
+				.build();
 	}
 	
 }

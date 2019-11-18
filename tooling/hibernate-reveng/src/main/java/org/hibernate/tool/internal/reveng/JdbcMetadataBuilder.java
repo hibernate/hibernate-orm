@@ -108,7 +108,7 @@ public class JdbcMetadataBuilder {
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 
-	public Metadata readFromDatabase() {
+	public Metadata build() {
 		MetadataImpl metadata = ((InFlightMetadataCollectorImpl)metadataCollector)
 				.buildMetadataInstance(metadataBuildingContext);
 		metadata.getTypeConfiguration().scope(metadataBuildingContext);		

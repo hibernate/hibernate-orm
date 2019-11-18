@@ -61,18 +61,18 @@ import org.jboss.logging.Logger;
 
 /**
  * @author max
- *
+ * @author koen
  */
-public class JdbcBinder {
+public class JdbcMetadataBuilder {
 	
 	
-	public static JdbcBinder create(
+	public static JdbcMetadataBuilder create(
 			Properties properties, 
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
-		return new JdbcBinder(properties, reverseEngineeringStrategy);
+		return new JdbcMetadataBuilder(properties, reverseEngineeringStrategy);
 	}
 	
-	private static final Logger log = Logger.getLogger(JdbcBinder.class);
+	private static final Logger log = Logger.getLogger(JdbcMetadataBuilder.class);
 
 	private final Properties properties;
 	private final MetadataBuildingContext metadataBuildingContext;	
@@ -84,7 +84,7 @@ public class JdbcBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	private JdbcBinder(
+	private JdbcMetadataBuilder(
 			Properties properties,
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
 		this.properties = properties;

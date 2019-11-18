@@ -96,6 +96,8 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 					assertTrue( Hibernate.isInitialized( other ) );
 					assertThat( other, notNullValue() );
 					assertThat( other.getId(), equalTo( 2 ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 

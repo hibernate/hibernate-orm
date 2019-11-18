@@ -8,9 +8,15 @@ package org.hibernate.orm.test.sql.exec.onetoone;
 
 import java.util.Calendar;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.Hibernate;
+import org.hibernate.stat.spi.StatisticsImplementor;
+
 import org.hibernate.testing.orm.domain.gambit.EntityWithOneToOne;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,23 +24,26 @@ import org.junit.jupiter.api.Test;
 import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
-public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
+@DomainModel(
+		annotatedClasses = {
 				EntityWithOneToOne.class,
 				SimpleEntity.class
-		};
-	}
+		}
+)
+@ServiceRegistry
+@SessionFactory(generateStatistics = true)
+public class EntityWithOneToOneTest {
 
 	@BeforeEach
-	public void setUp() {
+	public void setUp(SessionFactoryScope scope) {
 		EntityWithOneToOne entity = new EntityWithOneToOne( 1, "first", Integer.MAX_VALUE );
 
 		SimpleEntity other = new SimpleEntity(
@@ -48,30 +57,39 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 
 		entity.setOther( other );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			session.save( other );
 			session.save( entity );
 		} );
 	}
 
 	@AfterEach
-	public void tearDown() {
-		deleteAll();
+	public void tearDown(SessionFactoryScope scope) {
+		deleteAll( scope );
 	}
 
 	@Test
-	public void testGet() {
-		inTransaction(
+	public void testGet(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
-					assert loaded != null;
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+					assertThat( loaded, notNullValue() );
 					assertThat( loaded.getName(), equalTo( "first" ) );
-					assert loaded.getOther() != null;
-					assertThat( loaded.getOther().getId(), equalTo( 2 ) );
+
+					SimpleEntity other = loaded.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+					assertThat( other, notNullValue() );
+					assertThat( other.getId(), equalTo( 2 ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final SimpleEntity loaded = session.get( SimpleEntity.class, 2 );
 					assert loaded != null;
@@ -81,7 +99,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testUpdate(){
+	public void testUpdate(SessionFactoryScope scope) {
 		SimpleEntity other = new SimpleEntity(
 				3,
 				Calendar.getInstance().getTime(),
@@ -91,7 +109,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				null
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -104,7 +122,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -117,59 +135,122 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	public void testQueryParentAttribute2() {
-		inTransaction(
+	public void testHqlSelectParentAttribute(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOne e where e.id = 1",
 							String.class
 					).uniqueResult();
 					assertThat( value, equalTo( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
 
 	@Test
-	public void testQueryParentAttribute3() {
-		inTransaction(
+	public void testHqlSelect(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne value = session.createQuery(
 							"select e from EntityWithOneToOne e where e.id = 1",
 							EntityWithOneToOne.class
 					).uniqueResult();
 					assertThat( value.getName(), equalTo( "first" ) );
+
+					SimpleEntity other = value.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+
 				}
 		);
 	}
 
 	@Test
-	public void testQueryParentAttribute() {
-		inTransaction(
+	public void testHqlSelectParentParentAttributeWithImplicitJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
 				session -> {
 					final String value = session.createQuery(
 							"select e.name from EntityWithOneToOne e where e.other.id = 2",
 							String.class
 					).uniqueResult();
 					assertThat( value, equalTo( "first" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
 
 	@Test
-	public void testQueryParent() {
-		inTransaction(
+	public void testHqlSelectWithImplicitJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne value = session.createQuery(
 							"select e from EntityWithOneToOne e where e.other.id = 2",
 							EntityWithOneToOne.class
 					).uniqueResult();
 					assertThat( value.getName(), equalTo( "first" ) );
+
+					SimpleEntity other = value.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
 	}
 
-	private void deleteAll() {
-		inTransaction(
+	@Test
+	public void testHqlSelectWithJoin(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithOneToOne value = session.createQuery(
+							"select e from EntityWithOneToOne e join e.other k where k.id = 2",
+							EntityWithOneToOne.class
+					).uniqueResult();
+					assertThat( value.getName(), equalTo( "first" ) );
+
+					SimpleEntity other = value.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testHqlSelectWithJoinFetch(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction(
+				session -> {
+					final EntityWithOneToOne value = session.createQuery(
+							"select e from EntityWithOneToOne e join fetch e.other k where k.id = 2",
+							EntityWithOneToOne.class
+					).uniqueResult();
+					assertThat( value.getName(), equalTo( "first" ) );
+
+					SimpleEntity other = value.getOther();
+					assertTrue( Hibernate.isInitialized( other ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+				}
+		);
+	}
+
+	private void deleteAll(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne loaded = session.get( EntityWithOneToOne.class, 1 );
 					assert loaded != null;
@@ -179,7 +260,7 @@ public class EntityWithOneToOneTest extends SessionFactoryBasedFunctionalTest {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					final EntityWithOneToOne notfound = session.find( EntityWithOneToOne.class, 1 );
 					assertThat( notfound, CoreMatchers.nullValue() );

@@ -29,7 +29,6 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 	}
 	   
 	public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(String catalog, String schema, String table) {
-		String sql = null;
 			try {			
 				catalog = caseForSearch( catalog );
 				schema = caseForSearch( schema );
@@ -73,8 +72,8 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 									statement.close();
 								}
 								catch (SQLException e) {
-									throw getSQLExceptionConverter().convert(e,
-											"Problem while closing prepared statement", null);				
+									throw new RuntimeException(
+											"Problem while closing prepared statement", e);				
 								}
 							}
 						}
@@ -89,12 +88,12 @@ public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
 					protected Throwable handleSQLException(SQLException e) {
 						// schemaRs and catalogRs are only used for error reporting if
 						// we get an exception
-						throw getSQLExceptionConverter().convert( e,
-								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", null);					
+						throw new RuntimeException(
+								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);					
 					}
 				};
 			} catch (SQLException e) {
-				throw getSQLExceptionConverter().convert(e, "Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", sql);		         
+				throw new RuntimeException("Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);		         
 			} 		
 		}
 }

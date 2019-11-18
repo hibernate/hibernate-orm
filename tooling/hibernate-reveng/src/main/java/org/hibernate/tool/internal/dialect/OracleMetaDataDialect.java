@@ -287,20 +287,20 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 					// we get an exception
 					String databaseStructure = getDatabaseStructure(catalog,
 							schema);
-					throw getSQLExceptionConverter().convert(
-							e,
+					throw new RuntimeException(
 							"Could not get list of tables from database. Probably a JDBC driver problem. "
-									+ databaseStructure, null);
+									+ databaseStructure, 
+							e);
 				}
 			};
 		} catch (SQLException e) {
 			// schemaRs and catalogRs are only used for error reporting if we
 			// get an exception
 			String databaseStructure = getDatabaseStructure(catalog, schema);
-			throw getSQLExceptionConverter().convert(
-					e,
+			throw new RuntimeException(
 					"Could not get list of tables from database. Probably a JDBC driver problem. "
-							+ databaseStructure, null);
+							+ databaseStructure, 
+					e);
 		}
 	}
 	
@@ -332,18 +332,17 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				}
 
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(
-							e,
+					throw new RuntimeException(
 							"Exception while getting index info for "
 									+ TableNameQualifier.qualify(catalog, schema, table),
-							null);
+							e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(
-					e,
+			throw new RuntimeException (
 					"Exception while getting index info for "
-							+ TableNameQualifier.qualify(catalog, schema, table) + ": " + e.getMessage(), null);
+							+ TableNameQualifier.qualify(catalog, schema, table) + ": " + e.getMessage(),
+					e);
 		}
 	}
 
@@ -377,18 +376,17 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				}
 
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(
-							e,
+					throw new RuntimeException(
 							"Error while reading column meta data for "
 									+ TableNameQualifier.qualify(catalog, schema, table),
-							null);
+							e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(
-					e,
+			throw new RuntimeException(
 					"Error while reading column meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), null);
+							+ TableNameQualifier.qualify(catalog, schema, table), 
+					e);
 		}
 	}
 
@@ -419,18 +417,17 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				}
 
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(
-							e,
+					throw new RuntimeException(
 							"Error while reading primary key meta data for "
 									+ TableNameQualifier.qualify(catalog, schema, table),
-							null);
+							e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(
-					e,
+			throw new RuntimeException(
 					"Error while reading primary key meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), null);
+							+ TableNameQualifier.qualify(catalog, schema, table), 
+					e);
 		}
 	}
 
@@ -464,18 +461,17 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				}
 
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(
-							e,
+					throw new RuntimeException(
 							"Error while reading exported keys meta data for "
 									+ TableNameQualifier.qualify(catalog, schema, table),
-							null);
+							e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(
-					e,
+			throw new RuntimeException(
 					"Error while reading exported keys meta data for "
-							+ TableNameQualifier.qualify(catalog, schema, table), null);
+							+ TableNameQualifier.qualify(catalog, schema, table), 
+					e);
 		}
 	}	
 	
@@ -519,8 +515,8 @@ public class OracleMetaDataDialect extends AbstractMetaDataDialect {
 				ps.close();
 			}
 			catch (SQLException e) {
-				throw getSQLExceptionConverter().convert(e,
-						"Problem while closing prepared statement", null);				
+				throw new RuntimeException(
+						"Problem while closing prepared statement", e);				
 			}
 			return null;
 		}

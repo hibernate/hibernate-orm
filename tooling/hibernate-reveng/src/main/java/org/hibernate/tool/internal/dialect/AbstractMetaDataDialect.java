@@ -31,16 +31,11 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 	private DatabaseMetaData metaData;
 	
 	private ConnectionProvider connectionProvider = null;
-	private SQLExceptionConverter exceptionConverter = null;
-
-//	private ReverseEngineeringRuntimeInfo info;
-
 
 	public void configure(
 			ConnectionProvider connectionProvider, 
 			SQLExceptionConverter sqlExceptionConverter) {
 		this.connectionProvider = connectionProvider;	
-		this.exceptionConverter = sqlExceptionConverter;
 	}
 	
 	public void close() {
@@ -50,7 +45,7 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 				connectionProvider.closeConnection(connection);				
 			}
 			catch (SQLException e) {
-				throw getSQLExceptionConverter().convert(e, "Problem while closing connection", null);
+				throw new RuntimeException("Problem while closing connection", e);
 			} finally {
 				connection = null;
 			}
@@ -131,10 +126,6 @@ public abstract class AbstractMetaDataDialect implements MetaDataDialect {
 		if(iterator instanceof ResultSetIterator) {
 			((ResultSetIterator)iterator).close();
 		}
-	}
-	
-	protected SQLExceptionConverter getSQLExceptionConverter() {
-		return exceptionConverter;
 	}
 	
 	public boolean needQuote(String name) {

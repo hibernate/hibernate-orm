@@ -40,15 +40,17 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					// schemaRs and catalogRs are only used for error reporting if
 					// we get an exception
 					String databaseStructure = getDatabaseStructure( catalog, schema );
-					throw getSQLExceptionConverter().convert( e,
+					throw new RuntimeException(
 							"Could not get list of tables from database. Probably a JDBC driver problem. "
-									+ databaseStructure, null );					
+									+ databaseStructure, 
+							e );					
 				}
 			};
 		} catch (SQLException e) {
 			// schemaRs and catalogRs are only used for error reporting if we get an exception
 			String databaseStructure = getDatabaseStructure(xcatalog,xschema);
-			throw getSQLExceptionConverter().convert(e, "Could not get list of tables from database. Probably a JDBC driver problem. " + databaseStructure, null);		         
+			throw new RuntimeException(
+					"Could not get list of tables from database. Probably a JDBC driver problem. " + databaseStructure, e);		         
 		} 		
 	}
 	
@@ -74,11 +76,13 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					return element;					
 				}
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(e, "Exception while getting index info for " + TableNameQualifier.qualify(catalog, schema, table), null);
+					throw new RuntimeException(
+							"Exception while getting index info for " + TableNameQualifier.qualify(catalog, schema, table), e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(e, "Exception while getting index info for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), null);
+			throw new RuntimeException(
+					"Exception while getting index info for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), e);
 		} 		
 	}
 
@@ -114,11 +118,11 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					return element;					
 				}
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(e, "Error while reading column meta data for " + TableNameQualifier.qualify(catalog, schema, table), null);
+					throw new RuntimeException("Error while reading column meta data for " + TableNameQualifier.qualify(catalog, schema, table), e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(e, "Error while reading column meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), null);
+			throw new RuntimeException("Error while reading column meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), e);
 		}	
 	}
 
@@ -143,11 +147,14 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					return element;					
 				}
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(e, "Error while reading primary key meta data for " + TableNameQualifier.qualify(catalog, schema, table), null);
+					throw new RuntimeException(
+							"Error while reading primary key meta data for " + TableNameQualifier.qualify(catalog, schema, table), 
+							e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(e, "Error while reading primary key meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), null);
+			throw new RuntimeException(
+					"Error while reading primary key meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), e);
 		}	
 	}
 
@@ -169,11 +176,13 @@ public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
 					return element;					
 				}
 				protected Throwable handleSQLException(SQLException e) {
-					throw getSQLExceptionConverter().convert(e, "Error while reading exported keys meta data for " + TableNameQualifier.qualify(catalog, schema, table), null);
+					throw new RuntimeException(
+							"Error while reading exported keys meta data for " + TableNameQualifier.qualify(catalog, schema, table), e);
 				}
 			};
 		} catch (SQLException e) {
-			throw getSQLExceptionConverter().convert(e, "Error while reading exported keys meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), null);
+			throw new RuntimeException(
+					"Error while reading exported keys meta data for " + TableNameQualifier.qualify(xcatalog, xschema, xtable), e);
 		}	
 	}
 	

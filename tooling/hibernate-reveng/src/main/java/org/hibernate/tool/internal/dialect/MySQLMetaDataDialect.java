@@ -47,12 +47,12 @@ public class MySQLMetaDataDialect extends JDBCMetaDataDialect {
 					protected Throwable handleSQLException(SQLException e) {
 						// schemaRs and catalogRs are only used for error reporting if
 						// we get an exception
-						throw getSQLExceptionConverter().convert( e,
-								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", null);					
+						throw new RuntimeException(
+								"Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);					
 					}
 				};
 			} catch (SQLException e) {
-				throw getSQLExceptionConverter().convert(e, "Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", sql);		         
+				throw new RuntimeException("Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);		         
 			} 		
 		}
 	

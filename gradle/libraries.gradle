@@ -25,7 +25,7 @@ ext {
     javassistVersion = '3.24.0-GA'
     byteBuddyVersion = '1.10.2'
 
-    agroalVersion = '1.6'
+    agroalVersion = '1.7'
 
     geolatteVersion = '1.4.0'
 

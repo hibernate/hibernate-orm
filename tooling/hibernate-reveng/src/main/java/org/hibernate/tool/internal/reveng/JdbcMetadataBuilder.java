@@ -108,22 +108,32 @@ public class JdbcMetadataBuilder {
 	}
 
 	public Metadata build() {
-		MetadataImpl metadata = metadataCollector
-				.buildMetadataInstance(metadataBuildingContext);
-		metadata.getTypeConfiguration().scope(metadataBuildingContext);		
+		Metadata result = createMetadata();		
+	    DatabaseCollector collector = readFromDatabase();
+        createPersistentClasses(collector, result); //move this to a different step!
+		metadataCollector.processSecondPasses(metadataBuildingContext);		
+		return result;
+	}
+	
+	private MetadataImpl createMetadata() {
+		MetadataImpl result = metadataCollector.buildMetadataInstance(metadataBuildingContext);
+		result.getTypeConfiguration().scope(metadataBuildingContext);		
+		return result;
+	}
+	
+	private DatabaseCollector readFromDatabase() {
 	    JDBCReader reader = JdbcReaderFactory.newJDBCReader(properties,revengStrategy,serviceRegistry);
 	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
         reader.readDatabaseSchema(collector, defaultCatalog, defaultSchema);
-        createPersistentClasses(collector, new BinderMapping(metadata)); //move this to a different step!
-		metadataCollector.processSecondPasses(metadataBuildingContext);		
-		return metadata;
+        return collector;
 	}
 	
 	/**
 	 * @param manyToOneCandidates
 	 * @param mappings2
 	 */
-	private void createPersistentClasses(DatabaseCollector collector, Mapping mapping) {
+	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
+		BinderMapping mapping = new BinderMapping(metadata);
 		Map<String, List<ForeignKey>> manyToOneCandidates = collector.getOneToManyCandidates();
 		for (Iterator<Table> iter = metadataCollector.collectTableMappings().iterator(); iter.hasNext();) {
 			Table table = iter.next();

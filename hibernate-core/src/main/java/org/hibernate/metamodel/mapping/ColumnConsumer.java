@@ -13,7 +13,7 @@ package org.hibernate.metamodel.mapping;
 public interface ColumnConsumer {
 	// todo (6.0) : pass values `updateable`, `checkable`, etc
 	void accept(
-			String columnExpression,
 			String containingTableExpression,
+			String columnExpression,
 			JdbcMapping jdbcMapping);
 }

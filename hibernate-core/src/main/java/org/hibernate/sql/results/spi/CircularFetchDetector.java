@@ -19,7 +19,10 @@ import org.hibernate.sql.results.internal.domain.BiDirectionalFetchImpl;
  */
 public class CircularFetchDetector {
 
-	public Fetch findBiDirectionalFetch(FetchParent fetchParent, Fetchable fetchable, SqlAstProcessingState creationState) {
+	public Fetch findBiDirectionalFetch(
+			FetchParent fetchParent,
+			Fetchable fetchable,
+			SqlAstProcessingState creationState) {
 		if ( !fetchable.isCircular( fetchParent, creationState ) ) {
 			return null;
 		}

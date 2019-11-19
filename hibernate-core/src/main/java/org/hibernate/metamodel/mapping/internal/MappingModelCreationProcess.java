@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +64,12 @@ public class MappingModelCreationProcess {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
 			entityPersister.prepareMappingModel( this );
+		}
+
+		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
+			currentlyProcessingRole = entityPersister.getEntityName();
+
+			entityPersister.finishMappingModelInitialization( this );
 		}
 
 		while ( postInitCallbacks != null && ! postInitCallbacks.isEmpty() ) {

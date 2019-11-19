@@ -10,11 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 /**
  * @author Andrea Boriero
  */
 @Entity
+@Table(name = "EntityWithOneToOneJoinTable")
 public class EntityWithOneToOneJoinTable {
 	private Integer id;
 

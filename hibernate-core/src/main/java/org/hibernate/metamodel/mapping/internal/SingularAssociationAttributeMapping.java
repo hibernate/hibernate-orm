@@ -9,14 +9,12 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -39,6 +37,7 @@ import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -47,13 +46,13 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		implements EntityValuedModelPart, TableGroupJoinProducer {
 	private final String sqlAliasStem;
 	private final boolean isNullable;
-	private final ForeignKeyDescriptor foreignKeyDescriptor;
+	private ForeignKeyDescriptor foreignKeyDescriptor;
+	private final String referencedPropertyName;
 
 	public SingularAssociationAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			boolean isNullable,
-			ForeignKeyDescriptor foreignKeyDescriptor,
+			ToOne value,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
 			EntityMappingType type,
@@ -69,8 +68,16 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				propertyAccess
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
-		this.isNullable = isNullable;
+		this.isNullable = value.isNullable();
+		referencedPropertyName = value.getReferencedPropertyName();
+	}
+
+	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
+	}
+
+	public ForeignKeyDescriptor getForeignKeyDescriptor(){
+		return this.foreignKeyDescriptor;
 	}
 
 	@Override
@@ -227,38 +234,42 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	@Override
 	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
-		final NavigablePath navigablePath = fetchParent.getNavigablePath();
-
-		final NavigablePath parent = navigablePath.getParent();
-		if ( parent == null ) {
+		final NavigablePath panentNaviblePath = fetchParent.getNavigablePath();
+		final NavigablePath parentParentNavigablePath = panentNaviblePath.getParent();
+		if ( parentParentNavigablePath == null ) {
 			return false;
 		}
 		else {
 			final String entityName = getMappedTypeDescriptor().getEntityName();
-			if ( parent.getLocalName().equals( entityName ) ) {
-				return true;
-			}
-			else {
-				NavigablePath parentOfParent = parent.getParent();
-				if ( parentOfParent == null ) {
-					return false;
+
+			if ( panentNaviblePath.getLocalName().equals( referencedPropertyName ) ) {
+				if ( parentParentNavigablePath.getLocalName().equals( entityName ) ) {
+					return true;
 				}
 				else {
-					if ( parentOfParent.getParent() != null ) {
-						return false;
+					// need to check if panentNaviblePath.getParent()
+//					FetchParent fetchParent1 = fetchParentByNavigableFullPath.get( parentParentNavigablePath.getFullPath() );
+					final JavaTypeDescriptor resultJavaTypeDescriptor = fetchParent.getResultJavaTypeDescriptor();
+					if ( getEntityMappingType().getJavaTypeDescriptor().getJavaType()
+							.equals( resultJavaTypeDescriptor.getJavaType() ) ) {
+						return true;
 					}
-					else {
-						final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
-								.getCreationContext()
-								.getDomainModel()
-								.findEntityDescriptor( parentOfParent.getFullPath() );
-						final String parentEntityName = entityDescriptor.findSubPart( parent.getLocalName() ).getJavaTypeDescriptor()
-								.getJavaType()
-								.getName();
-						if ( parentEntityName.equals( entityName ) ) {
-							return true;
-						}
-					}
+					return false;
+				}
+			}
+			else {
+				if ( parentParentNavigablePath.getLocalName().equals( entityName ) ) {
+					return true;
+				}
+				JavaTypeDescriptor parentParentJavaTypeDescriptor = creationState.getSqlAstCreationState()
+						.getFromClauseAccess()
+						.findTableGroup( parentParentNavigablePath )
+						.getModelPart()
+						.getJavaTypeDescriptor();
+
+				if ( getEntityMappingType().getJavaTypeDescriptor().getJavaType()
+						.equals( parentParentJavaTypeDescriptor.getJavaType() ) ) {
+					return true;
 				}
 				return false;
 			}

@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -19,6 +20,7 @@ import org.hibernate.annotations.NaturalId;
  * @author Steve Ebersole
  */
 @Entity
+@Table(name = "SIMPLE_ENTITY")
 public class SimpleEntity {
 	private Integer id;
 

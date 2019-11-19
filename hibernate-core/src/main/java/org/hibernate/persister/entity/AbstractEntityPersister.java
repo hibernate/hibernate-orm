@@ -134,6 +134,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -143,6 +144,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -153,6 +155,7 @@ import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -6213,6 +6216,26 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	@Override
+	public void finishMappingModelInitialization(MappingModelCreationProcess creationProcess) {
+		singularAssociationsToFinilize.forEach( (property, singularAssociationAttributeMapping) -> {
+			final Dialect dialect = creationProcess.getCreationContext()
+					.getSessionFactory()
+					.getJdbcServices()
+					.getJdbcEnvironment()
+					.getDialect();
+
+			MappingModelCreationHelper.interpretKeyDescriptor(
+					singularAssociationAttributeMapping,
+					property,
+					(ToOne) property.getValue(),
+					this,
+					dialect,
+					creationProcess
+			);
+		} );
+	}
+
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
@@ -6378,6 +6401,8 @@ public abstract class AbstractEntityPersister
 		throw new NotYetImplementedFor6Exception( AbstractEntityPersister.class );
 	}
 
+	Map<Property,SingularAssociationAttributeMapping> singularAssociationsToFinilize = new HashMap<>(  );
+
 	private AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
@@ -6438,7 +6463,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof EntityType ) {
-			return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+			SingularAssociationAttributeMapping attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					bootProperty,
@@ -6448,6 +6473,8 @@ public abstract class AbstractEntityPersister
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
 			);
+			singularAssociationsToFinilize.put( bootProperty,attributeMapping );
+			return attributeMapping;
 		}
 
 		// todo (6.0) : for now ignore any non basic-typed attributes

@@ -10,11 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 
 /**
  * @author Andrea Boriero
  */
 @Entity
+@Table(name= "EntityWithOneToOneSharingPrimaryKey")
 public class EntityWithOneToOneSharingPrimaryKey {
 	private Integer id;
 

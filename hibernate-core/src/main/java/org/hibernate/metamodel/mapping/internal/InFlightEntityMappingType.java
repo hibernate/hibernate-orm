@@ -35,4 +35,8 @@ public interface InFlightEntityMappingType extends EntityMappingType {
 	default void prepareMappingModel(MappingModelCreationProcess creationProcess) {
 		// by default do nothing - support for legacy impls
 	}
+
+	default void finishMappingModelInitialization(MappingModelCreationProcess creationProcess) {
+		// by default do nothing
+	}
 }

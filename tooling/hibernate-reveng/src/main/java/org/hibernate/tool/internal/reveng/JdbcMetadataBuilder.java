@@ -111,14 +111,10 @@ public class JdbcMetadataBuilder {
 		MetadataImpl metadata = metadataCollector
 				.buildMetadataInstance(metadataBuildingContext);
 		metadata.getTypeConfiguration().scope(metadataBuildingContext);		
-	    Mapping mapping = new BinderMapping(metadata);
-	    // use default from settings 
-	    String catalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-	    String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	    JDBCReader reader = JdbcReaderFactory.newJDBCReader(properties,revengStrategy,serviceRegistry);
 	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
-        reader.readDatabaseSchema(collector, catalog, schema);
-        createPersistentClasses(collector, mapping); //move this to a different step!
+        reader.readDatabaseSchema(collector, defaultCatalog, defaultSchema);
+        createPersistentClasses(collector, new BinderMapping(metadata)); //move this to a different step!
 		metadataCollector.processSecondPasses(metadataBuildingContext);		
 		return metadata;
 	}

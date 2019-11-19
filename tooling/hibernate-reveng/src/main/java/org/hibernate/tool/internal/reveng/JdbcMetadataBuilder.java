@@ -25,7 +25,6 @@ import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -76,7 +75,7 @@ public class JdbcMetadataBuilder {
 
 	private final Properties properties;
 	private final MetadataBuildingContext metadataBuildingContext;	
-	private final InFlightMetadataCollector metadataCollector;	
+	private final InFlightMetadataCollectorImpl metadataCollector;	
 	private final ReverseEngineeringStrategy revengStrategy;
 	
 	private boolean preferBasicCompositeIds;
@@ -109,7 +108,7 @@ public class JdbcMetadataBuilder {
 	}
 
 	public Metadata build() {
-		MetadataImpl metadata = ((InFlightMetadataCollectorImpl)metadataCollector)
+		MetadataImpl metadata = metadataCollector
 				.buildMetadataInstance(metadataBuildingContext);
 		metadata.getTypeConfiguration().scope(metadataBuildingContext);		
 	    Mapping mapping = new BinderMapping(metadata);
@@ -120,7 +119,7 @@ public class JdbcMetadataBuilder {
 	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
         reader.readDatabaseSchema(collector, catalog, schema);
         createPersistentClasses(collector, mapping); //move this to a different step!
-		((InFlightMetadataCollectorImpl)metadataCollector).processSecondPasses(metadataBuildingContext);		
+		metadataCollector.processSecondPasses(metadataBuildingContext);		
 		return metadata;
 	}
 	

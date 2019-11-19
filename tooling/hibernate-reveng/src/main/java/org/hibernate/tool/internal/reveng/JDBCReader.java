@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
@@ -31,15 +30,12 @@ public class JDBCReader {
 
 	private final ConnectionProvider provider;
 
-	private final SQLExceptionConverter sec;
-
 	private final String defaultSchema;
 	private final String defaultCatalog;
 	
-	public JDBCReader(MetaDataDialect dialect, ConnectionProvider provider, SQLExceptionConverter sec, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
+	public JDBCReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
 		this.metadataDialect = dialect;
 		this.provider = provider;
-		this.sec = sec;
 		this.revengStrategy = reveng;
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
@@ -168,7 +164,7 @@ public class JDBCReader {
 					}
 
 				} catch (SQLException e) {
-					sec.convert(e, "Problem while closing connection", null);
+					throw new RuntimeException("Problem while closing connection", e);
 				}
 				finally {
 					if(connection!=null)
@@ -176,7 +172,7 @@ public class JDBCReader {
 							provider.closeConnection( connection );
 						}
 						catch (SQLException e) {
-							sec.convert(e, "Problem while closing connection", null);
+							throw new RuntimeException("Problem while closing connection", e);
 						}
 				} 
 			}

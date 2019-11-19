@@ -3321,7 +3321,18 @@ public abstract class AbstractEntityPersister
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
 		final int jdbcBatchSizeToUse = session.getConfiguredJdbcBatchSize();
-		final boolean useBatch = expectation.canBeBatched() && isBatchable() && jdbcBatchSizeToUse > 1;
+		// IMPLEMENTATION NOTE: If Session#saveOrUpdate or #update is used to update an entity, then
+		//                      Hibernate does not have a database snapshot of the existing entity.
+		//                      As a result, oldFields will be null.
+		// Don't use a batch if oldFields == null and the jth table is optional (isNullableTable( j ),
+		// because there is no way to know that there is actually a row to update. If the update
+		// was batched in this case, the batch update would fail and there is no way to fallback to
+		// an insert.
+		final boolean useBatch =
+				expectation.canBeBatched() &&
+						isBatchable() &&
+						jdbcBatchSizeToUse > 1 &&
+						( oldFields != null || !isNullableTable( j ) );
 		if ( useBatch && updateBatchKey == null ) {
 			updateBatchKey = new BasicBatchKey(
 					getEntityName() + "#UPDATE",

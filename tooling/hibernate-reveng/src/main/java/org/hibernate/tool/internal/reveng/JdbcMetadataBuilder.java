@@ -55,10 +55,8 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 
@@ -494,7 +492,13 @@ public class JdbcMetadataBuilder {
 			while (columnIterator.hasNext()) {
 				Column fkcolumn = (Column) columnIterator.next();
 				if(fkcolumn.getSqlTypeCode() != null) {  // TODO: user defined foreign ref columns does not have a type set.
-					guessAndAlignType(fk.getTable(), fkcolumn, mapping, false); // needed to ensure foreign key columns has same type as the "property" column.
+					TypeUtils.determinePreferredType(
+							metadataCollector, 
+							revengStrategy, 
+							fk.getTable(), 
+							fkcolumn, 
+							mapping, 
+							false); // needed to ensure foreign key columns has same type as the "property" column.
 				}
 				element.addColumn(fkcolumn);
 			}
@@ -529,7 +533,13 @@ public class JdbcMetadataBuilder {
 		while ( columnIterator.hasNext() ) {
 			Column fkcolumn = columnIterator.next();
 			if(fkcolumn.getSqlTypeCode()!=null) { // TODO: user defined foreign ref columns does not have a type set.
-				guessAndAlignType(collectionTable, fkcolumn, mapping, false); // needed to ensure foreign key columns has same type as the "property" column.
+				TypeUtils.determinePreferredType(
+						metadataCollector, 
+						revengStrategy,
+						collectionTable, 
+						fkcolumn, 
+						mapping, 
+						false); // needed to ensure foreign key columns has same type as the "property" column.
 			}
 			keyValue.addColumn( fkcolumn );
 		}
@@ -850,7 +860,12 @@ public class JdbcMetadataBuilder {
 	private SimpleValue bindColumnToSimpleValue(Table table, Column column, Mapping mapping, boolean generatedIdentifier) {
 		SimpleValue value = new SimpleValue(metadataBuildingContext, table);
 		value.addColumn(column);
-		value.setTypeName(guessAndAlignType(table, column, mapping, generatedIdentifier));
+		value.setTypeName(TypeUtils.determinePreferredType(
+				metadataCollector, 
+				revengStrategy,
+				table, column, 
+				mapping, 
+				generatedIdentifier));
 		return value;
 	}
 
@@ -873,63 +888,6 @@ public class JdbcMetadataBuilder {
 		if(column.getValue()!=null) {
 			//throw new JDBCBinderException("Binding column twice should not happen. " + column);
 		}
-	}
-
-	/**
-	 * @param column
-	 * @param generatedIdentifier
-	 * @return
-	 */
-	private String guessAndAlignType(Table table, Column column, Mapping mapping, boolean generatedIdentifier) {
-		// TODO: this method mutates the column if the types does not match...not good.
-		// maybe we should copy the column instead before calling this method.
-		Integer sqlTypeCode = column.getSqlTypeCode();
-		String location = 
-				"Table: " + 
-				TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getQuotedName() ) + 
-				" column: " + 
-				column.getQuotedName();
-		if(sqlTypeCode==null) {
-			throw new RuntimeException("sqltype is null for " + location);
-		}
-
-		String preferredHibernateType = revengStrategy.columnToHibernateTypeName(
-				TableIdentifier.create(table),
-				column.getName(),
-				sqlTypeCode.intValue(),
-				column.getLength(), column.getPrecision(), column.getScale(), column.isNullable(), generatedIdentifier
-		);
-
-		Type wantedType = metadataCollector.getTypeResolver().heuristicType(preferredHibernateType);
-
-		if(wantedType!=null) {
-			int[] wantedSqlTypes = wantedType.sqlTypes(mapping);
-
-			if(wantedSqlTypes.length>1) {
-				throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");
-			}
-
-			int wantedSqlType = wantedSqlTypes[0];
-			if(wantedSqlType!=sqlTypeCode.intValue() ) {
-				log.debug("Sql type mismatch for " + location + " between DB and wanted hibernate type. Sql type set to " + typeCodeName( sqlTypeCode.intValue() ) + " instead of " + typeCodeName(wantedSqlType) );
-				column.setSqlTypeCode(Integer.valueOf(wantedSqlType));
-			}
-		}
-		else {
-			log.debug("No Hibernate type found for " + preferredHibernateType + ". Most likely cause is a missing UserType class.");
-		}
-
-
-
-		if(preferredHibernateType==null) {
-			throw new RuntimeException("Could not find javatype for " + typeCodeName(sqlTypeCode.intValue()));
-		}
-
-		return preferredHibernateType;
-	}
-
-	private String typeCodeName(int sqlTypeCode) {
-		return sqlTypeCode + "(" + JdbcToHibernateTypeHelper.getJDBCTypeName(sqlTypeCode) + ")";
 	}
 
 	/**

@@ -111,7 +111,6 @@ public class JdbcMetadataBuilder {
 		Metadata result = createMetadata();		
 	    DatabaseCollector collector = readFromDatabase();
         createPersistentClasses(collector, result); //move this to a different step!
-		metadataCollector.processSecondPasses(metadataBuildingContext);		
 		return result;
 	}
 	
@@ -204,7 +203,8 @@ public class JdbcMetadataBuilder {
 			updatePrimaryKey(rc, pki);
 
 		}
-
+		
+		metadataCollector.processSecondPasses(metadataBuildingContext);		
 	}
 
 	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {

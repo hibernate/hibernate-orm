@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -134,7 +135,6 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	@FailureExpected
 	public void testGetParent3() {
 		inTransaction( session -> {
 
@@ -211,7 +211,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getParent1(), notNullValue() );
-			assertThat( child2.getParent2(), notNullValue() );
+			assertThat( child2.getParent2(), nullValue() );
 		} );
 	}
 

@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -38,7 +39,6 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -48,6 +48,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private ForeignKeyDescriptor foreignKeyDescriptor;
+
 	private final String referencedPropertyName;
 	private final boolean referringPrimaryKey;
 
@@ -72,15 +73,19 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = value.isNullable();
 		referencedPropertyName = value.getReferencedPropertyName();
-		referringPrimaryKey =value.isReferenceToPrimaryKey();
+		referringPrimaryKey = value.isReferenceToPrimaryKey();
 	}
 
-	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){
+	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
 	}
 
-	public ForeignKeyDescriptor getForeignKeyDescriptor(){
+	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return this.foreignKeyDescriptor;
+	}
+
+	public String getReferencedPropertyName() {
+		return referencedPropertyName;
 	}
 
 	@Override
@@ -252,41 +257,27 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		if ( parentParentNavigablePath == null ) {
 			return false;
 		}
+		if ( getAttributeName().equals( parentParentNavigablePath.getLocalName() ) ) {
+			return true;
+		}
 		else {
-			final String entityName = getMappedTypeDescriptor().getEntityName();
-
-			if ( panentNaviblePath.getLocalName().equals( referencedPropertyName ) ) {
-				if ( parentParentNavigablePath.getLocalName().equals( entityName ) ) {
-					return true;
-				}
-				else {
-					// need to check if panentNaviblePath.getParent()
-//					FetchParent fetchParent1 = fetchParentByNavigableFullPath.get( parentParentNavigablePath.getFullPath() );
-					final JavaTypeDescriptor resultJavaTypeDescriptor = fetchParent.getResultJavaTypeDescriptor();
-					if ( getEntityMappingType().getJavaTypeDescriptor().getJavaType()
-							.equals( resultJavaTypeDescriptor.getJavaType() ) ) {
-						return true;
-					}
-					return false;
-				}
+			final ModelPartContainer modelPart = creationState.getSqlAstCreationState()
+					.getFromClauseAccess()
+					.findTableGroup( parentParentNavigablePath )
+					.getModelPart();
+			final SingularAssociationAttributeMapping part = (SingularAssociationAttributeMapping) modelPart
+					.findSubPart( panentNaviblePath.getLocalName(), null );
+			if ( panentNaviblePath.getLocalName().equals( referencedPropertyName )
+					&& part.getFetchableName().equals( referencedPropertyName ) ) {
+				return true;
 			}
-			else {
-				if ( parentParentNavigablePath.getLocalName().equals( entityName ) ) {
-					return true;
-				}
-				JavaTypeDescriptor parentParentJavaTypeDescriptor = creationState.getSqlAstCreationState()
-						.getFromClauseAccess()
-						.findTableGroup( parentParentNavigablePath )
-						.getModelPart()
-						.getJavaTypeDescriptor();
-
-				if ( getEntityMappingType().getJavaTypeDescriptor().getJavaType()
-						.equals( parentParentJavaTypeDescriptor.getJavaType() ) ) {
-					return true;
-				}
-				return false;
+			else if ( part.getReferencedPropertyName() != null
+					&& part.getReferencedPropertyName().equals( getAttributeName() ) ) {
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 }

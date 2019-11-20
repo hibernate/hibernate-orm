@@ -335,7 +335,9 @@ public class MetamodelSelectBuilderProcess {
 			}
 
 			try {
-				fetchDepth++;
+				if(!(fetchable instanceof BasicValuedModelPart)) {
+					fetchDepth--;
+				}
 				Fetch fetch = fetchable.generateFetch(
 						fetchParent,
 						fetchablePath,
@@ -348,7 +350,9 @@ public class MetamodelSelectBuilderProcess {
 				fetches.add( fetch );
 			}
 			finally {
-				fetchDepth--;
+				if(!(fetchable instanceof BasicValuedModelPart)) {
+					fetchDepth--;
+				}
 			}
 		};
 

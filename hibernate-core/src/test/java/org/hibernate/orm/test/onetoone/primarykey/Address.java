@@ -6,26 +6,19 @@
  */
 
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
-package org.hibernate.test.annotations.onetoone.primarykey;
+package org.hibernate.orm.test.onetoone.primarykey;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
 
 @Entity
-public class Person {
+public class Address {
 
 	@Id
 	private long id;
 
-	@OneToOne
-	@JoinTable(
-			name = "personAddress",
-			joinColumns = @JoinColumn(name = "person_id"),
-			inverseJoinColumns = @JoinColumn(name = "address_id")
-			)
-	private Address address;
+	@OneToOne(mappedBy = "address")
+	private Person person;
 
 	public long getId() {
 		return id;
@@ -35,11 +28,12 @@ public class Person {
 		this.id = id;
 	}
 
-	public Address getAddress() {
-		return address;
+	public Person getPerson() {
+		return person;
 	}
 
-	public void setAddress(Address address) {
-		this.address = address;
+	public void setPerson(Person person) {
+		this.person = person;
 	}
+
 }

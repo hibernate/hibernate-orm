@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.onetoone;
+package org.hibernate.orm.test.onetoone;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -17,20 +17,22 @@ import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.PropertyValueException;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11596")
-public class OneToOneJoinTableOptionalTest extends BaseCoreFunctionalTestCase {
+public class OneToOneJoinTableNonOptionalTest extends SessionFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -44,10 +46,16 @@ public class OneToOneJoinTableOptionalTest extends BaseCoreFunctionalTestCase {
 			session.save( show );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			ShowDescription showDescription = new ShowDescription();
-			session.save( showDescription );
-		} );
+		try {
+			doInHibernate( this::sessionFactory, session -> {
+				ShowDescription showDescription = new ShowDescription();
+				session.save( showDescription );
+			} );
+			fail();
+		}
+		catch (PropertyValueException expected) {
+			assertTrue( expected.getMessage().startsWith( "not-null property references a null or transient value" ) );
+		}
 	}
 
 	@Entity(name = "Show")
@@ -92,7 +100,7 @@ public class OneToOneJoinTableOptionalTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private Integer id;
 
-		@OneToOne(mappedBy = "description", cascade = CascadeType.ALL)
+		@OneToOne(mappedBy = "description", cascade = CascadeType.ALL, optional = false)
 		private Show show;
 
 		public Integer getId() {

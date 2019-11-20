@@ -4,10 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.orm.test.jpa.association;
 
-//$Id$
-package org.hibernate.jpa.test.association;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
@@ -16,30 +14,30 @@ import javax.persistence.OneToOne;
  * @author Emmanuel Bernard
  */
 @Entity
-public class Incident {
+public class IncidentStatus {
 	@Id
 	String id;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	IncidentStatus incidentStatus;
+	@OneToOne(mappedBy = "incidentStatus")
+	Incident incident;
 
-	public Incident() {
+	public IncidentStatus() {
 	}
 
-	public Incident(String id) {
+	public IncidentStatus(String id) {
 		this.id = id;
 	}
 
-	public IncidentStatus getIncidentStatus() {
-		return incidentStatus;
+	public Incident getIncident() {
+		return incident;
 	}
 
-	public void setIncidentStatus(IncidentStatus incidentStatus) {
-		this.incidentStatus = incidentStatus;
+	public void setIncident(Incident incident) {
+		this.incident = incident;
 	}
 
 	@Override
 	public String toString() {
-		return "Incident: " + id + " " + incidentStatus;
+		return "IncidentStatus " + id;
 	}
 }

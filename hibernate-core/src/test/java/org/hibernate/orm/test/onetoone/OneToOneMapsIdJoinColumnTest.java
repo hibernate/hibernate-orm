@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.onetoone;
+package org.hibernate.orm.test.onetoone;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -14,17 +14,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Vlad Mihalcea
  */
-public class OneToOneMapsIdJoinColumnTest extends BaseEntityManagerFunctionalTestCase {
+public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

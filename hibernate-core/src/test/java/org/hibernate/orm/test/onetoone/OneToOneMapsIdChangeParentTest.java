@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.onetoone;
+package org.hibernate.orm.test.onetoone;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -17,10 +17,12 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
@@ -32,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-13228" )
-public class OneToOneMapsIdChangeParentTest extends BaseEntityManagerFunctionalTestCase {
+public class OneToOneMapsIdChangeParentTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(

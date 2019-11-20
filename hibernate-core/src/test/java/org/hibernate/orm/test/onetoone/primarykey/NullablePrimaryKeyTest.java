@@ -6,7 +6,7 @@
  */
 
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
-package org.hibernate.test.annotations.onetoone.primarykey;
+package org.hibernate.orm.test.onetoone.primarykey;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +21,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit5.BaseUnitTest;
 import org.junit.Assert;
-import org.junit.Test;
-
-import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test harness for ANN-742.
@@ -33,10 +31,9 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  *
  */
-public class NullablePrimaryKeyTest extends BaseUnitTestCase {
+public class NullablePrimaryKeyTest extends BaseUnitTest {
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void testGeneratedSql() {
 
 		Map settings = new HashMap();
@@ -47,14 +44,11 @@ public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 
 		try {
 			MetadataSources ms = new MetadataSources( serviceRegistry );
-			ms.addAnnotatedClass(Address.class);
-			ms.addAnnotatedClass(Person.class);
+			ms.addAnnotatedClass( Address.class);
+			ms.addAnnotatedClass( Person.class);
 
 			final Metadata metadata = ms.buildMetadata();
 			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands( metadata, false );
-			for (String s : commands) {
-                log.debug( s );
-			}
 			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0), " +
 					"person_id numeric(19,0) not null, primary key (person_id))";
 

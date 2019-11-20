@@ -59,7 +59,6 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -1320,8 +1319,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final Expression expression =
 				new QueryLiteral<>(
 						discriminatorValuesByTableName.get( table.getTableExpression() ),
-						resultType,
-						Clause.SELECT
+						resultType
 				);
 
 		caseSearchedExpression.when( predicate, expression );

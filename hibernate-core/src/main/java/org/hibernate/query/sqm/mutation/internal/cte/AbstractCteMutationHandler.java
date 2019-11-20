@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 
@@ -22,15 +22,15 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 public abstract class AbstractCteMutationHandler extends AbstractMutationHandler {
 	private final CteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
-	private final CteBasedMutationStrategy strategy;
+	private final CteStrategy strategy;
 
 	public AbstractCteMutationHandler(
 			CteTable cteTable,
 			SqmDeleteOrUpdateStatement sqmStatement,
 			DomainParameterXref domainParameterXref,
-			CteBasedMutationStrategy strategy,
-			HandlerCreationContext creationContext) {
-		super( sqmStatement, creationContext );
+			CteStrategy strategy,
+			SessionFactoryImplementor sessionFactory) {
+		super( sqmStatement, sessionFactory );
 		this.cteTable = cteTable;
 		this.domainParameterXref = domainParameterXref;
 
@@ -45,7 +45,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		return domainParameterXref;
 	}
 
-	public CteBasedMutationStrategy getStrategy() {
+	public CteStrategy getStrategy() {
 		return strategy;
 	}
 }

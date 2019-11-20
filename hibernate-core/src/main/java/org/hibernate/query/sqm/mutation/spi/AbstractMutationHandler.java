@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.mutation.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.Handler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 
 /**
@@ -21,9 +22,9 @@ public abstract class AbstractMutationHandler implements Handler {
 
 	public AbstractMutationHandler(
 			SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement,
-			HandlerCreationContext creationContext) {
+			SessionFactoryImplementor sessionFactory) {
 		this.sqmDeleteOrUpdateStatement = sqmDeleteOrUpdateStatement;
-		this.sessionFactory = creationContext.getSessionFactory();
+		this.sessionFactory = sessionFactory;
 
 		final String entityName = sqmDeleteOrUpdateStatement.getTarget()
 				.getReferencedPathSource()

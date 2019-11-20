@@ -10,17 +10,16 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @asciidoc
@@ -50,51 +49,25 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
  *     )
  * ````
  *
- * todo (6.0) : why not:
- *
- * ````
- * with cte_id (id) as (
- *     select id
- *     from Person p
- *     where ...
- * )
- * delete from Contact
- * where (id) in (
- * 		select id
- * 		from cte_id
- * )
- *
- * with cte_id (id) as (
- *     select id
- *     from Person p
- *     where ...
- * )
- * delete from Person
- * where (id) in (
- * 		select id
- * 		from cte_id
- * )
- * ````
- *
  * @author Evandro Pires da Silva
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */
-public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
+public class CteStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SHORT_NAME = "cte";
 	public static final String TABLE_NAME = "id_cte";
 
 	private final EntityPersister rootDescriptor;
+	private final SessionFactoryImplementor sessionFactory;
 	private final CteTable cteTable;
 
-	public CteBasedMutationStrategy(
+	public CteStrategy(
 			EntityPersister rootDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
+		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = runtimeModelCreationContext.getTypeConfiguration()
-				.getSessionFactory()
-				.getServiceRegistry()
+		final Dialect dialect = sessionFactory.getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getJdbcEnvironment()
 				.getDialect();
@@ -120,24 +93,30 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.cteTable = new CteTable( rootDescriptor, runtimeModelCreationContext.getTypeConfiguration() );
+		this.cteTable = new CteTable( rootDescriptor );
 	}
 
 	@Override
-	public UpdateHandler buildUpdateHandler(
-			SqmUpdateStatement sqmUpdateStatement,
+	public int executeDelete(
+			SqmDeleteStatement sqmDelete,
 			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		checkMatch( sqmUpdateStatement, creationContext );
-
-		return new CteUpdateHandler( cteTable, sqmUpdateStatement, domainParameterXref, this, creationContext );
+			ExecutionContext context) {
+		checkMatch( sqmDelete );
+		return new CteDeleteHandler( cteTable, sqmDelete, domainParameterXref, this, sessionFactory ).execute( context );
 	}
 
-	private void checkMatch(SqmDeleteOrUpdateStatement sqmStatement, HandlerCreationContext creationContext) {
+	@Override
+	public int executeUpdate(
+			SqmUpdateStatement sqmUpdate,
+			DomainParameterXref domainParameterXref,
+			ExecutionContext context) {
+		checkMatch( sqmUpdate );
+		return new CteUpdateHandler( cteTable, sqmUpdate, domainParameterXref, this, sessionFactory ).execute( context );
+	}
+
+	private void checkMatch(SqmDeleteOrUpdateStatement sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor = creationContext.getSessionFactory()
-				.getDomainModel()
-				.getEntityDescriptor( targetEntityName );
+		final EntityPersister targetEntityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
 
 		if ( targetEntityDescriptor != rootDescriptor && ! rootDescriptor.isSubclassEntityName( targetEntityDescriptor.getEntityName() ) ) {
 			throw new IllegalArgumentException(
@@ -150,15 +129,5 @@ public class CteBasedMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-	}
-
-	@Override
-	public DeleteHandler buildDeleteHandler(
-			SqmDeleteStatement sqmDeleteStatement,
-			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		checkMatch( sqmDeleteStatement, creationContext );
-
-		return new CteDeleteHandler( cteTable, sqmDeleteStatement, domainParameterXref, this, creationContext );
 	}
 }

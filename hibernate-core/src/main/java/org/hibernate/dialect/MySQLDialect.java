@@ -366,7 +366,8 @@ public class MySQLDialect extends Dialect {
 					}
 				},
 				AfterUseAction.DROP,
-				TempTableDdlTransactionHandling.NONE
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 

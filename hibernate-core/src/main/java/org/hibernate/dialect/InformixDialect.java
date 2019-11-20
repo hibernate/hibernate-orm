@@ -301,7 +301,8 @@ public class InformixDialect extends Dialect {
 					}
 				},
 				AfterUseAction.NONE,
-				TempTableDdlTransactionHandling.NONE
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 	

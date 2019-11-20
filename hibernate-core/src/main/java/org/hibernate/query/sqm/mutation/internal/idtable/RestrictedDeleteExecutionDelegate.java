@@ -7,40 +7,32 @@
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -76,7 +68,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	private final Supplier<IdTableExporter> idTableExporterAccess;
 
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
+	private final MultiTableSqmMutationConverter converter;
 
+	@SuppressWarnings("WeakerAccess")
 	public RestrictedDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			IdTable idTable,
@@ -86,7 +80,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			AfterUseAction afterUseAction,
 			TempTableDdlTransactionHandling ddlTransactionHandling,
 			Supplier<IdTableExporter> idTableExporterAccess,
-			Function<SharedSessionContractImplementor,String> sessionUidAccess,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			QueryOptions queryOptions,
+			QueryParameterBindings queryParameterBindings,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.idTable = idTable;
@@ -98,53 +94,34 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		this.idTableExporterAccess = idTableExporterAccess;
 		this.sessionUidAccess = sessionUidAccess;
 		this.sessionFactory = sessionFactory;
+
+		converter = new MultiTableSqmMutationConverter(
+				entityDescriptor,
+				domainParameterXref,
+				queryOptions,
+				queryParameterBindings,
+				sessionFactory
+		);
 	}
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		final Converter converter = new Converter(
-				sessionFactory,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings()
-		);
-
-		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
-				null,
-				converter,
-				converter.getCurrentClauseStack()::getCurrent
-		) {
-			@Override
-			public Expression resolveSqlExpression(
-					String key, Function<SqlAstProcessingState, Expression> creator) {
-				return super.resolveSqlExpression( key, creator );
-			}
-		};
-
-		converter.getProcessingStateStack().push( rootProcessingState );
 
 		final EntityPersister entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( sqmDelete.getTarget().getEntityName() );
 		final String hierarchyRootTableName = ( (Joinable) entityDescriptor ).getTableName();
-		final NavigablePath navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
-		final TableGroup deletingTableGroup = entityDescriptor.createRootTableGroup(
-				navigablePath,
-				null,
-				JoinType.LEFT,
-				LockMode.PESSIMISTIC_WRITE,
-				converter.getSqlAliasBaseGenerator(),
-				converter.getSqlExpressionResolver(),
-				() -> predicate -> {},
-				sessionFactory
-		);
 
-		// because this is a multi-table update, here we expect multiple TableReferences
-		assert !deletingTableGroup.getTableReferenceJoins().isEmpty();
-
-		// Register this TableGroup with the "registry" in preparation for
-		converter.getFromClauseAccess().registerTableGroup( navigablePath, deletingTableGroup );
+		final TableGroup deletingTableGroup = converter.getMutatingTableGroup();
 
 		final TableReference hierarchyRootTableReference = deletingTableGroup.resolveTableReference( hierarchyRootTableName );
 		assert hierarchyRootTableReference != null;
+
+		final Map<SqmParameter, List<JdbcParameter>> parameterResolutions;
+		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
+			parameterResolutions = Collections.emptyMap();
+		}
+		else {
+			parameterResolutions = new IdentityHashMap<>();
+		}
 
 		// Use the converter to interpret the where-clause.  We do this for 2 reasons:
 		//		1) the resolved Predicate is ultimately the base for applying restriction to the deletes
@@ -158,7 +135,8 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					if ( ! hierarchyRootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
 						needsIdTableWrapper.set( true );
 					}
-				}
+				},
+				parameterResolutions::put
 		);
 
 		boolean needsIdTable = needsIdTableWrapper.get();
@@ -167,7 +145,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			return executeWithIdTable(
 					predicate,
 					deletingTableGroup,
-					converter.getRestrictionSqmParameterResolutions(),
+					parameterResolutions,
 					executionContext
 			);
 		}
@@ -175,7 +153,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			return executeWithoutIdTable(
 					predicate,
 					deletingTableGroup,
-					converter.getRestrictionSqmParameterResolutions(),
+					parameterResolutions,
 					converter.getSqlExpressionResolver(),
 					executionContext
 			);
@@ -399,11 +377,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			ExecutionContext executionContext,
 			JdbcParameterBindings jdbcParameterBindings) {
 		final int rows = ExecuteWithIdTableHelper.saveMatchingIdsIntoIdTable(
-				sqmDelete,
+				converter,
 				predicate,
 				idTable,
 				sessionUidAccess,
-				domainParameterXref,
 				jdbcParameterBindings,
 				executionContext
 		);
@@ -466,88 +443,6 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				JdbcParameterBindings.NO_BINDINGS,
 				executionContext
 		);
-	}
-
-
-
-
-	static class Converter extends BaseSqmToSqlAstConverter {
-		private Map<SqmParameter,List<JdbcParameter>> restrictionSqmParameterResolutions;
-
-		private BiConsumer<SqmParameter,List<JdbcParameter>> sqmParamResolutionConsumer;
-
-		Converter(
-				SqlAstCreationContext creationContext,
-				QueryOptions queryOptions,
-				DomainParameterXref domainParameterXref,
-				QueryParameterBindings domainParameterBindings) {
-			super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
-		}
-
-		Map<SqmParameter, List<JdbcParameter>> getRestrictionSqmParameterResolutions() {
-			return restrictionSqmParameterResolutions;
-		}
-
-		@Override
-		public Stack<SqlAstProcessingState> getProcessingStateStack() {
-			return super.getProcessingStateStack();
-		}
-
-		public Predicate visitWhereClause(SqmWhereClause sqmWhereClause, Consumer<ColumnReference> restrictionColumnReferenceConsumer) {
-			if ( sqmWhereClause == null || sqmWhereClause.getPredicate() == null ) {
-				return null;
-			}
-
-			sqmParamResolutionConsumer = (sqm, jdbcs) -> {
-				if ( restrictionSqmParameterResolutions == null ) {
-					restrictionSqmParameterResolutions = new IdentityHashMap<>();
-				}
-				restrictionSqmParameterResolutions.put( sqm, jdbcs );
-			};
-
-			final SqlAstProcessingState rootProcessingState = getProcessingStateStack().getCurrent();
-			final SqlAstProcessingStateImpl restrictionProcessingState = new SqlAstProcessingStateImpl(
-					rootProcessingState,
-					this,
-					getCurrentClauseStack()::getCurrent
-			) {
-				@Override
-				public SqlExpressionResolver getSqlExpressionResolver() {
-					return this;
-				}
-
-				@Override
-				public Expression resolveSqlExpression(
-						String key, Function<SqlAstProcessingState, Expression> creator) {
-					final Expression expression = rootProcessingState.getSqlExpressionResolver().resolveSqlExpression( key, creator );
-					if ( expression instanceof ColumnReference ) {
-						restrictionColumnReferenceConsumer.accept( (ColumnReference) expression );
-					}
-					return expression;
-				}
-			};
-
-			getProcessingStateStack().push( restrictionProcessingState );
-			try {
-				return (Predicate) sqmWhereClause.getPredicate().accept( this );
-			}
-			finally {
-				getProcessingStateStack().pop();
-			}
-		}
-
-		@Override
-		protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
-			final Expression expression = super.consumeSqmParameter( sqmParameter );
-			final List<JdbcParameter> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
-			sqmParamResolutionConsumer.accept( sqmParameter, jdbcParameters );
-			return expression;
-		}
-
-		@Override
-		public SqlExpressionResolver getSqlExpressionResolver() {
-			return super.getSqlExpressionResolver();
-		}
 	}
 
 }

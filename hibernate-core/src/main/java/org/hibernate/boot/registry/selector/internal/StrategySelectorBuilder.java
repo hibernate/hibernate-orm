@@ -89,7 +89,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.PersistentTableStrategy;
@@ -410,8 +410,8 @@ public class StrategySelectorBuilder {
 	private void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
-				CteBasedMutationStrategy.SHORT_NAME,
-				CteBasedMutationStrategy.class
+				CteStrategy.SHORT_NAME,
+				CteStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,

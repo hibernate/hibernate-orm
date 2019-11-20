@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 

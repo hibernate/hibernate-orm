@@ -13,11 +13,11 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.function.Function;
 
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -26,6 +26,7 @@ import org.hibernate.jdbc.AbstractWork;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("WeakerAccess")
 public class IdTableHelper {
 	private final static CoreMessageLogger log = CoreLogging.messageLogger( IdTableHelper.class );
 
@@ -34,35 +35,23 @@ public class IdTableHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Creation
 
-	public static void createIdTable(
-			IdTable idTable,
-			IdTableExporter exporter,
-			TempTableDdlTransactionHandling ddlTransactionHandling,
-			SharedSessionContractImplementor session) {
-		executeWork(
-				new IdTableCreationWork( idTable, exporter, session ),
-				ddlTransactionHandling,
-				session
-		);
-	}
-
-	private static class IdTableCreationWork extends AbstractWork {
+	public static class IdTableCreationWork extends AbstractWork {
 		private final IdTable idTable;
 		private final IdTableExporter exporter;
-		private final SharedSessionContractImplementor session;
+		private final SessionFactoryImplementor sessionFactory;
 
-		IdTableCreationWork(
+		public IdTableCreationWork(
 				IdTable idTable,
 				IdTableExporter exporter,
-				SharedSessionContractImplementor session) {
+				SessionFactoryImplementor sessionFactory) {
 			this.idTable = idTable;
 			this.exporter = exporter;
-			this.session = session;
+			this.sessionFactory = sessionFactory;
 		}
 
 		@Override
 		public void execute(Connection connection) {
-			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 			try {
 				final String creationCommand = exporter.getSqlCreateCommand( idTable );
@@ -91,35 +80,23 @@ public class IdTableHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Drop
 
-	public static void dropIdTable(
-			IdTable idTable,
-			IdTableExporter exporter,
-			TempTableDdlTransactionHandling ddlTransactionHandling,
-			SharedSessionContractImplementor session) {
-		executeWork(
-				new IdTableDropWork( idTable, exporter, session ),
-				ddlTransactionHandling,
-				session
-		);
-	}
-
-	private static class IdTableDropWork extends AbstractWork {
+	public static class IdTableDropWork extends AbstractWork {
 		private final IdTable idTable;
 		private final IdTableExporter exporter;
-		private final SharedSessionContractImplementor session;
+		private final SessionFactoryImplementor sessionFactory;
 
 		IdTableDropWork(
 				IdTable idTable,
 				IdTableExporter exporter,
-				SharedSessionContractImplementor session) {
+				SessionFactoryImplementor sessionFactory) {
 			this.idTable = idTable;
 			this.exporter = exporter;
-			this.session = session;
+			this.sessionFactory = sessionFactory;
 		}
 
 		@Override
 		public void execute(Connection connection) {
-			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
+			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 			try {
 				final String dropCommand = exporter.getSqlCreateCommand( idTable );
@@ -181,35 +158,6 @@ public class IdTableHelper {
 		}
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Misc
-
-	private static void executeWork(
-			AbstractWork work,
-			TempTableDdlTransactionHandling ddlTransactionHandling,
-			SharedSessionContractImplementor session) {
-		if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
-			// simply execute the work using a Connection obtained from JdbcConnectionAccess
-			//
-			// NOTE : we do not (potentially) release the Connection here
-			//		via LogicalConnectionImplementor#afterStatement because
-			// 		for sure we will be immediately using it again to
-			//		populate the id table and use it...
-
-			try {
-				work.execute( session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
-			}
-			catch (SQLException e) {
-				log.error( "Unable to use JDBC Connection to create perform id table management", e );
-			}
-		}
-		else {
-			session.getTransactionCoordinator()
-					.createIsolationDelegate()
-					.delegateWork( work, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
-		}
-	}
 
 	private static SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 		public boolean doProcess() {

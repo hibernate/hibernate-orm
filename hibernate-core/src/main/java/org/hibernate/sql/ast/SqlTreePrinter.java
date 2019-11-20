@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -445,9 +446,15 @@ public class SqlTreePrinter implements SqlAstWalker {
 //		logNode( "positional-param (%s)", parameter.getPosition() );
 //	}
 
+
+	@Override
+	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
+		logNode( "literal (" + jdbcLiteral.getLiteralValue() + ')' );
+	}
+
 	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
-		logNode( "literal (" + queryLiteral.getValue() + ')' );
+		logNode( "literal (" + queryLiteral.getLiteralValue() + ')' );
 	}
 
 	@Override

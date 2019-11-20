@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.mutation.internal.cte;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -24,13 +24,14 @@ public class CteUpdateHandler
 		extends AbstractCteMutationHandler
 		implements UpdateHandler {
 
+	@SuppressWarnings("WeakerAccess")
 	public CteUpdateHandler(
 			CteTable cteTable,
 			SqmUpdateStatement sqmStatement,
 			DomainParameterXref domainParameterXref,
-			CteBasedMutationStrategy strategy,
-			HandlerCreationContext creationContext) {
-		super( cteTable, sqmStatement, domainParameterXref, strategy, creationContext );
+			CteStrategy strategy,
+			SessionFactoryImplementor sessionFactory) {
+		super( cteTable, sqmStatement, domainParameterXref, strategy, sessionFactory );
 	}
 
 	@Override

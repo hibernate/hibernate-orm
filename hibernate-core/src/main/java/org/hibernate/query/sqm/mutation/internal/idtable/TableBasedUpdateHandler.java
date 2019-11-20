@@ -16,7 +16,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,16 +23,14 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -63,11 +60,12 @@ public class TableBasedUpdateHandler
 	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final Supplier<IdTableExporter> exporterSupplier;
-
 	private final DomainParameterXref domainParameterXref;
 
+	private final EntityPersister entityDescriptor;
+
 	TableBasedUpdateHandler(
-			SqmUpdateStatement sqmDeleteStatement,
+			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			IdTable idTable,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
@@ -75,8 +73,8 @@ public class TableBasedUpdateHandler
 			BeforeUseAction beforeUseAction,
 			AfterUseAction afterUseAction,
 			TempTableDdlTransactionHandling ddlTransactionHandling,
-			HandlerCreationContext creationContext) {
-		super( sqmDeleteStatement, creationContext );
+			SessionFactoryImplementor sessionFactory) {
+		super( sqmUpdate, sessionFactory );
 		this.idTable = idTable;
 		this.exporterSupplier = exporterSupplier;
 		this.beforeUseAction = beforeUseAction;
@@ -84,6 +82,9 @@ public class TableBasedUpdateHandler
 		this.ddlTransactionHandling = ddlTransactionHandling;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
+
+		final String targetEntityName = sqmUpdate.getTarget().getEntityName();
+		this.entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
 	}
 
 	protected SqmUpdateStatement getSqmUpdate() {
@@ -131,21 +132,7 @@ public class TableBasedUpdateHandler
 
 		converterProcessingStateStack.push( rootProcessingState );
 
-		final NavigablePath navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
-		final TableGroup updatingTableGroup = entityDescriptor.createRootTableGroup(
-				navigablePath,
-				null,
-				JoinType.LEFT,
-				LockMode.PESSIMISTIC_WRITE,
-				converterDelegate.getSqlAliasBaseGenerator(),
-				converterDelegate.getSqlExpressionResolver(),
-				() -> predicate -> {},
-				sessionFactory
-		);
-
-		// because this is a multi-table update, here we expect multiple TableReferences
-		assert !updatingTableGroup.getTableReferenceJoins().isEmpty();
-		converterDelegate.getFromClauseAccess().registerTableGroup( navigablePath, updatingTableGroup );
+		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();
 
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference( hierarchyRootTableName );
 		assert hierarchyRootTableReference != null;

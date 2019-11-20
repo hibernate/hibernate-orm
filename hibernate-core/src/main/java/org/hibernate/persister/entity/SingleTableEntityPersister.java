@@ -46,7 +46,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -915,8 +914,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				ComparisonOperator.EQUAL,
 				new QueryLiteral<>(
 						getDiscriminatorValue(),
-						( (BasicType) getDiscriminatorType() ),
-						Clause.WHERE
+						( (BasicType) getDiscriminatorType() )
 				)
 		);
 	}

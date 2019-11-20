@@ -618,7 +618,8 @@ public class DerbyDialect extends DB2Dialect {
 					}
 				},
 				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 }

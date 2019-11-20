@@ -379,7 +379,8 @@ public class H2Dialect extends Dialect {
 				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
 				this::getTypeName,
 				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 

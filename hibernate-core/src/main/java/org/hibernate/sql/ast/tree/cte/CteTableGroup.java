@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -31,8 +31,9 @@ public class CteTableGroup implements TableGroup {
 	private final NavigablePath navigablePath;
 	private final TableReference cteTableReference;
 
+	@SuppressWarnings("WeakerAccess")
 	public CteTableGroup(TableReference cteTableReference) {
-		this.navigablePath = new NavigablePath( CteBasedMutationStrategy.TABLE_NAME );
+		this.navigablePath = new NavigablePath( CteStrategy.TABLE_NAME );
 		this.cteTableReference = cteTableReference;
 	}
 

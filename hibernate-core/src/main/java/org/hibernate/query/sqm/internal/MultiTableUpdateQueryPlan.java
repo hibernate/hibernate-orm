@@ -7,21 +7,29 @@
 package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole
  */
 public class MultiTableUpdateQueryPlan implements NonSelectQueryPlan {
-	private final UpdateHandler updateHandler;
+	private final SqmUpdateStatement sqmUpdate;
+	private final DomainParameterXref domainParameterXref;
+	private final SqmMultiTableMutationStrategy mutationStrategy;
 
-	public MultiTableUpdateQueryPlan(UpdateHandler updateHandler) {
-		this.updateHandler = updateHandler;
+	public MultiTableUpdateQueryPlan(
+			SqmUpdateStatement sqmUpdate,
+			DomainParameterXref domainParameterXref,
+			SqmMultiTableMutationStrategy mutationStrategy) {
+		this.sqmUpdate = sqmUpdate;
+		this.domainParameterXref = domainParameterXref;
+		this.mutationStrategy = mutationStrategy;
 	}
 
 	@Override
 	public int executeUpdate(ExecutionContext executionContext) {
-		return updateHandler.execute( executionContext );
+		return mutationStrategy.executeUpdate( sqmUpdate, domainParameterXref, executionContext );
 	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -98,6 +99,8 @@ public interface SqlAstWalker {
 	void visitTuple(SqlTuple tuple);
 
 	void visitParameter(JdbcParameter jdbcParameter);
+
+	void visitJdbcLiteral(JdbcLiteral jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
 

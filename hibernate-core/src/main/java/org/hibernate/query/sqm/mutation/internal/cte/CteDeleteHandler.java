@@ -19,9 +19,8 @@ import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
+import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
+import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -54,12 +53,11 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			CteTable cteTable,
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			CteBasedMutationStrategy strategy,
-			HandlerCreationContext creationContext) {
-		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, creationContext );
+			CteStrategy strategy,
+			SessionFactoryImplementor sessionFactory) {
+		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, sessionFactory );
 
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 	}
@@ -71,7 +69,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		final List<Object> ids = SqmMutationStrategyHelper.selectMatchingIds(
+		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
 				getSqmDeleteOrUpdateStatement(),
 				getDomainParameterXref(),
 				executionContext
@@ -122,17 +120,15 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		);
 
 		getEntityDescriptor().visitConstraintOrderedTables(
-				(tableExpression, tableColumnsVisitationSupplier) -> {
-					executeDelete(
-							cteDefinitionQuerySpec,
-							tableExpression,
-							tableColumnsVisitationSupplier,
-							getEntityDescriptor().getIdentifierMapping(),
-							cteQuerySpec,
-							jdbcParameterBindings,
-							executionContext
-					);
-				}
+				(tableExpression, tableColumnsVisitationSupplier) -> executeDelete(
+						cteDefinitionQuerySpec,
+						tableExpression,
+						tableColumnsVisitationSupplier,
+						getEntityDescriptor().getIdentifierMapping(),
+						cteQuerySpec,
+						jdbcParameterBindings,
+						executionContext
+				)
 		);
 
 		return ids.size();
@@ -201,7 +197,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		);
 		return new CteStatement(
 				cteDefinition,
-				CteBasedMutationStrategy.TABLE_NAME,
+				CteStrategy.TABLE_NAME,
 				getCteTable(),
 				deleteStatement
 		);
@@ -225,16 +221,14 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		final List<ColumnReference> columnsToMatchReferences = new ArrayList<>();
 
 		columnsToMatchVisitationSupplier.get().accept(
-				(columnExpression, containingTableExpression, jdbcMapping) -> {
-					columnsToMatchReferences.add(
-							new ColumnReference(
-									targetTableReference,
-									columnExpression,
-									jdbcMapping,
-									sessionFactory
-							)
-					);
-				}
+				(columnExpression, containingTableExpression, jdbcMapping) -> columnsToMatchReferences.add(
+						new ColumnReference(
+								targetTableReference,
+								columnExpression,
+								jdbcMapping,
+								sessionFactory
+						)
+				)
 		);
 
 		final Expression columnsToMatchExpression;

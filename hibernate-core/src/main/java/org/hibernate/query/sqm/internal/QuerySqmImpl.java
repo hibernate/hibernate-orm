@@ -545,34 +545,22 @@ public class QuerySqmImpl<R>
 			return new SimpleDeleteQueryPlan( sqmDelete, domainParameterXref );
 		}
 		else {
-			return new MultiTableDeleteQueryPlan(
-					multiTableStrategy.buildDeleteHandler(
-							sqmDelete,
-							domainParameterXref,
-							this::getSessionFactory
-					)
-			);
+			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
 		}
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
-		final SqmUpdateStatement sqmStatement = (SqmUpdateStatement) getSqmStatement();
+		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
 
-		final String entityNameToUpdate = sqmStatement.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final String entityNameToUpdate = sqmUpdate.getTarget().getReferencedPathSource().getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
 
 		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy == null ) {
-			return new SimpleUpdateQueryPlan( sqmStatement, domainParameterXref );
+			return new SimpleUpdateQueryPlan( sqmUpdate, domainParameterXref );
 		}
 		else {
-			return new MultiTableUpdateQueryPlan(
-					multiTableStrategy.buildUpdateHandler(
-							sqmStatement,
-							domainParameterXref,
-							this::getSessionFactory
-					)
-			);
+			return new MultiTableUpdateQueryPlan( sqmUpdate, domainParameterXref, multiTableStrategy );
 		}
 	}
 

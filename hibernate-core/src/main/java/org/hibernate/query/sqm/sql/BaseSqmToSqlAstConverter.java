@@ -764,8 +764,7 @@ public abstract class BaseSqmToSqlAstConverter
 						literal,
 						getCreationContext().getDomainModel(),
 						getFromClauseAccess()::findTableGroup
-				),
-				getCurrentClauseStack().getCurrent()
+				)
 		);
 	}
 
@@ -1450,8 +1449,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
 		return new QueryLiteral(
 				sqmEnumLiteral.getEnumValue(),
-				(BasicValuedMapping) determineValueMapping( sqmEnumLiteral ),
-				getCurrentClauseStack().getCurrent()
+				(BasicValuedMapping) determineValueMapping( sqmEnumLiteral )
 		);
 	}
 
@@ -1459,8 +1457,7 @@ public abstract class BaseSqmToSqlAstConverter
 	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
 		return new QueryLiteral(
 				sqmFieldLiteral.getValue(),
-				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral ),
-				getCurrentClauseStack().getCurrent()
+				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral )
 		);
 	}
 

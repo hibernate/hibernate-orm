@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
@@ -25,6 +26,8 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -792,6 +795,12 @@ public abstract class AbstractSqlAstWalker
 //		visitJdbcParameterBinder( positionalParameter );
 //	}
 
+
+	@Override
+	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
+		renderAsLiteral( jdbcLiteral );
+	}
+
 	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
 		final QueryLiteralRendering queryLiteralRendering = getSessionFactory().getSessionFactoryOptions().getQueryLiteralRenderingMode();
@@ -807,7 +816,7 @@ public abstract class AbstractSqlAstWalker
 			}
 			case AUTO:
 			case AS_PARAM_OUTSIDE_SELECT: {
-				if ( queryLiteral.isInSelect() ) {
+				if ( clauseStack.getCurrent() == Clause.SELECT ) {
 					renderAsLiteral( queryLiteral );
 				}
 				else {
@@ -824,25 +833,21 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@SuppressWarnings("unchecked")
-	private void renderAsLiteral(QueryLiteral<?> queryLiteral) {
-		if ( queryLiteral.getValue() == null ) {
+	private void renderAsLiteral(Literal literal) {
+		if ( literal.getLiteralValue() == null ) {
 			// todo : not sure we allow this "higher up"
 			appendSql( SqlAppender.NULL_KEYWORD );
 		}
 		else {
-			assert queryLiteral.getExpressionType().getJdbcTypeCount( getTypeConfiguration() ) == 1;
-			queryLiteral.visitJdbcTypes(
-					jdbcMapping -> {
-						final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
-						appendSql(
-								literalFormatter.toJdbcLiteral(
-										queryLiteral.getValue(),
-										dialect,
-										null
-								)
-						);
-					},
-					getTypeConfiguration()
+			assert literal.getExpressionType().getJdbcTypeCount( getTypeConfiguration() ) == 1;
+			final JdbcMapping jdbcMapping = literal.getJdbcMapping();
+			final JdbcLiteralFormatter literalFormatter = jdbcMapping.getSqlTypeDescriptor().getJdbcLiteralFormatter( jdbcMapping.getJavaTypeDescriptor() );
+			appendSql(
+					literalFormatter.toJdbcLiteral(
+							literal.getLiteralValue(),
+							dialect,
+							null
+					)
 			);
 		}
 	}

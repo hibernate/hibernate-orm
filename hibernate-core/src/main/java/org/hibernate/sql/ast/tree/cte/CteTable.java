@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
@@ -29,7 +29,6 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Describes the table definition for the CTE - its name amd its columns
@@ -41,10 +40,10 @@ public class CteTable {
 
 	private final List<CteColumn> cteColumns;
 
-	public CteTable(EntityMappingType entityDescriptor, TypeConfiguration typeConfiguration) {
+	public CteTable(EntityMappingType entityDescriptor) {
 		this.sessionFactory = entityDescriptor.getEntityPersister().getFactory();
 
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( typeConfiguration );
+		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
 		cteColumns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().visitColumns(
 				(columnExpression, containingTableExpression, jdbcMapping) -> cteColumns.add(
@@ -62,7 +61,7 @@ public class CteTable {
 	}
 
 	public String getTableExpression() {
-		return CteBasedMutationStrategy.TABLE_NAME;
+		return CteStrategy.TABLE_NAME;
 	}
 
 	public List<CteColumn> getCteColumns() {
@@ -150,13 +149,13 @@ public class CteTable {
 
 		return new TableReference(
 				tableValueCtorExpressionBuffer.toString(),
-				CteBasedMutationStrategy.TABLE_NAME,
+				CteStrategy.TABLE_NAME,
 				false,
 				sessionFactory
 		);
 	}
 
-	public QuerySpec createCteSubQuery(ExecutionContext executionContext) {
+	public QuerySpec createCteSubQuery(@SuppressWarnings("unused") ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
 
 		final TableReference cteTableReference = new TableReference(

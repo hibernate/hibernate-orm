@@ -144,7 +144,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
@@ -169,7 +168,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.query.sqm.mutation.internal.cte.CteBasedMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
@@ -6201,6 +6199,18 @@ public abstract class AbstractEntityPersister
 		else {
 			sqmMultiTableMutationStrategy = null;
 		}
+
+		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
+		// generation of `staticFetchableList` because we need to wait until after all sub-classes have had their
+		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
+		creationProcess.registerInitializationCallback(
+				() -> {
+					staticFetchableList = new ArrayList<>( attributeMappings.size() );
+					visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+					return true;
+				}
+		);
 	}
 
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
@@ -6220,7 +6230,7 @@ public abstract class AbstractEntityPersister
 		return SqmMutationStrategyHelper.resolveStrategy(
 				entityBootDescriptor,
 				entityMappingDescriptor,
-				creationProcess.getCreationContext()
+				creationProcess
 		);
 
 	}
@@ -6607,12 +6617,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected List<Fetchable> getStaticFetchableList() {
-		if ( staticFetchableList == null ) {
-			staticFetchableList = new ArrayList<>( attributeMappings.size() );
-			visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
-
-			visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
-		}
 		return staticFetchableList;
 	}
 

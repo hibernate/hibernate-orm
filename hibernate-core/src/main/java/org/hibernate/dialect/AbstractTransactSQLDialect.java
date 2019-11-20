@@ -223,7 +223,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 //				// sql-server, at least needed this dropped after use; strange!
 				this::getTypeName,
 				AfterUseAction.DROP,
-				TempTableDdlTransactionHandling.NONE
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 

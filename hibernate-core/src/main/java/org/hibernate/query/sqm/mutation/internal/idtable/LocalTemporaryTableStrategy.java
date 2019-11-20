@@ -10,14 +10,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
@@ -31,63 +29,73 @@ public class LocalTemporaryTableStrategy implements SqmMultiTableMutationStrateg
 	private final Supplier<IdTableExporter> idTableExporterAccess;
 	private final AfterUseAction afterUseAction;
 	private final TempTableDdlTransactionHandling ddlTransactionHandling;
+	private final SessionFactoryImplementor sessionFactory;
 
 	public LocalTemporaryTableStrategy(
 			IdTable idTable,
 			Supplier<IdTableExporter> idTableExporterAccess,
 			AfterUseAction afterUseAction,
-			TempTableDdlTransactionHandling ddlTransactionHandling) {
+			TempTableDdlTransactionHandling ddlTransactionHandling,
+			SessionFactoryImplementor sessionFactory) {
 		this.idTable = idTable;
 		this.idTableExporterAccess = idTableExporterAccess;
 		this.afterUseAction = afterUseAction;
 		this.ddlTransactionHandling = ddlTransactionHandling;
+		this.sessionFactory = sessionFactory;
 	}
 
 	public LocalTemporaryTableStrategy(
 			IdTable idTable,
 			Function<Integer, String> databaseTypeNameResolver,
 			AfterUseAction afterUseAction,
-			TempTableDdlTransactionHandling ddlTransactionHandling) {
+			TempTableDdlTransactionHandling ddlTransactionHandling,
+			SessionFactoryImplementor sessionFactory) {
 		this(
 				idTable,
 				() -> new TempIdTableExporter( true, databaseTypeNameResolver ),
 				afterUseAction,
-				ddlTransactionHandling
-		);
-	}
-
-	@Override
-	public UpdateHandler buildUpdateHandler(
-			SqmUpdateStatement sqmUpdateStatement,
-			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		return new TableBasedUpdateHandler(
-				sqmUpdateStatement,
-				domainParameterXref, idTable,
-				SharedSessionContractImplementor::getTenantIdentifier,
-				idTableExporterAccess,
-				BeforeUseAction.CREATE,
-				afterUseAction,
 				ddlTransactionHandling,
-				creationContext
+				sessionFactory
 		);
 	}
 
 	@Override
-	public DeleteHandler buildDeleteHandler(
-			SqmDeleteStatement sqmDeleteStatement,
+	public int executeUpdate(
+			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		return new TableBasedDeleteHandler(
-				sqmDeleteStatement,
+			ExecutionContext context) {
+		return new TableBasedUpdateHandler(
+				sqmUpdate,
 				domainParameterXref,
 				idTable,
-				SharedSessionContractImplementor::getTenantIdentifier,
+				session -> {
+					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
+				},
 				idTableExporterAccess,
 				BeforeUseAction.CREATE,
 				afterUseAction,
 				ddlTransactionHandling,
-				creationContext
-		);
+				sessionFactory
+		).execute( context );
+	}
+
+	@Override
+	public int executeDelete(
+			SqmDeleteStatement sqmDelete,
+			DomainParameterXref domainParameterXref,
+			ExecutionContext context) {
+		return new TableBasedDeleteHandler(
+				sqmDelete,
+				domainParameterXref,
+				idTable,
+				session -> {
+					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
+				},
+				idTableExporterAccess,
+				BeforeUseAction.CREATE,
+				afterUseAction,
+				ddlTransactionHandling,
+				sessionFactory
+		).execute( context );
 	}
 }

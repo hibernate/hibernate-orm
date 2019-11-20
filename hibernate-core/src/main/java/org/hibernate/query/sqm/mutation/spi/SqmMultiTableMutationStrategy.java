@@ -9,27 +9,24 @@ package org.hibernate.query.sqm.mutation.spi;
 import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
- * Pluggable strategy for defining how mutation (`UPDATE` or `DELETE`)
- * queries should be handled when the target entity is mapped to multiple
- * tables (generally via secondary tables or joined-inheritance).
+ * Pluggable strategy for defining how mutation (`UPDATE` or `DELETE`) queries should be handled when the target
+ * entity is mapped to multiple tables via secondary tables or certain inheritance strategies.
  *
- * {@link #prepare} and {@link #release} allow the strategy to perform
- * any one time preparation and cleanup.
+ * The main contracts here are {@link #executeUpdate} and {@link #executeDelete}.
  *
- * The heavy lifting is handled by the {@link UpdateHandler} and {@link DeleteHandler}
- * delegates obtained via {@link #buildUpdateHandler} and {@link #buildDeleteHandler}
- * methods.
+ * {@link #prepare} and {@link #release} allow the strategy to perform any one time preparation and cleanup.
  *
- * @apiNote See {@link SqmMutationStrategyHelper#resolveStrategy} for standard resolution
- * of the strategy to use.  See also {@link SqmMutationStrategyHelper#resolveDeleteHandler}
- * and {@link SqmMutationStrategyHelper#resolveUpdateHandler} for standard resolution of
- * the delete and update handler to use applying standard special-case handling
+ * @apiNote See {@link SqmMutationStrategyHelper#resolveStrategy} for standard resolution of the strategy to use
+ * for each hierarchy
  *
  * @author Steve Ebersole
  */
@@ -40,8 +37,7 @@ public interface SqmMultiTableMutationStrategy {
 	 * is being built.
 	 */
 	default void prepare(
-			Metamodel runtimeMetadata,
-			SessionFactoryOptions sessionFactoryOptions,
+			MappingModelCreationProcess mappingModelCreationProcess,
 			JdbcConnectionAccess connectionAccess) {
 		// by default, nothing to do...
 	}
@@ -49,35 +45,28 @@ public interface SqmMultiTableMutationStrategy {
 	/**
 	 * Release the strategy.   Called one time as the SessionFactory is
 	 * being shut down.
-	 *
-	 * @param runtimeMetadata Access to the runtime mappings
-	 * @param connectionAccess Access to the JDBC Connection
 	 */
-	default void release(Metamodel runtimeMetadata, JdbcConnectionAccess connectionAccess) {
+	default void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {
 		// by default, nothing to do...
 	}
 
 	/**
-	 * Build a handler capable of handling the update query indicated by the given SQM tree.
+	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
 	 *
-	 * @param sqmUpdateStatement The SQM AST representing the update query
-	 * @param domainParameterXref cross references between SqmParameters and QueryParameters
-	 * @param creationContext Context info for the creation
+	 * @return The number of rows affected
 	 */
-	UpdateHandler buildUpdateHandler(
+	int executeUpdate(
 			SqmUpdateStatement sqmUpdateStatement,
 			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext);
+			ExecutionContext context);
 
 	/**
-	 * Build a handler capable of handling the delete query indicated by the given SQM tree.
+	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
 	 *
-	 * @param sqmDeleteStatement The SQM AST representing the delete query
-	 * @param domainParameterXref cross references between SqmParameters
-	 * @param creationContext Context info for the creation
+	 * @return The number of rows affected
 	 */
-	DeleteHandler buildDeleteHandler(
+	int executeDelete(
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext);
+			ExecutionContext context);
 }

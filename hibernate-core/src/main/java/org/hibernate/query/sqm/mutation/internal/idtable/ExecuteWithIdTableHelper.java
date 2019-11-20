@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -15,25 +16,16 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmTreePrinter;
-import org.hibernate.query.sqm.mutation.internal.SqmIdSelectGenerator;
-import org.hibernate.query.sqm.sql.SqmQuerySpecTranslation;
-import org.hibernate.query.sqm.sql.SqmSelectTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.Clause;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
@@ -47,6 +39,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.UUIDCharType;
 
 import org.jboss.logging.Logger;
@@ -63,158 +56,83 @@ public final class ExecuteWithIdTableHelper {
 	}
 
 	public static int saveMatchingIdsIntoIdTable(
-			SqmUpdateStatement sqmMutation,
 			MultiTableSqmMutationConverter sqmConverter,
-			TableGroup mutatingTableGroup,
 			Predicate suppliedPredicate,
 			IdTable idTable,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
-			DomainParameterXref domainParameterXref,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final SqmQuerySpec sqmIdSelect = SqmIdSelectGenerator.generateSqmEntityIdSelect(
-				sqmMutation,
-				factory
+		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+
+		assert mutatingTableGroup.getModelPart() instanceof EntityMappingType;
+		final EntityMappingType mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
+
+		final InsertSelectStatement idTableInsert = new InsertSelectStatement();
+
+		final TableReference idTableReference = new TableReference( idTable.getTableExpression(), null, false, factory );
+		idTableInsert.setTargetTable( idTableReference );
+
+		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
+			final IdTableColumn column = idTable.getIdTableColumns().get( i );
+			idTableInsert.addTargetColumnReferences(
+					new ColumnReference( idTableReference, column.getColumnName(), column.getJdbcMapping(), factory )
+			);
+		}
+
+		final QuerySpec matchingIdSelection = new QuerySpec( true, 1 );
+		idTableInsert.setSourceSelectStatement( matchingIdSelection );
+
+		matchingIdSelection.getFromClause().addRoot( mutatingTableGroup );
+
+		final AtomicInteger positionWrapper = new AtomicInteger();
+
+		mutatingEntityDescriptor.getIdentifierMapping().visitColumns(
+				(columnExpression, containingTableExpression, jdbcMapping) -> {
+					final int jdbcPosition = positionWrapper.getAndIncrement();
+					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
+					matchingIdSelection.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									jdbcPosition,
+									jdbcPosition + 1,
+									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
+											SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+											sqlAstProcessingState -> new ColumnReference(
+													tableReference,
+													columnExpression,
+													jdbcMapping,
+													factory
+											)
+									),
+									jdbcMapping
+							)
+					);
+				}
 		);
 
 		if ( idTable.getSessionUidColumn() != null ) {
-			//noinspection unchecked
-			sqmIdSelect.getSelectClause().add(
-					new SqmSelection(
-							new SqmLiteral(
+			final int jdbcPosition = positionWrapper.getAndIncrement();
+			matchingIdSelection.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							jdbcPosition,
+							jdbcPosition + 1,
+							new QueryLiteral(
 									sessionUidAccess.apply( executionContext.getSession() ),
-									UUIDCharType.INSTANCE,
-									executionContext.getSession().getFactory().getNodeBuilder()
+									StandardBasicTypes.STRING
 							),
-							null,
-							executionContext.getSession().getFactory().getNodeBuilder()
+							idTable.getSessionUidColumn().getJdbcMapping()
 					)
 			);
 		}
 
-		SqmTreePrinter.logTree( sqmIdSelect, "Entity-identifier Selection SqmQuerySpec" );
-
-		final InsertSelectStatement insertSelectStatement = new InsertSelectStatement();
-
-		final TableReference idTableReference = new TableReference( idTable.getTableExpression(), null, false, factory );
-		insertSelectStatement.setTargetTable( idTableReference );
-
-		final QuerySpec matchingIdRestrictionQuerySpec = generateTempTableInsertValuesQuerySpec(
-				sqmConverter,
-				mutatingTableGroup,
-				suppliedPredicate,
-				sqmIdSelect
-		);
-		insertSelectStatement.setSourceSelectStatement( matchingIdRestrictionQuerySpec );
-
-		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
-			final IdTableColumn column = idTable.getIdTableColumns().get( i );
-			insertSelectStatement.addTargetColumnReferences(
-					new ColumnReference( idTableReference, column.getColumnName(), column.getJdbcMapping(), factory )
-			);
-		}
+		matchingIdSelection.applyPredicate( suppliedPredicate );
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 		final SqlAstInsertSelectTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
-		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( insertSelectStatement );
-
-		return jdbcServices.getJdbcMutationExecutor().execute(
-				jdbcInsert,
-				jdbcParameterBindings,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(integer, preparedStatement) -> {},
-				executionContext
-		);
-	}
-
-	private static QuerySpec generateTempTableInsertValuesQuerySpec(
-			MultiTableSqmMutationConverter sqmConverter,
-			TableGroup mutatingTableGroup, Predicate suppliedPredicate, SqmQuerySpec sqmIdSelect) {
-		final QuerySpec matchingIdRestrictionQuerySpec = new QuerySpec( false, 1 );
-		sqmConverter.visitSelectClause(
-				sqmIdSelect.getSelectClause(),
-				matchingIdRestrictionQuerySpec,
-				columnReference -> {},
-				(sqmParameter, jdbcParameters) -> {}
-		);
-		matchingIdRestrictionQuerySpec.getFromClause().addRoot( mutatingTableGroup );
-		matchingIdRestrictionQuerySpec.applyPredicate( suppliedPredicate );
-		return matchingIdRestrictionQuerySpec;
-	}
-
-	public static int saveMatchingIdsIntoIdTable(
-			SqmDeleteOrUpdateStatement sqmMutation,
-			Predicate predicate,
-			IdTable idTable,
-			Function<SharedSessionContractImplementor,String> sessionUidAccess,
-			DomainParameterXref domainParameterXref,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
-		final SqmQuerySpec sqmIdSelect = SqmIdSelectGenerator.generateSqmEntityIdSelect(
-				sqmMutation,
-				factory
-		);
-
-		if ( idTable.getSessionUidColumn() != null ) {
-			//noinspection unchecked
-			sqmIdSelect.getSelectClause().add(
-					new SqmSelection(
-							new SqmLiteral(
-									sessionUidAccess.apply( executionContext.getSession() ),
-									UUIDCharType.INSTANCE,
-									executionContext.getSession().getFactory().getNodeBuilder()
-							),
-							null,
-							executionContext.getSession().getFactory().getNodeBuilder()
-					)
-			);
-		}
-
-		SqmTreePrinter.logTree( sqmIdSelect, "Entity-identifier Selection SqmQuerySpec" );
-
-		final SqmTranslatorFactory sqmTranslatorFactory = factory.getQueryEngine().getSqmTranslatorFactory();
-		final SqmSelectTranslator sqmTranslator = sqmTranslatorFactory.createSelectTranslator(
-				QueryOptions.NONE,
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				factory
-		);
-
-		final SqmQuerySpecTranslation sqmIdSelectTranslation = sqmTranslator.translate( sqmIdSelect );
-
-
-
-		final InsertSelectStatement insertSelectStatement = new InsertSelectStatement();
-
-		final TableReference idTableReference = new TableReference( idTable.getTableExpression(), null, false, factory );
-		insertSelectStatement.setTargetTable( idTableReference );
-
-		final QuerySpec matchingIdRestrictionQuerySpec = sqmIdSelectTranslation.getSqlAst();
-		insertSelectStatement.setSourceSelectStatement( matchingIdRestrictionQuerySpec );
-		matchingIdRestrictionQuerySpec.applyPredicate( predicate );
-
-		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
-			final IdTableColumn column = idTable.getIdTableColumns().get( i );
-			insertSelectStatement.addTargetColumnReferences(
-					new ColumnReference( idTableReference, column.getColumnName(), column.getJdbcMapping(), factory )
-			);
-		}
-
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstInsertSelectTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
-		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( insertSelectStatement );
+		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( idTableInsert );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcInsert,
@@ -302,8 +220,7 @@ public final class ExecuteWithIdTableHelper {
 							ComparisonOperator.EQUAL,
 							new QueryLiteral(
 									sessionUidAccess.apply( executionContext.getSession() ),
-									UUIDCharType.INSTANCE,
-									Clause.WHERE
+									UUIDCharType.INSTANCE
 							)
 					)
 			);
@@ -317,12 +234,23 @@ public final class ExecuteWithIdTableHelper {
 			TempTableDdlTransactionHandling ddlTransactionHandling,
 			ExecutionContext executionContext) {
 		if ( beforeUseAction == BeforeUseAction.CREATE ) {
-			IdTableHelper.createIdTable(
+			final IdTableHelper.IdTableCreationWork idTableCreationWork = new IdTableHelper.IdTableCreationWork(
 					idTable,
 					idTableExporterAccess.get(),
-					ddlTransactionHandling,
-					executionContext.getSession()
+					executionContext.getSession().getFactory()
 			);
+
+			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
+				( (SessionImplementor) executionContext.getSession() ).doWork( idTableCreationWork );
+			}
+			else {
+				final IsolationDelegate isolationDelegate = executionContext.getSession()
+						.getJdbcCoordinator()
+						.getJdbcSessionOwner()
+						.getTransactionCoordinator()
+						.createIsolationDelegate();
+				isolationDelegate.delegateWork( idTableCreationWork, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
+			}
 		}
 	}
 
@@ -342,12 +270,23 @@ public final class ExecuteWithIdTableHelper {
 			);
 		}
 		else if ( afterUseAction == AfterUseAction.DROP ) {
-			IdTableHelper.dropIdTable(
+			final IdTableHelper.IdTableDropWork idTableDropWork = new IdTableHelper.IdTableDropWork(
 					idTable,
 					idTableExporterAccess.get(),
-					ddlTransactionHandling,
-					executionContext.getSession()
+					executionContext.getSession().getFactory()
 			);
+
+			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
+				( (SessionImplementor) executionContext.getSession() ).doWork( idTableDropWork );
+			}
+			else {
+				final IsolationDelegate isolationDelegate = executionContext.getSession()
+						.getJdbcCoordinator()
+						.getJdbcSessionOwner()
+						.getTransactionCoordinator()
+						.createIsolationDelegate();
+				isolationDelegate.delegateWork( idTableDropWork, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
+			}
 		}
 	}
 }

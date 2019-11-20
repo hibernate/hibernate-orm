@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstUpdateTranslator;
@@ -157,15 +158,11 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		);
 
 		try {
-
 			final int rows = ExecuteWithIdTableHelper.saveMatchingIdsIntoIdTable(
-					sqmUpdate,
 					sqmConverter,
-					updatingTableGroup,
 					suppliedPredicate,
 					idTable,
 					sessionUidAccess,
-					domainParameterXref,
 					jdbcParameterBindings,
 					executionContext
 			);

@@ -37,7 +37,7 @@ public class DerbyCaseExpressionWalker implements CaseExpressionWalker {
 		if ( otherwise != null ) {
 			sqlBuffer.append( " else " );
 			if ( otherwise instanceof QueryLiteral ) {
-				Object value = ( (QueryLiteral) otherwise ).getValue();
+				Object value = ( (QueryLiteral) otherwise ).getLiteralValue();
 				if ( value == null ) {
 					// null is not considered the same type as Integer.
 					sqlBuffer.append( "-1" );

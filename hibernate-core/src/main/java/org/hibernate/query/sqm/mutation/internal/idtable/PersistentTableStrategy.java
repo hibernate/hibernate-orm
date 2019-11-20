@@ -6,14 +6,21 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.function.Supplier;
+
+import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.DeleteHandler;
-import org.hibernate.query.sqm.mutation.spi.HandlerCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.UpdateHandler;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+
+import org.jboss.logging.Logger;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -23,6 +30,8 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  * @author Steve Ebersole
  */
 public class PersistentTableStrategy implements SqmMultiTableMutationStrategy {
+	private static final Logger log = Logger.getLogger( PersistentTableStrategy.class );
+
 	public static final String SHORT_NAME = "persistent";
 
 	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.drop_tables";
@@ -30,19 +39,160 @@ public class PersistentTableStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
 	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
 
-	@Override
-	public UpdateHandler buildUpdateHandler(
-			SqmUpdateStatement sqmUpdateStatement,
-			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	private final IdTable idTable;
+	private final AfterUseAction afterUseAction;
+	private final Supplier<IdTableExporter> idTableExporterAccess;
+
+	private final SessionFactoryImplementor sessionFactory;
+
+	private boolean prepared;
+	private boolean created;
+	private boolean released;
+
+	public PersistentTableStrategy(
+			IdTable idTable,
+			AfterUseAction afterUseAction,
+			Supplier<IdTableExporter> idTableExporterAccess,
+			SessionFactoryImplementor sessionFactory) {
+		this.idTable = idTable;
+		this.afterUseAction = afterUseAction;
+		this.idTableExporterAccess = idTableExporterAccess;
+		this.sessionFactory = sessionFactory;
+
+		if ( afterUseAction == AfterUseAction.DROP ) {
+			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + idTable.getTableExpression() );
+		}
 	}
 
 	@Override
-	public DeleteHandler buildDeleteHandler(
-			SqmDeleteStatement sqmDeleteStatement,
+	public int executeUpdate(
+			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			HandlerCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+			ExecutionContext context) {
+		return new TableBasedUpdateHandler(
+				sqmUpdate,
+				domainParameterXref,
+				idTable,
+				session -> session.getSessionIdentifier().toString(),
+				idTableExporterAccess,
+				BeforeUseAction.CREATE,
+				afterUseAction,
+				TempTableDdlTransactionHandling.NONE,
+				sessionFactory
+		).execute( context );
+	}
+
+	@Override
+	public int executeDelete(
+			SqmDeleteStatement sqmDelete,
+			DomainParameterXref domainParameterXref,
+			ExecutionContext context) {
+		return new TableBasedDeleteHandler(
+				sqmDelete,
+				domainParameterXref,
+				idTable,
+				session -> session.getSessionIdentifier().toString(),
+				idTableExporterAccess,
+				BeforeUseAction.CREATE,
+				afterUseAction,
+				TempTableDdlTransactionHandling.NONE,
+				sessionFactory
+		).execute( context );
+	}
+
+	@Override
+	public void prepare(
+			MappingModelCreationProcess mappingModelCreationProcess,
+			JdbcConnectionAccess connectionAccess) {
+		if ( prepared ) {
+			return;
+		}
+
+		prepared = true;
+
+		log.debugf( "Creating persistent ID table : %s", idTable.getTableExpression() );
+
+		final IdTableHelper.IdTableCreationWork idTableCreationWork = new IdTableHelper.IdTableCreationWork(
+				idTable,
+				idTableExporterAccess.get(),
+				sessionFactory
+		);
+		Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (UnsupportedOperationException e) {
+			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
+			log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+			return;
+		}
+		catch (SQLException e) {
+			log.error( "Unable obtain JDBC Connection", e );
+			return;
+		}
+
+		try {
+			idTableCreationWork.execute( connection );
+			created = true;
+		}
+		finally {
+			try {
+				connectionAccess.releaseConnection( connection );
+			}
+			catch (SQLException ignore) {
+			}
+		}
+
+		if ( created ) {
+			// todo (6.0) : register strategy for dropping of the table if requested - DROP_ID_TABLES
+		}
+	}
+
+	@Override
+	public void release(
+			SessionFactoryImplementor sessionFactory,
+			JdbcConnectionAccess connectionAccess) {
+		if ( released ) {
+			return;
+		}
+
+		released = true;
+
+		if ( created ) {
+			return;
+		}
+
+
+		log.debugf( "Dropping persistent ID table : %s", idTable.getTableExpression() );
+
+		final IdTableHelper.IdTableDropWork idTableDropWork = new IdTableHelper.IdTableDropWork(
+				idTable,
+				idTableExporterAccess.get(),
+				sessionFactory
+		);
+		Connection connection;
+		try {
+			connection = connectionAccess.obtainConnection();
+		}
+		catch (UnsupportedOperationException e) {
+			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
+			log.debugf( "Unable to obtain JDBC connection; unable to drop persistent ID table : %s", idTable.getTableExpression() );
+			return;
+		}
+		catch (SQLException e) {
+			log.error( "Unable obtain JDBC Connection", e );
+			return;
+		}
+
+		try {
+			idTableDropWork.execute( connection );
+		}
+		finally {
+			try {
+				connectionAccess.releaseConnection( connection );
+			}
+			catch (SQLException ignore) {
+			}
+		}
 	}
 }

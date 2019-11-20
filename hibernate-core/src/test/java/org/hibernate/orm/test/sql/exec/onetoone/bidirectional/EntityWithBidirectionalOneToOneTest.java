@@ -216,7 +216,6 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	@FailureExpected
 	public void testHqlSelectParent() {
 		inTransaction(
 				session -> {

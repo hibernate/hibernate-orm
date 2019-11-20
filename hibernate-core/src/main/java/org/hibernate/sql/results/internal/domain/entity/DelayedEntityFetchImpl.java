@@ -26,7 +26,7 @@ import org.hibernate.sql.results.spi.Initializer;
  */
 public class DelayedEntityFetchImpl extends AbstractEntityFecth {
 
-	private DomainResult fkResult;
+	private DomainResult result;
 
 	public DelayedEntityFetchImpl(
 			FetchParent fetchParent,
@@ -34,10 +34,10 @@ public class DelayedEntityFetchImpl extends AbstractEntityFecth {
 			LockMode lockMode,
 			boolean nullable,
 			NavigablePath navigablePath,
-			DomainResult fkResult,
+			DomainResult result,
 			DomainResultCreationState creationState) {
 		super( fetchParent, fetchedAttribute, navigablePath, nullable, lockMode );
-		this.fkResult = fkResult;
+		this.result = result;
 	}
 
 	@Override
@@ -52,7 +52,7 @@ public class DelayedEntityFetchImpl extends AbstractEntityFecth {
 				fetchedAttribute.getMappedFetchStrategy(),
 				getLockMode(),
 				(EntityPersister) fetchedAttribute.getMappedTypeDescriptor(),
-				fkResult.createResultAssembler( collector, creationState )
+				result.createResultAssembler( collector, creationState )
 		);
 	}
 }

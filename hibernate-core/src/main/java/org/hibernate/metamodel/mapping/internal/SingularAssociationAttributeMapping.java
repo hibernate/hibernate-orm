@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetchImpl;
 import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -48,6 +49,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final boolean isNullable;
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private final String referencedPropertyName;
+	private final boolean referringPrimaryKey;
 
 	public SingularAssociationAttributeMapping(
 			String name,
@@ -70,6 +72,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = value.isNullable();
 		referencedPropertyName = value.getReferencedPropertyName();
+		referringPrimaryKey =value.isReferenceToPrimaryKey();
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){
@@ -142,13 +145,23 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			);
 		}
 
+		final DomainResult result;
+
+		if ( referringPrimaryKey ) {
+			result = foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState );
+		}
+		else {
+			result = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
+					.createDomainResult( fetchablePath, lhsTableGroup, null, creationState );
+		}
+
 		return new DelayedEntityFetchImpl(
 				fetchParent,
 				this,
 				lockMode,
 				isNullable,
 				fetchablePath,
-				foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState ),
+				result,
 				creationState
 		);
 	}

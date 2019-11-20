@@ -26,12 +26,13 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.metadata.DefaultDatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JDBCReader;
-import org.hibernate.tool.internal.reveng.JdbcReaderFactory;
 import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
@@ -60,15 +61,21 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 		ServiceRegistry serviceRegistry = builder.build();
 		
+		Properties properties = Environment.getProperties();
 		dialect = serviceRegistry.getService(JdbcServices.class).getDialect();
 
 		tableSelector = new TableSelectorStrategy(
 				new DefaultReverseEngineeringStrategy() );
-		reader = JdbcReaderFactory.newJDBCReader( 
-				Environment.getProperties(),
+		MetaDataDialect mdd = MetaDataDialectFactory
+				.createMetaDataDialect(
+						dialect, 
+						properties );
+		reader = JDBCReader.create( 
+				properties,
 				tableSelector, 
+				mdd,
 				serviceRegistry);
-		dbc = new DefaultDatabaseCollector(reader.getMetaDataDialect());
+		dbc = new DefaultDatabaseCollector(mdd);
 	}
 
 	public void visit(IssueCollector collector) {

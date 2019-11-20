@@ -28,6 +28,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -46,6 +47,8 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
@@ -121,7 +124,11 @@ public class JdbcMetadataBuilder {
 	}
 	
 	private DatabaseCollector readFromDatabase() {
-	    JDBCReader reader = JdbcReaderFactory.newJDBCReader(properties,revengStrategy,serviceRegistry);
+		MetaDataDialect mdd = MetaDataDialectFactory
+				.createMetaDataDialect(
+						serviceRegistry.getService(JdbcServices.class).getDialect(), 
+						properties );
+	    JDBCReader reader = JDBCReader.create(properties,revengStrategy,mdd, serviceRegistry);
 	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
         reader.readDatabaseSchema(collector, defaultCatalog, defaultSchema);
         return collector;

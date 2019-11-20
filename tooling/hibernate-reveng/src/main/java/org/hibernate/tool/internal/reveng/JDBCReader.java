@@ -10,12 +10,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ProgressListener;
@@ -23,6 +26,25 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 
 public class JDBCReader {
+
+	public static JDBCReader create(
+			Properties properties, 
+			ReverseEngineeringStrategy revengStrategy, 
+			MetaDataDialect mdd,
+			ServiceRegistry serviceRegistry) {
+		ConnectionProvider connectionProvider = serviceRegistry
+				.getService(ConnectionProvider.class);
+		String defaultCatalogName = properties
+				.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		String defaultSchemaName = properties
+				.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		return new JDBCReader(
+				mdd, 
+				connectionProvider, 
+				defaultCatalogName, 
+				defaultSchemaName, 
+				revengStrategy );
+	}
 
 	private final ReverseEngineeringStrategy revengStrategy;
 	

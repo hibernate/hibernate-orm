@@ -55,6 +55,7 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.ForeignKeyDirection;

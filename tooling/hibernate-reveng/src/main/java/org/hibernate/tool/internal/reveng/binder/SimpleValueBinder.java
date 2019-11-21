@@ -23,7 +23,8 @@ public class SimpleValueBinder {
 		value.setTypeName(TypeUtils.determinePreferredType(
 				metadataCollector, 
 				revengStrategy,
-				table, column, 
+				table, 
+				column, 
 				mapping, 
 				generatedIdentifier));
 		return value;

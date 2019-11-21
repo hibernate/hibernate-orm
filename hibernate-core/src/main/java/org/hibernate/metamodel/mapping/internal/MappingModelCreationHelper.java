@@ -283,6 +283,8 @@ public class MappingModelCreationHelper {
 
 	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(
 			EntityPersister entityPersister,
+			Property bootProperty,
+			String attributeName,
 			String rootTableName,
 			String[] rootTableKeyColumnNames,
 			CompositeType cidType,
@@ -294,48 +296,29 @@ public class MappingModelCreationHelper {
 		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
-		return new EntityIdentifierMapping() {
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+				propertyAccess
+		);
 
-			@Override
-			public MappingType getMappedTypeDescriptor() {
-				return ( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getMappedTypeDescriptor();
-			}
+		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+				(Component) bootProperty.getValue(),
+				cidType,
+				attributeMappingType -> new EmbeddedIdentifierMappingImpl(
+						attributeName,
+						attributeMappingType,
+						attributeMetadataAccess,
+						FetchStrategy.IMMEDIATE_JOIN,
+						0,
+						entityPersister,
+						propertyAccess,
+						rootTableName,
+						rootTableKeyColumnNames
+				),
+				creationProcess
+		);
 
-			@Override
-			public JavaTypeDescriptor getJavaTypeDescriptor() {
-				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
-			}
 
-			@Override
-			public <T> DomainResult<T> createDomainResult(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					String resultVariable,
-					DomainResultCreationState creationState) {
-				return ( (ModelPart) entityPersister.getIdentifierType() ).createDomainResult(
-						navigablePath,
-						tableGroup,
-						resultVariable,
-						creationState
-				);
-			}
-
-			@Override
-			public void applySqlSelections(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					DomainResultCreationState creationState) {
-				( (ModelPart) entityPersister.getIdentifierType() ).applySqlSelections(
-						navigablePath,
-						tableGroup,
-						creationState
-				);
-			}
-		};
+		return (EmbeddedIdentifierMappingImpl) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
 	public static EntityIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
@@ -635,6 +618,58 @@ public class MappingModelCreationHelper {
 			@Override
 			public CascadeStyle getCascadeStyle() {
 				return cascadeStyle;
+			}
+		};
+	}
+
+	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
+			PropertyAccess propertyAccess) {
+		return entityMappingType -> new StateArrayContributorMetadata() {
+
+			private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+
+
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return mutabilityPlan;
+			}
+
+			@Override
+			public boolean isNullable() {
+				return false;
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return true;
+			}
+
+			@Override
+			public boolean isUpdatable() {
+				return false;
+			}
+
+			@Override
+			public boolean isIncludedInDirtyChecking() {
+
+				return false;
+			}
+
+			@Override
+			public boolean isIncludedInOptimisticLocking() {
+				// todo (6.0) : do not sure this is correct
+				return true;
+			}
+
+			@Override
+			public CascadeStyle getCascadeStyle() {
+				// todo (6.0) : do not sure this is correct
+				return null;
 			}
 		};
 	}

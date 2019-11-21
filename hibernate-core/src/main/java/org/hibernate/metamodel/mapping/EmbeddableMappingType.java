@@ -279,7 +279,16 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
 		attributeMappings.forEach(
-				(s, attributeMapping) -> attributeMapping.visitJdbcValues( value, clause, consumer, session )
+				(s, attributeMapping) -> {
+					Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+					attributeMapping.visitJdbcValues( o, clause, consumer, session );
+				}
+		);
+	}
+
+	public void visitColumns(ColumnConsumer consumer) {
+		attributeMappings.values().forEach(
+				attributeMapping -> attributeMapping.visitColumns( consumer )
 		);
 	}
 

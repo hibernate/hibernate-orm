@@ -6121,6 +6121,12 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+
+		final PersistentClass bootEntityDescriptor = creationContext
+				.getBootModel()
+				.getEntityBinding( getEntityName() );
+
 		if ( superMappingType != null && shouldProcessSuperMapping() ) {
 			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
 
@@ -6131,7 +6137,8 @@ public abstract class AbstractEntityPersister
 		else {
 			identifierMapping = creationProcess.processSubPart(
 					EntityIdentifierMapping.ROLE_LOCAL_NAME,
-					(role, creationProcess1) -> generateIdentifierMapping( creationProcess )
+					(role, creationProcess1) ->
+							generateIdentifierMapping( creationProcess, bootEntityDescriptor.getIdentifierProperty() )
 			);
 
 			if ( getVersionType() == null ) {
@@ -6153,11 +6160,7 @@ public abstract class AbstractEntityPersister
 			naturalIdMapping = null;
 		}
 
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 
-		final PersistentClass bootEntityDescriptor = creationContext
-				.getBootModel()
-				.getEntityBinding( getEntityName() );
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
@@ -6362,7 +6365,7 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess) {
+	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, Property identifierProperty) {
 		final Type idType = getIdentifierType();
 
 		if ( idType instanceof CompositeType ) {
@@ -6370,6 +6373,8 @@ public abstract class AbstractEntityPersister
 			if ( ! cidType.isEmbedded() ) {
 				return MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping(
 						this,
+						identifierProperty,
+						identifierProperty.getName(),
 						getRootTableName(),
 						rootTableKeyColumnNames,
 						cidType,

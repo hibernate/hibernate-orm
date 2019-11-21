@@ -277,6 +277,7 @@ public class MetamodelSelectBuilderProcess {
 					final ColumnReference columnReference = columnReferences.get( j );
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnReference.getJdbcMapping() );
 					jdbcParameterConsumer.accept( jdbcParameter );
+					tupleParams.add( jdbcParameter );
 				}
 				final SqlTuple paramTuple = new SqlTuple( tupleParams, keyPart );
 				predicate.addExpression( paramTuple );

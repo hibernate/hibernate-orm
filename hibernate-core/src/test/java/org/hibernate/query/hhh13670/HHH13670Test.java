@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.hhh13670;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -112,11 +111,39 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
         });
     }
 
-    @Override
-    protected void configure(Configuration configuration) {
-        super.afterConfigurationBuilt( configuration );
-        // Uncomment to fix tests
-//        configuration.setProperty( AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES, "false" );
+    @Test
+    public void testSubTypePropertyReferencedFromEntityJoinInSyntheticSubquery2() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery(
+                    "SELECT  subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 INNER JOIN SubA subA_0 ON 1=1 WHERE (EXISTS (SELECT 1 FROM Super s WHERE subA_0.id = s.parent.id)) ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)
+                    .getResultList();
+
+            assertEquals(4, resultList.size());
+        });
+    }
+
+    @Test
+    public void testSubTypePropertyReferencedFromWhereClause() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery("SELECT subB_0.id FROM SubB subB_0 WHERE subB_0.parent.id IS NOT NULL", Tuple.class)
+                    .getResultList();
+        });
+    }
+
+    @Test
+    public void testSubTypePropertyReferencedFromGroupByClause() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery("SELECT subB_0.id FROM SubB subB_0 GROUP BY subB_0.id , subB_0.parent.id", Tuple.class)
+                    .getResultList();
+        });
+    }
+
+    @Test
+    public void testSubTypePropertyReferencedFromOrderByClause() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery("SELECT subB_0.id FROM SubB subB_0 ORDER BY subB_0.id , subB_0.parent.id", Tuple.class)
+                    .getResultList();
+        });
     }
 
     @Override

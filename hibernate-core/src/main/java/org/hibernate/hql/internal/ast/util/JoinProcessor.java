@@ -8,6 +8,7 @@ package org.hibernate.hql.internal.ast.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.hibernate.hql.internal.ast.tree.FromReferenceNode;
 import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
+import org.hibernate.hql.internal.ast.tree.SqlFragment;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -154,9 +156,7 @@ public class JoinProcessor implements SqlTokenTypes {
 				if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
 					AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
 					String[] tables = aep.getTableNames();
-					for ( String table : tables ) {
-						result.add( table );
-					}
+					Collections.addAll(result, tables);
 				}
 			}
 		}
@@ -171,10 +171,25 @@ public class JoinProcessor implements SqlTokenTypes {
 				FromReferenceNode fromReferenceNode = (FromReferenceNode) node;
 				String[] tables = fromReferenceNode.getReferencedTables();
 				if ( tables != null ) {
-					for ( String table : tables ) {
-						result.add( table );
+					Collections.addAll(result, tables);
+				}
+			}
+			else if (node instanceof SqlFragment) {
+				SqlFragment sqlFragment = (SqlFragment) node;
+				FromElement fromElement = sqlFragment.getFromElement();
+
+				if (fromElement != null) {
+					// For joins, we want to add the table where the association key is mapped as well as that could be a supertype that we need to join
+					String role = fromElement.getRole();
+					if ( role != null ) {
+						result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
+					}
+					AST withClauseAst = fromElement.getWithClauseAst();
+					if ( withClauseAst != null ) {
+						collectReferencedTables( new ASTIterator( withClauseAst ), result );
 					}
 				}
+
 			}
 		}
 	}

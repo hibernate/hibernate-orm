@@ -101,6 +101,24 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
         });
     }
 
+    @Test
+    public void testSubTypePropertyReferencedFromEntityJoinInSyntheticSubquery() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery(
+                    "SELECT  subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 INNER JOIN SubA subA_0 ON 1=1 WHERE (EXISTS (SELECT 1 FROM subB_0.parent _synth_subquery_0 WHERE subA_0.id = _synth_subquery_0.id)) ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)
+                    .getResultList();
+
+            assertEquals(1, resultList.size());
+        });
+    }
+
+    @Override
+    protected void configure(Configuration configuration) {
+        super.afterConfigurationBuilt( configuration );
+        // Uncomment to fix tests
+//        configuration.setProperty( AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES, "false" );
+    }
+
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] { Super.class, SubA.class, SubB.class };

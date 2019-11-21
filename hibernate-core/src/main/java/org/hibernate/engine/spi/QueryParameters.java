@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.CoreLogging;
@@ -30,6 +31,8 @@ import org.jboss.logging.Logger;
  */
 public final class QueryParameters {
 	private static final Logger LOG = CoreLogging.logger( QueryParameters.class );
+	public static final String HQL_VARIABLE_PREFIX = ":";
+
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
@@ -518,13 +521,14 @@ public final class QueryParameters {
 
 	@SuppressWarnings( {"unchecked"})
 	public void processFilters(String sql, Map filters, SessionFactoryImplementor factory) {
-//		if ( filters.size() == 0 || !sql.contains( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
-//			// HELLA IMPORTANT OPTIMIZATION!!!
-//			processedPositionalParameterValues = getPositionalParameterValues();
-//			processedPositionalParameterTypes = getPositionalParameterTypes();
-//			processedSQL = sql;
-//		}
-//		else {
+		if ( filters.size() == 0 || !sql.contains( HQL_VARIABLE_PREFIX ) ) {
+			// HELLA IMPORTANT OPTIMIZATION!!!
+			processedPositionalParameterValues = getPositionalParameterValues();
+			processedPositionalParameterTypes = getPositionalParameterTypes();
+			processedSQL = sql;
+		}
+		else {
+			throw new NotYetImplementedFor6Exception( getClass() );
 //			final StringTokenizer tokens = new StringTokenizer( sql, SYMBOLS, true );
 //			StringBuilder result = new StringBuilder();
 //			List parameters = new ArrayList();
@@ -582,7 +586,7 @@ public final class QueryParameters {
 //			processedPositionalParameterValues = parameters.toArray();
 //			processedPositionalParameterTypes = ( Type[] ) parameterTypes.toArray( new Type[parameterTypes.size()] );
 //			processedSQL = result.toString();
-//		}
+		}
 	}
 
 	private int getNumberOfParametersCoveredBy(Type[] subtypes) {

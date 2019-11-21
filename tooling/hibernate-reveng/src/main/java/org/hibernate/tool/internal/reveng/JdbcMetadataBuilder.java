@@ -55,6 +55,7 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
@@ -683,7 +684,14 @@ public class JdbcMetadataBuilder {
 			Column pkc = (Column) keyColumns.get(0);
 			checkColumn(pkc);
 
-			id = bindColumnToSimpleValue(table, pkc, mapping, !naturalId);
+			id = SimpleValueBinder.bindSimpleValue(
+					metadataBuildingContext, 
+					metadataCollector, 
+					revengStrategy, 
+					table, 
+					pkc, 
+					mapping, 
+					!naturalId);
 
 			idPropertyname = revengStrategy.tableToIdentifierPropertyName(tableIdentifier);
 			if(idPropertyname==null) {
@@ -841,8 +849,20 @@ public class JdbcMetadataBuilder {
 
 	}
 
-	private Property bindBasicProperty(String propertyName, Table table, Column column, Set<Column> processedColumns, Mapping mapping) {
-		SimpleValue value = bindColumnToSimpleValue( table, column, mapping, false );
+	private Property bindBasicProperty(
+			String propertyName, 
+			Table table, 
+			Column column, 
+			Set<Column> processedColumns, 
+			Mapping mapping) {
+		SimpleValue value = SimpleValueBinder.bindSimpleValue(
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				table, 
+				column, 
+				mapping,
+				false);
 		return PropertyBinder.makeProperty(
 				table, 
 				defaultCatalog,
@@ -855,18 +875,6 @@ public class JdbcMetadataBuilder {
 				null, 
 				null,
 				revengStrategy);
-	}
-
-	private SimpleValue bindColumnToSimpleValue(Table table, Column column, Mapping mapping, boolean generatedIdentifier) {
-		SimpleValue value = new SimpleValue(metadataBuildingContext, table);
-		value.addColumn(column);
-		value.setTypeName(TypeUtils.determinePreferredType(
-				metadataCollector, 
-				revengStrategy,
-				table, column, 
-				mapping, 
-				generatedIdentifier));
-		return value;
 	}
 
     /**

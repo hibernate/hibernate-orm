@@ -35,6 +35,7 @@ import org.hibernate.query.sqm.sql.SqmSelectTranslation;
 import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
@@ -413,6 +414,15 @@ public class StandardSqmSelectTranslator
 		final EntityPersister mappingDescriptor = getCreationContext().getDomainModel().getEntityDescriptor( nodeType.getHibernateEntityName() );
 
 		return new EntityTypeLiteral( mappingDescriptor );
+	}
+
+	@Override
+	public Expression visitSqmPathEntityTypeExpression(SqmPathEntityType<?> sqmExpression) {
+		return BasicValuedPathInterpretation.from(
+				sqmExpression,
+				this,
+				this
+		);
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -22,7 +23,7 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec implements SqlAstNode, PredicateContainer, CteConsumer {
+public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, CteConsumer {
 	private final boolean isRoot;
 
 	private final FromClause fromClause;
@@ -104,5 +105,13 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, CteConsumer {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitQuerySpec( this );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Expression
+
+	@Override
+	public MappingModelExpressable getExpressionType() {
+		return null;
 	}
 }

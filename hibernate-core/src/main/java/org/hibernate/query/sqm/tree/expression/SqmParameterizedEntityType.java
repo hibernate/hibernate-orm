@@ -18,18 +18,16 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
  *
  * @author Steve Ebersole
  */
-public class SqmEntityType<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
+public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final SqmExpression discriminatorSource;
 
-	public SqmEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
-		super( parameterExpression.getAnticipatedType(), nodeBuilder );
-		this.discriminatorSource = parameterExpression;
+	public SqmExpression getDiscriminatorSource() {
+		return discriminatorSource;
 	}
 
-	public SqmEntityType(SqmPath<T> entityValuedPath, NodeBuilder nodeBuilder) {
-		//noinspection unchecked
-		super( entityValuedPath.getReferencedPathSource().sqmAs( EntityDomainType.class ), nodeBuilder );
-		this.discriminatorSource = entityValuedPath;
+	public SqmParameterizedEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
+		super( parameterExpression.getAnticipatedType(), nodeBuilder );
+		this.discriminatorSource = parameterExpression;
 	}
 
 	@Override

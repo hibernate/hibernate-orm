@@ -8,10 +8,13 @@ package org.hibernate.sql.results.internal.domain.composite;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeResultMappingNode;
@@ -44,9 +47,25 @@ public class CompositeFetch extends AbstractFetchParent implements CompositeResu
 		this.fetchTiming = fetchTiming;
 		this.nullable = nullable;
 
-		creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
+		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
-				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( fetchParent.getNavigablePath() )
+				np -> {
+					final TableGroupJoin tableGroupJoin = getFetchContainer().createTableGroupJoin(
+							getNavigablePath(),
+							creationState.getSqlAstCreationState()
+									.getFromClauseAccess()
+									.findTableGroup( fetchParent.getNavigablePath() ),
+							null,
+							nullable ? JoinType.LEFT : JoinType.INNER,
+							LockMode.NONE,
+							stem -> creationState.getSqlAliasBaseManager().createSqlAliasBase( stem ),
+							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+							creationState.getSqlAstCreationState().getCreationContext()
+					);
+
+					return tableGroupJoin.getJoinedGroup();
+				}
+
 		);
 
 		afterInitialize( creationState );

@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.junit;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.service.Service;
@@ -27,5 +28,17 @@ public interface ServiceRegistryScope {
 		}
 
 		action.accept( service );
+	}
+
+	default <R, S extends Service> R fromService(Class<S> role, Function<S,R> action) {
+		assert role != null;
+
+		final S service = getRegistry().getService( role );
+
+		if ( service == null ) {
+			throw new IllegalArgumentException( "Could not locate requested service - " + role.getName() );
+		}
+
+		return action.apply( service );
 	}
 }

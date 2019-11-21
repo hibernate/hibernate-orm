@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
@@ -794,12 +795,15 @@ public abstract class BaseSqmToSqlAstConverter
 		this.jdbcParameters.addParameters( jdbcParametersForSqm );
 		this.jdbcParamsBySqmParam.put( sqmParameter, jdbcParametersForSqm );
 
+		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
+		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
+
 		return new SqmParameterInterpretation(
 				sqmParameter,
-				domainParameterXref.getQueryParameter( sqmParameter ),
+				queryParameter,
 				jdbcParametersForSqm,
 				valueMapping,
-				domainParameterBindings::getBinding
+				qp -> binding
 		);
 	}
 
@@ -869,6 +873,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 		if ( parameterSqmType instanceof BasicValuedMapping ) {
 			return (BasicValuedMapping) parameterSqmType;
+		}
+
+		if ( parameterSqmType instanceof EmbeddedSqmPathSource ) {
+			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
 		}
 
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
@@ -1391,10 +1399,8 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
-	public Object visitSubQueryExpression(SqmSubQuery sqmSubQuery) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		final QuerySpec subQuerySpec = visitQuerySpec( sqmSubQuery.getQuerySpec() );
+	public QuerySpec visitSubQueryExpression(SqmSubQuery sqmSubQuery) {
+		return visitQuerySpec( sqmSubQuery.getQuerySpec() );
 //
 //		final ExpressableType<?> expressableType = determineExpressableType( sqmSubQuery );
 //

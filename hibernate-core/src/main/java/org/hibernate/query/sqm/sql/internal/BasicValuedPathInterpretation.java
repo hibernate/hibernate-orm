@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -39,7 +40,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker) {
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
@@ -48,7 +49,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 		final TableReference tableReference = tableGroup.resolveTableReference( mapping.getContainingTableExpression() );
 
-		final ColumnReference columnReference = (ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+		final Expression expression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
 						tableReference,
 						mapping.getMappedColumnExpression()
@@ -60,6 +61,19 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 						sqlAstCreationState.getCreationContext().getSessionFactory()
 				)
 		);
+
+		final ColumnReference columnReference;
+		if ( expression instanceof ColumnReference ) {
+			columnReference = ( (ColumnReference) expression );
+		}
+		else if ( expression instanceof SqlSelectionExpression ) {
+			final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getExpression();
+			assert selectedExpression instanceof ColumnReference;
+			columnReference = (ColumnReference) selectedExpression;
+		}
+		else {
+			throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
+		}
 
 		return new BasicValuedPathInterpretation<>( columnReference, sqmPath, mapping, tableGroup );
 	}

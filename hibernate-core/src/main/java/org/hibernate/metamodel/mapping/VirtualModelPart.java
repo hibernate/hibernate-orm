@@ -7,8 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 /**
- * Marker interface for parts of the application domain model that are virtual - do not
- * actually exist in the model classes
+ * Marker interface for parts of the application domain model that do not actually exist in the model classes
  *
  * @author Steve Ebersole
  */

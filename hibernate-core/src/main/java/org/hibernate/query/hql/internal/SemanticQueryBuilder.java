@@ -84,12 +84,13 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.DowncastLocation;
@@ -1266,14 +1267,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		//		2) TYPE( :someParam )
 		if ( ctx.entityTypeReference().parameter() != null ) {
 			// we have form (2)
-			return new SqmEntityType(
+			return new SqmParameterizedEntityType(
 					(SqmParameter) ctx.entityTypeReference().parameter().accept( this ),
 					creationContext.getNodeBuilder()
 			);
 		}
 		else if ( ctx.entityTypeReference().path() != null ) {
 			// we have form (1)
-			return new SqmEntityType(
+			return new SqmPathEntityType(
 					(SqmPath<?>) ctx.entityTypeReference().path().accept( this ),
 					creationContext.getNodeBuilder()
 			);

@@ -14,10 +14,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -28,22 +26,14 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.sql.SimpleSqmDeleteTranslator;
-import org.hibernate.query.sqm.sql.SimpleSqmUpdateTranslator;
-import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
-import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteTranslator;
-import org.hibernate.query.sqm.sql.internal.StandardSqmInsertSelectTranslator;
-import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
-import org.hibernate.query.sqm.sql.internal.StandardSqmUpdateTranslator;
+import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses
@@ -53,19 +43,38 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
  */
 @Incubating
 public class QueryEngine {
+
 	public static QueryEngine from(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor metadata) {
+		final SqmCreationContext sqmCreationContext = sessionFactory;
+		final SessionFactoryOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
+		final SqmCreationOptions sqmCreationOptions = new SqmCreationOptionsStandard( sessionFactory );
+
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final HqlTranslator hqlTranslator = resolveHqlTranslator(
+				queryEngineOptions,
+				dialect,
+				sqmCreationContext,
+				sqmCreationOptions
+		);
+
+		final SqmTranslatorFactory sqmTranslatorFactory = resolveSqmTranslatorFactory( queryEngineOptions, dialect );
+
 		return new QueryEngine(
 				sessionFactory.getJpaMetamodel(),
-				sessionFactory.getServiceRegistry(),
-				sessionFactory.getSessionFactoryOptions(),
-				sessionFactory,
-				new SqmCreationOptionsStandard( sessionFactory ),
-				sessionFactory.getProperties(),
-				metadata.buildNamedQueryRepository( sessionFactory )
+				metadata.buildNamedQueryRepository( sessionFactory ),
+				hqlTranslator,
+				sqmTranslatorFactory,
+				sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class ),
+				buildInterpretationCache( sessionFactory.getProperties() ),
+				dialect,
+				queryEngineOptions.getSqmFunctionRegistry(),
+				sessionFactory.getServiceRegistry()
 		);
 	}
+
+	private final JpaMetamodel jpaMetamodel;
 
 	private final NamedQueryRepository namedQueryRepository;
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
@@ -76,49 +85,141 @@ public class QueryEngine {
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
 	public QueryEngine(
-			JpaMetamodel domainModel,
-			ServiceRegistry serviceRegistry,
-			SessionFactoryOptions runtimeOptions,
-			SqmCreationContext sqmCreationContext,
-			SqmCreationOptions sqmCreationOptions,
-			Map properties,
-			NamedQueryRepository namedQueryRepository) {
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
+			JpaMetamodel jpaMetamodel,
+			NamedQueryRepository namedQueryRepository,
+			HqlTranslator hqlTranslator,
+			SqmTranslatorFactory sqmTranslatorFactory,
+			NativeQueryInterpreter nativeQueryInterpreter,
+			QueryInterpretationCache interpretationCache,
+			Dialect dialect,
+			SqmFunctionRegistry userDefinedRegistry,
+			ServiceRegistry serviceRegistry) {
+		this.jpaMetamodel = jpaMetamodel;
 		this.namedQueryRepository = namedQueryRepository;
-
-		this.hqlTranslator = resolveHqlTranslator(
-				runtimeOptions,
-				dialect,
-				sqmCreationContext,
-				sqmCreationOptions
-		);
-
-		this.sqmTranslatorFactory = resolveSqmTranslatorFactory(
-				runtimeOptions,
-				dialect,
-				sqmCreationContext,
-				sqmCreationOptions
-		);
+		this.sqmTranslatorFactory = sqmTranslatorFactory;
+		this.nativeQueryInterpreter = nativeQueryInterpreter;
+		this.interpretationCache = interpretationCache;
+		this.hqlTranslator = hqlTranslator;
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
-				domainModel,
+				jpaMetamodel,
 				serviceRegistry
 		);
 
-		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		dialect.initializeFunctionRegistry( this );
+		if ( userDefinedRegistry != null ) {
+			userDefinedRegistry.overlay( sqmFunctionRegistry );
+		}
+	}
 
-		this.interpretationCache = buildInterpretationCache( properties );
+	/**
+	 * Simplified constructor mainly meant for Quarkus use
+	 */
+	public QueryEngine(
+			JpaMetamodel jpaMetamodel,
+			boolean useStrictJpaCompliance,
+			NamedQueryRepository namedQueryRepository,
+			NativeQueryInterpreter nativeQueryInterpreter,
+			Dialect dialect,
+			ServiceRegistry serviceRegistry) {
+		this.jpaMetamodel = jpaMetamodel;
+		this.namedQueryRepository = namedQueryRepository;
+		this.sqmTranslatorFactory = null;
+		this.nativeQueryInterpreter = nativeQueryInterpreter;
 
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		dialect.initializeFunctionRegistry( this );
-		if ( runtimeOptions.getSqmFunctionRegistry() != null ) {
-			runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
-		}
+
+		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				this,
+				jpaMetamodel,
+				serviceRegistry
+		);
+
+		final SqmCreationContext sqmCreationContext = new SqmCreationContext() {
+			@Override
+			public JpaMetamodel getJpaMetamodel() {
+				return jpaMetamodel;
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return serviceRegistry;
+			}
+
+			@Override
+			public QueryEngine getQueryEngine() {
+				return QueryEngine.this;
+			}
+
+			@Override
+			public NodeBuilder getNodeBuilder() {
+				return criteriaBuilder;
+			}
+		};
+
+		//noinspection Convert2Lambda
+		this.hqlTranslator = new StandardHqlTranslator(
+				sqmCreationContext,
+				new SqmCreationOptions() {
+					@Override
+					public boolean useStrictJpaCompliance() {
+						return useStrictJpaCompliance;
+					}
+				}
+		);
+
+		this.interpretationCache = buildInterpretationCache(
+				serviceRegistry.getService( ConfigurationService.class ).getSettings()
+		);
 	}
+
+//	public QueryEngine(
+//			JpaMetamodel domainModel,
+//			ServiceRegistry serviceRegistry,
+//			SessionFactoryOptions runtimeOptions,
+//			SqmCreationContext sqmCreationContext,
+//			SqmCreationOptions sqmCreationOptions,
+//			Map properties,
+//			NamedQueryRepository namedQueryRepository) {
+//		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+//		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+//		final Dialect dialect = jdbcEnvironment.getDialect();
+//
+//		this.namedQueryRepository = namedQueryRepository;
+//
+//		this.hqlTranslator = resolveHqlTranslator(
+//				runtimeOptions,
+//				dialect,
+//				sqmCreationContext,
+//				sqmCreationOptions
+//		);
+//
+//		this.sqmTranslatorFactory = resolveSqmTranslatorFactory(
+//				runtimeOptions,
+//				dialect,
+//				sqmCreationContext,
+//				sqmCreationOptions
+//		);
+//
+//		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+//				this,
+//				domainModel,
+//				serviceRegistry
+//		);
+//
+//		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+//
+//		this.interpretationCache = buildInterpretationCache( properties );
+//
+//		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+//		dialect.initializeFunctionRegistry( this );
+//		if ( runtimeOptions.getSqmFunctionRegistry() != null ) {
+//			runtimeOptions.getSqmFunctionRegistry().overlay( sqmFunctionRegistry );
+//		}
+//	}
 
 	private static HqlTranslator resolveHqlTranslator(
 			SessionFactoryOptions runtimeOptions,
@@ -136,11 +237,9 @@ public class QueryEngine {
 		return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
 	}
 
-	private SqmTranslatorFactory resolveSqmTranslatorFactory(
+	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
 			SessionFactoryOptions runtimeOptions,
-			Dialect dialect,
-			SqmCreationContext sqmCreationContext,
-			SqmCreationOptions sqmCreationOptions) {
+			Dialect dialect) {
 		if ( runtimeOptions.getSqmTranslatorFactory() != null ) {
 			return runtimeOptions.getSqmTranslatorFactory();
 		}
@@ -149,68 +248,7 @@ public class QueryEngine {
 			return dialect.getSqmTranslatorFactory();
 		}
 
-		return new SqmTranslatorFactory() {
-			@Override
-			public SqmSelectTranslator createSelectTranslator(
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers influencers,
-					SqlAstCreationContext creationContext) {
-				return new StandardSqmSelectTranslator(
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings,
-						influencers,
-						creationContext
-				);
-			}
-
-			@Override
-			public SimpleSqmDeleteTranslator createSimpleDeleteTranslator(
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers influencers,
-					SqlAstCreationContext creationContext) {
-				return new StandardSqmDeleteTranslator(
-						creationContext,
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings
-				);
-			}
-
-			@Override
-			public SqmInsertSelectTranslator createInsertSelectTranslator(
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers influencers,
-					SqlAstCreationContext creationContext) {
-				return new StandardSqmInsertSelectTranslator(
-						creationContext,
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings
-				);
-			}
-
-			@Override
-			public SimpleSqmUpdateTranslator createSimpleUpdateTranslator(
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings queryParameterBindings,
-					LoadQueryInfluencers loadQueryInfluencers,
-					SessionFactoryImplementor factory) {
-				return new StandardSqmUpdateTranslator(
-						factory,
-						queryOptions,
-						domainParameterXref,
-						queryParameterBindings
-				);
-			}
-		};
+		return new StandardSqmTranslatorFactory();
 	}
 
 	private static QueryInterpretationCache buildInterpretationCache(Map properties) {

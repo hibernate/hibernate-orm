@@ -27,14 +27,14 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
@@ -190,7 +190,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
 
-	T visitParameterizedEntityTypeExpression(SqmEntityType<?> expression);
+	T visitSqmPathEntityTypeExpression(SqmPathEntityType<?> expression);
+
+	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression);
 
 	T visitUnaryOperationExpression(SqmUnaryOperation<?> expression);
 

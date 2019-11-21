@@ -42,11 +42,18 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 		this.valueConverter = valueConverter;
 	}
 
+	/**
+	 * Access to the raw value (unconverted, if a converter applied)
+	 */
+	public Object extractRawValue(RowProcessingState rowProcessingState) {
+		return rowProcessingState.getJdbcValue( valuesArrayPosition );
+	}
+
 	@Override
 	public J assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
-		Object jdbcValue = rowProcessingState.getJdbcValue( valuesArrayPosition );
+		Object jdbcValue = extractRawValue( rowProcessingState );
 
 		SqlResultsLogger.INSTANCE.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
 

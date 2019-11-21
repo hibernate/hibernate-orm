@@ -123,6 +123,28 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    public void testSubTypePropertyReferencedFromEntityJoinInSyntheticSubquery3() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery(
+                    "SELECT subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 INNER JOIN SubA subA_0 ON 1=1 WHERE (EXISTS (SELECT 1 FROM Super s WHERE s.id = subB_0.parent.id)) ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)
+                    .getResultList();
+
+            assertEquals(6, resultList.size());
+        });
+    }
+
+    @Test
+    public void testSubTypePropertyReferencedFromEntityJoinInSyntheticSubquery4() {
+        doInJPA(this::sessionFactory, em -> {
+            List<Tuple> resultList = em.createQuery(
+                    "SELECT subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 INNER JOIN SubA subA_0 ON 1=1 WHERE (EXISTS (SELECT 1 FROM Super s WHERE s.id = subA_0.parent.id)) ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)
+                    .getResultList();
+
+            assertEquals(0, resultList.size());
+        });
+    }
+
+    @Test
     public void testSubTypePropertyReferencedFromWhereClause() {
         doInJPA(this::sessionFactory, em -> {
             List<Tuple> resultList = em.createQuery("SELECT subB_0.id FROM SubB subB_0 WHERE subB_0.parent.id IS NOT NULL", Tuple.class)

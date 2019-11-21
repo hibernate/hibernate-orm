@@ -50,13 +50,17 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributorMapping
+public class EmbeddedIdentifierMappingImpl
 		implements EmbeddedIdentifierMapping {
+	private final String name;
+	private final MappingType type;
+	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
 	private final PropertyAccess propertyAccess;
 	private final String tableExpression;
 	private final String[] attrColumnNames;
@@ -65,21 +69,25 @@ public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributor
 			String name,
 			MappingType type,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			FetchStrategy mappedFetchStrategy,
-			int stateArrayPosition,
-			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			String tableExpression,
 			String[] attrColumnNames) {
-		super( name, type, attributeMetadataAccess, mappedFetchStrategy, stateArrayPosition, declaringType );
+		this.name = name;
+		this.type = type;
+		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.propertyAccess = propertyAccess;
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
 	}
 
 	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+	}
+
+	@Override
 	public String getPartName() {
-		return getAttributeName();
+		return name;
 	}
 
 	@Override
@@ -94,7 +102,7 @@ public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributor
 
 	@Override
 	public EmbeddableMappingType getMappedTypeDescriptor() {
-		return (EmbeddableMappingType) super.getMappedTypeDescriptor();
+		return (EmbeddableMappingType) type;
 	}
 
 	@Override
@@ -209,7 +217,7 @@ public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributor
 
 	@Override
 	public String getSqlAliasStem() {
-			return getAttributeName();
+			return name;
 	}
 
 	@Override
@@ -255,6 +263,16 @@ public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributor
 	}
 
 	@Override
+	public String getFetchableName() {
+		return name;
+	}
+
+	@Override
+	public FetchStrategy getMappedFetchStrategy() {
+		return null;
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -268,7 +286,7 @@ public class EmbeddedIdentifierMappingImpl extends AbstractStateArrayContributor
 				this,
 				fetchParent,
 				fetchTiming,
-				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
+				attributeMetadataAccess.resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);
 	}

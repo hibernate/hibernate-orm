@@ -307,9 +307,6 @@ public class MappingModelCreationHelper {
 						attributeName,
 						attributeMappingType,
 						attributeMetadataAccess,
-						FetchStrategy.IMMEDIATE_JOIN,
-						0,
-						entityPersister,
 						propertyAccess,
 						rootTableName,
 						rootTableKeyColumnNames

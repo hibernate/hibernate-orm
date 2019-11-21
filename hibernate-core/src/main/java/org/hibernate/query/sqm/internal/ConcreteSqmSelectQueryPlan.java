@@ -157,9 +157,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	public List<R> performList(ExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 
-		if ( jdbcSelect == null ) {
-			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
-			//		- this is similar to the plan for loaders
+//		if ( jdbcSelect == null ) {
+//			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
+//			//		- this is similar to the plan for loaders
 
 			final SessionFactoryImplementor sessionFactory = session.getFactory();
 			final QueryEngine queryEngine = sessionFactory.getQueryEngine();
@@ -189,7 +189,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					domainParameterXref,
 					interpretation::getJdbcParamsBySqmParam
 			);
-		}
+//		}
 
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(

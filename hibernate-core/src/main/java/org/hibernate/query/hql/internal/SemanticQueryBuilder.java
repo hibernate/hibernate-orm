@@ -84,12 +84,12 @@ import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
@@ -727,6 +727,10 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			if ( sqmFrom != null ) {
 				return sqmFrom;
 			}
+
+			final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
+			dotIdentifierConsumer.consumeIdentifier( ctx.getText(), true, true );
+			return (SqmExpression) dotIdentifierConsumer.getConsumedPart();
 		}
 
 		return (SqmExpression) ctx.expression().accept( this );
@@ -2706,7 +2710,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 //
 //		return result;
 //	}
-
 
 	@Override
 	public SemanticPathPart visitDotIdentifierSequence(HqlParser.DotIdentifierSequenceContext ctx) {

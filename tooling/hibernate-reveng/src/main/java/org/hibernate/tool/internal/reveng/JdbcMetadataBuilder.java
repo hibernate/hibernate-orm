@@ -54,6 +54,7 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
 import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
@@ -784,28 +785,25 @@ public class JdbcMetadataBuilder {
 	 * @param primaryKey
 	 */
 	private void bindColumnsToProperties(Table table, RootClass rc, Set<Column> processedColumns, Mapping mapping) {
-
 		for (Iterator<?> iterator = table.getColumnIterator(); iterator.hasNext();) {
 			Column column = (Column) iterator.next();
 			if ( !processedColumns.contains(column) ) {
 				checkColumn(column);
-
 				String propertyName = 
 						RevEngUtils.getColumnToPropertyNameInRevengStrategy(
 								revengStrategy, 
 								table, 
 								defaultCatalog, 
 								defaultSchema, 
-								column.getName());
-
-				Property property = bindBasicProperty(
-						BinderUtils.makeUnique(rc,propertyName),
-						table,
-						column,
-						processedColumns,
-						mapping
-					);
-
+								column.getName());				
+				Property property = BasicPropertyBinder
+						.create(
+								metadataBuildingContext, 
+								metadataCollector, 
+								revengStrategy, 
+								defaultCatalog, 
+								defaultCatalog)
+						.bind(BinderUtils.makeUnique(rc,propertyName), table, column, mapping);
 				rc.addProperty(property);
 			}
 		}
@@ -842,40 +840,19 @@ public class JdbcMetadataBuilder {
 
 		processed.add(column);
 		String propertyName = revengStrategy.columnToPropertyName( identifier, column.getName() );
-		Property property = bindBasicProperty(BinderUtils.makeUnique(rc, propertyName), table, column, processed, mapping);
+		Property property = BasicPropertyBinder
+				.create(
+						metadataBuildingContext, 
+						metadataCollector, 
+						revengStrategy, 
+						defaultCatalog, 
+						defaultSchema)
+				.bind(BinderUtils.makeUnique(rc, propertyName), table, column, mapping);
 		rc.addProperty(property);
 		rc.setVersion(property);
 		rc.setOptimisticLockStyle(OptimisticLockStyle.VERSION);
 		log.debug("Column " + column.getName() + " will be used for <version>/<timestamp> columns in " + identifier);
 
-	}
-
-	private Property bindBasicProperty(
-			String propertyName, 
-			Table table, 
-			Column column, 
-			Set<Column> processedColumns, 
-			Mapping mapping) {
-		SimpleValue value = SimpleValueBinder.bind(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				table, 
-				column, 
-				mapping,
-				false);
-		return PropertyBinder.bind(
-				table, 
-				defaultCatalog,
-				defaultSchema,
-				propertyName, 
-				value, 
-				true, 
-				true, 
-				false, 
-				null, 
-				null,
-				revengStrategy);
 	}
 
     /**
@@ -934,10 +911,10 @@ public class JdbcMetadataBuilder {
                 }
 				else {
                     checkColumn(column);
-
                     String propertyName = revengStrategy.columnToPropertyName( TableIdentifier.create(table), column.getName() );
-					property = bindBasicProperty( BinderUtils.makeUnique(pkc, propertyName), table, column, processedColumns, mapping);
-
+                    property = BasicPropertyBinder
+                    		.create(metadataBuildingContext, metadataCollector, revengStrategy, defaultCatalog, defaultSchema)
+                    		.bind(BinderUtils.makeUnique(pkc, propertyName), table, column, mapping);
                     processedColumns.add(column);
                 }
             }

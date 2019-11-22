@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 

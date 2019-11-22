@@ -56,6 +56,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
@@ -975,8 +976,8 @@ public class JdbcMetadataBuilder {
     		foreignKeyIterator = tempList.iterator();
     		while(foreignKeyIterator.hasNext()) {
     			ForeignKey key = (ForeignKey) foreignKeyIterator.next();
-    			List<Column> matchingColumns = columnMatches(myPkColumns, i, key);
-    			if(matchingColumns!=null) {
+    			List<Column> matchingColumns = ForeignKeyUtils.columnMatches(myPkColumns, i, key);
+    			if(!matchingColumns.isEmpty()) {
     				result.add(new ForeignKeyForColumns(key, matchingColumns));
     				i+=matchingColumns.size()-1;
     				foreignKeyIterator.remove();
@@ -992,24 +993,6 @@ public class JdbcMetadataBuilder {
 
     	return result;
     }
-
-    private List<Column> columnMatches(Column[] myPkColumns, int offset, ForeignKey key) {
-
-    	if(key.getColumnSpan()>(myPkColumns.length-offset)) {
-    		return null; // not enough columns in the key
-    	}
-
-    	List<Column> columns = new ArrayList<Column>();
-    	for (int j = 0; j < key.getColumnSpan(); j++) {
-			Column column = myPkColumns[j+offset];
-			if(!column.equals(key.getColumn(j))) {
-				return null;
-			} else {
-				columns.add(column);
-			}
-		}
-		return columns.isEmpty()?null:columns;
-	}
 
 	static class ForeignKeyForColumns {
 

@@ -181,10 +181,14 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		//		The other option would be to leverage `java.util.concurrent.locks.ReadWriteLock`
 		//		to protect access.  However, synchronized is much simpler here.  We will verify
 		// 		during throughput testing whether this is an issue and consider changes then
-		if ( cacheableSqmInterpretation == null ) {
+
+		CacheableSqmInterpretation localCopy = cacheableSqmInterpretation;
+
+		if ( localCopy == null ) {
 			synchronized ( this ) {
-				if ( cacheableSqmInterpretation == null ) {
-					cacheableSqmInterpretation = buildCacheableSqmInterpretation(
+				localCopy = cacheableSqmInterpretation;
+				if ( localCopy == null ) {
+					cacheableSqmInterpretation = localCopy = buildCacheableSqmInterpretation(
 							sqm,
 							domainParameterXref,
 							executionContext
@@ -193,7 +197,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		}
 
-		return cacheableSqmInterpretation;
+		return localCopy;
 	}
 
 	private static CacheableSqmInterpretation buildCacheableSqmInterpretation(

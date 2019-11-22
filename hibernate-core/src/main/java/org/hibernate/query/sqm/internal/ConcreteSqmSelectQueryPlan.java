@@ -174,55 +174,63 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		}
 	}
 
+	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
+
 	private CacheableSqmInterpretation resolveCacheableSqmInterpretation(ExecutionContext executionContext) {
-		synchronized ( this ) {
-			if ( cacheableSqmInterpretation != null ) {
-				return cacheableSqmInterpretation;
+		// NOTE : VERY IMPORTANT - intentional double-lock checking
+		//		The other option would be to leverage `java.util.concurrent.locks.ReadWriteLock`
+		//		to protect access.  However, synchronized is much simpler here.  We will verify
+		// 		during throughput testing whether this is an issue and consider changes then
+		if ( cacheableSqmInterpretation == null ) {
+			synchronized ( this ) {
+				if ( cacheableSqmInterpretation == null ) {
+					cacheableSqmInterpretation = buildCacheableSqmInterpretation(
+							sqm,
+							domainParameterXref,
+							executionContext
+					);
+				}
 			}
-
-			final SharedSessionContractImplementor session = executionContext.getSession();
-			final SessionFactoryImplementor sessionFactory = session.getFactory();
-			final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-
-			final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
-
-			final SqmSelectTranslator sqmConverter = sqmTranslatorFactory.createSelectTranslator(
-					executionContext.getQueryOptions(),
-					domainParameterXref,
-					executionContext.getQueryParameterBindings(),
-					executionContext.getLoadQueryInfluencers(),
-					sessionFactory
-			);
-
-//			tableGroupAccess = sqmConverter.getFromClauseAccess();
-			final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
-
-			final SqmSelectTranslation interpretation = sqmConverter.translate( sqm );
-
-			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-//			jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( interpretation.getSqlAst() );
-			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( interpretation.getSqlAst() );
-
-//			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-//					domainParameterXref,
-//					interpretation::getJdbcParamsBySqmParam
-//			);
-
-			final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
-					domainParameterXref,
-					interpretation::getJdbcParamsBySqmParam
-			);
-
-			this.cacheableSqmInterpretation = new CacheableSqmInterpretation( jdbcSelect, tableGroupAccess, jdbcParamsXref );
-
-			return cacheableSqmInterpretation;
 		}
+
+		return cacheableSqmInterpretation;
 	}
 
-	private CacheableSqmInterpretation cacheableSqmInterpretation;
+	private static CacheableSqmInterpretation buildCacheableSqmInterpretation(
+			SqmSelectStatement sqm,
+			DomainParameterXref domainParameterXref, ExecutionContext executionContext) {
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
+
+		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+
+		final SqmSelectTranslator sqmConverter = sqmTranslatorFactory.createSelectTranslator(
+				executionContext.getQueryOptions(),
+				domainParameterXref,
+				executionContext.getQueryParameterBindings(),
+				executionContext.getLoadQueryInfluencers(),
+				sessionFactory
+		);
+
+//			tableGroupAccess = sqmConverter.getFromClauseAccess();
+		final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
+
+		final SqmSelectTranslation interpretation = sqmConverter.translate( sqm );
+
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( interpretation.getSqlAst() );
+
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+				domainParameterXref,
+				interpretation::getJdbcParamsBySqmParam
+		);
+
+		return new CacheableSqmInterpretation( jdbcSelect, tableGroupAccess, jdbcParamsXref );
+	}
 
 	private static class CacheableSqmInterpretation {
 		private final JdbcSelect jdbcSelect;

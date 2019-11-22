@@ -10,7 +10,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
 public class SimpleValueBinder {
 
-	public static SimpleValue bindSimpleValue(
+	public static SimpleValue bind(
 			MetadataBuildingContext metadataBuildingContext,
 			InFlightMetadataCollector metadataCollector,
 			ReverseEngineeringStrategy revengStrategy,

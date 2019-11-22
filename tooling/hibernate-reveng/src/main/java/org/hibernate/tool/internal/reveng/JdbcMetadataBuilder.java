@@ -685,7 +685,7 @@ public class JdbcMetadataBuilder {
 			Column pkc = (Column) keyColumns.get(0);
 			checkColumn(pkc);
 
-			id = SimpleValueBinder.bindSimpleValue(
+			id = SimpleValueBinder.bind(
 					metadataBuildingContext, 
 					metadataCollector, 
 					revengStrategy, 
@@ -856,7 +856,7 @@ public class JdbcMetadataBuilder {
 			Column column, 
 			Set<Column> processedColumns, 
 			Mapping mapping) {
-		SimpleValue value = SimpleValueBinder.bindSimpleValue(
+		SimpleValue value = SimpleValueBinder.bind(
 				metadataBuildingContext, 
 				metadataCollector, 
 				revengStrategy, 

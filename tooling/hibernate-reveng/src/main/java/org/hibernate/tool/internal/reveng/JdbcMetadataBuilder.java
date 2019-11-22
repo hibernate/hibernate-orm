@@ -919,8 +919,8 @@ public class JdbcMetadataBuilder {
                     processedColumns.add(column);
                 }
             }
-			else if (element instanceof ForeignKeyForColumns) {
-                ForeignKeyForColumns fkfc = (ForeignKeyForColumns) element;
+			else if (element instanceof ForeignKeyUtils.ForeignKeyForColumns) {
+				ForeignKeyUtils.ForeignKeyForColumns fkfc = (ForeignKeyUtils.ForeignKeyForColumns) element;
                 ForeignKey foreignKey = fkfc.key;
                 String propertyName = revengStrategy.foreignKeyToEntityName(
 						foreignKey.getName(),
@@ -978,7 +978,7 @@ public class JdbcMetadataBuilder {
     			ForeignKey key = (ForeignKey) foreignKeyIterator.next();
     			List<Column> matchingColumns = ForeignKeyUtils.columnMatches(myPkColumns, i, key);
     			if(!matchingColumns.isEmpty()) {
-    				result.add(new ForeignKeyForColumns(key, matchingColumns));
+    				result.add(new ForeignKeyUtils.ForeignKeyForColumns(key, matchingColumns));
     				i+=matchingColumns.size()-1;
     				foreignKeyIterator.remove();
     				foundKey=true;
@@ -992,17 +992,6 @@ public class JdbcMetadataBuilder {
 		}
 
     	return result;
-    }
-
-	static class ForeignKeyForColumns {
-
-        protected final List<Column> columns;
-        protected final ForeignKey key;
-
-        public ForeignKeyForColumns(ForeignKey key, List<Column> columns) {
-            this.key = key;
-            this.columns = columns;
-        }
     }
 
  }

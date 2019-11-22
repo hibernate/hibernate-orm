@@ -28,4 +28,12 @@ public class ForeignKeyUtils {
 		return result;
 	}
 
+	public static class ForeignKeyForColumns {
+        public final List<Column> columns;
+        public final ForeignKey key;
+        public ForeignKeyForColumns(ForeignKey key, List<Column> columns) {
+            this.key = key;
+            this.columns = columns;
+        }
+    }
 }

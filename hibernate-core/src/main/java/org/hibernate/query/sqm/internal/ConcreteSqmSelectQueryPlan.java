@@ -25,10 +25,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.sql.SqmSelectTranslation;
 import org.hibernate.query.sqm.sql.SqmSelectTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.SqmSelectTranslation;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -55,13 +54,8 @@ import org.hibernate.sql.results.spi.RowTransformer;
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement sqm;
 	private final DomainParameterXref domainParameterXref;
-	private final SqmStatement.ParameterResolutions parameterResolutions;
 
 	private final RowTransformer<R> rowTransformer;
-
-	private JdbcSelect jdbcSelect;
-	private FromClauseAccess tableGroupAccess;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
@@ -71,7 +65,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
 		this.domainParameterXref = domainParameterXref;
-		this.parameterResolutions = sqm.resolveParameters();
 
 		this.rowTransformer = determineRowTransformer( sqm, resultType, queryOptions );
 
@@ -157,10 +150,37 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	public List<R> performList(ExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 
-//		if ( jdbcSelect == null ) {
-//			// todo (6.0) : for cases where we have no "load query influencers" we could use a cached SQL AST
-//			//		- this is similar to the plan for loaders
+		final CacheableSqmInterpretation sqmInterpretation = resolveCacheableSqmInterpretation( executionContext );
 
+		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+				executionContext.getQueryParameterBindings(),
+				domainParameterXref,
+				sqmInterpretation.getJdbcParamsXref(),
+				session.getFactory().getDomainModel(),
+				sqmInterpretation.getTableGroupAccess()::findTableGroup,
+				session
+		);
+
+		try {
+			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+					sqmInterpretation.getJdbcSelect(),
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer
+			);
+		}
+		finally {
+			domainParameterXref.clearExpansions();
+		}
+	}
+
+	private CacheableSqmInterpretation resolveCacheableSqmInterpretation(ExecutionContext executionContext) {
+		synchronized ( this ) {
+			if ( cacheableSqmInterpretation != null ) {
+				return cacheableSqmInterpretation;
+			}
+
+			final SharedSessionContractImplementor session = executionContext.getSession();
 			final SessionFactoryImplementor sessionFactory = session.getFactory();
 			final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
@@ -174,7 +194,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					sessionFactory
 			);
 
-			tableGroupAccess = sqmConverter.getFromClauseAccess();
+//			tableGroupAccess = sqmConverter.getFromClauseAccess();
+			final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
 
 			final SqmSelectTranslation interpretation = sqmConverter.translate( sqm );
 
@@ -182,37 +203,57 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-			jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory )
-					.translate( interpretation.getSqlAst() );
+//			jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( interpretation.getSqlAst() );
+			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( interpretation.getSqlAst() );
 
-			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+//			this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
+//					domainParameterXref,
+//					interpretation::getJdbcParamsBySqmParam
+//			);
+
+			final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
 					domainParameterXref,
 					interpretation::getJdbcParamsBySqmParam
 			);
-//		}
 
+			this.cacheableSqmInterpretation = new CacheableSqmInterpretation( jdbcSelect, tableGroupAccess, jdbcParamsXref );
 
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
-				executionContext.getQueryParameterBindings(),
-				domainParameterXref,
-				jdbcParamsXref,
-				session.getFactory().getDomainModel(),
-				tableGroupAccess::findTableGroup,
-				session
-		);
-
-		try {
-			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-					jdbcSelect,
-					jdbcParameterBindings,
-					executionContext,
-					rowTransformer
-			);
-		}
-		finally {
-			domainParameterXref.clearExpansions();
+			return cacheableSqmInterpretation;
 		}
 	}
+
+	private CacheableSqmInterpretation cacheableSqmInterpretation;
+
+	private static class CacheableSqmInterpretation {
+		private final JdbcSelect jdbcSelect;
+		private final FromClauseAccess tableGroupAccess;
+		private final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
+
+		CacheableSqmInterpretation(
+				JdbcSelect jdbcSelect,
+				FromClauseAccess tableGroupAccess,
+				Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref) {
+			this.jdbcSelect = jdbcSelect;
+			this.tableGroupAccess = tableGroupAccess;
+			this.jdbcParamsXref = jdbcParamsXref;
+		}
+
+		JdbcSelect getJdbcSelect() {
+			return jdbcSelect;
+		}
+
+		FromClauseAccess getTableGroupAccess() {
+			return tableGroupAccess;
+		}
+
+		Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> getJdbcParamsXref() {
+			return jdbcParamsXref;
+		}
+	}
+
+
+
+
 
 	@Override
 	@SuppressWarnings("unchecked")

@@ -10,11 +10,11 @@ import java.sql.Statement;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.orm.test.metamodel.mapping.PluralAttributeTests.Component;
-import org.hibernate.orm.test.metamodel.mapping.PluralAttributeTests.EntityContainingLists;
-import org.hibernate.orm.test.metamodel.mapping.PluralAttributeTests.EntityContainingSets;
-import org.hibernate.orm.test.metamodel.mapping.PluralAttributeTests.EnumValue;
-import org.hibernate.orm.test.metamodel.mapping.PluralAttributeTests.SimpleEntity;
+import org.hibernate.orm.test.metamodel.mapping.collections.SomeStuff;
+import org.hibernate.orm.test.metamodel.mapping.collections.EntityContainingLists;
+import org.hibernate.orm.test.metamodel.mapping.collections.EntityContainingSets;
+import org.hibernate.orm.test.metamodel.mapping.collections.EnumValue;
+import org.hibernate.orm.test.metamodel.mapping.collections.SimpleEntity;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,8 +24,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -40,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				SimpleEntity.class,
 				EntityContainingLists.class,
 				EntityContainingSets.class,
-				Component.class
+				SomeStuff.class
 		}
 )
 @ServiceRegistry
@@ -143,8 +141,8 @@ public class PluralAttributeSmokeTests {
 						entityContainingLists.addEnum( EnumValue.ONE );
 						entityContainingLists.addEnum( EnumValue.THREE );
 
-						entityContainingLists.addComponent( new Component( "first-a1", "first-another-a1" ) );
-						entityContainingLists.addComponent( new Component( "first-a2", "first-another-a2" ) );
+						entityContainingLists.addComponent( new SomeStuff( "first-a1", "first-another-a1" ) );
+						entityContainingLists.addComponent( new SomeStuff( "first-a2", "first-another-a2" ) );
 
 						entityContainingLists.addSimpleEntity( simpleEntity1 );
 						entityContainingLists.addSimpleEntity( simpleEntity2 );
@@ -164,8 +162,8 @@ public class PluralAttributeSmokeTests {
 						entity.addEnum( EnumValue.ONE );
 						entity.addEnum( EnumValue.THREE );
 
-						entity.addComponent( new Component( "first-a1", "first-another-a1" ) );
-						entity.addComponent( new Component( "first-a2", "first-another-a2" ) );
+						entity.addComponent( new SomeStuff( "first-a1", "first-another-a1" ) );
+						entity.addComponent( new SomeStuff( "first-a2", "first-another-a2" ) );
 
 						entity.addSimpleEntity( simpleEntity1 );
 						entity.addSimpleEntity( simpleEntity2 );

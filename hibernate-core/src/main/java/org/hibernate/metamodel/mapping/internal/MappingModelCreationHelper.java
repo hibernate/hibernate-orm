@@ -1082,6 +1082,24 @@ public class MappingModelCreationHelper {
 			return (CollectionPart) mappingType.getEmbeddedValueMapping();
 		}
 
+		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
+			final EntityPersister associatedEntity;
+
+			if ( bootMapKeyDescriptor instanceof OneToMany ) {
+				associatedEntity = creationProcess.getEntityPersister(
+						( (OneToMany) bootMapKeyDescriptor ).getReferencedEntityName()
+				);
+			}
+			else {
+				// many-to-many
+				associatedEntity = creationProcess.getEntityPersister(
+						( (ToOne) bootMapKeyDescriptor ).getReferencedEntityName()
+				);
+			}
+
+			return new EntityCollectionPart( CollectionPart.Nature.ELEMENT, associatedEntity );
+		}
+
 		throw new NotYetImplementedFor6Exception(
 				"Support for plural attributes with index type [" + bootMapKeyDescriptor + "] not yet implemented"
 		);

@@ -28,7 +28,7 @@ ext {
     javassistVersion = '3.24.0-GA'
     byteBuddyVersion = '1.10.2'
 
-    agroalVersion = '1.6'
+    agroalVersion = '1.7'
 
     geolatteVersion = '1.4.0'
 
@@ -55,8 +55,8 @@ ext {
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
-            jandex:         'org.jboss:jandex:2.0.5.Final',
-            classmate:      'com.fasterxml:classmate:1.3.4',
+            jandex:         'org.jboss:jandex:2.1.1.Final',
+            classmate:      'com.fasterxml:classmate:1.5.1',
 
             // Dom4J
             dom4j:          'org.dom4j:dom4j:2.1.1@jar',

@@ -3,6 +3,36 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.9.Final (November 14, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31806/tab/release-report-done
+
+** Bug
+    * [HHH-12030] - Symbol$TypeVariableSymbol cannot be cast to TypeElement
+    * [HHH-13307] -  On release of batch it still contained JDBC statements using JTA
+    * [HHH-13433] - EntityManager.find() should only check for roll-back-only condition if there is an active JTA transaction, otherwise ORM should throw convert( e, lockOptions )
+    * [HHH-13614] - Allow the IntegratorProvider to be supplied via its FQN in the JPA persistence.xml
+    * [HHH-13670] - Missing from clause in query with joined inheritance, regression in 5.4.5
+    * [HHH-13687] - TenantSchemaResolver not called in integration test after upgrade from 5.4.4 to >=5.4.5
+    * [HHH-13690] - Multi-tenancy supporting session factories can not be created
+    * [HHH-13698] - Hibernate does not recognize MySQL 8 error code 3572 as PessimisticLockException
+    * [HHH-13700] - Configuration property CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT should not be passed to the JDBC connection properties
+    * [HHH-13705] - Enhancement as Proxy with inline dirty checking - flush of an @ManyToOne with an Embedded value having not null properties causes PropertyValueException
+    * [HHH-13710] - Wrong tenant-identifier in Envers temporary session
+    * [HHH-13712] - inheritance - select count query is not working with inheritance
+    * [HHH-13727] - h2 database with DATABASE_TO_UPPER=false throws org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "sequences" not found
+
+** Task
+    * [HHH-13730] - Upgrade to Classmate 1.4.0
+    * [HHH-13731] - Upgrade to Classmate 1.5.1
+    * [HHH-13733] - Upgrade to Jandex 2.1.1.Final
+
+** Improvement
+    * [HHH-13654] - Avoid clearing of collections when closing StatefulPersistenceContext
+    * [HHH-13723] - Hint sizing of ArrayList in ResultSetProcessingContextImpl
+
+
 Changes in 5.4.8.Final (October 28, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

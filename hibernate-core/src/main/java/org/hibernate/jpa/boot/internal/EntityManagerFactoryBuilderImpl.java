@@ -277,37 +277,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			return;
 		}
 
-		MetadataBuilderContributor metadataBuilderContributor = null;
-		Class<? extends MetadataBuilderContributor> metadataBuilderContributorImplClass = null;
-
-		if ( metadataBuilderContributorSetting instanceof MetadataBuilderContributor ) {
-			metadataBuilderContributor = (MetadataBuilderContributor) metadataBuilderContributorSetting;
-		}
-		else if ( metadataBuilderContributorSetting instanceof Class ) {
-			metadataBuilderContributorImplClass = (Class<? extends MetadataBuilderContributor>) metadataBuilderContributorSetting;
-		}
-		else if ( metadataBuilderContributorSetting instanceof String ) {
-			final ClassLoaderService classLoaderService = standardServiceRegistry.getService( ClassLoaderService.class );
-
-			metadataBuilderContributorImplClass = classLoaderService.classForName( (String) metadataBuilderContributorSetting );
-		}
-		else {
-			throw new IllegalArgumentException(
-					"The provided " + METADATA_BUILDER_CONTRIBUTOR + " setting value [" + metadataBuilderContributorSetting + "] is not supported!"
-			);
-		}
-
-		if ( metadataBuilderContributorImplClass != null ) {
-			try {
-				metadataBuilderContributor = metadataBuilderContributorImplClass.newInstance();
-			}
-			catch (InstantiationException | IllegalAccessException e) {
-				throw new IllegalArgumentException(
-						"The MetadataBuilderContributor class [" + metadataBuilderContributorImplClass + "] could not be instantiated!",
-						e
-				);
-			}
-		}
+		MetadataBuilderContributor metadataBuilderContributor = loadSettingInstance(
+				METADATA_BUILDER_CONTRIBUTOR,
+				metadataBuilderContributorSetting,
+				MetadataBuilderContributor.class
+		);
 
 		if ( metadataBuilderContributor != null ) {
 			metadataBuilderContributor.contribute( metamodelBuilder );
@@ -395,13 +369,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService) {
 		final BootstrapServiceRegistryBuilder bsrBuilder = new BootstrapServiceRegistryBuilder();
 
-		final IntegratorProvider integratorProvider = (IntegratorProvider) integrationSettings.get( INTEGRATOR_PROVIDER );
-		if ( integratorProvider != null ) {
-			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
-				bsrBuilder.applyIntegrator( integrator );
-			}
-		}
-		
+		applyIntegrationProvider( integrationSettings, bsrBuilder );
+
 		final StrategyRegistrationProviderList strategyRegistrationProviderList
 				= (StrategyRegistrationProviderList) integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
 		if ( strategyRegistrationProviderList != null ) {
@@ -465,6 +434,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return bsrBuilder.build();
 	}
 
+	private void applyIntegrationProvider(Map integrationSettings, BootstrapServiceRegistryBuilder bsrBuilder) {
+		Object integrationSetting = integrationSettings.get( INTEGRATOR_PROVIDER );
+		if ( integrationSetting == null ) {
+			return;
+		}
+		final IntegratorProvider integratorProvider = loadSettingInstance(
+				INTEGRATOR_PROVIDER,
+				integrationSetting,
+				IntegratorProvider.class
+		);
+
+		if ( integratorProvider != null ) {
+			for ( Integrator integrator : integratorProvider.getIntegrators() ) {
+				bsrBuilder.applyIntegrator( integrator );
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
 	private MergedSettings mergeSettings(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?,?> integrationSettings,
@@ -1396,5 +1384,52 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			this.cacheRegionDefinitions.add( cacheRegionDefinition );
 		}
+	}
+
+	private <T> T loadSettingInstance(String settingName, Object settingValue, Class<T> clazz) {
+		T instance = null;
+		Class<? extends T> instanceClass = null;
+
+		if ( clazz.isAssignableFrom( settingValue.getClass() ) ) {
+			instance = (T) settingValue;
+		}
+		else if ( settingValue instanceof Class ) {
+			instanceClass = (Class<? extends T>) settingValue;
+		}
+		else if ( settingValue instanceof String ) {
+			String settingStringValue = (String) settingValue;
+			if ( standardServiceRegistry != null ) {
+				final ClassLoaderService classLoaderService = standardServiceRegistry.getService( ClassLoaderService.class );
+
+				instanceClass = classLoaderService.classForName( settingStringValue );
+			}
+			else {
+				try {
+					instanceClass = (Class<? extends T>) Class.forName( settingStringValue );
+				}
+				catch (ClassNotFoundException e) {
+					throw new IllegalArgumentException( "Can't load class: " + settingStringValue, e );
+				}
+			}
+		}
+		else {
+			throw new IllegalArgumentException(
+				"The provided " + settingName + " setting value [" + settingValue + "] is not supported!"
+			);
+		}
+
+		if ( instanceClass != null ) {
+			try {
+				instance = instanceClass.newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new IllegalArgumentException(
+						"The " + clazz.getSimpleName() +" class [" + instanceClass + "] could not be instantiated!",
+						e
+				);
+			}
+		}
+
+		return instance;
 	}
 }

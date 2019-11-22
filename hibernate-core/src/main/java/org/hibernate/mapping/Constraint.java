@@ -75,7 +75,16 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * @return String The generated name
 	 */
 	public static String generateName(String prefix, Table table, List<Column> columns) {
-		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+		//N.B. legacy APIs are involved: can't trust that the columns List is actually
+		//containing Column instances - the generic type isn't consistently enforced.
+		ArrayList<Column> defensive = new ArrayList<>( columns.size() );
+		for ( Object o : columns ) {
+			if ( o instanceof Column ) {
+				defensive.add( (Column) o );
+			}
+			//else: others might be Formula instances. They don't need to be part of the name generation.
+		}
+		return generateName( prefix, table, defensive.toArray( new Column[0] ) );
 	}
 
 	/**

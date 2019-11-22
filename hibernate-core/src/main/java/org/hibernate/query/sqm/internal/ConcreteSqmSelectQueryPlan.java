@@ -188,11 +188,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			synchronized ( this ) {
 				localCopy = cacheableSqmInterpretation;
 				if ( localCopy == null ) {
-					cacheableSqmInterpretation = localCopy = buildCacheableSqmInterpretation(
+					localCopy = buildCacheableSqmInterpretation(
 							sqm,
 							domainParameterXref,
 							executionContext
 					);
+					cacheableSqmInterpretation = localCopy;
 				}
 			}
 		}

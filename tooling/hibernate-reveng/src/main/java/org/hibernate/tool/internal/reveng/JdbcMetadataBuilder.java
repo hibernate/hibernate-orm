@@ -381,7 +381,7 @@ public class JdbcMetadataBuilder {
         	value.setFetchMode(FetchMode.SELECT);
         }
 
-        return PropertyBinder.makeProperty(
+        return PropertyBinder.bind(
         		table, 
         		defaultCatalog,
         		defaultSchema,
@@ -429,7 +429,7 @@ public class JdbcMetadataBuilder {
         	value.setFetchMode(FetchMode.SELECT);
         }
 
-        return PropertyBinder.makeProperty(
+        return PropertyBinder.bind(
         		table, 
         		defaultCatalog,
         		defaultSchema,
@@ -708,7 +708,7 @@ public class JdbcMetadataBuilder {
 			id.setNullValue("undefined");
 		}
 
-		Property property = PropertyBinder.makeProperty(
+		Property property = PropertyBinder.bind(
 				table, 
 				defaultCatalog,
 				defaultSchema,
@@ -864,7 +864,7 @@ public class JdbcMetadataBuilder {
 				column, 
 				mapping,
 				false);
-		return PropertyBinder.makeProperty(
+		return PropertyBinder.bind(
 				table, 
 				defaultCatalog,
 				defaultSchema,

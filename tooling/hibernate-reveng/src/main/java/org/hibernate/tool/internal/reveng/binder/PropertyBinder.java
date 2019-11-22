@@ -1,16 +1,18 @@
 package org.hibernate.tool.internal.reveng.binder;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.jboss.logging.Logger;
 
 public class PropertyBinder {
 
-	private static final Logger log = Logger.getLogger(PropertyBinder.class);
+	private static final Logger LOGGER = Logger.getLogger(PropertyBinder.class.getName());
 
-	public static Property makeProperty(
+	public static Property bind(
 			Table table, 
 			String defaultCatalog,
 			String defaultSchema,
@@ -22,7 +24,7 @@ public class PropertyBinder {
 			String cascade, 
 			String propertyAccessorName,
 			ReverseEngineeringStrategy revengStrategy) {
-    	log.debug("Building property " + propertyName);
+    	LOGGER.log(Level.INFO, "Building property " + propertyName);
         Property prop = new Property();
 		prop.setName(propertyName);
 		prop.setValue(value);

@@ -4,7 +4,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.MetaAttributesBinder;
 import org.jboss.logging.Logger;
 
 public class PropertyBinder {

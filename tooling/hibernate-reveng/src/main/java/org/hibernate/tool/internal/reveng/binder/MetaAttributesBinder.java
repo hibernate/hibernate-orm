@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.binder;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -9,6 +9,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.internal.reveng.RevEngUtils;
 
 public class MetaAttributesBinder {
 

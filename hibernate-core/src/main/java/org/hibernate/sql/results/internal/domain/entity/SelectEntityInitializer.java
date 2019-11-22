@@ -9,7 +9,9 @@ package org.hibernate.sql.results.internal.domain.entity;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParentAccess;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -18,24 +20,28 @@ import org.hibernate.sql.results.spi.RowProcessingState;
 
 /**
  * @author Andrea Boriero
- * @author Steve Ebersole
  */
-public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
+public class SelectEntityInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 	private final NavigablePath navigablePath;
 	private final EntityPersister concreteDescriptor;
 	private final DomainResultAssembler identifierAssembler;
+	private final boolean unwrapProxy;
+	private final boolean nullable;
 
 	private Object entityInstance;
-	private Object identifier;
 
-	protected DelayedEntityFetchInitializer(
+	protected SelectEntityInitializer(
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler) {
+			DomainResultAssembler identifierAssembler,
+			boolean unwrapProxy,
+			boolean nullable) {
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
+		this.unwrapProxy = unwrapProxy;
+		this.nullable = nullable;
 	}
 
 	@Override
@@ -50,47 +56,40 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( entityInstance != null ) {
-			return;
-		}
-		identifier = identifierAssembler.assemble( rowProcessingState );
 
-		// todo (6.0) : technically the entity could be managed or cached already.  who/what handles that?
-
-		// todo (6.0) : could also be getting loaded elsewhere (LoadingEntityEntry)
-		if ( identifier == null ) {
-			// todo (6.0) : check this is the correct behaviour
-			entityInstance = null;
-		}
-		else {
-			if ( concreteDescriptor.hasProxy() ) {
-				entityInstance = concreteDescriptor.createProxy(
-						identifier,
-						rowProcessingState.getSession()
-				);
-			}
-			else if ( concreteDescriptor
-					.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading() ) {
-				entityInstance = concreteDescriptor.instantiate(
-						identifier,
-						rowProcessingState.getSession()
-				);
-			}
-
-			notifyParentResolutionListeners( entityInstance );
-		}
 	}
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		// nothing to do
+		if ( entityInstance != null ) {
+			return;
+		}
+
+		final Object id = identifierAssembler.assemble( rowProcessingState );
+		if ( id == null ) {
+			return;
+		}
+
+		final String entityName = concreteDescriptor.getEntityName();
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+
+		entityInstance = session.internalLoad(
+				entityName,
+				id,
+				false,
+				nullable
+		);
+
+		if ( entityInstance instanceof HibernateProxy ) {
+			final boolean isProxyUnwrapEnabled = unwrapProxy && concreteDescriptor.isInstrumented();
+
+			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( isProxyUnwrapEnabled );
+		}
 	}
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
-		identifier = null;
 
 		clearParentResolutionListeners();
 	}
@@ -119,5 +118,4 @@ public class DelayedEntityFetchInitializer extends AbstractFetchParentAccess imp
 			super.registerResolutionListener( listener );
 		}
 	}
-
 }

@@ -103,6 +103,7 @@ public class ManyToOneTest {
 
 					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
 					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
+					assertThat( anotherSimpleEntity.getName(), is( "other" ) );
 
 					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
@@ -118,6 +119,7 @@ public class ManyToOneTest {
 					OtherEntity otherEntity = session.
 							createQuery( "from OtherEntity o join o.simpleEntity", OtherEntity.class )
 							.uniqueResult();
+					// the eager association is null
 					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 					assertThat( otherEntity.getName(), is( "Bar" ) );
 
@@ -134,7 +136,48 @@ public class ManyToOneTest {
 					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
 				}
 		);
+
+		scope.inTransaction(
+				session -> {
+					OtherEntity otherEntity = session.
+							createQuery( "from OtherEntity", OtherEntity.class )
+							.uniqueResult();
+					AnotherSimpleEntity anotherSimpleEntity = new AnotherSimpleEntity();
+					anotherSimpleEntity.setId( 3 );
+					anotherSimpleEntity.setName( "other" );
+					session.save( anotherSimpleEntity );
+					otherEntity.setAnotherSimpleEntity( anotherSimpleEntity );
+				}
+		);
+
+		statistics.clear();
+
+		scope.inTransaction(
+				session -> {
+					OtherEntity otherEntity = session.
+							createQuery( "from OtherEntity o join o.simpleEntity", OtherEntity.class )
+							.uniqueResult();
+					// the eager association is not null so a second select is executed
+					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
+					assertThat( otherEntity.getName(), is( "Bar" ) );
+
+					SimpleEntity simpleEntity = otherEntity.getSimpleEntity();
+					assertFalse( Hibernate.isInitialized( simpleEntity ) );
+					assertThat( simpleEntity, notNullValue() );
+					assertThat( simpleEntity.getName(), is( "Fab" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
+
+					AnotherSimpleEntity anotherSimpleEntity = otherEntity.getAnotherSimpleEntity();
+					assertTrue( Hibernate.isInitialized( anotherSimpleEntity ) );
+					assertThat( anotherSimpleEntity.getName(), is( "other" ) );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
+				}
+		);
+
 	}
+
 
 	@Test
 	public void testHQLSelectWithFetchJoin(SessionFactoryScope scope) {

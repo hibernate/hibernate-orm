@@ -14,7 +14,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
@@ -22,22 +21,21 @@ import org.hibernate.sql.results.spi.Initializer;
 
 /**
  * @author Andrea Boriero
- * @author Steve Ebersole
  */
-public class DelayedEntityFetchImpl extends AbstractEntityFecth {
+public class SelectEntityFetchImpl extends AbstractEntityFecth {
 
 	private final DomainResult result;
 
-	public DelayedEntityFetchImpl(
+	public SelectEntityFetchImpl(
 			FetchParent fetchParent,
 			SingularAssociationAttributeMapping fetchedAttribute,
 			LockMode lockMode,
-			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResult result) {
-		super( fetchParent, fetchedAttribute, navigablePath, nullable, lockMode );
+		super( fetchParent, fetchedAttribute, navigablePath, fetchedAttribute.isNullable(), lockMode );
 		this.result = result;
 	}
+
 
 	@Override
 	protected EntityInitializer getEntityInitializer(
@@ -45,10 +43,15 @@ public class DelayedEntityFetchImpl extends AbstractEntityFecth {
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
 		final SingularAssociationAttributeMapping fetchedAttribute = (SingularAssociationAttributeMapping) getFetchedMapping();
-		return new DelayedEntityFetchInitializer(
+
+		return new SelectEntityInitializer(
 				getNavigablePath(),
 				(EntityPersister) fetchedAttribute.getMappedTypeDescriptor(),
-				result.createResultAssembler( collector, creationState )
+				result.createResultAssembler( collector, creationState ),
+				fetchedAttribute.isUnwrapProxy(),
+				fetchedAttribute.isNullable()
 		);
 	}
+
+
 }

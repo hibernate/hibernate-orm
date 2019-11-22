@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetchImpl;
 import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
+import org.hibernate.sql.results.internal.domain.entity.SelectEntityFetchImpl;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -47,10 +48,12 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		implements EntityValuedModelPart, TableGroupJoinProducer {
 	private final String sqlAliasStem;
 	private final boolean isNullable;
+	private final boolean referringPrimaryKey;
+	final protected boolean unwrapProxy;
+	private final String referencedPropertyName;
+
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 
-	private final String referencedPropertyName;
-	private final boolean referringPrimaryKey;
 
 	public SingularAssociationAttributeMapping(
 			String name,
@@ -74,6 +77,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.isNullable = value.isNullable();
 		referencedPropertyName = value.getReferencedPropertyName();
 		referringPrimaryKey = value.isReferenceToPrimaryKey();
+		unwrapProxy = value.isUnwrapProxy();
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
@@ -144,7 +148,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 					fetchParent,
 					this,
 					lockMode,
-					!selected,
+					true,
 					fetchablePath,
 					creationState
 			);
@@ -160,14 +164,23 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 					.createDomainResult( fetchablePath, lhsTableGroup, null, creationState );
 		}
 
+		if ( fetchTiming == FetchTiming.IMMEDIATE && !selected ) {
+			return new SelectEntityFetchImpl(
+					fetchParent,
+					this,
+					lockMode,
+					fetchablePath,
+					result
+			);
+		}
+
 		return new DelayedEntityFetchImpl(
 				fetchParent,
 				this,
 				lockMode,
 				isNullable,
 				fetchablePath,
-				result,
-				creationState
+				result
 		);
 	}
 
@@ -280,4 +293,11 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		return false;
 	}
 
+	public boolean isNullable() {
+		return isNullable;
+	}
+
+	public boolean isUnwrapProxy() {
+		return unwrapProxy;
+	}
 }

@@ -229,7 +229,10 @@ public class StandardSqmSelectTranslator
 			//		because it
 			assert getFromClauseIndex().getTableGroup( fetchablePath ) != null;
 
-			fetchTiming = FetchTiming.IMMEDIATE;
+//
+			if ( fetchedJoin.isFetched() ) {
+				fetchTiming = FetchTiming.IMMEDIATE;
+			}
 			joined = true;
 			alias = fetchedJoin.getExplicitAlias();
 			lockMode = determineLockMode( alias );

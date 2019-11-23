@@ -22,7 +22,7 @@ import org.hibernate.sql.results.spi.Initializer;
 /**
  * @author Andrea Boriero
  */
-public class SelectEntityFetchImpl extends AbstractEntityFecth {
+public class SelectEntityFetchImpl extends AbstractEntityFetch {
 
 	private final DomainResult result;
 

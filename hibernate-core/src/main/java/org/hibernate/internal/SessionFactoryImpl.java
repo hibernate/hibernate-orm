@@ -11,7 +11,6 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -52,6 +50,8 @@ import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
@@ -79,7 +79,6 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -203,6 +202,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			SessionFactoryOptions options) {
 		LOG.debug( "Building session factory" );
 
+		final TypeConfiguration typeConfiguration = bootMetamodel.getTypeConfiguration();
+		final MetadataBuildingContext bootModelBuildingContext = typeConfiguration.getMetadataBuildingContext();
+		final BootstrapContext bootstrapContext = bootModelBuildingContext.getBootstrapContext();
+
 		this.sessionFactoryOptions = options;
 		this.settings = new Settings( options, bootMetamodel );
 
@@ -275,7 +278,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.observer.addObserver( integratorObserver );
 		try {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-				integrator.integrate( bootMetamodel, this, this.serviceRegistry );
+				integrator.integrate( bootMetamodel, bootstrapContext, this );
 				integratorObserver.integrators.add( integrator );
 			}
 			//Generators:
@@ -295,10 +298,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
-			this.metamodel = bootMetamodel.getTypeConfiguration().scope( this );
+			this.metamodel = typeConfiguration.scope( this );
 			( (DomainMetamodelImpl) metamodel ).finishInitialization(
 					bootMetamodel,
-					bootMetamodel.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext(),
+					bootstrapContext,
 					this
 			);
 

@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.jboss.logging.Logger;
@@ -199,14 +198,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			physicalConnection = null;
 			getResourceRegistry().releaseResources();
 		}
-	}
-
-	@Override
-	public LogicalConnectionImplementor makeShareableCopy() {
-		errorIfClosed();
-
-		// todo : implement
-		return null;
 	}
 
 	@Override

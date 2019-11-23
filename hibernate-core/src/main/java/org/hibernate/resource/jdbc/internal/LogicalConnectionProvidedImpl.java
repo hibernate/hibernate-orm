@@ -13,7 +13,6 @@ import java.sql.Connection;
 
 import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.jboss.logging.Logger;
@@ -79,13 +78,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public Connection getPhysicalConnection() {
 		errorIfClosed();
 		return providedConnection;
-	}
-
-	@Override
-	public LogicalConnectionImplementor makeShareableCopy() {
-		errorIfClosed();
-
-		return new LogicalConnectionProvidedImpl( providedConnection, new ResourceRegistryStandardImpl() );
 	}
 
 	@Override

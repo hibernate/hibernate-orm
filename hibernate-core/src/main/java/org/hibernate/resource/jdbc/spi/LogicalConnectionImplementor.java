@@ -59,15 +59,8 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	void manualReconnect(Connection suppliedConnection);
 
 	/**
-	 * Creates a shareable copy of itself for use in "shared sessions"
-	 *
-	 * @return The shareable copy.
-	 *
-	 * @deprecated This method is not used by Hibernate.
+	 * Access to the current underlying JDBC transaction
 	 */
-	@Deprecated
-	LogicalConnectionImplementor makeShareableCopy();
-
 	PhysicalJdbcTransaction getPhysicalJdbcTransaction();
 
 	/**

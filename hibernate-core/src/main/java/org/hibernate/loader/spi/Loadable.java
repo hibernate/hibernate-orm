@@ -36,7 +36,7 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers);
 	boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers);
 
-	String getPathName();
+	String getRootPathName();
 
 	@Override
 	default TableGroup createRootTableGroup(

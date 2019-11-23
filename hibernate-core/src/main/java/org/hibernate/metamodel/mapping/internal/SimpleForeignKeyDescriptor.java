@@ -10,10 +10,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -31,6 +37,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.internal.domain.basic.BasicResult;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,7 +46,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
+public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart {
 	private final String keyColumnContainingTable;
 	private final String keyColumnExpression;
 	private final String targetColumnContainingTable;
@@ -95,6 +103,51 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 				null,
 				jdbcMapping.getJavaTypeDescriptor()
 		);
+	}
+
+	@Override
+	public Predicate generateJoinPredicate(
+			TableReference lhs,
+			TableReference rhs,
+			JoinType joinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		if ( lhs.getTableExpression().equals( keyColumnContainingTable ) ) {
+			assert rhs.getTableExpression().equals( targetColumnContainingTable );
+			return new ComparisonPredicate(
+					new ColumnReference(
+							lhs,
+							keyColumnExpression,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					),
+					ComparisonOperator.EQUAL,
+					new ColumnReference(
+							rhs,
+							targetColumnExpression,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					)
+			);
+		}
+		else {
+			assert rhs.getTableExpression().equals( keyColumnContainingTable );
+			return new ComparisonPredicate(
+					new ColumnReference(
+							lhs,
+							targetColumnExpression,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					),
+					ComparisonOperator.EQUAL,
+					new ColumnReference(
+							rhs,
+							keyColumnExpression,
+							jdbcMapping,
+							creationContext.getSessionFactory()
+					)
+			);
+		}
 	}
 
 	@Override
@@ -251,5 +304,53 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor {
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		valuesConsumer.consume( value, jdbcMapping );
+	}
+
+
+	@Override
+	public String getContainingTableExpression() {
+		return keyColumnContainingTable;
+	}
+
+	@Override
+	public String getMappedColumnExpression() {
+		return keyColumnExpression;
+	}
+
+	@Override
+	public BasicValueConverter getConverter() {
+		return null;
+	}
+
+	@Override
+	public String getFetchableName() {
+		return PART_NAME;
+	}
+
+	@Override
+	public FetchStrategy getMappedFetchStrategy() {
+		return FetchStrategy.IMMEDIATE_JOIN;
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			LockMode lockMode,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return null;
+	}
+
+	@Override
+	public MappingType getMappedTypeDescriptor() {
+		return null;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
 	}
 }

@@ -171,10 +171,10 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 				nature.getName()
 		);
 
-		final SqlSelection sqlSelection = resolveSqlSelection(
-				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( fetchablePath.getParent() ),
-				creationState
-		);
+		final TableGroup tableGroup = creationState.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.findTableGroup( fetchablePath.getParent() );
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
 		return new BasicFetch(
 				sqlSelection.getValuesArrayPosition(),

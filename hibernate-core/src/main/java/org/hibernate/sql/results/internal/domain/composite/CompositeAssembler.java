@@ -25,7 +25,7 @@ public class CompositeAssembler implements DomainResultAssembler {
 
 	@Override
 	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
-		return initializer.getInitializingModelPart().getJavaTypeDescriptor();
+		return initializer.getInitializedPart().getJavaTypeDescriptor();
 	}
 
 	@Override

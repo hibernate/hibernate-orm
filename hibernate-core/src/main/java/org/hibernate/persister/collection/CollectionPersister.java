@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -19,23 +20,28 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * A strategy for persisting a collection role. Defines a contract between
@@ -72,6 +78,8 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface CollectionPersister extends CollectionDefinition, TableReferenceContributor {
+	NavigableRole getNavigableRole();
+
 	/**
 	 * Initialize the given collection with the given key
 	 */
@@ -86,8 +94,6 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 	 * Get the cache
 	 */
 	CollectionDataAccess getCacheAccessStrategy();
-
-	NavigableRole getNavigableRole();
 
 	/**
 	 * Get the cache structure
@@ -300,6 +306,18 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 	SessionFactoryImplementor getFactory();
 
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
+
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	default boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
+
+	default boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
 
 	/**
 	 * Generates the collection's key column aliases, based on the given

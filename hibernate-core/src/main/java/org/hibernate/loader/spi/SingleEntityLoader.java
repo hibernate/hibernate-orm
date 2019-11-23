@@ -9,7 +9,6 @@ package org.hibernate.loader.spi;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Loader for loading a single entity by primary or unique key

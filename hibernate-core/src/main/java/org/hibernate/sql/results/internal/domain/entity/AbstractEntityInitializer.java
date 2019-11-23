@@ -323,8 +323,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}
 		}
-
-		// todo (6.0) : subselect fetches similar to batch fetch handling above
 	}
 
 	@Override

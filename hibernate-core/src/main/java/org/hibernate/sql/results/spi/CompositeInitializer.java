@@ -13,7 +13,8 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
  * @author Steve Ebersole
  */
 public interface CompositeInitializer extends Initializer, FetchParentAccess {
-	EmbeddableValuedModelPart getInitializingModelPart();
+	@Override
+	EmbeddableValuedModelPart getInitializedPart();
 
 	Object getCompositeInstance();
 

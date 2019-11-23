@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -14,6 +15,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public interface EntityInitializer extends Initializer, FetchParentAccess {
+	@Override
+	default ModelPart getInitializedPart() {
+		return getEntityDescriptor();
+	}
 
 	/**
 	 * Get the descriptor for the type of entity being initialized

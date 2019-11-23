@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
@@ -39,6 +41,9 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -56,6 +61,10 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
+import org.hibernate.loader.internal.MetamodelSelectBuilderProcess;
+import org.hibernate.loader.internal.SingleCollectionKeyLoader;
+import org.hibernate.loader.internal.SubSelectFetchCollectionLoader;
+import org.hibernate.loader.spi.CollectionLoader;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -67,6 +76,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
@@ -85,6 +99,7 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
@@ -93,8 +108,16 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -113,7 +136,7 @@ import org.jboss.logging.Logger;
  * @see OneToManyPersister
  */
 public abstract class AbstractCollectionPersister
-		implements CollectionMetadata, SQLLoadableCollection {
+		implements CollectionMetadata, SQLLoadableCollection, PluralAttributeMappingImpl.Aware {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
 			AbstractCollectionPersister.class.getName() );
@@ -765,9 +788,92 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
+	private CollectionLoader standardCollectionLoader;
+
 	@Override
 	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
-		getAppropriateInitializer( key, session ).initialize( key, session );
+//		getAppropriateInitializer( key, session ).initialize( key, session );
+		determineLoaderToUse( key, session ).load( key, session );
+	}
+
+	protected CollectionLoader getStandardCollectionLoader() {
+		CollectionLoader localCopy = standardCollectionLoader;
+		if ( localCopy == null ) {
+			synchronized (this) {
+				if ( localCopy == null ) {
+					localCopy = createCollectionLoader( LoadQueryInfluencers.NONE );
+					standardCollectionLoader  = localCopy;
+				}
+			}
+		}
+		return localCopy;
+	}
+
+	protected CollectionLoader determineLoaderToUse(Object key, SharedSessionContractImplementor session) {
+		if ( queryLoaderName != null ) {
+			// if there is a user-specified loader, return that
+			return getStandardCollectionLoader();
+		}
+
+		final CollectionLoader subSelectLoader = resolveSubSelectLoader( key, session );
+		if ( subSelectLoader != null ) {
+			return subSelectLoader;
+		}
+
+		if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+			return getStandardCollectionLoader();
+		}
+
+		return createCollectionLoader( session.getLoadQueryInfluencers() );
+	}
+
+	private CollectionLoader resolveSubSelectLoader(Object key, SharedSessionContractImplementor session) {
+		if ( !isSubselectLoadable() ) {
+			return null;
+		}
+
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+
+		final EntityKey ownerEntityKey = session.generateEntityKey( key, getOwnerEntityPersister() );
+		final SubselectFetch subselect = persistenceContext.getBatchFetchQueue().getSubselect( ownerEntityKey );
+		if ( subselect == null ) {
+			return null;
+		}
+
+		// Take care of any entities that might have
+		// been evicted!
+		subselect.getResult().removeIf( o -> !persistenceContext.containsEntity( o ) );
+
+		// Run a subquery loader
+		return createSubSelectLoader( subselect, session );
+	}
+
+	protected CollectionLoader createSubSelectLoader(SubselectFetch subselect, SharedSessionContractImplementor session) {
+		//noinspection RedundantCast
+		return new SubSelectFetchCollectionLoader(
+				attributeMapping,
+				(DomainResult) null,
+				subselect,
+				session
+		);
+	}
+
+	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		final java.util.List<JdbcParameter> jdbcParameters = new ArrayList<>();
+
+		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
+				attributeMapping,
+				null,
+				attributeMapping.getKeyDescriptor(),
+				null,
+				1,
+				loadQueryInfluencers,
+				LockOptions.READ,
+				jdbcParameters::add,
+				getFactory()
+		);
+
+		return new SingleCollectionKeyLoader( attributeMapping, sqlAst, jdbcParameters );
 	}
 
 	protected CollectionInitializer getAppropriateInitializer(Object key, SharedSessionContractImplementor session) {
@@ -1995,9 +2101,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session) {
-		final Map<String, Filter> enabledFilters = session.getLoadQueryInfluencers().getEnabledFilters();
-		return filterHelper.isAffectedBy( enabledFilters ) ||
-				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
+		return isAffectedByEnabledFilters( session.getLoadQueryInfluencers() );
 	}
 
 	public boolean isSubselectLoadable() {
@@ -2382,6 +2486,47 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
 
+	// todo (6.0) : atm there is no way to get a `PluralAttributeMapping` reference except through its declaring `ManagedTypeMapping` attributes.  this is a backhand way
+	//		of getting access to it for use from the persister
+
+	private PluralAttributeMapping attributeMapping;
+
+	@Override
+	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
+		this.attributeMapping = attributeMapping;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		if ( influencers.hasEnabledFilters() ) {
+			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
+			return filterHelper.isAffectedBy( enabledFilters ) ||
+					( isManyToMany() && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+		// todo (6.0) : anything to do here?
+		return false;
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		if ( influencers.hasEnabledFetchProfiles() ) {
+			for ( String enabledFetchProfileName : influencers.getEnabledFetchProfileNames() ) {
+				final FetchProfile fetchProfile = getFactory().getFetchProfile( enabledFetchProfileName );
+				final Fetch fetchByRole = fetchProfile.getFetchByRole( getRole() );
+				if ( fetchByRole.getStyle() == Fetch.Style.JOIN ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 
 	@Override
 	public void applyTableReferences(
@@ -2413,6 +2558,16 @@ public abstract class AbstractCollectionPersister
 		}
 
 		if ( elementPersister != null ) {
+			collector.applyPrimaryJoinProducer(
+					(lhs, rhs) -> new TableReferenceJoin(
+							baseJoinType,
+							rhs,
+							generateEntityElementJoinPredicate(
+									lhs, rhs, baseJoinType, sqlExpressionResolver, creationContext
+							)
+					)
+			);
+
 			elementPersister.applyTableReferences(
 					sqlAliasBase,
 					// todo (6.0) : determine the proper join-type to use
@@ -2423,6 +2578,100 @@ public abstract class AbstractCollectionPersister
 			);
 		}
 
+	}
+
+	private Predicate generateEntityElementJoinPredicate(
+			TableReference lhs,
+			TableReference rhs,
+			JoinType baseJoinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+
+		// `lhs` should be the collection table
+		// `rhs` should be the primary element table
+		assert lhs.getTableExpression().equals( getTableName() );
+
+		final String fkTargetModelPartName = getCollectionType().getRHSUniqueKeyPropertyName();
+		final ModelPart fkTargetDescriptor;
+		if ( fkTargetModelPartName != null ) {
+			fkTargetDescriptor = elementPersister.findSubPart( fkTargetModelPartName );
+		}
+		else {
+			fkTargetDescriptor = elementPersister.getIdentifierMapping();
+		}
+
+		final int jdbcTypeCount = fkTargetDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		assert jdbcTypeCount == elementColumnNames.length;
+
+		if ( jdbcTypeCount == 1 ) {
+			final BasicValuedModelPart fkModelPartType = (BasicValuedModelPart) fkTargetDescriptor;
+			return new ComparisonPredicate(
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
+							sqlAstProcessingState -> new ColumnReference(
+									lhs,
+									elementColumnNames[0],
+									fkModelPartType.getJdbcMapping(),
+									sessionFactory
+							)
+					),
+					ComparisonOperator.EQUAL,
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
+							sqlAstProcessingState -> new ColumnReference(
+									rhs,
+									fkModelPartType.getMappedColumnExpression(),
+									fkModelPartType.getJdbcMapping(),
+									sessionFactory
+							)
+					)
+			);
+		}
+		else {
+			// todo (6.0) : tuple or disjunction?
+			//		for now use a tuple - its easier to build, even though disjunction is more universally supported at DB level
+			final java.util.List<JdbcMapping> jdbcMappings = new ArrayList<>( jdbcTypeCount );
+			final SqlTuple.Builder comparisonRhsBuilder = new SqlTuple.Builder( fkTargetDescriptor, jdbcTypeCount );
+			fkTargetDescriptor.visitColumns(
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
+						assert rhs.getTableExpression().equals( containingTableExpression );
+						jdbcMappings.add( jdbcMapping );
+						comparisonRhsBuilder.addSubExpression(
+								sqlExpressionResolver.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
+										sqlAstProcessingState -> new ColumnReference(
+												rhs,
+												columnExpression,
+												jdbcMapping,
+												sessionFactory
+										)
+								)
+						);
+					}
+			);
+			final SqlTuple comparisonRhs = comparisonRhsBuilder.buildTuple();
+
+			final SqlTuple.Builder comparisonLhsBuilder = new SqlTuple.Builder( fkTargetDescriptor, jdbcTypeCount );
+			for ( int i = 0; i < elementColumnNames.length; i++ ) {
+				final String lhsColumnName = elementColumnNames[i];
+				final JdbcMapping jdbcMapping = jdbcMappings.get( i );
+				comparisonLhsBuilder.addSubExpression(
+						sqlExpressionResolver.resolveSqlExpression(
+								SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
+								sqlAstProcessingState -> new ColumnReference(
+										lhs,
+										lhsColumnName,
+										jdbcMapping,
+										sessionFactory
+								)
+						)
+				);
+			}
+			final SqlTuple comparisionLhs = comparisonLhsBuilder.buildTuple();
+
+			return new ComparisonPredicate( comparisionLhs, ComparisonOperator.EQUAL, comparisonRhs );
+		}
 	}
 
 	@Override

@@ -129,6 +129,15 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		this.list = (List) persister.getCollectionType().instantiate( anticipatedSize );
 	}
 
+	public void load(int index, Object element) {
+		assert isInitializing();
+		// todo (6.0) : we need to account for base - but it is not exposed from collection descriptor nor attribute
+		for ( int i = list.size(); i <= index; ++i ) {
+			list.add( i, null );
+		}
+		list.set( index, element );
+	}
+
 	@Override
 	public boolean isWrapper(Object collection) {
 		return list==collection;

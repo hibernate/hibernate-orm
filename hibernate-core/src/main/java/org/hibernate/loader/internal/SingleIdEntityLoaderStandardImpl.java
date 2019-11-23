@@ -6,7 +6,9 @@
  */
 package org.hibernate.loader.internal;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.LockMode;
@@ -16,7 +18,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.InternalFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * Standard implementation of SingleIdEntityLoader
@@ -43,6 +46,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	@Override
 	public void prepare() {
 		// see `org.hibernate.persister.entity.AbstractEntityPersister#createLoaders`
+		//		we should pre-load a few - maybe LockMode.NONE and LockMode.READ
 
 	}
 
@@ -138,20 +142,26 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LockOptions lockOptions,
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
-		final MetamodelSelectBuilderProcess.SqlAstDescriptor sqlAstDescriptor = MetamodelSelectBuilderProcess.createSelect(
-				sessionFactory,
+
+		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+
+		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
 				getLoadable(),
+				// null here means to select everything
 				null,
 				getLoadable().getIdentifierMapping(),
 				null,
 				1,
 				queryInfluencers,
-				lockOptions
+				lockOptions,
+				jdbcParameters::add,
+				sessionFactory
 		);
 
 		return new SingleIdLoadPlan<>(
 				getLoadable().getIdentifierMapping(),
-				sqlAstDescriptor
+				sqlAst,
+				jdbcParameters
 		);
 	}
 }

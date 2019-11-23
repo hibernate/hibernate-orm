@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 
 /**
@@ -46,6 +47,11 @@ public class SqlTuple implements Expression {
 
 		public Builder(MappingModelExpressable valueMapping) {
 			this.valueMapping = valueMapping;
+		}
+
+		public Builder(MappingModelExpressable valueMapping, int jdbcTypeCount) {
+			this( valueMapping );
+			expressions = new ArrayList<>( jdbcTypeCount );
 		}
 
 		public void addSubExpression(Expression expression) {

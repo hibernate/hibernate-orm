@@ -544,4 +544,12 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 
+	public void load(Object identifier, Object element) {
+		assert isInitializing();
+		Object old = identifiers.put( values.size(), identifier );
+		if ( old == null ) {
+			//maintain correct duplication if loaded in a cartesian product
+			values.add( element );
+		}
+	}
 }

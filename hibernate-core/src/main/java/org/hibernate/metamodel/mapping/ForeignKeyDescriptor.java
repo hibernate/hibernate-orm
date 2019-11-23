@@ -11,6 +11,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -26,6 +27,13 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	Predicate generateJoinPredicate(
 			TableGroup lhs,
 			TableGroup tableGroup,
+			JoinType joinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext);
+
+	Predicate generateJoinPredicate(
+			TableReference lhs,
+			TableReference rhs,
 			JoinType joinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);

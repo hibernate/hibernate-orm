@@ -14,7 +14,8 @@ import org.hibernate.sql.results.spi.Fetchable;
 public interface CollectionPart extends ModelPart, Fetchable {
 	enum Nature {
 		ELEMENT( "{element}" ),
-		INDEX( "{index}" );
+		INDEX( "{index}" ),
+		ID( "{collection-id}" );
 
 		private final String name;
 
@@ -27,11 +28,22 @@ public interface CollectionPart extends ModelPart, Fetchable {
 		}
 
 		public static Nature fromName(String name) {
-			if ( ELEMENT.name.equals( name ) ) {
+			if ( "key".equals( name ) || "{key}".equals( name )
+					|| "keys".equals( name ) || "{keys}".equals( name )
+					|| "index".equals( name ) || "{index}".equals( name )
+					|| "indices".equals( name ) || "{indices}".equals( name ) ) {
+				return INDEX;
+			}
+
+			if ( "element".equals( name ) || "{element}".equals( name )
+					|| "elements".equals( name ) || "{elements}".equals( name )
+					|| "value".equals( name ) || "{value}".equals( name )
+					|| "values".equals( name ) || "{values}".equals( name ) ) {
 				return ELEMENT;
 			}
-			else if ( INDEX.name.equals( name ) ) {
-				return INDEX;
+
+			if ( ID.name.equals( name ) ) {
+				return ID;
 			}
 
 			throw new IllegalArgumentException(

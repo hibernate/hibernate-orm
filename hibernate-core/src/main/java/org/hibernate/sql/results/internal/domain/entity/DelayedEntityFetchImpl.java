@@ -24,7 +24,7 @@ import org.hibernate.sql.results.spi.Initializer;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class DelayedEntityFetchImpl extends AbstractEntityFecth {
+public class DelayedEntityFetchImpl extends AbstractEntityFetch {
 
 	private final DomainResult result;
 

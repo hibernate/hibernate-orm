@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.spi;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
@@ -17,9 +18,11 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @author Steve Ebersole
  */
 public interface Initializer {
-	Object getInitializedInstance();
-
 	NavigablePath getNavigablePath();
+
+	ModelPart getInitializedPart();
+
+	Object getInitializedInstance();
 
 	/**
 	 * Step 1 - Resolve the key value for this initializer for the current

@@ -661,6 +661,11 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return super.hashCode();
 	}
 
+	public void load(Object element) {
+		assert isInitializing();
+		bag.add( element );
+	}
+
 	final class Clear implements DelayedOperation {
 		@Override
 		public void operate() {

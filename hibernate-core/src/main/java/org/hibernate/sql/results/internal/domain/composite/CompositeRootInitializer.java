@@ -9,7 +9,7 @@ package org.hibernate.sql.results.internal.domain.composite;
 import java.util.function.Consumer;
 
 import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.CompositeResultMappingNode;
+import org.hibernate.sql.results.spi.CompositeResultNode;
 import org.hibernate.sql.results.spi.Initializer;
 
 /**
@@ -17,7 +17,7 @@ import org.hibernate.sql.results.spi.Initializer;
  */
 public class CompositeRootInitializer extends AbstractCompositeInitializer {
 	public CompositeRootInitializer(
-			CompositeResultMappingNode resultDescriptor,
+			CompositeResultNode resultDescriptor,
 			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super( resultDescriptor, null, initializerConsumer, creationState );

@@ -18,7 +18,7 @@ import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParentAccess;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeInitializer;
-import org.hibernate.sql.results.spi.CompositeResultMappingNode;
+import org.hibernate.sql.results.spi.CompositeResultNode;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParentAccess;
@@ -42,7 +42,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractCompositeInitializer(
-			CompositeResultMappingNode resultDescriptor,
+			CompositeResultNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
 			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
@@ -69,7 +69,7 @@ public abstract class AbstractCompositeInitializer extends AbstractFetchParentAc
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getInitializingModelPart() {
+	public EmbeddableValuedModelPart getInitializedPart() {
 		return embeddedModelPartDescriptor;
 	}
 

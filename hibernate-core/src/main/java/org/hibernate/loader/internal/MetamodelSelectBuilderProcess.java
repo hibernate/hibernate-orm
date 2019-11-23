@@ -52,30 +52,26 @@ import org.jboss.logging.Logger;
 public class MetamodelSelectBuilderProcess {
 	private static final Logger log = Logger.getLogger( MetamodelSelectBuilderProcess.class );
 
-	public interface SqlAstDescriptor {
-		SelectStatement getSqlAst();
-		List<JdbcParameter> getJdbcParameters();
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public static SqlAstDescriptor createSelect(
-			SessionFactoryImplementor sessionFactory,
+	public static SelectStatement createSelect(
 			Loadable loadable,
 			List<ModelPart> partsToSelect,
 			ModelPart restrictedPart,
-			DomainResult domainResult,
+			DomainResult cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
 		final MetamodelSelectBuilderProcess process = new MetamodelSelectBuilderProcess(
 				sessionFactory,
 				loadable,
 				partsToSelect,
 				restrictedPart,
-				domainResult,
+				cachedDomainResult,
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
-				lockOptions
+				lockOptions,
+				jdbcParameterConsumer
 		);
 
 		return process.execute();
@@ -85,10 +81,11 @@ public class MetamodelSelectBuilderProcess {
 	private final Loadable loadable;
 	private final List<ModelPart> partsToSelect;
 	private final ModelPart restrictedPart;
-	private final DomainResult domainResult;
+	private final DomainResult cachedDomainResult;
 	private final int numberOfKeysToLoad;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
+	private final Consumer<JdbcParameter> jdbcParameterConsumer;
 
 
 	private MetamodelSelectBuilderProcess(
@@ -96,21 +93,23 @@ public class MetamodelSelectBuilderProcess {
 			Loadable loadable,
 			List<ModelPart> partsToSelect,
 			ModelPart restrictedPart,
-			DomainResult domainResult,
+			DomainResult cachedDomainResult,
 			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer) {
 		this.creationContext = creationContext;
 		this.loadable = loadable;
 		this.partsToSelect = partsToSelect;
 		this.restrictedPart = restrictedPart;
-		this.domainResult = domainResult;
+		this.cachedDomainResult = cachedDomainResult;
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
+		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
 
-	private SqlAstDescriptor execute() {
+	private SelectStatement execute() {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
 		final List<DomainResult> domainResults;
 
@@ -123,7 +122,7 @@ public class MetamodelSelectBuilderProcess {
 				creationContext
 		);
 
-		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getPathName() );
+		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
@@ -158,9 +157,9 @@ public class MetamodelSelectBuilderProcess {
 			//		allows re-use as they can be re-used to save on memory - they
 			//		do not share state between
 			final DomainResult domainResult;
-			if ( this.domainResult != null ) {
+			if ( this.cachedDomainResult != null ) {
 				// used the one passed to the constructor
-				domainResult = this.domainResult;
+				domainResult = this.cachedDomainResult;
 			}
 			else {
 				// create one
@@ -179,22 +178,17 @@ public class MetamodelSelectBuilderProcess {
 				creationContext.getDomainModel().getTypeConfiguration()
 		);
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>( numberOfKeyColumns * numberOfKeysToLoad );
-
 		applyKeyRestriction(
 				rootQuerySpec,
 				rootNavigablePath,
 				rootTableGroup,
 				restrictedPart,
 				numberOfKeyColumns,
-				jdbcParameters::add,
+				jdbcParameterConsumer,
 				sqlAstCreationState
 		);
 
-		return new SqlAstDescriptorImpl(
-				new SelectStatement( rootQuerySpec, domainResults ),
-				jdbcParameters
-		);
+		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
 	private void applyKeyRestriction(
@@ -205,8 +199,6 @@ public class MetamodelSelectBuilderProcess {
 			int numberOfKeyColumns,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState) {
-		final NavigablePath keyPath = rootNavigablePath.append( keyPart.getPartName() );
-
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		if ( numberOfKeyColumns == 1 ) {
@@ -362,28 +354,6 @@ public class MetamodelSelectBuilderProcess {
 		referencedMappingContainer.visitFetchables( processor, null );
 
 		return fetches;
-	}
-
-	static class SqlAstDescriptorImpl implements SqlAstDescriptor {
-		private final SelectStatement sqlAst;
-		private final List<JdbcParameter> jdbcParameters;
-
-		public SqlAstDescriptorImpl(
-				SelectStatement sqlAst,
-				List<JdbcParameter> jdbcParameters) {
-			this.sqlAst = sqlAst;
-			this.jdbcParameters = jdbcParameters;
-		}
-
-		@Override
-		public SelectStatement getSqlAst() {
-			return sqlAst;
-		}
-
-		@Override
-		public List<JdbcParameter> getJdbcParameters() {
-			return jdbcParameters;
-		}
 	}
 }
 

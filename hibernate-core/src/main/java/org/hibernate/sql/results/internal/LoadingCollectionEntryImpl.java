@@ -38,7 +38,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		this.key = key;
 		this.collectionInstance = collectionInstance;
 
-		collectionInstance.beforeInitialize( getCollectionDescriptor(), -1 );
+		collectionInstance.beforeInitialize( collectionDescriptor, -1 );
 		collectionInstance.beginRead();
 	}
 

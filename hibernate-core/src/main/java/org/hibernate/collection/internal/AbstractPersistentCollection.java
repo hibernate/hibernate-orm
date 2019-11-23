@@ -615,6 +615,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		this.initialized = true;
 	}
 
+	protected boolean isInitializing() {
+		return initializing;
+	}
+
 	protected final void setDirectlyAccessible(boolean directlyAccessible) {
 		this.directlyAccessible = directlyAccessible;
 	}

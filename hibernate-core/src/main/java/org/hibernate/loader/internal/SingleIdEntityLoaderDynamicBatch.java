@@ -6,7 +6,9 @@
  */
 package org.hibernate.loader.internal;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
@@ -22,6 +24,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
@@ -83,15 +86,19 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 			log.debugf( "Batch loading entity [%s] : %s", getLoadable().getEntityName(), idsToLoad );
 		}
 
-		final MetamodelSelectBuilderProcess.SqlAstDescriptor sqlAstDescriptor = MetamodelSelectBuilderProcess.createSelect(
-				session.getFactory(),
+		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+
+		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
 				getLoadable(),
+				// null here means to select everything
 				null,
 				getLoadable().getIdentifierMapping(),
 				null,
 				numberOfIds,
 				session.getLoadQueryInfluencers(),
-				lockOptions
+				lockOptions,
+				jdbcParameters::add,
+				session.getFactory()
 		);
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
@@ -99,14 +106,14 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAstDescriptor.getSqlAst() );
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				getLoadable().getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
 		);
 
 		for ( int i = 0; i < numberOfIds; i++ ) {
-			final Iterator<JdbcParameter> paramItr = sqlAstDescriptor.getJdbcParameters().iterator();
+			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 
 			getLoadable().getIdentifierMapping().visitJdbcValues(
 					idsToLoad[i],

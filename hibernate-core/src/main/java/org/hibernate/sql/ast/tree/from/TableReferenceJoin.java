@@ -22,7 +22,7 @@ public class TableReferenceJoin implements SqlAstNode {
 	private final Predicate predicate;
 
 	public TableReferenceJoin(JoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
-		this.joinType = joinType;
+		this.joinType = joinType == null ? JoinType.LEFT : joinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
 

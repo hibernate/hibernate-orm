@@ -14,7 +14,7 @@ import org.hibernate.query.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public interface CompositeResultMappingNode extends ResultSetMappingNode, FetchParent {
+public interface CompositeResultNode extends ResultSetMappingNode, FetchParent {
 	@Override
 	default NavigablePath getNavigablePath() {
 		return null;

@@ -9,7 +9,6 @@ package org.hibernate.sql.results.internal.domain.entity;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
@@ -23,16 +22,16 @@ import org.hibernate.sql.results.spi.Initializer;
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractEntityFecth implements Fetch {
+public abstract class AbstractEntityFetch implements Fetch {
 	private final FetchParent fetchParent;
-	private final SingularAssociationAttributeMapping fetchedAttribute;
+	private final Fetchable fetchedAttribute;
 	private final NavigablePath navigablePath;
 	private final boolean nullable;
 	private final LockMode lockMode;
 
-	public AbstractEntityFecth(
+	public AbstractEntityFetch(
 			FetchParent fetchParent,
-			SingularAssociationAttributeMapping fetchedAttribute,
+			Fetchable fetchedAttribute,
 			NavigablePath navigablePath,
 			boolean nullable,
 			LockMode lockMode) {

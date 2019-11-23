@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.internal.domain.collection;
 
-import java.io.Serializable;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -143,8 +142,8 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 		}
 
 		@Override
-		public CollectionPersister getInitializingCollectionDescriptor() {
-			return fetchedMapping.getCollectionDescriptor();
+		public PluralAttributeMapping getInitializedPart() {
+			return fetchedMapping;
 		}
 
 		@Override

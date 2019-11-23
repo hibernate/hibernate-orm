@@ -7,6 +7,8 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
@@ -16,7 +18,12 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @author Steve Ebersole
  */
 public interface CollectionInitializer extends Initializer {
-	CollectionPersister getInitializingCollectionDescriptor();
+	@Override
+	PluralAttributeMapping getInitializedPart();
+
+	default CollectionPersister getInitializingCollectionDescriptor() {
+		return getInitializedPart().getCollectionDescriptor();
+	}
 
 	PersistentCollection getCollectionInstance();
 

@@ -30,6 +30,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	public AbstractFetchParent(FetchableContainer fetchContainer, NavigablePath navigablePath) {
 		this.fetchContainer = fetchContainer;
 		this.navigablePath = navigablePath;
+		assert fetchContainer instanceof ManagedMappingType;
 	}
 
 	protected void afterInitialize(DomainResultCreationState creationState) {

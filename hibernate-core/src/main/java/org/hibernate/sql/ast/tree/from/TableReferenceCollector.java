@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.function.BiFunction;
+
 import org.hibernate.sql.ast.JoinType;
 
 /**
@@ -15,6 +17,8 @@ import org.hibernate.sql.ast.JoinType;
  * @author Steve Ebersole
  */
 public interface TableReferenceCollector {
+	void applyPrimaryJoinProducer(BiFunction<TableReference, TableReference, TableReferenceJoin> primaryJoinProducer);
+
 	void applyPrimaryReference(TableReference tableReference);
 
 	/**

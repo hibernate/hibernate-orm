@@ -9,12 +9,17 @@ package org.hibernate.sql.results.internal.domain.collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
+import org.hibernate.LockMode;
+import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
+import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -29,31 +34,43 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EagerCollectionFetch extends CollectionFetch implements FetchParent {
-	private final DomainResult fkResult;
+	private final DomainResult keyContainerResult;
+	private final DomainResult keyCollectionResult;
 
 	private final Fetch elementFetch;
 	private final Fetch indexFetch;
-	private final DomainResult identifierResult;
 
 	private final List<Fetch> fetches;
+
+	private final CollectionInitializerProducer initializerProducer;
 
 	public EagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
-			DomainResult fkResult,
 			boolean nullable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		super( fetchedPath, fetchedAttribute, nullable, fetchParent );
-		this.fkResult = fkResult;
 
-		final CollectionIdentifierDescriptor identifierDescriptor = fetchedAttribute.getIdentifierDescriptor();
-		if ( identifierDescriptor == null ) {
-			this.identifierResult = null;
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final TableGroup collectionTableGroup = fromClauseAccess.getTableGroup( fetchedPath );
+		final NavigablePath parentPath = fetchedPath.getParent();
+		final TableGroup parentTableGroup = parentPath == null ? null : fromClauseAccess.findTableGroup( parentPath );
+
+		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
+		if ( parentTableGroup != null ) {
+			// join fetch
+			keyContainerResult = keyDescriptor.createDomainResult( fetchedPath, parentTableGroup, creationState );
+			keyCollectionResult = keyDescriptor.createDomainResult( fetchedPath, collectionTableGroup, creationState );
 		}
 		else {
-			final TableGroup collectionTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().getTableGroup( fetchedPath );
-			this.identifierResult = identifierDescriptor.createDomainResult( fetchedPath, collectionTableGroup, creationState );
+			// select fetch
+			// todo (6.0) : we could potentially leverage batch fetching for performance
+			keyContainerResult = keyDescriptor.createDomainResult( fetchedPath, collectionTableGroup, creationState );
+
+			// use null for `keyCollectionResult`... the initializer will see that as trigger to use
+			// the assembled container-key value as the collection-key value.
+			keyCollectionResult = null;
 		}
 
 		fetches = creationState.visitFetches( this );
@@ -67,6 +84,18 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			indexFetch = null;
 			elementFetch = fetches.get( 0 );
 		}
+
+		final CollectionSemantics collectionSemantics = getFetchedMapping().getCollectionDescriptor().getCollectionSemantics();
+		initializerProducer = collectionSemantics.createInitializerProducer(
+				fetchedPath,
+				fetchedAttribute,
+				fetchParent,
+				nullable,
+				null,
+				// todo (6.0) : we need to propagate these lock modes
+				LockMode.READ,
+				creationState
+		);
 	}
 
 	@Override
@@ -74,17 +103,36 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		return new EagerCollectionAssembler(
-				getNavigablePath(),
-				getFetchedMapping(),
-				fkResult,
-				elementFetch,
-				indexFetch,
-				identifierResult,
-				parentAccess,
+		final DomainResultAssembler keyContainerAssembler = keyContainerResult.createResultAssembler(
 				collector,
 				creationState
 		);
+
+		final DomainResultAssembler keyCollectionAssembler;
+		if ( keyCollectionResult == null ) {
+			keyCollectionAssembler = null;
+		}
+		else {
+			keyCollectionAssembler = keyCollectionResult.createResultAssembler(
+					collector,
+					creationState
+			);
+		}
+
+		final CollectionInitializer initializer = initializerProducer.produceInitializer(
+				getNavigablePath(),
+				getFetchedMapping(),
+				parentAccess,
+				null,
+				keyContainerAssembler,
+				keyCollectionAssembler,
+				collector,
+				creationState
+		);
+
+		collector.accept( initializer );
+
+		return new EagerCollectionAssembler( getFetchedMapping(), initializer );
 	}
 
 	@Override

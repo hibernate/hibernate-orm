@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.CompositeResultMappingNode;
+import org.hibernate.sql.results.spi.CompositeResultNode;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
@@ -29,7 +29,7 @@ import org.hibernate.sql.results.spi.Initializer;
 /**
  * @author Steve Ebersole
  */
-public class CompositeFetch extends AbstractFetchParent implements CompositeResultMappingNode, Fetch {
+public class CompositeFetch extends AbstractFetchParent implements CompositeResultNode, Fetch {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final boolean nullable;
@@ -41,7 +41,7 @@ public class CompositeFetch extends AbstractFetchParent implements CompositeResu
 			FetchTiming fetchTiming,
 			boolean nullable,
 			DomainResultCreationState creationState) {
-		super( embeddedPartDescriptor, navigablePath );
+		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -50,7 +50,7 @@ public class CompositeFetch extends AbstractFetchParent implements CompositeResu
 		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
 				np -> {
-					final TableGroupJoin tableGroupJoin = getFetchContainer().createTableGroupJoin(
+					final TableGroupJoin tableGroupJoin = getReferencedMappingContainer().createTableGroupJoin(
 							getNavigablePath(),
 							creationState.getSqlAstCreationState()
 									.getFromClauseAccess()
@@ -77,23 +77,23 @@ public class CompositeFetch extends AbstractFetchParent implements CompositeResu
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getFetchContainer() {
-		return (EmbeddableValuedModelPart) super.getFetchContainer();
+	public EmbeddableMappingType getFetchContainer() {
+		return (EmbeddableMappingType) super.getFetchContainer();
 	}
 
 	@Override
 	public EmbeddableValuedModelPart getReferencedMappingContainer() {
-		return getFetchContainer();
+		return getFetchContainer().getEmbeddedValueMapping();
 	}
 
 	@Override
 	public Fetchable getFetchedMapping() {
-		return getFetchContainer();
+		return getReferencedMappingContainer();
 	}
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return getFetchContainer().getEmbeddableTypeDescriptor();
+		return getFetchContainer();
 	}
 
 	@Override

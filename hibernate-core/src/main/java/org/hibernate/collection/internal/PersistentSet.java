@@ -144,6 +144,12 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 		this.set = (Set) persister.getCollectionType().instantiate( anticipatedSize );
 	}
 
+	@SuppressWarnings("unchecked")
+	public void load(Object element) {
+		assert isInitializing();
+		tempList.add( element );
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)

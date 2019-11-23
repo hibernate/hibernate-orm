@@ -55,7 +55,7 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 	}
 
 	@Override
-	default String getPathName() {
+	default String getRootPathName() {
 		return getEntityName();
 	}
 

@@ -27,7 +27,7 @@ public class SubselectFetch {
 
 	private static final String FROM_STRING = " from ";
 
-	private final Set resultingEntityKeys;
+	private final Set<EntityKey> resultingEntityKeys;
 	private final String queryString;
 	private final String alias;
 	private final Loadable loadable;
@@ -58,7 +58,7 @@ public class SubselectFetch {
 			final String alias,
 			final Loadable loadable,
 			final QueryParameters queryParameters,
-			final Set resultingEntityKeys,
+			final Set<EntityKey> resultingEntityKeys,
 			final Map namedParameterLocMap) {
 		this(
 				createSubselectFetchQueryFragment( queryParameters ),
@@ -90,7 +90,7 @@ public class SubselectFetch {
 			final String alias,
 			final Loadable loadable,
 			final QueryParameters queryParameters,
-			final Set resultingEntityKeys,
+			final Set<EntityKey> resultingEntityKeys,
 			final Map namedParameterLocMap) {
 		this.resultingEntityKeys = resultingEntityKeys;
 		this.queryParameters = queryParameters;
@@ -168,7 +168,7 @@ public class SubselectFetch {
 	/**
 	 * Get the Set of EntityKeys
 	 */
-	public Set getResult() {
+	public Set<EntityKey> getResult() {
 		return resultingEntityKeys;
 	}
 

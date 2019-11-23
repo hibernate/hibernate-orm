@@ -48,7 +48,7 @@ public abstract class AbstractEntityResultNode extends AbstractFetchParent imple
 			NavigablePath navigablePath,
 			EntityMappingType targetType,
 			DomainResultCreationState creationState) {
-		super( referencedModelPart, navigablePath );
+		super( referencedModelPart.getEntityMappingType(), navigablePath );
 		this.referencedModelPart = referencedModelPart;
 		this.lockMode = lockMode;
 		this.targetType = targetType;

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
+import org.hibernate.loader.spi.Loadable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.spi.Fetchable;
@@ -17,13 +18,20 @@ import org.hibernate.sql.results.spi.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapping
-		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer {
+		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer, Loadable {
 
 	CollectionPersister getCollectionDescriptor();
 
 	ForeignKeyDescriptor getKeyDescriptor();
 
 	CollectionPart getIndexDescriptor();
+
+	interface IndexMetadata {
+		CollectionPart getIndexDescriptor();
+		int getListIndexBase();
+	}
+
+	IndexMetadata getIndexMetadata();
 
 	CollectionPart getElementDescriptor();
 

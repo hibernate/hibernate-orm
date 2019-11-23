@@ -29,6 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
 import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
@@ -39,12 +40,9 @@ import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -68,20 +66,23 @@ public class MappedFetchTests {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
 		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( RootEntity.class );
-		final MetamodelSelectBuilderProcess.SqlAstDescriptor sqlAstDescriptor = MetamodelSelectBuilderProcess.createSelect(
-				sessionFactory,
+
+		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
 				rootEntityDescriptor,
 				null,
 				rootEntityDescriptor.getIdentifierMapping(),
 				null,
 				1,
 				LoadQueryInfluencers.NONE,
-				LockOptions.NONE
+				LockOptions.NONE,
+				jdbcParameter -> {
+				},
+				sessionFactory
 		);
 
-		assertThat( sqlAstDescriptor.getSqlAst().getDomainResultDescriptors().size(), is( 1 ) );
+		assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 
-		final DomainResult domainResult = sqlAstDescriptor.getSqlAst().getDomainResultDescriptors().get( 0 );
+		final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult entityResult = (EntityResult) domainResult;
@@ -105,7 +106,7 @@ public class MappedFetchTests {
 		assertThat( simpleEntitiesFetch, instanceOf( DelayedCollectionFetch.class ) );
 
 
-		final QuerySpec querySpec = sqlAstDescriptor.getSqlAst().getQuerySpec();
+		final QuerySpec querySpec = sqlAst.getQuerySpec();
 
 		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
 		assertThat( tableGroup.getModelPart(), is( rootEntityDescriptor ) );

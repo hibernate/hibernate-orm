@@ -32,6 +32,12 @@ public class StandardSortedMapSemantics extends AbstractMapSemantics<SortedMap<?
 	}
 
 	@Override
+	public Class<SortedMap<?, ?>> getCollectionJavaType() {
+		//noinspection unchecked
+		return (Class) SortedMap.class;
+	}
+
+	@Override
 	public TreeMap<?, ?> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {

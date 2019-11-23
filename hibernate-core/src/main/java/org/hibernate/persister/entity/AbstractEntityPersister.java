@@ -4552,15 +4552,14 @@ public abstract class AbstractEntityPersister
 
 	//Relational based Persisters should be content with this implementation
 	protected void createLoaders() {
-		// We load the entity loaders for the most common lock modes.
-
+		// create the entity loaders for the most common lock modes.
 		noneLockLoader = createEntityLoader( LockMode.NONE );
 		readLockLoader = createEntityLoader( LockMode.READ );
 
-
-		// The loaders for the other lock modes are lazily loaded and will later be stored in this map,
-		//		unless this setting is disabled
-		if ( ! factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled() ) {
+		// see if the user enabled delaying creation of the remaining loaders
+		final boolean delayCreationsEnabled = factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled();
+		if ( ! delayCreationsEnabled ) {
+			// the setting is disabled -> do the creations
 			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ, LockMode.WRITE ) ) ) {
 				loaders.put( lockMode, createEntityLoader( lockMode ) );
 			}
@@ -4568,7 +4567,6 @@ public abstract class AbstractEntityPersister
 
 
 		// And finally, create the internal merge and refresh load plans
-
 		loaders.put(
 				"merge",
 				new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() )
@@ -4715,7 +4713,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
-		return loadQueryInfluencers.getEffectiveEntityGraph().getGraph() != null;
+		if ( loadQueryInfluencers.getEffectiveEntityGraph().getGraph() == null ) {
+			return false;
+		}
+
+		return loadQueryInfluencers.getEffectiveEntityGraph().getGraph().appliesTo( getEntityName() );
 	}
 
 	@Override

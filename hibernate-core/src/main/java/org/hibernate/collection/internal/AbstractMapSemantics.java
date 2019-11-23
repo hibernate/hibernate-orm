@@ -12,12 +12,28 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
+import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.MapSemantics;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.internal.domain.collection.MapInitializerProducer;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSemantics<M> {
+	@Override
+	public Class<M> getCollectionJavaType() {
+		//noinspection unchecked
+		return (Class) Map.class;
+	}
+
 	@Override
 	public Iterator getKeyIterator(M rawMap) {
 		if ( rawMap == null ) {
@@ -59,5 +75,41 @@ public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSem
 		if ( rawMap != null ) {
 			rawMap.values().forEach( action );
 		}
+	}
+
+	@Override
+	public CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			LockMode lockMode,
+			DomainResultCreationState creationState) {
+		final TableGroup tableGroup = creationState.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.getTableGroup( navigablePath );
+		return new MapInitializerProducer(
+				attributeMapping,
+				selected,
+				attributeMapping.getIndexDescriptor().generateFetch(
+						fetchParent,
+						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
+						FetchTiming.IMMEDIATE,
+						selected,
+						lockMode,
+						null,
+						creationState
+				),
+				attributeMapping.getElementDescriptor().generateFetch(
+						fetchParent,
+						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
+						FetchTiming.IMMEDIATE,
+						selected,
+						lockMode,
+						null,
+						creationState
+				)
+		);
 	}
 }

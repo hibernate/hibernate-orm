@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal.domain;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.CollectionInitializer;
@@ -42,6 +43,11 @@ public class ArrayInitializer implements CollectionInitializer {
 			NavigablePath navigablePath) {
 		this.arrayDescriptor = arrayDescriptor;
 		this.navigablePath = navigablePath;
+	}
+
+	@Override
+	public PluralAttributeMapping getInitializedPart() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

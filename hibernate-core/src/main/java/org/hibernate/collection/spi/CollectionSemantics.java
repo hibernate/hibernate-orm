@@ -10,9 +10,14 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * Describes the semantics of a persistent collection such that Hibernate
@@ -29,6 +34,8 @@ public interface CollectionSemantics<C> {
 	 * Get the classification of collections described by this semantic
 	 */
 	CollectionClassification getCollectionClassification();
+
+	Class<C> getCollectionJavaType();
 
 	C instantiateRaw(
 			int anticipatedSize,
@@ -47,4 +54,16 @@ public interface CollectionSemantics<C> {
 	Iterator getElementIterator(C rawCollection);
 
 	void visitElements(C rawCollection, Consumer action);
+
+	/**
+	 * todo (6.0) : clean this contract up!
+	 */
+	CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			LockMode lockMode,
+			DomainResultCreationState creationState);
 }

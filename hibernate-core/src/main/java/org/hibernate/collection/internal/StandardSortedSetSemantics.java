@@ -33,6 +33,12 @@ public class StandardSortedSetSemantics extends AbstractSetSemantics<SortedSet<?
 	}
 
 	@Override
+	public Class<SortedSet<?>> getCollectionJavaType() {
+		//noinspection unchecked
+		return (Class) SortedSet.class;
+	}
+
+	@Override
 	public SortedSet instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {

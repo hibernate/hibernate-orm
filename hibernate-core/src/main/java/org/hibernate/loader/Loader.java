@@ -1047,10 +1047,12 @@ public abstract class Loader {
 		return false;
 	}
 
-	private static Set[] transpose(List keys) {
-		Set[] result = new Set[( (EntityKey[]) keys.get( 0 ) ).length];
+	private static Set<EntityKey>[] transpose(List<EntityKey[]> keys) {
+		//noinspection unchecked
+		final Set<EntityKey>[] result = new Set[ keys.get( 0 ).length ];
+
 		for ( int j = 0; j < result.length; j++ ) {
-			result[j] = new HashSet( keys.size() );
+			result[j] = new HashSet<>( keys.size() );
 			for ( Object key : keys ) {
 				result[j].add( ( (EntityKey[]) key )[j] );
 			}
@@ -1061,7 +1063,7 @@ public abstract class Loader {
 	private void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
 
-			Set[] keySets = transpose( keys );
+			Set<EntityKey>[] keySets = transpose( keys );
 
 			Map namedParameterLocMap = buildNamedParameterLocMap( queryParameters );
 

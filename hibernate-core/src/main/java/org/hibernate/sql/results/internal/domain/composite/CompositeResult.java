@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.internal.domain.AbstractFetchParent;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.CompositeResultMappingNode;
+import org.hibernate.sql.results.spi.CompositeResultNode;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class CompositeResult<T> extends AbstractFetchParent implements CompositeResultMappingNode, DomainResult<T> {
+public class CompositeResult<T> extends AbstractFetchParent implements CompositeResultNode, DomainResult<T> {
 	private final String resultVariable;
 
 	public CompositeResult(
@@ -35,7 +35,7 @@ public class CompositeResult<T> extends AbstractFetchParent implements Composite
 			EmbeddableValuedModelPart modelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( modelPart, navigablePath );
+		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
@@ -68,8 +68,8 @@ public class CompositeResult<T> extends AbstractFetchParent implements Composite
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getFetchContainer() {
-		return (EmbeddableValuedModelPart) super.getFetchContainer();
+	public EmbeddableMappingType getFetchContainer() {
+		return (EmbeddableMappingType) super.getFetchContainer();
 	}
 
 	@Override
@@ -79,12 +79,12 @@ public class CompositeResult<T> extends AbstractFetchParent implements Composite
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return getFetchContainer().getEmbeddableTypeDescriptor();
+		return getFetchContainer();
 	}
 
 	@Override
 	public EmbeddableValuedModelPart getReferencedMappingContainer() {
-		return getFetchContainer();
+		return getFetchContainer().getEmbeddedValueMapping();
 	}
 
 	@Override

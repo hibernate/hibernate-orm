@@ -10,26 +10,26 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.sql.results.spi.FetchParentAccess;
+import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.Initializer;
 
 /**
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityFetch extends AbstractEntityFecth {
+public class EntityFetch extends AbstractEntityFetch {
 
 	private final EntityResultImpl entityResult;
 
 	public EntityFetch(
 			FetchParent fetchParent,
-			SingularAssociationAttributeMapping fetchedAttribute,
+			Fetchable fetchedAttribute,
 			LockMode lockMode,
 			boolean nullable,
 			NavigablePath navigablePath,
@@ -38,7 +38,7 @@ public class EntityFetch extends AbstractEntityFecth {
 
 		entityResult = new EntityResultImpl(
 				navigablePath,
-				(EntityValuedModelPart) fetchedAttribute.getMappedTypeDescriptor(),
+				(EntityValuedModelPart) fetchedAttribute,
 				null,
 				creationState
 		);

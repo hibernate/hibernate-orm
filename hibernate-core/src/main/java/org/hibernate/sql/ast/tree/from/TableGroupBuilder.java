@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
@@ -29,6 +30,16 @@ public class TableGroupBuilder implements TableReferenceCollector {
 		return new TableGroupBuilder( path, producer, lockMode, sqlAliasBase, sessionFactory );
 	}
 
+	public static TableGroupBuilder builder(
+			NavigablePath path,
+			TableGroupProducer producer,
+			LockMode lockMode,
+			SqlAliasBase sqlAliasBase,
+			BiFunction<TableReference, TableReference,TableReferenceJoin> primaryJoinProducer,
+			SessionFactoryImplementor sessionFactory) {
+		return new TableGroupBuilder( path, producer, lockMode, sqlAliasBase, primaryJoinProducer, sessionFactory );
+	}
+
 	private final NavigablePath path;
 	private final TableGroupProducer producer;
 	private final SessionFactoryImplementor sessionFactory;
@@ -36,7 +47,7 @@ public class TableGroupBuilder implements TableReferenceCollector {
 	private final SqlAliasBase sqlAliasBase;
 	private final LockMode lockMode;
 
-	private final Function<TableReference,TableReferenceJoin> primaryJoinProducer;
+	private BiFunction<TableReference, TableReference,TableReferenceJoin> primaryJoinProducer;
 
 	private TableReference primaryTableReference;
 	private TableReference secondaryTableLhs;
@@ -57,7 +68,7 @@ public class TableGroupBuilder implements TableReferenceCollector {
 			TableGroupProducer producer,
 			LockMode lockMode,
 			SqlAliasBase sqlAliasBase,
-			Function<TableReference,TableReferenceJoin> primaryJoinProducer,
+			BiFunction<TableReference, TableReference,TableReferenceJoin> primaryJoinProducer,
 			SessionFactoryImplementor sessionFactory) {
 		this.path = path;
 		this.producer = producer;
@@ -65,6 +76,11 @@ public class TableGroupBuilder implements TableReferenceCollector {
 		this.sqlAliasBase = sqlAliasBase;
 		this.primaryJoinProducer = primaryJoinProducer;
 		this.sessionFactory = sessionFactory;
+	}
+
+	@Override
+	public void applyPrimaryJoinProducer(BiFunction<TableReference, TableReference, TableReferenceJoin> primaryJoinProducer) {
+		this.primaryJoinProducer = primaryJoinProducer;
 	}
 
 	public TableGroup build() {
@@ -87,9 +103,7 @@ public class TableGroupBuilder implements TableReferenceCollector {
 	public void applyPrimaryReference(TableReference tableReference) {
 		if ( primaryTableReference != null ) {
 			assert primaryJoinProducer != null;
-
-			addTableReferenceJoin( primaryJoinProducer.apply( tableReference ) );
-
+			addTableReferenceJoin( primaryJoinProducer.apply( primaryTableReference, tableReference ) );
 		}
 		else {
 			primaryTableReference = tableReference;

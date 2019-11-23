@@ -14,6 +14,10 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.internal.domain.collection.EntityCollectionPartTableGroup;
+import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -70,6 +74,32 @@ public class EntityCollectionPart implements CollectionPart, EntityValuedModelPa
 			boolean selected,
 			LockMode lockMode,
 			String resultVariable,
+			DomainResultCreationState creationState) {
+		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+				fetchablePath,
+				np -> {
+					final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
+							.getFromClauseAccess()
+							.getTableGroup( fetchablePath.getParent() );
+					return new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, this );
+				}
+		);
+		return new EntityFetch( fetchParent, this, lockMode, selected, fetchablePath, creationState );
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

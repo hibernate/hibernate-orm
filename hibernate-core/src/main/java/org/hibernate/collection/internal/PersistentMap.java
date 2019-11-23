@@ -145,6 +145,11 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		this.map = (Map) persister.getCollectionType().instantiate( anticipatedSize );
 	}
 
+	public void load(Object key, Object value) {
+		assert isInitializing();
+		map.put( key, value );
+	}
+
 	@Override
 	public int size() {
 		return readSize() ? getCachedSize() : map.size();

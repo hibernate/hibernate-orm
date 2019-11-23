@@ -10,11 +10,21 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
+import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.internal.domain.collection.ArrayInitializerProducer;
+import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.spi.FetchParent;
 
 /**
  * CollectionSemantics implementation for arrays
@@ -33,6 +43,11 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 	@Override
 	public CollectionClassification getCollectionClassification() {
 		return CollectionClassification.ARRAY;
+	}
+
+	@Override
+	public Class<Object[]> getCollectionJavaType() {
+		return Object[].class;
 	}
 
 	@Override
@@ -78,6 +93,41 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 		for ( Object element : array ) {
 			action.accept( element );
 		}
+	}
 
+	@Override
+	public CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			LockMode lockMode,
+			DomainResultCreationState creationState) {
+		final TableGroup tableGroup = creationState.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.getTableGroup( navigablePath );
+		return new ArrayInitializerProducer(
+				attributeMapping,
+				selected,
+				attributeMapping.getIndexDescriptor().generateFetch(
+						fetchParent,
+						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
+						FetchTiming.IMMEDIATE,
+						selected,
+						lockMode,
+						null,
+						creationState
+				),
+				attributeMapping.getElementDescriptor().generateFetch(
+						fetchParent,
+						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
+						FetchTiming.IMMEDIATE,
+						selected,
+						lockMode,
+						null,
+						creationState
+				)
+		);
 	}
 }

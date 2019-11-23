@@ -763,6 +763,7 @@ public class MappingModelCreationHelper {
 
 				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
 						collectionDescriptor,
+						tableExpression,
 						identifierColumnName,
 						(BasicType) loadableCollection.getIdentifierType()
 				);

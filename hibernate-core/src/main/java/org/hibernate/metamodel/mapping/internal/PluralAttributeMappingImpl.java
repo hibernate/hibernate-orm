@@ -7,12 +7,15 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.List;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -26,20 +29,22 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.internal.domain.collection.CollectionDomainResult;
 import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
 import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
+import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
@@ -48,6 +53,10 @@ import org.hibernate.sql.results.spi.FetchParent;
  * @author Steve Ebersole
  */
 public class PluralAttributeMappingImpl extends AbstractAttributeMapping implements PluralAttributeMapping {
+	public interface Aware {
+		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
+	}
+
 	private final int stateArrayPosition;
 	private final PropertyAccess propertyAccess;
 	private final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess;
@@ -64,6 +73,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final String separateCollectionTable;
 
 	private final String sqlAliasStem;
+
+	private final IndexMetadata indexMetadata;
 
 	@SuppressWarnings("WeakerAccess")
 	public PluralAttributeMappingImpl(
@@ -101,6 +112,33 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		else {
 			separateCollectionTable = ( (Joinable) collectionDescriptor ).getTableName();
 		}
+
+		indexMetadata = new IndexMetadata() {
+			final int baseIndex;
+
+			{
+				if ( bootDescriptor instanceof List ) {
+					baseIndex = ( (List) bootDescriptor ).getBaseIndex();
+				}
+				else {
+					baseIndex = -1;
+				}
+
+			}
+
+			@Override
+			public CollectionPart getIndexDescriptor() {
+				return indexDescriptor;
+			}
+
+			@Override
+			public int getListIndexBase() {
+				return baseIndex;
+			}
+		};
+		if ( collectionDescriptor instanceof Aware ) {
+			( (Aware) collectionDescriptor ).injectAttributeMapping( this );
+		}
 	}
 
 	@Override
@@ -126,6 +164,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	@Override
 	public CollectionPart getIndexDescriptor() {
 		return indexDescriptor;
+	}
+
+	@Override
+	public IndexMetadata getIndexMetadata() {
+		return indexMetadata;
 	}
 
 	@Override
@@ -161,6 +204,22 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		return fetchStrategy;
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.getTableGroup( navigablePath );
+
+		assert collectionTableGroup != null;
+
+		//noinspection unchecked
+		return new CollectionDomainResult( navigablePath, this, resultVariable, tableGroup, creationState );
 	}
 
 	@Override
@@ -201,7 +260,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			return new EagerCollectionFetch(
 					fetchablePath,
 					this,
-					fkDescriptor.createDomainResult( fetchablePath, collectionTableGroup, creationState ),
 					getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 					fetchParent,
 					creationState
@@ -281,6 +339,57 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
+	public TableGroup createRootTableGroup(
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			JoinType tableReferenceJoinType,
+			LockMode lockMode,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationContext creationContext) {
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+
+		final TableGroupBuilder tableGroupBuilder = TableGroupBuilder.builder(
+				navigablePath,
+				this,
+				lockMode,
+				sqlAliasBase,
+				creationContext.getSessionFactory()
+		);
+
+		applyTableReferences(
+				sqlAliasBase,
+				tableReferenceJoinType,
+				tableGroupBuilder,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		return tableGroupBuilder.build();
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
+	}
+
+	@Override
+	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
+		return getCollectionDescriptor().isAffectedByEntityGraph( influencers );
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		return getCollectionDescriptor().isAffectedByEnabledFetchProfiles( influencers );
+	}
+
+	@Override
+	public String getRootPathName() {
+		return getCollectionDescriptor().getRole();
+	}
+
+	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromName( name );
 		if ( nature == CollectionPart.Nature.ELEMENT ) {
@@ -288,6 +397,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		}
 		else if ( nature == CollectionPart.Nature.INDEX ) {
 			return indexDescriptor;
+		}
+		else if ( nature == CollectionPart.Nature.ID ) {
+			return identifierDescriptor;
 		}
 
 		return null;

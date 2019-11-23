@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.sql.results.spi.AssemblerCreationState;
 import org.hibernate.sql.results.spi.CompositeInitializer;
-import org.hibernate.sql.results.spi.CompositeResultMappingNode;
+import org.hibernate.sql.results.spi.CompositeResultNode;
 import org.hibernate.sql.results.spi.FetchParentAccess;
 import org.hibernate.sql.results.spi.Initializer;
 
@@ -22,7 +22,7 @@ public class CompositeFetchInitializer
 		implements CompositeInitializer {
 	public CompositeFetchInitializer(
 			FetchParentAccess fetchParentAccess,
-			CompositeResultMappingNode resultDescriptor,
+			CompositeResultNode resultDescriptor,
 			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super( resultDescriptor, fetchParentAccess, initializerConsumer, creationState );

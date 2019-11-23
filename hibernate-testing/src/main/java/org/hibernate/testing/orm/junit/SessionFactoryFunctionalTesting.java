@@ -16,14 +16,14 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Composite annotation for functional tests that
- * require a functioning SessionFactory.
+ * Composite annotation for functional tests that require a functioning SessionFactory.
  *
- * @apiNote Logically this should also include
- * `@TestInstance( TestInstance.Lifecycle.PER_CLASS )`
- * but that annotation is not conveyed (is that the
- * right word?  its not applied to the thing using this annotation).
- * Test classes should apply that themselves.
+ * @apiNote Applies support for SessionFactory-based testing.  Up to the test to define
+ * configuration (via {@link ServiceRegistry}), mappings (via {@link DomainModel}) and/or
+ * SessionFactory-options (via {@link SessionFactory}).  Rather than using these other
+ * annotations, tests could just implement building those individual pieces via
+ * {@link ServiceRegistryProducer}, {@link DomainModelProducer} and/or {@link SessionFactoryProducer}
+ * instead.
  *
  * @see SessionFactoryExtension
  * @see DialectFilterExtension
@@ -39,6 +39,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @DomainModelFunctionalTesting
 
-@ExtendWith(SessionFactoryExtension.class )
+@ExtendWith( SessionFactoryExtension.class )
 public @interface SessionFactoryFunctionalTesting {
 }

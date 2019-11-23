@@ -36,6 +36,12 @@ import org.junit.platform.commons.support.AnnotationSupport;
 import org.jboss.logging.Logger;
 
 /**
+ * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
+ * including argument injection (or see {@link SessionFactoryScopeAware})
+ *
+ * @see SessionFactoryScope
+ * @see DomainModelExtension
+ *
  * @author Steve Ebersole
  */
 public class SessionFactoryExtension

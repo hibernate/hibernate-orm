@@ -705,7 +705,11 @@ public abstract class AbstractEntityPersister
 			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl( this, factory );
 		}
 
-		multiIdEntityLoader = new MultiIdEntityLoaderStandardImpl( this );
+		// todo (6.0) : allow a "max entities" to be passed (or determine based on Dialect?) indicating how many entities
+		//  		to load at once.  i.e. it limits the number of the generated IN-list JDBC-parameters in a given
+		//  		PreparedStatement, opting to split the load into multiple JDBC operations to work around database
+		//			limits on number of parameters, number of IN-list values, etc
+		multiIdEntityLoader = new MultiIdEntityLoaderStandardImpl( this, factory );
 
 		naturalIdLoader = bootDescriptor.hasNaturalId()
 				? new NaturalIdLoaderStandardImpl( this )

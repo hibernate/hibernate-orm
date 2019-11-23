@@ -21,6 +21,12 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 /**
+ * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
+ * including argument injection (or see {@link DomainModelScopeAware})
+ *
+ * @see ServiceRegistryScope
+ * @see DomainModelExtension
+ *
  * @author Steve Ebersole
  */
 public class DomainModelExtension

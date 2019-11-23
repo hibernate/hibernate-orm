@@ -148,6 +148,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			idsInBatch.add( ids[i] );
 
 			if ( idsInBatch.size() >= maxBatchSize ) {
+				// we've hit the allotted max-batch-size, perform an "intermediate load"
 				performOrderedBatchLoad( idsInBatch, lockOptions, persister, session );
 			}
 
@@ -157,6 +158,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		}
 
 		if ( !idsInBatch.isEmpty() ) {
+			// we still have ids to load from the processing above since the last max-batch-size trigger,
+			// perform a load for them
 			performOrderedBatchLoad( idsInBatch, lockOptions, persister, session );
 		}
 

@@ -900,7 +900,7 @@ public class JdbcMetadataBuilder {
             list = new ArrayList<Object>(keyColumns);
         }
 		else {
-            list = findForeignKeys(table.getForeignKeyIterator(), keyColumns);
+            list = ForeignKeyUtils.findForeignKeys(table.getForeignKeyIterator(), keyColumns);
         }
         for (Iterator<?> iter = list.iterator(); iter.hasNext();) {
             Object element = iter.next();
@@ -951,47 +951,6 @@ public class JdbcMetadataBuilder {
         ma.addValue("true");
         m.put(ma.getName(),ma);
         property.setMetaAttributes(m);
-    }
-
-    /**
-     * @param foreignKeyIterator
-     * @param columns
-     * @return
-     */
-    private List<Object> findForeignKeys(Iterator<?> foreignKeyIterator, List<Column> pkColumns) {
-
-    	List<ForeignKey> tempList = new ArrayList<ForeignKey>();
-    	while(foreignKeyIterator.hasNext()) {
-    		tempList.add((ForeignKey)foreignKeyIterator.next());
-    	}
-
-//    	Collections.reverse(tempList);
-
-    	List<Object> result = new ArrayList<Object>();
-    	Column myPkColumns[] = (Column[]) pkColumns.toArray(new Column[pkColumns.size()]);
-
-    	for (int i = 0; i < myPkColumns.length; i++) {
-
-    		boolean foundKey = false;
-    		foreignKeyIterator = tempList.iterator();
-    		while(foreignKeyIterator.hasNext()) {
-    			ForeignKey key = (ForeignKey) foreignKeyIterator.next();
-    			List<Column> matchingColumns = ForeignKeyUtils.columnMatches(myPkColumns, i, key);
-    			if(!matchingColumns.isEmpty()) {
-    				result.add(new ForeignKeyUtils.ForeignKeyForColumns(key, matchingColumns));
-    				i+=matchingColumns.size()-1;
-    				foreignKeyIterator.remove();
-    				foundKey=true;
-    				break;
-    			}
-    		}
-    		if(!foundKey) {
-    			result.add(myPkColumns[i]);
-    		}
-
-		}
-
-    	return result;
     }
 
  }

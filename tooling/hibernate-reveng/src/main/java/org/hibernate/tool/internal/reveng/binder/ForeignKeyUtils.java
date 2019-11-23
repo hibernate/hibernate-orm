@@ -1,6 +1,7 @@
 package org.hibernate.tool.internal.reveng.binder;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.mapping.Column;
@@ -8,7 +9,35 @@ import org.hibernate.mapping.ForeignKey;
 
 public class ForeignKeyUtils {
 
-    public static List<Column> columnMatches(
+    public static List<Object> findForeignKeys(Iterator<ForeignKey> foreignKeyIterator, List<Column> pkColumns) {
+    	List<ForeignKey> tempList = new ArrayList<ForeignKey>();
+    	while(foreignKeyIterator.hasNext()) {
+    		tempList.add(foreignKeyIterator.next());
+    	}
+    	List<Object> result = new ArrayList<Object>();
+    	Column[] myPkColumns = pkColumns.toArray(new Column[pkColumns.size()]);
+    	for (int i = 0; i < myPkColumns.length; i++) {
+    		boolean foundKey = false;
+    		foreignKeyIterator = tempList.iterator();
+    		while(foreignKeyIterator.hasNext()) {
+    			ForeignKey key = foreignKeyIterator.next();
+    			List<Column> matchingColumns = columnMatches(myPkColumns, i, key);
+    			if(!matchingColumns.isEmpty()) {
+    				result.add(new ForeignKeyForColumns(key, matchingColumns));
+    				i+=matchingColumns.size()-1;
+    				foreignKeyIterator.remove();
+    				foundKey=true;
+    				break;
+    			}
+    		}
+    		if(!foundKey) {
+    			result.add(myPkColumns[i]);
+    		}
+		}
+    	return result;
+    }
+
+    private static List<Column> columnMatches(
     		Column[] pkColumns, 
     		int offset, 
     		ForeignKey fk) {

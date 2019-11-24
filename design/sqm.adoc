@@ -1,4 +1,4 @@
-== SQM
+= SQM
 
 The Semantic Query Model (SQM) is Hibernate's representation of an HQL or Criteria query's semantic (meaning).  This
 representation is modeled as an "abstract syntax tree" (AST) - meaning it is a structured tree of nodes where each node
@@ -6,24 +6,32 @@ represrents an atomic piece of the query.  E.g. `SqmSelectClause` represents the
 imagine.  That `SqmSelectClause` is ultimately a collection of one or more `SqmSelection` references representing the
 individual selections to be returned from the query (called the domain results).
 
-=== The Model
+== The Tree
 
-This SQM model uses the Hibernate domain model, which is Hibernate's extension to the JPA model.  This model contains no
-relational mapping information, it simply describes the domain model in mostly Java terms although it does incorporate
-"classifications" of the type system.  E.g. it understand that `Customer` is an entity, but contains no information
-about the tables it maps to nor its columns.
+SQM is an Abstract Syntax Tree (AST) describing a query from the perspective of the domain model.  It uses the Hibernate
+domain model, which is Hibernate's extension to the JPA model.  This model contains no relational mapping information -
+it simply describes the domain model in mostly Java terms although it does incorporate "classifications" of the type
+system.  E.g. it understand that `Customer` is an entity, but contains no information about the tables, columns, etc.
 
 See the `design/type-system-domain.adoc` design doc.  For details about this domain model
 
+The tree model is defined in the package `org.hibernate.query.sqm.tree`
 
-=== Building an SQM
+
+== Building an SQM
 
 
-=== Interpreting an SQM
+=== HQL
 
-Ultimately Hibernate needs to talk with the database to fulfill these query executions.  This is currently a 2-step process.
 
-First we convert the SQM into a new AST called the SQL AST.  This is an AST that is more "SQL-y".  It's nodes are defined
-in terms of Hibernate's mapping model which is the model that actually does understand the relational mapping.
-See `design/type-system-mapping.adoc` for details about this model.  Part of this conversion step is to resolving
-domain model references to mapping model references...
+=== Criteria
+
+
+
+== Translating an SQM
+
+Generic support for walking over the SQM tree via the `org.hibernate.query.sqm.SemanticQueryWalker` contract.
+
+More specialized support specifically for translating the SQM into a SQL AST is also defined by
+`org.hibernate.query.sqm.sql.SqmToSqlAstConverter`.  The document `design/sql-ast.adoc` for details about the SQL AST,
+including its execution.

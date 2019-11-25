@@ -10,10 +10,12 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
@@ -40,12 +42,13 @@ import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.DomainResultCreationState;
 import org.hibernate.sql.results.spi.Fetch;
 import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.spi.Fetchable;
 
 /**
  * @author Steve Ebersole
  */
 public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
-		implements EntityValuedModelPart, TableGroupJoinProducer {
+		implements EntityValuedModelPart, EntityAssociationMapping, TableGroupJoinProducer {
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final boolean referringPrimaryKey;
@@ -278,14 +281,17 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 					.getFromClauseAccess()
 					.findTableGroup( parentParentNavigablePath )
 					.getModelPart();
-			final SingularAssociationAttributeMapping part = (SingularAssociationAttributeMapping) modelPart
-					.findSubPart( panentNaviblePath.getLocalName(), null );
+//			final SingularAssociationAttributeMapping part = (SingularAssociationAttributeMapping) modelPart
+//					.findSubPart( panentNaviblePath.getLocalName(), null );
+			final EntityAssociationMapping part = (EntityAssociationMapping) modelPart.findSubPart( panentNaviblePath.getLocalName(), null );
+
 			if ( panentNaviblePath.getLocalName().equals( referencedPropertyName )
 					&& part.getFetchableName().equals( referencedPropertyName ) ) {
 				return true;
 			}
-			else if ( part.getReferencedPropertyName() != null
-					&& part.getReferencedPropertyName().equals( getAttributeName() ) ) {
+			else if ( part.getKeyTargetMatchPart() != null
+//					&& part.getKeyTargetMatchPart().equals( this ) ) {
+					&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
 				return true;
 			}
 		}
@@ -299,5 +305,15 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	public boolean isUnwrapProxy() {
 		return unwrapProxy;
+	}
+
+	@Override
+	public EntityMappingType getAssociatedEntityMappingType() {
+		return getEntityMappingType();
+	}
+
+	@Override
+	public ModelPart getKeyTargetMatchPart() {
+		return foreignKeyDescriptor;
 	}
 }

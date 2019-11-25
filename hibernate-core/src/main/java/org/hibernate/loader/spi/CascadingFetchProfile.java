@@ -11,13 +11,13 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Steve Ebersole
  */
-public enum InternalFetchProfile {
+public enum CascadingFetchProfile {
 	MERGE( "merge" ),
 	REFRESH( "refresh" );
 
 	private final String legacyName;
 
-	InternalFetchProfile(String legacyName) {
+	CascadingFetchProfile(String legacyName) {
 		this.legacyName = legacyName;
 	}
 
@@ -25,7 +25,7 @@ public enum InternalFetchProfile {
 		return legacyName;
 	}
 
-	public static InternalFetchProfile fromLegacyName(String legacyName) {
+	public static CascadingFetchProfile fromLegacyName(String legacyName) {
 		if ( StringHelper.isEmpty( legacyName ) ) {
 			return null;
 		}

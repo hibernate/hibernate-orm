@@ -6,13 +6,16 @@
  */
 package org.hibernate.loader.internal;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.spi.CollectionLoader;
@@ -24,7 +27,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -34,29 +36,48 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 
 /**
+ * Main implementation of CollectionLoader for handling a load of a single collection-key
+ *
  * @author Steve Ebersole
  */
 public class SingleCollectionKeyLoader implements CollectionLoader {
-	private final PluralAttributeMapping pluralAttributeMapping;
+	private final PluralAttributeMapping attributeMapping;
+
+	private final int keyJdbcCount;
+
 	private final SelectStatement sqlAst;
 	private final List<JdbcParameter> jdbcParameters;
 
 	public SingleCollectionKeyLoader(
-			PluralAttributeMapping pluralAttributeMapping,
-			SelectStatement sqlAst, List<JdbcParameter> jdbcParameters) {
-		this.pluralAttributeMapping = pluralAttributeMapping;
-		this.sqlAst = sqlAst;
-		this.jdbcParameters = jdbcParameters;
+			PluralAttributeMapping attributeMapping,
+			LoadQueryInfluencers influencers,
+			SessionFactoryImplementor sessionFactory) {
+		this.attributeMapping = attributeMapping;
+
+		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+
+		this.jdbcParameters = new ArrayList<>();
+		this.sqlAst = MetamodelSelectBuilderProcess.createSelect(
+				attributeMapping,
+				null,
+				attributeMapping.getKeyDescriptor(),
+				null,
+				1,
+				influencers,
+				LockOptions.READ,
+				jdbcParameters::add,
+				sessionFactory
+		);
 	}
 
 	@Override
 	public PluralAttributeMapping getLoadable() {
-		return pluralAttributeMapping;
+		return attributeMapping;
 	}
 
 	@Override
 	public PersistentCollection load(Object key, SharedSessionContractImplementor session) {
-		final CollectionKey collectionKey = new CollectionKey( pluralAttributeMapping.getCollectionDescriptor(), key );
+		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -65,13 +86,11 @@ public class SingleCollectionKeyLoader implements CollectionLoader {
 
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
-				pluralAttributeMapping.getKeyDescriptor().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
-		);
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 
 		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 
-		pluralAttributeMapping.getKeyDescriptor().visitJdbcValues(
+		attributeMapping.getKeyDescriptor().visitJdbcValues(
 				key,
 				Clause.WHERE,
 				(value, type) -> {
@@ -96,7 +115,7 @@ public class SingleCollectionKeyLoader implements CollectionLoader {
 		);
 		assert !paramItr.hasNext();
 
-		JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {

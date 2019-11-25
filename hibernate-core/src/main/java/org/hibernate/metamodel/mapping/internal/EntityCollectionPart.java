@@ -11,8 +11,10 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.internal.domain.collection.EntityCollectionPartTableGroup;
@@ -26,14 +28,30 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class EntityCollectionPart implements CollectionPart, EntityValuedModelPart {
+public class EntityCollectionPart implements CollectionPart, EntityAssociationMapping, EntityValuedModelPart {
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
+	private ModelPart fkTargetModelPart;
+
 	@SuppressWarnings("WeakerAccess")
-	public EntityCollectionPart(Nature nature, EntityMappingType entityMappingType) {
+	public EntityCollectionPart(
+			Nature nature,
+			EntityMappingType entityMappingType,
+			String fkTargetModelPartName,
+			MappingModelCreationProcess creationProcess) {
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
+
+		creationProcess.registerInitializationCallback(
+				() -> {
+					fkTargetModelPart = fkTargetModelPartName == null
+							? entityMappingType.getIdentifierMapping()
+							: entityMappingType.findSubPart( fkTargetModelPartName, entityMappingType );
+					assert fkTargetModelPart != null;
+					return true;
+				}
+		);
 	}
 
 	@Override
@@ -49,6 +67,16 @@ public class EntityCollectionPart implements CollectionPart, EntityValuedModelPa
 	@Override
 	public EntityMappingType getEntityMappingType() {
 		return entityMappingType;
+	}
+
+	@Override
+	public EntityMappingType getAssociatedEntityMappingType() {
+		return getEntityMappingType();
+	}
+
+	@Override
+	public ModelPart getKeyTargetMatchPart() {
+		return fkTargetModelPart;
 	}
 
 	@Override

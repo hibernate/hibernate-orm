@@ -107,18 +107,15 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.loader.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.internal.MultiIdEntityLoaderStandardImpl;
 import org.hibernate.loader.internal.NaturalIdLoaderStandardImpl;
 import org.hibernate.loader.internal.Preparable;
-import org.hibernate.loader.internal.SingleIdEntityLoaderLegacyBatch;
-import org.hibernate.loader.internal.SingleIdEntityLoaderPaddedBatch;
+import org.hibernate.loader.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.spi.Loader;
@@ -144,7 +141,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -172,7 +168,6 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -188,6 +183,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -1016,22 +1012,7 @@ public abstract class AbstractEntityPersister
 			EntityMappingType entityDescriptor,
 			int batchSize,
 			SessionFactoryImplementor factory) {
-		final BatchFetchStyle batchFetchStyle = factory.getSettings().getBatchFetchStyle();
-
-		switch ( batchFetchStyle ) {
-			case LEGACY: {
-				return new SingleIdEntityLoaderLegacyBatch( entityDescriptor, batchSize, factory );
-			}
-			case DYNAMIC: {
-				return new SingleIdEntityLoaderDynamicBatch( entityDescriptor, batchSize, factory );
-			}
-			case PADDED: {
-				return new SingleIdEntityLoaderPaddedBatch( entityDescriptor, batchSize, factory );
-			}
-			default: {
-				throw new UnsupportedOperationException( "BatchFetchStyle [" + batchFetchStyle.name() + "] not supported" );
-			}
-		}
+		return new SingleIdEntityLoaderDynamicBatch( entityDescriptor, batchSize, factory );
 	}
 
 	@SuppressWarnings("RedundantIfStatement")

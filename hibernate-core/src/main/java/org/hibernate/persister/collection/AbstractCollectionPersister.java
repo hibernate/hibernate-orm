@@ -22,7 +22,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
@@ -43,7 +42,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -61,7 +59,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.internal.MetamodelSelectBuilderProcess;
+import org.hibernate.loader.internal.BatchCollectionKeyLoader;
 import org.hibernate.loader.internal.SingleCollectionKeyLoader;
 import org.hibernate.loader.internal.SubSelectFetchCollectionLoader;
 import org.hibernate.loader.spi.CollectionLoader;
@@ -115,8 +113,6 @@ import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -859,21 +855,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		final java.util.List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		final int batchSize = getBatchSize();
+		if ( batchSize > 1 ) {
+			return new BatchCollectionKeyLoader( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
+		}
 
-		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
-				attributeMapping,
-				null,
-				attributeMapping.getKeyDescriptor(),
-				null,
-				1,
-				loadQueryInfluencers,
-				LockOptions.READ,
-				jdbcParameters::add,
-				getFactory()
-		);
-
-		return new SingleCollectionKeyLoader( attributeMapping, sqlAst, jdbcParameters );
+		return new SingleCollectionKeyLoader( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
 
 	protected CollectionInitializer getAppropriateInitializer(Object key, SharedSessionContractImplementor session) {

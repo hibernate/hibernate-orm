@@ -1098,7 +1098,14 @@ public class MappingModelCreationHelper {
 				);
 			}
 
-			return new EntityCollectionPart( CollectionPart.Nature.ELEMENT, associatedEntity );
+			final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
+
+			return new EntityCollectionPart(
+					CollectionPart.Nature.ELEMENT,
+					associatedEntity,
+					indexEntityType.getRHSUniqueKeyPropertyName(),
+					creationProcess
+			);
 		}
 
 		throw new NotYetImplementedFor6Exception(
@@ -1171,7 +1178,14 @@ public class MappingModelCreationHelper {
 				);
 			}
 
-			return new EntityCollectionPart( CollectionPart.Nature.ELEMENT, associatedEntity );
+			final EntityType indexEntityType = (EntityType) collectionDescriptor.getElementType();
+
+			return new EntityCollectionPart(
+					CollectionPart.Nature.ELEMENT,
+					associatedEntity,
+					indexEntityType.getRHSUniqueKeyPropertyName(),
+					creationProcess
+			);
 		}
 
 		throw new NotYetImplementedFor6Exception(

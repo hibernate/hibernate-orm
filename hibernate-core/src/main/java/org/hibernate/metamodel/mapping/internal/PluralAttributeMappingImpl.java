@@ -136,8 +136,17 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				return baseIndex;
 			}
 		};
+
 		if ( collectionDescriptor instanceof Aware ) {
 			( (Aware) collectionDescriptor ).injectAttributeMapping( this );
+		}
+
+		if ( elementDescriptor instanceof Aware ) {
+			( (Aware) elementDescriptor ).injectAttributeMapping( this );
+		}
+
+		if ( indexDescriptor instanceof Aware ) {
+			( (Aware) indexDescriptor ).injectAttributeMapping( this );
 		}
 	}
 

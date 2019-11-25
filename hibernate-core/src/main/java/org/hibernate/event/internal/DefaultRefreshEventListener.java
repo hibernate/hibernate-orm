@@ -30,7 +30,7 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.spi.InternalFetchProfile;
+import org.hibernate.loader.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -170,7 +170,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		evictCachedCollections( persister, id, source );
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
-				InternalFetchProfile.REFRESH,
+				CascadingFetchProfile.REFRESH,
 				() -> doRefresh( event, source, object, e, persister, id, persistenceContext )
 		);
 

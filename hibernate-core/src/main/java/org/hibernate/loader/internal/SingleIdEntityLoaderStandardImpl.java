@@ -16,7 +16,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.spi.InternalFetchProfile;
+import org.hibernate.loader.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameter;
@@ -28,7 +28,7 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
  */
 public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> implements Preparable {
 	private EnumMap<LockMode, SingleIdLoadPlan> selectByLockMode = new EnumMap<>( LockMode.class );
-	private EnumMap<InternalFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
+	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
 
 	private AtomicInteger nonReusablePlansGenerated = new AtomicInteger();
 
@@ -71,14 +71,14 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			return createLoadPlan( lockOptions, loadQueryInfluencers, session.getFactory() );
 		}
 
-		final InternalFetchProfile enabledInternalFetchProfile = loadQueryInfluencers.getEnabledInternalFetchProfile();
-		if ( enabledInternalFetchProfile != null ) {
+		final CascadingFetchProfile enabledCascadingFetchProfile = loadQueryInfluencers.getEnabledCascadingFetchProfile();
+		if ( enabledCascadingFetchProfile != null ) {
 			if ( LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
 				if ( selectByInternalCascadeProfile == null ) {
-					selectByInternalCascadeProfile = new EnumMap<>( InternalFetchProfile.class );
+					selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
 				}
 				else {
-					final SingleIdLoadPlan existing = selectByInternalCascadeProfile.get( enabledInternalFetchProfile );
+					final SingleIdLoadPlan existing = selectByInternalCascadeProfile.get( enabledCascadingFetchProfile );
 					if ( existing != null ) {
 						//noinspection unchecked
 						return existing;
@@ -90,7 +90,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 						loadQueryInfluencers,
 						session.getFactory()
 				);
-				selectByInternalCascadeProfile.put( enabledInternalFetchProfile, plan );
+				selectByInternalCascadeProfile.put( enabledCascadingFetchProfile, plan );
 				return plan;
 			}
 		}

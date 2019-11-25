@@ -34,7 +34,7 @@ import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.spi.InternalFetchProfile;
+import org.hibernate.loader.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -303,7 +303,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		// apply the special MERGE fetch profile and perform the resolution (Session#get)
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
-				InternalFetchProfile.MERGE,
+				CascadingFetchProfile.MERGE,
 				() -> source.get( entityName, clonedIdentifier )
 
 		);

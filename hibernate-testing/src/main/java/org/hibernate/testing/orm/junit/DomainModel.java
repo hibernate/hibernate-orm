@@ -12,6 +12,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.persistence.SharedCacheMode;
+
+import org.hibernate.cache.spi.access.AccessType;
+
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.junit.jupiter.api.TestInstance;
@@ -95,6 +99,10 @@ public @interface DomainModel {
 	String[] xmlMappings() default {};
 	ExtraQueryImport[] extraQueryImports() default {};
 	Class<?>[] extraQueryImportClasses() default {};
+
+	SharedCacheMode sharedCacheMode() default SharedCacheMode.ENABLE_SELECTIVE;
+
+	AccessType accessType() default AccessType.READ_WRITE;
 
 	@interface ExtraQueryImport {
 		String name();

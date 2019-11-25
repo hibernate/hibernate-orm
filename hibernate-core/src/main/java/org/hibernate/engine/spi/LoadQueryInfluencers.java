@@ -21,7 +21,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
-import org.hibernate.loader.spi.InternalFetchProfile;
+import org.hibernate.loader.spi.CascadingFetchProfile;
 import org.hibernate.type.Type;
 
 /**
@@ -44,7 +44,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private InternalFetchProfile enabledInternalFetchProfile;
+	private CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
 	private HashSet<String> enabledFetchProfileNames;
@@ -69,21 +69,21 @@ public class LoadQueryInfluencers implements Serializable {
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void withInternalFetchProfile(InternalFetchProfile profile, InternalFetchProfileAction action) {
-		final InternalFetchProfile previous = this.enabledInternalFetchProfile;
-		this.enabledInternalFetchProfile = profile;
+	public void withInternalFetchProfile(CascadingFetchProfile profile, InternalFetchProfileAction action) {
+		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
+		this.enabledCascadingFetchProfile = profile;
 		action.performAction();
-		this.enabledInternalFetchProfile = previous;
+		this.enabledCascadingFetchProfile = previous;
 	}
 
-	public <T> T fromInternalFetchProfile(InternalFetchProfile profile, Supplier<T> supplier) {
-		final InternalFetchProfile previous = this.enabledInternalFetchProfile;
-		this.enabledInternalFetchProfile = profile;
+	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
+		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
+		this.enabledCascadingFetchProfile = profile;
 		try {
 			return supplier.get();
 		}
 		finally {
-			this.enabledInternalFetchProfile = previous;
+			this.enabledCascadingFetchProfile = previous;
 		}
 	}
 
@@ -92,34 +92,34 @@ public class LoadQueryInfluencers implements Serializable {
 		void performAction();
 	}
 
-	public InternalFetchProfile getEnabledInternalFetchProfile() {
-		return enabledInternalFetchProfile;
+	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
+		return enabledCascadingFetchProfile;
 	}
 
-	public void setEnabledInternalFetchProfile(InternalFetchProfile enabledInternalFetchProfile) {
+	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
 		if ( sessionFactory == null ) {
 			// thats the signal that this is the immutable, context-less
 			// variety
 			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
 		}
 
-		this.enabledInternalFetchProfile = enabledInternalFetchProfile;
+		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
 	/**
-	 * @deprecated Use {@link #getEnabledInternalFetchProfile} instead
+	 * @deprecated Use {@link #getEnabledCascadingFetchProfile} instead
 	 */
 	@Deprecated
 	public String getInternalFetchProfile() {
-		return getEnabledInternalFetchProfile().getLegacyName();
+		return getEnabledCascadingFetchProfile().getLegacyName();
 	}
 
 	/**
-	 * @deprecated Use {@link #setEnabledInternalFetchProfile} instead
+	 * @deprecated Use {@link #setEnabledCascadingFetchProfile} instead
 	 */
 	@Deprecated
 	public void setInternalFetchProfile(String internalFetchProfile) {
-		setEnabledInternalFetchProfile( InternalFetchProfile.fromLegacyName( internalFetchProfile ) );
+		setEnabledCascadingFetchProfile( CascadingFetchProfile.fromLegacyName( internalFetchProfile ) );
 	}
 
 

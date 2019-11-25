@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.CockroachDB1920Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -29,6 +30,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -47,6 +49,7 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-12973")
 @RequiresDialect(PostgreSQL82Dialect.class)
+@SkipForDialect(CockroachDB1920Dialect.class)
 public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule

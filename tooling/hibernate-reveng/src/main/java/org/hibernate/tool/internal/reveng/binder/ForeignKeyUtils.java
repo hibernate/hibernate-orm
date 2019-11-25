@@ -9,10 +9,10 @@ import org.hibernate.mapping.ForeignKey;
 
 public class ForeignKeyUtils {
 
-    public static List<Object> findForeignKeys(Iterator<ForeignKey> foreignKeyIterator, List<Column> pkColumns) {
+    public static List<Object> findForeignKeys(Iterator<?> foreignKeyIterator, List<Column> pkColumns) {
     	List<ForeignKey> tempList = new ArrayList<ForeignKey>();
     	while(foreignKeyIterator.hasNext()) {
-    		tempList.add(foreignKeyIterator.next());
+    		tempList.add((ForeignKey)foreignKeyIterator.next());
     	}
     	List<Object> result = new ArrayList<Object>();
     	Column[] myPkColumns = pkColumns.toArray(new Column[pkColumns.size()]);
@@ -20,7 +20,7 @@ public class ForeignKeyUtils {
     		boolean foundKey = false;
     		foreignKeyIterator = tempList.iterator();
     		while(foreignKeyIterator.hasNext()) {
-    			ForeignKey key = foreignKeyIterator.next();
+    			ForeignKey key = (ForeignKey)foreignKeyIterator.next();
     			List<Column> matchingColumns = columnMatches(myPkColumns, i, key);
     			if(!matchingColumns.isEmpty()) {
     				result.add(new ForeignKeyForColumns(key, matchingColumns));

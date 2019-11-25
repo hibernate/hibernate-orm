@@ -46,7 +46,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -56,6 +55,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.EntityPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
@@ -319,10 +319,19 @@ public class JdbcMetadataBuilder {
 				ForeignKeyDirection.FROM_PARENT :
 				ForeignKeyDirection.TO_PARENT );
 
+        return EntityPropertyBinder
+        		.create(
+        				revengStrategy, 
+        				defaultCatalog, 
+        				defaultSchema)
+        		.bind(
+        				propertyName, 
+        				true, 
+        				targetTable, 
+        				fk, 
+        				value, 
+        				inverseProperty);
 
-        return makeEntityProperty(propertyName, true, targetTable, fk, value, inverseProperty);
-        //return makeProperty(TableIdentifier.create(targetTable), propertyName, value,
-        //        true, true, value.getFetchMode() != FetchMode.JOIN, null, null);
     }
 
     /**
@@ -346,7 +355,18 @@ public class JdbcMetadataBuilder {
 		}
         value.setFetchMode(FetchMode.SELECT);
 
-        return makeEntityProperty(propertyName, mutable, table, fk, value, false);
+        return EntityPropertyBinder
+        		.create(
+        				revengStrategy, 
+        				defaultCatalog, 
+        				defaultSchema)
+        		.bind(
+        				propertyName, 
+        				mutable, 
+        				table, 
+        				fk, 
+        				value, 
+        				false);
      }
 
     private Property makeCollectionProperty(String propertyName, boolean mutable,
@@ -396,53 +416,6 @@ public class JdbcMetadataBuilder {
         		null,
         		revengStrategy);
 
-	}
-
-	private Property makeEntityProperty(String propertyName, boolean mutable,
-			Table table, ForeignKey fk, ToOne value, boolean inverseProperty) {
-		AssociationInfo fkei = inverseProperty?revengStrategy.foreignKeyToInverseAssociationInfo(fk):revengStrategy.foreignKeyToAssociationInfo(fk);
-
-        String fetchMode = null;
-        String cascade = null;
-        boolean update = mutable;
-        boolean insert = mutable;
-
-        if(fkei != null){
-        	cascade = fkei.getCascade();
-        	if(fkei.getUpdate()!=null) {
-        		update = fkei.getUpdate().booleanValue();
-        	}
-        	if(fkei.getInsert()!=null) {
-        		insert = fkei.getInsert().booleanValue();
-        	}
-
-        	fetchMode = fkei.getFetch();
-
-
-        }
-
-        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
-        }
-        else if(FetchMode.SELECT.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-        else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-
-        return PropertyBinder.bind(
-        		table, 
-        		defaultCatalog,
-        		defaultSchema,
-        		propertyName, 
-        		value, 
-        		insert, 
-        		update, 
-        		value.getFetchMode()!=FetchMode.JOIN, 
-        		cascade, 
-        		null,
-        		revengStrategy);
 	}
 
 	/**
@@ -895,7 +868,7 @@ public class JdbcMetadataBuilder {
         }
         pkc.setComponentClassName(compositeIdName);
 		Table table = rc.getTable();
-        List<Object> list = null;
+        List<?> list = null;
 		if (preferBasicCompositeIds ) {
             list = new ArrayList<Object>(keyColumns);
         }

@@ -7,6 +7,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;
@@ -23,6 +24,7 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	private IdentifierValue unsavedValue;
 	private IdentifierGenerator identifierGenerator;
 	private boolean identifierAssignedByInsert;
+	private boolean hasNestedIdentifierAssignedByInsert;
 	private boolean hasIdentifierMapper;
 
 	/**
@@ -30,8 +32,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 *
 	 * @param name The name of the property representing the identifier within
 	 * its owning entity.
-	 * @param node The node name to use for XML-based representation of this
-	 * property.
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
 	 * @param unsavedValue The value which, if found as the value on the identifier
@@ -51,6 +51,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.hasNestedIdentifierAssignedByInsert = ( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator )
+				&& ( ( (CompositeNestedGeneratedValueGenerator) identifierGenerator ).hasPostInsertGeneratedValue() );
 	}
 
 	/**
@@ -75,6 +77,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.hasNestedIdentifierAssignedByInsert = ( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator )
+				&& ( ( (CompositeNestedGeneratedValueGenerator) identifierGenerator ).hasPostInsertGeneratedValue() );
 	}
 
 	@Override
@@ -100,6 +104,10 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	@Override
 	public boolean isIdentifierAssignedByInsert() {
 		return identifierAssignedByInsert;
+	}
+
+	public boolean hasNestedIdentifierAssignedByInsert() {
+		return hasNestedIdentifierAssignedByInsert;
 	}
 
 	@Override

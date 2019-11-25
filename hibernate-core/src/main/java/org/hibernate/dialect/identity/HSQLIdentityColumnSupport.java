@@ -38,4 +38,9 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 	public String getIdentityInsertString() {
 		return hsqldbVersion < 200 ? "null" : "default";
 	}
+
+	@Override
+	public boolean supportsCompositeNestedIdentityColumns() {
+		return true;
+	}
 }

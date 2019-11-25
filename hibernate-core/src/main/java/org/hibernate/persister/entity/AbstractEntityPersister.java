@@ -83,6 +83,7 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -3102,7 +3103,8 @@ public abstract class AbstractEntityPersister
 			final boolean[] notNull,
 			String sql,
 			final Object object,
-			final SharedSessionContractImplementor session) throws HibernateException {
+			final SharedSessionContractImplementor session,
+			Serializable partialId) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Inserting entity: {0} (native id)", getEntityName() );
@@ -3113,7 +3115,7 @@ public abstract class AbstractEntityPersister
 
 		Binder binder = new Binder() {
 			public void bindValues(PreparedStatement ps) throws SQLException {
-				dehydrate( null, fields, notNull, propertyColumnInsertable, 0, ps, session, false );
+				dehydrate( partialId, fields, notNull, propertyColumnInsertable, 0, ps, session, false );
 			}
 
 			public Object getEntity() {
@@ -3121,7 +3123,13 @@ public abstract class AbstractEntityPersister
 			}
 		};
 
-		return identityDelegate.performInsert( sql, session, binder );
+		if ( partialId == null ) {
+			return identityDelegate.performInsert( sql, session, binder );
+		}
+
+		identityDelegate.performInsert( sql, partialId, session, binder );
+		// at this point partialId shouldn't be partial anymore
+		return partialId;
 	}
 
 	public String getIdentitySelectString() {
@@ -3697,7 +3705,14 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
+			throws HibernateException {
+		return insert(fields, object, session, null);
+	}
+
+	@Override
+	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session, Serializable partialId)
 			throws HibernateException {
 		// apply any pre-insert in-memory value generation
 		preInsertInMemoryValueGeneration( fields, object, session );
@@ -3707,14 +3722,14 @@ public abstract class AbstractEntityPersister
 		if ( entityMetamodel.isDynamicInsert() ) {
 			// For the case of dynamic-insert="true", we need to generate the INSERT SQL
 			boolean[] notNull = getPropertiesToInsert( fields );
-			id = insert( fields, notNull, generateInsertString( true, notNull ), object, session );
+			id = insert( fields, notNull, generateInsertString( true, notNull ), object, session, partialId );
 			for ( int j = 1; j < span; j++ ) {
 				insert( id, fields, notNull, j, generateInsertString( notNull, j ), object, session );
 			}
 		}
 		else {
 			// For the case of dynamic-insert="false", use the static SQL
-			id = insert( fields, getPropertyInsertability(), getSQLIdentityInsertString(), object, session );
+			id = insert( fields, getPropertyInsertability(), getSQLIdentityInsertString(), object, session, partialId );
 			for ( int j = 1; j < span; j++ ) {
 				insert( id, fields, getPropertyInsertability(), j, getSQLInsertStrings()[j], object, session );
 			}
@@ -4233,8 +4248,13 @@ public abstract class AbstractEntityPersister
 					? generateIdentityInsertString( getPropertyInsertability() )
 					: substituteBrackets( customSQLInsert[0] );
 		}
-		else {
-			sqlIdentityInsertString = null;
+		else if ( hasNestedIdentifierAssignedByInsert() ) {
+			identityDelegate = ( (CompositeNestedGeneratedValueGenerator) getIdentifierGenerator() )
+					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect() );
+			// TODO handle sqlIdentityInsertString: so far we keep null
+			sqlIdentityInsertString = customSQLInsert[0] == null
+					? sqlInsertStrings[0]
+					: substituteBrackets( customSQLInsert[0] );
 		}
 
 		logStaticSQL();
@@ -4714,6 +4734,10 @@ public abstract class AbstractEntityPersister
 
 	public boolean isIdentifierAssignedByInsert() {
 		return entityMetamodel.getIdentifierProperty().isIdentifierAssignedByInsert();
+	}
+
+	public boolean hasNestedIdentifierAssignedByInsert() {
+		return entityMetamodel.getIdentifierProperty().hasNestedIdentifierAssignedByInsert();
 	}
 
 	public boolean hasLazyProperties() {

@@ -103,4 +103,11 @@ public interface IdentityColumnSupport {
 	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect);
+
+	/**
+	 * Does this dialect support nested identity column key generation in a composite key?
+	 *
+	 * @return True if composite NESTED IDENTITY columns are supported; false otherwise.
+	 */
+	boolean supportsCompositeNestedIdentityColumns();
 }

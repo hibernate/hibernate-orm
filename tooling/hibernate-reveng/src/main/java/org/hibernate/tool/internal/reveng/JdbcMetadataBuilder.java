@@ -57,6 +57,7 @@ import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
 import org.hibernate.tool.internal.reveng.binder.EntityPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
+import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.SimpleValueBinder;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
@@ -333,41 +334,6 @@ public class JdbcMetadataBuilder {
         				inverseProperty);
 
     }
-
-    /**
-     * @param mutable
-     * @param table
-     * @param fk
-     * @param columnsToBind
-     * @param processedColumns
-     * @param rc
-     * @param propName
-     */
-    private Property bindManyToOne(String propertyName, boolean mutable, Table table, ForeignKey fk, Set<Column> processedColumns) {
-        ManyToOne value = new ManyToOne(metadataBuildingContext, table);
-        value.setReferencedEntityName( fk.getReferencedEntityName() );
-		Iterator<Column> columns = fk.getColumnIterator();
-        while ( columns.hasNext() ) {
-			Column fkcolumn = (Column) columns.next();
-			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
-            value.addColumn(fkcolumn);
-            processedColumns.add(fkcolumn);
-		}
-        value.setFetchMode(FetchMode.SELECT);
-
-        return EntityPropertyBinder
-        		.create(
-        				revengStrategy, 
-        				defaultCatalog, 
-        				defaultSchema)
-        		.bind(
-        				propertyName, 
-        				mutable, 
-        				table, 
-        				fk, 
-        				value, 
-        				false);
-     }
 
     private Property makeCollectionProperty(String propertyName, boolean mutable,
 			Table table, ForeignKey fk, Collection value, boolean inverseProperty) {
@@ -740,13 +706,18 @@ public class JdbcMetadataBuilder {
             			isUnique
             	);
 
-            	Property property = bindManyToOne(
-            			BinderUtils.makeUnique(rc, propertyName),
-            			mutable,
-            			table,
-            			foreignKey,
-            			processedColumns
-            	);
+            	Property property = ManyToOneBinder
+            			.create(
+            					metadataBuildingContext, 
+            					revengStrategy, 
+            					defaultCatalog, 
+            					defaultSchema)
+            			.bind(
+            					BinderUtils.makeUnique(rc, propertyName), 
+            					mutable, 
+            					table, 
+            					foreignKey, 
+            					processedColumns);
 
             	rc.addProperty(property);
             }
@@ -894,7 +865,18 @@ public class JdbcMetadataBuilder {
 						TableIdentifier.create(foreignKey.getTable() ),
 						foreignKey.getColumns(), TableIdentifier.create(foreignKey.getReferencedTable() ), foreignKey.getReferencedColumns(), true
 					);
-                property = bindManyToOne( BinderUtils.makeUnique(pkc, propertyName), true, table, foreignKey, processedColumns);
+                property = ManyToOneBinder
+                		.create(
+                				metadataBuildingContext, 
+                				revengStrategy,
+                				defaultCatalog, 
+                				defaultSchema)
+                		.bind(
+                				BinderUtils.makeUnique(pkc, propertyName), 
+                				true, 
+                				table, 
+                				foreignKey, 
+                				processedColumns);
                 processedColumns.addAll(fkfc.columns);
             }
 			else {

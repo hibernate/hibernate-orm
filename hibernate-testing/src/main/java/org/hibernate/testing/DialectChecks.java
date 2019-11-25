@@ -45,6 +45,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsCompositeNestedIdentityColumns implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.getIdentityColumnSupport().supportsCompositeNestedIdentityColumns();
+		}
+	}
+
 	public static class SupportsColumnCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsColumnCheck();

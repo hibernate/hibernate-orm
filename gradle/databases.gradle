@@ -115,7 +115,8 @@ ext {
                         'jdbc.url'   : 'jdbc:sap://localhost:39015/'
                 ],
                 cockroachdb : [
-                        'db.dialect' : 'org.hibernate.dialect.PostgreSQL95Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.CockroachDB1920Dialect',
+                        // CockroachDB uses the same pgwire protocol as PostgreSQL, so the driver is the same.
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'root',
                         'jdbc.pass'  : '',

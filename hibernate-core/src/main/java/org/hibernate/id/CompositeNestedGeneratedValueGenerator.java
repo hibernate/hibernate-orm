@@ -16,7 +16,9 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.CompositeGeneratedIdentifierReturningDelegate;
+import org.hibernate.dialect.identity.CompositeGeneratedIdentifierSelectingDelegate;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.type.Type;
 
@@ -138,8 +140,16 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		return !postInsertGenerationPlans.isEmpty();
 	}
 
-	public CompositeGeneratedIdentifierReturningDelegate getInsertGeneratedIdentifierDelegate(AbstractEntityPersister persister, Dialect dialect) {
-		// TODO Have different strategies for useGetGeneratedKeys: yes/no
-		return new CompositeGeneratedIdentifierReturningDelegate( persister, dialect, new HashSet<>( postInsertGenerationPlans ) );
+	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(AbstractEntityPersister persister, Dialect dialect,
+			boolean isGetGeneratedKeysEnabled) {
+		if ( isGetGeneratedKeysEnabled || dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+			// Use the ReturningDelegate form:
+			// using the result set returning from the insert to extract the generated values
+			return new CompositeGeneratedIdentifierReturningDelegate( persister, dialect, new HashSet<>( postInsertGenerationPlans ) );
+		}
+
+		// Use the SelectingDelegate form:
+		// using a further select to load the generated values
+		return new CompositeGeneratedIdentifierSelectingDelegate( persister, dialect, new HashSet<>( postInsertGenerationPlans ) );
 	}
 }

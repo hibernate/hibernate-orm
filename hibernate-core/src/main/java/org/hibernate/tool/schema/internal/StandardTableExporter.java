@@ -66,7 +66,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
 		if ( table.hasPrimaryKey() ) {
-			Column pkColumn = (Column) table.getPrimaryKey().getColumns().iterator().next();
+			Column pkColumn = findIdentityColumn( table );
 			pkColName = pkColumn.getQuotedName( dialect );
 		}
 
@@ -155,6 +155,18 @@ public class StandardTableExporter implements Exporter<Table> {
 		applyInitCommands( table, sqlStrings );
 
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
+	}
+
+	private Column findIdentityColumn(Table table) {
+		List<Column> columns = table.getPrimaryKey().getColumns();
+		for ( Column column : columns ) {
+			// post-insert identifier generator takes the precedence
+			if ( column.hasPostInsertIdentifierGenerator() ) {
+				return column;
+			}
+		}
+
+		return columns.get( 0 );
 	}
 
 	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {

@@ -56,4 +56,9 @@ public class IdentityColumnSupportImpl implements IdentityColumnSupport {
 			Dialect dialect) {
 		return new GetGeneratedKeysDelegate( persister, dialect );
 	}
+
+	@Override
+	public boolean supportsCompositeNestedIdentityColumns() {
+		return false;
+	}
 }

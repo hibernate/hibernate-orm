@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.internal.EntityCompositeIdentityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
@@ -27,7 +28,9 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -112,7 +115,8 @@ public abstract class AbstractSaveEventListener
 		}
 
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Serializable generatedId = persister.getIdentifierGenerator().generate( source, entity );
+		IdentifierGenerator identifierGenerator = persister.getIdentifierGenerator();
+		Serializable generatedId = identifierGenerator.generate( source, entity );
 		if ( generatedId == null ) {
 			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
 		}
@@ -122,13 +126,17 @@ public abstract class AbstractSaveEventListener
 		else if ( generatedId == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
 			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
 		}
+		else if ( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator &&
+			( (CompositeNestedGeneratedValueGenerator) identifierGenerator ).hasPostInsertGeneratedValue() ) {
+			return performSave( entity, generatedId, persister, true, anything, source, requiresImmediateIdAccess );
+		}
 		else {
 			// TODO: define toString()s for generators
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf(
 						"Generated identifier: %s, using strategy: %s",
 						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-						persister.getIdentifierGenerator().getClass().getName()
+						identifierGenerator.getClass().getName()
 				);
 			}
 
@@ -181,6 +189,9 @@ public abstract class AbstractSaveEventListener
 				}
 			}
 			persister.setIdentifier( entity, id, source );
+		}
+		else if ( id != null ) {
+			key = source.generateEntityKey( id, persister );
 		}
 		else {
 			key = null;
@@ -324,9 +335,10 @@ public abstract class AbstractSaveEventListener
 			EventSource source,
 			boolean shouldDelayIdentityInserts) {
 		if ( useIdentityColumn ) {
-			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
-					values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts
-			);
+			EntityIdentityInsertAction insert = ( id != null ) ?
+					new EntityCompositeIdentityInsertAction( values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts, id ) :
+					new EntityIdentityInsertAction( values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts );
+
 			source.getActionQueue().addAction( insert );
 			return insert;
 		}

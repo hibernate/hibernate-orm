@@ -42,4 +42,7 @@ public interface InsertGeneratedIdentifierDelegate {
 	 */
 	Serializable performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
 
+	default void performInsert(String insertSQL, Serializable partialKey, SharedSessionContractImplementor session, Binder binder) {
+		performInsert(insertSQL,session, binder);
+	}
 }

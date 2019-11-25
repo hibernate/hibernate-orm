@@ -7,6 +7,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.type.Type;
@@ -24,7 +25,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	private final IdentifierValue unsavedValue;
 	private final IdentifierGenerator identifierGenerator;
 	private final boolean identifierAssignedByInsert;
-	private final boolean hasIdentifierMapper;
+	private final boolean hasNestedIdentifierAssignedByInsert;
+	private boolean hasIdentifierMapper;
 
 	/**
 	 * Construct a non-virtual identifier property.
@@ -50,6 +52,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.hasNestedIdentifierAssignedByInsert = ( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator )
+				&& ( ( (CompositeNestedGeneratedValueGenerator) identifierGenerator ).hasPostInsertGeneratedValue() );
 	}
 
 	/**
@@ -74,6 +78,8 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
+		this.hasNestedIdentifierAssignedByInsert = ( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator )
+				&& ( ( (CompositeNestedGeneratedValueGenerator) identifierGenerator ).hasPostInsertGeneratedValue() );
 	}
 
 	@Override
@@ -99,6 +105,10 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	@Override
 	public boolean isIdentifierAssignedByInsert() {
 		return identifierAssignedByInsert;
+	}
+
+	public boolean hasNestedIdentifierAssignedByInsert() {
+		return hasNestedIdentifierAssignedByInsert;
 	}
 
 	@Override

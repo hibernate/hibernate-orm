@@ -431,6 +431,17 @@ public interface EntityPersister extends EntityDefinition {
 	throws HibernateException;
 
 	/**
+	 * Persist an instance, using a natively generated identifier (optional operation),
+	 * providing a partial composite id.
+	 */
+	default Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session, Serializable partialId)
+			throws HibernateException {
+		// We let the implementation to provide an implementation that will use the partialId parameter.
+		// Using a default allows to do not change the spi.
+		return insert( fields, object, session );
+	}
+
+	/**
 	 * Delete a persistent instance
 	 */
 	void delete(Serializable id, Object version, Object object, SharedSessionContractImplementor session)

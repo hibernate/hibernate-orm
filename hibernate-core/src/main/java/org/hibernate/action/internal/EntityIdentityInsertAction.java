@@ -55,8 +55,34 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			boolean isVersionIncrementDisabled,
 			SharedSessionContractImplementor session,
 			boolean isDelayed) {
+		this( state, instance, persister, isVersionIncrementDisabled, session, isDelayed, null);
+	}
+
+	/**
+	 * This method is supposed to be used only by any subtype,
+	 * such as {@link EntityCompositeIdentityInsertAction},
+	 * that requires to pass the partial id as id to the supertype {@link AbstractEntityInsertAction}.
+	 *
+	 * @param state The current (extracted) entity state
+	 * @param instance The entity instance
+	 * @param persister The entity persister
+	 * @param isVersionIncrementDisabled Whether version incrementing is disabled
+	 * @param session The session
+	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
+	 * @param partialId Optional partial id. Used for composite nested identity generation.
+	 *
+	 * @throws HibernateException Indicates an illegal state
+	 */
+	protected EntityIdentityInsertAction(
+			Object[] state,
+			Object instance,
+			EntityPersister persister,
+			boolean isVersionIncrementDisabled,
+			SharedSessionContractImplementor session,
+			boolean isDelayed,
+			Serializable partialId) {
 		super(
-				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
+				( isDelayed ? generateDelayedPostInsertIdentifier() : partialId ),
 				state,
 				instance,
 				isVersionIncrementDisabled,
@@ -81,7 +107,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			generatedId = persister.insert( getState(), instance, session );
+			generatedId = generateId( persister, session, instance );
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( generatedId, instance, getState(), session );
 			}
@@ -117,6 +143,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	public boolean needsAfterTransactionCompletion() {
 		//TODO: simply remove this override if we fix the above todos
 		return hasPostCommitEventListeners();
+	}
+
+	protected Serializable generateId(EntityPersister persister, SharedSessionContractImplementor session, Object instance) {
+		return persister.insert( getState(), instance, session );
 	}
 
 	@Override

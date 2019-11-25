@@ -8,19 +8,24 @@ package org.hibernate.id;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.identity.CompositeGeneratedIdentifierReturningDelegate;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.type.Type;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
  * need to happen to "fill" the identifier property(s).
  * <p/>
  * This generator is used implicitly for all composite identifier scenarios if an
- * explicit generator is not in place.  So it make sense to discuss the various 
+ * explicit generator is not in place.  So it make sense to discuss the various
  * potential scenarios:<ul>
  * <li>
  * <i>"embedded" composite identifier</i> - this is possible only in HBM mappings
@@ -77,8 +82,26 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext);
 	}
 
+	public interface PostInsertGenerationPlan {
+
+		String columnName();
+
+		Type type();
+
+		/**
+		 * Set the post-insert generated value.
+		 *
+		 * @param session The current session
+		 * @param generated The post insert generated value
+		 * @param injectionContext The context into which the generated value can be injected
+		 */
+		void set(SharedSessionContractImplementor session, Serializable generated, Object injectionContext);
+	}
+
 	private final GenerationContextLocator generationContextLocator;
-	private List<GenerationPlan> generationPlans = new ArrayList<>();
+
+	private final List<GenerationPlan> generationPlans = new ArrayList<>();
+	private final List<PostInsertGenerationPlan> postInsertGenerationPlans = new ArrayList<>();
 
 	public CompositeNestedGeneratedValueGenerator(GenerationContextLocator generationContextLocator) {
 		this.generationContextLocator = generationContextLocator;
@@ -86,6 +109,10 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 
 	public void addGeneratedValuePlan(GenerationPlan plan) {
 		generationPlans.add( plan );
+	}
+
+	public void addPostInsertGeneratedValuePlan(PostInsertGenerationPlan plan) {
+		postInsertGenerationPlans.add( plan );
 	}
 
 	@Override
@@ -105,5 +132,14 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		for (GenerationPlan plan : generationPlans) {
 			plan.registerExportables( database );
 		}
+	}
+
+	public boolean hasPostInsertGeneratedValue() {
+		return !postInsertGenerationPlans.isEmpty();
+	}
+
+	public CompositeGeneratedIdentifierReturningDelegate getInsertGeneratedIdentifierDelegate(AbstractEntityPersister persister, Dialect dialect) {
+		// TODO Have different strategies for useGetGeneratedKeys: yes/no
+		return new CompositeGeneratedIdentifierReturningDelegate( persister, dialect, new HashSet<>( postInsertGenerationPlans ) );
 	}
 }

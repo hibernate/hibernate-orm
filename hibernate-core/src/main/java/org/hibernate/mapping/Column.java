@@ -362,6 +362,11 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return quoted ? name : name.toLowerCase( Locale.ROOT );
 	}
 
+	public boolean hasPostInsertIdentifierGenerator() {
+		return ( value instanceof SimpleValue ) ?
+				( (SimpleValue) value ).hasPostInsertIdentifierGenerator() : false;
+	}
+
 	/**
 	 * Shallow copy, the value is not copied
 	 */

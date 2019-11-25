@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -25,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
@@ -453,12 +455,22 @@ public class Component extends SimpleValue implements MetaAttributable {
 						defaultSchema,
 						rootClass
 				);
-				generator.addGeneratedValuePlan(
-						new ValueGenerationPlan(
-								valueGenerator,
-								injector( property, attributeDeclarer )
-						)
-				);
+
+				if ( valueGenerator instanceof PostInsertIdentifierGenerator ) {
+					// if the nested generator is a post insert generator,
+					// use a different kind of plan to handle the generated value
+					generator.addPostInsertGeneratedValuePlan( new PostInsertValueGenerationPlan(
+							injector( property, attributeDeclarer ), property
+					) );
+				}
+				else {
+					generator.addGeneratedValuePlan(
+							new ValueGenerationPlan(
+									valueGenerator,
+									injector( property, attributeDeclarer )
+							)
+					);
+				}
 			}
 		}
 		return generator;
@@ -518,4 +530,42 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 	}
 
+	public static class PostInsertValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.PostInsertGenerationPlan {
+		private final Setter injector;
+		private final Property property;
+
+		public PostInsertValueGenerationPlan(Setter injector, Property property) {
+			this.injector = injector;
+			this.property = property;
+		}
+
+		@Override
+		public String columnName() {
+			Iterator<Selectable> it = property.getValue().getColumnIterator();
+			if ( !it.hasNext() ) {
+				throw new PostInsertValueGenerationPlanException( property.getName() );
+			}
+
+			// return first column: it is supposed to have at most one column for the property
+			return it.next().getText();
+		}
+
+		@Override
+		public Type type() {
+			return property.getType();
+		}
+
+		@Override
+		public void set(SharedSessionContractImplementor session, Serializable generatedValue, Object injectionContext) {
+			injector.set( injectionContext, generatedValue, session.getFactory() );
+		}
+	}
+
+	private static class PostInsertValueGenerationPlanException extends HibernateException {
+
+		public PostInsertValueGenerationPlanException(String propertyName) {
+			super( "Unexpected exception on post insert value generation for a composite key: " +
+					"it is supposed to have at least one column for the property: " + propertyName );
+		}
+	}
 }

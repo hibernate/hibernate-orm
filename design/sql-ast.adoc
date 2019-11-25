@@ -2,7 +2,8 @@
 
 Ultimately our goal here is to have a `JdbcOperation` object to be executed.  Generally, that would look like this:
 
-````
+[source]
+----
 		final SelectStatement sqlAst = ...;
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -19,8 +20,7 @@ Ultimately our goal here is to have a `JdbcOperation` object to be executed.  Ge
 				jdbcParameterBindings,
 				...
 		);
-
-````
+----
 
 
 == The Tree

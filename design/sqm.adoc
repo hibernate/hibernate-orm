@@ -2,9 +2,13 @@
 
 The Semantic Query Model (SQM) is Hibernate's representation of an HQL or Criteria query's semantic (meaning).  This
 representation is modeled as an "abstract syntax tree" (AST) - meaning it is a structured tree of nodes where each node
-represrents an atomic piece of the query.  E.g. `SqmSelectClause` represents the query's select clause as you might
-imagine.  That `SqmSelectClause` is ultimately a collection of one or more `SqmSelection` references representing the
-individual selections to be returned from the query (called the domain results).
+represents an atomic piece of the query.  E.g. `SqmSelectClause` represents the query's select clause.
+`SqmSelectClause` is ultimately a collection of one or more `SqmSelection` references representing the individual
+selections to be returned from the query (called the domain results).  Etc
+
+All of these details are handled by the `QuerySqmImpl` implementation of `Query`.  This is what Hibernate
+uses for both HQL and Criteria queries.
+
 
 == The Tree
 
@@ -18,14 +22,14 @@ See the `design/type-system-domain.adoc` design doc.  For details about this dom
 The tree model is defined in the package `org.hibernate.query.sqm.tree`
 
 
-== Building an SQM
+== Building an SQM - HQL
+
+`org.hibernate.query.hql.HqlTranslator#translate`
 
 
-=== HQL
+== Building an SQM - Criteria
 
-
-=== Criteria
-
+`org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder`
 
 
 == Translating an SQM
@@ -33,5 +37,19 @@ The tree model is defined in the package `org.hibernate.query.sqm.tree`
 Generic support for walking over the SQM tree via the `org.hibernate.query.sqm.SemanticQueryWalker` contract.
 
 More specialized support specifically for translating the SQM into a SQL AST is also defined by
-`org.hibernate.query.sqm.sql.SqmToSqlAstConverter`.  The document `design/sql-ast.adoc` for details about the SQL AST,
-including its execution.
+`org.hibernate.query.sqm.sql.SqmToSqlAstConverter`.
+
+[source]
+----
+		final SessionFactoryImplementor sessionFactory = ...;
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
+
+		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+
+		final SqmSelectTranslator sqmConverter = sqmTranslatorFactory.createSelectTranslator( ... );
+
+		final SqmSelectTranslation interpretation = sqmConverter.translate( sqm );
+----
+
+
+See the document `design/sql-ast.adoc` for details about the SQL AST, including its execution.

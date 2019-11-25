@@ -4416,7 +4416,7 @@ public abstract class AbstractEntityPersister
 		}
 		else if ( hasNestedIdentifierAssignedByInsert() ) {
 			identityDelegate = ( (CompositeNestedGeneratedValueGenerator) getIdentifierGenerator() )
-					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect() );
+					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect(), useGetGeneratedKeys() );
 			// TODO handle sqlIdentityInsertString: so far we keep null
 			sqlIdentityInsertString = customSQLInsert[0] == null
 					? sqlInsertStrings[0]

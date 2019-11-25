@@ -307,7 +307,7 @@ public class JdbcMetadataBuilder {
         Iterator<Column> columns = fk.getColumnIterator();
         while (columns.hasNext()) {
             Column fkcolumn = (Column) columns.next();
-            checkColumn(fkcolumn);
+			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
             value.addColumn(fkcolumn);
             processedColumns.add(fkcolumn);
         }
@@ -349,7 +349,7 @@ public class JdbcMetadataBuilder {
 		Iterator<Column> columns = fk.getColumnIterator();
         while ( columns.hasNext() ) {
 			Column fkcolumn = (Column) columns.next();
-            checkColumn(fkcolumn);
+			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
             value.addColumn(fkcolumn);
             processedColumns.add(fkcolumn);
 		}
@@ -658,7 +658,7 @@ public class JdbcMetadataBuilder {
 
 			naturalId = "assigned".equals( tableIdentifierStrategyName );
 			Column pkc = (Column) keyColumns.get(0);
-			checkColumn(pkc);
+			BinderUtils.checkColumnForMultipleBinding(pkc);
 
 			id = SimpleValueBinder.bind(
 					metadataBuildingContext, 
@@ -762,7 +762,7 @@ public class JdbcMetadataBuilder {
 		for (Iterator<?> iterator = table.getColumnIterator(); iterator.hasNext();) {
 			Column column = (Column) iterator.next();
 			if ( !processedColumns.contains(column) ) {
-				checkColumn(column);
+				BinderUtils.checkColumnForMultipleBinding(column);
 				String propertyName = 
 						RevEngUtils.getColumnToPropertyNameInRevengStrategy(
 								revengStrategy, 
@@ -844,12 +844,6 @@ public class JdbcMetadataBuilder {
         return false;
     }
 
-	private void checkColumn(Column column) {
-		if(column.getValue()!=null) {
-			//throw new JDBCBinderException("Binding column twice should not happen. " + column);
-		}
-	}
-
 	/**
      * Basically create an [classname]Id.class and add  properties for it.
 	 * @param rc
@@ -884,7 +878,7 @@ public class JdbcMetadataBuilder {
                     throw new RuntimeException("Binding column twice for primary key should not happen: " + column);
                 }
 				else {
-                    checkColumn(column);
+					BinderUtils.checkColumnForMultipleBinding(column);
                     String propertyName = revengStrategy.columnToPropertyName( TableIdentifier.create(table), column.getName() );
                     property = BasicPropertyBinder
                     		.create(metadataBuildingContext, metadataCollector, revengStrategy, defaultCatalog, defaultSchema)

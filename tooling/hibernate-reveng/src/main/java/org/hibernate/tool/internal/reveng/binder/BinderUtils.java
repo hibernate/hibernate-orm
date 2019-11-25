@@ -7,15 +7,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
 public class BinderUtils {
+	
+	public static Logger LOGGER = Logger.getLogger(BinderUtils.class.getName());
 
     public static String makeUnique(
     		Iterator<Property> props, 
@@ -61,6 +64,14 @@ public class BinderUtils {
 			return Collections.emptyMap();
 		} else {
 			return map;
+		}
+	}
+
+	public static void checkColumnForMultipleBinding(Column column) {
+		if(column.getValue()!=null) {
+			LOGGER.log(Level.WARNING, "Binding column twice should not happen. " + column);
+// TODO enable this next line and investigate why the tests fail
+//			throw new RuntimeException("Binding column twice should not happen. " + column);
 		}
 	}
 

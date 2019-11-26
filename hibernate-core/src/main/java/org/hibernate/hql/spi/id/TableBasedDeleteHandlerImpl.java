@@ -68,7 +68,7 @@ public class TableBasedDeleteHandlerImpl
 				AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory.getMetamodel().collectionPersister( cType.getRole() );
 				if ( cPersister.isManyToMany() ) {
 					deletes.add( generateDelete( cPersister.getTableName(),
-							cPersister.getKeyColumnNames(), idSubselect, "bulk delete - m2m join table cleanup"));
+							cPersister.getKeyColumnNames(), generateIdSubselect( targetedPersister, cPersister, idTableInfo ), "bulk delete - m2m join table cleanup"));
 				}
 			}
 		}

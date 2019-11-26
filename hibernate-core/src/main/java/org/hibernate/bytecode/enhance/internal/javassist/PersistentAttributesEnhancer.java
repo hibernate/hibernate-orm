@@ -520,26 +520,30 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		// make sure to add the CompositeOwner interface
 		addCompositeOwnerInterface( managedCtClass );
 
+		String readFragment = persistentField.visibleFrom( managedCtClass ) ? persistentField.getName() : "super." + EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName() + "()";
+
 		// cleanup previous owner
 		fieldWriter.insertBefore(
 				String.format(
-						"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%1$s\"); }%n",
-						persistentField.getName(),
+						"if (%1$s != null) { ((%2$s) %1$s).%3$s(\"%4$s\"); }%n",
+						readFragment,
 						CompositeTracker.class.getName(),
-						EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER
+						EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER,
+						persistentField.getName()
 				)
 		);
 
 		// trigger track changes
 		fieldWriter.insertAfter(
 				String.format(
-						"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%1$s\", (%3$s) this); }%n" +
-								"%5$s(\"%1$s\");",
-						persistentField.getName(),
+						"if (%1$s != null) { ((%2$s) %1$s).%4$s(\"%6$s\", (%3$s) this); }%n" +
+								"%5$s(\"%6$s\");",
+						readFragment,
 						CompositeTracker.class.getName(),
 						CompositeOwner.class.getName(),
 						EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
-						EnhancerConstants.TRACKER_CHANGER_NAME
+						EnhancerConstants.TRACKER_CHANGER_NAME,
+						persistentField.getName()
 				)
 		);
 	}

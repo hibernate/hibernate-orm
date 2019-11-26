@@ -26,6 +26,14 @@ import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.field.FieldDescription;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.StackManipulation;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
+import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
+import net.bytebuddy.jar.asm.Opcodes;
 
 class CodeTemplates {
 
@@ -509,5 +517,27 @@ class CodeTemplates {
 	@Retention(RetentionPolicy.RUNTIME)
 	@interface MappedBy {
 
+	}
+
+	// mapping to get private field from superclass by calling the enhanced reader, for use when field is not visible
+	static class GetterMapping implements Advice.OffsetMapping {
+
+		private final FieldDescription persistentField;
+
+		GetterMapping(FieldDescription persistentField) {
+			this.persistentField = persistentField;
+		}
+
+		@Override public Target resolve(TypeDescription instrumentedType, MethodDescription instrumentedMethod, Assigner assigner, Advice.ArgumentHandler argumentHandler, Sort sort) {
+			MethodDescription.Token signature = new MethodDescription.Token( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(), Opcodes.ACC_PUBLIC, persistentField.getType() );
+			MethodDescription method = new MethodDescription.Latent( instrumentedType.getSuperClass().asErasure(), signature );
+
+			return new Target.AbstractReadOnlyAdapter() {
+				@Override
+				public StackManipulation resolveRead() {
+					return new StackManipulation.Compound( MethodVariableAccess.loadThis(), MethodInvocation.invoke( method ).special( method.getDeclaringType().asErasure() ) );
+				}
+			};
+		}
 	}
 }

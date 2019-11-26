@@ -7,6 +7,7 @@
 package org.hibernate.hql.internal.ast.exec;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -23,6 +24,7 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -58,7 +60,8 @@ public class DeleteExecutor extends BasicExecutor {
 				final SqlGenerator gen = new SqlGenerator( factory );
 				gen.whereClause( whereClause );
 				parameterSpecifications = gen.getCollectedParameters();
-				idSubselectWhere = gen.getSQL().length() > 7 ? gen.getSQL() : "";
+				String sql = gen.getSQL();
+				idSubselectWhere = sql.length() > 7 ? sql : "";
 			}
 			else {
 				parameterSpecifications = new ArrayList<>();
@@ -74,8 +77,20 @@ public class DeleteExecutor extends BasicExecutor {
 					final CollectionType cType = (CollectionType) type;
 					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) metamodel.collectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
-						if ( persister.getIdentifierColumnNames().length > 1
-								&& notSupportingTuplesInSubqueries ) {
+						Type keyType = cPersister.getKeyType();
+						String[] columnNames;
+						if ( keyType.isComponentType() ) {
+							ComponentType componentType = (ComponentType) keyType;
+							List<String> columns = new ArrayList<>( componentType.getPropertyNames().length );
+							for ( String propertyName : componentType.getPropertyNames() ) {
+								Collections.addAll( columns, persister.toColumns( propertyName ) );
+							}
+							columnNames = columns.toArray( new String[columns.size()] );
+						}
+						else {
+							columnNames = persister.getIdentifierColumnNames();
+						}
+						if ( columnNames.length > 1 && notSupportingTuplesInSubqueries ) {
 							LOG.warn(
 									"This dialect is unable to cascade the delete into the many-to-many join table" +
 									" when the entity has multiple primary keys.  Either properly setup cascading on" +
@@ -83,11 +98,13 @@ public class DeleteExecutor extends BasicExecutor {
 							);
 						}
 						else {
-							final String idSubselect = "(select "
-									+ String.join( ", ", persister.getIdentifierColumnNames() ) + " from "
-									+ persister.getTableName() + idSubselectWhere + ")";
-							final String where = "(" + String.join( ", ", cPersister.getKeyColumnNames() )
-									+ ") in " + idSubselect;
+							StringBuilder whereBuilder = new StringBuilder();
+							whereBuilder.append( '(' );
+							append( ", ", cPersister.getKeyColumnNames(), whereBuilder );
+							whereBuilder.append( ") in (select " );
+							append( ", ", columnNames, whereBuilder );
+							final String where = whereBuilder.append(" from ")
+								.append( persister.getTableName() ).append( idSubselectWhere ).append( ")" ).toString();
 							final Delete delete = new Delete().setTableName( cPersister.getTableName() ).setWhere( where );
 							if ( commentsEnabled ) {
 								delete.setComment( "delete FKs in join table" );
@@ -100,6 +117,14 @@ public class DeleteExecutor extends BasicExecutor {
 		}
 		catch (RecognitionException e) {
 			throw new HibernateException( "Unable to delete the FKs in the join table!", e );
+		}
+	}
+
+	private static void append(String delimiter, String[] parts, StringBuilder sb) {
+		sb.append( parts[0] );
+		for ( int i = 1; i < parts.length; i++ ) {
+			sb.append( delimiter );
+			sb.append( parts[i] );
 		}
 	}
 	

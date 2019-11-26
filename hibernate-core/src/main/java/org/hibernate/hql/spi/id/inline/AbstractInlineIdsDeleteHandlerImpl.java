@@ -9,6 +9,7 @@ package org.hibernate.hql.spi.id.inline;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.engine.spi.QueryParameters;
@@ -17,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
@@ -61,7 +63,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 						deletes.add( generateDelete(
 								cPersister.getTableName(),
 								cPersister.getKeyColumnNames(),
-								idSubselect,
+								generateIdSubselect( idSubselect, getTargetedQueryable(), cPersister ),
 								"bulk delete - m2m join table cleanup"
 						).toStatementString() );
 					}
@@ -100,6 +102,28 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 		}
 
 		return values.getIds().size();
+	}
+
+	protected String generateIdSubselect(String idSubselect, Queryable persister, AbstractCollectionPersister cPersister) {
+		String[] columnNames = getKeyColumnNames( persister, cPersister );
+		// If the column names are equal to the identifier column names, just return the idSubselect
+		if ( Arrays.equals(getTargetedQueryable().getIdentifierColumnNames(), columnNames ) ) {
+			return idSubselect;
+		}
+
+		// Otherwise, we need to fetch the key column names from the original table
+		// Unfortunately, this is a bit more work, as only the identifiers are fetched
+		// It would be great if we could adapt #selectIds to fetch key columns as well
+		StringBuilder selectBuilder = new StringBuilder();
+		selectBuilder.append( "select " );
+		appendJoined( ", ", columnNames, selectBuilder );
+		selectBuilder.append( " from " ).append( getTargetedQueryable().getTableName() );
+		selectBuilder.append( " tmp where (" );
+		appendJoined( ", ", getTargetedQueryable().getIdentifierColumnNames(), selectBuilder );
+		selectBuilder.append( ") in (" );
+		selectBuilder.append( idSubselect );
+		selectBuilder.append( ")" );
+		return selectBuilder.toString();
 	}
 
 	protected Delete generateDelete(

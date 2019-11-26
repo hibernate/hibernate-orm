@@ -11,6 +11,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,10 +22,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -239,6 +243,16 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13752")
+	public void deleteWithNaturalIdBasedJoinTable() {
+		doInHibernate( this::sessionFactory, session -> {
+			Query query = session.createQuery(
+				"DELETE FROM Book b WHERE 1=0" );
+			query.executeUpdate();
+		} );
+	}
+
 	private int getSQLJoinCount(Query query) {
 		String sqlQuery = getSQLQuery( query ).toLowerCase();
 
@@ -315,6 +329,14 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 		@NaturalId
 		@Column(name = "isbn", unique = true)
 		private String isbn;
+
+		@OneToMany
+		@JoinTable(
+			name = "similar_books",
+			joinColumns = @JoinColumn(name = "base_isbn", referencedColumnName = "isbn"),
+			inverseJoinColumns = @JoinColumn(name = "ref_isbn", referencedColumnName = "isbn_ref")
+		)
+		private Set<BookRef> similarBooks;
 
 	}
 

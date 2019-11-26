@@ -6,6 +6,7 @@
  */
 package org.hibernate.hql.spi.id;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.param.ParameterSpecification;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
@@ -23,6 +25,8 @@ import org.hibernate.sql.SelectValues;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 
 /**
  * Convenience base class for {@link MultiTableBulkIdStrategy.UpdateHandler}
@@ -191,6 +195,40 @@ public abstract class AbstractTableBasedBulkIdHandler {
 	protected String generateIdSubselect(Queryable persister, IdTableInfo idTableInfo) {
 		return "select " + String.join( ", ", persister.getIdentifierColumnNames() ) +
 				" from " + idTableInfo.getQualifiedIdTableName();
+	}
+
+	protected String generateIdSubselect(Queryable persister, AbstractCollectionPersister cPersister, IdTableInfo idTableInfo) {
+		String[] columnNames = getKeyColumnNames( persister, cPersister );
+		StringBuilder selectBuilder = new StringBuilder();
+		selectBuilder.append( "select " );
+		appendJoined( ", ", columnNames, selectBuilder  );
+		return selectBuilder.append( " from " )
+			.append( idTableInfo.getQualifiedIdTableName() ).toString();
+	}
+
+	protected static String[] getKeyColumnNames(Queryable persister, AbstractCollectionPersister cPersister) {
+		Type keyType = cPersister.getKeyType();
+		String[] columnNames;
+		if ( keyType.isComponentType() ) {
+			ComponentType componentType = (ComponentType) keyType;
+			List<String> columns = new ArrayList<>(componentType.getPropertyNames().length );
+			for ( String propertyName : componentType.getPropertyNames() ) {
+				Collections.addAll( columns, persister.toColumns( propertyName ) );
+			}
+			columnNames = columns.toArray( new String[columns.size()] );
+		}
+		else {
+			columnNames = persister.getIdentifierColumnNames();
+		}
+		return columnNames;
+	}
+
+	protected static void appendJoined(String delimiter, String[] parts, StringBuilder sb) {
+		sb.append( parts[0] );
+		for ( int i = 1; i < parts.length; i++ ) {
+			sb.append( delimiter );
+			sb.append( parts[i] );
+		}
 	}
 
 	protected void prepareForUse(Queryable persister, SharedSessionContractImplementor session) {

@@ -28,11 +28,9 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
@@ -189,16 +187,16 @@ public class JdbcMetadataBuilder {
 			metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
 
 			Set<Column> processed = new HashSet<Column>();
-
-			PrimaryKeyInfo pki = PrimaryKeyBinder
+			
+			PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
 					.create(
 							metadataBuildingContext, 
 							metadataCollector, 
 							revengStrategy, 
 							defaultCatalog, 
 							defaultSchema, 
-							preferBasicCompositeIds)
-					.bind(
+							preferBasicCompositeIds);
+			PrimaryKeyInfo pki = primaryKeyBinder.bind(
 							table, 
 							rc, 
 							processed, 
@@ -220,47 +218,12 @@ public class JdbcMetadataBuilder {
 			
 			bindOutgoingForeignKeys(table, rc, processed);
 			bindColumnsToProperties(table, rc, processed, mapping);
-			List<ForeignKey> incomingForeignKeys = manyToOneCandidates.get( rc.getEntityName() );
-			bindIncomingForeignKeys(rc, processed, incomingForeignKeys, mapping);
-			updatePrimaryKey(rc, pki);
+			bindIncomingForeignKeys(rc, processed, manyToOneCandidates.get( rc.getEntityName()), mapping);
+			primaryKeyBinder.updatePrimaryKey(rc, pki);
 
 		}
 		
 		metadataCollector.processSecondPasses(metadataBuildingContext);		
-	}
-
-	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
-		SimpleValue idValue = (SimpleValue) rc.getIdentifierProperty().getValue();
-
-		Properties defaultStrategyProperties = new Properties();
-		Property constrainedOneToOne = getConstrainedOneToOne(rc);
-		if(constrainedOneToOne!=null) {
-			if(pki.suggestedStrategy==null) {
-				idValue.setIdentifierGeneratorStrategy("foreign");
-			}
-
-			if(pki.suggestedProperties==null) {
-				defaultStrategyProperties.setProperty("property", constrainedOneToOne.getName());
-				idValue.setIdentifierGeneratorProperties(defaultStrategyProperties);
-			}
-		}
-
-
-
-	}
-
-	private Property getConstrainedOneToOne(RootClass rc) {
-		Iterator<?> propertyClosureIterator = rc.getPropertyClosureIterator();
-		while (propertyClosureIterator.hasNext()) {
-			Property property = (Property) propertyClosureIterator.next();
-			if(property.getValue() instanceof OneToOne) {
-				OneToOne oto = (OneToOne) property.getValue();
-				if(oto.isConstrained()) {
-					return property;
-				}
-			}
-		}
-		return null;
 	}
 
 	// bind collections.

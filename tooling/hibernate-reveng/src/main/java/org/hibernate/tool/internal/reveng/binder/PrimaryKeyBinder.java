@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +18,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -170,6 +172,26 @@ public class PrimaryKeyBinder {
 		return pki;
 	}
 
+	public void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
+		SimpleValue idValue = (SimpleValue) rc.getIdentifierProperty().getValue();
+
+		Properties defaultStrategyProperties = new Properties();
+		Property constrainedOneToOne = getConstrainedOneToOne(rc);
+		if(constrainedOneToOne!=null) {
+			if(pki.suggestedStrategy==null) {
+				idValue.setIdentifierGeneratorStrategy("foreign");
+			}
+
+			if(pki.suggestedProperties==null) {
+				defaultStrategyProperties.setProperty("property", constrainedOneToOne.getName());
+				idValue.setIdentifierGeneratorProperties(defaultStrategyProperties);
+			}
+		}
+
+
+
+	}
+
 	private SimpleValue handleCompositeKey(
 			RootClass rc, 
 			Set<Column> processedColumns, 
@@ -259,5 +281,19 @@ public class PrimaryKeyBinder {
         m.put(ma.getName(),ma);
         property.setMetaAttributes(m);
     }
+
+	private Property getConstrainedOneToOne(RootClass rc) {
+		Iterator<?> propertyClosureIterator = rc.getPropertyClosureIterator();
+		while (propertyClosureIterator.hasNext()) {
+			Property property = (Property) propertyClosureIterator.next();
+			if(property.getValue() instanceof OneToOne) {
+				OneToOne oto = (OneToOne) property.getValue();
+				if(oto.isConstrained()) {
+					return property;
+				}
+			}
+		}
+		return null;
+	}
 
 }

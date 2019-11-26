@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
+import org.hibernate.testing.orm.domain.gambit.EntityWithAggregateId;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
@@ -153,6 +154,20 @@ public class MultiIdEntityLoadTests {
 		);
 	}
 
+	@Test
+	public void testMultiLoadingCompositeId(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final List<EntityWithAggregateId> entities = session.byMultipleIds( EntityWithAggregateId.class ).multiLoad(
+							new EntityWithAggregateId.Key( "abc", "def" ),
+							new EntityWithAggregateId.Key( "123", "456" )
+					);
+
+					assertThat( entities.size(), is( 2 ) );
+				}
+		);
+	}
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -163,6 +178,20 @@ public class MultiIdEntityLoadTests {
 					session.save( first );
 					session.save( second );
 					session.save( third );
+
+					session.save(
+							new EntityWithAggregateId(
+									new EntityWithAggregateId.Key( "abc", "def"),
+									"ghi"
+							)
+					);
+
+					session.save(
+							new EntityWithAggregateId(
+									new EntityWithAggregateId.Key( "123", "456"),
+									"789"
+							)
+					);
 				}
 		);
 	}
@@ -170,7 +199,10 @@ public class MultiIdEntityLoadTests {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createQuery( "delete BasicEntity" ).executeUpdate()
+				session -> {
+					session.createQuery( "delete BasicEntity" ).executeUpdate();
+					session.createQuery( "delete EntityWithAggregateId" ).executeUpdate();
+				}
 		);
 	}
 

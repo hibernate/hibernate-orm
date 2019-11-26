@@ -30,6 +30,7 @@ public class GambitDomainModel extends AbstractDomainModelDescriptor {
 				EntityWithManyToOneJoinTable.class,
 				EntityWithManyToOneSelfReference.class,
 				EntityWithNonIdAttributeNamedId.class,
+				EntityWithAggregateId.class,
 				EntityWithOneToMany.class,
 				EntityWithOneToOne.class,
 				EntityWithOneToOneJoinTable.class,

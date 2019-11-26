@@ -40,9 +40,9 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.ForeignKeyBinder;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
-import org.hibernate.tool.internal.reveng.binder.OneToManyBinder;
 import org.hibernate.tool.internal.reveng.binder.OneToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
 import org.hibernate.tool.internal.reveng.binder.VersionPropertyBinder;
@@ -226,50 +226,16 @@ public class JdbcMetadataBuilder {
 		metadataCollector.processSecondPasses(metadataBuildingContext);		
 	}
 
-	// bind collections.
-	@SuppressWarnings("unchecked")
 	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, List<ForeignKey> foreignKeys, Mapping mapping) {
 		if(foreignKeys!=null) {
+			ForeignKeyBinder foreignKeyBinder = ForeignKeyBinder.create(
+					metadataBuildingContext, 
+					metadataCollector, 
+					revengStrategy, 
+					defaultCatalog, 
+					defaultSchema);
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
-				ForeignKey foreignKey = iter.next();
-
-				if(revengStrategy.excludeForeignKeyAsCollection(
-						foreignKey.getName(),
-						TableIdentifier.create(foreignKey.getTable() ),
-						foreignKey.getColumns(),
-						TableIdentifier.create(foreignKey.getReferencedTable() ),
-						foreignKey.getReferencedColumns())) {
-					log.debug("Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
-				} else if (revengStrategy.isOneToOne(foreignKey)){
-	            	Property property = OneToOneBinder
-	            			.create(
-	            					metadataBuildingContext, 
-	            					revengStrategy, 
-	            					defaultCatalog, 
-	            					defaultSchema)
-	            			.bind(
-	            					rc, 
-	            					foreignKey.getTable(), 
-	            					foreignKey, 
-	            					processed, 
-	            					false, 
-	            					true);
-					rc.addProperty(property);
-				} else {
-					Property property = OneToManyBinder
-							.create(
-									metadataBuildingContext, 
-									metadataCollector, 
-									revengStrategy, 
-									defaultCatalog, 
-									defaultSchema)
-							.bind(
-									rc, 
-									foreignKey, 
-									processed, 
-									mapping);
-					rc.addProperty(property);
-				}
+				foreignKeyBinder.bind(iter.next(), rc, processed, mapping);
 			}
 		}
 	}

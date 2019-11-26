@@ -13,7 +13,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.FetchMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -43,13 +42,12 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
-import org.hibernate.tool.internal.reveng.binder.EntityPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.OneToManyBinder;
+import org.hibernate.tool.internal.reveng.binder.OneToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
 import org.hibernate.tool.internal.reveng.binder.VersionPropertyBinder;
-import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
 
 
@@ -280,7 +278,19 @@ public class JdbcMetadataBuilder {
 						foreignKey.getReferencedColumns())) {
 					log.debug("Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
 				} else if (revengStrategy.isOneToOne(foreignKey)){
-					Property property = bindOneToOne(rc, foreignKey.getTable(), foreignKey, processed, false, true);
+	            	Property property = OneToOneBinder
+	            			.create(
+	            					metadataBuildingContext, 
+	            					revengStrategy, 
+	            					defaultCatalog, 
+	            					defaultSchema)
+	            			.bind(
+	            					rc, 
+	            					foreignKey.getTable(), 
+	            					foreignKey, 
+	            					processed, 
+	            					false, 
+	            					true);
 					rc.addProperty(property);
 				} else {
 					Property property = OneToManyBinder
@@ -302,75 +312,7 @@ public class JdbcMetadataBuilder {
 	}
 
 
-    private Property bindOneToOne(PersistentClass rc, Table targetTable,
-            ForeignKey fk, Set<Column> processedColumns, boolean constrained, boolean inverseProperty) {
 
-        OneToOne value = new OneToOne(metadataBuildingContext, targetTable, rc);
-        value.setReferencedEntityName(revengStrategy
-                .tableToClassName(TableIdentifier.create(targetTable)));
-
-        boolean isUnique = ForeignKeyUtils.isUniqueReference(fk);
-        String propertyName = null;
-        if(inverseProperty) {
-            propertyName = revengStrategy.foreignKeyToInverseEntityName(
-        		fk.getName(),
-                TableIdentifier.create(fk.getReferencedTable()), 
-                fk.getReferencedColumns(), 
-                TableIdentifier.create(targetTable), 
-                fk.getColumns(), 
-                isUnique);
-        } else {
-            propertyName = revengStrategy.foreignKeyToEntityName(
-        		fk.getName(),
-                TableIdentifier.create(fk.getReferencedTable()), 
-                fk.getReferencedColumns(), 
-                TableIdentifier.create(targetTable), 
-                fk.getColumns(), 
-                isUnique);
-        }
-
-        Iterator<Column> columns = fk.getColumnIterator();
-        while (columns.hasNext()) {
-            Column fkcolumn = (Column) columns.next();
-			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
-            value.addColumn(fkcolumn);
-            processedColumns.add(fkcolumn);
-        }
-
-        value.setFetchMode(FetchMode.SELECT);
-
-        value.setConstrained(constrained);
-        value.setForeignKeyType( constrained ?
-				ForeignKeyDirection.FROM_PARENT :
-				ForeignKeyDirection.TO_PARENT );
-
-        return EntityPropertyBinder
-        		.create(
-        				revengStrategy, 
-        				defaultCatalog, 
-        				defaultSchema)
-        		.bind(
-        				propertyName, 
-        				true, 
-        				targetTable, 
-        				fk, 
-        				value, 
-        				inverseProperty);
-
-    }
-
-	/**
-	 * @param rc
-	 * @param processed
-	 * @param table
-	 * @param object
-	 */
-	/**
-	 * bind many-to-ones
-	 * @param table
-	 * @param rc
-	 * @param primaryKey
-	 */
 	private void bindOutgoingForeignKeys(Table table, RootClass rc, Set<Column> processedColumns) {
 
 		// Iterate the outgoing foreign keys and create many-to-one's
@@ -391,7 +333,19 @@ public class JdbcMetadataBuilder {
             	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
             	log.debug("Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
             } else if (revengStrategy.isOneToOne(foreignKey)){
-				Property property = bindOneToOne(rc, foreignKey.getReferencedTable(), foreignKey, processedColumns, true, false);
+            	Property property = OneToOneBinder
+            			.create(
+            					metadataBuildingContext, 
+            					revengStrategy, 
+            					defaultCatalog, 
+            					defaultSchema)
+            			.bind(
+            					rc, 
+            					foreignKey.getReferencedTable(), 
+            					foreignKey, 
+            					processedColumns, 
+            					true, 
+            					false);
 				rc.addProperty(property);
 			} else {
             	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);

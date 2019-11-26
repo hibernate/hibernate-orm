@@ -51,6 +51,7 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
+import org.hibernate.tool.internal.reveng.binder.CollectionPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.EntityPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
@@ -343,55 +344,6 @@ public class JdbcMetadataBuilder {
 
     }
 
-    private Property makeCollectionProperty(String propertyName, boolean mutable,
-			Table table, ForeignKey fk, Collection value, boolean inverseProperty) {
-    	AssociationInfo fkei = inverseProperty?revengStrategy.foreignKeyToInverseAssociationInfo(fk):revengStrategy.foreignKeyToAssociationInfo(fk);
-
-        String fetchMode = null;
-        String cascade = null;
-        boolean update = mutable;
-        boolean insert = mutable;
-
-        if(fkei != null){
-        	cascade = fkei.getCascade();
-        	if(cascade==null) cascade = "all"; //To ensure collections cascade to be compatible with Seam-gen and previous behavior.
-        	if(fkei.getUpdate()!=null) {
-        		update = fkei.getUpdate().booleanValue();
-        	}
-        	if(fkei.getInsert()!=null) {
-        		insert = fkei.getInsert().booleanValue();
-        	}
-
-        	fetchMode = fkei.getFetch();
-
-
-        }
-
-        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
-        }
-        else if(FetchMode.SELECT.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-        else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-
-        return PropertyBinder.bind(
-        		table, 
-        		defaultCatalog,
-        		defaultSchema,
-        		propertyName, 
-        		value, 
-        		insert, 
-        		update, 
-        		value.getFetchMode()!=FetchMode.JOIN, 
-        		cascade, 
-        		null,
-        		revengStrategy);
-
-	}
-
 	/**
 	 * @param rc
 	 * @param processed
@@ -499,8 +451,17 @@ public class JdbcMetadataBuilder {
 
 		metadataCollector.addCollectionBinding(collection);
 
-		return makeCollectionProperty(StringHelper.unqualify( collection.getRole() ), true, rc.getTable(), foreignKey, collection, true);
-		//return makeProperty(TableIdentifier.create( rc.getTable() ), StringHelper.unqualify( collection.getRole() ), collection, true, true, true, "none", null); // TODO: cascade isn't all by default
+		return CollectionPropertyBinder
+				.create(
+						revengStrategy, 
+						defaultCatalog, 
+						defaultSchema)
+				.bind(
+						StringHelper.unqualify( collection.getRole()), 
+						true, rc.getTable(), 
+						foreignKey, 
+						collection, 
+						true);
 
 
 	}

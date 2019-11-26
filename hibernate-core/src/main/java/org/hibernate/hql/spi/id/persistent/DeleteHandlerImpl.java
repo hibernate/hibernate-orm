@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.IdTableInfo;
 import org.hibernate.hql.spi.id.TableBasedDeleteHandlerImpl;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.SelectValues;
 
@@ -42,6 +43,11 @@ public class DeleteHandlerImpl extends TableBasedDeleteHandlerImpl {
 	@Override
 	protected String generateIdSubselect(Queryable persister, IdTableInfo idTableInfo) {
 		return super.generateIdSubselect( persister, idTableInfo ) + " where " + SESSION_ID_COLUMN_NAME + "=?";
+	}
+
+	@Override
+	protected String generateIdSubselect(Queryable persister, AbstractCollectionPersister cPersister, IdTableInfo idTableInfo) {
+		return super.generateIdSubselect( persister, cPersister, idTableInfo ) + " where " + SESSION_ID_COLUMN_NAME + "=?";
 	}
 
 	@Override

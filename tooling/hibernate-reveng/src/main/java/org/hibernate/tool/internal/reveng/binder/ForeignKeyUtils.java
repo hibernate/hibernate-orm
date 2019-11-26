@@ -9,6 +9,17 @@ import org.hibernate.mapping.ForeignKey;
 
 public class ForeignKeyUtils {
 
+    public static boolean isUniqueReference(ForeignKey foreignKey) {
+    	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
+    	while ( foreignKeyIterator.hasNext() ) {
+			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
+			if(element!=foreignKey && element.getReferencedTable().equals(foreignKey.getReferencedTable())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
     public static List<Object> findForeignKeys(Iterator<?> foreignKeyIterator, List<Column> pkColumns) {
     	List<ForeignKey> tempList = new ArrayList<ForeignKey>();
     	while(foreignKeyIterator.hasNext()) {

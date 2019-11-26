@@ -45,7 +45,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -53,9 +52,9 @@ import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
 import org.hibernate.tool.internal.reveng.binder.CollectionPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.EntityPropertyBinder;
+import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
-import org.hibernate.tool.internal.reveng.binder.PropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
@@ -294,7 +293,7 @@ public class JdbcMetadataBuilder {
         value.setReferencedEntityName(revengStrategy
                 .tableToClassName(TableIdentifier.create(targetTable)));
 
-        boolean isUnique = isUniqueReference(fk);
+        boolean isUnique = ForeignKeyUtils.isUniqueReference(fk);
         String propertyName = null;
         if(inverseProperty) {
             propertyName = revengStrategy.foreignKeyToInverseEntityName(
@@ -479,7 +478,7 @@ public class JdbcMetadataBuilder {
 			targetKey = toForeignKey;
 		}
 
-		boolean uniqueReference = isUniqueReference(targetKey); // TODO: need to look one step further for many-to-many!
+		boolean uniqueReference = ForeignKeyUtils.isUniqueReference(targetKey); // TODO: need to look one step further for many-to-many!
 		foreignKeyTable = TableIdentifier.create( targetKey.getTable() );
 		TableIdentifier foreignKeyReferencedTable = TableIdentifier.create( targetKey.getReferencedTable() );
 
@@ -529,19 +528,6 @@ public class JdbcMetadataBuilder {
 		return tableToClassName;
 	}
 
-	/** return true if this foreignkey is the only reference from this table to the same foreign table */
-    private boolean isUniqueReference(ForeignKey foreignKey) {
-
-    	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
-    	while ( foreignKeyIterator.hasNext() ) {
-			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
-			if(element!=foreignKey && element.getReferencedTable().equals(foreignKey.getReferencedTable())) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	/**
 	 * bind many-to-ones
 	 * @param table
@@ -571,7 +557,7 @@ public class JdbcMetadataBuilder {
 				Property property = bindOneToOne(rc, foreignKey.getReferencedTable(), foreignKey, processedColumns, true, false);
 				rc.addProperty(property);
 			} else {
-            	boolean isUnique = isUniqueReference(foreignKey);
+            	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);
             	String propertyName = revengStrategy.foreignKeyToEntityName(
             			foreignKey.getName(),
             			TableIdentifier.create(foreignKey.getTable() ),

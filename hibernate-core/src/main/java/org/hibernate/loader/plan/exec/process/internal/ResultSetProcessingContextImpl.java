@@ -344,20 +344,21 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		final Map<String, int[]> namedParameterLocMap =
 				ResultSetProcessorHelper.buildNamedParameterLocMap( queryParameters, namedParameterContext );
 
-		final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
+//		final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
 		for ( Map.Entry<EntityReference, Set<EntityKey>> entry : subselectLoadableEntityKeyMap.entrySet() ) {
 			if ( ! entry.getKey().getEntityPersister().hasSubselectLoadableCollections() ) {
 				continue;
 			}
 
-			SubselectFetch subselectFetch = new SubselectFetch(
-					subselectQueryString,
-					aliasResolutionContext.resolveSqlTableAliasFromQuerySpaceUid( entry.getKey().getQuerySpaceUid() ),
-					(Loadable) entry.getKey().getEntityPersister(),
-					queryParameters,
-					entry.getValue(),
-					namedParameterLocMap
-			);
+			SubselectFetch subselectFetch = null;
+//			SubselectFetch subselectFetch = new SubselectFetch(
+//					subselectQueryString,
+//					aliasResolutionContext.resolveSqlTableAliasFromQuerySpaceUid( entry.getKey().getQuerySpaceUid() ),
+//					(Loadable) entry.getKey().getEntityPersister(),
+//					queryParameters,
+//					entry.getValue(),
+//					namedParameterLocMap
+//			);
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			for ( EntityKey key : entry.getValue() ) {

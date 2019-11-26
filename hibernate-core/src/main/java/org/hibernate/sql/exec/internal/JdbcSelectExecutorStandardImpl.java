@@ -123,12 +123,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		return stream.onClose( scrollableResults::close );
 	}
 
-
-	private enum ExecuteAction {
-		EXECUTE_QUERY,
-
-	}
-
 	private <T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -173,8 +167,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
-				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
+		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
+				executionContext,
+				processingOptions,
+				executionContext::registerLoadingEntityEntry
+		);
 
 		final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 
@@ -186,7 +183,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 
 		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
-				jdbcValuesSourceProcessingState,
+				valuesProcessingState,
 				executionContext.getQueryOptions(),
 				rowReader,
 				jdbcValues
@@ -196,7 +193,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcValues,
 				executionContext.getSession(),
 				processingOptions,
-				jdbcValuesSourceProcessingState,
+				valuesProcessingState,
 				rowProcessingState,
 				rowReader
 		);

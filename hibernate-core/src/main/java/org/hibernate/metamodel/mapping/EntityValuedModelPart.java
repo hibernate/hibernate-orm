@@ -43,7 +43,8 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		// todo (6.0) : this is really only valid for root entity returns, not really many-to-ones, etc..
+		// creating the domain result should only ever be done for a root return.  otherwise `#generateFetch` should
+		// have been used.  so delegating to the entity-descriptor should be fine.
 		return getEntityMappingType().createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 
@@ -52,7 +53,8 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		// todo (6.0) : this is really only valid for root entity returns, not really many-to-ones, etc..
+		// this is really only valid for root entity returns, not really many-to-ones, etc..  but this should
+		// really only ever be called as part of creating a root-return.
 		getEntityMappingType().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 

@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal;
 import java.io.Serializable;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -16,6 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.LoadingCollectionEntry;
+import org.hibernate.sql.results.spi.RowProcessingState;
 
 /**
  * Represents a collection currently being loaded.
@@ -90,6 +92,8 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 
+		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
+		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x

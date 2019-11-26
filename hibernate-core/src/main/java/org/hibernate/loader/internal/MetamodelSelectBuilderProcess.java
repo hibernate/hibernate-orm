@@ -17,10 +17,14 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.spi.Loadable;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -28,15 +32,19 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.domain.collection.CollectionDomainResult;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.sql.results.spi.Fetch;
@@ -45,6 +53,8 @@ import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.sql.results.spi.FetchableContainer;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +84,30 @@ public class MetamodelSelectBuilderProcess {
 				jdbcParameterConsumer
 		);
 
-		return process.execute();
+		return process.generateSelect();
+	}
+
+	public static SelectStatement createSubSelectFetchSelect(
+			PluralAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			DomainResult cachedDomainResult,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final MetamodelSelectBuilderProcess process = new MetamodelSelectBuilderProcess(
+				sessionFactory,
+				attributeMapping,
+				null,
+				attributeMapping.getKeyDescriptor(),
+				cachedDomainResult,
+				-1,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect( subselect );
 	}
 
 	private final SqlAstCreationContext creationContext;
@@ -109,7 +142,205 @@ public class MetamodelSelectBuilderProcess {
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
 
-	private SelectStatement execute() {
+	private SelectStatement generateSelect(SubselectFetch subselect) {
+		// todo (6.0) : i think we may even be able to convert this to a join by piecing together
+		//		parts from the subselect-fetch sql-ast..
+
+		// todo (6.0) : ^^ another interesting idea is to use `partsToSelect` here relative to the owner
+		//		- so `loadable` is the owner entity-descriptor and the `partsToSelect` is the collection
+
+		assert loadable instanceof PluralAttributeMapping;
+
+		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
+
+		final QuerySpec rootQuerySpec = new QuerySpec( true );
+
+		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+
+		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				new SqlAliasBaseManager(),
+				new SimpleFromClauseAccessImpl(),
+				lockOptions,
+				this::visitFetches,
+				creationContext
+		);
+
+		// todo (6.0) : I think we want to continue to assign aliases to these table-references.  we just want
+		//  	to control how that gets rendered in the walker
+
+		final TableGroup rootTableGroup = loadable.createRootTableGroup(
+				rootNavigablePath,
+				null,
+				null,
+				lockOptions.getLockMode(),
+				sqlAstCreationState.getSqlAliasBaseManager(),
+				sqlAstCreationState.getSqlExpressionResolver(),
+				() -> rootQuerySpec::applyPredicate,
+				creationContext
+		);
+
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+
+		// generate and apply the restriction
+		applySubSelectRestriction(
+				rootQuerySpec,
+				rootNavigablePath,
+				rootTableGroup,
+				subselect,
+				sqlAstCreationState
+		);
+
+		// register the jdbc-parameters
+		subselect.getLoadingJdbcParameters().forEach( jdbcParameterConsumer );
+
+		return new SelectStatement(
+				rootQuerySpec,
+				Collections.singletonList(
+						new CollectionDomainResult(
+								rootNavigablePath,
+								attributeMapping,
+								null,
+								rootTableGroup,
+								sqlAstCreationState
+						)
+				)
+		);
+	}
+
+	private void applySubSelectRestriction(
+			QuerySpec querySpec,
+			NavigablePath rootNavigablePath,
+			TableGroup rootTableGroup,
+			SubselectFetch subselect,
+			LoaderSqlAstCreationState sqlAstCreationState) {
+		final SqlAstCreationContext sqlAstCreationContext = sqlAstCreationState.getCreationContext();
+		final SessionFactoryImplementor sessionFactory = sqlAstCreationContext.getSessionFactory();
+
+		assert loadable instanceof PluralAttributeMapping;
+		assert restrictedPart == null || restrictedPart instanceof ForeignKeyDescriptor;
+
+		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
+		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+
+		final Expression fkExpression;
+
+		final int jdbcTypeCount = fkDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		if ( jdbcTypeCount == 1 ) {
+			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
+			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
+			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+					createColumnReferenceKey(
+							simpleFkDescriptor.getContainingTableExpression(),
+							simpleFkDescriptor.getMappedColumnExpression()
+					),
+					sqlAstProcessingState -> new ColumnReference(
+							rootTableGroup.resolveTableReference( simpleFkDescriptor.getContainingTableExpression() ),
+							simpleFkDescriptor.getMappedColumnExpression(),
+							simpleFkDescriptor.getJdbcMapping(),
+							this.creationContext.getSessionFactory()
+					)
+			);
+		}
+		else {
+			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
+			fkDescriptor.visitColumns(
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
+						columnReferences.add(
+								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
+										createColumnReferenceKey( containingTableExpression, columnExpression ),
+										sqlAstProcessingState -> new ColumnReference(
+												rootTableGroup.resolveTableReference( containingTableExpression ),
+												columnExpression,
+												jdbcMapping,
+												this.creationContext.getSessionFactory()
+										)
+								)
+						);
+					}
+			);
+
+			fkExpression = new SqlTuple( columnReferences, fkDescriptor );
+		}
+
+		querySpec.applyPredicate(
+				new InSubQueryPredicate(
+						fkExpression,
+						generateSubSelect( attributeMapping, subselect, jdbcTypeCount, sqlAstCreationContext, sessionFactory ),
+						false
+				)
+		);
+	}
+
+	private QuerySpec generateSubSelect(
+			PluralAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			int jdbcTypeCount,
+			SqlAstCreationContext sqlAstCreationContext,
+			SessionFactoryImplementor sessionFactory) {
+		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+
+		final QuerySpec subQuery = new QuerySpec( false );
+
+		final QuerySpec loadingSqlAst = subselect.getLoadingSqlAst();
+
+		// transfer the from-clause
+		loadingSqlAst.getFromClause().visitRoots( subQuery.getFromClause()::addRoot );
+
+		// todo (6.0) : need to know the ColumnReference/TableReference part for the sub-query selection
+		//		for now we hope to get lucky and use the un-qualified name
+
+		if ( jdbcTypeCount == 1 ) {
+			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
+			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
+			subQuery.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							1,
+							0,
+							new ColumnReference(
+									(String) null,
+									simpleFkDescriptor.getTargetColumnExpression(),
+									simpleFkDescriptor.getJdbcMapping(),
+									sessionFactory
+							),
+							simpleFkDescriptor.getJdbcMapping()
+					)
+			);
+		}
+		else {
+			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
+
+			fkDescriptor.visitTargetColumns(
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
+						columnReferences.add(
+								new ColumnReference(
+										(String) null,
+										columnExpression,
+										jdbcMapping,
+										sessionFactory
+								)
+						);
+					}
+			);
+
+			subQuery.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							1,
+							0,
+							new SqlTuple( columnReferences, fkDescriptor ),
+							null
+					)
+			);
+		}
+
+		// transfer the restriction
+		subQuery.applyPredicate( loadingSqlAst.getWhereClauseRestrictions() );
+
+		return subQuery;
+	}
+
+	private SelectStatement generateSelect() {
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
 		final List<DomainResult> domainResults;
 
@@ -211,7 +442,7 @@ public class MetamodelSelectBuilderProcess {
 			final String columnExpression = basicKeyPart.getMappedColumnExpression();
 			final TableReference tableReference = rootTableGroup.resolveTableReference( tableExpression );
 			final ColumnReference columnRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+					createColumnReferenceKey( tableReference, columnExpression ),
 					p -> new ColumnReference(
 							tableReference,
 							columnExpression,
@@ -248,7 +479,7 @@ public class MetamodelSelectBuilderProcess {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey( tableReference, columnExpression ),
+										createColumnReferenceKey( tableReference, columnExpression ),
 										p -> new ColumnReference(
 												tableReference,
 												columnExpression,

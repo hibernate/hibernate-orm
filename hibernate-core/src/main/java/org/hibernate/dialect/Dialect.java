@@ -2922,6 +2922,7 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
+	@SuppressWarnings({"Convert2Lambda", "WeakerAccess"})
 	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
 		@Override
 		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys) {

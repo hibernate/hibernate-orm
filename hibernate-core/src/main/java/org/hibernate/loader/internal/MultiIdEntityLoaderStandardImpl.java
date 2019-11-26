@@ -9,6 +9,7 @@ package org.hibernate.loader.internal;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,18 +18,21 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.loader.spi.MultiIdEntityLoader;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -36,6 +40,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
@@ -46,6 +51,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.LoadingEntityEntry;
 
 import org.jboss.logging.Logger;
 
@@ -177,6 +183,7 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 			if ( idsInBatch.size() >= maxBatchSize ) {
 				// we've hit the allotted max-batch-size, perform an "intermediate load"
 				loadEntitiesById( idsInBatch, lockOptions, session );
+				idsInBatch.clear();
 			}
 
 			// Save the EntityKey instance for use later!
@@ -280,8 +287,23 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 			);
 		}
 
-		// we should have used all of the JbdcParameter references (created bindings for all)
+		// we should have used all of the JdbcParameter references (created bindings for all)
 		assert !paramItr.hasNext();
+
+		final LoadingEntityCollector loadingEntityCollector;
+
+		if ( entityDescriptor.hasSubselectLoadableCollections() ) {
+			loadingEntityCollector = new LoadingEntityCollector(
+					entityDescriptor,
+					sqlAst.getQuerySpec(),
+					jdbcParameters,
+					jdbcParameterBindings,
+					session.getPersistenceContext().getBatchFetchQueue()
+			);
+		}
+		else {
+			loadingEntityCollector = null;
+		}
 
 		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
@@ -306,10 +328,43 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 					public Callback getCallback() {
 						return null;
 					}
+
+					@Override
+					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+						if ( loadingEntityCollector != null ) {
+							loadingEntityCollector.collectLoadingEntityKey( entityKey );
+						}
+					}
 				},
 				RowTransformerPassThruImpl.instance()
 		);
+	}
 
+	private static class LoadingEntityCollector {
+		final SubselectFetch subselectFetch;
+		private final BatchFetchQueue batchFetchQueue;
+
+		LoadingEntityCollector(
+				EntityValuedModelPart loadingEntityDescriptor,
+				QuerySpec loadingSqlAst,
+				List<JdbcParameter> jdbcParameters,
+				JdbcParameterBindings jdbcParameterBindings,
+				BatchFetchQueue batchFetchQueue) {
+			this.batchFetchQueue = batchFetchQueue;
+			subselectFetch = new SubselectFetch(
+					loadingEntityDescriptor,
+					loadingSqlAst,
+					jdbcParameters,
+					jdbcParameterBindings,
+					new HashSet<>()
+			);
+
+		}
+
+		void collectLoadingEntityKey(EntityKey entityKey) {
+			subselectFetch.getResultingEntityKeys().add( entityKey );
+			batchFetchQueue.addSubselect( entityKey, subselectFetch );
+		}
 	}
 
 	private List<T> performUnorderedMultiLoad(

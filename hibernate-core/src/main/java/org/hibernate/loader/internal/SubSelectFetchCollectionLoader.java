@@ -61,12 +61,10 @@ public class SubSelectFetchCollectionLoader implements CollectionLoader {
 
 		jdbcParameters = new ArrayList<>();
 
-		sqlAst = MetamodelSelectBuilderProcess.createSelect(
+		sqlAst = MetamodelSelectBuilderProcess.createSubSelectFetchSelect(
 				attributeMapping,
+				subselect,
 				null,
-				attributeMapping.getKeyDescriptor(),
-				null,
-				subselect.getResult().size(),
 				session.getLoadQueryInfluencers(),
 				LockOptions.READ,
 				jdbcParameters::add,
@@ -88,42 +86,9 @@ public class SubSelectFetchCollectionLoader implements CollectionLoader {
 
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
-				attributeMapping.getKeyDescriptor().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
-		);
-
-		for ( EntityKey key : subselect.getResult() ) {
-			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
-
-			attributeMapping.getKeyDescriptor().visitJdbcValues(
-					key.getIdentifierValue(),
-					Clause.WHERE,
-					(value, type) -> {
-						assert paramItr.hasNext();
-						final JdbcParameter parameter = paramItr.next();
-						jdbcParameterBindings.addBinding(
-								parameter,
-								new JdbcParameterBinding() {
-									@Override
-									public JdbcMapping getBindType() {
-										return type;
-									}
-
-									@Override
-									public Object getBindValue() {
-										return value;
-									}
-								}
-						);
-					},
-					session
-			);
-			assert !paramItr.hasNext();
-		}
-
-		JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
-				jdbcParameterBindings,
+				subselect.getLoadingJdbcParameterBindings(),
 				new ExecutionContext() {
 					@Override
 					public SharedSessionContractImplementor getSession() {

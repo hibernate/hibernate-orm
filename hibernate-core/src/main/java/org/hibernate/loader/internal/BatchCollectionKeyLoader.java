@@ -158,8 +158,7 @@ public class BatchCollectionKeyLoader implements CollectionLoader {
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate(
-					sqlAst );
+			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount * smallBatchLength );
 			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();

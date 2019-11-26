@@ -9,10 +9,12 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.spi.CollectionInitializer;
 import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.spi.EntityInitializer;
 import org.hibernate.sql.results.spi.Initializer;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
@@ -51,6 +53,14 @@ public class StandardRowReader<T> implements RowReader<T> {
 		this.callback = callback;
 
 		this.resultRow = new Object[assemblerCount];
+
+		for ( int i = 0; i < initializers.size(); i++ ) {
+			final Initializer initializer = initializers.get( i );
+			if ( initializer instanceof EntityInitializer ) {
+				final EntityInitializer entityInitializer = (EntityInitializer) initializer;
+
+			}
+		}
 	}
 
 	@Override

@@ -353,4 +353,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}
+
+	public String getTargetColumnContainingTable() {
+		return targetColumnContainingTable;
+	}
+
+	public String getTargetColumnExpression() {
+		return targetColumnExpression;
+	}
 }

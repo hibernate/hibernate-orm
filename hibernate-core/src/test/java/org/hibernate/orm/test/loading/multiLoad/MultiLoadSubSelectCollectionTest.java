@@ -83,12 +83,9 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12740" )
-	@FailureExpected( jiraKey = "none yet", message = "subselect-fetching not triggered")
 	public void testSubselect() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-
-
 					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids(56) );
 					assertEquals( 56, list.size() );
 

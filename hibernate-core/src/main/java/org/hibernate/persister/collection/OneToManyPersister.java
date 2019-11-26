@@ -575,19 +575,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SharedSessionContractImplementor session) {
-		return new SubselectOneToManyLoader(
-				this,
-				subselect.toSubselectString( getCollectionType().getLHSPropertyName() ),
-				subselect.getResult(),
-				subselect.getQueryParameters(),
-				subselect.getNamedParameterLocMap(),
-				session.getFactory(),
-				session.getLoadQueryInfluencers()
-		);
-	}
-
-	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
 				.loadElement( session, key, incrementIndexByBase( index ) );

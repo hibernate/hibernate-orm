@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
@@ -37,6 +38,8 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 
+	private final BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryConsumer;
+
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -44,13 +47,13 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final PreLoadEvent preLoadEvent;
 	private final PostLoadEvent postLoadEvent;
 
-	// todo (6.0) : "loading collections" as well?
-
 	public JdbcValuesSourceProcessingStateStandardImpl(
 			ExecutionContext executionContext,
-			JdbcValuesSourceProcessingOptions processingOptions) {
+			JdbcValuesSourceProcessingOptions processingOptions,
+			BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryListener) {
 		this.executionContext = executionContext;
 		this.processingOptions = processingOptions;
+		this.loadingEntityEntryConsumer = loadingEntityEntryListener;
 
 		if ( executionContext.getSession() instanceof EventSource ) {
 			preLoadEvent = new PreLoadEvent( (EventSource) executionContext.getSession() );
@@ -93,6 +96,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			LoadingEntityEntry loadingEntry) {
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
+		}
+
+		if ( loadingEntityEntryConsumer != null ) {
+			loadingEntityEntryConsumer.accept( entityKey, loadingEntry );
 		}
 
 		loadingEntityMap.put( entityKey, loadingEntry );

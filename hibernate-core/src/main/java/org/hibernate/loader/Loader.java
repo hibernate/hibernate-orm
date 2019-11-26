@@ -1061,57 +1061,57 @@ public abstract class Loader {
 	}
 
 	private void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
-		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
-
-			Set<EntityKey>[] keySets = transpose( keys );
-
-			Map namedParameterLocMap = buildNamedParameterLocMap( queryParameters );
-
-			final Loadable[] loadables = getEntityPersisters();
-			final String[] aliases = getAliases();
-			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
-			for ( Object key : keys ) {
-				final EntityKey[] rowKeys = (EntityKey[]) key;
-				for ( int i = 0; i < rowKeys.length; i++ ) {
-
-					if ( rowKeys[i] != null && loadables[i].hasSubselectLoadableCollections() ) {
-
-						SubselectFetch subselectFetch = new SubselectFetch(
-								subselectQueryString,
-								aliases[i],
-								loadables[i],
-								queryParameters,
-								keySets[i],
-								namedParameterLocMap
-						);
-
-						batchFetchQueue
-								.addSubselect( rowKeys[i], subselectFetch );
-					}
-
-				}
-
-			}
-		}
+//		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
+//
+//			Set<EntityKey>[] keySets = transpose( keys );
+//
+//			Map namedParameterLocMap = buildNamedParameterLocMap( queryParameters );
+//
+//			final Loadable[] loadables = getEntityPersisters();
+//			final String[] aliases = getAliases();
+//			final String subselectQueryString = SubselectFetch.createSubselectFetchQueryFragment( queryParameters );
+//			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+//			final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
+//			for ( Object key : keys ) {
+//				final EntityKey[] rowKeys = (EntityKey[]) key;
+//				for ( int i = 0; i < rowKeys.length; i++ ) {
+//
+//					if ( rowKeys[i] != null && loadables[i].hasSubselectLoadableCollections() ) {
+//
+//						SubselectFetch subselectFetch = new SubselectFetch(
+//								subselectQueryString,
+//								aliases[i],
+//								loadables[i],
+//								queryParameters,
+//								keySets[i],
+//								namedParameterLocMap
+//						);
+//
+//						batchFetchQueue
+//								.addSubselect( rowKeys[i], subselectFetch );
+//					}
+//
+//				}
+//
+//			}
+//		}
 	}
 
-	private Map buildNamedParameterLocMap(QueryParameters queryParameters) {
-		if ( queryParameters.getNamedParameters() != null ) {
-			final Map namedParameterLocMap = new HashMap();
-			for ( String name : queryParameters.getNamedParameters().keySet() ) {
-				namedParameterLocMap.put(
-						name,
-						getNamedParameterLocs( name )
-				);
-			}
-			return namedParameterLocMap;
-		}
-		else {
-			return null;
-		}
-	}
+//	private Map buildNamedParameterLocMap(QueryParameters queryParameters) {
+//		if ( queryParameters.getNamedParameters() != null ) {
+//			final Map namedParameterLocMap = new HashMap();
+//			for ( String name : queryParameters.getNamedParameters().keySet() ) {
+//				namedParameterLocMap.put(
+//						name,
+//						getNamedParameterLocs( name )
+//				);
+//			}
+//			return namedParameterLocMap;
+//		}
+//		else {
+//			return null;
+//		}
+//	}
 
 	private void initializeEntitiesAndCollections(
 			final List hydratedObjects,

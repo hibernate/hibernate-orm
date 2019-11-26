@@ -838,7 +838,7 @@ public abstract class AbstractCollectionPersister
 
 		// Take care of any entities that might have
 		// been evicted!
-		subselect.getResult().removeIf( o -> !persistenceContext.containsEntity( o ) );
+		subselect.getResultingEntityKeys().removeIf( o -> !persistenceContext.containsEntity( o ) );
 
 		// Run a subquery loader
 		return createSubSelectLoader( subselect, session );
@@ -863,49 +863,6 @@ public abstract class AbstractCollectionPersister
 		return new SingleCollectionKeyLoader( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
 
-	protected CollectionInitializer getAppropriateInitializer(Object key, SharedSessionContractImplementor session) {
-		if ( queryLoaderName != null ) {
-			// if there is a user-specified loader, return that
-			// TODO: filters!?
-			return initializer;
-		}
-		CollectionInitializer subselectInitializer = getSubselectInitializer( key, session );
-		if ( subselectInitializer != null ) {
-			return subselectInitializer;
-		}
-		else if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() ) {
-			return initializer;
-		}
-		else {
-			return createCollectionInitializer( session.getLoadQueryInfluencers() );
-		}
-	}
-
-	private CollectionInitializer getSubselectInitializer(Object key, SharedSessionContractImplementor session) {
-		if ( !isSubselectLoadable() ) {
-			return null;
-		}
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-
-		SubselectFetch subselect = persistenceContext.getBatchFetchQueue().getSubselect(
-				session.generateEntityKey( key, getOwnerEntityPersister() )
-		);
-
-		if ( subselect == null ) {
-			return null;
-		}
-		else {
-			// Take care of any entities that might have
-			// been evicted!
-			subselect.getResult().removeIf( o -> !persistenceContext.containsEntity( (EntityKey) o ) );
-
-			// Run a subquery loader
-			return createSubselectInitializer( subselect, session );
-		}
-	}
-
-	protected abstract CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SharedSessionContractImplementor session);
 
 	protected abstract CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException;

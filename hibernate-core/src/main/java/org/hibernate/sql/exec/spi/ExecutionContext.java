@@ -6,12 +6,16 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.results.spi.LoadingEntityEntry;
 
 /**
  * @author Steve Ebersole
@@ -36,9 +40,17 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+		// by default do nothing
+	}
+
 	/**
 	 * Hook to allow delaying calls to {@link LogicalConnectionImplementor#afterStatement()}.
 	 * Mainly used in the case of batching and multi-table mutations
+	 *
+	 * todo (6.0) : come back and make sure we are calling this at appropriate times.  despite the name, it should be
+	 * 		called after a logical group of statements - e.g., after all of the delete statements against all of the
+	 * 		tables for a particular entity
 	 */
 	default void afterStatement(LogicalConnectionImplementor logicalConnection) {
 		logicalConnection.afterStatement();

@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -47,6 +48,8 @@ import org.jboss.logging.Logger;
 /**
  * A BatchingEntityLoaderBuilder that builds UniqueEntityLoader instances capable of dynamically building
  * its batch-fetch SQL based on the actual number of entity ids waiting to be fetched.
+ *
+ * @see Dialect#getDefaultBatchLoadSizingStrategy
  *
  * @author Steve Ebersole
  */
@@ -82,18 +85,15 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
-		final int maxBatchSize;
-		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
-			maxBatchSize = loadOptions.getBatchSize();
-		}
-		else {
-			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+		Integer batchSize = loadOptions.getBatchSize();
+		if ( batchSize == null || batchSize <= 0 ) {
+			batchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					persister.getIdentifierType().getColumnSpan( session.getFactory() ),
 					ids.length
 			);
 		}
 
-		final List<Serializable> idsInBatch = new ArrayList<>();
+		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
 
 		for ( int i = 0; i < ids.length; i++ ) {
@@ -147,7 +147,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 			// load the entity state.
 			idsInBatch.add( ids[i] );
 
-			if ( idsInBatch.size() >= maxBatchSize ) {
+			if ( idsInBatch.size() >= batchSize ) {
 				// we've hit the allotted max-batch-size, perform an "intermediate load"
 				performOrderedBatchLoad( idsInBatch, lockOptions, persister, session );
 			}
@@ -184,7 +184,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 	}
 
 	private void performOrderedBatchLoad(
-			List<Serializable> idsInBatch,
+			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			OuterJoinLoadable persister,
 			SharedSessionContractImplementor session) {
@@ -197,7 +197,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				session.getLoadQueryInfluencers()
 		);
 
-		final Serializable[] idsInBatchArray = idsInBatch.toArray( new Serializable[ idsInBatch.size() ] );
+		final Object[] idsInBatchArray = idsInBatch.toArray( new Object[ idsInBatch.size() ] );
 
 		QueryParameters qp = buildMultiLoadQueryParameters( persister, idsInBatchArray, lockOptions );
 		batchingLoader.doEntityBatchFetch( session, qp, idsInBatchArray );
@@ -330,7 +330,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 
 	public static QueryParameters buildMultiLoadQueryParameters(
 			OuterJoinLoadable persister,
-			Serializable[] ids,
+			Object[] ids,
 			LockOptions lockOptions) {
 		Type[] types = new Type[ids.length];
 		Arrays.fill( types, persister.getIdentifierType() );
@@ -503,7 +503,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 		public List doEntityBatchFetch(
 				SharedSessionContractImplementor session,
 				QueryParameters queryParameters,
-				Serializable[] ids) {
+				Object[] ids) {
 			final JdbcServices jdbcServices = session.getJdbcServices();
 			final String sql = StringHelper.expandBatchIdPlaceholder(
 					sqlTemplate,

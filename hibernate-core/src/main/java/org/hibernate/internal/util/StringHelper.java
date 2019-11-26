@@ -788,7 +788,7 @@ public final class StringHelper {
 
 	public static String expandBatchIdPlaceholder(
 			String sql,
-			Serializable[] ids,
+			Object[] ids,
 			String alias,
 			String[] keyColumnNames,
 			Dialect dialect) {

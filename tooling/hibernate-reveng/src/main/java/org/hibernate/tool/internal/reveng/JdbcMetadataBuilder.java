@@ -24,7 +24,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
@@ -49,6 +48,7 @@ import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
 import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.OneToManyBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
+import org.hibernate.tool.internal.reveng.binder.VersionPropertyBinder;
 import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
 
@@ -207,7 +207,19 @@ public class JdbcMetadataBuilder {
 							mapping, 
 							collector);
 			
-			bindColumnsToVersioning(table, rc, processed, mapping);
+			VersionPropertyBinder
+				.create(
+						metadataBuildingContext, 
+						metadataCollector, 
+						revengStrategy, 
+						defaultCatalog, 
+						defaultSchema)
+				.bind(
+						table, 
+						rc, 
+						processed, 
+						mapping);
+			
 			bindOutgoingForeignKeys(table, rc, processed);
 			bindColumnsToProperties(table, rc, processed, mapping);
 			List<ForeignKey> incomingForeignKeys = manyToOneCandidates.get( rc.getEntityName() );
@@ -438,52 +450,6 @@ public class JdbcMetadataBuilder {
 				rc.addProperty(property);
 			}
 		}
-	}
-
-	private void bindColumnsToVersioning(Table table, RootClass rc, Set<Column> processed, Mapping mapping) {
-		TableIdentifier identifier = TableIdentifier.create(table);
-
-		String optimisticLockColumnName = revengStrategy.getOptimisticLockColumnName(identifier);
-
-		if(optimisticLockColumnName!=null) {
-			Column column = table.getColumn(new Column(optimisticLockColumnName));
-			if(column==null) {
-				log.warn("Column " + column + " wanted for <version>/<timestamp> not found in " + identifier);
-			} else {
-				bindVersionProperty(table, identifier, column, rc, processed, mapping);
-			}
-		} else {
-			log.debug("Scanning " + identifier + " for <version>/<timestamp> columns.");
-			Iterator<?> columnIterator = table.getColumnIterator();
-			while(columnIterator.hasNext()) {
-				Column column = (Column) columnIterator.next();
-				boolean useIt = revengStrategy.useColumnForOptimisticLock(identifier, column.getName());
-				if(useIt && !processed.contains(column)) {
-					bindVersionProperty( table, identifier, column, rc, processed, mapping );
-					return;
-				}
-			}
-			log.debug("No columns reported while scanning for <version>/<timestamp> columns in " + identifier);
-		}
-	}
-
-	private void bindVersionProperty(Table table, TableIdentifier identifier, Column column, RootClass rc, Set<Column> processed, Mapping mapping) {
-
-		processed.add(column);
-		String propertyName = revengStrategy.columnToPropertyName( identifier, column.getName() );
-		Property property = BasicPropertyBinder
-				.create(
-						metadataBuildingContext, 
-						metadataCollector, 
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema)
-				.bind(BinderUtils.makeUnique(rc, propertyName), table, column, mapping);
-		rc.addProperty(property);
-		rc.setVersion(property);
-		rc.setOptimisticLockStyle(OptimisticLockStyle.VERSION);
-		log.debug("Column " + column.getName() + " will be used for <version>/<timestamp> columns in " + identifier);
-
 	}
 
     /**

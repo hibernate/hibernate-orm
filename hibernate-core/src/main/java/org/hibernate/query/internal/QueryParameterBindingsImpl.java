@@ -637,6 +637,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				parameterBindingMap.put( syntheticParam, syntheticBinding );
 			}
 
+			// HHH-8091
+			// "in ()" breaks some dbs; "in (null)" will always work
+			if (expansionList.length() == 0) {
+				expansionList.append("null"); 
+			}	
 			queryString = StringHelper.replace(
 					beforePlaceholder,
 					afterPlaceholder,

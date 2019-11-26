@@ -17,7 +17,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.spi.id.AbstractIdsBulkIdHandler;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.Queryable;
+
+import java.util.Arrays;
 
 /**
  * Defines how identifier values are selected from the updatable/deletable tables.
@@ -88,7 +91,30 @@ public abstract class AbstractCteValuesListBulkIdHandler extends
 				) )
 				.append( " from " )
 				.append( determineIdTableName( persister ) )
+				.append( " tmp2" )
 				.toString();
+	}
+
+	protected String generateIdSubselect(String idSubselect, Queryable persister, AbstractCollectionPersister cPersister) {
+		String[] columnNames = getKeyColumnNames( persister, cPersister );
+		// If the column names are equal to the identifier column names, just return the idSubselect
+		if ( Arrays.equals( getTargetedQueryable().getIdentifierColumnNames(), columnNames ) ) {
+			return idSubselect;
+		}
+
+		// Otherwise, we need to fetch the key column names from the original table
+		// Unfortunately, this is a bit more work, as only the identifiers are fetched
+		// It would be great if we could adapt #selectIds to fetch key columns as well
+		StringBuilder selectBuilder = new StringBuilder();
+		selectBuilder.append( "select " );
+		appendJoined( ", ", columnNames, selectBuilder );
+		selectBuilder.append( " from " ).append( getTargetedQueryable().getTableName() );
+		selectBuilder.append( " tmp where (" );
+		appendJoined( ", ", getTargetedQueryable().getIdentifierColumnNames(), selectBuilder );
+		selectBuilder.append( ") in (select " );
+		appendJoined( ", ", getTargetedQueryable().getIdentifierColumnNames(), selectBuilder );
+		selectBuilder.append( " from " ).append( determineIdTableName( persister ) ).append( " tmp2)" );
+		return selectBuilder.toString();
 	}
 
 	protected CteValuesListBuilder prepareCteStatement(

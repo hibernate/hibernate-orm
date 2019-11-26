@@ -41,9 +41,6 @@ import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.binder.BasicPropertyBinder;
 import org.hibernate.tool.internal.reveng.binder.BinderUtils;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyBinder;
-import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils;
-import org.hibernate.tool.internal.reveng.binder.ManyToOneBinder;
-import org.hibernate.tool.internal.reveng.binder.OneToOneBinder;
 import org.hibernate.tool.internal.reveng.binder.PrimaryKeyBinder;
 import org.hibernate.tool.internal.reveng.binder.VersionPropertyBinder;
 import org.jboss.logging.Logger;
@@ -235,7 +232,7 @@ public class JdbcMetadataBuilder {
 					defaultCatalog, 
 					defaultSchema);
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
-				foreignKeyBinder.bind(iter.next(), rc, processed, mapping);
+				foreignKeyBinder.bindIncoming(iter.next(), rc, processed, mapping);
 			}
 		}
 	}
@@ -243,6 +240,13 @@ public class JdbcMetadataBuilder {
 
 
 	private void bindOutgoingForeignKeys(Table table, RootClass rc, Set<Column> processedColumns) {
+
+		ForeignKeyBinder foreignKeyBinder = ForeignKeyBinder.create(
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema);
 
 		// Iterate the outgoing foreign keys and create many-to-one's
 		for(Iterator<?> iterator = table.getForeignKeyIterator(); iterator.hasNext();) {
@@ -253,55 +257,9 @@ public class JdbcMetadataBuilder {
 				if ( !preferBasicCompositeIds ) continue; //it's in the pk, so skip this one
 				mutable = false;
             }
+            
+            foreignKeyBinder.bindOutgoing(foreignKey, table, rc, processedColumns, mutable);
 
-            if(revengStrategy.excludeForeignKeyAsManytoOne(foreignKey.getName(),
-        			TableIdentifier.create(foreignKey.getTable() ),
-        			foreignKey.getColumns(),
-        			TableIdentifier.create(foreignKey.getReferencedTable() ),
-        			foreignKey.getReferencedColumns())) {
-            	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
-            	log.debug("Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
-            } else if (revengStrategy.isOneToOne(foreignKey)){
-            	Property property = OneToOneBinder
-            			.create(
-            					metadataBuildingContext, 
-            					revengStrategy, 
-            					defaultCatalog, 
-            					defaultSchema)
-            			.bind(
-            					rc, 
-            					foreignKey.getReferencedTable(), 
-            					foreignKey, 
-            					processedColumns, 
-            					true, 
-            					false);
-				rc.addProperty(property);
-			} else {
-            	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);
-            	String propertyName = revengStrategy.foreignKeyToEntityName(
-            			foreignKey.getName(),
-            			TableIdentifier.create(foreignKey.getTable() ),
-            			foreignKey.getColumns(),
-            			TableIdentifier.create(foreignKey.getReferencedTable() ),
-            			foreignKey.getReferencedColumns(),
-            			isUnique
-            	);
-
-            	Property property = ManyToOneBinder
-            			.create(
-            					metadataBuildingContext, 
-            					revengStrategy, 
-            					defaultCatalog, 
-            					defaultSchema)
-            			.bind(
-            					BinderUtils.makeUnique(rc, propertyName), 
-            					mutable, 
-            					table, 
-            					foreignKey, 
-            					processedColumns);
-
-            	rc.addProperty(property);
-            }
 		}
 	}
 

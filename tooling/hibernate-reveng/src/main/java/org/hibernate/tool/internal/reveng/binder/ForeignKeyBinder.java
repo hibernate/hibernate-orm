@@ -11,6 +11,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
@@ -51,7 +52,7 @@ public class ForeignKeyBinder {
 		this.defaultSchema = defaultSchema;
 	}
 	
-	public void bind(
+	public void bindIncoming(
 			ForeignKey foreignKey,
 			PersistentClass persistentClass,
 			Set<Column> processed,
@@ -93,6 +94,63 @@ public class ForeignKeyBinder {
 							mapping);
 			persistentClass.addProperty(property);
 		}		
+	}
+	
+	public void bindOutgoing(
+			ForeignKey foreignKey,
+			Table table,
+			PersistentClass rc,
+			Set<Column> processedColumns,
+			boolean mutable) {
+
+        if(revengStrategy.excludeForeignKeyAsManytoOne(foreignKey.getName(),
+    			TableIdentifier.create(foreignKey.getTable() ),
+    			foreignKey.getColumns(),
+    			TableIdentifier.create(foreignKey.getReferencedTable() ),
+    			foreignKey.getReferencedColumns())) {
+        	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
+        	LOGGER.log(Level.INFO, "Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
+        } else if (revengStrategy.isOneToOne(foreignKey)){
+        	Property property = OneToOneBinder
+        			.create(
+        					metadataBuildingContext, 
+        					revengStrategy, 
+        					defaultCatalog, 
+        					defaultSchema)
+        			.bind(
+        					rc, 
+        					foreignKey.getReferencedTable(), 
+        					foreignKey, 
+        					processedColumns, 
+        					true, 
+        					false);
+			rc.addProperty(property);
+		} else {
+        	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);
+        	String propertyName = revengStrategy.foreignKeyToEntityName(
+        			foreignKey.getName(),
+        			TableIdentifier.create(foreignKey.getTable() ),
+        			foreignKey.getColumns(),
+        			TableIdentifier.create(foreignKey.getReferencedTable() ),
+        			foreignKey.getReferencedColumns(),
+        			isUnique
+        	);
+
+        	Property property = ManyToOneBinder
+        			.create(
+        					metadataBuildingContext, 
+        					revengStrategy, 
+        					defaultCatalog, 
+        					defaultSchema)
+        			.bind(
+        					BinderUtils.makeUnique(rc, propertyName), 
+        					mutable, 
+        					table, 
+        					foreignKey, 
+        					processedColumns);
+
+        	rc.addProperty(property);
+        }		
 	}
 
 }

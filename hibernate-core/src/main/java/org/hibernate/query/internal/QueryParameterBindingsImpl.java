@@ -641,7 +641,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					beforePlaceholder,
 					afterPlaceholder,
 					sourceToken,
-					expansionList.toString(),
+					expansionList.isEmpty() ? "null" : expansionList.toString(),
 					true,
 					true
 			);

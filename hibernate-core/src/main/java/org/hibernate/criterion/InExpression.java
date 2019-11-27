@@ -46,12 +46,16 @@ public class InExpression implements Criterion {
 			if ( columns.length > 1 ) {
 				singleValueParam = '(' + singleValueParam + ')';
 			}
-			final String params = values.length > 0
+			String params = values.length > 0
 					? StringHelper.repeat( singleValueParam + ", ", values.length - 1 ) + singleValueParam
 					: "";
 			String cols = String.join( ", ", columns );
 			if ( columns.length > 1 ) {
 				cols = '(' + cols + ')';
+			}
+			// HHH-8901
+			if ( ! criteriaQuery.getFactory().getDialect().supportsEmptyInList() && params.isEmpty() ) {
+				params = "null";
 			}
 			return cols + " in (" + params + ')';
 		}

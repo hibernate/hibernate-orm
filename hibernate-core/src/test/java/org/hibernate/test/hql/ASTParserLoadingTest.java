@@ -6,6 +6,18 @@
  */
 package org.hibernate.test.hql;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -13,11 +25,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -53,19 +65,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
 import org.hibernate.test.any.PropertyValue;
@@ -75,23 +74,19 @@ import org.hibernate.test.cid.LineItem;
 import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.Type;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -664,6 +659,35 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-8901" )
+	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
+	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
+		Session session = openSession();
+		session.beginTransaction();
+		Human human = new Human();
+		human.setName( new Name( "Lukasz", null, "Antoniak" ) );
+		human.setNickName( "NONE" );
+		session.save( human );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		List results = session.createQuery( "from Human h where h.nickName in (:nickNames)" )
+				.setParameter("nickNames", Collections.emptySet() )
+				.list();
+		assertEquals( 0, results.size() );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( human );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-2851")
 	public void testMultipleRefsToSameParam() {
 		Session s = openSession();
@@ -982,7 +1006,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
-		
+
 		if ( getDialect() instanceof AbstractHANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
 					.setLong( "param", 1 ).list();

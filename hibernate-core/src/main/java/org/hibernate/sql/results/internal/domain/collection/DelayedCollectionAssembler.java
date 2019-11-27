@@ -91,6 +91,8 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 					fetchedMapping.getCollectionDescriptor(),
 					parentAccess.getParentKey()
 			);
+
+			parentAccess.registerResolutionListener( owner -> instance.setOwner( owner ) );
 		}
 
 		@Override
@@ -137,6 +139,7 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 
 		@Override
 		public void finishUpRow(RowProcessingState rowProcessingState) {
+
 			collectionKey = null;
 			instance = null;
 		}

@@ -110,7 +110,6 @@ public class SetOperationTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "FlushVisitor collection handling" )
 	public void testDeleteWithElementCollectionData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

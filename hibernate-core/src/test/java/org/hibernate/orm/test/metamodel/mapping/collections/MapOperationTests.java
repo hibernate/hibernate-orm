@@ -87,11 +87,6 @@ public class MapOperationTests {
 	}
 
 	@Test
-	@FailureExpected(
-			reason = "As noted in `#dropData` there is a problem with @ElementCollections not be handled properly " +
-					"for cascade; `org.hibernate.tuple.NonIdentifierAttribute#getCascadeStyle` returns CascadeStyles.NONE " +
-					"which leads to `EntityPersister#hasCascades` to report false which leads to Cascades skipping it"
-	)
 	public void testDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

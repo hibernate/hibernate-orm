@@ -1,3 +1,5 @@
+apply plugin: 'org.hibernate.orm'
+
 ext {
     hibernateVersion = 'hibernate-version-you-want'
 }
@@ -9,7 +11,9 @@ buildscript {
 }
 
 hibernate {
-    enhance {
-        // any configuration goes here
-    }
+	enhance {
+        enableLazyInitialization = true
+        enableDirtyTracking = true
+        enableAssociationManagement = true
+	}
 }

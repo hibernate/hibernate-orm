@@ -119,25 +119,18 @@ public class JdbcMetadataBuilder {
         return collector;
 	}
 	
-	/**
-	 * @param manyToOneCandidates
-	 * @param mappings2
-	 */
 	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
 		BinderMapping mapping = new BinderMapping(metadata);
-		Map<String, List<ForeignKey>> manyToOneCandidates = collector.getOneToManyCandidates();
 		for (Iterator<Table> iter = metadataCollector.collectTableMappings().iterator(); iter.hasNext();) {
 			Table table = iter.next();
-			if (table.getCatalog() != null && table.getCatalog().equals(defaultCatalog)) {
-				table.setCatalog(null);
-			}
-			if (table.getSchema() != null && table.getSchema().equals(defaultSchema)) {
-				table.setSchema(null);
-			}
 			if(table.getColumnSpan()==0) {
 				log.warn("Cannot create persistent class for " + table + " as no columns were found.");
 				continue;
 			}
+			if(revengStrategy.isManyToManyTable(table)) {
+				log.debug( "Ignoring " + table + " as class since rev.eng. says it is a many-to-many" );
+				continue;
+			}	    	
 			// TODO: this naively just create an entity per table
 			// should have an opt-out option to mark some as helper tables, subclasses etc.
 			/*if(table.getPrimaryKey()==null || table.getPrimaryKey().getColumnSpan()==0) {
@@ -145,85 +138,89 @@ public class JdbcMetadataBuilder {
                 continue;
                 // TODO: just create one big embedded composite id instead.
             }*/
+			bindRootClass(table, collector, mapping);
+		}		
+		metadataCollector.processSecondPasses(metadataBuildingContext);		
+	}
+	
+	
+	private void bindRootClass(Table table, DatabaseCollector collector, Mapping mapping) {
+		if (table.getCatalog() != null && table.getCatalog().equals(defaultCatalog)) {
+			table.setCatalog(null);
+		}
+		if (table.getSchema() != null && table.getSchema().equals(defaultSchema)) {
+			table.setSchema(null);
+		}   	
+		RootClass rc = new RootClass(metadataBuildingContext);
+		TableIdentifier tableIdentifier = TableIdentifier.create(table);
+		String className = revengStrategy.tableToClassName( tableIdentifier );
+		log.debug("Building entity " + className + " based on " + tableIdentifier);
+		rc.setEntityName( className );
+		rc.setJpaEntityName( StringHelper.unqualify( className ) );
+		rc.setClassName( className );
+		rc.setProxyInterfaceName( rc.getEntityName() ); // TODO: configurable ?
+		rc.setLazy(true);
 
-			if(revengStrategy.isManyToManyTable(table)) {
-				log.debug( "Ignoring " + table + " as class since rev.eng. says it is a many-to-many" );
-				continue;
-			}
-
-	    	
-			RootClass rc = new RootClass(metadataBuildingContext);
-			TableIdentifier tableIdentifier = TableIdentifier.create(table);
-			String className = revengStrategy.tableToClassName( tableIdentifier );
-			log.debug("Building entity " + className + " based on " + tableIdentifier);
-			rc.setEntityName( className );
-			rc.setJpaEntityName( StringHelper.unqualify( className ) );
-			rc.setClassName( className );
-			rc.setProxyInterfaceName( rc.getEntityName() ); // TODO: configurable ?
-			rc.setLazy(true);
-
-			rc.setMetaAttributes(
-					BinderUtils.safeMap(
-							RevEngUtils.getTableToMetaAttributesInRevengStrategy(
-									revengStrategy, 
-									table, 
-									defaultCatalog, 
-									defaultSchema)));
+		rc.setMetaAttributes(
+				BinderUtils.safeMap(
+						RevEngUtils.getTableToMetaAttributesInRevengStrategy(
+								revengStrategy, 
+								table, 
+								defaultCatalog, 
+								defaultSchema)));
 
 
-			rc.setDiscriminatorValue( rc.getEntityName() );
-			rc.setTable(table);
-			try {
-				metadataCollector.addEntityBinding(rc);
-			} catch(DuplicateMappingException dme) {
-				// TODO: detect this and generate a "permutation" of it ?
-				PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
-				Table table2 = class1.getTable();
-				throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
-			}
-			metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
+		rc.setDiscriminatorValue( rc.getEntityName() );
+		rc.setTable(table);
+		try {
+			metadataCollector.addEntityBinding(rc);
+		} catch(DuplicateMappingException dme) {
+			// TODO: detect this and generate a "permutation" of it ?
+			PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
+			Table table2 = class1.getTable();
+			throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
+		}
+		metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
 
-			Set<Column> processed = new HashSet<Column>();
-			
-			PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
-					.create(
-							metadataBuildingContext, 
-							metadataCollector, 
-							revengStrategy, 
-							defaultCatalog, 
-							defaultSchema, 
-							preferBasicCompositeIds);
-			PrimaryKeyInfo pki = primaryKeyBinder.bind(
-							table, 
-							rc, 
-							processed, 
-							mapping, 
-							collector);
-			
-			VersionPropertyBinder
+		Set<Column> processed = new HashSet<Column>();
+		
+		PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
 				.create(
 						metadataBuildingContext, 
 						metadataCollector, 
 						revengStrategy, 
 						defaultCatalog, 
-						defaultSchema)
-				.bind(
+						defaultSchema, 
+						preferBasicCompositeIds);
+		PrimaryKeyInfo pki = primaryKeyBinder.bind(
 						table, 
 						rc, 
 						processed, 
-						mapping);
-			
-			bindOutgoingForeignKeys(table, rc, processed);
-			bindColumnsToProperties(table, rc, processed, mapping);
-			bindIncomingForeignKeys(rc, processed, manyToOneCandidates.get( rc.getEntityName()), mapping);
-			primaryKeyBinder.updatePrimaryKey(rc, pki);
-
-		}
+						mapping, 
+						collector);
 		
-		metadataCollector.processSecondPasses(metadataBuildingContext);		
+		VersionPropertyBinder
+			.create(
+					metadataBuildingContext, 
+					metadataCollector, 
+					revengStrategy, 
+					defaultCatalog, 
+					defaultSchema)
+			.bind(
+					table, 
+					rc, 
+					processed, 
+					mapping);
+		
+		bindOutgoingForeignKeys(table, rc, processed);
+		bindColumnsToProperties(table, rc, processed, mapping);
+		bindIncomingForeignKeys(rc, processed, collector, mapping);
+		primaryKeyBinder.updatePrimaryKey(rc, pki);
+		
 	}
 
-	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, List<ForeignKey> foreignKeys, Mapping mapping) {
+	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, DatabaseCollector collector, Mapping mapping) {
+		List<ForeignKey> foreignKeys = collector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
 			ForeignKeyBinder foreignKeyBinder = ForeignKeyBinder.create(
 					metadataBuildingContext, 

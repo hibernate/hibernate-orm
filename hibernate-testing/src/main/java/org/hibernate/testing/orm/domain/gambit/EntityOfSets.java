@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.domain.gambit;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -17,6 +18,7 @@ import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Steve Ebersole
@@ -30,6 +32,8 @@ public class EntityOfSets {
 	private Set<Component> setOfExtraLazyComponents;
 	private Set<EntityOfSets> setOfOneToMany;
 	private Set<EntityOfSets> setOfManyToMany;
+
+	private SortedSet<String> sortedSetOfBasics;
 
 	public EntityOfSets() {
 	}
@@ -103,4 +107,14 @@ public class EntityOfSets {
 		this.setOfManyToMany = setOfManyToMany;
 	}
 
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasics")
+	@SortNatural
+	public SortedSet<String> getSortedSetOfBasics() {
+		return sortedSetOfBasics;
+	}
+
+	public void setSortedSetOfBasics(SortedSet<String> sortedSetOfBasics) {
+		this.sortedSetOfBasics = sortedSetOfBasics;
+	}
 }

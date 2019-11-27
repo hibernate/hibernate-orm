@@ -59,10 +59,12 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	private transient SharedSessionContractImplementor session;
 	private boolean isTempSession = false;
+
 	private boolean initialized;
+	private transient boolean initializing;
+
 	private transient List<DelayedOperation> operationQueue;
 	private transient boolean directlyAccessible;
-	private transient boolean initializing;
 	private Object owner;
 	private int cachedSize = -1;
 
@@ -615,7 +617,8 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		this.initialized = true;
 	}
 
-	protected boolean isInitializing() {
+	@Override
+	public boolean isInitializing() {
 		return initializing;
 	}
 

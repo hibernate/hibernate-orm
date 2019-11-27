@@ -8,7 +8,10 @@ package org.hibernate.orm.test.metamodel.mapping.collections;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
@@ -18,6 +21,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Steve Ebersole
@@ -33,6 +38,8 @@ public class EntityContainingSets {
 	private Set<EnumValue> setOfEnums;
 	private Set<SomeStuff> setOfComponents;
 	private Set<SimpleEntity> setOfEntities;
+
+	private SortedSet<String> sortedSetOfBasics;
 
 	public EntityContainingSets() {
 	}
@@ -140,5 +147,23 @@ public class EntityContainingSets {
 			setOfEntities = new HashSet<>();
 		}
 		setOfEntities.add( value );
+	}
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasics")
+	@SortNatural
+	public SortedSet<String> getSortedSetOfBasics() {
+		return sortedSetOfBasics;
+	}
+
+	public void setSortedSetOfBasics(SortedSet<String> sortedSetOfBasics) {
+		this.sortedSetOfBasics = sortedSetOfBasics;
+	}
+
+	public void addSortedBasic(String value) {
+		if ( sortedSetOfBasics == null ) {
+			sortedSetOfBasics = new TreeSet<>();
+		}
+		sortedSetOfBasics.add( value );
 	}
 }

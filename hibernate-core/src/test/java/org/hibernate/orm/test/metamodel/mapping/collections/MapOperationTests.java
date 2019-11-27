@@ -58,16 +58,16 @@ public class MapOperationTests {
 		// there is a problem with deleting entities which have basic collections.  for some reason those
 		// do not register as cascadable, so we do not delete the collection rows first
 
-//		scope.inTransaction(
-//				session -> {
-//					final EntityContainingMaps entity = session.load( EntityContainingMaps.class, 1 );
-//					session.delete( entity );
-//				}
-//		);
+		scope.inTransaction(
+				session -> {
+					final EntityContainingMaps entity = session.load( EntityContainingMaps.class, 1 );
+					session.delete( entity );
+				}
+		);
 
 		// uber hacky temp way:
 
-		TempDropDataHelper.cleanDatabaseSchema( scope, domainModelScope );
+//		TempDropDataHelper.cleanDatabaseSchema( scope, domainModelScope );
 	}
 
 	@Test
@@ -98,5 +98,8 @@ public class MapOperationTests {
 					session.delete( entity );
 				}
 		);
+
+		// re-create it so the drop-data can succeed
+		createData( scope );
 	}
 }

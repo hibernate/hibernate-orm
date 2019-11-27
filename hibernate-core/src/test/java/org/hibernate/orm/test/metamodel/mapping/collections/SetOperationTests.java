@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.metamodel.mapping.collections;
 
+import java.util.Iterator;
+
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -44,6 +46,9 @@ public class SetOperationTests {
 					entity.addBasic( "a value" );
 					entity.addBasic( "another value" );
 
+					entity.addSortedBasic( "def" );
+					entity.addSortedBasic( "abc" );
+
 					entity.addEnum( EnumValue.ONE );
 					entity.addEnum( EnumValue.TWO );
 
@@ -60,14 +65,12 @@ public class SetOperationTests {
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope, DomainModelScope domainModelScope) {
-//		scope.inTransaction(
-//				session -> {
-//					final EntityContainingSets entity = session.load( EntityContainingSets.class, 1 );
-//					session.delete( entity );
-//				}
-//		);
-
-		TempDropDataHelper.cleanDatabaseSchema( scope, domainModelScope );
+		scope.inTransaction(
+				session -> {
+					final EntityContainingSets entity = session.load( EntityContainingSets.class, 1 );
+					session.delete( entity );
+				}
+		);
 	}
 
 	@Test
@@ -117,10 +120,12 @@ public class SetOperationTests {
 					session.delete( entity );
 				}
 		);
+
+		// re-create it so the drop-data can succeed
+		createData( scope );
 	}
 
 	@Test
-	@FailureExpected( reason = "not sure" )
 	public void testTriggerFetch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -132,6 +137,26 @@ public class SetOperationTests {
 					assert Hibernate.isInitialized( entity.getSetOfBasics() );
 
 					assert ! Hibernate.isInitialized( entity.getSetOfEnums() );
+				}
+		);
+	}
+
+	@Test
+	public void testSortedSetAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityContainingSets entity = session.get( EntityContainingSets.class, 1 );
+					assert ! Hibernate.isInitialized( entity.getSortedSetOfBasics() );
+
+					Hibernate.initialize( entity.getSortedSetOfBasics() );
+
+					assertThat( entity.getSortedSetOfBasics().size(), is( 2 ) );
+
+					final Iterator<String> iterator = entity.getSortedSetOfBasics().iterator();
+					final String first = iterator.next();
+					final String second = iterator.next();
+					assertThat( first, is( "abc" ) );
+					assertThat( second, is( "def" ) );
 				}
 		);
 	}

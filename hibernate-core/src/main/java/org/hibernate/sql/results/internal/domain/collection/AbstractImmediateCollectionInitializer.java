@@ -300,13 +300,16 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				// the LoadingCollectionEntry won't finalize this for us without at least one row.
 				final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
 				final PersistentCollection collection = persistenceContext.getCollection( collectionKey );
-				collection.beforeInitialize( getCollectionAttributeMapping().getCollectionDescriptor(), 0 );
-				collection.beginRead();
-				collection.endRead();
 
-				final CollectionEntry entry = persistenceContext.getCollectionEntry( collection );
-				if ( entry != null ) {
-					entry.postInitialize( collection );
+				if ( ! collection.isInitializing() ) {
+					collection.beforeInitialize( getCollectionAttributeMapping().getCollectionDescriptor(), 0 );
+					collection.beginRead();
+					collection.endRead();
+
+					final CollectionEntry entry = persistenceContext.getCollectionEntry( collection );
+					if ( entry != null ) {
+						entry.postInitialize( collection );
+					}
 				}
 			}
 		}

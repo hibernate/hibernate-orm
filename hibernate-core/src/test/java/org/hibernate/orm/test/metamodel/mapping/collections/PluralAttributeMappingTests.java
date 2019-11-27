@@ -67,7 +67,7 @@ public class PluralAttributeMappingTests {
 		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingSets.class );
 
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 6 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 7 ) );
 
 		final AttributeMapping setOfBasics = containerEntityDescriptor.findAttributeMapping( "setOfBasics" );
 		assertThat( setOfBasics, notNullValue() );
@@ -84,6 +84,9 @@ public class PluralAttributeMappingTests {
 
 		final AttributeMapping setOfEntities = containerEntityDescriptor.findAttributeMapping( "setOfEntities" );
 		assertThat( setOfEntities, notNullValue() );
+
+		final AttributeMapping sortedSetOfBasics = containerEntityDescriptor.findAttributeMapping( "sortedSetOfBasics" );
+		assertThat( sortedSetOfBasics, notNullValue() );
 	}
 
 	@Test

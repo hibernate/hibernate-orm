@@ -246,6 +246,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 				EntityOfSets.class.getName() + ".setOfOneToMany",
 				"b"
 		);
+		collectionValueFunctionAssertions(
+				interpretSelect( "select value(b) from EntityOfSets e join e.sortedSetOfBasics b" ),
+				EntityOfSets.class.getName() + ".sortedSetOfBasics",
+				"b"
+		);
 
 		// todo : ManyToMany not properly handled atm
 	}

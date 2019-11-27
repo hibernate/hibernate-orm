@@ -343,6 +343,11 @@ public interface PersistentCollection {
 	boolean isWrapper(Object collection);
 
 	/**
+	 * Is this PersistentCollection in the process of being initialized?
+	 */
+	boolean isInitializing();
+
+	/**
 	 * Is this instance initialized?
 	 *
 	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?

@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -18,30 +19,27 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
+import org.hibernate.tool.internal.reveng.ReverseEngineeringContext;
 
 public class RootClassBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(RootClassBinder.class.getName());
 	
 	public static RootClassBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema,
-			boolean preferBasicCompositeIds) {
+			ReverseEngineeringContext binderContext) {
 		return new RootClassBinder(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema, 
-				preferBasicCompositeIds);
+				binderContext.metadataBuildingContext, 
+				binderContext.metadataCollector, 
+				binderContext.revengStrategy, 
+				binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG), 
+				binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
+				(Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS));
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;

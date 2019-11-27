@@ -22,7 +22,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
@@ -48,8 +47,8 @@ public class JdbcMetadataBuilder {
 	private final MetadataBuildingContext metadataBuildingContext;	
 	private final InFlightMetadataCollectorImpl metadataCollector;	
 	private final ReverseEngineeringStrategy revengStrategy;
+	private final ReverseEngineeringContext reverseEngineeringContext;
 	
-	private boolean preferBasicCompositeIds;
 	private final StandardServiceRegistry serviceRegistry;
 	private final String defaultCatalog;
 	private final String defaultSchema;
@@ -73,9 +72,14 @@ public class JdbcMetadataBuilder {
 						bootstrapContext,
 						metadataBuildingOptions);
 		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(bootstrapContext, metadataBuildingOptions, metadataCollector);
-		this.preferBasicCompositeIds = (Boolean)properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.reverseEngineeringContext = ReverseEngineeringContext
+				.create(
+						metadataBuildingContext, 
+						metadataCollector, 
+						reverseEngineeringStrategy, 
+						properties);
 	}
 
 	public Metadata build() {
@@ -122,13 +126,7 @@ public class JdbcMetadataBuilder {
                 // TODO: just create one big embedded composite id instead.
             }*/
 			RootClassBinder
-				.create(
-						metadataBuildingContext,
-						metadataCollector, 
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema, 
-						preferBasicCompositeIds)
+				.create(reverseEngineeringContext)
 				.bind(table, collector, mapping);
 		}		
 		metadataCollector.processSecondPasses(metadataBuildingContext);		

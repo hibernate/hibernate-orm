@@ -194,6 +194,10 @@ public class InPredicate<T>
 						.append( ( (Renderable) value ).render( renderingContext ) );
 				sep = ", ";
 			}
+			// HHH-8901
+			if ( ! renderingContext.getDialect().supportsEmptyInList() && getValues().isEmpty() ) {
+				buffer.append( "null" );
+			}
 			buffer.append( ')' );
 		}
 		return buffer.toString();

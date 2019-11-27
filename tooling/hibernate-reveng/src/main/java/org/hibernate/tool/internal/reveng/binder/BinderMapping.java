@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;

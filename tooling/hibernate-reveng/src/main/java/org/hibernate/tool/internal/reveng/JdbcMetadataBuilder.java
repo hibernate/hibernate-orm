@@ -24,6 +24,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
+import org.hibernate.tool.internal.reveng.binder.BinderMapping;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
 import org.jboss.logging.Logger;
 

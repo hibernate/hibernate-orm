@@ -46,7 +46,7 @@ public class JdbcMetadataBuilder {
 	private final MetadataBuildingContext metadataBuildingContext;	
 	private final InFlightMetadataCollectorImpl metadataCollector;	
 	private final ReverseEngineeringStrategy revengStrategy;
-	private final ReverseEngineeringContext reverseEngineeringContext;
+	private final BinderContext binderContext;
 	
 	private final StandardServiceRegistry serviceRegistry;
 	private final String defaultCatalog;
@@ -73,7 +73,7 @@ public class JdbcMetadataBuilder {
 		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(bootstrapContext, metadataBuildingOptions, metadataCollector);
 		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		this.reverseEngineeringContext = ReverseEngineeringContext
+		this.binderContext = BinderContext
 				.create(
 						metadataBuildingContext, 
 						metadataCollector, 
@@ -114,7 +114,7 @@ public class JdbcMetadataBuilder {
     }*/
 	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
 		BinderMapping mapping = new BinderMapping(metadata);
-		RootClassBinder rootClassBinder = RootClassBinder.create(reverseEngineeringContext);
+		RootClassBinder rootClassBinder = RootClassBinder.create(binderContext);
 		for (Table table : metadataCollector.collectTableMappings()) {
 			if(table.getColumnSpan()==0) {
 				LOGGER.warn("Cannot create persistent class for " + table + " as no columns were found.");

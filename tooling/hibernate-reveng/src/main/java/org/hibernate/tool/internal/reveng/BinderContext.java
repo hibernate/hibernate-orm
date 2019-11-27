@@ -6,14 +6,14 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
-public class ReverseEngineeringContext {
+public class BinderContext {
 	
-	public static ReverseEngineeringContext create(
+	public static BinderContext create(
 			MetadataBuildingContext metadataBuildingContext,
 			InFlightMetadataCollector metadataCollector,
 			ReverseEngineeringStrategy revengStrategy,
 			Properties properties) {
-		return new ReverseEngineeringContext(
+		return new BinderContext(
 				metadataBuildingContext, 
 				metadataCollector, 
 				revengStrategy, 
@@ -25,7 +25,7 @@ public class ReverseEngineeringContext {
 	public final ReverseEngineeringStrategy revengStrategy;
 	public final Properties properties;
 	
-	private ReverseEngineeringContext(
+	private BinderContext(
 			MetadataBuildingContext metadataBuildingContext,
 			InFlightMetadataCollector metadataCollector,
 			ReverseEngineeringStrategy revengStrategy,

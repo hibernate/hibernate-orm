@@ -25,14 +25,14 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
-import org.hibernate.tool.internal.reveng.ReverseEngineeringContext;
+import org.hibernate.tool.internal.reveng.BinderContext;
 
 public class RootClassBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(RootClassBinder.class.getName());
 	
 	public static RootClassBinder create(
-			ReverseEngineeringContext binderContext) {
+			BinderContext binderContext) {
 		return new RootClassBinder(
 				binderContext.metadataBuildingContext, 
 				binderContext.metadataCollector, 

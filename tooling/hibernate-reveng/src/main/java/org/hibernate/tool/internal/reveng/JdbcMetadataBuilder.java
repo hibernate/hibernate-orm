@@ -5,7 +5,6 @@
 package org.hibernate.tool.internal.reveng;
 
 
-import java.util.Iterator;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
@@ -106,10 +105,17 @@ public class JdbcMetadataBuilder {
         return collector;
 	}
 	
+	// TODO: this naively just create an entity per table
+	// should have an opt-out option to mark some as helper tables, subclasses etc.
+	/*if(table.getPrimaryKey()==null || table.getPrimaryKey().getColumnSpan()==0) {
+	    log.warn("Cannot create persistent class for " + table + " as no primary key was found.");
+        continue;
+        // TODO: just create one big embedded composite id instead.
+    }*/
 	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
 		BinderMapping mapping = new BinderMapping(metadata);
-		for (Iterator<Table> iter = metadataCollector.collectTableMappings().iterator(); iter.hasNext();) {
-			Table table = iter.next();
+		RootClassBinder rootClassBinder = RootClassBinder.create(reverseEngineeringContext);
+		for (Table table : metadataCollector.collectTableMappings()) {
 			if(table.getColumnSpan()==0) {
 				LOGGER.warn("Cannot create persistent class for " + table + " as no columns were found.");
 				continue;
@@ -118,16 +124,7 @@ public class JdbcMetadataBuilder {
 				LOGGER.debug( "Ignoring " + table + " as class since rev.eng. says it is a many-to-many" );
 				continue;
 			}	    	
-			// TODO: this naively just create an entity per table
-			// should have an opt-out option to mark some as helper tables, subclasses etc.
-			/*if(table.getPrimaryKey()==null || table.getPrimaryKey().getColumnSpan()==0) {
-			    log.warn("Cannot create persistent class for " + table + " as no primary key was found.");
-                continue;
-                // TODO: just create one big embedded composite id instead.
-            }*/
-			RootClassBinder
-				.create(reverseEngineeringContext)
-				.bind(table, collector, mapping);
+			rootClassBinder.bind(table, collector, mapping);
 		}		
 		metadataCollector.processSecondPasses(metadataBuildingContext);		
 	}

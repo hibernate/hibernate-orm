@@ -542,7 +542,7 @@ public class QuerySqmImpl<R>
 
 		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy == null ) {
-			return new SimpleDeleteQueryPlan( sqmDelete, domainParameterXref );
+			return new SimpleDeleteQueryPlan( entityDescriptor, sqmDelete, domainParameterXref );
 		}
 		else {
 			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );

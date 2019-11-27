@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -42,6 +43,7 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 				EntityOfLists.class,
 				EntityOfSets.class,
 				EntityOfMaps.class,
+				SimpleEntity.class,
 		};
 	}
 

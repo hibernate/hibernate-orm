@@ -53,10 +53,21 @@ public class StandardSqmDeleteTranslator
 
 	@Override
 	public SimpleSqmDeleteTranslation translate(SqmDeleteStatement statement) {
+		SqlAstProcessingStateImpl processingState = new SqlAstProcessingStateImpl(
+				null,
+				this,
+				getCurrentClauseStack()::getCurrent
+		);
+
+		getProcessingStateStack().push( processingState );
+
 		final DeleteStatement deleteStatement = visitDeleteStatement( statement );
+
 		return new SimpleSqmDeleteTranslation(
 				deleteStatement,
-				getJdbcParamsBySqmParam()
+				getJdbcParamsBySqmParam(),
+				processingState.getSqlExpressionResolver(),
+				getFromClauseAccess()
 		);
 	}
 
@@ -65,14 +76,6 @@ public class StandardSqmDeleteTranslator
 		final String entityName = statement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor = getCreationContext().getDomainModel().getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
-
-		getProcessingStateStack().push(
-				new SqlAstProcessingStateImpl(
-						null,
-						this,
-						getCurrentClauseStack()::getCurrent
-				)
-		);
 
 		try {
 			final NavigablePath rootPath = new NavigablePath( entityName );

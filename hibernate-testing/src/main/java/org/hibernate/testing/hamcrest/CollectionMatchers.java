@@ -28,4 +28,22 @@ public class CollectionMatchers {
 	public static Matcher<Collection<?>> hasSize(int size) {
 		return org.hamcrest.Matchers.hasSize( size );
 	}
+
+	public static <X extends Collection<?>> HasNullElementsMatcher<X> hasNullElements() {
+		//noinspection unchecked
+		return HasNullElementsMatcher.HAS_NULL_ELEMENTS_MATCHER;
+	}
+
+	public static <X extends Collection<?>> HasNullElementsMatcher<X> hasNoNullElements() {
+		//noinspection unchecked
+		return HasNullElementsMatcher.HAS_NO_NULL_ELEMENTS_MATCHER;
+	}
+
+	public static <C extends Collection<?>> Matcher<C> isInitialized() {
+		return InitializationCheckMatcher.isInitialized();
+	}
+
+	public static <C extends Collection<?>> Matcher<C> isNotInitialized() {
+		return InitializationCheckMatcher.isNotInitialized();
+	}
 }

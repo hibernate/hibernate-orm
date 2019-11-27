@@ -8,9 +8,12 @@ package org.hibernate.orm.test.metamodel.mapping.collections;
 
 import org.hibernate.Hibernate;
 
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.EnumValue;
+import org.hibernate.testing.orm.domain.gambit.SimpleComponent;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,13 +25,7 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
-@DomainModel(
-		annotatedClasses = {
-				SimpleEntity.class,
-				EntityContainingMaps.class,
-				SomeStuff.class
-		}
-)
+@DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory
 public class MapOperationTests {
@@ -36,7 +33,7 @@ public class MapOperationTests {
 	public void createData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityContainingMaps entityContainingMaps = new EntityContainingMaps( 1, "first-map-entity" );
+					final EntityOfMaps entityContainingMaps = new EntityOfMaps( 1, "first-map-entity" );
 					entityContainingMaps.addBasicByBasic( "someKey", "someValue" );
 					entityContainingMaps.addBasicByBasic( "anotherKey", "anotherValue" );
 
@@ -45,8 +42,8 @@ public class MapOperationTests {
 
 					entityContainingMaps.addBasicByConvertedEnum( EnumValue.THREE, "three" );
 
-					entityContainingMaps.addSomeStuffByBasic( "the stuff", new SomeStuff( "the stuff - 1", "the stuff - 2" ) );
-					entityContainingMaps.addSomeStuffByBasic( "the other stuff", new SomeStuff( "the other stuff - 1", "the other stuff - 2" ) );
+					entityContainingMaps.addComponentByBasic( "the stuff", new SimpleComponent( "the stuff - 1", "the stuff - 2" ) );
+					entityContainingMaps.addComponentByBasic( "the other stuff", new SimpleComponent( "the other stuff - 1", "the other stuff - 2" ) );
 
 					session.save( entityContainingMaps );
 				}
@@ -60,7 +57,7 @@ public class MapOperationTests {
 
 		scope.inTransaction(
 				session -> {
-					final EntityContainingMaps entity = session.load( EntityContainingMaps.class, 1 );
+					final EntityOfMaps entity = session.load( EntityOfMaps.class, 1 );
 					session.delete( entity );
 				}
 		);
@@ -74,9 +71,9 @@ public class MapOperationTests {
 	public void testSqmFetching(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityContainingMaps entity = session.createQuery(
-							"select e from EntityContainingMaps e join fetch e.basicByEnum",
-							EntityContainingMaps.class
+					final EntityOfMaps entity = session.createQuery(
+							"select e from EntityOfMaps e join fetch e.basicByEnum",
+							EntityOfMaps.class
 					).getSingleResult();
 
 					assert Hibernate.isInitialized( entity.getBasicByEnum() );
@@ -90,9 +87,9 @@ public class MapOperationTests {
 	public void testDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final EntityContainingMaps entity = session.createQuery(
-							"select e from EntityContainingMaps e join fetch e.basicByEnum",
-							EntityContainingMaps.class
+					final EntityOfMaps entity = session.createQuery(
+							"select e from EntityOfMaps e join fetch e.basicByEnum",
+							EntityOfMaps.class
 					).getSingleResult();
 
 					session.delete( entity );

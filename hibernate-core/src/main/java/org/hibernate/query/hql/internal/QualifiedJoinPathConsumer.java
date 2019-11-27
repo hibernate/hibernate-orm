@@ -6,9 +6,12 @@
  */
 package org.hibernate.query.hql.internal;
 
+import java.util.Locale;
+
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -139,6 +142,16 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final SqmPathSource subPathSource = lhs.getReferencedPathSource().findSubPathSource( name );
+		if ( subPathSource == null ) {
+			throw new HqlInterpretationException(
+					String.format(
+							Locale.ROOT,
+							"Could not locate specified joinable path : %s -> %s",
+							lhs.getNavigablePath(),
+							name
+					)
+			);
+		}
 		final SqmAttributeJoin join = ( (SqmJoinable) subPathSource ).createSqmJoin(
 				lhs,
 				joinType,

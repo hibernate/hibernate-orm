@@ -12,6 +12,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -36,6 +37,13 @@ public class UnrestrictedDeleteExecutionDelegate implements TableBasedDeleteHand
 		// 		from the root table of the entity hierarchy,  which happens to be the last table we
 		// 		will visit
 		final AtomicInteger result = new AtomicInteger();
+
+		SqmMutationStrategyHelper.cleanUpCollectionTables(
+				entityDescriptor,
+				(tableReference, attributeMapping) -> null,
+				JdbcParameterBindings.NO_BINDINGS,
+				executionContext
+		);
 
 		entityDescriptor.visitConstraintOrderedTables(
 				(tableExpression, tableKeyColumnsVisitationSupplier) -> {

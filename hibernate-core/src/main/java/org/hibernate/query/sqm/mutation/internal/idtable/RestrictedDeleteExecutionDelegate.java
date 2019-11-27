@@ -23,13 +23,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
@@ -38,6 +42,7 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -47,6 +52,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import org.jboss.logging.Logger;
 
@@ -389,6 +395,26 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				idTable,
 				sessionUidAccess,
 				entityDescriptor,
+				executionContext
+		);
+
+		SqmMutationStrategyHelper.cleanUpCollectionTables(
+				entityDescriptor,
+				(tableReference, attributeMapping) -> {
+					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+
+					return new InSubQueryPredicate(
+							MappingModelHelper.buildColumnReferenceExpression(
+									fkDescriptor,
+									null,
+									sessionFactory
+							),
+							idTableSubQuery,
+							false
+					);
+
+				},
+				JdbcParameterBindings.NO_BINDINGS,
 				executionContext
 		);
 

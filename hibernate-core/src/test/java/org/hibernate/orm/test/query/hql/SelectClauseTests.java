@@ -32,6 +32,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
@@ -150,13 +151,13 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testMapKeyFunction() {
 		collectionIndexFunctionAssertions(
-				interpretSelect( "select key(m) from EntityOfMaps e join e.basicToBasicMap m" ),
+				interpretSelect( "select key(m) from EntityOfMaps e join e.basicByBasic m" ),
 				CollectionClassification.MAP,
 				BasicDomainType.class,
 				"m"
 		);
 		collectionIndexFunctionAssertions(
-				interpretSelect( "select key(m) from EntityOfMaps e join e.componentToBasicMap m" ),
+				interpretSelect( "select key(m) from EntityOfMaps e join e.basicByComponent m" ),
 				CollectionClassification.MAP,
 				EmbeddableDomainType.class,
 				"m"
@@ -194,18 +195,18 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	@Test
 	public void testMapValueFunction() {
 		collectionValueFunctionAssertions(
-				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToBasicMap m" ),
-				EntityOfMaps.class.getName() + ".basicToBasicMap",
+				interpretSelect( "select value(m) from EntityOfMaps e join e.basicByBasic m" ),
+				EntityOfMaps.class.getName() + ".basicByBasic",
 				"m"
 		);
 		collectionValueFunctionAssertions(
-				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToComponentMap m" ),
-				EntityOfMaps.class.getName() + ".basicToComponentMap",
+				interpretSelect( "select value(m) from EntityOfMaps e join e.componentByBasic m" ),
+				EntityOfMaps.class.getName() + ".componentByBasic",
 				"m"
 		);
 		collectionValueFunctionAssertions(
-				interpretSelect( "select value(m) from EntityOfMaps e join e.basicToOneToMany m" ),
-				EntityOfMaps.class.getName() + ".basicToOneToMany",
+				interpretSelect( "select value(m) from EntityOfMaps e join e.oneToManyByBasic m" ),
+				EntityOfMaps.class.getName() + ".oneToManyByBasic",
 				"m"
 		);
 
@@ -284,7 +285,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMapEntryFunction() {
-		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.basicToManyToMany m" );
+		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.manyToManyByBasic m" );
 
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
@@ -321,6 +322,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 				EntityOfLists.class,
 				EntityOfMaps.class,
 				EntityOfSets.class,
+				SimpleEntity.class,
 		};
 	}
 

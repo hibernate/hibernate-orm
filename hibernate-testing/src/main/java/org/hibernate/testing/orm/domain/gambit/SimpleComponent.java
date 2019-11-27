@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.metamodel.mapping.collections;
+package org.hibernate.testing.orm.domain.gambit;
 
 import javax.persistence.Embeddable;
 
@@ -12,14 +12,14 @@ import javax.persistence.Embeddable;
  * @author Steve Ebersole
  */
 @Embeddable
-public class SomeStuff {
+public class SimpleComponent {
 	private String anAttribute;
 	private String anotherAttribute;
 
-	public SomeStuff() {
+	public SimpleComponent() {
 	}
 
-	public SomeStuff(String anAttribute, String anotherAttribute) {
+	public SimpleComponent(String anAttribute, String anotherAttribute) {
 		this.anAttribute = anAttribute;
 		this.anotherAttribute = anotherAttribute;
 	}

@@ -36,6 +36,13 @@ public class SimpleEntity {
 
 	public SimpleEntity(
 			Integer id,
+			String someString) {
+		this.id = id;
+		this.someString = someString;
+	}
+
+	public SimpleEntity(
+			Integer id,
 			Date someDate,
 			Instant someInstant,
 			Integer someInteger,

@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
-import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.EntityWithAggregateId;
@@ -16,17 +16,12 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.Description;
-
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -132,7 +127,7 @@ public class MultiIdEntityLoadTests {
 
 						assertThat(
 								results,
-								HasNullElementsMatcher.hasNoNullElements()
+								CollectionMatchers.hasNoNullElements()
 						);
 					}
 
@@ -147,7 +142,7 @@ public class MultiIdEntityLoadTests {
 						// however, we should now have a null element for the deleted entity
 						assertThat(
 								results,
-								HasNullElementsMatcher.hasNullElements()
+								CollectionMatchers.hasNullElements()
 						);
 					}
 				}
@@ -206,52 +201,4 @@ public class MultiIdEntityLoadTests {
 		);
 	}
 
-	private static class HasNullElementsMatcher<C extends Collection<?>> extends BaseMatcher<C> {
-		public static final HasNullElementsMatcher INSTANCE = new HasNullElementsMatcher( false );
-		public static final HasNullElementsMatcher NEGATED_INSTANCE = new HasNullElementsMatcher( true );
-
-		public static <X extends Collection<?>> HasNullElementsMatcher<X> hasNullElements() {
-			//noinspection unchecked
-			return INSTANCE;
-		}
-
-		public static <X extends Collection<?>> HasNullElementsMatcher<X> hasNoNullElements() {
-			//noinspection unchecked
-			return NEGATED_INSTANCE;
-		}
-
-		private final boolean negated;
-
-		public HasNullElementsMatcher(boolean negated) {
-			this.negated = negated;
-		}
-
-		@Override
-		public boolean matches(Object item) {
-			assertThat( item, instanceOf( Collection.class ) );
-
-			//noinspection unchecked
-			C collection = (C) item;
-
-			if ( negated ) {
-				// check no-null-elements - if any is null, this check fails
-				collection.forEach( e -> assertThat( e, notNullValue() ) );
-				return true;
-			}
-
-			boolean foundOne = false;
-			for ( Object e : collection ) {
-				if ( e == null ) {
-					foundOne = true;
-					break;
-				}
-			}
-			return foundOne;
-		}
-
-		@Override
-		public void describeTo(Description description) {
-			description.appendText( "had null elements" );
-		}
-	}
 }

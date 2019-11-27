@@ -11,6 +11,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 
+import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
+import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,15 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		annotatedClasses = {
-				SimpleEntity.class,
-				EntityContainingLists.class,
-				EntityContainingSets.class,
-				EntityContainingMaps.class,
-				SomeStuff.class
-		}
-)
+@DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory
 @SuppressWarnings("WeakerAccess")
@@ -41,58 +37,65 @@ public class PluralAttributeMappingTests {
 	@Test
 	public void testLists(SessionFactoryScope scope) {
 		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingLists.class );
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfLists.class );
 
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 6 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 7 ) );
 
 		final AttributeMapping listOfBasics = containerEntityDescriptor.findAttributeMapping( "listOfBasics" );
 		assertThat( listOfBasics, notNullValue() );
 
-		final AttributeMapping listOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "listOfConvertedBasics" );
-		assertThat( listOfConvertedBasics, notNullValue() );
-
-
 		final AttributeMapping listOfEnums = containerEntityDescriptor.findAttributeMapping( "listOfEnums" );
 		assertThat( listOfEnums, notNullValue() );
+
+		final AttributeMapping listOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "listOfConvertedEnums" );
+		assertThat( listOfConvertedBasics, notNullValue() );
 
 		final AttributeMapping listOfComponents = containerEntityDescriptor.findAttributeMapping( "listOfComponents" );
 		assertThat( listOfComponents, notNullValue() );
 
-		final AttributeMapping listOfEntities = containerEntityDescriptor.findAttributeMapping( "listOfEntities" );
-		assertThat( listOfEntities, notNullValue() );
+		final AttributeMapping listOfOneToMany = containerEntityDescriptor.findAttributeMapping( "listOfOneToMany" );
+		assertThat( listOfOneToMany, notNullValue() );
+
+		final AttributeMapping listOfManyToMany = containerEntityDescriptor.findAttributeMapping( "listOfManyToMany" );
+		assertThat( listOfManyToMany, notNullValue() );
 	}
 
 	@Test
 	public void testSets(SessionFactoryScope scope) {
 		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingSets.class );
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfSets.class );
 
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 7 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 9 ) );
 
 		final AttributeMapping setOfBasics = containerEntityDescriptor.findAttributeMapping( "setOfBasics" );
 		assertThat( setOfBasics, notNullValue() );
 
-		final AttributeMapping setOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "setOfConvertedBasics" );
-		assertThat( setOfConvertedBasics, notNullValue() );
-
+		final AttributeMapping sortedSetOfBasics = containerEntityDescriptor.findAttributeMapping( "sortedSetOfBasics" );
+		assertThat( sortedSetOfBasics, notNullValue() );
 
 		final AttributeMapping setOfEnums = containerEntityDescriptor.findAttributeMapping( "setOfEnums" );
 		assertThat( setOfEnums, notNullValue() );
 
+		final AttributeMapping setOfConvertedBasics = containerEntityDescriptor.findAttributeMapping( "setOfConvertedEnums" );
+		assertThat( setOfConvertedBasics, notNullValue() );
+
 		final AttributeMapping setOfComponents = containerEntityDescriptor.findAttributeMapping( "setOfComponents" );
 		assertThat( setOfComponents, notNullValue() );
 
-		final AttributeMapping setOfEntities = containerEntityDescriptor.findAttributeMapping( "setOfEntities" );
-		assertThat( setOfEntities, notNullValue() );
+		final AttributeMapping extraLazySetOfComponents = containerEntityDescriptor.findAttributeMapping( "extraLazySetOfComponents" );
+		assertThat( extraLazySetOfComponents, notNullValue() );
 
-		final AttributeMapping sortedSetOfBasics = containerEntityDescriptor.findAttributeMapping( "sortedSetOfBasics" );
-		assertThat( sortedSetOfBasics, notNullValue() );
+		final AttributeMapping setOfOneToMany = containerEntityDescriptor.findAttributeMapping( "setOfOneToMany" );
+		assertThat( setOfOneToMany, notNullValue() );
+
+		final AttributeMapping setOfManyToMany = containerEntityDescriptor.findAttributeMapping( "setOfManyToMany" );
+		assertThat( setOfManyToMany, notNullValue() );
 	}
 
 	@Test
 	public void testMaps(SessionFactoryScope scope) {
 		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityContainingMaps.class );
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
 		// 8 for now, until entity-valued map keys is supported
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 9 ) );
@@ -112,12 +115,12 @@ public class PluralAttributeMappingTests {
 		assertThat( basicByConvertedEnum.getKeyDescriptor(), notNullValue() );
 		assertThat( basicByConvertedEnum.getElementDescriptor(), notNullValue() );
 
-		final PluralAttributeMapping someStuffByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "someStuffByBasic" );
+		final PluralAttributeMapping someStuffByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "componentByBasic" );
 		assertThat( someStuffByBasic, notNullValue() );
 		assertThat( someStuffByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( someStuffByBasic.getElementDescriptor(), notNullValue() );
 
-		final PluralAttributeMapping basicBySomeStuff = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicBySomeStuff" );
+		final PluralAttributeMapping basicBySomeStuff = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByComponent" );
 		assertThat( basicBySomeStuff, notNullValue() );
 		assertThat( basicBySomeStuff.getKeyDescriptor(), notNullValue() );
 		assertThat( basicBySomeStuff.getElementDescriptor(), notNullValue() );

@@ -9,12 +9,17 @@ package org.hibernate.testing.orm.domain.gambit;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.persistence.CollectionTable;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -25,25 +30,29 @@ import org.hibernate.annotations.SortNatural;
  */
 @SuppressWarnings("unused")
 @Entity
+@Table(name = "entity_containing_sets")
 public class EntityOfSets {
 	private Integer id;
-	private Set<String> setOfBasics;
-	private Set<Component> setOfComponents;
-	private Set<Component> setOfExtraLazyComponents;
-	private Set<EntityOfSets> setOfOneToMany;
-	private Set<EntityOfSets> setOfManyToMany;
+	private String name;
 
+	private Set<String> setOfBasics;
 	private SortedSet<String> sortedSetOfBasics;
+
+	private Set<EnumValue> setOfEnums;
+	private Set<EnumValue> setOfConvertedEnums;
+
+	private Set<SimpleComponent> setOfComponents;
+	private Set<SimpleComponent> extraLazySetOfComponents;
+
+	private Set<SimpleEntity> setOfOneToMany;
+	private Set<SimpleEntity> setOfManyToMany;
 
 	public EntityOfSets() {
 	}
 
-	public EntityOfSets(Integer id) {
+	public EntityOfSets(Integer id, String name) {
 		this.id = id;
-		this.setOfBasics = new HashSet<>();
-		this.setOfComponents = new HashSet<>();
-		this.setOfOneToMany = new HashSet<>();
-		this.setOfManyToMany = new HashSet<>();
+		this.name = name;
 	}
 
 	@Id
@@ -55,8 +64,19 @@ public class EntityOfSets {
 		this.id = id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfBasics
+
 	@ElementCollection()
-//	@ElementCollection( fetch = FetchType.EAGER )
 	@CollectionTable( name = "EntityOfSet_basics")
 	public Set<String> getSetOfBasics() {
 		return setOfBasics;
@@ -66,46 +86,16 @@ public class EntityOfSets {
 		this.setOfBasics = setOfBasics;
 	}
 
-	@ElementCollection
-	@CollectionTable( name = "EntityOfSet_components")
-	public Set<Component> getSetOfComponents() {
-		return setOfComponents;
+	public void addBasic(String value) {
+		if ( setOfBasics == null ) {
+			setOfBasics = new HashSet<>();
+		}
+		setOfBasics.add( value );
 	}
 
-	public void setSetOfComponents(Set<Component> setOfComponents) {
-		this.setOfComponents = setOfComponents;
-	}
 
-	@ElementCollection
-	@LazyCollection( LazyCollectionOption.EXTRA )
-	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
-	public Set<Component> getSetOfExtraLazyComponents() {
-		return setOfExtraLazyComponents;
-	}
-
-	public void setSetOfExtraLazyComponents(Set<Component> setOfExtraLazyComponents) {
-		this.setOfExtraLazyComponents = setOfExtraLazyComponents;
-	}
-
-	@OneToMany
-	@CollectionTable( name = "EntityOfSet_oneToMany")
-	public Set<EntityOfSets> getSetOfOneToMany() {
-		return setOfOneToMany;
-	}
-
-	public void setSetOfOneToMany(Set<EntityOfSets> setOfOneToMany) {
-		this.setOfOneToMany = setOfOneToMany;
-	}
-
-	@ManyToMany
-	@CollectionTable( name = "EntityOfSet_manyToMany")
-	public Set<EntityOfSets> getSetOfManyToMany() {
-		return setOfManyToMany;
-	}
-
-	public void setSetOfManyToMany(Set<EntityOfSets> setOfManyToMany) {
-		this.setOfManyToMany = setOfManyToMany;
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedSetOfBasics
 
 	@ElementCollection()
 	@CollectionTable( name = "EntityOfSet_sortedBasics")
@@ -116,5 +106,139 @@ public class EntityOfSets {
 
 	public void setSortedSetOfBasics(SortedSet<String> sortedSetOfBasics) {
 		this.sortedSetOfBasics = sortedSetOfBasics;
+	}
+
+	public void addSortedBasic(String value) {
+		if ( sortedSetOfBasics == null ) {
+			sortedSetOfBasics = new TreeSet<>();
+		}
+		sortedSetOfBasics.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfConvertedEnums
+
+	@ElementCollection
+	@Convert(converter = EnumValueConverter.class)
+	public Set<EnumValue> getSetOfConvertedEnums() {
+		return setOfConvertedEnums;
+	}
+
+	public void setSetOfConvertedEnums(Set<EnumValue> setOfConvertedEnums) {
+		this.setOfConvertedEnums = setOfConvertedEnums;
+	}
+
+	public void addConvertedEnum(EnumValue value) {
+		if ( setOfConvertedEnums == null ) {
+			setOfConvertedEnums = new HashSet<>();
+		}
+		setOfConvertedEnums.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfEnums
+
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+	public Set<EnumValue> getSetOfEnums() {
+		return setOfEnums;
+	}
+
+	public void setSetOfEnums(Set<EnumValue> setOfEnums) {
+		this.setOfEnums = setOfEnums;
+	}
+
+	public void addEnum(EnumValue value) {
+		if ( setOfEnums == null ) {
+			setOfEnums = new HashSet<>();
+		}
+		setOfEnums.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfComponents
+
+	@ElementCollection
+	@CollectionTable( name = "EntityOfSet_components")
+	public Set<SimpleComponent> getSetOfComponents() {
+		return setOfComponents;
+	}
+
+	public void setSetOfComponents(Set<SimpleComponent> setOfComponents) {
+		this.setOfComponents = setOfComponents;
+	}
+
+	public void addComponent(SimpleComponent value) {
+		if ( setOfComponents == null ) {
+			setOfComponents = new HashSet<>();
+		}
+		setOfComponents.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfExtraLazyComponents
+
+	@ElementCollection
+	@LazyCollection( LazyCollectionOption.EXTRA )
+	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
+	public Set<SimpleComponent> getExtraLazySetOfComponents() {
+		return extraLazySetOfComponents;
+	}
+
+	public void setExtraLazySetOfComponents(Set<SimpleComponent> extraLazySetOfComponents) {
+		this.extraLazySetOfComponents = extraLazySetOfComponents;
+	}
+
+	public void addExtraLazyComponent(SimpleComponent value) {
+		if ( extraLazySetOfComponents == null ) {
+			extraLazySetOfComponents = new HashSet<>();
+		}
+		extraLazySetOfComponents.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfOneToMany
+
+	@OneToMany
+	@CollectionTable( name = "EntityOfSet_oneToMany")
+	public Set<SimpleEntity> getSetOfOneToMany() {
+		return setOfOneToMany;
+	}
+
+	public void setSetOfOneToMany(Set<SimpleEntity> setOfOneToMany) {
+		this.setOfOneToMany = setOfOneToMany;
+	}
+
+	public void addOneToMany(SimpleEntity value) {
+		if ( setOfOneToMany == null ) {
+			setOfOneToMany = new HashSet<>();
+		}
+		setOfOneToMany.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// setOfManyToMany
+
+	@ManyToMany
+	@CollectionTable( name = "EntityOfSet_manyToMany")
+	public Set<SimpleEntity> getSetOfManyToMany() {
+		return setOfManyToMany;
+	}
+
+	public void setSetOfManyToMany(Set<SimpleEntity> setOfManyToMany) {
+		this.setOfManyToMany = setOfManyToMany;
+	}
+
+	public void addManyToMany(SimpleEntity value) {
+		if ( setOfManyToMany == null ) {
+			setOfManyToMany = new HashSet<>();
+		}
+		setOfManyToMany.add( value );
 	}
 }

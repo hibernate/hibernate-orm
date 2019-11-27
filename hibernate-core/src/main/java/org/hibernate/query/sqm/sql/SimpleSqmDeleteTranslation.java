@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.spi.JdbcParameter;
 
@@ -19,12 +21,18 @@ import org.hibernate.sql.exec.spi.JdbcParameter;
 public class SimpleSqmDeleteTranslation implements SqmTranslation {
 	private final DeleteStatement sqlAst;
 	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap;
+	private final SqlExpressionResolver sqlExpressionResolver;
+	private final FromClauseAccess fromClauseAccess;
 
 	public SimpleSqmDeleteTranslation(
 			DeleteStatement sqlAst,
-			Map<SqmParameter, List<JdbcParameter>> jdbcParamMap) {
+			Map<SqmParameter, List<JdbcParameter>> jdbcParamMap,
+			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess) {
 		this.sqlAst = sqlAst;
 		this.jdbcParamMap = jdbcParamMap;
+		this.sqlExpressionResolver = sqlExpressionResolver;
+		this.fromClauseAccess = fromClauseAccess;
 	}
 
 	@Override
@@ -35,5 +43,13 @@ public class SimpleSqmDeleteTranslation implements SqmTranslation {
 	@Override
 	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamMap;
+	}
+
+	public SqlExpressionResolver getSqlExpressionResolver() {
+		return sqlExpressionResolver;
+	}
+
+	public FromClauseAccess getFromClauseAccess() {
+		return fromClauseAccess;
 	}
 }

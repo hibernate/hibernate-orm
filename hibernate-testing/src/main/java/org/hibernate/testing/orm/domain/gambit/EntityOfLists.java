@@ -6,9 +6,13 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
+import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
@@ -21,10 +25,25 @@ import javax.persistence.OrderColumn;
 @Entity
 public class EntityOfLists {
 	private Integer id;
+	private String name;
+
 	private List<String> listOfBasics;
-	private List<Component> listOfComponents;
-	private List<EntityOfLists> listOfOneToMany;
-	private List<EntityOfLists> listOfManyToMany;
+
+	private List<EnumValue> listOfConvertedEnums;
+	private List<EnumValue> listOfEnums;
+
+	private List<SimpleComponent> listOfComponents;
+
+	private List<SimpleEntity> listOfOneToMany;
+	private List<SimpleEntity> listOfManyToMany;
+
+	public EntityOfLists() {
+	}
+
+	public EntityOfLists(Integer id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
 	@Id
 	public Integer getId() {
@@ -34,6 +53,18 @@ public class EntityOfLists {
 	public void setId(Integer id) {
 		this.id = id;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfBasics
 
 	@ElementCollection
 	@OrderColumn
@@ -45,33 +76,117 @@ public class EntityOfLists {
 		this.listOfBasics = listOfBasics;
 	}
 
+	public void addBasic(String basic) {
+		if ( listOfBasics == null ) {
+			listOfBasics = new ArrayList<>();
+		}
+		listOfBasics.add( basic );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfConvertedEnums
+
 	@ElementCollection
 	@OrderColumn
-	public List<Component> getListOfComponents() {
+	@Convert(converter = EnumValueConverter.class)
+	public List<EnumValue> getListOfConvertedEnums() {
+		return listOfConvertedEnums;
+	}
+
+	public void setListOfConvertedEnums(List<EnumValue> listOfConvertedEnums) {
+		this.listOfConvertedEnums = listOfConvertedEnums;
+	}
+
+	public void addConvertedEnum(EnumValue value) {
+		if ( listOfConvertedEnums == null ) {
+			listOfConvertedEnums = new ArrayList<>();
+		}
+		listOfConvertedEnums.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfEnums
+
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+	@OrderColumn
+	public List<EnumValue> getListOfEnums() {
+		return listOfEnums;
+	}
+
+	public void setListOfEnums(List<EnumValue> listOfEnums) {
+		this.listOfEnums = listOfEnums;
+	}
+
+	public void addEnum(EnumValue value) {
+		if ( listOfEnums == null ) {
+			listOfEnums = new ArrayList<>();
+		}
+		listOfEnums.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfComponents
+
+	@ElementCollection
+	@OrderColumn
+	public List<SimpleComponent> getListOfComponents() {
 		return listOfComponents;
 	}
 
-	public void setListOfComponents(List<Component> listOfComponents) {
+	public void setListOfComponents(List<SimpleComponent> listOfComponents) {
 		this.listOfComponents = listOfComponents;
 	}
 
+	public void addComponent(SimpleComponent value) {
+		if ( listOfComponents == null ) {
+			listOfComponents = new ArrayList<>();
+		}
+		listOfComponents.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfOneToMany
+
 	@OneToMany
 	@OrderColumn
-	public List<EntityOfLists> getListOfOneToMany() {
+	public List<SimpleEntity> getListOfOneToMany() {
 		return listOfOneToMany;
 	}
 
-	public void setListOfOneToMany(List<EntityOfLists> listOfOneToMany) {
+	public void setListOfOneToMany(List<SimpleEntity> listOfOneToMany) {
 		this.listOfOneToMany = listOfOneToMany;
 	}
 
+	public void addOneToMany(SimpleEntity value) {
+		if ( listOfOneToMany == null ) {
+			listOfOneToMany = new ArrayList<>();
+		}
+		listOfOneToMany.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// listOfManyToMany
+
 	@ManyToMany
 	@OrderColumn
-	public List<EntityOfLists> getListOfManyToMany() {
+	public List<SimpleEntity> getListOfManyToMany() {
 		return listOfManyToMany;
 	}
 
-	public void setListOfManyToMany(List<EntityOfLists> listOfManyToMany) {
+	public void setListOfManyToMany(List<SimpleEntity> listOfManyToMany) {
 		this.listOfManyToMany = listOfManyToMany;
+	}
+
+	public void addManyToMany(SimpleEntity value) {
+		if ( listOfManyToMany == null ) {
+			listOfManyToMany = new ArrayList<>();
+		}
+		listOfManyToMany.add( value );
 	}
 }

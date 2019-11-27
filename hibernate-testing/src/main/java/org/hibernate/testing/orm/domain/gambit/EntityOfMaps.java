@@ -6,12 +6,15 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
+import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 
 /**
@@ -21,11 +24,26 @@ import javax.persistence.OneToMany;
 @Entity
 public class EntityOfMaps {
 	private Integer id;
-	private Map<String,String> basicToBasicMap;
-	private Map<String, Component> basicToComponentMap;
-	private Map<Component,String> componentToBasicMap;
-	private Map<String, EntityOfMaps> basicToOneToMany;
-	private Map<String, EntityOfMaps> basicToManyToMany;
+	private String name;
+
+	private Map<String,String> basicByBasic;
+	private Map<EnumValue,String> basicByEnum;
+	private Map<EnumValue,String> basicByConvertedEnum;
+
+	private Map<String, SimpleComponent> componentByBasic;
+	private Map<SimpleComponent,String> basicByComponent;
+
+	private Map<String, SimpleEntity> oneToManyByBasic;
+	private Map<SimpleEntity,String> basicByOneToMany;
+	private Map<String, SimpleEntity> manyToManyByBasic;
+
+	public EntityOfMaps() {
+	}
+
+	public EntityOfMaps(Integer id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
 	@Id
 	public Integer getId() {
@@ -36,50 +54,175 @@ public class EntityOfMaps {
 		this.id = id;
 	}
 
-	@ElementCollection
-	public Map<String, String> getBasicToBasicMap() {
-		return basicToBasicMap;
+	public String getName() {
+		return name;
 	}
 
-	public void setBasicToBasicMap(Map<String, String> basicToBasicMap) {
-		this.basicToBasicMap = basicToBasicMap;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	@ElementCollection
-	public Map<String, Component> getBasicToComponentMap() {
-		return basicToComponentMap;
-	}
 
-	public void setBasicToComponentMap(Map<String, Component> basicToComponentMap) {
-		this.basicToComponentMap = basicToComponentMap;
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basicByBasic
 
 	@ElementCollection
-	public Map<Component, String> getComponentToBasicMap() {
-		return componentToBasicMap;
+	public Map<String, String> getBasicByBasic() {
+		return basicByBasic;
 	}
 
-	public void setComponentToBasicMap(Map<Component, String> componentToBasicMap) {
-		this.componentToBasicMap = componentToBasicMap;
+	public void setBasicByBasic(Map<String, String> basicByBasic) {
+		this.basicByBasic = basicByBasic;
 	}
+
+	public void addBasicByBasic(String key, String val) {
+		if ( basicByBasic == null ) {
+			basicByBasic = new HashMap<>();
+		}
+		basicByBasic.put( key, val );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basicByEnum
+
+	@ElementCollection
+	@MapKeyEnumerated
+	public Map<EnumValue, String> getBasicByEnum() {
+		return basicByEnum;
+	}
+
+	public void setBasicByEnum(Map<EnumValue, String> basicByEnum) {
+		this.basicByEnum = basicByEnum;
+	}
+
+	public void addBasicByEnum(EnumValue key, String val) {
+		if ( basicByEnum == null ) {
+			basicByEnum = new HashMap<>();
+		}
+		basicByEnum.put( key, val );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basicByConvertedEnum
+
+	@ElementCollection
+	@Convert(attributeName = "key", converter = EnumValueConverter.class)
+	public Map<EnumValue, String> getBasicByConvertedEnum() {
+		return basicByConvertedEnum;
+	}
+
+	public void setBasicByConvertedEnum(Map<EnumValue, String> basicByConvertedEnum) {
+		this.basicByConvertedEnum = basicByConvertedEnum;
+	}
+
+	public void addBasicByConvertedEnum(EnumValue key, String value) {
+		if ( basicByConvertedEnum == null ) {
+			basicByConvertedEnum = new HashMap<>();
+		}
+		basicByConvertedEnum.put( key, value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// componentByBasic
+
+	@ElementCollection
+	public Map<String, SimpleComponent> getComponentByBasic() {
+		return componentByBasic;
+	}
+
+	public void setComponentByBasic(Map<String, SimpleComponent> componentByBasic) {
+		this.componentByBasic = componentByBasic;
+	}
+
+	public void addComponentByBasic(String key, SimpleComponent value) {
+		if ( componentByBasic == null ) {
+			componentByBasic = new HashMap<>();
+		}
+		componentByBasic.put( key, value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basicByComponent
+
+	@ElementCollection
+	public Map<SimpleComponent, String> getBasicByComponent() {
+		return basicByComponent;
+	}
+
+	public void setBasicByComponent(Map<SimpleComponent, String> basicByComponent) {
+		this.basicByComponent = basicByComponent;
+	}
+
+	public void addBasicByComponent(SimpleComponent key, String value) {
+		if ( basicByComponent == null ) {
+			basicByComponent = new HashMap<>();
+		}
+		basicByComponent.put( key, value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// oneToManyByBasic
 
 	@OneToMany
 	@JoinColumn
-	public Map<String, EntityOfMaps> getBasicToOneToMany() {
-		return basicToOneToMany;
+	public Map<String, SimpleEntity> getOneToManyByBasic() {
+		return oneToManyByBasic;
 	}
 
-	public void setBasicToOneToMany(Map<String, EntityOfMaps> basicToOneToMany) {
-		this.basicToOneToMany = basicToOneToMany;
+	public void setOneToManyByBasic(Map<String, SimpleEntity> oneToManyByBasic) {
+		this.oneToManyByBasic = oneToManyByBasic;
 	}
+
+	public void addOneToManyByComponent(String key, SimpleEntity value) {
+		if ( oneToManyByBasic == null ) {
+			oneToManyByBasic = new HashMap<>();
+		}
+		oneToManyByBasic.put( key, value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basicByOneToMany
+
+	@ElementCollection
+	public Map<SimpleEntity, String> getBasicByOneToMany() {
+		return basicByOneToMany;
+	}
+
+	public void setBasicByOneToMany(Map<SimpleEntity, String> basicByOneToMany) {
+		this.basicByOneToMany = basicByOneToMany;
+	}
+
+	public void addOneToManyByBasic(SimpleEntity key, String val) {
+		if ( basicByOneToMany == null ) {
+			basicByOneToMany = new HashMap<>();
+		}
+		basicByOneToMany.put( key, val );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// manyToManyByBasic
 
 	@ManyToMany
-	public Map<String, EntityOfMaps> getBasicToManyToMany() {
-		return basicToManyToMany;
+	public Map<String, SimpleEntity> getManyToManyByBasic() {
+		return manyToManyByBasic;
 	}
 
-	public void setBasicToManyToMany(Map<String, EntityOfMaps> basicToManyToMany) {
-		this.basicToManyToMany = basicToManyToMany;
+	public void setManyToManyByBasic(Map<String, SimpleEntity> manyToManyByBasic) {
+		this.manyToManyByBasic = manyToManyByBasic;
+	}
+
+	public void addManyToManyByComponent(String key, SimpleEntity value) {
+		if ( manyToManyByBasic == null ) {
+			manyToManyByBasic = new HashMap<>();
+		}
+		manyToManyByBasic.put( key, value );
 	}
 
 }

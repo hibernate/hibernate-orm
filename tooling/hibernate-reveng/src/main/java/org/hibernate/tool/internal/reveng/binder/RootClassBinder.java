@@ -25,7 +25,6 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
-import org.hibernate.tool.internal.reveng.BinderContext;
 
 public class RootClassBinder {
 	

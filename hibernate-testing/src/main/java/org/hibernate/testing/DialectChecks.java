@@ -55,6 +55,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class NotSupportsEmptyInListCheck implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return !dialect.supportsEmptyInList();
+		}
+	}
+
 	public static class CaseSensitiveCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.areStringComparisonsCaseInsensitive();

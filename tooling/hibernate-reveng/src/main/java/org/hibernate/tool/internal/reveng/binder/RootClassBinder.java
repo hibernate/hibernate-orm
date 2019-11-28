@@ -32,13 +32,7 @@ public class RootClassBinder {
 	
 	public static RootClassBinder create(
 			BinderContext binderContext) {
-		return new RootClassBinder(
-				binderContext.metadataBuildingContext, 
-				binderContext.metadataCollector, 
-				binderContext.revengStrategy, 
-				binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG), 
-				binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
-				(Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS));
+		return new RootClassBinder(binderContext);
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;
@@ -48,19 +42,13 @@ public class RootClassBinder {
 	private final String defaultSchema;
 	private final boolean preferBasicCompositeIds;
 	
-	private RootClassBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema,
-			boolean preferBasicCompositeIds) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.metadataCollector = metadataCollector;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
-		this.preferBasicCompositeIds = preferBasicCompositeIds;
+	private RootClassBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.metadataCollector = binderContext.metadataCollector;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {

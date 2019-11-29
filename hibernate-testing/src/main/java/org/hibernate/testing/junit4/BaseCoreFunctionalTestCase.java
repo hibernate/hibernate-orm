@@ -20,6 +20,7 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -387,7 +388,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictAllRegions();
 		}
 	}
-	
+
 	protected boolean isCleanupTestDataRequired() {
 		return false;
 	}
@@ -516,5 +517,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void inSession(Consumer<SessionImplementor> action) {
 		TransactionUtil2.inSession( sessionFactory(), action );
+	}
+
+	protected void inStatelessSession(Consumer<StatelessSession> action) {
+		TransactionUtil2.inStatelessSession( sessionFactory(), action );
 	}
 }

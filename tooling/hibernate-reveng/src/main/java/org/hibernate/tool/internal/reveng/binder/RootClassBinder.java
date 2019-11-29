@@ -41,6 +41,7 @@ public class RootClassBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	private final boolean preferBasicCompositeIds;
+	private final BinderContext binderContext;
 	
 	private RootClassBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
@@ -49,6 +50,7 @@ public class RootClassBinder {
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
+		this.binderContext = binderContext;
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {
@@ -92,13 +94,7 @@ public class RootClassBinder {
 		Set<Column> processed = new HashSet<Column>();
 		
 		PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
-				.create(
-						metadataBuildingContext, 
-						metadataCollector, 
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema, 
-						preferBasicCompositeIds);
+				.create(binderContext);
 		PrimaryKeyInfo pki = primaryKeyBinder.bind(
 						table, 
 						rc, 

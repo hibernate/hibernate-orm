@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -23,6 +24,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -33,20 +35,8 @@ public class PrimaryKeyBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(PrimaryKeyBinder.class.getName());
 	
-	public static PrimaryKeyBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema,
-			boolean preferBasicCompositeIds) {
-		return new PrimaryKeyBinder(
-				metadataBuildingContext,
-				metadataCollector,
-				revengStrategy,
-				defaultCatalog,
-				defaultSchema,
-				preferBasicCompositeIds);
+	public static PrimaryKeyBinder create(BinderContext binderContext) {
+		return new PrimaryKeyBinder(binderContext);
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;
@@ -57,19 +47,13 @@ public class PrimaryKeyBinder {
 	private final boolean preferBasicCompositeIds;
 
 	
-	private PrimaryKeyBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema,
-			boolean preferBasicCompositeIds) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.metadataCollector = metadataCollector;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
-		this.preferBasicCompositeIds = preferBasicCompositeIds;
+	private PrimaryKeyBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.metadataCollector = binderContext.metadataCollector;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 	}
 
 	public PrimaryKeyInfo bind(

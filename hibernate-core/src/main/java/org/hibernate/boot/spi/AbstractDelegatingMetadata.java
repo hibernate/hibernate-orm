@@ -17,7 +17,6 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.dialect.function.SQLFunction;
@@ -25,6 +24,7 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.mapping.FetchProfile;
@@ -240,4 +240,10 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
 		return delegate.getMappedSuperclassMappingsCopy();
 	}
+
+	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		delegate.initSessionFactory( sessionFactory );
+	}
+
 }

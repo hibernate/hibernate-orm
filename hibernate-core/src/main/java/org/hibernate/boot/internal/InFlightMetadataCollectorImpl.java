@@ -79,6 +79,7 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
@@ -245,6 +246,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
 		return new HashSet<>( mappedSuperClasses.values() );
+	}
+
+	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		throw new UnsupportedOperationException(
+				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
+						"we should better segment this in the API :)"
+		);
 	}
 
 	@Override

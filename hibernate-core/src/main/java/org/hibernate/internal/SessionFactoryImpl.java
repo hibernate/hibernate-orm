@@ -11,7 +11,6 @@ import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -31,7 +29,6 @@ import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -82,7 +79,6 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -136,7 +132,6 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 
-
 /**
  * Concrete implementation of the <tt>SessionFactory</tt> interface. Has the following
  * responsibilities
@@ -159,7 +154,6 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
  */
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
 
 	private final String name;
 	private final String uuid;
@@ -214,7 +208,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
 
-		prepareEventListeners( metadata );
+		metadata.initSessionFactory( this );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -408,41 +402,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.autoClose( false )
 				.flushMode( FlushMode.MANUAL )
 				.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
-	}
-
-	private void prepareEventListeners(MetadataImplementor metadata) {
-		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-
-		eventListenerRegistry.prepare( metadata );
-
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !String.class.isInstance( entry.getKey() ) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
-			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				continue;
-			}
-			final String eventTypeName = propertyName.substring(
-					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
-			);
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
-				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
-			}
-		}
-	}
-
-	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
-		try {
-			return classLoaderService.classForName( listenerImpl ).newInstance();
-		}
-		catch (Exception e) {
-			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
-		}
 	}
 
 	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {

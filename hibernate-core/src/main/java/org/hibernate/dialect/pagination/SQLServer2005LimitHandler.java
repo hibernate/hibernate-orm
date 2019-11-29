@@ -585,7 +585,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		int index = offset;
 		boolean inString = false;
 		for ( ; index < sql.length(); ++index ) {
-			if ( sql.charAt( index ) == '\'' ) {
+			if ( sql.charAt( index ) == '\'' && !inString ) {
 				inString = true;
 			}
 			else if ( sql.charAt( index ) == '\'' && inString ) {

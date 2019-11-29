@@ -54,12 +54,38 @@ public class RootClassBinder {
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {
-		if (table.getCatalog() != null && table.getCatalog().equals(defaultCatalog)) {
-			table.setCatalog(null);
+		Set<Column> processed = new HashSet<Column>();
+		nullifyDefaultCatalogAndSchema(table);
+		RootClass rc = createRootClass(table);
+		addToMetadataCollector(rc, table);
+		PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
+				.create(binderContext);
+		PrimaryKeyInfo pki = primaryKeyBinder.bind(
+						table, 
+						rc, 
+						processed, 
+						mapping, 
+						collector);		
+		bindVersionProperty(table, rc, processed, mapping);
+		bindOutgoingForeignKeys(table, rc, processed);
+		bindColumnsToProperties(table, rc, processed, mapping);
+		bindIncomingForeignKeys(rc, processed, collector, mapping);
+		primaryKeyBinder.updatePrimaryKey(rc, pki);	
+	}
+	
+	private void addToMetadataCollector(RootClass rc, Table table) {
+		try {
+			metadataCollector.addEntityBinding(rc);
+			metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
+		} catch(DuplicateMappingException dme) {
+			// TODO: detect this and generate a "permutation" of it ?
+			PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
+			Table table2 = class1.getTable();
+			throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
 		}
-		if (table.getSchema() != null && table.getSchema().equals(defaultSchema)) {
-			table.setSchema(null);
-		}   	
+	}
+	
+	private RootClass createRootClass(Table table) {
 		RootClass rc = new RootClass(metadataBuildingContext);
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		String className = revengStrategy.tableToClassName( tableIdentifier );
@@ -81,45 +107,35 @@ public class RootClassBinder {
 
 		rc.setDiscriminatorValue( rc.getEntityName() );
 		rc.setTable(table);
-		try {
-			metadataCollector.addEntityBinding(rc);
-		} catch(DuplicateMappingException dme) {
-			// TODO: detect this and generate a "permutation" of it ?
-			PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
-			Table table2 = class1.getTable();
-			throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
+		return rc;
+	}
+	
+	private void nullifyDefaultCatalogAndSchema(Table table) {
+		if (table.getCatalog() != null && table.getCatalog().equals(defaultCatalog)) {
+			table.setCatalog(null);
 		}
-		metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
-
-		Set<Column> processed = new HashSet<Column>();
-		
-		PrimaryKeyBinder primaryKeyBinder = PrimaryKeyBinder
-				.create(binderContext);
-		PrimaryKeyInfo pki = primaryKeyBinder.bind(
-						table, 
-						rc, 
-						processed, 
-						mapping, 
-						collector);
-		
+		if (table.getSchema() != null && table.getSchema().equals(defaultSchema)) {
+			table.setSchema(null);
+		}   		
+	}
+	
+	private void bindVersionProperty(
+			Table table, 
+			RootClass rc, 
+			Set<Column> processed, 
+			Mapping mapping) {
 		VersionPropertyBinder
 			.create(
-					metadataBuildingContext, 
-					metadataCollector, 
-					revengStrategy, 
-					defaultCatalog, 
-					defaultSchema)
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema)
 			.bind(
-					table, 
-					rc, 
-					processed, 
-					mapping);
-		
-		bindOutgoingForeignKeys(table, rc, processed);
-		bindColumnsToProperties(table, rc, processed, mapping);
-		bindIncomingForeignKeys(rc, processed, collector, mapping);
-		primaryKeyBinder.updatePrimaryKey(rc, pki);
-		
+				table, 
+				rc, 
+				processed, 
+				mapping);
 	}
 
 	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, DatabaseCollector collector, Mapping mapping) {

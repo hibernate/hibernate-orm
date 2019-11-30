@@ -137,7 +137,7 @@ ext {
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:3.2.0",
-            vibur:           "org.vibur:vibur-dbcp:22.2",
+            vibur:           "org.vibur:vibur-dbcp:25.0",
             agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
             agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
 

@@ -58,18 +58,25 @@ public class RootClassBinder {
 		nullifyDefaultCatalogAndSchema(table);
 		RootClass rc = createRootClass(table);
 		addToMetadataCollector(rc, table);
-		PrimaryKeyInfo pki = 
-				primaryKeyBinder.bind(
-						table, 
-						rc, 
-						processed, 
-						mapping, 
-						collector);		
+		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, mapping, collector);		
 		bindVersionProperty(table, rc, processed, mapping);
 		bindOutgoingForeignKeys(table, rc, processed);
 		bindColumnsToProperties(table, rc, processed, mapping);
 		bindIncomingForeignKeys(rc, processed, collector, mapping);
-		primaryKeyBinder.updatePrimaryKey(rc, pki);	
+		updatePrimaryKey(rc, pki);	
+	}
+	
+	private PrimaryKeyInfo bindPrimaryKey(
+			Table table, 
+			RootClass rc, 
+			Set<Column> processed, 
+			Mapping mapping, 
+			DatabaseCollector collector) {
+		return primaryKeyBinder.bind(table, rc, processed, mapping, collector);	
+	}
+	
+	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
+		primaryKeyBinder.updatePrimaryKey(rc, pki);
 	}
 	
 	private void addToMetadataCollector(RootClass rc, Table table) {

@@ -1,11 +1,9 @@
 package org.hibernate.tool.internal.reveng.binder;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,14 +57,6 @@ public class BinderUtils {
         return BinderUtils.makeUnique(clazz.getPropertyIterator(), propertyName);
     }
     
-	public static Map<?,?> safeMap(Map<?,?> map) {
-		if(map==null) {
-			return Collections.emptyMap();
-		} else {
-			return map;
-		}
-	}
-
 	public static void checkColumnForMultipleBinding(Column column) {
 		if(column.getValue()!=null) {
 			LOGGER.log(Level.WARNING, "Binding column twice should not happen. " + column);

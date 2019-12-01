@@ -1,9 +1,7 @@
 package org.hibernate.tool.internal.reveng;
 
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -44,23 +42,6 @@ public class RevEngUtils {
 		return result;	
 	}
 
-	public static Map<String,MetaAttribute> getTableToMetaAttributesInRevengStrategy(
-			ReverseEngineeringStrategy revengStrat,
-			Table table,
-			String defaultCatalog,
-			String defaultSchema) {
-		Map<String,MetaAttribute> result = null;
-		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrat.tableToMetaAttributes(tableIdentifier);
-		if (result == null) {
-			String catalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = getSchemaForModel(table.getSchema(), defaultSchema);
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrat.tableToMetaAttributes(tableIdentifier);
-		}
-		return result;
-	}
-	
 	public static String getColumnToPropertyNameInRevengStrategy(
 			ReverseEngineeringStrategy revengStrat,
 			Table table,

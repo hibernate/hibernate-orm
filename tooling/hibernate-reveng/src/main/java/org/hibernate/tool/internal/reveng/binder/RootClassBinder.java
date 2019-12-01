@@ -1,8 +1,10 @@
 package org.hibernate.tool.internal.reveng.binder;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +17,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -101,16 +104,7 @@ public class RootClassBinder {
 		rc.setClassName( className );
 		rc.setProxyInterfaceName( rc.getEntityName() ); // TODO: configurable ?
 		rc.setLazy(true);
-
-		rc.setMetaAttributes(
-				BinderUtils.safeMap(
-						RevEngUtils.getTableToMetaAttributesInRevengStrategy(
-								revengStrategy, 
-								table, 
-								defaultCatalog, 
-								defaultSchema)));
-
-
+		rc.setMetaAttributes(getMetaAttributes(table, defaultCatalog, defaultSchema));
 		rc.setDiscriminatorValue( rc.getEntityName() );
 		rc.setTable(table);
 		return rc;
@@ -219,4 +213,23 @@ public class RootClassBinder {
         return false;
     }
 
+	private Map<String,MetaAttribute> getMetaAttributes(
+			Table table,
+			String defaultCatalog,
+			String defaultSchema) {
+		Map<String,MetaAttribute> result = null;
+		TableIdentifier tableIdentifier = TableIdentifier.create(table);
+		result = revengStrategy.tableToMetaAttributes(tableIdentifier);
+		if (result == null) {
+			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
+			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
+			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			result = revengStrategy.tableToMetaAttributes(tableIdentifier);
+		}
+		if (result == null) {
+			result = Collections.emptyMap();
+		}
+		return result;
+	}
+	
 }

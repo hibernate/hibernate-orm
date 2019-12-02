@@ -6,8 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -24,10 +22,9 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 
 /**
  * A one-time use CollectionLoader for applying a sub-select fetch
@@ -36,11 +33,9 @@ import org.hibernate.sql.results.graph.DomainResult;
  */
 public class SubSelectFetchCollectionLoader implements CollectionLoader {
 	private final PluralAttributeMapping attributeMapping;
-	private final DomainResult cachedDomainResult;
 	private final SubselectFetch subselect;
 
 	private final SelectStatement sqlAst;
-	private final java.util.List<JdbcParameter> jdbcParameters;
 
 	public SubSelectFetchCollectionLoader(
 			PluralAttributeMapping attributeMapping,
@@ -48,18 +43,15 @@ public class SubSelectFetchCollectionLoader implements CollectionLoader {
 			SubselectFetch subselect,
 			SharedSessionContractImplementor session) {
 		this.attributeMapping = attributeMapping;
-		this.cachedDomainResult = cachedDomainResult;
 		this.subselect = subselect;
-
-		jdbcParameters = new ArrayList<>();
 
 		sqlAst = LoaderSelectBuilder.createSubSelectFetchSelect(
 				attributeMapping,
 				subselect,
-				null,
+				cachedDomainResult,
 				session.getLoadQueryInfluencers(),
 				LockOptions.READ,
-				jdbcParameters::add,
+				jdbcParameter -> {},
 				session.getFactory()
 		);
 	}

@@ -6,8 +6,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.List;
+
 /**
  * @author Steve Ebersole
  */
-public interface NaturalIdMapping extends SingularAttributeMapping, StateArrayContributorMapping {
+public interface NaturalIdMapping extends VirtualModelPart {
+	List<SingularAttributeMapping> getNaturalIdAttributes();
 }

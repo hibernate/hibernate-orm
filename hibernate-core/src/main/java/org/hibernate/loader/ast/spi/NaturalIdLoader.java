@@ -42,4 +42,11 @@ public interface NaturalIdLoader<T> extends Loader {
 	 * @param session The session into which the entity is being loaded
 	 */
 	T load(Object naturalIdToLoad, LoadOptions options, SharedSessionContractImplementor session);
+
+	/**
+	 * Resolve the natural-id value from an id
+	 */
+	Object[] resolveIdToNaturalId(Object id, SharedSessionContractImplementor session);
+
+	Object resolveNaturalIdToId(Object[] naturalIdValues, SharedSessionContractImplementor session);
 }

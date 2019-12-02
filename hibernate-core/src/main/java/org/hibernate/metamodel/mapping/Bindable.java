@@ -158,8 +158,8 @@ public interface Bindable {
 	@FunctionalInterface
 	interface JdbcValuesConsumer {
 		/**
-		 * Consume a JDBC-level value.  The JDBC type descriptor is also passed in
+		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(Object value, JdbcMapping type);
+		void consume(Object jdbcValue, JdbcMapping jdbcMapping);
 	}
 }

@@ -39,6 +39,8 @@ import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.jboss.logging.Logger;
 
 /**
+ * A one-time use CollectionLoader for applying a batch fetch
+ *
  * @author Steve Ebersole
  */
 public class BatchKeyCollectionLoader implements CollectionLoader {

@@ -255,7 +255,7 @@ public class SqmUtil {
 					private int position = 0;
 
 					@Override
-					public void consume(Object jdbcValue, JdbcMapping jdbcType) {
+					public void consume(Object jdbcValue, JdbcMapping jdbcMapping) {
 						final JdbcParameter jdbcParameter = jdbcParams.get( position );
 						jdbcParameterBindings.addBinding(
 								jdbcParameter,
@@ -263,7 +263,7 @@ public class SqmUtil {
 
 									@Override
 									public JdbcMapping getBindType() {
-										return jdbcType;
+										return jdbcMapping;
 									}
 
 									@Override

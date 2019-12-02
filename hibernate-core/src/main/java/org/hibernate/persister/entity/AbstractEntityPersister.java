@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -74,7 +73,6 @@ import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -107,11 +105,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.custom.sql.SQLQueryParser;
-import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
-import org.hibernate.loader.entity.CascadeEntityLoader;
-import org.hibernate.loader.entity.EntityLoader;
-import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.NaturalIdLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.Preparable;
@@ -122,6 +115,11 @@ import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
+import org.hibernate.loader.custom.sql.SQLQueryParser;
+import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.CascadeEntityLoader;
+import org.hibernate.loader.entity.EntityLoader;
+import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -194,11 +192,11 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
@@ -4527,7 +4525,7 @@ public abstract class AbstractEntityPersister
 		prepareLoader( multiIdEntityLoader );
 		prepareLoader( naturalIdLoader );
 
-		// todo (6.0) : the init done in most of these is delayed now
+		// todo (6.0) : these should be removed in favor of `singleIdEntityLoader`, ...
 		createLoaders();
 		createUniqueKeyLoaders();
 
@@ -4578,49 +4576,6 @@ public abstract class AbstractEntityPersister
 				"refresh",
 				new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() )
 		);
-	}
-
-	protected final UniqueEntityLoader getLoaderByLockMode(LockMode lockMode) {
-		if ( LockMode.NONE == lockMode ) {
-			return noneLockLoader;
-		}
-		else if ( LockMode.READ == lockMode ) {
-			return readLockLoader;
-		}
-
-		return loaders.computeIfAbsent( lockMode, this::generateDelayedEntityLoader );
-	}
-
-	private UniqueEntityLoader generateDelayedEntityLoader(Object lockModeObject) {
-		// Unfortunately, the loaders map mixes LockModes and Strings as keys so we need to accept an Object.
-		// The cast is safe as we will always call this method with a LockMode.
-		LockMode lockMode = (LockMode) lockModeObject;
-
-		switch ( lockMode ) {
-			case NONE:
-			case READ:
-			case OPTIMISTIC:
-			case OPTIMISTIC_FORCE_INCREMENT: {
-				return createEntityLoader( lockMode );
-			}
-			case UPGRADE:
-			case UPGRADE_NOWAIT:
-			case UPGRADE_SKIPLOCKED:
-			case FORCE:
-			case PESSIMISTIC_READ:
-			case PESSIMISTIC_WRITE:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				//TODO: inexact, what we really need to know is: are any outer joins used?
-				boolean disableForUpdate = getSubclassTableSpan() > 1
-						&& hasSubclasses()
-						&& !getFactory().getDialect().supportsOuterJoinForUpdate();
-
-				return disableForUpdate ? readLockLoader : createEntityLoader( lockMode );
-			}
-			default: {
-				throw new IllegalStateException( String.format( Locale.ROOT, "Lock mode %1$s not supported by entity loaders.", lockMode ) );
-			}
-		}
 	}
 
 	/**
@@ -5667,109 +5622,33 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
-	public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-		if ( !hasNaturalIdentifier() ) {
-			throw new MappingException(
-					"persistent class did not define a natural-id : " + MessageHelper.infoString(
-							this
-					)
-			);
-		}
+	public Object[] getNaturalIdentifierSnapshot(Object id, SharedSessionContractImplementor session) {
+		verifyHasNaturalId();
+
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Getting current natural-id snapshot state for: {0}",
-					MessageHelper.infoString( this, id, getFactory() )
+			LOG.tracef(
+					"Getting current natural-id snapshot state for `%s#%s",
+					getEntityName(),
+					id
 			);
 		}
 
-		int[] naturalIdPropertyIndexes = getNaturalIdentifierProperties();
-		int naturalIdPropertyCount = naturalIdPropertyIndexes.length;
-		boolean[] naturalIdMarkers = new boolean[getPropertySpan()];
-		Type[] extractionTypes = new Type[naturalIdPropertyCount];
-		for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
-			extractionTypes[i] = getPropertyTypes()[naturalIdPropertyIndexes[i]];
-			naturalIdMarkers[naturalIdPropertyIndexes[i]] = true;
-		}
+		return naturalIdLoader.resolveIdToNaturalId( id, session );
+	}
 
-		///////////////////////////////////////////////////////////////////////
-		// TODO : look at perhaps caching this...
-		Select select = new Select( getFactory().getDialect() );
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "get current natural-id state " + getEntityName() );
-		}
-		select.setSelectClause( concretePropertySelectFragmentSansLeadingComma( getRootAlias(), naturalIdMarkers ) );
-		select.setFromClause( fromTableFragment( getRootAlias() ) + fromJoinFragment( getRootAlias(), true, false ) );
-
-		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-		String whereClause = new StringBuilder()
-				.append(
-						String.join(
-								"=? and ",
-								aliasedIdColumns
-						)
-				)
-				.append( "=?" )
-				.append( whereJoinFragment( getRootAlias(), true, false ) )
-				.toString();
-
-		String sql = select.setOuterJoins( "", "" )
-				.setWhereClause( whereClause )
-				.toStatementString();
-		///////////////////////////////////////////////////////////////////////
-
-		Object[] snapshot = new Object[naturalIdPropertyCount];
-		try {
-			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			PreparedStatement ps = jdbcCoordinator
-					.getStatementPreparer()
-					.prepareStatement( sql );
-			try {
-				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( ps );
-				try {
-					//if there is no resulting row, return null
-					if ( !rs.next() ) {
-						return null;
-					}
-					final EntityKey key = session.generateEntityKey( id, this );
-					Object owner = session.getPersistenceContextInternal().getEntity( key );
-					for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
-						snapshot[i] = extractionTypes[i].hydrate(
-								rs, getPropertyAliases(
-										"",
-										naturalIdPropertyIndexes[i]
-								), session, null
-						);
-						if ( extractionTypes[i].isEntityType() ) {
-							snapshot[i] = extractionTypes[i].resolve( snapshot[i], session, owner );
-						}
-					}
-					return snapshot;
-				}
-				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, ps );
-				}
-			}
-			finally {
-				jdbcCoordinator.getResourceRegistry().release( ps );
-				jdbcCoordinator.afterStatementExecution();
-			}
-		}
-		catch (SQLException e) {
-			throw getFactory().getSQLExceptionHelper().convert(
-					e,
-					"could not retrieve snapshot: " + MessageHelper.infoString( this, id, getFactory() ),
-					sql
-			);
+	private void verifyHasNaturalId() {
+		if ( ! hasNaturalIdentifier() ) {
+			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
 		}
 	}
 
 	@Override
-	public Serializable loadEntityIdByNaturalId(
+	public Object loadEntityIdByNaturalId(
 			Object[] naturalIdValues,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
+		verifyHasNaturalId();
+
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Resolving natural-id [%s] to id : %s ",
@@ -5778,162 +5657,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final boolean[] valueNullness = determineValueNullness( naturalIdValues );
-		final String sqlEntityIdByNaturalIdString = determinePkByNaturalIdQuery( valueNullness );
-
-		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( sqlEntityIdByNaturalIdString );
-			try {
-				int positions = 1;
-				int loop = 0;
-				for ( int idPosition : getNaturalIdentifierProperties() ) {
-					final Object naturalIdValue = naturalIdValues[loop++];
-					if ( naturalIdValue != null ) {
-						final Type type = getPropertyTypes()[idPosition];
-						type.nullSafeSet( ps, naturalIdValue, positions, session );
-						positions += type.getColumnSpan( session.getFactory() );
-					}
-				}
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-				try {
-					// if there is no resulting row, return null
-					if ( !rs.next() ) {
-						return null;
-					}
-
-					final Object hydratedId = getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
-					return (Serializable) getIdentifierType().resolve( hydratedId, session, null );
-				}
-				finally {
-					session.getJdbcCoordinator().getResourceRegistry().release( rs, ps );
-				}
-			}
-			finally {
-				session.getJdbcCoordinator().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-		catch (SQLException e) {
-			throw getFactory().getSQLExceptionHelper().convert(
-					e,
-					String.format(
-							"could not resolve natural-id [%s] to id : %s",
-							Arrays.asList( naturalIdValues ),
-							MessageHelper.infoString( this )
-					),
-					sqlEntityIdByNaturalIdString
-			);
-		}
-	}
-
-	private boolean[] determineValueNullness(Object[] naturalIdValues) {
-		boolean[] nullness = new boolean[naturalIdValues.length];
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			nullness[i] = naturalIdValues[i] == null;
-		}
-		return nullness;
-	}
-
-	private Boolean naturalIdIsNonNullable;
-	private String cachedPkByNonNullableNaturalIdQuery;
-
-	private String determinePkByNaturalIdQuery(boolean[] valueNullness) {
-		if ( !hasNaturalIdentifier() ) {
-			throw new HibernateException(
-					"Attempt to build natural-id -> PK resolution query for entity that does not define natural id"
-			);
-		}
-
-		// performance shortcut for cases where the natural-id is defined as completely non-nullable
-		if ( isNaturalIdNonNullable() ) {
-			if ( valueNullness != null && !ArrayHelper.isAllFalse( valueNullness ) ) {
-				throw new HibernateException( "Null value(s) passed to lookup by non-nullable natural-id" );
-			}
-			if ( cachedPkByNonNullableNaturalIdQuery == null ) {
-				cachedPkByNonNullableNaturalIdQuery = generateEntityIdByNaturalIdSql( null );
-			}
-			return cachedPkByNonNullableNaturalIdQuery;
-		}
-
-		// Otherwise, regenerate it each time
-		return generateEntityIdByNaturalIdSql( valueNullness );
-	}
-
-	protected boolean isNaturalIdNonNullable() {
-		if ( naturalIdIsNonNullable == null ) {
-			naturalIdIsNonNullable = determineNaturalIdNullability();
-		}
-		return naturalIdIsNonNullable;
-	}
-
-	private boolean determineNaturalIdNullability() {
-		boolean[] nullability = getPropertyNullability();
-		for ( int position : getNaturalIdentifierProperties() ) {
-			// if any individual property is nullable, return false
-			if ( nullability[position] ) {
-				return false;
-			}
-		}
-		// return true if we found no individually nullable properties
-		return true;
-	}
-
-	private String generateEntityIdByNaturalIdSql(boolean[] valueNullness) {
-		EntityPersister rootPersister = getFactory().getEntityPersister( getRootEntityName() );
-		if ( rootPersister != this ) {
-			if ( rootPersister instanceof AbstractEntityPersister ) {
-				return ( (AbstractEntityPersister) rootPersister ).generateEntityIdByNaturalIdSql( valueNullness );
-			}
-		}
-
-		Select select = new Select( getFactory().getDialect() );
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "get current natural-id->entity-id state " + getEntityName() );
-		}
-
-		final String rootAlias = getRootAlias();
-
-		select.setSelectClause( identifierSelectFragment( rootAlias, "" ) );
-		select.setFromClause( fromTableFragment( rootAlias ) + fromJoinFragment( rootAlias, true, false ) );
-
-		final StringBuilder whereClause = new StringBuilder();
-		final int[] propertyTableNumbers = getPropertyTableNumbers();
-		final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
-		int valuesIndex = -1;
-		for ( int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++ ) {
-			valuesIndex++;
-			if ( propIdx > 0 ) {
-				whereClause.append( " and " );
-			}
-
-			final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
-			final String tableAlias = generateTableAlias( rootAlias, propertyTableNumbers[naturalIdIdx] );
-			final String[] propertyColumnNames = getPropertyColumnNames( naturalIdIdx );
-			final String[] aliasedPropertyColumns = StringHelper.qualify( tableAlias, propertyColumnNames );
-
-			if ( valueNullness != null && valueNullness[valuesIndex] ) {
-				whereClause.append( String.join( " is null and ", aliasedPropertyColumns ) ).append( " is null" );
-			}
-			else {
-				whereClause.append( String.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
-			}
-		}
-
-		whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );
-
-		return select.setOuterJoins( "", "" ).setWhereClause( whereClause.toString() ).toStatementString();
-	}
-
-	protected String concretePropertySelectFragmentSansLeadingComma(String alias, boolean[] include) {
-		String concretePropertySelectFragment = concretePropertySelectFragment( alias, include );
-		int firstComma = concretePropertySelectFragment.indexOf( ", " );
-		if ( firstComma == 0 ) {
-			concretePropertySelectFragment = concretePropertySelectFragment.substring( 2 );
-		}
-		return concretePropertySelectFragment;
+		return naturalIdLoader.resolveNaturalIdToId( naturalIdValues, session );
 	}
 
 	public boolean hasNaturalIdentifier() {

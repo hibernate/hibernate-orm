@@ -6,7 +6,6 @@
  */
 package org.hibernate.internal.util;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
@@ -52,6 +51,23 @@ public final class StringHelper {
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
 			buf.append( seperator ).append( strings[i] );
+		}
+		return buf.toString();
+	}
+
+	public static String join(String separator, Object[] values) {
+		int length = values.length;
+		if ( length == 0 ) {
+			return "";
+		}
+		// Allocate space for length * firstStringLength;
+		// If strings[0] is null, then its length is defined as 4, since that's the
+		// length of "null".
+		final int firstStringLength = values[0] != null ? values[0].toString().length() : 4;
+		StringBuilder buf = new StringBuilder( length * firstStringLength )
+				.append( values[0] );
+		for ( int i = 1; i < length; i++ ) {
+			buf.append( separator ).append( values[i] );
 		}
 		return buf.toString();
 	}

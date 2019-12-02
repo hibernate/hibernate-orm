@@ -33,7 +33,6 @@ import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -82,7 +81,7 @@ public class LoaderSelectBuilder {
 	 */
 	public static SelectStatement createSelect(
 			Loadable loadable,
-			List<ModelPart> partsToSelect,
+			List<? extends ModelPart> partsToSelect,
 			ModelPart restrictedPart,
 			DomainResult cachedDomainResult,
 			int numberOfKeysToLoad,
@@ -143,7 +142,7 @@ public class LoaderSelectBuilder {
 
 	private final SqlAstCreationContext creationContext;
 	private final Loadable loadable;
-	private final List<ModelPart> partsToSelect;
+	private final List<? extends ModelPart> partsToSelect;
 	private final ModelPart restrictedPart;
 	private final DomainResult cachedDomainResult;
 	private final int numberOfKeysToLoad;
@@ -155,7 +154,7 @@ public class LoaderSelectBuilder {
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
 			Loadable loadable,
-			List<ModelPart> partsToSelect,
+			List<? extends ModelPart> partsToSelect,
 			ModelPart restrictedPart,
 			DomainResult cachedDomainResult,
 			int numberOfKeysToLoad,

@@ -183,13 +183,7 @@ public class RootClassBinder {
 			Column column = (Column) iterator.next();
 			if ( !processedColumns.contains(column) ) {
 				BinderUtils.checkColumnForMultipleBinding(column);
-				String propertyName = 
-						RevEngUtils.getColumnToPropertyNameInRevengStrategy(
-								revengStrategy, 
-								table, 
-								defaultCatalog, 
-								defaultSchema, 
-								column.getName());				
+				String propertyName = getColumnToPropertyNameInRevengStrategy(table, column);				
 				Property property = BasicPropertyBinder
 						.create(
 								metadataBuildingContext, 
@@ -232,4 +226,20 @@ public class RootClassBinder {
 		return result;
 	}
 	
+	private String getColumnToPropertyNameInRevengStrategy(
+			Table table,
+			Column column) {
+		String result = null;
+		String columnName = column.getName();
+		TableIdentifier tableIdentifier = TableIdentifier.create(table);
+		result = revengStrategy.columnToPropertyName(tableIdentifier, columnName);
+		if (result == null) {
+			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
+			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
+			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			result = revengStrategy.columnToPropertyName(tableIdentifier, columnName);
+		}
+		return result;
+	}
+
 }

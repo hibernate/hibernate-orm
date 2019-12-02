@@ -42,24 +42,6 @@ public class RevEngUtils {
 		return result;	
 	}
 
-	public static String getColumnToPropertyNameInRevengStrategy(
-			ReverseEngineeringStrategy revengStrat,
-			Table table,
-			String defaultCatalog,
-			String defaultSchema,
-			String columnName) {
-		String result = null;
-		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrat.columnToPropertyName(tableIdentifier, columnName);
-		if (result == null) {
-			String catalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = getSchemaForModel(table.getSchema(), defaultSchema);
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrat.columnToPropertyName(tableIdentifier, columnName);
-		}
-		return result;
-	}
-
 	public static TableIdentifier createTableIdentifier(
 			Table table, 
 			String defaultCatalog, 

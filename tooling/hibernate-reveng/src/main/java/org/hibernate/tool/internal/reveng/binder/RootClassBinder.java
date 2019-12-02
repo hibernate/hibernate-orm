@@ -46,6 +46,7 @@ public class RootClassBinder {
 	private final boolean preferBasicCompositeIds;
 	private final PrimaryKeyBinder primaryKeyBinder;
 	private final VersionPropertyBinder versionPropertyBinder;
+	private final ForeignKeyBinder foreignKeyBinder;
 	
 	private RootClassBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
@@ -56,6 +57,12 @@ public class RootClassBinder {
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
 		this.versionPropertyBinder = VersionPropertyBinder.create(binderContext);
+		this.foreignKeyBinder = ForeignKeyBinder.create(
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {
@@ -132,12 +139,6 @@ public class RootClassBinder {
 	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, DatabaseCollector collector, Mapping mapping) {
 		List<ForeignKey> foreignKeys = collector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
-			ForeignKeyBinder foreignKeyBinder = ForeignKeyBinder.create(
-					metadataBuildingContext, 
-					metadataCollector, 
-					revengStrategy, 
-					defaultCatalog, 
-					defaultSchema);
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
 				foreignKeyBinder.bindIncoming(iter.next(), rc, processed, mapping);
 			}
@@ -146,26 +147,15 @@ public class RootClassBinder {
 
 
 	private void bindOutgoingForeignKeys(Table table, RootClass rc, Set<Column> processedColumns) {
-
-		ForeignKeyBinder foreignKeyBinder = ForeignKeyBinder.create(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
-
 		// Iterate the outgoing foreign keys and create many-to-one's
 		for(Iterator<?> iterator = table.getForeignKeyIterator(); iterator.hasNext();) {
 			ForeignKey foreignKey = (ForeignKey) iterator.next();
-
 			boolean mutable = true;
             if ( contains( foreignKey.getColumnIterator(), processedColumns ) ) {
 				if ( !preferBasicCompositeIds ) continue; //it's in the pk, so skip this one
 				mutable = false;
-            }
-            
+            }           
             foreignKeyBinder.bindOutgoing(foreignKey, table, rc, processedColumns, mutable);
-
 		}
 	}
 

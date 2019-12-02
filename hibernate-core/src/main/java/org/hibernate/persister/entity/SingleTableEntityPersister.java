@@ -91,6 +91,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final boolean[] subclassTableSequentialSelect;
 	private final String[][] subclassTableKeyColumnClosure;
 	private final boolean[] isClassOrSuperclassTable;
+	private final boolean[] isClassOrSuperclassJoin;
 
 	// properties of this class, including inherited properties
 	private final int[] propertyTableNumbers;
@@ -243,6 +244,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<String> subclassTables = new ArrayList<String>();
 		ArrayList<String[]> joinKeyColumns = new ArrayList<String[]>();
 		ArrayList<Boolean> isConcretes = new ArrayList<Boolean>();
+		ArrayList<Boolean> isClassOrSuperclassJoins = new ArrayList<Boolean>();
 		ArrayList<Boolean> isDeferreds = new ArrayList<Boolean>();
 		ArrayList<Boolean> isInverses = new ArrayList<Boolean>();
 		ArrayList<Boolean> isNullables = new ArrayList<Boolean>();
@@ -250,6 +252,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add( Boolean.TRUE );
+		isClassOrSuperclassJoins.add( Boolean.TRUE );
 		isDeferreds.add( Boolean.FALSE );
 		isInverses.add( Boolean.FALSE );
 		isNullables.add( Boolean.FALSE );
@@ -257,14 +260,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		joinIter = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			isConcretes.add( persistentClass.isClassOrSuperclassJoin( join ) );
-			isDeferreds.add( join.isSequentialSelect() );
+			isConcretes.add( persistentClass.isClassOrSuperclassTable( join.getTable() ) );
+			isClassOrSuperclassJoins.add( persistentClass.isClassOrSuperclassJoin( join ) );
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin( join ) ) {
-				hasDeferred = true;
-			}
+
+			boolean isDeferred = join.isSequentialSelect() && ! persistentClass.isClassOrSuperclassJoin( join ) ;
+			isDeferreds.add( isDeferred );
+			hasDeferred |= isDeferred;
 
 			String joinTableName = determineTableName( join.getTable(), jdbcEnvironment );
 			subclassTables.add( joinTableName );
@@ -284,6 +288,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
 		subclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( joinKeyColumns );
 		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
+		isClassOrSuperclassJoin = ArrayHelper.toBooleanArray( isClassOrSuperclassJoins );
 		isInverseSubclassTable = ArrayHelper.toBooleanArray( isInverses );
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
 		hasSequentialSelects = hasDeferred;
@@ -813,6 +818,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return isClassOrSuperclassTable[j];
 	}
 
+	protected boolean isClassOrSuperclassJoin(int j) {
+		return isClassOrSuperclassJoin[j];
+	}
+
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
@@ -845,6 +854,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+	}
+
+	@Override
+	public boolean canOmitSuperclassTableJoin() {
+		return true;
 	}
 
 	public boolean isMultiTable() {

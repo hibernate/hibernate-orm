@@ -3133,4 +3133,9 @@ public abstract class Dialect implements ConversionContext {
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return null;
 	}
+
+	public boolean supportsSelectAliasInGroupByClause() {
+		return false;
+	}
+
 }

@@ -47,6 +47,7 @@ public class RootClassBinder {
 	private final PrimaryKeyBinder primaryKeyBinder;
 	private final VersionPropertyBinder versionPropertyBinder;
 	private final ForeignKeyBinder foreignKeyBinder;
+	private final BasicPropertyBinder basicPropertyBinder;
 	
 	private RootClassBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
@@ -58,6 +59,12 @@ public class RootClassBinder {
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
 		this.versionPropertyBinder = VersionPropertyBinder.create(binderContext);
 		this.foreignKeyBinder = ForeignKeyBinder.create(binderContext);
+		this.basicPropertyBinder = BasicPropertyBinder.create(
+						metadataBuildingContext, 
+						metadataCollector, 
+						revengStrategy, 
+						defaultCatalog, 
+						defaultCatalog);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {
@@ -160,14 +167,11 @@ public class RootClassBinder {
 			if ( !processedColumns.contains(column) ) {
 				BinderUtils.checkColumnForMultipleBinding(column);
 				String propertyName = getColumnToPropertyNameInRevengStrategy(table, column);				
-				Property property = BasicPropertyBinder
-						.create(
-								metadataBuildingContext, 
-								metadataCollector, 
-								revengStrategy, 
-								defaultCatalog, 
-								defaultCatalog)
-						.bind(BinderUtils.makeUnique(rc,propertyName), table, column, mapping);
+				Property property = basicPropertyBinder.bind(
+						BinderUtils.makeUnique(rc,propertyName), 
+						table, 
+						column, 
+						mapping);
 				rc.addProperty(property);
 			}
 		}

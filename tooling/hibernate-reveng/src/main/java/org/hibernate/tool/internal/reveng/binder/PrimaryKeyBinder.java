@@ -55,12 +55,7 @@ public class PrimaryKeyBinder {
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
-		this.basicPropertyBinder = BasicPropertyBinder.create(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 
 	public PrimaryKeyInfo bind(

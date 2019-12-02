@@ -5,9 +5,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
@@ -19,38 +16,27 @@ import org.hibernate.tool.api.reveng.TableIdentifier;
 
 public class VersionPropertyBinder {
 	
+	private final static Logger LOGGER = Logger.getLogger(VersionPropertyBinder.class.getName());
+	
 	public static VersionPropertyBinder create(BinderContext binderContext) {
 		return new VersionPropertyBinder(binderContext);
 	}
 	
-	private final static Logger LOGGER = Logger.getLogger(VersionPropertyBinder.class.getName());
-	
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final InFlightMetadataCollector metadataCollector;
 	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
 	private final BasicPropertyBinder basicPropertyBinder;
 	
 	private VersionPropertyBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		this.basicPropertyBinder = BasicPropertyBinder.create(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 	
-	public void bind(Table table, RootClass rc, Set<Column> processed, Mapping mapping) {
+	public void bind(
+			Table table, 
+			RootClass rc, 
+			Set<Column> processed, 
+			Mapping mapping) {
 		TableIdentifier identifier = TableIdentifier.create(table);
-
 		String optimisticLockColumnName = revengStrategy.getOptimisticLockColumnName(identifier);
-
 		if(optimisticLockColumnName!=null) {
 			Column column = table.getColumn(new Column(optimisticLockColumnName));
 			if(column==null) {

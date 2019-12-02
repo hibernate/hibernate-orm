@@ -59,12 +59,7 @@ public class RootClassBinder {
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
 		this.versionPropertyBinder = VersionPropertyBinder.create(binderContext);
 		this.foreignKeyBinder = ForeignKeyBinder.create(binderContext);
-		this.basicPropertyBinder = BasicPropertyBinder.create(
-						metadataBuildingContext, 
-						metadataCollector, 
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema);
+		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {

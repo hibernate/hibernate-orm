@@ -242,6 +242,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				sqlExpressionResolver,
 				creationContext
 		);
+		predicate.forceTableReferenceJoinRendering();
 		tableGroupJoin.applyPredicate( predicate );
 
 		return tableGroupJoin;

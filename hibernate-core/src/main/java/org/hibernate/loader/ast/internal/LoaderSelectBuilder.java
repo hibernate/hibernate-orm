@@ -419,7 +419,9 @@ public class LoaderSelectBuilder {
 		referencedMappingContainer.visitFetchables( processor, null );
 
 		return fetches;
-	}	private SelectStatement generateSelect(SubselectFetch subselect) {
+	}
+
+	private SelectStatement generateSelect(SubselectFetch subselect) {
 		// todo (6.0) : i think we may even be able to convert this to a join by piecing together
 		//		parts from the subselect-fetch sql-ast..
 

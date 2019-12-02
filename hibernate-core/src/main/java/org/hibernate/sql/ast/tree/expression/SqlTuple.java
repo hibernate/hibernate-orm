@@ -30,6 +30,11 @@ public class SqlTuple implements Expression {
 		return valueMapping;
 	}
 
+	@Override
+	public void forceTableReferenceJoinRendering() {
+		expressions.forEach( expression -> expression.forceTableReferenceJoinRendering() );
+	}
+
 	public List<? extends Expression> getExpressions(){
 		return expressions;
 	}

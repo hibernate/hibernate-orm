@@ -68,6 +68,11 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
+
+	@Override
 	public void bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,

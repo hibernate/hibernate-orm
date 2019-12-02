@@ -51,6 +51,11 @@ public class Junction implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		predicates.forEach( predicate -> predicate.forceTableReferenceJoinRendering() );
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitJunction( this );
 	}

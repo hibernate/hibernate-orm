@@ -42,6 +42,11 @@ public class InSubQueryPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		testExpression.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitInSubQueryPredicate( this );
 	}

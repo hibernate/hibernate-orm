@@ -51,6 +51,13 @@ public class BetweenPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		expression.forceTableReferenceJoinRendering();
+		lowerBound.forceTableReferenceJoinRendering();
+		upperBound.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitBetweenPredicate( this );
 	}

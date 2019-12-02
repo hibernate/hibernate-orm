@@ -919,7 +919,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getDiscriminatorColumnName() ),
 						sqlAstProcessingState -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								tableGroup.getPrimaryTableReference(),
 								getDiscriminatorColumnName(),
 								( (BasicType) getDiscriminatorType() ).getJdbcMapping(),
 								getFactory()

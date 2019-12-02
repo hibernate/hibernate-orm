@@ -46,4 +46,9 @@ public class SqlSelectionExpression implements Expression {
 	public MappingModelExpressable getExpressionType() {
 		return theExpression.getExpressionType();
 	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
 }

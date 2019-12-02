@@ -28,6 +28,11 @@ public class GroupedPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		subPredicate.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitGroupedPredicate( this );
 	}

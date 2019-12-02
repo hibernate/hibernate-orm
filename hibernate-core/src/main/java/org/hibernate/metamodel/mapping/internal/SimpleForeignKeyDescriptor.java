@@ -77,7 +77,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
-		final String identificationVariable = tableReference.getIdentificationVariable();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
@@ -86,7 +85,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 						),
 						s -> {
 							return new ColumnReference(
-									identificationVariable,
+									tableReference,
 									keyColumnExpression,
 									jdbcMapping,
 									creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
@@ -179,7 +178,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							targetColumnExpression
 					),
 					s -> new ColumnReference(
-							targetTableKeyReference.getIdentificationVariable(),
+							targetTableKeyReference,
 							targetColumnExpression,
 							jdbcMapping,
 							creationContext.getSessionFactory()
@@ -198,7 +197,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 							targetColumnExpression
 					),
 					s -> new ColumnReference(
-							targetTableKeyReference.getIdentificationVariable(),
+							targetTableKeyReference,
 							targetColumnExpression,
 							jdbcMapping,
 							creationContext.getSessionFactory()

@@ -55,7 +55,7 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 						mapping.getMappedColumnExpression()
 				),
 				sacs -> new ColumnReference(
-						tableReference.getIdentificationVariable(),
+						tableReference,
 						mapping.getMappedColumnExpression(),
 						mapping.getJdbcMapping(),
 						sqlAstCreationState.getCreationContext().getSessionFactory()
@@ -112,6 +112,11 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 	@Override
 	public ModelPart getExpressionType() {
 		return mapping;
+	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+		columnReference.forceTableReferenceJoinRendering();
 	}
 
 

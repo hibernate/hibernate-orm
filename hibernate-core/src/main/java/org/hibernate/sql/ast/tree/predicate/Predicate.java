@@ -13,4 +13,5 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public interface Predicate extends SqlAstNode {
 	boolean isEmpty();
+	void forceTableReferenceJoinRendering();
 }

@@ -58,6 +58,11 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitJdbcLiteral( this );
 	}

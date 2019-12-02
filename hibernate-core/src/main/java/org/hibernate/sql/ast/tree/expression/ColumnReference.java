@@ -35,6 +35,7 @@ public class ColumnReference implements Expression, Assignable {
 	private final String columnExpression;
 	private final String referenceExpression;
 	private final JdbcMapping jdbcMapping;
+	private TableReference tableReference;
 
 	public ColumnReference(
 			String qualifier,
@@ -55,6 +56,7 @@ public class ColumnReference implements Expression, Assignable {
 			JdbcMapping jdbcMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this( tableReference.getIdentificationVariable(), columnExpression, jdbcMapping, sessionFactory );
+		this.tableReference = tableReference;
 	}
 
 	public String getQualifier() {
@@ -136,5 +138,12 @@ public class ColumnReference implements Expression, Assignable {
 	@Override
 	public List<ColumnReference> getColumnReferences() {
 		return Collections.singletonList( this );
+	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+		if ( tableReference != null ) {
+			tableReference.forceRendering();
+		}
 	}
 }

@@ -27,6 +27,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 
 	private final boolean isOptional;
 	private final SessionFactoryImplementor sessionFactory;
+	private boolean forceRendering;
 
 	private final Map<String, ColumnReference> columnReferenceResolutionMap = new HashMap<>();
 
@@ -39,6 +40,14 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 		this.identificationVariable = identificationVariable;
 		this.isOptional = isOptional;
 		this.sessionFactory = sessionFactory;
+	}
+
+	public boolean isForceRendering() {
+		return forceRendering;
+	}
+
+	public void forceRendering() {
+		this.forceRendering = true;
 	}
 
 	public String getTableExpression() {

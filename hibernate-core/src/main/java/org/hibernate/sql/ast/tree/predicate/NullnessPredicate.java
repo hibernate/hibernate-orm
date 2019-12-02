@@ -35,6 +35,11 @@ public class NullnessPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		expression.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitNullnessPredicate( this );
 	}

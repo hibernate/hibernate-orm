@@ -180,7 +180,7 @@ public class MappingModelCreationHelper {
 				final Expression expression = expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
-								rootTableReference.getIdentificationVariable(),
+								rootTableReference,
 								pkColumnName,
 								( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()
@@ -213,7 +213,7 @@ public class MappingModelCreationHelper {
 				final Expression expression = expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
 						sqlAstProcessingState -> new ColumnReference(
-								rootTable,
+								rootTableReference,
 								pkColumnName,
 								( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
 								creationProcess.getCreationContext().getSessionFactory()

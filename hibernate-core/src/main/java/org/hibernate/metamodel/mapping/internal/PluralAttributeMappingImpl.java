@@ -319,17 +319,20 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		);
 
 		final TableGroup tableGroup = tableGroupBuilder.build();
+		final Predicate predicate = getKeyDescriptor().generateJoinPredicate(
+				lhs,
+				tableGroup,
+				joinType,
+				sqlExpressionResolver,
+				creationContext
+		);
+		predicate.forceTableReferenceJoinRendering();
+
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				joinType,
 				tableGroup,
-				getKeyDescriptor().generateJoinPredicate(
-						lhs,
-						tableGroup,
-						joinType,
-						sqlExpressionResolver,
-						creationContext
-				)
+				predicate
 		);
 
 		lhs.addTableGroupJoin( tableGroupJoin );

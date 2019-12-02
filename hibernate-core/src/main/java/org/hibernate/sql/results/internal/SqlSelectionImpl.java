@@ -45,6 +45,7 @@ public class SqlSelectionImpl implements SqlSelection {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.sqlExpression = sqlExpression;
 		this.jdbcMapping = jdbcMapping;
+		sqlExpression.forceTableReferenceJoinRendering();
 	}
 
 	public Expression getWrappedSqlExpression() {

@@ -1352,7 +1352,7 @@ public abstract class AbstractEntityPersister
 										rootPkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										rootTableReference.getIdentificationVariable(),
+										rootTableReference,
 										rootPkColumnName,
 										jdbcMapping,
 										getFactory()
@@ -1366,7 +1366,7 @@ public abstract class AbstractEntityPersister
 										fkColumnName
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										joinedTableReference.getIdentificationVariable(),
+										joinedTableReference,
 										fkColumnName,
 										jdbcMapping,
 										getFactory()

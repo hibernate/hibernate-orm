@@ -33,4 +33,6 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 			TypeConfiguration typeConfiguration) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
+
+	void forceTableReferenceJoinRendering();
 }

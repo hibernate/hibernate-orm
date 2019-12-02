@@ -34,6 +34,11 @@ public class EntityTypeLiteral implements Expression {
 		return entityTypeDescriptor;
 	}
 
+	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
+
 //	@Override
 //	public SqlSelection createSqlSelection(
 //			int jdbcPosition,

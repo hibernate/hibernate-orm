@@ -36,9 +36,9 @@ public class EntityValuedPathInterpretation<T> implements SqmPathInterpretation<
 				mapping);
 	}
 
-	private EntityValuedModelPart mapping = null;
-	private TableGroup tableGroup = null;
-	private SqmEntityValuedSimplePath sqmPath = null;
+	private EntityValuedModelPart mapping;
+	private TableGroup tableGroup;
+	private SqmEntityValuedSimplePath sqmPath;
 
 	private EntityValuedPathInterpretation(
 			SqmEntityValuedSimplePath sqmPath,
@@ -69,6 +69,11 @@ public class EntityValuedPathInterpretation<T> implements SqmPathInterpretation<
 	@Override
 	public ModelPart getExpressionType() {
 		return null;
+	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+
 	}
 
 	@Override

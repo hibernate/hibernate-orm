@@ -42,7 +42,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 								getMappedColumnExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								tableReference.getIdentificationVariable(),
+								tableReference,
 								getMappedColumnExpression(),
 								getJdbcMapping(),
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()

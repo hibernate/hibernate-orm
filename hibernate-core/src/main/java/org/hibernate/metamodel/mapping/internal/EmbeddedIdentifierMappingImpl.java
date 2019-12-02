@@ -172,7 +172,7 @@ public class EmbeddedIdentifierMappingImpl
 										attrColumnExpr
 								),
 								sqlAstProcessingState -> new ColumnReference(
-										tableReference.getIdentificationVariable(),
+										tableReference,
 										attrColumnExpr,
 										jdbcMapping,
 										sqlAstCreationState.getCreationContext().getSessionFactory()

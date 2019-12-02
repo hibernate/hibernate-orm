@@ -66,7 +66,13 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	@Override
 	public void applyPredicate(Predicate predicate) {
-		this.whereClauseRestrictions = SqlAstTreeHelper.combinePredicates( this.whereClauseRestrictions, predicate );
+		if ( predicate != null ) {
+			this.whereClauseRestrictions = SqlAstTreeHelper.combinePredicates(
+					this.whereClauseRestrictions,
+					predicate
+			);
+			predicate.forceTableReferenceJoinRendering();
+		}
 	}
 
 	public List<SortSpecification> getSortSpecifications() {
@@ -84,6 +90,7 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 			sortSpecifications = new ArrayList<>();
 		}
 		sortSpecifications.add( specification );
+		specification.getSortExpression().forceTableReferenceJoinRendering();
 	}
 
 	public Expression getLimitClauseExpression() {
@@ -92,6 +99,9 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	public void setLimitClauseExpression(Expression limitClauseExpression) {
 		this.limitClauseExpression = limitClauseExpression;
+		if ( limitClauseExpression != null ) {
+			limitClauseExpression.forceTableReferenceJoinRendering();
+		}
 	}
 
 	public Expression getOffsetClauseExpression() {
@@ -100,6 +110,9 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	public void setOffsetClauseExpression(Expression offsetClauseExpression) {
 		this.offsetClauseExpression = offsetClauseExpression;
+		if ( offsetClauseExpression != null ) {
+			offsetClauseExpression.forceTableReferenceJoinRendering();
+		}
 	}
 
 	@Override
@@ -113,5 +126,10 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	@Override
 	public MappingModelExpressable getExpressionType() {
 		return null;
+	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+
 	}
 }

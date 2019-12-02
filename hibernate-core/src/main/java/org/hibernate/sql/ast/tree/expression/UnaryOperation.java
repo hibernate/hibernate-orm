@@ -45,6 +45,11 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		operand.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitUnaryOperationExpression( this );
 	}

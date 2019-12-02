@@ -21,7 +21,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  * @author Steve Ebersole
  */
 public class MappingModelHelper {
-	public static Expression buildColumnReferenceExpression(
+	public static Expression buildColumnReferenceExpressionForMutationStatement(
 			ModelPart modelPart,
 			SqlExpressionResolver sqlExpressionResolver,
 			SessionFactoryImplementor sessionFactory) {

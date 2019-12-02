@@ -1329,7 +1329,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
 
 		return new ColumnReference(
-				tableReference.getIdentificationVariable(),
+				tableReference,
 				getIdentifierColumnNames()[0],
 				jdbcMappings.get( 0 ),
 				getFactory()

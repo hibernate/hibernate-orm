@@ -30,6 +30,11 @@ public class SelfRenderingPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		selfRenderingExpression.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitSelfRenderingPredicate( this );
 	}

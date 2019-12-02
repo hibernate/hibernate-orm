@@ -65,6 +65,11 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
+
+	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {

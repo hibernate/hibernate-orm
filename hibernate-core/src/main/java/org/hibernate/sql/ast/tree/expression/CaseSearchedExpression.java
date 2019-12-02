@@ -92,6 +92,14 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		whenFragments.forEach( whenFragment -> whenFragment.getPredicate().forceTableReferenceJoinRendering() );
+		if ( otherwise != null ) {
+			otherwise.forceTableReferenceJoinRendering();
+		}
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitCaseSearchedExpression( this );
 	}

@@ -53,6 +53,11 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitQueryLiteral( this );
 	}

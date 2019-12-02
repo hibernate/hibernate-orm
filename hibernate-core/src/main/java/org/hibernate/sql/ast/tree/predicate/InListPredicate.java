@@ -70,6 +70,12 @@ public class InListPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		testExpression.forceTableReferenceJoinRendering();
+		listExpressions.forEach( expression -> expression.forceTableReferenceJoinRendering() );
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitInListPredicate( this );
 	}

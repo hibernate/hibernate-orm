@@ -45,6 +45,12 @@ public class ComparisonPredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		leftHandExpression.forceTableReferenceJoinRendering();
+		rightHandExpression.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitRelationalPredicate( this );
 	}

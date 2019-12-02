@@ -88,6 +88,11 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		sqlExpression.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlExpression.accept( sqlTreeWalker );
 	}

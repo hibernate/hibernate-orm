@@ -119,7 +119,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 				exprResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( tableGroup.getPrimaryTableReference(), columnExpression ),
 						sqlAstProcessingState -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								tableGroup.getPrimaryTableReference(),
 								columnExpression,
 								mapper,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()

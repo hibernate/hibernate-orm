@@ -348,15 +348,17 @@ public abstract class AbstractSqlAstWalker
 		}
 
 		for ( TableReferenceJoin tableJoin : joins ) {
-			sqlAppender.appendSql( EMPTY_STRING );
-			sqlAppender.appendSql( tableJoin.getJoinType().getText() );
-			sqlAppender.appendSql( " join " );
+			if ( tableJoin.getJoinedTableReference().isForceRendering() ) {
+				sqlAppender.appendSql( EMPTY_STRING );
+				sqlAppender.appendSql( tableJoin.getJoinType().getText() );
+				sqlAppender.appendSql( " join " );
 
-			renderTableReference( tableJoin.getJoinedTableReference() );
+				renderTableReference( tableJoin.getJoinedTableReference() );
 
-			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
-				sqlAppender.appendSql( " on " );
-				tableJoin.getJoinPredicate().accept( this );
+				if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
+					sqlAppender.appendSql( " on " );
+					tableJoin.getJoinPredicate().accept( this );
+				}
 			}
 		}
 	}

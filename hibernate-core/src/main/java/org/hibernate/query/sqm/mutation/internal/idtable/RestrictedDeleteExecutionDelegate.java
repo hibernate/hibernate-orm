@@ -401,7 +401,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 
 					return new InSubQueryPredicate(
-							MappingModelHelper.buildColumnReferenceExpression(
+							MappingModelHelper.buildColumnReferenceExpressionForMutationStatement(
 									fkDescriptor,
 									null,
 									sessionFactory

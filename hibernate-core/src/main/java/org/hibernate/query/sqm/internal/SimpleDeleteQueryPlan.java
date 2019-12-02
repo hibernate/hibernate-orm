@@ -117,7 +117,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					}
 
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-					final Expression fkColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
+					final Expression fkColumnExpression = MappingModelHelper.buildColumnReferenceExpressionForMutationStatement(
 							fkDescriptor,
 							null,
 							factory
@@ -125,7 +125,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 					final QuerySpec matchingIdSubQuery = new QuerySpec( false );
 
-					final Expression fkTargetColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
+					final Expression fkTargetColumnExpression = MappingModelHelper.buildColumnReferenceExpressionForMutationStatement(
 							fkDescriptor,
 							sqmInterpretation.getSqlExpressionResolver(),
 							factory

@@ -42,6 +42,18 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		fixture.forceTableReferenceJoinRendering();
+		whenFragments.forEach( whenFragment -> {
+			whenFragment.getCheckValue().forceTableReferenceJoinRendering();
+			whenFragment.getResult().forceTableReferenceJoinRendering();
+		} );
+		if ( otherwise != null ) {
+			otherwise.forceTableReferenceJoinRendering();
+		}
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitCaseSimpleExpression( this );
 	}

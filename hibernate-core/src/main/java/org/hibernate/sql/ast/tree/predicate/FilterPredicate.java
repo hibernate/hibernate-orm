@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -21,6 +22,11 @@ public class FilterPredicate implements Predicate {
 	@Override
 	public boolean isEmpty() {
 		return true;
+	}
+
+	@Override
+	public void forceTableReferenceJoinRendering() {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

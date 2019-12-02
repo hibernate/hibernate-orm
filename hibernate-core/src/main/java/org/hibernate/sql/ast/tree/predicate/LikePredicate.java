@@ -61,6 +61,13 @@ public class LikePredicate implements Predicate {
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		matchExpression.forceTableReferenceJoinRendering();
+		pattern.forceTableReferenceJoinRendering();
+		escapeCharacter.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitLikePredicate( this );
 	}

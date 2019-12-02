@@ -39,6 +39,12 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	}
 
 	@Override
+	public void forceTableReferenceJoinRendering() {
+		lhsOperand.forceTableReferenceJoinRendering();
+		rhsOperand.forceTableReferenceJoinRendering();
+	}
+
+	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitBinaryArithmeticExpression( this );
 	}

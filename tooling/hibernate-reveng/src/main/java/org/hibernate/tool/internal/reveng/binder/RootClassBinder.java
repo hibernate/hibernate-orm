@@ -106,7 +106,7 @@ public class RootClassBinder {
 		rc.setClassName( className );
 		rc.setProxyInterfaceName( rc.getEntityName() ); // TODO: configurable ?
 		rc.setLazy(true);
-		rc.setMetaAttributes(getMetaAttributes(table, defaultCatalog, defaultSchema));
+		rc.setMetaAttributes(getMetaAttributes(table));
 		rc.setDiscriminatorValue( rc.getEntityName() );
 		rc.setTable(table);
 		return rc;
@@ -198,10 +198,7 @@ public class RootClassBinder {
         return false;
     }
 
-	private Map<String,MetaAttribute> getMetaAttributes(
-			Table table,
-			String defaultCatalog,
-			String defaultSchema) {
+	private Map<String,MetaAttribute> getMetaAttributes(Table table) {
 		Map<String,MetaAttribute> result = null;
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = revengStrategy.tableToMetaAttributes(tableIdentifier);

@@ -14,7 +14,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
@@ -31,6 +30,7 @@ public class VersionPropertyBinder {
 	private final ReverseEngineeringStrategy revengStrategy;
 	private final String defaultCatalog;
 	private final String defaultSchema;
+	private final BasicPropertyBinder basicPropertyBinder;
 	
 	private VersionPropertyBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
@@ -38,6 +38,12 @@ public class VersionPropertyBinder {
 		this.revengStrategy = binderContext.revengStrategy;
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.basicPropertyBinder = BasicPropertyBinder.create(
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema);
 	}
 	
 	public void bind(Table table, RootClass rc, Set<Column> processed, Mapping mapping) {
@@ -67,18 +73,20 @@ public class VersionPropertyBinder {
 		}
 	}
 
-	private void bindVersionProperty(Table table, TableIdentifier identifier, Column column, RootClass rc, Set<Column> processed, Mapping mapping) {
-
+	private void bindVersionProperty(
+			Table table, 
+			TableIdentifier identifier, 
+			Column column, 
+			RootClass rc, 
+			Set<Column> processed, 
+			Mapping mapping) {
 		processed.add(column);
 		String propertyName = revengStrategy.columnToPropertyName( identifier, column.getName() );
-		Property property = BasicPropertyBinder
-				.create(
-						metadataBuildingContext, 
-						metadataCollector, 
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema)
-				.bind(BinderUtils.makeUnique(rc, propertyName), table, column, mapping);
+		Property property = basicPropertyBinder.bind(
+				BinderUtils.makeUnique(rc, propertyName), 
+				table, 
+				column, 
+				mapping);
 		rc.addProperty(property);
 		rc.setVersion(property);
 		rc.setOptimisticLockStyle(OptimisticLockStyle.VERSION);

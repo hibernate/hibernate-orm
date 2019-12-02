@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -19,18 +20,8 @@ public class ForeignKeyBinder {
 	
 	private static Logger LOGGER = Logger.getLogger(ForeignKeyBinder.class.getName());
 	
-	public static ForeignKeyBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		return new ForeignKeyBinder(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+	public static ForeignKeyBinder create(BinderContext binderContext) {
+		return new ForeignKeyBinder(binderContext);
 	}
 	
 	private MetadataBuildingContext metadataBuildingContext;
@@ -39,17 +30,12 @@ public class ForeignKeyBinder {
 	private String defaultCatalog;
 	private String defaultSchema;
 	
-	private ForeignKeyBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.metadataCollector = metadataCollector;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
+	private ForeignKeyBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.metadataCollector = binderContext.metadataCollector;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 	
 	public void bindIncoming(

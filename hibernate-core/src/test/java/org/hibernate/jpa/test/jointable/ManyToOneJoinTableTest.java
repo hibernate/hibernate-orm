@@ -6,40 +6,54 @@
  */
 package org.hibernate.jpa.test.jointable;
 
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import java.util.LinkedList;
+
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactoryProducer;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Test;
 
-import java.util.Collections;
-
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Christian Beikov
  */
-public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
+@DomainModel(
+		annotatedClasses = {
 				Person.class,
 				Address.class
-		};
+		}
+)
+public class ManyToOneJoinTableTest implements SessionFactoryProducer {
+	private SQLStatementInterceptor sqlStatementInterceptor;
+
+	@Override
+	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
+		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
+		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
+		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
 	}
 
 	@Test
-	public void testAvoidJoin() {
-		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
-				"SELECT e.id FROM Person e",
-				false,
-				Collections.EMPTY_MAP
+	public void testAvoidJoin(SessionFactoryScope scope) {
+		final String queryString = "SELECT e.id FROM Person e";
+		scope.inTransaction(
+				session -> {
+					final LinkedList<String> sqlQueries = sqlStatementInterceptor.getSqlQueries();
+					sqlQueries.clear();
+					session.createQuery( queryString ).list();
+					assertThat( sqlQueries.size(), is( 1 ) );
+					// Ideally, we could detect that *ToOne join tables aren't used, but that requires tracking the uses of properties
+					// Since *ToOne join tables are treated like secondary or subclass/superclass tables, the proper fix will allow many more optimizations
+					assertFalse( sqlQueries.getFirst().contains( "join" ) );
+				}
 		);
-		assertEquals( 1, plan.getTranslators().length );
-		final QueryTranslator translator = plan.getTranslators()[0];
-		final String generatedSql = translator.getSQLString();
-		// Ideally, we could detect that *ToOne join tables aren't used, but that requires tracking the uses of properties
-		// Since *ToOne join tables are treated like secondary or subclass/superclass tables, the proper fix will allow many more optimizations
-		assertFalse( generatedSql.contains( "join" ) );
 	}
 }

@@ -9,11 +9,11 @@ package org.hibernate.sql.ast.tree.from;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**

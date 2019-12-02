@@ -31,12 +31,12 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.internal.domain.basic.BasicResult;
-import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.DomainResult;
 
 import org.jboss.logging.Logger;
 

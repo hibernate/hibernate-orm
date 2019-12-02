@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**

@@ -23,13 +23,13 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.SqlResultsLogger;
-import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.basic.BasicResult;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -165,7 +165,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		SqlResultsLogger.INSTANCE.debugf(
+		ResultsLogger.INSTANCE.debugf(
 				"Generating Fetch for collection-part : `%s` -> `%s`",
 				collectionDescriptor.getRole(),
 				nature.getName()

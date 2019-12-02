@@ -54,6 +54,11 @@ public class SingletonStack<T> implements Stack<T> {
 	}
 
 	@Override
+	public void visitRootFirst(Consumer<T> action) {
+		action.accept( instance );
+	}
+
+	@Override
 	public void visitCurrentFirst(Consumer<T> action) {
 		action.accept( instance );
 	}

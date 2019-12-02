@@ -7,13 +7,11 @@
 package org.hibernate.sql.ast.tree.select;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.results.spi.DomainResult;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**

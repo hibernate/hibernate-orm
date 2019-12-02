@@ -16,14 +16,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;

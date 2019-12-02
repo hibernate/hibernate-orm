@@ -7,7 +7,7 @@
 package org.hibernate.sql.exec.internal;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
  * @author Steve Ebersole

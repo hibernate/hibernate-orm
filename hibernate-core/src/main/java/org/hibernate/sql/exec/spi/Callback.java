@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.ast.spi.AfterLoadAction;
 
 /**
  * Callback to allow SQM interpretation to trigger certain things within ORM.  See the current

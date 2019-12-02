@@ -59,10 +59,10 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.internal.BatchCollectionKeyLoader;
-import org.hibernate.loader.internal.SingleCollectionKeyLoader;
-import org.hibernate.loader.internal.SubSelectFetchCollectionLoader;
-import org.hibernate.loader.spi.CollectionLoader;
+import org.hibernate.loader.ast.internal.BatchKeyCollectionLoader;
+import org.hibernate.loader.ast.internal.SingleKeyCollectionLoader;
+import org.hibernate.loader.ast.internal.SubSelectFetchCollectionLoader;
+import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -113,7 +113,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -857,10 +857,10 @@ public abstract class AbstractCollectionPersister
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		final int batchSize = getBatchSize();
 		if ( batchSize > 1 ) {
-			return new BatchCollectionKeyLoader( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
+			return new BatchKeyCollectionLoader( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
 		}
 
-		return new SingleCollectionKeyLoader( attributeMapping, loadQueryInfluencers, getFactory() );
+		return new SingleKeyCollectionLoader( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
 
 

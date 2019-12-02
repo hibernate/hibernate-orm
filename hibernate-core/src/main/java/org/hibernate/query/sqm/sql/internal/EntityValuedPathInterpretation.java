@@ -11,10 +11,10 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Koen Aers

@@ -8,11 +8,11 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
-import org.hibernate.loader.spi.Loadable;
+import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.results.spi.Fetchable;
-import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
  * @author Steve Ebersole

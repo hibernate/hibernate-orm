@@ -10,15 +10,16 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.JdbcValues;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 
 import org.jboss.logging.Logger;

@@ -12,9 +12,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

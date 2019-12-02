@@ -9,8 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**

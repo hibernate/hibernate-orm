@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
  * Represents a selection that is "re-used" in certain parts of the query

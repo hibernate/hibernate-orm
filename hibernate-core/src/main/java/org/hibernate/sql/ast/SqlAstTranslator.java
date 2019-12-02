@@ -8,7 +8,6 @@ package org.hibernate.sql.ast;
 
 import java.util.Set;
 
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -30,7 +29,7 @@ public interface SqlAstTranslator extends SqlAstWalker, SqlTypeDescriptorIndicat
 	 * Generalized support for translating a CTE statement.  The underlying
 	 * {@link CteStatement#getCteConsumer()} could be a SELECT, UPDATE, DELETE, etc.
 	 *
-	 * Implementors may throw an exception is the CTE-consumer is of the incorrect type
+	 * Implementors may throw an exception if the CTE-consumer is of the incorrect type
 	 */
 	JdbcOperation translate(CteStatement cteStatement);
 }

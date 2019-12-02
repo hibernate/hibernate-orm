@@ -53,6 +53,11 @@ public interface Stack<T> {
 	void clear();
 
 	/**
+	 * Visit all elements in the stack, starting with the root and working "forward"
+	 */
+	void visitRootFirst(Consumer<T> action);
+
+	/**
 	 * Visit all elements in the stack, starting with the current and working back
 	 */
 	void visitCurrentFirst(Consumer<T> action);

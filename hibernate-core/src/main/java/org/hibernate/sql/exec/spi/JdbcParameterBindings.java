@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.function.BiConsumer;
 
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+
 /**
  * Access to all of the externalized JDBC parameter bindings
  *

@@ -37,7 +37,7 @@ import org.hibernate.loader.plan.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchSource;
-import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.persister.entity.Loadable;
 
 import org.jboss.logging.Logger;

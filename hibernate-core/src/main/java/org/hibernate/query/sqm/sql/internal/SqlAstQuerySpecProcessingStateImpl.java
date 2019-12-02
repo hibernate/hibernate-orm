@@ -8,19 +8,15 @@ package org.hibernate.query.sqm.sql.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQuerySpecProcessingState;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -52,7 +48,6 @@ public class SqlAstQuerySpecProcessingStateImpl
 	// SqlExpressionResolver
 
 	private Map<Expression, SqlSelection> sqlSelectionMap;
-	private int nonEmptySelections = 0;
 
 	@Override
 	protected Map<Expression, SqlSelection> sqlSelectionMap() {
@@ -77,55 +72,18 @@ public class SqlAstQuerySpecProcessingStateImpl
 			return existing;
 		}
 
+		final int valuesArrayPosition = sqlSelectionMap.size();
 		final SqlSelection sqlSelection = expression.createSqlSelection(
-				nonEmptySelections + 1,
-				sqlSelectionMap.size(),
+				valuesArrayPosition + 1,
+				valuesArrayPosition,
 				javaTypeDescriptor,
 				typeConfiguration
 		);
 
 		sqlSelectionMap.put( expression, sqlSelection );
 
-		if ( !( sqlSelection instanceof EmptySqlSelection ) ) {
-			nonEmptySelections++;
-		}
-
 		querySpec.getSelectClause().addSqlSelection( sqlSelection );
 
 		return sqlSelection;
-	}
-
-	@Override
-	public SqlSelection emptySqlSelection() {
-		final EmptySqlSelection sqlSelection = new EmptySqlSelection( sqlSelectionMap.size() );
-		sqlSelectionMap.put( EmptyExpression.EMPTY_EXPRESSION, sqlSelection );
-		return sqlSelection;
-	}
-
-	public static class EmptyExpression implements Expression {
-		@SuppressWarnings("WeakerAccess")
-		public static final EmptyExpression EMPTY_EXPRESSION = new EmptyExpression();
-
-		private EmptyExpression() {
-		}
-
-		@Override
-		public SqlSelection createSqlSelection(
-				int jdbcPosition,
-				int valuesArrayPosition,
-				JavaTypeDescriptor javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return null;
-		}
-
-		@Override
-		public MappingModelExpressable getExpressionType() {
-			return null;
-		}
-
-		@Override
-		public void accept(SqlAstWalker sqlTreeWalker) {
-
-		}
 	}
 }

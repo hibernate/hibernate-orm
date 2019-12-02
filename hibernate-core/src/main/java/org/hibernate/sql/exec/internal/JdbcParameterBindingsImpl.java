@@ -12,8 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 

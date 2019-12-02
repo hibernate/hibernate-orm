@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**

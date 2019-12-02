@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
  * An anonymous call block (sometimes called an anonymous procedure) to be executed

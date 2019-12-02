@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole

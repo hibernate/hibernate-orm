@@ -6,9 +6,9 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 
 /**
  * @author Andrea Boriero

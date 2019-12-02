@@ -29,10 +29,10 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -186,7 +186,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new CompositeResult<>(
+		return new EmbeddableResultImpl<>(
 				navigablePath,
 				valueMapping,
 				resultVariable,

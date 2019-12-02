@@ -13,17 +13,17 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.BiDirectionalFetch;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.Fetchable;
-import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.BiDirectionalFetch;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -64,6 +64,11 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 	@Override
 	public Fetchable getFetchedMapping() {
 		return fetchable;
+	}
+
+	@Override
+	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+		return fetchable.getJavaTypeDescriptor();
 	}
 
 	@Override

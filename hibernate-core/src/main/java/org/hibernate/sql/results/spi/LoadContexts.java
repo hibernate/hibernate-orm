@@ -13,6 +13,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
  * Maintains a Stack of processing state related to performing load operations.

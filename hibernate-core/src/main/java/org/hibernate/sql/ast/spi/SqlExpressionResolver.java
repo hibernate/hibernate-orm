@@ -64,6 +64,4 @@ public interface SqlExpressionResolver {
 			Expression expression,
 			JavaTypeDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration);
-
-	SqlSelection emptySqlSelection();
 }

@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.transform.ResultTransformer;
 
 /**

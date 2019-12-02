@@ -10,25 +10,25 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.internal.domain.collection.EntityCollectionPartTableGroup;
-import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityCollectionPart implements CollectionPart, EntityAssociationMapping, EntityValuedModelPart {
+public class EntityCollectionPart implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable {
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
@@ -95,7 +95,7 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	}
 
 	@Override
-	public Fetch generateFetch(
+	public EntityFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -112,7 +112,7 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 					return new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, this );
 				}
 		);
-		return new EntityFetch( fetchParent, this, lockMode, selected, fetchablePath, creationState );
+		return new EntityFetchJoinedImpl( fetchParent, this, lockMode, selected, fetchablePath, creationState );
 	}
 
 	@Override

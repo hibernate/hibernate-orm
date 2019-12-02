@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.Set;
 
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;

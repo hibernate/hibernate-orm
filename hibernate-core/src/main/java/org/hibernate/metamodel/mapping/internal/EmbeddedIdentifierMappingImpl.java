@@ -15,12 +15,12 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddedIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -44,12 +44,12 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.results.internal.domain.composite.CompositeFetch;
-import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -57,7 +57,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Andrea Boriero
  */
 public class EmbeddedIdentifierMappingImpl
-		implements EmbeddedIdentifierMapping {
+		implements EmbeddedIdentifierMapping, EmbeddableValuedFetchable {
 	private final String name;
 	private final MappingType type;
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
@@ -142,7 +142,7 @@ public class EmbeddedIdentifierMappingImpl
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new CompositeResult<>(
+		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
 				resultVariable,
@@ -281,7 +281,7 @@ public class EmbeddedIdentifierMappingImpl
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new CompositeFetch(
+		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
 				fetchParent,

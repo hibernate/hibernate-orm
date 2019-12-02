@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.function.BiConsumer;
-
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -15,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.results.spi.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * @author Steve Ebersole

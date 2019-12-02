@@ -16,9 +16,16 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -44,13 +51,6 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.results.internal.domain.composite.CompositeFetch;
-import org.hibernate.sql.results.internal.domain.composite.CompositeResult;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.Fetchable;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -58,7 +58,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class EmbeddedAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements EmbeddableValuedModelPart, Fetchable {
+		implements EmbeddableValuedFetchable, Fetchable {
 	private final String tableExpression;
 	private final String[] attrColumnNames;
 
@@ -140,7 +140,7 @@ public class EmbeddedAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new CompositeResult<>(
+		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
 				resultVariable,
@@ -166,7 +166,7 @@ public class EmbeddedAttributeMapping
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new CompositeFetch(
+		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
 				fetchParent,

@@ -7,9 +7,10 @@
 package org.hibernate.sql.results;
 
 import org.hibernate.HibernateException;
+import org.hibernate.sql.results.graph.DomainResult;
 
 /**
- * Base for problems creating {@link org.hibernate.sql.results.spi.DomainResult}
+ * Base for problems creating {@link DomainResult}
  * instances
  *
  * @author Steve Ebersole

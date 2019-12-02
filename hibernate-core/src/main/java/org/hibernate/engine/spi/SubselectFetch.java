@@ -10,8 +10,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**
@@ -21,6 +22,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public class SubselectFetch {
 	private final EntityValuedModelPart entityModelPart;
 	private final QuerySpec loadingSqlAst;
+	private final TableGroup ownerTableGroup;
 	private final List<JdbcParameter> loadingJdbcParameters;
 	private final JdbcParameterBindings loadingJdbcParameterBindings;
 	private final Set<EntityKey> resultingEntityKeys;
@@ -28,11 +30,13 @@ public class SubselectFetch {
 	public SubselectFetch(
 			EntityValuedModelPart entityModelPart,
 			QuerySpec loadingSqlAst,
+			TableGroup ownerTableGroup,
 			List<JdbcParameter> loadingJdbcParameters,
 			JdbcParameterBindings loadingJdbcParameterBindings,
 			Set<EntityKey> resultingEntityKeys) {
 		this.entityModelPart = entityModelPart;
 		this.loadingSqlAst = loadingSqlAst;
+		this.ownerTableGroup = ownerTableGroup;
 		this.loadingJdbcParameters = loadingJdbcParameters;
 		this.loadingJdbcParameterBindings = loadingJdbcParameterBindings;
 		this.resultingEntityKeys = resultingEntityKeys;
@@ -44,6 +48,10 @@ public class SubselectFetch {
 
 	public QuerySpec getLoadingSqlAst() {
 		return loadingSqlAst;
+	}
+
+	public TableGroup getOwnerTableGroup() {
+		return ownerTableGroup;
 	}
 
 	public List<JdbcParameter> getLoadingJdbcParameters() {

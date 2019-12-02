@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.JdbcValuesMappingProducerStandard;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 
 /**
  * The final phase of query translation.  Here we take the SQL-AST an

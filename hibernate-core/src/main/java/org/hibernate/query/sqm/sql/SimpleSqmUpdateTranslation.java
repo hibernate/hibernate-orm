@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * @author Steve Ebersole

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;

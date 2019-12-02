@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 
 /**

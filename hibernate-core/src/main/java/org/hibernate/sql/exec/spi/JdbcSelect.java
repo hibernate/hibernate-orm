@@ -9,7 +9,7 @@ package org.hibernate.sql.exec.spi;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
  * Executable JDBC command

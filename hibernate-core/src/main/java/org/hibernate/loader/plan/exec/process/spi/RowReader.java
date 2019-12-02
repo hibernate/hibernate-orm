@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
-import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.ast.spi.AfterLoadAction;
 
 /**
  * @author Steve Ebersole

@@ -12,10 +12,10 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.SqlResultsLogger;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.JdbcValues;
+import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
@@ -44,9 +44,9 @@ public class Helper {
 	}
 
 	private static Consumer<Initializer> getInitializerConsumer(List<Initializer> initializers) {
-		if ( SqlResultsLogger.INSTANCE.isDebugEnabled() ) {
+		if ( ResultsLogger.INSTANCE.isDebugEnabled() ) {
 			return initializer -> {
-				SqlResultsLogger.INSTANCE.debug( "Adding initializer : " + initializer );
+				ResultsLogger.INSTANCE.debug( "Adding initializer : " + initializer );
 				initializers.add( initializer );
 			};
 		}

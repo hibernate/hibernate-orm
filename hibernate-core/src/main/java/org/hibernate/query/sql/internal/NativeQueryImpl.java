@@ -81,7 +81,7 @@ import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
 

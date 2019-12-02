@@ -168,7 +168,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-		ManagedType<?> type = jpaEntityTypeMap.get( cls );
+		ManagedType<?> type = jpaEntityTypeMap.get( cls.getName() );
 		if ( type == null ) {
 			type = jpaMappedSuperclassTypeMap.get( cls );
 		}

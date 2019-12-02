@@ -21,7 +21,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
-import org.hibernate.loader.spi.CascadingFetchProfile;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.type.Type;
 
 /**

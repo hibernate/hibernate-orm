@@ -11,19 +11,11 @@ import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**

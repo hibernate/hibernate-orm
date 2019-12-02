@@ -11,11 +11,11 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.spi.AssemblerCreationState;
-import org.hibernate.sql.results.spi.CollectionInitializer;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.FetchParentAccess;
-import org.hibernate.sql.results.spi.Initializer;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * Functional contract to create a CollectionInitializer

@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
  * @author Steve Ebersole

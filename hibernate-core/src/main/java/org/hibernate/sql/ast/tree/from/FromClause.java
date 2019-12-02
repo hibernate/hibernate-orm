@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**

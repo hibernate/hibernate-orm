@@ -8,8 +8,8 @@ package org.hibernate.procedure.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**

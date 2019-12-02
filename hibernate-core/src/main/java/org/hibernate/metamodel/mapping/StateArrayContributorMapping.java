@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole

@@ -72,9 +72,9 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.internal.domain.entity.JoinedSubclassResultImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
@@ -1169,7 +1169,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			DomainResultCreationState creationState) {
 		if ( hasSubclasses() ) {
 			//noinspection unchecked
-			return new JoinedSubclassResultImpl( navigablePath, this, resultVariable, creationState );
+			return new EntityResultJoinedSubclassImpl( navigablePath, this, resultVariable, creationState );
 		}
 		else {
 			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );

@@ -9,16 +9,15 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.spi.CollectionInitializer;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
-import org.hibernate.sql.results.spi.EntityInitializer;
-import org.hibernate.sql.results.spi.Initializer;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
@@ -77,12 +76,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public List<Initializer> getInitializers() {
 		return initializers;
 	}
-
-	@Override
-	public int getNumberOfResults() {
-		return rowTransformer.determineNumberOfResultElements( assemblerCount );
-	}
-
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {

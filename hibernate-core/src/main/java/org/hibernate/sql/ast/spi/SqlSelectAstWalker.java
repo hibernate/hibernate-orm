@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.sql.ast.SqlAstWalker;
+
 /**
  * @author Steve Ebersole
  * @author Andrea Boriero

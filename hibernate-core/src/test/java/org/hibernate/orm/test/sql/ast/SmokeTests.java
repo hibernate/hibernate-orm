@@ -29,10 +29,10 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.internal.domain.basic.BasicResult;
-import org.hibernate.sql.results.internal.domain.basic.BasicResultAssembler;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultAssembler;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 

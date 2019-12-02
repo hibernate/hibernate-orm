@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Commonality between `many-to-one`, `one-to-one` and `any`, as well as entity-valued collection elements and map-keys

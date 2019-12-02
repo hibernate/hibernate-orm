@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.results.spi.DomainResult;
+import org.hibernate.sql.results.graph.DomainResult;
 
 /**
  * @author Steve Ebersole

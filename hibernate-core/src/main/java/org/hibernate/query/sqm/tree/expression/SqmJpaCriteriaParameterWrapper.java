@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * @author Steve Ebersole
@@ -82,7 +83,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	 * as part of {@link SemanticQueryWalker#visitJpaCriteriaParameter}.  This wrapper
 	 * is intended just for representing unique SqmParameter references for each
 	 * JpaCriteriaParameter occurence in the SQM true as part of the {@link org.hibernate.query.QueryParameter}
-	 * -> {@link SqmParameter} -> {@link org.hibernate.sql.exec.spi.JdbcParameter} transformation.
+	 * -> {@link SqmParameter} -> {@link JdbcParameter} transformation.
 	 * Each occurrence requires a unique SqmParameter to make sure we ultimately get the complete
 	 * set of JdbcParameter references
 	 */

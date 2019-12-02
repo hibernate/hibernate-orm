@@ -22,7 +22,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.internal.MetamodelSelectBuilderProcess;
+import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -30,12 +30,12 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.results.internal.domain.basic.BasicFetch;
-import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
-import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.EntityResult;
-import org.hibernate.sql.results.spi.Fetch;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.entity.EntityResult;
+import org.hibernate.sql.results.graph.Fetch;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -67,7 +67,7 @@ public class MappedFetchTests {
 		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
 		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( RootEntity.class );
 
-		final SelectStatement sqlAst = MetamodelSelectBuilderProcess.createSelect(
+		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				rootEntityDescriptor,
 				null,
 				rootEntityDescriptor.getIdentifierMapping(),

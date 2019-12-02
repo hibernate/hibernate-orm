@@ -164,7 +164,14 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 					throw (HibernateException) target;
 				}
 				else {
-					throw new MappingException( "Could not instantiate collection persister " + persisterClass.getName(), target );
+					throw new MappingException(
+							String.format(
+									"Could not instantiate collection persister implementor `%s` for collection-role `%s`",
+									persisterClass.getName(),
+									collectionBinding.getRole()
+							),
+							target
+					);
 				}
 			}
 			catch (Exception e) {

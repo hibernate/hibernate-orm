@@ -132,9 +132,4 @@ public class SqlAstProcessingStateImpl implements SqlAstProcessingState, SqlExpr
 			TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
 	}
-
-	@Override
-	public SqlSelection emptySqlSelection() {
-		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
-	}
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * Information obtained from the interpretation of an SqmStatement

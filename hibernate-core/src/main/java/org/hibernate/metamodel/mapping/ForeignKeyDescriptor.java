@@ -13,8 +13,8 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
@@ -51,7 +51,11 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 		visitReferringColumns( consumer );
 	}
 
+	String getReferringTableExpression();
+
 	void visitReferringColumns(ColumnConsumer consumer);
+
+	String getTargetTableExpression();
 
 	void visitTargetColumns(ColumnConsumer consumer);
 

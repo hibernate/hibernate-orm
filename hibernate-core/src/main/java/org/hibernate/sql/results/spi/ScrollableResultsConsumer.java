@@ -9,8 +9,11 @@ package org.hibernate.sql.results.spi;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 
 /**

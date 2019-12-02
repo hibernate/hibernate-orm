@@ -55,14 +55,14 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.results.internal.domain.instantiation.DynamicInstantiation;
+import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.spi.CircularFetchDetector;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.EntityResultNode;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -251,8 +251,8 @@ public class StandardSqmSelectTranslator
 				}
 			}
 			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
-				if ( fetchParent instanceof EntityResultNode ) {
-					final EntityResultNode entityFetchParent = (EntityResultNode) fetchParent;
+				if ( fetchParent instanceof EntityResultGraphNode ) {
+					final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
 					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
 					final String fetchParentEntityName = entityMappingType.getEntityName();
 					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
@@ -341,11 +341,11 @@ public class StandardSqmSelectTranslator
 	}
 
 	private static boolean appliesTo(GraphImplementor<?> graphNode, FetchParent fetchParent) {
-		if ( ! ( fetchParent instanceof EntityResultNode ) ) {
+		if ( ! ( fetchParent instanceof EntityResultGraphNode ) ) {
 			return false;
 		}
 
-		final EntityResultNode entityFetchParent = (EntityResultNode) fetchParent;
+		final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
 		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
 
 		assert graphNode.getGraphedType() instanceof EntityDomainType;

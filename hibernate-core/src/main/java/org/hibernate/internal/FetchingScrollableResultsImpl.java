@@ -9,10 +9,10 @@ package org.hibernate.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.sql.results.spi.JdbcValues;
-import org.hibernate.sql.results.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**

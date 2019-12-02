@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.select;
 
 import org.hibernate.SortOrder;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 

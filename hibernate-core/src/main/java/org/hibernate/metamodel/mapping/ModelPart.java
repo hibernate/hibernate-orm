@@ -12,8 +12,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 

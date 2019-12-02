@@ -41,13 +41,13 @@ import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.internal.domain.collection.CollectionDomainResult;
-import org.hibernate.sql.results.internal.domain.collection.DelayedCollectionFetch;
-import org.hibernate.sql.results.internal.domain.collection.EagerCollectionFetch;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
+import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * @author Steve Ebersole

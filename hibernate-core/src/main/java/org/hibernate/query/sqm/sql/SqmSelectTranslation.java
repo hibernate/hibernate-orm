@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * Details of the result of interpreting an SQM SELECT AST into a SQL SELECT AST

@@ -9,8 +9,8 @@ package org.hibernate.sql.ast.spi;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * todo (6.0) : most of this is SQM -> SQL specific.  Should move to that package.

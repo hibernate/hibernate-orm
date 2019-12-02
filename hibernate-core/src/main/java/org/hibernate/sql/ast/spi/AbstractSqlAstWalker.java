@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -55,9 +56,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
-import org.hibernate.sql.exec.spi.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.results.internal.EmptySqlSelection;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -93,6 +93,10 @@ public abstract class AbstractSqlAstWalker
 	protected AbstractSqlAstWalker(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 		this.dialect = sessionFactory.getJdbcServices().getDialect();
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 
 
@@ -250,9 +254,6 @@ public abstract class AbstractSqlAstWalker
 
 			String separator = NO_SEPARATOR;
 			for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
-				if ( sqlSelection instanceof EmptySqlSelection ) {
-					continue;
-				}
 				appendSql( separator );
 				sqlSelection.accept( this );
 				separator = COMA_SEPARATOR;
@@ -1055,10 +1056,5 @@ public abstract class AbstractSqlAstWalker
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return getSessionFactory().getTypeConfiguration();
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
 	}
 }

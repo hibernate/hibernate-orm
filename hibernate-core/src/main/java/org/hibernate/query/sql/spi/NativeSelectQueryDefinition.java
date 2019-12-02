@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.sql.results.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**

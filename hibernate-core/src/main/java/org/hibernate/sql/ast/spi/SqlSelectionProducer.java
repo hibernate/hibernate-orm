@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -17,7 +18,7 @@ public interface SqlSelectionProducer {
 	 * Create a SqlSelection for the given JDBC ResultSet position
 	 *
 	 * @param jdbcPosition The index position used to read values from JDBC
-	 * @param valuesArrayPosition The position in our {@linkplain org.hibernate.sql.results.spi.RowProcessingState#getJdbcValue(org.hibernate.sql.ast.spi.SqlSelection) "current JDBC values array"}
+	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(org.hibernate.sql.ast.spi.SqlSelection) "current JDBC values array"}
 	 * @param javaTypeDescriptor The descriptor for the Java type to read the value as
 	 * @param typeConfiguration The associated TypeConfiguration
 	 */

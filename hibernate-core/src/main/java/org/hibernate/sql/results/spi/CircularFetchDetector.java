@@ -7,6 +7,9 @@
 package org.hibernate.sql.results.spi;
 
 
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.results.internal.domain.BiDirectionalFetchImpl;

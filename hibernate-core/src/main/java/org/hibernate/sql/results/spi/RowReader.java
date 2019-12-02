@@ -10,6 +10,10 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.query.named.RowReaderMemento;
 
 /**
@@ -25,17 +29,10 @@ public interface RowReader<R> {
 	 */
 	Class<R> getResultJavaType();
 
-	List<Initializer> getInitializers();
-
 	/**
-	 * How many results (domain selections) are returned by this reader?
-	 *
-	 * @apiNote If this method returns `> 1` then {@link #getResultJavaType()}
-	 * should return either `Object[].class` (or {@link javax.persistence.Tuple}?).
-	 *
-	 * todo (6.0) : determine this ^^
+	 * The initializers associated with this reader
 	 */
-	int getNumberOfResults();
+	List<Initializer> getInitializers();
 
 	/**
 	 * The actual coordination of reading a row

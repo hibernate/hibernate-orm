@@ -7,10 +7,9 @@
 package org.hibernate.orm.test.loading;
 
 import org.hibernate.Hibernate;
-import org.hibernate.loader.internal.SingleIdEntityLoaderStandardImpl;
-import org.hibernate.loader.spi.SingleIdEntityLoader;
+import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
+import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;

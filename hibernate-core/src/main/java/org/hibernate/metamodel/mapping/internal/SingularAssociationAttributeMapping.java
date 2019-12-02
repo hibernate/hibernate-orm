@@ -12,7 +12,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -35,20 +34,20 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.internal.domain.entity.DelayedEntityFetchImpl;
-import org.hibernate.sql.results.internal.domain.entity.EntityFetch;
-import org.hibernate.sql.results.internal.domain.entity.SelectEntityFetchImpl;
-import org.hibernate.sql.results.spi.DomainResult;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.Fetch;
-import org.hibernate.sql.results.spi.FetchParent;
-import org.hibernate.sql.results.spi.Fetchable;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
-		implements EntityValuedModelPart, EntityAssociationMapping, TableGroupJoinProducer {
+		implements EntityValuedFetchable, EntityAssociationMapping, TableGroupJoinProducer {
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final boolean referringPrimaryKey;
@@ -106,7 +105,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
-	public Fetch generateFetch(
+	public EntityFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
@@ -115,12 +114,12 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess()
-				.getTableGroup( fetchParent.getNavigablePath() );
+		final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+				fetchParent.getNavigablePath()
+		);
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
-				// todo (6.0) : verify the JoinType is correct
 				JoinType joinType;
 				if ( isNullable ) {
 					joinType = JoinType.LEFT;
@@ -147,7 +146,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				);
 			}
 
-			return new EntityFetch(
+			return new EntityFetchJoinedImpl(
 					fetchParent,
 					this,
 					lockMode,
@@ -157,33 +156,36 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			);
 		}
 
-		final DomainResult result;
+		final DomainResult keyResult;
 
 		if ( referringPrimaryKey ) {
-			result = foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState );
+			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState );
 		}
 		else {
-			result = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
+			keyResult = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
 					.createDomainResult( fetchablePath, lhsTableGroup, null, creationState );
 		}
 
-		if ( fetchTiming == FetchTiming.IMMEDIATE && !selected ) {
-			return new SelectEntityFetchImpl(
+		assert !selected;
+		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+			return new EntityFetchSelectImpl(
 					fetchParent,
 					this,
 					lockMode,
+					isNullable,
 					fetchablePath,
-					result
+					keyResult,
+					creationState
 			);
 		}
 
-		return new DelayedEntityFetchImpl(
+		return new EntityFetchDelayedImpl(
 				fetchParent,
 				this,
 				lockMode,
 				isNullable,
 				fetchablePath,
-				result
+				keyResult
 		);
 	}
 

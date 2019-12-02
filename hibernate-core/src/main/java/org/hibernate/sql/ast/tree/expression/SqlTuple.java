@@ -11,8 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
  * @author Steve Ebersole

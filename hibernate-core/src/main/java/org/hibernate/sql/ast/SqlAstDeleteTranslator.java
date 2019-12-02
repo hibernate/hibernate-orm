@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast;
 
 import org.hibernate.sql.ast.spi.SqlAstToJdbcOperationConverter;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.exec.spi.JdbcDelete;

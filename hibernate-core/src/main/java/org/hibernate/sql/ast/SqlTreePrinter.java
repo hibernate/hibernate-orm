@@ -10,8 +10,6 @@ import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
@@ -22,6 +20,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -50,7 +49,6 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.spi.JdbcParameter;
 
 /**
  * @author Steve Ebersole
@@ -71,13 +69,6 @@ public class SqlTreePrinter implements SqlAstWalker {
 	private int depth = 2;
 
 	private SqlTreePrinter() {
-	}
-
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		// should not be needed.
-		// todo (6.0) : in fact we really should consider dropping this from the interface
-		return null;
 	}
 
 	private void visitStatement(Statement sqlAstStatement) {
@@ -177,6 +168,10 @@ public class SqlTreePrinter implements SqlAstWalker {
 
 	private void logNode(String pattern, Object arg) {
 		logWithIndentation( "-> [" + String.format( pattern, arg ) + ']');
+	}
+
+	private void logNode(String pattern, Object arg, Object arg2) {
+		logWithIndentation( "-> [" + String.format( pattern, arg, arg2 ) + ']');
 	}
 
 	private void logNode(String text, Runnable subTreeHandler) {
@@ -379,7 +374,7 @@ public class SqlTreePrinter implements SqlAstWalker {
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		logNode( columnReference.renderSqlFragment( getSessionFactory() ) );
+		logNode( "{%s}.{%s}", columnReference.getQualifier(), columnReference.getColumnExpression() );
 	}
 
 	@Override

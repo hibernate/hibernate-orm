@@ -104,6 +104,19 @@ public class StandardStack<T> implements Stack<T> {
 	}
 
 	@Override
+	public void visitRootFirst(Consumer<T> action) {
+		if ( internalStack != null ) {
+			final int stackSize = internalStack.size();
+			for ( int i = stackSize - 1; i >= 0; i-- ) {
+				action.accept( internalStack.get( i ) );
+			}
+		}
+		if ( current != null ) {
+			action.accept( current );
+		}
+	}
+
+	@Override
 	public void visitCurrentFirst(Consumer<T> action) {
 		if ( current != null ) {
 			action.accept( current );

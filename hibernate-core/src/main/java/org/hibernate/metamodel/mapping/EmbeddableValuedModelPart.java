@@ -14,8 +14,8 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.results.spi.Fetchable;
-import org.hibernate.sql.results.spi.FetchableContainer;
+import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
  * @author Steve Ebersole

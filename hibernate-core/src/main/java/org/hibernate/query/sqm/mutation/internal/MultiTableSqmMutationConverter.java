@@ -39,8 +39,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.exec.spi.JdbcParameter;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * Specialized BaseSqmToSqlAstConverter implementation used during conversion

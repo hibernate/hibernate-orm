@@ -7,8 +7,9 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.results.spi.JdbcValuesMetadata;
-import org.hibernate.sql.results.spi.RowProcessingState;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.type.descriptor.ValueExtractor;
 
 /**

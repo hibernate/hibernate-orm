@@ -17,9 +17,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.internal.domain.collection.SetInitializerProducer;
-import org.hibernate.sql.results.spi.DomainResultCreationState;
-import org.hibernate.sql.results.spi.FetchParent;
+import org.hibernate.sql.results.graph.collection.internal.SetInitializerProducer;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * @author Steve Ebersole

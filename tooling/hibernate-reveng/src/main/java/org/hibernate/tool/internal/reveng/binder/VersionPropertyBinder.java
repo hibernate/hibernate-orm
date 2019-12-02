@@ -7,29 +7,21 @@ import java.util.logging.Logger;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
 public class VersionPropertyBinder {
 	
-	public static VersionPropertyBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		return new VersionPropertyBinder(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+	public static VersionPropertyBinder create(BinderContext binderContext) {
+		return new VersionPropertyBinder(binderContext);
 	}
 	
 	private final static Logger LOGGER = Logger.getLogger(VersionPropertyBinder.class.getName());
@@ -40,17 +32,12 @@ public class VersionPropertyBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	private VersionPropertyBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.metadataCollector = metadataCollector;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
+	private VersionPropertyBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.metadataCollector = binderContext.metadataCollector;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 	
 	public void bind(Table table, RootClass rc, Set<Column> processed, Mapping mapping) {

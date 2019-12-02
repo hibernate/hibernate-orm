@@ -55,12 +55,7 @@ public class RootClassBinder {
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
-		this.versionPropertyBinder = VersionPropertyBinder.create(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+		this.versionPropertyBinder = VersionPropertyBinder.create(binderContext);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {

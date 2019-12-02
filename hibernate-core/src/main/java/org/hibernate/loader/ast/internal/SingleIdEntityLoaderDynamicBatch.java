@@ -179,4 +179,13 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
 	}
+
+	@Override
+	public T load(
+			Object pkValue,
+			Object entityInstance,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		return singleIdLoader.load( pkValue, entityInstance, lockOptions, session );
+	}
 }

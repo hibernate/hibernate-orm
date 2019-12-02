@@ -59,7 +59,22 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getFactory()
 		);
 
-		return loadPlan.load( key, lockOptions, session );
+		return loadPlan.load( key, lockOptions, null, session );
+	}
+
+	@Override
+	public T load(
+			Object key,
+			Object entityInstance,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final SingleIdLoadPlan<T> loadPlan = resolveLoadPlan(
+				lockOptions,
+				session.getLoadQueryInfluencers(),
+				session.getFactory()
+		);
+
+		return loadPlan.load( key, lockOptions, entityInstance, session );
 	}
 
 	@Internal

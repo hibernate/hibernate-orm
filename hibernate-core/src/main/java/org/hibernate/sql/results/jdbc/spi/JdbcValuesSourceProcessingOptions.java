@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
-import java.io.Serializable;
-
 /**
  * Essentially processing options only for entity loading
  *
@@ -16,7 +14,7 @@ import java.io.Serializable;
 public interface JdbcValuesSourceProcessingOptions {
 	Object getEffectiveOptionalObject();
 	String getEffectiveOptionalEntityName();
-	Serializable getEffectiveOptionalId();
+	Object getEffectiveOptionalId();
 
 	boolean shouldReturnProxies();
 }

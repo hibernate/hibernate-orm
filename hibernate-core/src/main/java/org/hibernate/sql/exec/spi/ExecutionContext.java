@@ -38,6 +38,13 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	/**
+	 * Should only be used when initializing a bytecode-proxy
+	 */
+	default Object getEntityInstance() {
+		return null;
+	}
+
 	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 		// by default do nothing
 	}

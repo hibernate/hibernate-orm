@@ -70,6 +70,18 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 	}
 
 	@Override
+	public T load(
+			Object pkValue,
+			Object entityInstance,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		if ( entityInstance != null ) {
+			throw new UnsupportedOperationException(  );
+		}
+		return load( pkValue, lockOptions, session );
+	}
+
+	@Override
 	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
 		return new Object[0];
 	}

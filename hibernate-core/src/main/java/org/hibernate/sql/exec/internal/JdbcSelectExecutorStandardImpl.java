@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +128,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
 			Function<String, PreparedStatement> statementCreator,
-			ResultsConsumer<T,R> resultsConsumer) {
+			ResultsConsumer<T, R> resultsConsumer) {
 
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
 				jdbcSelect,
@@ -148,7 +147,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
 			@Override
 			public Object getEffectiveOptionalObject() {
-				return null;
+				return executionContext.getEntityInstance();
 			}
 
 			@Override
@@ -157,7 +156,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 
 			@Override
-			public Serializable getEffectiveOptionalId() {
+			public Object getEffectiveOptionalId() {
 				return null;
 			}
 

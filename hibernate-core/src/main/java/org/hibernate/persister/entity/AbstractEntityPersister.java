@@ -4616,11 +4616,11 @@ public abstract class AbstractEntityPersister
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Serializable identifier = entityKey.getIdentifier();
-			final Object loaded = readLockLoader.load(
+			final Object loaded = singleIdEntityLoader.load(
 					identifier,
 					entity,
-					session,
-					LockOptions.READ
+					LockOptions.READ,
+					session
 			);
 
 			if ( loaded == null ) {

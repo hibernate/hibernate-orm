@@ -21,12 +21,12 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -70,7 +70,18 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		return sqlAst;
 	}
 
-	T load(Object restrictedValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	T load(
+			Object restrictedValue,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		return load( restrictedValue, lockOptions, null, session );
+	}
+
+	T load(
+			Object restrictedValue,
+			LockOptions lockOptions,
+			Object entityInstance,
+			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
@@ -119,6 +130,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					}
 
 					@Override
+					public Object getEntityInstance() {
+						return entityInstance;
+					}
+
+					@Override
 					public QueryOptions getQueryOptions() {
 						return QueryOptions.NONE;
 					}
@@ -130,7 +146,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 					@Override
 					public Callback getCallback() {
-						return null;
+						return afterLoadAction -> {
+						};
 					}
 				},
 				RowTransformerPassThruImpl.instance()

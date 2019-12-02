@@ -22,6 +22,12 @@ public interface SingleIdEntityLoader<T> extends SingleEntityLoader<T> {
 	T load(Object pkValue, LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
+	 * Load by primary key value, populating the passed entity instance.  Used to initialize an uninitialized
+	 * bytecode-proxy.  The passed instance is the enhanced proxy
+	 */
+	T load(Object pkValue, Object entityInstance, LockOptions lockOptions, SharedSessionContractImplementor session);
+
+	/**
 	 * Load database snapshot by primary key value
 	 */
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session);

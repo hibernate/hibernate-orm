@@ -64,7 +64,7 @@ public class RootClassBinder {
 						metadataCollector, 
 						revengStrategy, 
 						defaultCatalog, 
-						defaultCatalog);
+						defaultSchema);
 	}
 
 	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {

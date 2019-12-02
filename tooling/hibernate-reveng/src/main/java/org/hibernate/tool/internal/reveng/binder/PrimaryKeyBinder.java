@@ -45,6 +45,7 @@ public class PrimaryKeyBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	private final boolean preferBasicCompositeIds;
+	private final BasicPropertyBinder basicPropertyBinder;
 
 	
 	private PrimaryKeyBinder(BinderContext binderContext) {
@@ -54,6 +55,12 @@ public class PrimaryKeyBinder {
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
+		this.basicPropertyBinder = BasicPropertyBinder.create(
+				metadataBuildingContext, 
+				metadataCollector, 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema);
 	}
 
 	public PrimaryKeyInfo bind(
@@ -209,18 +216,11 @@ public class PrimaryKeyBinder {
 				else {
 					BinderUtils.checkColumnForMultipleBinding(column);
                     String propertyName = revengStrategy.columnToPropertyName( TableIdentifier.create(table), column.getName() );
-                    property = BasicPropertyBinder
-                    		.create(
-                    				metadataBuildingContext, 
-                    				metadataCollector, 
-                    				revengStrategy, 
-                    				defaultCatalog, 
-                    				defaultSchema)
-                    		.bind(
-                    				BinderUtils.makeUnique(pkc, propertyName), 
-                    				table, 
-                    				column, 
-                    				mapping);
+                    property = basicPropertyBinder.bind(
+            				BinderUtils.makeUnique(pkc, propertyName), 
+            				table, 
+            				column, 
+            				mapping);
                     processedColumns.add(column);
                 }
             }

@@ -16,7 +16,10 @@ import org.hibernate.dialect.Dialect;
  * Implementation of InsertSelect.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) Use {@link org.hibernate.sql.ast.tree.insert.InsertSelectStatement} instead
  */
+@Deprecated
 public class InsertSelect {
 	private String tableName;
 	private String comment;

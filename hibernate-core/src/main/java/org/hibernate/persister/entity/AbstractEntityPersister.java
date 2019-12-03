@@ -1255,19 +1255,6 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private void resolveTableReferenceJoins(
-			TableReference rootTableReference,
-			SqlAliasBase sqlAliasBase,
-			org.hibernate.sql.ast.JoinType joinType,
-			Consumer<TableReferenceJoin> collector,
-			SqlExpressionResolver sqlExpressionResolver) {
-		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
-			collector.accept(
-					createTableReferenceJoin( i, rootTableReference, joinType, sqlAliasBase, sqlExpressionResolver )
-			);
-		}
-	}
-
 	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
@@ -1817,8 +1804,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session)
-			throws HibernateException {
+	public Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"resolving unique key [%s] to identifier for entity [%s]",
@@ -1827,103 +1813,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		int propertyIndex = getSubclassPropertyIndex( uniquePropertyName );
-		if ( propertyIndex < 0 ) {
-			throw new HibernateException(
-					"Could not determine Type for property [" + uniquePropertyName + "] on entity [" + getEntityName() + "]"
-			);
-		}
-		Type propertyType = getSubclassPropertyType( propertyIndex );
-
-		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( generateIdByUniqueKeySelectString( uniquePropertyName ) );
-			try {
-				propertyType.nullSafeSet( ps, key, 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-				try {
-					//if there is no resulting row, return null
-					if ( !rs.next() ) {
-						return null;
-					}
-					return (Serializable) getIdentifierType().nullSafeGet( rs, getIdentifierAliases(), session, null );
-				}
-				finally {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-				}
-			}
-			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					String.format(
-							"could not resolve unique property [%s] to identifier for entity [%s]",
-							uniquePropertyName,
-							getEntityName()
-					),
-					getSQLSnapshotSelectString()
-			);
-		}
-
-	}
-
-	protected String generateIdByUniqueKeySelectString(String uniquePropertyName) {
-		Select select = new Select( getFactory().getDialect() );
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "resolve id by unique property [" + getEntityName() + "." + uniquePropertyName + "]" );
-		}
-
-		final String rooAlias = getRootAlias();
-
-		select.setFromClause( fromTableFragment( rooAlias ) + fromJoinFragment( rooAlias, true, false ) );
-
-		SelectFragment selectFragment = new SelectFragment();
-		selectFragment.addColumns( rooAlias, getIdentifierColumnNames(), getIdentifierAliases() );
-		select.setSelectClause( selectFragment );
-
-		StringBuilder whereClauseBuffer = new StringBuilder();
-		final int uniquePropertyIndex = getSubclassPropertyIndex( uniquePropertyName );
-		final String uniquePropertyTableAlias = generateTableAlias(
-				rooAlias,
-				getSubclassPropertyTableNumber( uniquePropertyIndex )
-		);
-		String sep = "";
-		for ( String columnTemplate : getSubclassPropertyColumnReaderTemplateClosure()[uniquePropertyIndex] ) {
-			if ( columnTemplate == null ) {
-				continue;
-			}
-			final String columnReference = StringHelper.replace(
-					columnTemplate,
-					Template.TEMPLATE,
-					uniquePropertyTableAlias
-			);
-			whereClauseBuffer.append( sep ).append( columnReference ).append( "=?" );
-			sep = " and ";
-		}
-		for ( String formulaTemplate : getSubclassPropertyFormulaTemplateClosure()[uniquePropertyIndex] ) {
-			if ( formulaTemplate == null ) {
-				continue;
-			}
-			final String formulaReference = StringHelper.replace(
-					formulaTemplate,
-					Template.TEMPLATE,
-					uniquePropertyTableAlias
-			);
-			whereClauseBuffer.append( sep ).append( formulaReference ).append( "=?" );
-			sep = " and ";
-		}
-		whereClauseBuffer.append( whereJoinFragment( rooAlias, true, false ) );
-
-		select.setWhereClause( whereClauseBuffer.toString() );
-
-		return select.setOuterJoins( "", "" ).toStatementString();
+		return getUniqueKeyLoader( uniquePropertyName ).resolveId( key, session );
 	}
 
 
@@ -2644,13 +2534,18 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
 
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
 			SharedSessionContractImplementor session) throws HibernateException {
-		final SingularAttributeMapping attribute = (SingularAttributeMapping) findSubPart( propertyName );
+		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.READ, session );
+	}
+
+	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
+
+	protected SingleUniqueKeyEntityLoader getUniqueKeyLoader(String attributeName) {
+		final SingularAttributeMapping attribute = (SingularAttributeMapping) findSubPart( attributeName );
 		final SingleUniqueKeyEntityLoader<?> existing;
 		if ( uniqueKeyLoadersNew == null ) {
 			uniqueKeyLoadersNew = new IdentityHashMap<>();
@@ -2666,6 +2561,7 @@ public abstract class AbstractEntityPersister
 
 		final SingleUniqueKeyEntityLoader loader = new SingleUniqueKeyEntityLoaderStandard( this, attribute );
 		uniqueKeyLoadersNew.put( attribute, loader );
+
 		return loader;
 	}
 

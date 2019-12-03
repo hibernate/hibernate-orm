@@ -5,16 +5,14 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
-public class SimpleValueBinder {
+public class SimpleValueBinder extends AbstractBinder {
 	
 	public static SimpleValueBinder create(BinderContext binderContext) {
 		return new SimpleValueBinder(binderContext);
 	}
 	
-	private final BinderContext binderContext;
-	
 	public SimpleValueBinder(BinderContext binderContext) {
-		this.binderContext = binderContext;
+		super(binderContext);
 	}
 	
 	public SimpleValue bind(

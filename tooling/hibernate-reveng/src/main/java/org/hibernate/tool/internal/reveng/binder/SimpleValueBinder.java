@@ -20,7 +20,7 @@ public class SimpleValueBinder extends AbstractBinder {
 			Column column,
 			Mapping mapping,
 			boolean generatedIdentifier) {
-		SimpleValue value = new SimpleValue(binderContext.metadataBuildingContext, table);
+		SimpleValue value = new SimpleValue(getMetadataBuildingContext(), table);
 		value.addColumn(column);
 		value.setTypeName(TypeUtils.determinePreferredType(
 				binderContext.metadataCollector, 

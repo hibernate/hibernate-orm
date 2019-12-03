@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
@@ -18,19 +19,30 @@ import org.hibernate.tool.internal.reveng.RevEngUtils;
 public class PropertyBinder {
 
 	private static final Logger LOGGER = Logger.getLogger(PropertyBinder.class.getName());
+	
+	static PropertyBinder create(BinderContext binderContext) {
+		return new PropertyBinder(binderContext);
+	}
 
-	public static Property bind(
+	private final ReverseEngineeringStrategy revengStrategy;
+	private final String defaultCatalog;
+	private final String defaultSchema;
+	
+	private PropertyBinder(BinderContext binderContext) {
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+	}
+
+	public Property bind(
 			Table table, 
-			String defaultCatalog,
-			String defaultSchema,
 			String propertyName, 
 			Value value, 
 			boolean insertable, 
 			boolean updatable, 
 			boolean lazy, 
 			String cascade, 
-			String propertyAccessorName,
-			ReverseEngineeringStrategy revengStrategy) {
+			String propertyAccessorName) {
     	LOGGER.log(Level.INFO, "Building property " + propertyName);
         Property prop = new Property();
 		prop.setName(propertyName);
@@ -40,29 +52,14 @@ public class PropertyBinder {
 		prop.setLazy(lazy);
 		prop.setCascade(cascade==null?"none":cascade);
 		prop.setPropertyAccessorName(propertyAccessorName==null?"property":propertyAccessorName);
-		return bindMetaAttributes(
-				prop, 
-				revengStrategy, 
-				table,
-				defaultCatalog,
-				defaultSchema);
+		return bindMetaAttributes(prop, table);
 	}
 
-    private static Property bindMetaAttributes(
-    		Property property, 
-    		ReverseEngineeringStrategy revengStrategy,
-    		Table table,
-    		String defaultCatalog,
-    		String defaultSchema) {
+    private Property bindMetaAttributes(Property property, Table table) {
     	Iterator<Selectable> columnIterator = property.getValue().getColumnIterator();
 		while(columnIterator.hasNext()) {
 			Column col = (Column) columnIterator.next();
-			Map<String,MetaAttribute> map = getColumnToMetaAttributesInRevengStrategy(
-					revengStrategy, 
-					table, 
-					defaultCatalog, 
-					defaultSchema, 
-					col.getName());
+			Map<String,MetaAttribute> map = getColumnToMetaAttributesInRevengStrategy(table, col.getName());
 			if(map!=null) { 
 				property.setMetaAttributes(map);
 			}
@@ -71,20 +68,17 @@ public class PropertyBinder {
 		return property;
     }
 
-	private static Map<String,MetaAttribute> getColumnToMetaAttributesInRevengStrategy(
-			ReverseEngineeringStrategy revengStrat,
+	private Map<String,MetaAttribute> getColumnToMetaAttributesInRevengStrategy(
 			Table table,
-			String defaultCatalog,
-			String defaultSchema,
 			String column) {
 		Map<String,MetaAttribute> result = null;
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrat.columnToMetaAttributes(tableIdentifier, column);
+		result = revengStrategy.columnToMetaAttributes(tableIdentifier, column);
 		if (result == null) {
 			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
 			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
 			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrat.columnToMetaAttributes(tableIdentifier, column);
+			result = revengStrategy.columnToMetaAttributes(tableIdentifier, column);
 		}
 		return result;
 	}

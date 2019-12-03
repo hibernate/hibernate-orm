@@ -46,6 +46,7 @@ public class PrimaryKeyBinder {
 	private final BasicPropertyBinder basicPropertyBinder;
 	private final SimpleValueBinder simpleValueBinder;
 	private final ManyToOneBinder manyToOneBinder;
+	private final PropertyBinder propertyBinder;
 
 	
 	private PrimaryKeyBinder(BinderContext binderContext) {
@@ -57,6 +58,7 @@ public class PrimaryKeyBinder {
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
 		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
+		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
 	public PrimaryKeyInfo bind(
@@ -138,18 +140,15 @@ public class PrimaryKeyBinder {
 			id.setNullValue("undefined");
 		}
 
-		Property property = PropertyBinder.bind(
+		Property property = propertyBinder.bind(
 				table, 
-				defaultCatalog,
-				defaultSchema,
 				BinderUtils.makeUnique(rc,idPropertyname), 
 				id, 
 				true, 
 				true, 
 				false, 
 				null, 
-				null,
-				revengStrategy);
+				null);
 		rc.setIdentifierProperty(property);
 		rc.setIdentifier(id);
 

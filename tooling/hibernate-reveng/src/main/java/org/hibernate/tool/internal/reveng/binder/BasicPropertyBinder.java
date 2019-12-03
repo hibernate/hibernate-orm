@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
@@ -14,10 +13,12 @@ public class BasicPropertyBinder extends AbstractBinder {
 	}
 	
 	private final SimpleValueBinder simpleValueBinder;
+	private final PropertyBinder propertyBinder;
 	
 	private BasicPropertyBinder(BinderContext binderContext) {
 		super(binderContext);
 		simpleValueBinder = SimpleValueBinder.create(binderContext);
+		propertyBinder = PropertyBinder.create(binderContext);
 	}
 	
 
@@ -31,18 +32,15 @@ public class BasicPropertyBinder extends AbstractBinder {
 				column, 
 				mapping,
 				false);
-		return PropertyBinder.bind(
+		return propertyBinder.bind(
 				table, 
-				binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG),
-				binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
 				propertyName, 
 				value, 
 				true, 
 				true, 
 				false, 
 				null, 
-				null,
-				binderContext.revengStrategy);
+				null);
 	}
 
 }

@@ -1,7 +1,6 @@
 package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.FetchMode;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -16,13 +15,11 @@ public class EntityPropertyBinder {
 	}
 	
 	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
+	private final PropertyBinder propertyBinder;
 	
 	private EntityPropertyBinder(BinderContext binderContext) {
 		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
 	public Property bind(
@@ -64,18 +61,15 @@ public class EntityPropertyBinder {
         	value.setFetchMode(FetchMode.SELECT);
         }
 
-        return PropertyBinder.bind(
+        return propertyBinder.bind(
         		table, 
-        		defaultCatalog,
-        		defaultSchema,
-        		propertyName, 
+         		propertyName, 
         		value, 
         		insert, 
         		update, 
         		value.getFetchMode()!=FetchMode.JOIN, 
         		cascade, 
-        		null,
-        		revengStrategy);
+        		null);
 	}
 
 }

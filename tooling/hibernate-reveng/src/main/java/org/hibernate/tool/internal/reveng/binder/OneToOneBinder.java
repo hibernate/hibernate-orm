@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.OneToOne;
@@ -24,14 +23,12 @@ public class OneToOneBinder {
 	
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
+	private final EntityPropertyBinder entityPropertyBinder;
 	
 	private OneToOneBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
 		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.entityPropertyBinder = EntityPropertyBinder.create(binderContext);
 	}
 
     public Property bind(
@@ -81,11 +78,7 @@ public class OneToOneBinder {
 				ForeignKeyDirection.FROM_PARENT :
 				ForeignKeyDirection.TO_PARENT );
 
-        return EntityPropertyBinder
-        		.create(
-        				revengStrategy, 
-        				defaultCatalog, 
-        				defaultSchema)
+        return entityPropertyBinder
         		.bind(
         				propertyName, 
         				true, 

@@ -6,6 +6,8 @@ import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 
+import java.sql.DatabaseMetaData;
+
 /**
  * An SQL dialect for CockroachDB 19.2 and later. This is the first dialect for CockroachDB. It extends
  * {@link PostgreSQL95Dialect} because CockroachDB is aiming for Postgres compatibility.
@@ -27,6 +29,10 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     public boolean supportsExpectedLobUsagePattern() {
         return false;
     }
+
+    @Override
+    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) { return false; }
+
 
     @Override
     public boolean supportsLockTimeouts() {

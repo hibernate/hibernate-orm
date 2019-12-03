@@ -5,12 +5,12 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.*;
 
-import java.sql.DatabaseMetaData;
-import java.sql.Types;
+import java.sql.*;
 
 import java.sql.DatabaseMetaData;
 
@@ -53,11 +53,8 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
         SqlTypeDescriptor descriptor;
         switch ( sqlCode ) {
             case Types.BLOB: {
-                // Force BLOB binding.  Otherwise, byte[] fields annotated
-                // with @Lob will attempt to use
-                // BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-                // dialect uses oid for Blobs, byte arrays cannot be used.
-                descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+                // Make BLOBs use byte[] storage.
+                descriptor = CockroachDBBlobTypeDescriptor.INSTANCE;
                 break;
             }
             case Types.CLOB: {
@@ -84,4 +81,59 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean supportsMixedTypeArithmetic() { return false; }
+
+    public static final class CockroachDBBlobTypeDescriptor implements SqlTypeDescriptor {
+
+        public static final CockroachDBBlobTypeDescriptor INSTANCE = new CockroachDBBlobTypeDescriptor();
+
+        private CockroachDBBlobTypeDescriptor() {
+        }
+
+        @Override
+        public int getSqlType() {
+            return Types.BLOB;
+        }
+
+        @Override
+        public boolean canBeRemapped() {
+            return true;
+        }
+
+        @Override
+        public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+            return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+                @Override
+                protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+                    return javaTypeDescriptor.wrap( rs.getBytes( name ), options );
+                }
+
+                @Override
+                protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+                    return javaTypeDescriptor.wrap( statement.getBytes( index ), options );
+                }
+
+                @Override
+                protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+                    return javaTypeDescriptor.wrap( statement.getBytes( name ), options );
+                }
+            };
+        }
+
+        @Override
+        public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+            return new BasicBinder<X>( javaTypeDescriptor, this ) {
+                @Override
+                public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+                        throws SQLException {
+                    st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+                }
+
+                @Override
+                protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+                        throws SQLException {
+                    st.setBytes( name, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+                }
+            };
+        }
+    };
 }

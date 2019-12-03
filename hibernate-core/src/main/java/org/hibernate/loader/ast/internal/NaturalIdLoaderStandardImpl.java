@@ -67,7 +67,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
-				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
+				Collections.emptyList(),
 				naturalIdMapping,
 				null,
 				1,
@@ -113,7 +113,8 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 			);
 		}
 
-		final List<Object[]> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+		//noinspection unchecked
+		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
 				new ExecutionContext() {
@@ -138,7 +139,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						};
 					}
 				},
-				row -> row
+				row -> (T) row[0]
 		);
 
 		if ( results.size() > 1 ) {
@@ -150,8 +151,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 			);
 		}
 
-		//noinspection unchecked
-		return (T) results.get( 0 );
+		return results.get( 0 );
 	}
 
 	@Override
@@ -255,7 +255,7 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor,
-				Collections.emptyList(),
+				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
 				naturalIdMapping,
 				null,
 				1,

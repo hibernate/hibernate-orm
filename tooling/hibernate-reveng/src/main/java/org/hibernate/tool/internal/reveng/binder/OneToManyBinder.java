@@ -8,7 +8,6 @@ import java.util.Set;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -35,15 +34,13 @@ public class OneToManyBinder {
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final InFlightMetadataCollector metadataCollector;
 	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
+	private final CollectionPropertyBinder collectionPropertyBinder;
 	
 	private OneToManyBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
 		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.collectionPropertyBinder = CollectionPropertyBinder.create(binderContext);
 	}
 
 	public Property bind(
@@ -151,11 +148,7 @@ public class OneToManyBinder {
 
 		metadataCollector.addCollectionBinding(collection);
 
-		return CollectionPropertyBinder
-				.create(
-						revengStrategy, 
-						defaultCatalog, 
-						defaultSchema)
+		return collectionPropertyBinder
 				.bind(
 						StringHelper.unqualify( collection.getRole()), 
 						true, rc.getTable(), 

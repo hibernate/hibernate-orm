@@ -536,7 +536,7 @@ public class EnhancerImpl implements Enhancer {
 				}
 				annotationDescriptions.addAll( fieldDescription.getDeclaredAnnotations() );
 
-				return fieldDescription.getDeclaredAnnotations();
+				return new AnnotationList.Explicit( annotationDescriptions );
 			}
 		}
 	}

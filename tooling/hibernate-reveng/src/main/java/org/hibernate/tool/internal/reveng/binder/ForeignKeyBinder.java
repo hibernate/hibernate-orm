@@ -4,8 +4,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -23,20 +21,16 @@ public class ForeignKeyBinder {
 		return new ForeignKeyBinder(binderContext);
 	}
 	
-	private MetadataBuildingContext metadataBuildingContext;
 	private ReverseEngineeringStrategy revengStrategy;
-	private String defaultCatalog;
-	private String defaultSchema;
 	private final OneToOneBinder oneToOneBinder;
 	private final OneToManyBinder oneToManyBinder;
+	private final ManyToOneBinder manyToOneBinder;
 	
 	private ForeignKeyBinder(BinderContext binderContext) {
 		this.oneToOneBinder = OneToOneBinder.create(binderContext);
 		this.oneToManyBinder = OneToManyBinder.create(binderContext);
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
 		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 	
 	public void bindIncoming(
@@ -107,12 +101,7 @@ public class ForeignKeyBinder {
         			isUnique
         	);
 
-        	Property property = ManyToOneBinder
-        			.create(
-        					metadataBuildingContext, 
-        					revengStrategy, 
-        					defaultCatalog, 
-        					defaultSchema)
+        	Property property = manyToOneBinder
         			.bind(
         					BinderUtils.makeUnique(rc, propertyName), 
         					mutable, 

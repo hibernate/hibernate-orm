@@ -45,6 +45,7 @@ public class PrimaryKeyBinder {
 	private final boolean preferBasicCompositeIds;
 	private final BasicPropertyBinder basicPropertyBinder;
 	private final SimpleValueBinder simpleValueBinder;
+	private final ManyToOneBinder manyToOneBinder;
 
 	
 	private PrimaryKeyBinder(BinderContext binderContext) {
@@ -55,6 +56,7 @@ public class PrimaryKeyBinder {
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
+		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
 	}
 
 	public PrimaryKeyInfo bind(
@@ -223,12 +225,7 @@ public class PrimaryKeyBinder {
 						TableIdentifier.create(foreignKey.getTable() ),
 						foreignKey.getColumns(), TableIdentifier.create(foreignKey.getReferencedTable() ), foreignKey.getReferencedColumns(), true
 					);
-                property = ManyToOneBinder
-                		.create(
-                				metadataBuildingContext, 
-                				revengStrategy,
-                				defaultCatalog, 
-                				defaultSchema)
+                property = manyToOneBinder
                 		.bind(
                 				BinderUtils.makeUnique(pkc, propertyName), 
                 				true, 

@@ -7,15 +7,15 @@ import org.hibernate.mapping.Table;
 
 public class SimpleValueBinder extends AbstractBinder {
 	
-	public static SimpleValueBinder create(BinderContext binderContext) {
+	static SimpleValueBinder create(BinderContext binderContext) {
 		return new SimpleValueBinder(binderContext);
 	}
 	
-	public SimpleValueBinder(BinderContext binderContext) {
+	private SimpleValueBinder(BinderContext binderContext) {
 		super(binderContext);
 	}
 	
-	public SimpleValue bind(
+	SimpleValue bind(
 			Table table,
 			Column column,
 			Mapping mapping,

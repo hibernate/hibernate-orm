@@ -246,6 +246,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5803" )
+	@RequiresDialectFeature(value = DialectChecks.SupportsMixedTypeArithmetic.class)
 	public void testQuotientConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

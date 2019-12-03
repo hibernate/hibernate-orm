@@ -35,7 +35,11 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
 
     @Override
-    public boolean supportsLockTimeouts() {
-        return false;
-    }
+    public boolean supportsLockTimeouts() { return false; }
+
+    @Override
+    public boolean supportsSkipLocked() { return false; }
+
+    @Override
+    public boolean supportsMixedTypeArithmetic() { return false; }
 }

@@ -2976,6 +2976,13 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Does this dialect/database support mixed type arithmetic (e.g. <int> + <float>).
+	 *
+	 * @return {@code true} if mixed type arithmetic is supported
+	 */
+	public boolean supportsMixedTypeArithmetic() { return true; }
+
 	public boolean isLegacyLimitHandlerBehaviorEnabled() {
 		return legacyLimitHandlerBehavior;
 	}

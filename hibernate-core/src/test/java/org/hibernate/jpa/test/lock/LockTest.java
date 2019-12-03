@@ -61,6 +61,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( LockTest.class );
 
 	@Test
+	@RequiresDialectFeature(value = DialectChecks.SupportNoWait.class)
 	public void testFindWithTimeoutHint() {
 		final Lock lock = new Lock();
 		lock.setName( "name" );

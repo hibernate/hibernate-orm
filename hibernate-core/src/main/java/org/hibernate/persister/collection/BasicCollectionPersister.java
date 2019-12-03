@@ -19,17 +19,12 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
-import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
-import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.collection.SubselectCollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -364,18 +359,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		return frag.toFragmentString()
 				.substring( 2 ); //strip leading ','
-	}
-
-	/**
-	 * Create the <tt>CollectionLoader</tt>
-	 *
-	 * @see org.hibernate.loader.collection.BasicCollectionLoader
-	 */
-	@Override
-	protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
-			throws MappingException {
-		return BatchingCollectionInitializerBuilder.getBuilder( getFactory() )
-				.createBatchingCollectionInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
 
 	@Override

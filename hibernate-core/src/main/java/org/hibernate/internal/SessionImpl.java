@@ -48,7 +48,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReplicationMode;
@@ -73,7 +72,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -127,7 +125,6 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.MultiLoadOptions;
@@ -138,7 +135,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -1582,61 +1578,6 @@ public final class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultClasses );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		checkOpenOrWaitingForAutoClose();
-////		checkTransactionSynchStatus();
-//
-//		if ( log.isTraceEnabled() ) {
-//			log.tracev( "Scroll SQL query: {0}", customQuery.getSQL() );
-//		}
-//
-//		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
-//
-//		autoFlushIfRequired( loader.getQuerySpaces() );
-//
-//		dontFlushFromFind++; //stops flush being called multiple times if this method is recursively called
-//		try {
-//			return loader.scroll( queryParameters, this );
-//		}
-//		finally {
-//			delayedAfterCompletion();
-//			dontFlushFromFind--;
-//		}
-	}
-
-	// basically just an adapted copy of find(CriteriaImpl)
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		checkOpenOrWaitingForAutoClose();
-////		checkTransactionSynchStatus();
-//
-//		if ( log.isTraceEnabled() ) {
-//			log.tracev( "SQL query: {0}", customQuery.getSQL() );
-//		}
-//
-//		CustomLoader loader = getFactory().getQueryPlanCache().getNativeQueryInterpreter().createCustomLoader( customQuery, getFactory() );
-//
-//		autoFlushIfRequired( loader.getQuerySpaces() );
-//
-//		dontFlushFromFind++;
-//		boolean success = false;
-//		try {
-//			List results = loader.list( this, queryParameters );
-//			success = true;
-//			return results;
-//		}
-//		finally {
-//			dontFlushFromFind--;
-//			delayedAfterCompletion();
-//			afterOperation( success );
-//		}
 	}
 
 	@Override

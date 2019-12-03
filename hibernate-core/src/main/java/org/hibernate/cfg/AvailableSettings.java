@@ -1689,7 +1689,10 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
 	 *
 	 * {@code LEGACY} is the default value.
+	 *
+	 * @deprecated (since 6.0) : An appropriate batch-fetch style is selected automatically
 	 */
+	@Deprecated
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 
 	/**

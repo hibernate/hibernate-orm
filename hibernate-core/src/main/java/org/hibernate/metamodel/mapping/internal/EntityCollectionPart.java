@@ -10,6 +10,15 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -17,12 +26,6 @@ import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartT
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -32,11 +35,13 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
+	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ModelPart fkTargetModelPart;
 
 	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
 			Nature nature,
+			Value bootModelValue,
 			EntityMappingType entityMappingType,
 			String fkTargetModelPartName,
 			MappingModelCreationProcess creationProcess) {
@@ -49,6 +54,8 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 							? entityMappingType.getIdentifierMapping()
 							: entityMappingType.findSubPart( fkTargetModelPartName, entityMappingType );
 					assert fkTargetModelPart != null;
+
+
 					return true;
 				}
 		);
@@ -103,15 +110,20 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+		assert fetchParent.getReferencedMappingContainer() instanceof PluralAttributeMapping;
+
+		// find or create the TableGroup associated with this `fetchablePath`
+		final TableGroup tableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				fetchablePath,
 				np -> {
+					// we need to create one.  first, find the collection's TableGroup
 					final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
 							.getFromClauseAccess()
 							.getTableGroup( fetchablePath.getParent() );
 					return new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, this );
 				}
 		);
+
 		return new EntityFetchJoinedImpl( fetchParent, this, lockMode, selected, fetchablePath, creationState );
 	}
 

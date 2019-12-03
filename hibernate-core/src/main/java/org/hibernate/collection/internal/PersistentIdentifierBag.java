@@ -7,8 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,7 +18,6 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -352,25 +349,6 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 		final Object old = snap.get( id );
 		return old != null && elemType.isDirty( old, entry, getSession() );
-	}
-
-	@Override
-	public Object readFrom(
-			ResultSet rs,
-			CollectionPersister persister,
-			CollectionAliases descriptor,
-			Object owner) throws HibernateException, SQLException {
-		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		final Object old = identifiers.put(
-			values.size(),
-			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
-		);
-
-		if ( old == null ) {
-			//maintain correct duplication if loaded in a cartesian product
-			values.add( element );
-		}
-		return element;
 	}
 
 	@Override

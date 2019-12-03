@@ -288,7 +288,10 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
+	 *
+	 * @deprecated (since 6.0) : an appropriate style is selected
 	 */
+	@Deprecated
 	SessionFactoryBuilder applyBatchFetchStyle(BatchFetchStyle style);
 
 	/**

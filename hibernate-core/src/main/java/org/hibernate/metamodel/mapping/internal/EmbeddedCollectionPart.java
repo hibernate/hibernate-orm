@@ -6,22 +6,18 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
@@ -33,10 +29,18 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -136,7 +140,27 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
+		final List<Expression> expressions = new ArrayList<>();
+		getEmbeddableTypeDescriptor().visitColumns(
+				(tableExpression, columnExpression, jdbcMapping) ->{
+					assert containingTableExpression.equals( tableExpression );
+					assert columnExpressions.contains( columnExpression );
+					expressions.add(
+							sqlExpressionResolver.resolveSqlExpression(
+									SqlExpressionResolver.createColumnReferenceKey( tableExpression, columnExpression ),
+									sqlAstProcessingState -> new ColumnReference(
+											tableGroup.resolveTableReference( tableExpression ),
+											columnExpression,
+											jdbcMapping,
+											sqlAstCreationState.getCreationContext().getSessionFactory()
+									)
+							)
+					);
+				}
+		);
+		return new SqlTuple( expressions, this );
 	}
 
 	@Override
@@ -149,7 +173,16 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		assert lhs.getModelPart() instanceof PluralAttributeMapping;
+
+		final TableGroup tableGroup = new CompositeTableGroup( navigablePath, this, lhs );
+
+		return new TableGroupJoin(
+				navigablePath,
+				joinType,
+				tableGroup,
+				null
+		);
 	}
 
 	@Override
@@ -159,7 +192,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		// nothing to do
 	}
 
 	@Override

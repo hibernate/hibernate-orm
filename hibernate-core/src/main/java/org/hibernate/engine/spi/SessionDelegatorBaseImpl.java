@@ -52,7 +52,6 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.QueryImplementor;
@@ -190,16 +189,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
-	}
-
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.listCustomQuery( customQuery, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scrollCustomQuery( customQuery, queryParameters );
 	}
 
 	@Override

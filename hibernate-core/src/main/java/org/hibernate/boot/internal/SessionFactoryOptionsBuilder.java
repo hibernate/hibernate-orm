@@ -1291,6 +1291,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.tempTableDdlTransactionHandling = handling;
 	}
 
+	/**
+	 * @deprecated (since 6.0) : No longer used internally
+	 */
+	@Deprecated
 	public void applyBatchFetchStyle(BatchFetchStyle style) {
 		this.batchFetchStyle = style;
 	}

@@ -9,24 +9,12 @@ package org.hibernate.result.internal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.loader.custom.Return;
-import org.hibernate.loader.custom.RootReturn;
-import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
-import org.hibernate.param.ParameterBinder;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
@@ -42,16 +30,12 @@ public class OutputsImpl implements Outputs {
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
-	private final CustomLoaderExtension loader;
 
 	private CurrentReturnState currentReturnState;
 
 	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
 		this.context = context;
 		this.jdbcStatement = jdbcStatement;
-
-		// For now...  but see the LoadPlan work; eventually this should just be a ResultSetProcessor.
-		this.loader = buildSpecializedCustomLoader( context );
 
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
@@ -138,12 +122,13 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected List extractResults(ResultSet resultSet) {
-		try {
-			return loader.processResultSet( resultSet );
-		}
-		catch (SQLException e) {
-			throw convert( e, "Error extracting results from CallableStatement" );
-		}
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		try {
+//			return loader.processResultSet( resultSet );
+//		}
+//		catch (SQLException e) {
+//			throw convert( e, "Error extracting results from CallableStatement" );
+//		}
 	}
 
 	/**
@@ -226,111 +211,4 @@ public class OutputsImpl implements Outputs {
 	}
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Hooks into Hibernate's Loader hierarchy for ResultSet -> Object mapping
-
-	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
-		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of
-		// work that is really unnecessary here.
-//		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
-//				context.getQueryReturns(),
-//				context.getSession().getFactory()
-//		);
-//		processor.process();
-//		final List<org.hibernate.loader.custom.Return> customReturns = processor.generateCallableReturns();
-//
-//		CustomQuery customQuery = new CustomQuery() {
-//			@Override
-//			public String getSQL() {
-//				return context.getSql();
-//			}
-//
-//			@Override
-//			public Set<String> getQuerySpaces() {
-//				return context.getSynchronizedQuerySpaces();
-//			}
-//
-//			@Override
-//			public List<ParameterBinder> getParameterValueBinders() {
-//				// no parameters in terms of embedded in the SQL string
-//				return Collections.emptyList();
-//			}
-//
-//			@Override
-//			public List<org.hibernate.loader.custom.Return> getCustomQueryReturns() {
-//				return customReturns;
-//			}
-//		};
-
-//		return new CustomLoaderExtension(
-//				customQuery,
-//				context.getQueryParameters(),
-//				context.getSession()
-//		);
-		throw new NotYetImplementedFor6Exception( );
-
-	}
-
-	private static class CustomLoaderExtension extends CustomLoader {
-		private static final EntityAliases[] NO_ALIASES = new EntityAliases[0];
-
-		private final QueryParameters queryParameters;
-		private final SharedSessionContractImplementor session;
-		private final EntityAliases[] entityAliases;
-
-		private boolean needsDiscovery = true;
-
-		public CustomLoaderExtension(
-				CustomQuery customQuery,
-				QueryParameters queryParameters,
-				SharedSessionContractImplementor session) {
-			super( customQuery, session.getFactory() );
-			this.queryParameters = queryParameters;
-			this.session = session;
-
-			entityAliases = interpretEntityAliases( customQuery.getCustomQueryReturns() );
-		}
-
-		private EntityAliases[] interpretEntityAliases(List<Return> customQueryReturns) {
-			final List<EntityAliases> entityAliases = new ArrayList<>();
-			for ( Return queryReturn : customQueryReturns ) {
-				if ( !RootReturn.class.isInstance( queryReturn ) ) {
-					continue;
-				}
-
-				entityAliases.add( ( (RootReturn) queryReturn ).getEntityAliases() );
-			}
-
-			if ( entityAliases.isEmpty() ) {
-				return NO_ALIASES;
-			}
-
-			return entityAliases.toArray( new EntityAliases[ entityAliases.size() ] );
-		}
-
-		@Override
-		protected EntityAliases[] getEntityAliases() {
-			return entityAliases;
-		}
-
-
-		// todo : this would be a great way to add locking to stored procedure support (at least where returning entities).
-
-		public List processResultSet(ResultSet resultSet) throws SQLException {
-			if ( needsDiscovery ) {
-				super.autoDiscoverTypes( resultSet );
-				// todo : EntityAliases discovery
-				needsDiscovery = false;
-			}
-			return super.processResultSet(
-					resultSet,
-					queryParameters,
-					session,
-					true,
-					null,
-					Integer.MAX_VALUE,
-					Collections.emptyList()
-			);
-		}
-	}
 }

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -58,10 +59,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
-import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.ast.internal.BatchKeyCollectionLoader;
-import org.hibernate.loader.ast.internal.SingleKeyCollectionLoader;
-import org.hibernate.loader.ast.internal.SubSelectFetchCollectionLoader;
+import org.hibernate.loader.ast.internal.CollectionLoaderBatchKey;
+import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
+import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
+import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -74,14 +75,20 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -110,6 +117,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -229,7 +237,6 @@ public abstract class AbstractCollectionPersister
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
 	private final CollectionType collectionType;
-	private CollectionInitializer initializer;
 
 	private final CacheEntryStructure cacheEntryStructure;
 
@@ -257,6 +264,8 @@ public abstract class AbstractCollectionPersister
 	private Map collectionPropertyColumnAliases = new HashMap();
 
 	private final Comparator comparator;
+
+	private CollectionLoader collectionLoader;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -761,9 +770,9 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void postInstantiate() throws MappingException {
-		initializer = queryLoaderName == null ?
-				createCollectionInitializer( LoadQueryInfluencers.NONE ) :
-				new NamedQueryCollectionInitializer( queryLoaderName, this );
+		collectionLoader = queryLoaderName == null
+				? createCollectionLoader( LoadQueryInfluencers.NONE )
+				: new CollectionLoaderNamedQuery( queryLoaderName, this, attributeMapping );
 	}
 
 	protected void logStaticSQL() {
@@ -846,7 +855,7 @@ public abstract class AbstractCollectionPersister
 
 	protected CollectionLoader createSubSelectLoader(SubselectFetch subselect, SharedSessionContractImplementor session) {
 		//noinspection RedundantCast
-		return new SubSelectFetchCollectionLoader(
+		return new CollectionLoaderSubSelectFetch(
 				attributeMapping,
 				(DomainResult) null,
 				subselect,
@@ -857,15 +866,12 @@ public abstract class AbstractCollectionPersister
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		final int batchSize = getBatchSize();
 		if ( batchSize > 1 ) {
-			return new BatchKeyCollectionLoader( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
+			return new CollectionLoaderBatchKey( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
 		}
 
-		return new SingleKeyCollectionLoader( attributeMapping, loadQueryInfluencers, getFactory() );
+
+		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
-
-
-	protected abstract CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
-			throws MappingException;
 
 	@Override
 	public NavigableRole getNavigableRole() {
@@ -2229,16 +2235,6 @@ public abstract class AbstractCollectionPersister
 		return dialect;
 	}
 
-	/**
-	 * Intended for internal use only. In fact really only currently used from
-	 * test suite for assertion purposes.
-	 *
-	 * @return The default collection initializer for this persister/collection.
-	 */
-	public CollectionInitializer getInitializer() {
-		return initializer;
-	}
-
 	@Override
 	public int getBatchSize() {
 		return batchSize;
@@ -2479,29 +2475,28 @@ public abstract class AbstractCollectionPersister
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
+
 		if ( isOneToMany() ) {
 			// one-to-many does not define a "collection table"
 			assert elementPersister != null;
 		}
 		else {
-			// we do have a "collection table" - apply it first
-			collector.applySecondaryTableReferences(
+			collector.applyPrimaryReference(
 					new TableReference(
 							qualifiedTableName,
 							sqlAliasBase.generateNewAlias(),
 							false,
 							getFactory()
-					),
-					baseJoinType,
-					(lhs, rhs, joinType) -> {
-						// create the join-predicate between the owner table and the collection table
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
+					)
 			);
-
 		}
 
 		if ( elementPersister != null ) {
+			// apply the strategy for how to create the join predicate between the collection table
+			// and the entity's primary table.  Only used when there is a collection-table.
+			//
+			// when triggered the `lhs` will be the collection-table and the `rhs` will be the
+			// entity's primary table
 			collector.applyPrimaryJoinProducer(
 					(lhs, rhs) -> new TableReferenceJoin(
 							baseJoinType,
@@ -2522,6 +2517,133 @@ public abstract class AbstractCollectionPersister
 			);
 		}
 
+		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
+		if ( indexDescriptor != null && indexDescriptor.getPartTypeDescriptor() instanceof TableReferenceContributor ) {
+			final TableReferenceContributor contributor = (TableReferenceContributor) indexDescriptor.getPartTypeDescriptor();
+
+			collector.applyPrimaryJoinProducer(
+					(lhs, rhs) -> new TableReferenceJoin(
+							baseJoinType,
+							rhs,
+							generateIndexJoinPredicate(
+									lhs,
+									rhs,
+									JoinType.CROSS,
+									sqlExpressionResolver,
+									creationContext
+							)
+					)
+			);
+
+			contributor.applyTableReferences(
+					sqlAliasBase,
+					baseJoinType,
+					collector,
+					sqlExpressionResolver,
+					creationContext
+			);
+		}
+	}
+
+	private Predicate generateIndexJoinPredicate(
+			TableReference lhs,
+			TableReference rhs,
+			JoinType joinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
+		final MappingType indexMappingType = indexDescriptor.getPartTypeDescriptor();
+
+		assert indexMappingType instanceof EntityMappingType;
+		final EntityMappingType indexEntityType = (EntityMappingType) indexMappingType;
+
+		// `lhs` should be the collection-table or the primary element table (one-to-many)
+		// `rhs` is the primary table for the index
+		if ( isOneToMany() ) {
+			assert elementPersister != null;
+			assert lhs.getTableExpression().equals( ( (Joinable) elementPersister ).getTableName() );
+		}
+		else {
+			assert lhs.getTableExpression().equals( getTableName() );
+		}
+
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+		final EntityIdentifierMapping identifierMapping = indexEntityType.getIdentifierMapping();
+
+		final int jdbcTypeCount = identifierMapping.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+
+		assert jdbcTypeCount == indexColumnNames.length;
+
+		if ( jdbcTypeCount == 1 ) {
+			assert identifierMapping instanceof BasicEntityIdentifierMapping;
+			assert elementColumnNames.length == 1;
+
+			final BasicEntityIdentifierMapping basicKeyMapping = (BasicEntityIdentifierMapping) identifierMapping;
+
+			return new ComparisonPredicate(
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
+							sqlAstProcessingState -> new ColumnReference(
+									lhs,
+									elementColumnNames[0],
+									basicKeyMapping.getJdbcMapping(),
+									sessionFactory
+							)
+					),
+					ComparisonOperator.EQUAL,
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
+							sqlAstProcessingState -> new ColumnReference(
+									rhs,
+									basicKeyMapping.getMappedColumnExpression(),
+									basicKeyMapping.getJdbcMapping(),
+									sessionFactory
+							)
+					)
+			);
+		}
+		else {
+			final SqlTuple.Builder comparisonLhsBuilder = new SqlTuple.Builder( indexDescriptor, jdbcTypeCount );
+			final SqlTuple.Builder comparisonRhsBuilder = new SqlTuple.Builder( identifierMapping, jdbcTypeCount );
+
+			final AtomicInteger count = new AtomicInteger();
+
+			identifierMapping.visitColumns(
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
+						assert rhs.getTableExpression().equals( containingTableExpression );
+						int position = count.getAndIncrement();
+
+						comparisonRhsBuilder.addSubExpression(
+								sqlExpressionResolver.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
+										sqlAstProcessingState -> new ColumnReference(
+												rhs,
+												columnExpression,
+												jdbcMapping,
+												sessionFactory
+										)
+								)
+						);
+
+						comparisonLhsBuilder.addSubExpression(
+								sqlExpressionResolver.resolveSqlExpression(
+										SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
+										sqlAstProcessingState -> new ColumnReference(
+												lhs,
+												elementColumnNames[ position ],
+												jdbcMapping,
+												sessionFactory
+										)
+								)
+						);
+					}
+			);
+
+			final SqlTuple comparisionLhs = comparisonLhsBuilder.buildTuple();
+			final SqlTuple comparisonRhs = comparisonRhsBuilder.buildTuple();
+
+			return new ComparisonPredicate( comparisionLhs, ComparisonOperator.EQUAL, comparisonRhs );
+		}
 	}
 
 	private Predicate generateEntityElementJoinPredicate(

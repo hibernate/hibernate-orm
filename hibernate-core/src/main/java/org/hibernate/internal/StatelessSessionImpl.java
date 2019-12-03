@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.List;
 import javax.transaction.SystemException;
 
 import org.hibernate.CacheMode;
@@ -27,16 +26,12 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.loader.custom.CustomLoader;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -549,40 +544,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			getJdbcCoordinator().afterTransaction();
 		}
 	}
-
-	@Override
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException {
-		checkOpen();
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
-
-		boolean success = false;
-		List results;
-		try {
-			results = loader.list( this, queryParameters );
-			success = true;
-		}
-		finally {
-			afterOperation( success );
-		}
-		temporaryPersistenceContext.clear();
-		return results;
-	}
-
-	@Override
-	public ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException {
-		checkOpen();
-		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
-		return loader.scroll( queryParameters, this );
-	}
-
-//	@Override
-//	public ScrollableResultsImplementor scroll(String query, QueryParameters queryParameters) throws HibernateException {
-//		checkOpen();
-//		HQLQueryPlan plan = getQueryPlan( query, false );
-//		return plan.performScroll( queryParameters, this );
-//	}
 
 	@Override
 	public void afterScrollOperation() {

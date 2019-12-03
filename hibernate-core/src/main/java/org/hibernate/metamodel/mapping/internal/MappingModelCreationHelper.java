@@ -1103,6 +1103,7 @@ public class MappingModelCreationHelper {
 
 			return new EntityCollectionPart(
 					CollectionPart.Nature.ELEMENT,
+					bootValueMapping.getElement(),
 					associatedEntity,
 					indexEntityType.getRHSUniqueKeyPropertyName(),
 					creationProcess
@@ -1183,6 +1184,7 @@ public class MappingModelCreationHelper {
 
 			return new EntityCollectionPart(
 					CollectionPart.Nature.ELEMENT,
+					bootDescriptor.getElement(),
 					associatedEntity,
 					indexEntityType.getRHSUniqueKeyPropertyName(),
 					creationProcess

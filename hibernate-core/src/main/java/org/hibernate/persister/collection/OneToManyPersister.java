@@ -13,21 +13,16 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
-import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
-import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.collection.SubselectOneToManyLoader;
-import org.hibernate.loader.entity.CollectionElementLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -500,18 +495,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				.toString();
 	}
 
-	/**
-	 * Create the <tt>OneToManyLoader</tt>
-	 *
-	 * @see org.hibernate.loader.collection.OneToManyLoader
-	 */
-	@Override
-	protected CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
-			throws MappingException {
-		return BatchingCollectionInitializerBuilder.getBuilder( getFactory() )
-				.createBatchingOneToManyInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
-	}
-
 	@Override
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
 		return ( (Joinable) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses );
@@ -576,8 +559,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
-		return new CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
-				.loadElement( session, key, incrementIndexByBase( index ) );
+		throw new NotYetImplementedFor6Exception( getClass() );
+//		return new org.hibernate.loader.entity.CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
+//				.loadElement( session, key, incrementIndexByBase( index ) );
 	}
 
 	@Override

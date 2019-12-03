@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.loader;
 
@@ -15,7 +15,10 @@ import org.jboss.logging.Logger;
  * ({@link org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}) setting
  *
  * @author Steve Ebersole
+ *
+ * @deprecated (since 6.0) : see {@link BatchLoadSizingStrategy} instead
  */
+@Deprecated
 public enum BatchFetchStyle {
 	/**
 	 * The legacy algorithm where we keep a set of pre-built batch sizes based on

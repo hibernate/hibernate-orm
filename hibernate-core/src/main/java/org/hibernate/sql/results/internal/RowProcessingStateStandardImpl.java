@@ -10,8 +10,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
-import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;

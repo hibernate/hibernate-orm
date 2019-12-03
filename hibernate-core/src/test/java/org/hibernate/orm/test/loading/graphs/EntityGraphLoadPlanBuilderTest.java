@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
-import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -31,6 +30,7 @@ import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -149,8 +149,8 @@ public class EntityGraphLoadPlanBuilderTest {
 					final Fetch fetch = catResult.getFetches().get( 0 );
 					assertThat( fetch, instanceOf( EntityFetch.class ) );
 					final EntityFetch ownerFetch = (EntityFetch) fetch;
-					assertThat( ownerFetch.getFetchedType().getName(), is( "owner" ) );
-					assertThat( ownerFetch.getEntityPersister().getEntityName(), is( Person.class.getName() ) );
+					assertThat( ownerFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+					assertThat( ownerFetch.getEntityValuedModelPart().getEntityMappingType().getEntityName(), is( Person.class.getName() ) );
 				}
 		);
 	}
@@ -223,8 +223,8 @@ public class EntityGraphLoadPlanBuilderTest {
 					final Fetch fetch = ( (EntityResult) domainResult ).getFetches().get( 0 );
 					assertThat( fetch, instanceOf( EntityFetch.class ) );
 					final EntityFetch ownerFetch = (EntityFetch) fetch;
-					assertThat( ownerFetch.getFetchedType().getName(), is( "owner" ) );
-					assertThat( ownerFetch.getEntityPersister().getEntityName(), is( Person.class.getName() ) );
+					assertThat( ownerFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+					assertThat( ownerFetch.getEntityValuedModelPart().getEntityMappingType().getEntityName(), is( Person.class.getName() ) );
 
 					// todo (6.0) : check the sub-fetches for Address
 				}

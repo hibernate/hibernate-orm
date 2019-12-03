@@ -169,6 +169,10 @@ public final class Settings {
 		return sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
+	/**
+	 * @deprecated (since 6.0) : No longer used internally
+	 */
+	@Deprecated
 	public BatchFetchStyle getBatchFetchStyle() {
 		return sessionFactoryOptions.getBatchFetchStyle();
 	}

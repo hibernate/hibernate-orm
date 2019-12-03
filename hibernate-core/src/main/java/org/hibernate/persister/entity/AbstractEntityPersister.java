@@ -15,9 +15,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +27,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -76,7 +75,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -111,15 +109,12 @@ import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
+import org.hibernate.loader.ast.internal.SingleUniqueKeyEntityLoaderStandard;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
-import org.hibernate.loader.custom.sql.SQLQueryParser;
-import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
-import org.hibernate.loader.entity.CascadeEntityLoader;
-import org.hibernate.loader.entity.EntityLoader;
-import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -143,6 +138,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
@@ -329,9 +325,6 @@ public abstract class AbstractEntityPersister
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
-	private UniqueEntityLoader noneLockLoader;
-	private UniqueEntityLoader readLockLoader;
-	private final Map<Object, UniqueEntityLoader> loaders = new ConcurrentHashMap<>();
 
 	// SQL strings
 	private String sqlVersionSelectString;
@@ -2651,70 +2644,33 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
+
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getAppropriateUniqueKeyLoader( propertyName, session ).loadByUniqueKey( session, uniqueKey );
-	}
-
-	private EntityLoader getAppropriateUniqueKeyLoader(String propertyName, SharedSessionContractImplementor session) {
-		final boolean useStaticLoader = !session.getLoadQueryInfluencers().hasEnabledFilters()
-				&& !session.getLoadQueryInfluencers().hasEnabledFetchProfiles()
-				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
-
-		if ( useStaticLoader ) {
-			return (EntityLoader) uniqueKeyLoaders.get( propertyName );
+		final SingularAttributeMapping attribute = (SingularAttributeMapping) findSubPart( propertyName );
+		final SingleUniqueKeyEntityLoader<?> existing;
+		if ( uniqueKeyLoadersNew == null ) {
+			uniqueKeyLoadersNew = new IdentityHashMap<>();
+			existing = null;
 		}
 		else {
-			return createUniqueKeyLoader(
-					propertyMapping.toType( propertyName ),
-					propertyMapping.toColumns( propertyName ),
-					session.getLoadQueryInfluencers()
-			);
+			existing = uniqueKeyLoadersNew.get( attribute );
 		}
+
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final SingleUniqueKeyEntityLoader loader = new SingleUniqueKeyEntityLoaderStandard( this, attribute );
+		uniqueKeyLoadersNew.put( attribute, loader );
+		return loader;
 	}
 
 	public int getPropertyIndex(String propertyName) {
 		return entityMetamodel.getPropertyIndex( propertyName );
-	}
-
-	protected void createUniqueKeyLoaders() throws MappingException {
-		Type[] propertyTypes = getPropertyTypes();
-		String[] propertyNames = getPropertyNames();
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( propertyUniqueness[i] ) {
-				//don't need filters for the static loaders
-				uniqueKeyLoaders.put(
-						propertyNames[i],
-						createUniqueKeyLoader(
-								propertyTypes[i],
-								getPropertyColumnNames( i ),
-								LoadQueryInfluencers.NONE
-						)
-				);
-				//TODO: create uk loaders for component properties
-			}
-		}
-	}
-
-	private EntityLoader createUniqueKeyLoader(
-			Type uniqueKeyType,
-			String[] columns,
-			LoadQueryInfluencers loadQueryInfluencers) {
-		if ( uniqueKeyType.isEntityType() ) {
-			String className = ( (EntityType) uniqueKeyType ).getAssociatedEntityName();
-			uniqueKeyType = getFactory().getMetamodel().entityPersister( className ).getIdentifierType();
-		}
-		return new EntityLoader(
-				this,
-				columns,
-				uniqueKeyType,
-				1,
-				LockMode.NONE,
-				getFactory(),
-				loadQueryInfluencers
-		);
 	}
 
 	protected String getSQLWhereString(String alias) {
@@ -2780,36 +2736,6 @@ public abstract class AbstractEntityPersister
 		if ( entityMetamodel.isPolymorphic() ) {
 			initDiscriminatorPropertyPath( mapping );
 		}
-	}
-
-	protected UniqueEntityLoader createEntityLoader(
-			LockMode lockMode,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		//TODO: disable batch loading if lockMode > READ?
-		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
-				.buildLoader( this, batchSize, lockMode, getFactory(), loadQueryInfluencers );
-	}
-
-	protected UniqueEntityLoader createEntityLoader(
-			LockOptions lockOptions,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		//TODO: disable batch loading if lockMode > READ?
-		return BatchingEntityLoaderBuilder.getBuilder( getFactory() )
-				.buildLoader( this, batchSize, lockOptions, getFactory(), loadQueryInfluencers );
-	}
-
-	/**
-	 * Used internally to create static loaders.  These are the default set of loaders used to handle get()/load()
-	 * processing.  lock() handling is done by the LockingStrategy instances (see {@link #getLocker})
-	 *
-	 * @param lockMode The lock mode to apply to the thing being loaded.
-	 *
-	 * @return
-	 *
-	 * @throws MappingException
-	 */
-	protected UniqueEntityLoader createEntityLoader(LockMode lockMode) throws MappingException {
-		return createEntityLoader( lockMode, LoadQueryInfluencers.NONE );
 	}
 
 	protected boolean check(
@@ -4515,7 +4441,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String substituteBrackets(String sql) {
-		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	public final void postInstantiate() throws MappingException {
@@ -4524,10 +4450,6 @@ public abstract class AbstractEntityPersister
 		prepareLoader( singleIdEntityLoader );
 		prepareLoader( multiIdEntityLoader );
 		prepareLoader( naturalIdLoader );
-
-		// todo (6.0) : these should be removed in favor of `singleIdEntityLoader`, ...
-		createLoaders();
-		createUniqueKeyLoaders();
 
 		doPostInstantiate();
 	}
@@ -4539,43 +4461,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected void doPostInstantiate() {
-	}
-
-	/**
-	 * "Needed" by subclasses to override the createLoader strategy
-	 *
-	 * @deprecated Because there are better patterns for this
-	 */
-	@Deprecated
-	protected Map getLoaders() {
-		return loaders;
-	}
-
-	//Relational based Persisters should be content with this implementation
-	protected void createLoaders() {
-		// create the entity loaders for the most common lock modes.
-		noneLockLoader = createEntityLoader( LockMode.NONE );
-		readLockLoader = createEntityLoader( LockMode.READ );
-
-		// see if the user enabled delaying creation of the remaining loaders
-		final boolean delayCreationsEnabled = factory.getSessionFactoryOptions().isDelayBatchFetchLoaderCreationsEnabled();
-		if ( ! delayCreationsEnabled ) {
-			// the setting is disabled -> do the creations
-			for ( LockMode lockMode : EnumSet.complementOf( EnumSet.of( LockMode.NONE, LockMode.READ, LockMode.WRITE ) ) ) {
-				loaders.put( lockMode, createEntityLoader( lockMode ) );
-			}
-		}
-
-
-		// And finally, create the internal merge and refresh load plans
-		loaders.put(
-				"merge",
-				new CascadeEntityLoader( this, CascadingActions.MERGE, getFactory() )
-		);
-		loaders.put(
-				"refresh",
-				new CascadeEntityLoader( this, CascadingActions.REFRESH, getFactory() )
-		);
 	}
 
 	/**
@@ -6629,17 +6514,5 @@ public abstract class AbstractEntityPersister
 //				};
 //			}
 //		};
-	}
-
-	private static class SubstituteBracketSQLQueryParser extends SQLQueryParser {
-
-		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory) {
-			super( queryString, null, factory );
-		}
-
-		@Override
-		public String process() {
-			return substituteBrackets( getOriginalQueryString() );
-		}
 	}
 }

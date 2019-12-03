@@ -168,6 +168,10 @@ public interface SessionFactoryOptions {
 
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
+	/**
+	 * @deprecated (since 6.0) : No longer used internally
+	 */
+	@Deprecated
 	BatchFetchStyle getBatchFetchStyle();
 
 	boolean isDelayBatchFetchLoaderCreationsEnabled();

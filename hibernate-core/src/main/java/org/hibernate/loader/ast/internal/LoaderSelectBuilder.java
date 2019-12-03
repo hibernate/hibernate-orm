@@ -107,7 +107,7 @@ public class LoaderSelectBuilder {
 	/**
 	 * Create a SQL AST select-statement used for subselect-based CollectionLoader
 	 *
-	 * @see SubSelectFetchCollectionLoader
+	 * @see CollectionLoaderSubSelectFetch
 	 *
 	 * @param attributeMapping The plural-attribute being loaded
 	 * @param subselect The subselect details to apply

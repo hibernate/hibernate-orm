@@ -111,8 +111,9 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// get the collection TableGroup
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath );
+		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent() );
 
 		final SqlAstCreationState astCreationState = creationState.getSqlAstCreationState();
 		final SqlAstCreationContext astCreationContext = astCreationState.getCreationContext();

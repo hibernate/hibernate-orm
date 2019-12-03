@@ -27,7 +27,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -302,18 +301,6 @@ public interface SharedSessionContractImplementor
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
 	Object instantiate(String entityName, Serializable id) throws HibernateException;
-
-	/**
-	 * Execute an SQL Query
-	 */
-	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute an SQL Query
-	 */
-	ScrollableResultsImplementor scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-			throws HibernateException;
 
 	/**
 	 * Execute a native SQL query, and return the results as a fully built list.

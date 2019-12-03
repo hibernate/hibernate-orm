@@ -18,7 +18,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.loader.custom.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.Transformers;

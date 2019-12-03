@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.SingleIdLoadPlan;
-import org.hibernate.loader.ast.internal.SingleKeyCollectionLoader;
+import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -111,7 +111,7 @@ public class LoadPlanBuilderTest {
 		final EntityPersister posterEntityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( Poster.class );
 		final PluralAttributeMapping messages = (PluralAttributeMapping) posterEntityDescriptor.findAttributeMapping( "messages" );
 
-		final SingleKeyCollectionLoader loader = new SingleKeyCollectionLoader(
+		final CollectionLoaderSingleKey loader = new CollectionLoaderSingleKey(
 				messages,
 				LoadQueryInfluencers.NONE,
 				sessionFactory

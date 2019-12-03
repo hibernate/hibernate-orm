@@ -7,14 +7,11 @@
 package org.hibernate.collection.spi;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -158,21 +155,10 @@ public interface PersistentCollection {
 	Iterator entries(CollectionPersister persister);
 
 	/**
-	 * Read a row from the JDBC result set
-	 *
-	 * @param rs The JDBC ResultSet
-	 * @param role The collection role
-	 * @param descriptor The aliases used for the columns making up the collection
-	 * @param owner The collection owner
-	 *
-	 * @return The read object
+	 * Read a row from the JDBC values
 	 *
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
-	 * @throws SQLException Indicates a problem accessing the ResultSet
 	 */
-	Object readFrom(ResultSet rs, CollectionPersister role, CollectionAliases descriptor, Object owner)
-			throws HibernateException, SQLException;
-
 	Object readFrom(
 			RowProcessingState rowProcessingState,
 			DomainResultAssembler elementAssembler,

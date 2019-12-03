@@ -5,6 +5,12 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import java.sql.DatabaseMetaData;
+import java.sql.Types;
 
 import java.sql.DatabaseMetaData;
 
@@ -13,6 +19,13 @@ import java.sql.DatabaseMetaData;
  * {@link PostgreSQL95Dialect} because CockroachDB is aiming for Postgres compatibility.
  */
 public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
+
+    public CockroachDB1920Dialect() {
+        super();
+        registerColumnType( Types.INTEGER, "int8" );
+        registerColumnType( Types.FLOAT, "float8" );
+        registerColumnType( Types.BLOB, "bytea" );
+    }
 
     @Override
     public IdentityColumnSupport getIdentityColumnSupport() {
@@ -27,7 +40,36 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean supportsExpectedLobUsagePattern() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean useInputStreamToInsertBlob() {
+        return true;
+    }
+
+    @Override
+    public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+        SqlTypeDescriptor descriptor;
+        switch ( sqlCode ) {
+            case Types.BLOB: {
+                // Force BLOB binding.  Otherwise, byte[] fields annotated
+                // with @Lob will attempt to use
+                // BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
+                // dialect uses oid for Blobs, byte arrays cannot be used.
+                descriptor = BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+                break;
+            }
+            case Types.CLOB: {
+                descriptor = ClobTypeDescriptor.STREAM_BINDING;
+                break;
+            }
+            default: {
+                descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
+                break;
+            }
+        }
+        return descriptor;
     }
 
     @Override

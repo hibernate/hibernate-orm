@@ -1,5 +1,6 @@
 package org.hibernate.tool.internal.reveng.binder;
 
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 public abstract class AbstractBinder {
@@ -12,6 +13,10 @@ public abstract class AbstractBinder {
 	
 	MetadataBuildingContext getMetadataBuildingContext() {
 		return binderContext.metadataBuildingContext;
+	}
+	
+	InFlightMetadataCollector getMetadataCollector() {
+		return binderContext.metadataCollector;
 	}
 	
 }

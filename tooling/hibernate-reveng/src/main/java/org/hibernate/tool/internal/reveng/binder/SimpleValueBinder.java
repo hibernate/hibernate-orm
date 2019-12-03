@@ -23,7 +23,7 @@ public class SimpleValueBinder extends AbstractBinder {
 		SimpleValue value = new SimpleValue(getMetadataBuildingContext(), table);
 		value.addColumn(column);
 		value.setTypeName(TypeUtils.determinePreferredType(
-				binderContext.metadataCollector, 
+				getMetadataCollector(), 
 				binderContext.revengStrategy,
 				table, 
 				column, 

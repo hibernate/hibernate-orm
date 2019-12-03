@@ -8,6 +8,7 @@ import java.util.Set;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -27,18 +28,8 @@ import org.hibernate.tool.internal.reveng.JdbcCollectionSecondPass;
 
 public class OneToManyBinder {
 	
-	public static OneToManyBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		return new OneToManyBinder(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema);
+	public static OneToManyBinder create(BinderContext binderContext) {
+		return new OneToManyBinder(binderContext);
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;
@@ -47,17 +38,12 @@ public class OneToManyBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	private OneToManyBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.metadataCollector = metadataCollector;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
+	private OneToManyBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.metadataCollector = binderContext.metadataCollector;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 
 	public Property bind(

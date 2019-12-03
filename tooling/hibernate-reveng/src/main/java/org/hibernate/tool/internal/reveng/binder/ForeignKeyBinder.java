@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
@@ -25,16 +24,16 @@ public class ForeignKeyBinder {
 	}
 	
 	private MetadataBuildingContext metadataBuildingContext;
-	private InFlightMetadataCollector metadataCollector;
 	private ReverseEngineeringStrategy revengStrategy;
 	private String defaultCatalog;
 	private String defaultSchema;
 	private final OneToOneBinder oneToOneBinder;
+	private final OneToManyBinder oneToManyBinder;
 	
 	private ForeignKeyBinder(BinderContext binderContext) {
 		this.oneToOneBinder = OneToOneBinder.create(binderContext);
+		this.oneToManyBinder = OneToManyBinder.create(binderContext);
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
@@ -63,13 +62,7 @@ public class ForeignKeyBinder {
         					true);
 			persistentClass.addProperty(property);
 		} else {
-			Property property = OneToManyBinder
-					.create(
-							metadataBuildingContext, 
-							metadataCollector, 
-							revengStrategy, 
-							defaultCatalog, 
-							defaultSchema)
+			Property property = oneToManyBinder
 					.bind(
 							persistentClass, 
 							foreignKey, 

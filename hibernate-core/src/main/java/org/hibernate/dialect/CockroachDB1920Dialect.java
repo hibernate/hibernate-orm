@@ -72,7 +72,6 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     @Override
     public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) { return false; }
 
-
     @Override
     public boolean supportsLockTimeouts() { return false; }
 
@@ -136,4 +135,7 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
             };
         }
     };
+
+    @Override
+    public boolean canCreateSchema() { return false; }
 }

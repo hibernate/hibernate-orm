@@ -6,24 +6,18 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
-public class BasicPropertyBinder {
+public class BasicPropertyBinder extends AbstractBinder {
 	
 	public static BasicPropertyBinder create(BinderContext binderContext) {
 		return new BasicPropertyBinder(binderContext);
 	}
 	
-	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
 	private final SimpleValueBinder simpleValueBinder;
 	
 	private BasicPropertyBinder(BinderContext binderContext) {
-		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
+		super(binderContext);
+		simpleValueBinder = SimpleValueBinder.create(binderContext);
 	}
 	
 
@@ -39,8 +33,8 @@ public class BasicPropertyBinder {
 				false);
 		return PropertyBinder.bind(
 				table, 
-				defaultCatalog,
-				defaultSchema,
+				binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG),
+				binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
 				propertyName, 
 				value, 
 				true, 
@@ -48,7 +42,7 @@ public class BasicPropertyBinder {
 				false, 
 				null, 
 				null,
-				revengStrategy);
+				binderContext.revengStrategy);
 	}
 
 }

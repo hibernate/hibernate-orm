@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
@@ -40,22 +39,22 @@ public class PrimaryKeyBinder {
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;
-	private final InFlightMetadataCollector metadataCollector;
 	private final ReverseEngineeringStrategy revengStrategy;
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	private final boolean preferBasicCompositeIds;
 	private final BasicPropertyBinder basicPropertyBinder;
+	private final SimpleValueBinder simpleValueBinder;
 
 	
 	private PrimaryKeyBinder(BinderContext binderContext) {
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
+		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
 	}
 
 	public PrimaryKeyInfo bind(
@@ -117,10 +116,7 @@ public class PrimaryKeyBinder {
 			Column pkc = (Column) keyColumns.get(0);
 			BinderUtils.checkColumnForMultipleBinding(pkc);
 
-			id = SimpleValueBinder.bind(
-					metadataBuildingContext, 
-					metadataCollector, 
-					revengStrategy, 
+			id = simpleValueBinder.bind(
 					table, 
 					pkc, 
 					mapping, 

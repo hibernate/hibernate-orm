@@ -1,7 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
@@ -16,18 +14,16 @@ public class BasicPropertyBinder {
 		return new BasicPropertyBinder(binderContext);
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;	
-	private final InFlightMetadataCollector metadataCollector;	
 	private final ReverseEngineeringStrategy revengStrategy;
 	private final String defaultCatalog;
 	private final String defaultSchema;
+	private final SimpleValueBinder simpleValueBinder;
 	
 	private BasicPropertyBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
 		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
 	}
 	
 
@@ -36,10 +32,7 @@ public class BasicPropertyBinder {
 			Table table, 
 			Column column, 
 			Mapping mapping) {
-		SimpleValue value = SimpleValueBinder.bind(
-				metadataBuildingContext, 
-				metadataCollector, 
-				revengStrategy, 
+		SimpleValue value = simpleValueBinder.bind(
 				table, 
 				column, 
 				mapping,

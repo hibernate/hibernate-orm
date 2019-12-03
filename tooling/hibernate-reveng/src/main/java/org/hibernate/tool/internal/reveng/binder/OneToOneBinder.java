@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.OneToOne;
@@ -17,16 +18,8 @@ import org.hibernate.type.ForeignKeyDirection;
 
 public class OneToOneBinder {
 	
-	public static OneToOneBinder create(
-			MetadataBuildingContext metadataBuildingContext,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		return new OneToOneBinder(
-				metadataBuildingContext, 
-				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema); 
+	public static OneToOneBinder create(BinderContext binderContext) {
+		return new OneToOneBinder(binderContext); 
 	}
 	
 	private final MetadataBuildingContext metadataBuildingContext;
@@ -34,15 +27,11 @@ public class OneToOneBinder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	private OneToOneBinder(
-			MetadataBuildingContext metadataBuildingContext,
-			ReverseEngineeringStrategy revengStrategy,
-			String defaultCatalog,
-			String defaultSchema) {
-		this.metadataBuildingContext = metadataBuildingContext;
-		this.revengStrategy = revengStrategy;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
+	private OneToOneBinder(BinderContext binderContext) {
+		this.metadataBuildingContext = binderContext.metadataBuildingContext;
+		this.revengStrategy = binderContext.revengStrategy;
+		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 	}
 
     public Property bind(

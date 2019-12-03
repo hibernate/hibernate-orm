@@ -29,8 +29,10 @@ public class ForeignKeyBinder {
 	private ReverseEngineeringStrategy revengStrategy;
 	private String defaultCatalog;
 	private String defaultSchema;
+	private final OneToOneBinder oneToOneBinder;
 	
 	private ForeignKeyBinder(BinderContext binderContext) {
+		this.oneToOneBinder = OneToOneBinder.create(binderContext);
 		this.metadataBuildingContext = binderContext.metadataBuildingContext;
 		this.metadataCollector = binderContext.metadataCollector;
 		this.revengStrategy = binderContext.revengStrategy;
@@ -51,12 +53,7 @@ public class ForeignKeyBinder {
 				foreignKey.getReferencedColumns())) {
 			LOGGER.log(Level.INFO, "Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
 		} else if (revengStrategy.isOneToOne(foreignKey)){
-        	Property property = OneToOneBinder
-        			.create(
-        					metadataBuildingContext, 
-        					revengStrategy, 
-        					defaultCatalog, 
-        					defaultSchema)
+        	Property property = oneToOneBinder
         			.bind(
         					persistentClass, 
         					foreignKey.getTable(), 
@@ -97,12 +94,7 @@ public class ForeignKeyBinder {
         	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
         	LOGGER.log(Level.INFO, "Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
         } else if (revengStrategy.isOneToOne(foreignKey)){
-        	Property property = OneToOneBinder
-        			.create(
-        					metadataBuildingContext, 
-        					revengStrategy, 
-        					defaultCatalog, 
-        					defaultSchema)
+        	Property property = oneToOneBinder
         			.bind(
         					rc, 
         					foreignKey.getReferencedTable(), 

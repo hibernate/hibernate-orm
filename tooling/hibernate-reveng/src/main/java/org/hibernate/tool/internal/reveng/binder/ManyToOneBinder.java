@@ -4,25 +4,23 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 
-public class ManyToOneBinder {
+public class ManyToOneBinder extends AbstractBinder {
 	
 	public static ManyToOneBinder create(BinderContext binderContext) {
 		return new ManyToOneBinder(binderContext);
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;
 	private final EntityPropertyBinder entityPropertyBinder;
 	
 	private ManyToOneBinder(BinderContext binderContext) {
+		super(binderContext);
 		this.entityPropertyBinder = EntityPropertyBinder.create(binderContext);
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
 	}
 
     public Property bind(
@@ -32,7 +30,7 @@ public class ManyToOneBinder {
     		ForeignKey fk, 
     		Set<Column> processedColumns) {
     	
-        ManyToOne value = new ManyToOne(metadataBuildingContext, table);
+        ManyToOne value = new ManyToOne(getMetadataBuildingContext(), table);
         value.setReferencedEntityName( fk.getReferencedEntityName() );
 		Iterator<Column> columns = fk.getColumnIterator();
         while ( columns.hasNext() ) {

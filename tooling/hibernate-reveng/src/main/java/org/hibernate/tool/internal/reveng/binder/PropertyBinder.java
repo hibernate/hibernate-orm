@@ -5,18 +5,16 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
-public class PropertyBinder {
+public class PropertyBinder extends AbstractBinder {
 
 	private static final Logger LOGGER = Logger.getLogger(PropertyBinder.class.getName());
 	
@@ -24,14 +22,8 @@ public class PropertyBinder {
 		return new PropertyBinder(binderContext);
 	}
 
-	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
-	
 	private PropertyBinder(BinderContext binderContext) {
-		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		super(binderContext);
 	}
 
 	public Property bind(
@@ -73,12 +65,12 @@ public class PropertyBinder {
 			String column) {
 		Map<String,MetaAttribute> result = null;
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrategy.columnToMetaAttributes(tableIdentifier, column);
+		result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
+			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
+			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
 			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrategy.columnToMetaAttributes(tableIdentifier, column);
+			result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		}
 		return result;
 	}

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -21,25 +19,19 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.JdbcCollectionSecondPass;
 
-public class OneToManyBinder {
+public class OneToManyBinder extends AbstractBinder {
 	
 	public static OneToManyBinder create(BinderContext binderContext) {
 		return new OneToManyBinder(binderContext);
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final InFlightMetadataCollector metadataCollector;
-	private final ReverseEngineeringStrategy revengStrategy;
 	private final CollectionPropertyBinder collectionPropertyBinder;
 	
 	private OneToManyBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
-		this.revengStrategy = binderContext.revengStrategy;
+		super(binderContext);
 		this.collectionPropertyBinder = CollectionPropertyBinder.create(binderContext);
 	}
 
@@ -51,13 +43,13 @@ public class OneToManyBinder {
 
 		Table collectionTable = foreignKey.getTable();
 
-		Collection collection = new org.hibernate.mapping.Set(metadataBuildingContext, rc); // MASTER TODO: allow overriding collection type
+		Collection collection = new org.hibernate.mapping.Set(getMetadataBuildingContext(), rc); // MASTER TODO: allow overriding collection type
 
 		collection.setCollectionTable(collectionTable); // CHILD+
 
 
 
-		boolean manyToMany = revengStrategy.isManyToManyTable( collectionTable );
+		boolean manyToMany = getRevengStrategy().isManyToManyTable( collectionTable );
 		if(manyToMany) {
 			//log.debug("Rev.eng said here is a many-to-many");
 			// TODO: handle "the other side should influence the name"
@@ -67,7 +59,7 @@ public class OneToManyBinder {
 
         if(manyToMany) {
 
-        	ManyToOne element = new ManyToOne(metadataBuildingContext, collection.getCollectionTable() );
+        	ManyToOne element = new ManyToOne(getMetadataBuildingContext(), collection.getCollectionTable() );
         	//TODO: find the other foreignkey and choose the other side.
         	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
         	List<ForeignKey> keys = new ArrayList<ForeignKey>();
@@ -93,8 +85,8 @@ public class OneToManyBinder {
 				Column fkcolumn = (Column) columnIterator.next();
 				if(fkcolumn.getSqlTypeCode() != null) {  // TODO: user defined foreign ref columns does not have a type set.
 					TypeUtils.determinePreferredType(
-							metadataCollector, 
-							revengStrategy, 
+							getMetadataCollector(), 
+							getRevengStrategy(), 
 							fk.getTable(), 
 							fkcolumn, 
 							mapping, 
@@ -107,10 +99,10 @@ public class OneToManyBinder {
         } else {
         	String tableToClassName = bindCollection( rc, foreignKey, null, collection );
 
-        	OneToMany oneToMany = new OneToMany(metadataBuildingContext, collection.getOwner() );
+        	OneToMany oneToMany = new OneToMany(getMetadataBuildingContext(), collection.getOwner() );
 
 			oneToMany.setReferencedEntityName( tableToClassName ); // Child
-        	metadataCollector.addSecondPass( new JdbcCollectionSecondPass(metadataBuildingContext, collection) );
+        	getMetadataCollector().addSecondPass( new JdbcCollectionSecondPass(getMetadataBuildingContext(), collection) );
 
         	collection.setElement(oneToMany);
         }
@@ -126,7 +118,7 @@ public class OneToManyBinder {
 				.getValue();
 		}
 
-		SimpleValue keyValue = new DependantValue(metadataBuildingContext, collectionTable, referencedKeyValue );
+		SimpleValue keyValue = new DependantValue(getMetadataBuildingContext(), collectionTable, referencedKeyValue );
 		//keyValue.setForeignKeyName("none"); // Avoid creating the foreignkey
 		//key.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue("on-delete") ) );
 		Iterator<Column> columnIterator = foreignKey.getColumnIterator();
@@ -134,8 +126,8 @@ public class OneToManyBinder {
 			Column fkcolumn = columnIterator.next();
 			if(fkcolumn.getSqlTypeCode()!=null) { // TODO: user defined foreign ref columns does not have a type set.
 				TypeUtils.determinePreferredType(
-						metadataCollector, 
-						revengStrategy,
+						getMetadataCollector(), 
+						getRevengStrategy(),
 						collectionTable, 
 						fkcolumn, 
 						mapping, 
@@ -146,7 +138,7 @@ public class OneToManyBinder {
 
 		collection.setKey(keyValue);
 
-		metadataCollector.addCollectionBinding(collection);
+		getMetadataCollector().addCollectionBinding(collection);
 
 		return collectionPropertyBinder
 				.bind(
@@ -178,7 +170,7 @@ public class OneToManyBinder {
 
 		if(toForeignKey==null) {
 
-			collectionRole = revengStrategy.foreignKeyToCollectionName(
+			collectionRole = getRevengStrategy().foreignKeyToCollectionName(
 				fromForeignKey.getName(),
 				foreignKeyTable,
 				fromForeignKey.getColumns(),
@@ -187,23 +179,23 @@ public class OneToManyBinder {
 				uniqueReference
 			);
 
-			tableToClassName = revengStrategy.tableToClassName( foreignKeyTable );
+			tableToClassName = getRevengStrategy().tableToClassName( foreignKeyTable );
 		} else {
 
-			collectionRole = revengStrategy.foreignKeyToManyToManyName(
+			collectionRole = getRevengStrategy().foreignKeyToManyToManyName(
 					fromForeignKey, TableIdentifier.create( fromForeignKey.getTable()), toForeignKey, uniqueReference );
 
-			tableToClassName = revengStrategy.tableToClassName( foreignKeyReferencedTable );
+			tableToClassName = getRevengStrategy().tableToClassName( foreignKeyReferencedTable );
 		}
 
-		collectionInverse = revengStrategy.isForeignKeyCollectionInverse(
+		collectionInverse = getRevengStrategy().isForeignKeyCollectionInverse(
 			targetKey.getName(),
 			foreignKeyTable,
 			targetKey.getColumns(),
 			foreignKeyReferencedTable,
 			targetKey.getReferencedColumns());
 
-		collectionLazy = revengStrategy.isForeignKeyCollectionLazy(
+		collectionLazy = getRevengStrategy().isForeignKeyCollectionLazy(
 			targetKey.getName(),
 			foreignKeyTable,
 			targetKey.getColumns(),

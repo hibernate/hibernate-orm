@@ -181,24 +181,32 @@ public class InPredicate<T>
 
 		// subquery expressions are already wrapped in parenthesis, so we only need to
 		// render the parenthesis here if the values represent an explicit value list
-		boolean isInSubqueryPredicate = getValues().size() == 1
-				&& Subquery.class.isInstance( getValues().get( 0 ) );
+		List<Expression<? extends T>> values = getValues();
+		boolean isInSubqueryPredicate = values.size() == 1
+				&& Subquery.class.isInstance( values.get( 0 ) );
 		if ( isInSubqueryPredicate ) {
-			buffer.append( ( (Renderable) getValues().get(0) ).render( renderingContext ) );
+			buffer.append( ( (Renderable) values.get( 0 ) ).render( renderingContext ) );
 		}
 		else {
-			buffer.append( '(' );
-			String sep = "";
-			for ( Expression value : getValues() ) {
-				buffer.append( sep )
-						.append( ( (Renderable) value ).render( renderingContext ) );
-				sep = ", ";
+			if ( values.isEmpty() ) {
+				if ( renderingContext.getDialect().supportsEmptyInList() ) {
+					buffer.append( "()" );
+				}
+				else {
+					buffer.append( "(null)" );
+				}
 			}
-			// HHH-8901
-			if ( ! renderingContext.getDialect().supportsEmptyInList() && getValues().isEmpty() ) {
-				buffer.append( "null" );
+			else {
+				buffer.append( '(' );
+				String sep = "";
+				for ( Expression value : values) {
+					buffer.append( sep )
+							.append( ( (Renderable) value )
+									.render( renderingContext ) );
+					sep = ", ";
+				}
+				buffer.append( ')' );
 			}
-			buffer.append( ')' );
 		}
 		return buffer.toString();
 	}

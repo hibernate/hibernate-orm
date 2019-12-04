@@ -11,10 +11,9 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class VersionPropertyBinder {
+public class VersionPropertyBinder extends AbstractBinder {
 	
 	private final static Logger LOGGER = Logger.getLogger(VersionPropertyBinder.class.getName());
 	
@@ -22,11 +21,10 @@ public class VersionPropertyBinder {
 		return new VersionPropertyBinder(binderContext);
 	}
 	
-	private final ReverseEngineeringStrategy revengStrategy;
 	private final BasicPropertyBinder basicPropertyBinder;
 	
 	private VersionPropertyBinder(BinderContext binderContext) {
-		this.revengStrategy = binderContext.revengStrategy;
+		super(binderContext);
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 	
@@ -36,7 +34,7 @@ public class VersionPropertyBinder {
 			Set<Column> processed, 
 			Mapping mapping) {
 		TableIdentifier identifier = TableIdentifier.create(table);
-		String optimisticLockColumnName = revengStrategy.getOptimisticLockColumnName(identifier);
+		String optimisticLockColumnName = getRevengStrategy().getOptimisticLockColumnName(identifier);
 		if(optimisticLockColumnName!=null) {
 			Column column = table.getColumn(new Column(optimisticLockColumnName));
 			if(column==null) {
@@ -49,7 +47,7 @@ public class VersionPropertyBinder {
 			Iterator<?> columnIterator = table.getColumnIterator();
 			while(columnIterator.hasNext()) {
 				Column column = (Column) columnIterator.next();
-				boolean useIt = revengStrategy.useColumnForOptimisticLock(identifier, column.getName());
+				boolean useIt = getRevengStrategy().useColumnForOptimisticLock(identifier, column.getName());
 				if(useIt && !processed.contains(column)) {
 					bindVersionProperty( table, identifier, column, rc, processed, mapping );
 					return;
@@ -67,7 +65,7 @@ public class VersionPropertyBinder {
 			Set<Column> processed, 
 			Mapping mapping) {
 		processed.add(column);
-		String propertyName = revengStrategy.columnToPropertyName( identifier, column.getName() );
+		String propertyName = getRevengStrategy().columnToPropertyName( identifier, column.getName() );
 		Property property = basicPropertyBinder.bind(
 				BinderUtils.makeUnique(rc, propertyName), 
 				table, 

@@ -22,6 +22,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -38,6 +40,7 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-10191")
 @RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportsComputedIndexes.class)
 public class SchemaUpdateWithFunctionIndexTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

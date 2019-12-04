@@ -3062,4 +3062,6 @@ public abstract class Dialect implements ConversionContext {
 
 	public boolean supportsStoredProcedures() { return true; }
 
+	public boolean supportsComputedIndexes() { return true; }
+
 }

@@ -141,4 +141,7 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean supportsStoredProcedures() { return false; }
+
+    @Override
+    public boolean supportsComputedIndexes() { return false; }
 }

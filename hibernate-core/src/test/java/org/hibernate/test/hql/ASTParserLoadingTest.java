@@ -3285,6 +3285,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "CockroachDB doesn't support current_time")
 	public void testStandardFunctions() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

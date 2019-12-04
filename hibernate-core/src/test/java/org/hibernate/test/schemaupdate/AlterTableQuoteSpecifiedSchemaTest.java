@@ -24,6 +24,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
@@ -45,6 +47,7 @@ import static org.junit.Assert.fail;
 		PostgreSQL82Dialect.class,
 		SQLServer2012Dialect.class,
 })
+@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
 public class AlterTableQuoteSpecifiedSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override

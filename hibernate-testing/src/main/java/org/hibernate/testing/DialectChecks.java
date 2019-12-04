@@ -282,6 +282,10 @@ abstract public class DialectChecks {
 		public boolean isMatch(Dialect dialect) { return dialect.supportsMixedTypeArithmetic(); }
 	}
 
+	public static class SupportsStoredProcedures implements DialectCheck {
+		public boolean isMatch(Dialect dialect) { return  dialect.supportsStoredProcedures(); }
+	}
+
 	public static class SupportsNClob implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {

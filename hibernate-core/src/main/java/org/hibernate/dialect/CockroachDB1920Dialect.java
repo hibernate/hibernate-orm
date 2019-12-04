@@ -138,4 +138,7 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean canCreateSchema() { return false; }
+
+    @Override
+    public boolean supportsStoredProcedures() { return false; }
 }

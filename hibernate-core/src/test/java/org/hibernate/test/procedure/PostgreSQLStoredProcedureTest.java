@@ -25,6 +25,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.type.StringType;
 
 import org.hibernate.testing.RequiresDialect;
@@ -42,6 +44,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialectFeature(DialectChecks.SupportsStoredProcedures.class)
 public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

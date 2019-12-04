@@ -3060,4 +3060,6 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	public boolean supportsStoredProcedures() { return true; }
+
 }

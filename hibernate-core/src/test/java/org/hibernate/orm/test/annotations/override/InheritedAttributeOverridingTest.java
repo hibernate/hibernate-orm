@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.override;
+package org.hibernate.orm.test.annotations.override;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -19,6 +19,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

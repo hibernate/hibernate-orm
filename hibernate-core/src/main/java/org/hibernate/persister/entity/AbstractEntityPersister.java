@@ -5954,7 +5954,6 @@ public abstract class AbstractEntityPersister
 			final Dialect dialect = creationProcess.getCreationContext()
 					.getSessionFactory()
 					.getJdbcServices()
-					.getJdbcEnvironment()
 					.getDialect();
 
 			MappingModelCreationHelper.interpretKeyDescriptor(
@@ -5966,6 +5965,8 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		} );
+
+		singularAssociationsToFinilize.clear();
 	}
 
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
@@ -6193,6 +6194,7 @@ public abstract class AbstractEntityPersister
 					this,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
+					getFetchMode( stateArrayPosition ),
 					creationProcess
 			);
 		}

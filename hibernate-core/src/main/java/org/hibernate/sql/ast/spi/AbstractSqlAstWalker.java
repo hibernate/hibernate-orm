@@ -370,10 +370,8 @@ public abstract class AbstractSqlAstWalker
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 
-		//noinspection StatementWithEmptyBody
 		if ( joinedGroup instanceof VirtualTableGroup ) {
-			// nothing to do
-			// todo (6.0) : join predicates?
+			processTableGroupJoins( tableGroupJoin.getJoinedGroup());
 		}
 		else {
 			appendSql( EMPTY_STRING );

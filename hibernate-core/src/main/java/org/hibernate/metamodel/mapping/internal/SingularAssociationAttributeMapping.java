@@ -138,8 +138,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 						creationState.getSqlAstCreationState().getCreationContext()
 				);
 
-				lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
 				sqlAstCreationState.getFromClauseAccess().registerTableGroup(
 						fetchablePath,
 						tableGroupJoin.getJoinedGroup()
@@ -283,18 +281,22 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 					.getFromClauseAccess()
 					.findTableGroup( parentParentNavigablePath )
 					.getModelPart();
-//			final SingularAssociationAttributeMapping part = (SingularAssociationAttributeMapping) modelPart
-//					.findSubPart( panentNaviblePath.getLocalName(), null );
-			final EntityAssociationMapping part = (EntityAssociationMapping) modelPart.findSubPart( panentNaviblePath.getLocalName(), null );
 
-			if ( panentNaviblePath.getLocalName().equals( referencedPropertyName )
-					&& part.getFetchableName().equals( referencedPropertyName ) ) {
-				return true;
+			final ModelPart subPart = modelPart.findSubPart( panentNaviblePath.getLocalName(), null );
+			if ( subPart instanceof EntityAssociationMapping ) {
+				final EntityAssociationMapping part = (EntityAssociationMapping) subPart;
+
+				if ( panentNaviblePath.getLocalName().equals( referencedPropertyName )
+						&& part.getFetchableName().equals( referencedPropertyName ) ) {
+					return true;
+				}
+				else if ( part.getKeyTargetMatchPart() != null
+						&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
+					return true;
+				}
 			}
-			else if ( part.getKeyTargetMatchPart() != null
-//					&& part.getKeyTargetMatchPart().equals( this ) ) {
-					&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
-				return true;
+			else {
+				return false;
 			}
 		}
 

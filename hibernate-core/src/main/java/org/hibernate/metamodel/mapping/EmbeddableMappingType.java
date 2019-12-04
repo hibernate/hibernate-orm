@@ -17,15 +17,19 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -34,7 +38,9 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -115,7 +121,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		while ( propertyIterator.hasNext() ) {
 			final Property bootPropertyDescriptor = propertyIterator.next();
 
-			if ( subtypes[ attributeIndex ] instanceof BasicType ) {
+			final Type subtype = subtypes[attributeIndex];
+			if ( subtype instanceof BasicType ) {
 				attributeMappings.put(
 						bootPropertyDescriptor.getName(),
 						MappingModelCreationHelper.buildBasicAttributeMapping(
@@ -123,7 +130,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 								attributeIndex,
 								bootPropertyDescriptor,
 								this,
-								(BasicType) subtypes[ attributeIndex ],
+								(BasicType) subtype,
 								containingTableExpression,
 								mappedColumnExpressions.get( columnPosition++ ),
 								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
@@ -132,8 +139,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 						)
 				);
 			}
-			else if ( subtypes[ attributeIndex ] instanceof CompositeType ) {
-				final CompositeType subCompositeType = (CompositeType) subtypes[ attributeIndex ];
+			else if ( subtype instanceof CompositeType ) {
+				final CompositeType subCompositeType = (CompositeType) subtype;
 				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getSessionFactory() );
 
 				attributeMappings.put(
@@ -153,6 +160,53 @@ public class EmbeddableMappingType implements ManagedMappingType {
 				);
 
 				columnPosition += columnSpan;
+			}
+			else {
+				final EntityPersister entityPersister = creationProcess
+						.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
+				if ( subtype instanceof CollectionType ) {
+					attributeMappings.put(
+							bootPropertyDescriptor.getName(),
+							MappingModelCreationHelper.buildPluralAttributeMapping(
+									bootPropertyDescriptor.getName(),
+									attributeIndex,
+									bootPropertyDescriptor,
+									entityPersister,
+									representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
+									compositeType.getCascadeStyle( attributeIndex),
+									compositeType.getFetchMode( attributeIndex ),
+									creationProcess
+							)
+					);
+				}
+				else if ( subtype instanceof EntityType ) {
+					final Dialect dialect = creationProcess.getCreationContext()
+							.getSessionFactory()
+							.getJdbcServices()
+							.getDialect();
+
+					final SingularAssociationAttributeMapping singularAssociationAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+							bootPropertyDescriptor.getName(),
+							attributeIndex,
+							bootPropertyDescriptor,
+							entityPersister,
+							(EntityType) subtype,
+							getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
+							compositeType.getCascadeStyle( attributeIndex ),
+							creationProcess
+					);
+					MappingModelCreationHelper.interpretKeyDescriptor(
+							singularAssociationAttributeMapping,
+							bootPropertyDescriptor,
+							(ToOne) bootPropertyDescriptor.getValue(),
+							entityPersister,
+							dialect,
+							creationProcess
+					);
+					attributeMappings.put( bootPropertyDescriptor.getName(), singularAssociationAttributeMapping );
+					// todo (6.0) : not sure it is always correct
+					columnPosition++;
+				}
 			}
 
 			attributeIndex++;

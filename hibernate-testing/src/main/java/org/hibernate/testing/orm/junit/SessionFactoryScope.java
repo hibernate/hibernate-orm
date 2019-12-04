@@ -9,6 +9,7 @@ package org.hibernate.testing.orm.junit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -27,4 +28,6 @@ public interface SessionFactoryScope {
 
 	<T> T fromTransaction(Function<SessionImplementor, T> action);
 	<T> T fromTransaction(SessionImplementor session, Function<SessionImplementor, T> action);
+
+	MetadataImplementor getMetadataImplementor();
 }

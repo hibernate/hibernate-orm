@@ -401,5 +401,10 @@ public class SessionFactoryExtension
 				throw e;
 			}
 		}
+
+		@Override
+		public MetadataImplementor getMetadataImplementor() {
+			return modelScope.getDomainModel();
+		}
 	}
 }

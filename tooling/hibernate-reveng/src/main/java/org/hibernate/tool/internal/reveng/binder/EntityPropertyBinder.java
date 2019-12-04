@@ -6,19 +6,17 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
-public class EntityPropertyBinder {
+public class EntityPropertyBinder extends AbstractBinder {
 	
 	public static EntityPropertyBinder create(BinderContext binderContext) {
 		return new EntityPropertyBinder(binderContext);
 	}
 	
-	private final ReverseEngineeringStrategy revengStrategy;
 	private final PropertyBinder propertyBinder;
 	
 	private EntityPropertyBinder(BinderContext binderContext) {
-		this.revengStrategy = binderContext.revengStrategy;
+		super(binderContext);
 		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
@@ -32,8 +30,8 @@ public class EntityPropertyBinder {
 		
 		AssociationInfo fkei = 
 				inverseProperty ? 
-						revengStrategy.foreignKeyToInverseAssociationInfo(fk) : 
-							revengStrategy.foreignKeyToAssociationInfo(fk);
+						getRevengStrategy().foreignKeyToInverseAssociationInfo(fk) : 
+							getRevengStrategy().foreignKeyToAssociationInfo(fk);
 
         String fetchMode = null;
         String cascade = null;

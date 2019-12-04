@@ -2,6 +2,7 @@ package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
 public abstract class AbstractBinder {
@@ -22,6 +23,10 @@ public abstract class AbstractBinder {
 	
 	ReverseEngineeringStrategy getRevengStrategy() {
 		return binderContext.revengStrategy;
+	}
+	
+	String getDefaultCatalog() {
+		return binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 	}
 	
 }

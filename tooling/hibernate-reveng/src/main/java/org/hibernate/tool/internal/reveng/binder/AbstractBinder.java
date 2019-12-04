@@ -29,4 +29,8 @@ public abstract class AbstractBinder {
 		return binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 	}
 	
+	String getDefaultSchema() {
+		return binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+	}
+	
 }

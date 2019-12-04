@@ -13,6 +13,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
+import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -679,6 +680,7 @@ public class MappingModelCreationHelper {
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
+			FetchMode fetchMode,
 			MappingModelCreationProcess creationProcess) {
 
 		final Collection bootValueMapping = (Collection) bootProperty.getValue();
@@ -873,7 +875,7 @@ public class MappingModelCreationHelper {
 		};
 
 		final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
-				( (OuterJoinLoadable) declaringType ).getFetchMode( stateArrayPosition ),
+				fetchMode,
 				collectionDescriptor.getCollectionType(),
 				sessionFactory
 		);

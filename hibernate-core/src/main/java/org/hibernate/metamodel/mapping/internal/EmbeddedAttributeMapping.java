@@ -16,6 +16,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -246,13 +247,14 @@ public class EmbeddedAttributeMapping
 				lhs
 		);
 
-		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, SqlAstJoinType.INNER, compositeTableGroup, null ) );
-
-		return new TableGroupJoin(
+		TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				compositeTableGroup
 		);
+		lhs.addTableGroupJoin( tableGroupJoin );
+
+		return tableGroupJoin;
 	}
 
 	@Override

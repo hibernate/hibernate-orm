@@ -10,6 +10,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
@@ -48,11 +49,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.embeddedModelPartDescriptor = resultDescriptor.getReferencedMappingContainer();
 		this.fetchParentAccess = fetchParentAccess;
 
-		final int numOfAttrs = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		this.resolvedValues = new Object[ numOfAttrs ];
 		this.assemblerMap = new IdentityHashMap<>( numOfAttrs );
 
-		this.embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().visitStateArrayContributors(
+		embeddableTypeDescriptor.visitStateArrayContributors(
 				stateArrayContributor -> {
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor.getFetchableName() );
 

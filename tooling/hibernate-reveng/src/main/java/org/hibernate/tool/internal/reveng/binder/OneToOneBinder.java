@@ -4,30 +4,25 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.type.ForeignKeyDirection;
 
-public class OneToOneBinder {
+public class OneToOneBinder extends AbstractBinder {
 	
 	public static OneToOneBinder create(BinderContext binderContext) {
 		return new OneToOneBinder(binderContext); 
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final ReverseEngineeringStrategy revengStrategy;
 	private final EntityPropertyBinder entityPropertyBinder;
 	
 	private OneToOneBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.revengStrategy = binderContext.revengStrategy;
+		super(binderContext);
 		this.entityPropertyBinder = EntityPropertyBinder.create(binderContext);
 	}
 
@@ -39,14 +34,14 @@ public class OneToOneBinder {
             boolean constrained, 
             boolean inverseProperty) {
 
-        OneToOne value = new OneToOne(metadataBuildingContext, targetTable, rc);
-        value.setReferencedEntityName(revengStrategy
-                .tableToClassName(TableIdentifier.create(targetTable)));
+        OneToOne value = new OneToOne(getMetadataBuildingContext(), targetTable, rc);
+        value.setReferencedEntityName(
+        		getRevengStrategy().tableToClassName(TableIdentifier.create(targetTable)));
 
         boolean isUnique = ForeignKeyUtils.isUniqueReference(fk);
         String propertyName = null;
         if(inverseProperty) {
-            propertyName = revengStrategy.foreignKeyToInverseEntityName(
+            propertyName = getRevengStrategy().foreignKeyToInverseEntityName(
         		fk.getName(),
                 TableIdentifier.create(fk.getReferencedTable()), 
                 fk.getReferencedColumns(), 
@@ -54,7 +49,7 @@ public class OneToOneBinder {
                 fk.getColumns(), 
                 isUnique);
         } else {
-            propertyName = revengStrategy.foreignKeyToEntityName(
+            propertyName = getRevengStrategy().foreignKeyToEntityName(
         		fk.getName(),
                 TableIdentifier.create(fk.getReferencedTable()), 
                 fk.getReferencedColumns(), 

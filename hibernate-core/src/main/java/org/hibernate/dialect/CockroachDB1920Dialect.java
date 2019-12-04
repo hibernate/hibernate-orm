@@ -145,4 +145,8 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean supportsComputedIndexes() { return false; }
+
+    @Override
+    public boolean supportsNoWait() { return false; }
+
 }

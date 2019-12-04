@@ -24,7 +24,7 @@ public class SimpleValueBinder extends AbstractBinder {
 		value.addColumn(column);
 		value.setTypeName(TypeUtils.determinePreferredType(
 				getMetadataCollector(), 
-				binderContext.revengStrategy,
+				getRevengStrategy(),
 				table, 
 				column, 
 				mapping, 

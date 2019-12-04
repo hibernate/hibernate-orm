@@ -21,11 +21,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MckoiDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SAPDBDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.AbstractWork;
@@ -196,6 +192,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testSelfManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -220,6 +217,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/27871")
 	public void testExample() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

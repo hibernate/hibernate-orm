@@ -39,14 +39,13 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
         return new InlineIdsInClauseBulkIdStrategy();
     }
 
-    @Override
-    public boolean supportsExpectedLobUsagePattern() {
+    public boolean doesReadCommittedCauseWritersToBlockReaders() {
         return true;
     }
 
     @Override
-    public boolean useInputStreamToInsertBlob() {
-        return true;
+    public boolean supportsExpectedLobUsagePattern() {
+        return false;
     }
 
     @Override
@@ -71,16 +70,32 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     }
 
     @Override
-    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) { return false; }
+    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+        return false;
+    }
 
     @Override
-    public boolean supportsLockTimeouts() { return false; }
+    public boolean supportsLockTimeouts() {
+        return false;
+    }
 
     @Override
-    public boolean supportsSkipLocked() { return false; }
+    public boolean supportsSkipLocked() {
+        // CockroachDB doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+        return false;
+    }
 
     @Override
-    public boolean supportsMixedTypeArithmetic() { return false; }
+    public boolean supportsNoWait() {
+        // CockroachDB doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+        return false;
+    }
+
+
+    @Override
+    public boolean supportsMixedTypeArithmetic() {
+        return false;
+    }
 
     public static final class CockroachDBBlobTypeDescriptor implements SqlTypeDescriptor {
 
@@ -138,15 +153,18 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     };
 
     @Override
-    public boolean canCreateSchema() { return false; }
+    public boolean canCreateSchema() {
+        return false;
+    }
 
     @Override
-    public boolean supportsStoredProcedures() { return false; }
+    public boolean supportsStoredProcedures() {
+        return false;
+    }
 
     @Override
-    public boolean supportsComputedIndexes() { return false; }
-
-    @Override
-    public boolean supportsNoWait() { return false; }
+    public boolean supportsComputedIndexes() {
+        return false;
+    }
 
 }

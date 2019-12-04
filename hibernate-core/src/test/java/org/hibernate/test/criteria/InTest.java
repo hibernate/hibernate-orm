@@ -66,4 +66,10 @@ public class InTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		session.close();
 	}
+
+	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
 }

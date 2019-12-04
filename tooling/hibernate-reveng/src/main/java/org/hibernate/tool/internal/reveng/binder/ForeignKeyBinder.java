@@ -10,10 +10,9 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class ForeignKeyBinder {
+public class ForeignKeyBinder extends AbstractBinder {
 	
 	private static Logger LOGGER = Logger.getLogger(ForeignKeyBinder.class.getName());
 	
@@ -21,16 +20,15 @@ public class ForeignKeyBinder {
 		return new ForeignKeyBinder(binderContext);
 	}
 	
-	private ReverseEngineeringStrategy revengStrategy;
 	private final OneToOneBinder oneToOneBinder;
 	private final OneToManyBinder oneToManyBinder;
 	private final ManyToOneBinder manyToOneBinder;
 	
 	private ForeignKeyBinder(BinderContext binderContext) {
+		super(binderContext);
 		this.oneToOneBinder = OneToOneBinder.create(binderContext);
 		this.oneToManyBinder = OneToManyBinder.create(binderContext);
 		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
-		this.revengStrategy = binderContext.revengStrategy;
 	}
 	
 	public void bindIncoming(
@@ -38,14 +36,14 @@ public class ForeignKeyBinder {
 			PersistentClass persistentClass,
 			Set<Column> processed,
 			Mapping mapping) {
-		if(revengStrategy.excludeForeignKeyAsCollection(
+		if(getRevengStrategy().excludeForeignKeyAsCollection(
 				foreignKey.getName(),
 				TableIdentifier.create(foreignKey.getTable() ),
 				foreignKey.getColumns(),
 				TableIdentifier.create(foreignKey.getReferencedTable() ),
 				foreignKey.getReferencedColumns())) {
 			LOGGER.log(Level.INFO, "Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
-		} else if (revengStrategy.isOneToOne(foreignKey)){
+		} else if (getRevengStrategy().isOneToOne(foreignKey)){
         	Property property = oneToOneBinder
         			.bind(
         					persistentClass, 
@@ -73,14 +71,14 @@ public class ForeignKeyBinder {
 			Set<Column> processedColumns,
 			boolean mutable) {
 
-        if(revengStrategy.excludeForeignKeyAsManytoOne(foreignKey.getName(),
+        if(getRevengStrategy().excludeForeignKeyAsManytoOne(foreignKey.getName(),
     			TableIdentifier.create(foreignKey.getTable() ),
     			foreignKey.getColumns(),
     			TableIdentifier.create(foreignKey.getReferencedTable() ),
     			foreignKey.getReferencedColumns())) {
         	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
         	LOGGER.log(Level.INFO, "Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
-        } else if (revengStrategy.isOneToOne(foreignKey)){
+        } else if (getRevengStrategy().isOneToOne(foreignKey)){
         	Property property = oneToOneBinder
         			.bind(
         					rc, 
@@ -92,7 +90,7 @@ public class ForeignKeyBinder {
 			rc.addProperty(property);
 		} else {
         	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);
-        	String propertyName = revengStrategy.foreignKeyToEntityName(
+        	String propertyName = getRevengStrategy().foreignKeyToEntityName(
         			foreignKey.getName(),
         			TableIdentifier.create(foreignKey.getTable() ),
         			foreignKey.getColumns(),

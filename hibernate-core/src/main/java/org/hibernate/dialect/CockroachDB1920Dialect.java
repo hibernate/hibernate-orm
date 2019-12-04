@@ -4,6 +4,7 @@ import org.hibernate.dialect.identity.CockroachDB1920IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy;
 import org.hibernate.hql.spi.id.persistent.PersistentTableBulkIdStrategy;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -35,7 +36,7 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     @Override
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
         // CockroachDB 19.2.0 does not support temporary tables, so we must override the Postgres behavior.
-        return new PersistentTableBulkIdStrategy();
+        return new InlineIdsInClauseBulkIdStrategy();
     }
 
     @Override

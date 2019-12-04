@@ -90,7 +90,7 @@ public class GroupByAliasTest extends BaseEntityManagerFunctionalTestCase {
 		List<Tuple> list = doInJPA(this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(
 					"select p.association as id_alias, sum(p.age) " +
-							"from Person p group by id_alias order by id_alias", Tuple.class)
+							"from Person p group by id_alias, p.association.id, p.association.name order by id_alias", Tuple.class)
 					.getResultList();
 		});
 
@@ -105,7 +105,7 @@ public class GroupByAliasTest extends BaseEntityManagerFunctionalTestCase {
 
 		List<Tuple> list = doInJPA(this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(
-					"select p.id as id_alias_1, p.association as id_alias_2, sum(p.age) " +
+					"select p.id as id_alias_1, p.association.id as id_alias_2, sum(p.age) " +
 							"from Person p group by id_alias_1, id_alias_2 order by id_alias_1, id_alias_2 ", Tuple.class)
 					.getResultList();
 		});

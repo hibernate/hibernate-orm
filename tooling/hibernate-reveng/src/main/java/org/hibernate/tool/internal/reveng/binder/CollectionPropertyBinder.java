@@ -6,6 +6,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
+import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 
 class CollectionPropertyBinder extends AbstractBinder {
 	
@@ -27,48 +28,64 @@ class CollectionPropertyBinder extends AbstractBinder {
 			ForeignKey fk, 
 			Collection value, 
 			boolean inverseProperty) {
-
-    	AssociationInfo fkei = inverseProperty?getRevengStrategy().foreignKeyToInverseAssociationInfo(fk):getRevengStrategy().foreignKeyToAssociationInfo(fk);
-
-        String fetchMode = null;
-        String cascade = null;
-        boolean update = mutable;
-        boolean insert = mutable;
-
-        if(fkei != null){
-        	cascade = fkei.getCascade();
-        	if(cascade==null) cascade = "all"; //To ensure collections cascade to be compatible with Seam-gen and previous behavior.
-        	if(fkei.getUpdate()!=null) {
-        		update = fkei.getUpdate().booleanValue();
-        	}
-        	if(fkei.getInsert()!=null) {
-        		insert = fkei.getInsert().booleanValue();
-        	}
-
-        	fetchMode = fkei.getFetch();
-
-
-        }
-
-        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
-        }
-        else if(FetchMode.SELECT.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-        else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-
+    	AssociationInfo associationInfo = determineAssociationInfo(fk, inverseProperty, mutable);
+    	updateFetchMode(value, associationInfo.getFetch());
         return propertyBinder.bind(
         		table, 
         		propertyName, 
         		value, 
-        		insert, 
-        		update, 
+        		associationInfo.getInsert(), 
+        		associationInfo.getUpdate(), 
         		value.getFetchMode()!=FetchMode.JOIN, 
-        		cascade, 
+        		associationInfo.getCascade(), 
         		null);
-
 	}
+    
+    private AssociationInfo determineAssociationInfo(
+    		ForeignKey foreignKey, 
+    		boolean inverseProperty, 
+    		boolean mutable) {
+    	AssociationInfo foreignKeyAssociationInfo = 
+    			getAssociationInfoInRevengStrategy(foreignKey, inverseProperty);
+    	DefaultAssociationInfo result = new DefaultAssociationInfo();
+    	result.setFetch(null);
+    	result.setCascade(null);
+    	result.setUpdate(mutable);
+    	result.setInsert(mutable);
+    	if(foreignKeyAssociationInfo != null){
+        	if (foreignKeyAssociationInfo.getCascade() == null) {
+        		result.setCascade("all");
+        	} else {
+        		result.setCascade(foreignKeyAssociationInfo.getCascade());
+        	}
+        	if(foreignKeyAssociationInfo.getUpdate()!=null) {
+        		result.setUpdate(foreignKeyAssociationInfo.getUpdate());;
+        	} 
+        	if(foreignKeyAssociationInfo.getInsert()!=null) {
+        		result.setInsert(foreignKeyAssociationInfo.getInsert());
+        	}
+        	result.setFetch(foreignKeyAssociationInfo.getFetch());
+        }
+        return result;
+    }
+    
+    private AssociationInfo getAssociationInfoInRevengStrategy(
+    		ForeignKey foreignKey, 
+    		boolean inverseProperty) {
+    	if (inverseProperty) {
+    		return getRevengStrategy().foreignKeyToInverseAssociationInfo(foreignKey);
+    	} else {
+    		return getRevengStrategy().foreignKeyToAssociationInfo(foreignKey);
+    	}
+    }
+    
+    private void updateFetchMode(Collection value, String fetchMode) {
+        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
+        	value.setFetchMode(FetchMode.JOIN);
+        }
+        else {
+        	value.setFetchMode(FetchMode.SELECT);
+        }    	
+    }
+    
 }

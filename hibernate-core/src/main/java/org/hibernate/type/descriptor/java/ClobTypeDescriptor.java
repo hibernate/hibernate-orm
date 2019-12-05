@@ -107,13 +107,13 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 						: value;
 				return (X) clob;
 			}
-			else if (String.class.isAssignableFrom( type )) {
+			else if ( String.class.isAssignableFrom( type ) ) {
 				if ( ClobImplementer.class.isInstance( value ) ) {
-					// if the incoming Clob is a wrapper, just pass along its CharacterStream
-					return (X)  ( (ClobImplementer) value ).getUnderlyingStream().asString();
+					// if the incoming Clob is a wrapper, just get the underlying String.
+					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
 				}
 				else {
-					// otherwise we need to build a CharacterStream...
+					// otherwise we need to extract the String.
 					return (X) DataHelper.extractString( value.getCharacterStream() );
 				}
 			}
@@ -139,8 +139,8 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 			Reader reader = (Reader) value;
 			return options.getLobCreator().createClob( DataHelper.extractString( reader ) );
 		}
-		else if (String.class.isAssignableFrom(( value.getClass()))) {
-			return options.getLobCreator().createClob((String) value);
+		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().createClob( (String) value );
 		}
 
 		throw unknownWrap( value.getClass() );

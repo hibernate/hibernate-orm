@@ -24,9 +24,9 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     public CockroachDB1920Dialect() {
         super();
-        registerColumnType(Types.INTEGER, "int8");
-        registerColumnType(Types.FLOAT, "float8");
-        registerColumnType(Types.BLOB, "bytea");
+        registerColumnType( Types.INTEGER, "int8" );
+        registerColumnType( Types.FLOAT, "float8" );
+        registerColumnType( Types.BLOB, "bytea" );
     }
 
     @Override
@@ -56,11 +56,12 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
         switch (sqlCode) {
             case Types.BLOB: {
                 // Make BLOBs use byte[] storage.
-                descriptor = VarbinaryTypeDescriptor.INSTANCE; // CockroachDBBlobTypeDescriptor.INSTANCE;
+                descriptor = VarbinaryTypeDescriptor.INSTANCE;
                 break;
             }
             case Types.CLOB: {
-                descriptor = VarcharTypeDescriptor.INSTANCE; // CockroachDBClobTypeDescriptor.INSTANCE;
+                // Make CLOBs use string storage.
+                descriptor = VarcharTypeDescriptor.INSTANCE;
                 break;
             }
             default: {
@@ -90,7 +91,9 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     }
 
     @Override
-    public boolean supportsMixedTypeArithmetic() { return false; }
+    public boolean supportsMixedTypeArithmetic() {
+        return false;
+    }
 
     @Override
     public boolean canCreateSchema() { return false; }

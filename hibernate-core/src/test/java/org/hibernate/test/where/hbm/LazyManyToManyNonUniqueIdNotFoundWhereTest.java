@@ -38,10 +38,10 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		doInHibernate(
 				this::sessionFactory, session -> {
 
-					session.createSQLQuery("drop table MATERIAL_RATINGS").executeUpdate();
-					session.createSQLQuery("drop table BUILDING_RATINGS").executeUpdate();
-					session.createSQLQuery("drop table ASSOCIATION_TABLE").executeUpdate();
-					session.createSQLQuery("drop table MAIN_TABLE").executeUpdate();
+					session.createSQLQuery("drop table if exists MATERIAL_RATINGS cascade").executeUpdate();
+					session.createSQLQuery("drop table if exists BUILDING_RATINGS cascade").executeUpdate();
+					session.createSQLQuery("drop table if exists ASSOCIATION_TABLE cascade").executeUpdate();
+					session.createSQLQuery("drop table if exists MAIN_TABLE cascade").executeUpdate();
 				}
 		);
 

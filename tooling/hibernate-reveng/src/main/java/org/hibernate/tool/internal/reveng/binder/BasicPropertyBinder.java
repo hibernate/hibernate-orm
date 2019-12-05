@@ -6,9 +6,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
-public class BasicPropertyBinder extends AbstractBinder {
+class BasicPropertyBinder extends AbstractBinder {
 	
-	public static BasicPropertyBinder create(BinderContext binderContext) {
+	static BasicPropertyBinder create(BinderContext binderContext) {
 		return new BasicPropertyBinder(binderContext);
 	}
 	
@@ -22,7 +22,7 @@ public class BasicPropertyBinder extends AbstractBinder {
 	}
 	
 
-	public Property bind(
+	Property bind(
 			String propertyName, 
 			Table table, 
 			Column column, 

@@ -7,9 +7,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 
-public class CollectionPropertyBinder extends AbstractBinder {
+class CollectionPropertyBinder extends AbstractBinder {
 	
-	public static CollectionPropertyBinder create(BinderContext binderContext) {
+	static CollectionPropertyBinder create(BinderContext binderContext) {
 		return new CollectionPropertyBinder(binderContext);
 	}
 	
@@ -20,7 +20,7 @@ public class CollectionPropertyBinder extends AbstractBinder {
 		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
-    public Property bind(
+    Property bind(
     		String propertyName, 
     		boolean mutable,
 			Table table, 

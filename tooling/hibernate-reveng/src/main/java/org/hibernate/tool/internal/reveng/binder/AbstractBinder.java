@@ -6,7 +6,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
-public abstract class AbstractBinder {
+abstract class AbstractBinder {
 	
 	final BinderContext binderContext;
 	

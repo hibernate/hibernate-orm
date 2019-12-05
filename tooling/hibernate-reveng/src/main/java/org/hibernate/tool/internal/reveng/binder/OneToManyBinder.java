@@ -89,7 +89,6 @@ public class OneToManyBinder extends AbstractBinder {
 							getRevengStrategy(), 
 							fk.getTable(), 
 							fkcolumn, 
-							mapping, 
 							false); // needed to ensure foreign key columns has same type as the "property" column.
 				}
 				element.addColumn(fkcolumn);
@@ -130,7 +129,6 @@ public class OneToManyBinder extends AbstractBinder {
 						getRevengStrategy(),
 						collectionTable, 
 						fkcolumn, 
-						mapping, 
 						false); // needed to ensure foreign key columns has same type as the "property" column.
 			}
 			keyValue.addColumn( fkcolumn );

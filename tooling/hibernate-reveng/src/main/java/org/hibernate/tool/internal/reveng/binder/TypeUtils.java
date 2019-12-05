@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
@@ -22,7 +21,6 @@ public class TypeUtils {
 			ReverseEngineeringStrategy revengStrategy,
 			Table table, 
 			Column column, 
-			Mapping mapping, 
 			boolean generatedIdentifier) {
 
 		String location = 
@@ -56,7 +54,7 @@ public class TypeUtils {
 
 		if(wantedType!=null) {
 
-			int[] wantedSqlTypes = wantedType.sqlTypes(mapping);
+			int[] wantedSqlTypes = wantedType.sqlTypes(metadataCollector);
 
 			if(wantedSqlTypes.length>1) {
 				throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");

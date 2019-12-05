@@ -27,7 +27,6 @@ public class SimpleValueBinder extends AbstractBinder {
 				getRevengStrategy(),
 				table, 
 				column, 
-				mapping, 
 				generatedIdentifier));
 		return value;
 	}

@@ -18,12 +18,14 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDB1920Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
@@ -117,6 +119,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
 	@RequiresDialect(PostgreSQL82Dialect.class)
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "CockroachDB does not support recursive CTE")
 	public void testCteNativeQueryOrdinalParameter() {
 
 		Node root1 = new Node();

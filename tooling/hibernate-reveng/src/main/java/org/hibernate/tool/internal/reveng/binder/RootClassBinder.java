@@ -10,9 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -22,14 +19,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
-public class RootClassBinder {
+public class RootClassBinder extends AbstractBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(RootClassBinder.class.getName());
 	
@@ -38,24 +33,13 @@ public class RootClassBinder {
 		return new RootClassBinder(binderContext);
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final InFlightMetadataCollector metadataCollector;
-	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
-	private final boolean preferBasicCompositeIds;
 	private final PrimaryKeyBinder primaryKeyBinder;
 	private final VersionPropertyBinder versionPropertyBinder;
 	private final ForeignKeyBinder foreignKeyBinder;
 	private final BasicPropertyBinder basicPropertyBinder;
 	
 	private RootClassBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.metadataCollector = binderContext.metadataCollector;
-		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
+		super(binderContext);
 		this.primaryKeyBinder = PrimaryKeyBinder.create(binderContext);
 		this.versionPropertyBinder = VersionPropertyBinder.create(binderContext);
 		this.foreignKeyBinder = ForeignKeyBinder.create(binderContext);
@@ -90,20 +74,20 @@ public class RootClassBinder {
 	
 	private void addToMetadataCollector(RootClass rc, Table table) {
 		try {
-			metadataCollector.addEntityBinding(rc);
-			metadataCollector.addImport( rc.getEntityName(), rc.getEntityName() );
+			getMetadataCollector().addEntityBinding(rc);
+			getMetadataCollector().addImport( rc.getEntityName(), rc.getEntityName() );
 		} catch(DuplicateMappingException dme) {
 			// TODO: detect this and generate a "permutation" of it ?
-			PersistentClass class1 = metadataCollector.getEntityBinding(dme.getName());
+			PersistentClass class1 = getMetadataCollector().getEntityBinding(dme.getName());
 			Table table2 = class1.getTable();
 			throw new RuntimeException("Duplicate class name '" + rc.getEntityName() + "' generated for '" + table + "'. Same name where generated for '" + table2 + "'");
 		}
 	}
 	
 	private RootClass createRootClass(Table table) {
-		RootClass rc = new RootClass(metadataBuildingContext);
+		RootClass rc = new RootClass(getMetadataBuildingContext());
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		String className = revengStrategy.tableToClassName( tableIdentifier );
+		String className = getRevengStrategy().tableToClassName( tableIdentifier );
 		LOGGER.log(Level.INFO, "Building entity " + className + " based on " + tableIdentifier);
 		rc.setEntityName( className );
 		rc.setJpaEntityName( StringHelper.unqualify( className ) );
@@ -117,10 +101,10 @@ public class RootClassBinder {
 	}
 	
 	private void nullifyDefaultCatalogAndSchema(Table table) {
-		if (table.getCatalog() != null && table.getCatalog().equals(defaultCatalog)) {
+		if (table.getCatalog() != null && table.getCatalog().equals(getDefaultCatalog())) {
 			table.setCatalog(null);
 		}
-		if (table.getSchema() != null && table.getSchema().equals(defaultSchema)) {
+		if (table.getSchema() != null && table.getSchema().equals(getDefaultSchema())) {
 			table.setSchema(null);
 		}   		
 	}
@@ -149,7 +133,7 @@ public class RootClassBinder {
 			ForeignKey foreignKey = (ForeignKey) iterator.next();
 			boolean mutable = true;
             if ( contains( foreignKey.getColumnIterator(), processedColumns ) ) {
-				if ( !preferBasicCompositeIds ) continue; //it's in the pk, so skip this one
+				if ( !preferBasicCompositeIds() ) continue; //it's in the pk, so skip this one
 				mutable = false;
             }           
             foreignKeyBinder.bindOutgoing(foreignKey, table, rc, processedColumns, mutable);
@@ -185,12 +169,12 @@ public class RootClassBinder {
 	private Map<String,MetaAttribute> getMetaAttributes(Table table) {
 		Map<String,MetaAttribute> result = null;
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrategy.tableToMetaAttributes(tableIdentifier);
+		result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
+			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
+			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
 			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrategy.tableToMetaAttributes(tableIdentifier);
+			result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		}
 		if (result == null) {
 			result = Collections.emptyMap();
@@ -204,12 +188,12 @@ public class RootClassBinder {
 		String result = null;
 		String columnName = column.getName();
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
-		result = revengStrategy.columnToPropertyName(tableIdentifier, columnName);
+		result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), defaultSchema);
+			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
+			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
 			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
-			result = revengStrategy.columnToPropertyName(tableIdentifier, columnName);
+			result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		}
 		return result;
 	}

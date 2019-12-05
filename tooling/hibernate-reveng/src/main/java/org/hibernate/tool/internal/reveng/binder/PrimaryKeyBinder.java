@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -23,14 +21,12 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
-public class PrimaryKeyBinder {
+public class PrimaryKeyBinder extends AbstractBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(PrimaryKeyBinder.class.getName());
 	
@@ -38,11 +34,6 @@ public class PrimaryKeyBinder {
 		return new PrimaryKeyBinder(binderContext);
 	}
 	
-	private final MetadataBuildingContext metadataBuildingContext;
-	private final ReverseEngineeringStrategy revengStrategy;
-	private final String defaultCatalog;
-	private final String defaultSchema;
-	private final boolean preferBasicCompositeIds;
 	private final BasicPropertyBinder basicPropertyBinder;
 	private final SimpleValueBinder simpleValueBinder;
 	private final ManyToOneBinder manyToOneBinder;
@@ -50,11 +41,7 @@ public class PrimaryKeyBinder {
 
 	
 	private PrimaryKeyBinder(BinderContext binderContext) {
-		this.metadataBuildingContext = binderContext.metadataBuildingContext;
-		this.revengStrategy = binderContext.revengStrategy;
-		this.defaultCatalog = binderContext.properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = binderContext.properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		this.preferBasicCompositeIds = (Boolean)binderContext.properties.get(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS);
+		super(binderContext);
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
 		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
@@ -98,13 +85,13 @@ public class PrimaryKeyBinder {
 			naturalId = true;
 
 			id = handleCompositeKey(rc, processed, keyColumns, mapping);
-			idPropertyname = revengStrategy.tableToIdentifierPropertyName(tableIdentifier);
+			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
 			if(idPropertyname==null) {
 				idPropertyname = "id";
 			}
 		}
 		else {
-			pki.suggestedStrategy = RevEngUtils.getTableIdentifierStrategyNameInRevengStrategy(revengStrategy, table, defaultCatalog, defaultSchema);
+			pki.suggestedStrategy = RevEngUtils.getTableIdentifierStrategyNameInRevengStrategy(getRevengStrategy(), table, getDefaultCatalog(), getDefaultSchema());
 			String suggestedStrategy = pki.suggestedStrategy;
 			if(suggestedStrategy==null) {
 				suggestedStrategy = collector.getSuggestedIdentifierStrategy( tableIdentifier.getCatalog(), tableIdentifier.getSchema(), tableIdentifier.getName() );
@@ -126,15 +113,15 @@ public class PrimaryKeyBinder {
 					mapping, 
 					!naturalId);
 
-			idPropertyname = revengStrategy.tableToIdentifierPropertyName(tableIdentifier);
+			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
 			if(idPropertyname==null) {
-				idPropertyname = revengStrategy.columnToPropertyName(tableIdentifier, pkc.getName() );
+				idPropertyname = getRevengStrategy().columnToPropertyName(tableIdentifier, pkc.getName() );
 			}
 
 			processed.add(pkc);
 		}
 		id.setIdentifierGeneratorStrategy(tableIdentifierStrategyName);
-		pki.suggestedProperties = revengStrategy.getTableIdentifierProperties(tableIdentifier);
+		pki.suggestedProperties = getRevengStrategy().getTableIdentifierProperties(tableIdentifier);
 		id.setIdentifierGeneratorProperties(pki.suggestedProperties);
 		if(naturalId) {
 			id.setNullValue("undefined");
@@ -180,18 +167,18 @@ public class PrimaryKeyBinder {
 			Set<Column> processedColumns, 
 			List<Column> keyColumns, 
 			Mapping mapping) {
-		Component pkc = new Component(metadataBuildingContext, rc);
+		Component pkc = new Component(getMetadataBuildingContext(), rc);
         pkc.setMetaAttributes(Collections.EMPTY_MAP);
         pkc.setEmbedded(false);
 
-        String compositeIdName = revengStrategy.tableToCompositeIdName(TableIdentifier.create(rc.getTable()));
+        String compositeIdName = getRevengStrategy().tableToCompositeIdName(TableIdentifier.create(rc.getTable()));
         if(compositeIdName==null) {
-        	compositeIdName = revengStrategy.classNameToCompositeIdName(rc.getClassName());
+        	compositeIdName = getRevengStrategy().classNameToCompositeIdName(rc.getClassName());
         }
         pkc.setComponentClassName(compositeIdName);
 		Table table = rc.getTable();
         List<?> list = null;
-		if (preferBasicCompositeIds ) {
+		if (preferBasicCompositeIds() ) {
             list = new ArrayList<Object>(keyColumns);
         }
 		else {
@@ -207,7 +194,7 @@ public class PrimaryKeyBinder {
                 }
 				else {
 					BinderUtils.checkColumnForMultipleBinding(column);
-                    String propertyName = revengStrategy.columnToPropertyName( TableIdentifier.create(table), column.getName() );
+                    String propertyName = getRevengStrategy().columnToPropertyName( TableIdentifier.create(table), column.getName() );
                     property = basicPropertyBinder.bind(
             				BinderUtils.makeUnique(pkc, propertyName), 
             				table, 
@@ -219,7 +206,7 @@ public class PrimaryKeyBinder {
 			else if (element instanceof ForeignKeyUtils.ForeignKeyForColumns) {
 				ForeignKeyUtils.ForeignKeyForColumns fkfc = (ForeignKeyUtils.ForeignKeyForColumns) element;
                 ForeignKey foreignKey = fkfc.key;
-                String propertyName = revengStrategy.foreignKeyToEntityName(
+                String propertyName = getRevengStrategy().foreignKeyToEntityName(
 						foreignKey.getName(),
 						TableIdentifier.create(foreignKey.getTable() ),
 						foreignKey.getColumns(), TableIdentifier.create(foreignKey.getReferencedTable() ), foreignKey.getReferencedColumns(), true

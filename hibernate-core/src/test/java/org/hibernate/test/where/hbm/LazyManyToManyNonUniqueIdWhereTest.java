@@ -41,11 +41,15 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 	public void setup() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-
 					session.createSQLQuery( "drop table MATERIAL_RATINGS" ).executeUpdate();
 					session.createSQLQuery( "drop table BUILDING_RATINGS" ).executeUpdate();
 					session.createSQLQuery( "drop table ASSOCIATION_TABLE" ).executeUpdate();
 					session.createSQLQuery( "drop table MAIN_TABLE" ).executeUpdate();
+				}
+		);
+
+		doInHibernate(
+				this::sessionFactory, session -> {
 
 					session.createSQLQuery(
 							"create table MAIN_TABLE( " +

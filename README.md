@@ -127,7 +127,7 @@ Use the following command:
 
     gradle clean compile -Pdb=pgsql
 
-_*NOTE: If you are running tests against a JDBC driver that is not available via Maven central (generally due to license nonsense - Oracle, DB2, etc) be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_
+_*NOTE: If you are running tests against a JDBC driver that is not available via Maven central be sure to add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server*_
 
 Running database-specific tests from the IDE using "profiles"
 -------------------------------------------------------------

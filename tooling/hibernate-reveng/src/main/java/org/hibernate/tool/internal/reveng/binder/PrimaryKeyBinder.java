@@ -197,8 +197,7 @@ public class PrimaryKeyBinder extends AbstractBinder {
                     property = basicPropertyBinder.bind(
             				BinderUtils.makeUnique(pkc, propertyName), 
             				table, 
-            				column, 
-            				mapping);
+            				column);
                     processedColumns.add(column);
                 }
             }

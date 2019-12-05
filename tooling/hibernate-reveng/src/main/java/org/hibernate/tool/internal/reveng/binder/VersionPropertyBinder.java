@@ -69,8 +69,7 @@ public class VersionPropertyBinder extends AbstractBinder {
 		Property property = basicPropertyBinder.bind(
 				BinderUtils.makeUnique(rc, propertyName), 
 				table, 
-				column, 
-				mapping);
+				column);
 		rc.addProperty(property);
 		rc.setVersion(property);
 		rc.setOptimisticLockStyle(OptimisticLockStyle.VERSION);

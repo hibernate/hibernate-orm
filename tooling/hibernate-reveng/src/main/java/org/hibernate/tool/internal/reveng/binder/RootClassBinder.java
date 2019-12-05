@@ -149,8 +149,7 @@ public class RootClassBinder extends AbstractBinder {
 				Property property = basicPropertyBinder.bind(
 						BinderUtils.makeUnique(rc,propertyName), 
 						table, 
-						column, 
-						mapping);
+						column);
 				rc.addProperty(property);
 			}
 		}

@@ -18,10 +18,12 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.CockroachDB1920Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -94,6 +96,7 @@ public class PostgreSqlLobStringTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses lo_from_bytea")
 	public void testBadClobDataSavedAsStringworksAfterUpdate() {
 		doInHibernate( this::sessionFactory, session -> {
 

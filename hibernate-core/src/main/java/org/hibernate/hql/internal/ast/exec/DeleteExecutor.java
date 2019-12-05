@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -82,10 +83,16 @@ public class DeleteExecutor extends BasicExecutor {
 						if ( keyType.isComponentType() ) {
 							ComponentType componentType = (ComponentType) keyType;
 							List<String> columns = new ArrayList<>( componentType.getPropertyNames().length );
-							for ( String propertyName : componentType.getPropertyNames() ) {
-								Collections.addAll( columns, persister.toColumns( propertyName ) );
+							try {
+								for ( String propertyName : componentType.getPropertyNames() ) {
+									Collections.addAll( columns, persister.toColumns( propertyName ) );
+								}
+								columnNames = columns.toArray( new String[0] );
 							}
-							columnNames = columns.toArray( new String[columns.size()] );
+							catch (MappingException e) {
+								// Property not found, due to IdClasses are not properly handled in metamodel HHH-12996
+								columnNames = persister.getIdentifierColumnNames();
+							}
 						}
 						else {
 							columnNames = persister.getIdentifierColumnNames();

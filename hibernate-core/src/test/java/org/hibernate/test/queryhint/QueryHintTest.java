@@ -73,7 +73,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// test Query w/ a simple Oracle optimizer hint
 		doInHibernate( this::sessionFactory, s -> {
-			Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
 					.addQueryHint( "ALL_ROWS" )
 					.setParameter( "departmentName", "Sales" );
 			List results = query.list();
@@ -87,7 +87,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		// test multiple hints
 		doInHibernate( this::sessionFactory, s -> {
-			Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
 					.addQueryHint( "ALL_ROWS" )
 					.addQueryHint( "USE_CONCAT" )
 					.setParameter( "departmentName", "Sales" );
@@ -102,7 +102,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 		
 		// ensure the insertion logic can handle a comment appended to the front
 		doInHibernate( this::sessionFactory, s -> {
-			Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
 					.setComment( "this is a test" )
 					.addQueryHint( "ALL_ROWS" )
 					.setParameter( "departmentName", "Sales" );
@@ -138,7 +138,7 @@ public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 		sqlStatementInterceptor.clear();
 
 		doInHibernate( this::sessionFactory, s -> {
-			Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
 					.addQueryHint( "ALL_ROWS" )
 					.setComment( "My_Query" )
 					.setParameter( "departmentName", "Sales" );

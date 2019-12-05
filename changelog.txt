@@ -3,6 +3,33 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.10.Final (December 05, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31811/tab/release-report-done
+
+** Bug
+    * [HHH-9301] - Group by on alias doesn't replace alias
+    * [HHH-12895] - Extra LEFT JOIN generated with @ManyToOne and @JoinTable when projecting on main entity id
+    * [HHH-13355] - StaleStateException for updates to optional secondary table using saveOrUpdate
+    * [HHH-13365] - Entities in joined subclass table are not inserted with batch size > 0 using sequence-identity ID generator
+    * [HHH-13608] - Oracle8iDialect should use CASE_INSENSITIVE pattern matching when checking the statement type
+    * [HHH-13722] - ArrayStoreException in Constraint.generateName
+    * [HHH-13737] - Add debug logging and a test case for HHH-13433
+    * [HHH-13742] - Missing from clause with joined inheritance property in association subquery
+    * [HHH-13758] - Limit Handler for SQL server doesn't work with CTE queries with strings literals
+    * [HHH-13764] - Annotations are ignored during enhancement if they are on the getter instead of the field
+
+** Task
+    * [HHH-13739] - Upgrade to Agroal 1.7
+    * [HHH-13761] - Debug logging of JPA compliance settings didn't log the value of the settings
+    * [HHH-13762] - Update vibur-dbcp dependency to 25.0
+
+** Improvement
+    * [HHH-8091] - Hibernate produces SQL - "in ()" - which is invalid in at least Oracle, MySQL and Postgres
+    * [HHH-13755] - Update Hibernate Gradle Plugin example in the documentation
+
+
 Changes in 5.4.9.Final (November 14, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -30,7 +30,6 @@ class BasicPropertyBinder extends AbstractBinder {
 		SimpleValue value = simpleValueBinder.bind(
 				table, 
 				column, 
-				mapping,
 				false);
 		return propertyBinder.bind(
 				table, 

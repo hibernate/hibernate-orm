@@ -110,7 +110,6 @@ public class PrimaryKeyBinder extends AbstractBinder {
 			id = simpleValueBinder.bind(
 					table, 
 					pkc, 
-					mapping, 
 					!naturalId);
 
 			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);

@@ -85,7 +85,7 @@ public class DeleteExecutor extends BasicExecutor {
 							for ( String propertyName : componentType.getPropertyNames() ) {
 								Collections.addAll( columns, persister.toColumns( propertyName ) );
 							}
-							columnNames = columns.toArray( new String[0] );
+							columnNames = columns.toArray( new String[columns.size()] );
 						}
 						else {
 							columnNames = persister.getIdentifierColumnNames();

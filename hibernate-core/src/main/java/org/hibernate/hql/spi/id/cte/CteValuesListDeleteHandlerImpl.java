@@ -56,7 +56,7 @@ public class CteValuesListDeleteHandlerImpl
 					deletes.add( generateDelete(
 							cPersister.getTableName(),
 							cPersister.getKeyColumnNames(),
-							generateIdSubselect( idSubselect, getTargetedQueryable(), cPersister ),
+							idSubselect,
 							"bulk delete - m2m join table cleanup"
 					) );
 				}

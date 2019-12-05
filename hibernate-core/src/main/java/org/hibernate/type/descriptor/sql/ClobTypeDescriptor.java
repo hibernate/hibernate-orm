@@ -126,7 +126,7 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 							CharacterStream.class,
 							options
 					);
-					st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					st.setCharacterStream( index, characterStream.asReader() );
 				}
 
 				@Override
@@ -137,7 +137,7 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 							CharacterStream.class,
 							options
 					);
-					st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
+					st.setCharacterStream( name, characterStream.asReader() );
 				}
 			};
 		}

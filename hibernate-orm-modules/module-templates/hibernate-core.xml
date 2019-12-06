@@ -26,7 +26,7 @@
         <module name="org.jboss.jandex"/>
         <module name="org.jboss.logging"/>
         <module name="org.jboss.vfs"/>
-        <module name="org.javassist" export="true"/>
+        <module name="org.javassist" export="true" optional="true"/>
         <module name="org.hibernate.commons-annotations"/>
         <module name="org.hibernate.orm.jipijapa-hibernate5" services="import" slot="${slot}"/>
         <module name="net.bytebuddy" slot="${bytebuddySlot}" />

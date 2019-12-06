@@ -22,7 +22,6 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.ErrorLogger;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
@@ -463,9 +462,9 @@ public class OverrideRepository  {
 			public boolean excludeForeignKeyAsCollection(
 					String keyname, 
 					TableIdentifier fromTable, 
-					List<Column> fromColumns, 
+					List<?> fromColumns, 
 					TableIdentifier referencedTable, 
-					List<Column> referencedColumns) {
+					List<?> referencedColumns) {
 				Boolean bool = foreignKeyInverseExclude.get(keyname);
 				if(bool!=null) {
 					return bool.booleanValue();

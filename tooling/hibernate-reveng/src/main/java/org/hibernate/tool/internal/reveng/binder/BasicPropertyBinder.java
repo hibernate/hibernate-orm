@@ -2,8 +2,8 @@ package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 
 class BasicPropertyBinder extends AbstractBinder {
 	
@@ -22,16 +22,11 @@ class BasicPropertyBinder extends AbstractBinder {
 	
 
 	Property bind(String propertyName, Table table, Column column) {
-		SimpleValue value = simpleValueBinder.bind(table, column, false);
 		return propertyBinder.bind(
 				table, 
 				propertyName, 
-				value, 
-				true, 
-				true, 
-				false, 
-				null, 
-				null);
+				simpleValueBinder.bind(table, column, false), 
+				DefaultAssociationInfo.create(null, null, true, true));
 	}
 
 }

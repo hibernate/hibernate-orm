@@ -2,22 +2,21 @@ package org.hibernate.tool.internal.reveng.binder;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.hibernate.FetchMode;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
 public class PropertyBinder extends AbstractBinder {
 
-	private static final Logger LOGGER = Logger.getLogger(PropertyBinder.class.getName());
-	
 	static PropertyBinder create(BinderContext binderContext) {
 		return new PropertyBinder(binderContext);
 	}
@@ -25,26 +24,36 @@ public class PropertyBinder extends AbstractBinder {
 	private PropertyBinder(BinderContext binderContext) {
 		super(binderContext);
 	}
-
-	public Property bind(
-			Table table, 
+	
+	Property bind(
+			Table table,
+			String propertyName,
+			Value value,
+			AssociationInfo associationInfo) {
+		return bindMetaAttributes(
+				createProperty(propertyName, value, associationInfo), 
+				table);
+	}
+	
+	private Property createProperty(
 			String propertyName, 
 			Value value, 
-			boolean insertable, 
-			boolean updatable, 
-			boolean lazy, 
-			String cascade, 
-			String propertyAccessorName) {
-    	LOGGER.log(Level.INFO, "Building property " + propertyName);
-        Property prop = new Property();
-		prop.setName(propertyName);
-		prop.setValue(value);
-		prop.setInsertable(insertable);
-		prop.setUpdateable(updatable);
-		prop.setLazy(lazy);
-		prop.setCascade(cascade==null?"none":cascade);
-		prop.setPropertyAccessorName(propertyAccessorName==null?"property":propertyAccessorName);
-		return bindMetaAttributes(prop, table);
+			AssociationInfo associationInfo) {
+		Property result = new Property();
+		result.setName(propertyName);
+		result.setValue(value);
+		result.setInsertable(associationInfo.getInsert());
+		result.setUpdateable(associationInfo.getUpdate());
+		String cascade = associationInfo.getCascade();
+		cascade = cascade == null ? "none" : cascade;
+		result.setCascade(cascade);
+		boolean lazy = false;
+		if (Fetchable.class.isInstance(value)) {
+			lazy = ((Fetchable)value).getFetchMode() != FetchMode.JOIN;
+		}
+		result.setLazy(lazy);
+		result.setPropertyAccessorName("property");
+		return result;
 	}
 
     private Property bindMetaAttributes(Property property, Table table) {

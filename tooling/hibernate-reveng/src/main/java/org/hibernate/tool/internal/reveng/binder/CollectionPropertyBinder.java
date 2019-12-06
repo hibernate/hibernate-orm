@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import org.hibernate.FetchMode;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
@@ -30,16 +29,8 @@ class CollectionPropertyBinder extends AbstractBinder {
 			boolean inverseProperty) {
     	AssociationInfo associationInfo = determineAssociationInfo(fk, inverseProperty, mutable);
     	BinderUtils.updateFetchMode(value, associationInfo.getFetch());
-        return propertyBinder.bind(
-        		table, 
-        		propertyName, 
-        		value, 
-        		associationInfo.getInsert(), 
-        		associationInfo.getUpdate(), 
-        		value.getFetchMode()!=FetchMode.JOIN, 
-        		associationInfo.getCascade(), 
-        		null);
-	}
+        return propertyBinder.bind(table, propertyName, value, associationInfo);
+ 	}
     
     private DefaultAssociationInfo determineAssociationInfo(
     		ForeignKey foreignKey, 

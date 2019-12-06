@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng.binder;
 
-import org.hibernate.FetchMode;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -30,15 +29,7 @@ class EntityPropertyBinder extends AbstractBinder {
 			boolean inverseProperty) {
     	AssociationInfo associationInfo = determineAssociationInfo(fk, inverseProperty, mutable);
     	BinderUtils.updateFetchMode(value, associationInfo.getFetch());
-        return propertyBinder.bind(
-        		table, 
-         		propertyName, 
-        		value, 
-           		associationInfo.getInsert(), 
-        		associationInfo.getUpdate(), 
-        		value.getFetchMode()!=FetchMode.JOIN, 
-        		associationInfo.getCascade(), 
-        		null);
+        return propertyBinder.bind(table, propertyName, value, associationInfo);
 	}
 
     private DefaultAssociationInfo determineAssociationInfo(

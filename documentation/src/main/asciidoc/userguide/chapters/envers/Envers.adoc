@@ -444,6 +444,18 @@ By default, that includes just:
 
 revision number::
 An integral value (`int/Integer` or `long/Long`). Essentially, the primary key of the revision
++
+[WARNING]
+====
+A revision number value should **always** be increasing and never overflows.
+
+The default implementations provided by Envers use an `int` data type which has an upper bounds of `Integer.MAX_VALUE`.
+It is critical that users consider whether this upper bounds is feasible for your application.  If a large range is needed, consider using a custom revision entity mapping using a `long` data type.
+
+In the event that the revision number reaches its upper bounds wrapping around becoming negative, an `AuditException` will be thrown causing the current transaction to be rolled back.
+This guarantees that the audit history remains in a valid state that can be queried by the Envers Query API.
+====
+
 revision timestamp::
 Either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
 When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will lose precision.

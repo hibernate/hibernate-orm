@@ -110,7 +110,7 @@ public final class AuditMetadataGenerator {
 		this.auditStrategy = auditStrategy;
 		this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
-		this.basicMetadataGenerator = new BasicMetadataGenerator();
+		this.basicMetadataGenerator = new BasicMetadataGenerator( this );
 		this.componentMetadataGenerator = new ComponentMetadataGenerator( this );
 		this.idMetadataGenerator = new IdMetadataGenerator( this );
 		this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator( this );
@@ -460,7 +460,7 @@ public final class AuditMetadataGenerator {
 			}
 
 			final Element joinKey = joinElement.addElement( "key" );
-			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator() );
+			MetadataTools.addColumns( joinKey, join.getKey().getColumnIterator(), metadata );
 			MetadataTools.addColumn( joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null );
 		}
 	}
@@ -509,7 +509,7 @@ public final class AuditMetadataGenerator {
 		if ( pc.getDiscriminator() != null ) {
 			final Element discriminatorElement = classMapping.addElement( "discriminator" );
 			// Database column or SQL formula allowed to distinguish entity types
-			MetadataTools.addColumnsOrFormulas( discriminatorElement, pc.getDiscriminator().getColumnIterator() );
+			MetadataTools.addColumnsOrFormulas( discriminatorElement, pc.getDiscriminator().getColumnIterator(), metadata );
 			discriminatorElement.addAttribute( "type", pc.getDiscriminator().getType().getName() );
 		}
 
@@ -633,7 +633,7 @@ public final class AuditMetadataGenerator {
 
 				// Adding the "key" element with all id columns...
 				final Element keyMapping = mappingData.getFirst().addElement( "key" );
-				MetadataTools.addColumns( keyMapping, pc.getTable().getPrimaryKey().columnIterator() );
+				MetadataTools.addColumns( keyMapping, pc.getTable().getPrimaryKey().columnIterator(), metadata );
 
 				// ... and the revision number column, read from the revision info relation mapping.
 				keyMapping.add( (Element) cloneAndSetupRevisionInfoRelationMapping().element( "column" ).clone() );

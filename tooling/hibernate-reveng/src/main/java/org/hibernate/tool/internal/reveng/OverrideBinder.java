@@ -330,7 +330,9 @@ public class OverrideBinder {
 
 	private static DefaultAssociationInfo ensureInit(
 			DefaultAssociationInfo associationInfo) {
-		return associationInfo==null?new DefaultAssociationInfo():associationInfo;
+		return associationInfo == null
+				? DefaultAssociationInfo.create(null, null, null, null)
+						: associationInfo;
 	}
 
 	private static boolean validateFkAssociations(Element element){

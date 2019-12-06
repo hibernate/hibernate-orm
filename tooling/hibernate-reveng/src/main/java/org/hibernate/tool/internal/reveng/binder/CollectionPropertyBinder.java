@@ -47,11 +47,7 @@ class CollectionPropertyBinder extends AbstractBinder {
     		boolean mutable) {
     	AssociationInfo foreignKeyAssociationInfo = 
     			getAssociationInfoInRevengStrategy(foreignKey, inverseProperty);
-    	DefaultAssociationInfo result = new DefaultAssociationInfo();
-    	result.setFetch(null);
-    	result.setCascade(null);
-    	result.setUpdate(mutable);
-    	result.setInsert(mutable);
+    	DefaultAssociationInfo result = DefaultAssociationInfo.create(null, null, mutable, mutable);
     	if(foreignKeyAssociationInfo != null){
         	if (foreignKeyAssociationInfo.getCascade() == null) {
         		result.setCascade("all");

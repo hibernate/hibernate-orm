@@ -313,7 +313,7 @@ public final class IdMetadataGenerator {
 		// schema and the base table schema when a @ManyToOne is present in an identifier.
 		manyToOneElement.addAttribute( "foreign-key", "none" );
 
-		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );
+		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator(), mainGenerator.getMetadata() );
 
 		return true;
 	}

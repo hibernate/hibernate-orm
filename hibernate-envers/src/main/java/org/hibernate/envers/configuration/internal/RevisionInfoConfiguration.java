@@ -422,6 +422,14 @@ public class RevisionInfoConfiguration {
 			revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
 		}
 
+		final RevisionInfoNumberReader revisionInfoNumberReader = new RevisionInfoNumberReader(
+				revisionInfoClass,
+				revisionInfoIdData,
+				metadata.getMetadataBuildingOptions().getServiceRegistry()
+		);
+
+		revisionInfoGenerator.setRevisionInfoNumberReader( revisionInfoNumberReader );
+
 		return new RevisionInfoConfigurationResult(
 				revisionInfoGenerator, revisionInfoXmlMapping,
 				new RevisionInfoQueryCreator(
@@ -429,7 +437,7 @@ public class RevisionInfoConfiguration {
 						revisionInfoTimestampData.getName(), isTimestampAsDate()
 				),
 				generateRevisionInfoRelationMapping(),
-				new RevisionInfoNumberReader( revisionInfoClass, revisionInfoIdData, metadata.getMetadataBuildingOptions().getServiceRegistry() ),
+				revisionInfoNumberReader,
 				globalCfg.isTrackEntitiesChangedInRevision()
 						? new ModifiedEntityNamesReader( revisionInfoClass, modifiedEntityNamesData, metadata.getMetadataBuildingOptions().getServiceRegistry() )
 						: null,

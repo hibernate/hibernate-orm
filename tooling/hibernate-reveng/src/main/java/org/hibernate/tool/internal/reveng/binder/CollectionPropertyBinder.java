@@ -45,8 +45,8 @@ class CollectionPropertyBinder extends AbstractBinder {
     		ForeignKey foreignKey, 
     		boolean inverseProperty, 
     		boolean mutable) {
-    	AssociationInfo origin = 
-    			getAssociationInfoInRevengStrategy(foreignKey, inverseProperty);
+    	AssociationInfo origin = BinderUtils
+    			.getAssociationInfo(getRevengStrategy(), foreignKey, inverseProperty);
     	DefaultAssociationInfo result = DefaultAssociationInfo.create(null, null, mutable, mutable);
     	if(origin != null){
         	updateAssociationInfo(origin, result);
@@ -69,14 +69,4 @@ class CollectionPropertyBinder extends AbstractBinder {
     	target.setFetch(origin.getFetch());
     }
 
-    private AssociationInfo getAssociationInfoInRevengStrategy(
-    		ForeignKey foreignKey, 
-    		boolean inverseProperty) {
-    	if (inverseProperty) {
-    		return getRevengStrategy().foreignKeyToInverseAssociationInfo(foreignKey);
-    	} else {
-    		return getRevengStrategy().foreignKeyToAssociationInfo(foreignKey);
-    	}
-    }
-    
 }

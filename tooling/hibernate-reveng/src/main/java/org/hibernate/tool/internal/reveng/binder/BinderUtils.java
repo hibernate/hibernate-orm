@@ -13,8 +13,11 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Fetchable;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.tool.api.reveng.AssociationInfo;
+import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
 public class BinderUtils {
 	
@@ -67,7 +70,7 @@ public class BinderUtils {
 		}
 	}
 	
-    public static void updateFetchMode(Fetchable value, String fetchMode) {
+    static void updateFetchMode(Fetchable value, String fetchMode) {
         if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
         	value.setFetchMode(FetchMode.JOIN);
         }
@@ -77,4 +80,15 @@ public class BinderUtils {
     }
 
 
+    static AssociationInfo getAssociationInfo(
+    		ReverseEngineeringStrategy revengStrategy,
+    		ForeignKey foreignKey, 
+    		boolean inverseProperty) {
+    	if (inverseProperty) {
+    		return revengStrategy.foreignKeyToInverseAssociationInfo(foreignKey);
+    	} else {
+    		return revengStrategy.foreignKeyToAssociationInfo(foreignKey);
+    	}
+    }
+    
 }

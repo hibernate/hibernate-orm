@@ -8,6 +8,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Properties;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
@@ -27,6 +28,12 @@ import org.dom4j.Element;
  * @author Chris Cranford
  */
 public final class BasicMetadataGenerator {
+
+	private final Metadata metadata;
+
+	public BasicMetadataGenerator(AuditMetadataGenerator mainGenerator) {
+		this.metadata = mainGenerator.getMetadata();
+	}
 
 	boolean addBasic(
 			Element parent,
@@ -109,7 +116,7 @@ public final class BasicMetadataGenerator {
 				key
 		);
 
-		MetadataTools.addColumns( propMapping, value.getColumnIterator() );
+		MetadataTools.addColumns( propMapping, value.getColumnIterator(), metadata );
 
 		return propMapping;
 	}

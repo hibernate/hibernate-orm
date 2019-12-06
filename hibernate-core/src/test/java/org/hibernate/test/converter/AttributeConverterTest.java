@@ -29,6 +29,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.tree.JavaConstantNode;
 import org.hibernate.internal.util.ConfigHelper;
@@ -46,6 +47,9 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -110,7 +114,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		}
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+		SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+		assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 	}
 
 	@Test
@@ -161,7 +166,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -190,7 +196,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

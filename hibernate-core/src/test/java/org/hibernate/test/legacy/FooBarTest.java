@@ -374,7 +374,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "CockroachDB does stricter type inference")
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/43007")
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

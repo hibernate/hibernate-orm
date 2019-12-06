@@ -24,8 +24,6 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     public CockroachDB1920Dialect() {
         super();
-        registerColumnType( Types.INTEGER, "int8" );
-        registerColumnType( Types.FLOAT, "float8" );
         registerColumnType( Types.BLOB, "bytea" );
     }
 
@@ -36,7 +34,6 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-
         // CockroachDB 19.2.0 does not support temporary tables, so we must override the Postgres behavior.
         return new InlineIdsInClauseBulkIdStrategy();
     }
@@ -73,10 +70,14 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     }
 
     @Override
-    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) { return false; }
+    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+        return false;
+    }
 
     @Override
-    public boolean supportsLockTimeouts() { return false; }
+    public boolean supportsLockTimeouts() {
+        return false;
+    }
 
     @Override
     public boolean supportsSkipLocked() {
@@ -96,14 +97,22 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
     }
 
     @Override
-    public boolean canCreateSchema() { return false; }
+    public boolean canCreateSchema() {
+        return false;
+    }
 
     @Override
-    public boolean supportsStoredProcedures() { return false; }
+    public boolean supportsStoredProcedures() {
+        return false;
+    }
 
     @Override
-    public boolean supportsComputedIndexes() { return false; }
+    public boolean supportsComputedIndexes() {
+        return false;
+    }
 
     @Override
-    public boolean supportsLoFunctions() { return false; }
+    public boolean supportsLoFunctions() {
+        return false;
+    }
 }

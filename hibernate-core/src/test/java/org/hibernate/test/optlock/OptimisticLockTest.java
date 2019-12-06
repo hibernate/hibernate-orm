@@ -13,6 +13,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.dialect.CockroachDB1920Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.DialectChecks;
@@ -161,20 +162,23 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 	private void checkException(Session mainSession, PersistenceException e) {
 		final Throwable cause = e.getCause();
 		if ( cause instanceof JDBCException ) {
-			// SQLServer will report this condition via a SQLException
-			// when using its SNAPSHOT transaction isolation...
-
-			if ( !(getDialect() instanceof SQLServerDialect && ((JDBCException) cause).getErrorCode() == 3960) ) {
-				throw e;
-			}
-			else {
+			if ( getDialect() instanceof SQLServerDialect && ((JDBCException) cause).getErrorCode() == 3960 ) {
+				// SQLServer will report this condition via a SQLException
+				// when using its SNAPSHOT transaction isolation.
 				// it seems to "lose track" of the transaction as well...
 				mainSession.getTransaction().rollback();
 				mainSession.beginTransaction();
 			}
+			else if ( getDialect() instanceof CockroachDB1920Dialect && ((JDBCException) cause).getSQLState().equals("40001")) {
+				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
+				// serialization failure.
+			}
+			else {
+				throw e;
+			}
 		}
 		else if ( !(cause instanceof StaleObjectStateException) && !(cause instanceof StaleStateException) ) {
-			fail( "expectd StaleObjectStateException or StaleStateException exception but is" + cause );
+			fail( "expected StaleObjectStateException or StaleStateException exception but is" + cause );
 		}
 	}
 

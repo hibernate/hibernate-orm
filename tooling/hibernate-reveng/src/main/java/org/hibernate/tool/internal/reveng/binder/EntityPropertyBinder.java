@@ -1,11 +1,13 @@
 package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.FetchMode;
+import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.api.reveng.AssociationInfo;
+import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 
 public class EntityPropertyBinder extends AbstractBinder {
 	
@@ -27,47 +29,60 @@ public class EntityPropertyBinder extends AbstractBinder {
 			ForeignKey fk, 
 			ToOne value, 
 			boolean inverseProperty) {
-		
-		AssociationInfo fkei = 
-				inverseProperty ? 
-						getRevengStrategy().foreignKeyToInverseAssociationInfo(fk) : 
-							getRevengStrategy().foreignKeyToAssociationInfo(fk);
-
-        String fetchMode = null;
-        String cascade = null;
-        boolean update = mutable;
-        boolean insert = mutable;
-
-        if(fkei != null){
-        	cascade = fkei.getCascade();
-        	if(fkei.getUpdate()!=null) {
-        		update = fkei.getUpdate().booleanValue();
-        	}
-        	if(fkei.getInsert()!=null) {
-        		insert = fkei.getInsert().booleanValue();
-        	}
-        	fetchMode = fkei.getFetch();
-        }
-
-        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
-        }
-        else if(FetchMode.SELECT.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-        else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }
-
+    	AssociationInfo associationInfo = determineAssociationInfo(fk, inverseProperty, mutable);
+    	updateFetchMode(value, associationInfo.getFetch());
         return propertyBinder.bind(
         		table, 
          		propertyName, 
         		value, 
-        		insert, 
-        		update, 
+           		associationInfo.getInsert(), 
+        		associationInfo.getUpdate(), 
         		value.getFetchMode()!=FetchMode.JOIN, 
-        		cascade, 
+        		associationInfo.getCascade(), 
         		null);
 	}
 
+    private DefaultAssociationInfo determineAssociationInfo(
+    		ForeignKey foreignKey, 
+    		boolean inverseProperty, 
+    		boolean mutable) {
+    	AssociationInfo foreignKeyAssociationInfo = 
+    			getAssociationInfoInRevengStrategy(foreignKey, inverseProperty);
+    	DefaultAssociationInfo result = DefaultAssociationInfo.create(null, null, mutable, mutable);
+    	if(foreignKeyAssociationInfo != null){
+        	updateAssociationInfo(foreignKeyAssociationInfo, result);
+        }
+        return result;
+    }
+    
+    private void updateAssociationInfo(AssociationInfo origin, DefaultAssociationInfo target) {
+    	target.setCascade(origin.getCascade());
+    	if(origin.getUpdate()!=null) {
+    		target.setUpdate(origin.getUpdate());;
+    	} 
+    	if(origin.getInsert()!=null) {
+    		target.setInsert(origin.getInsert());
+    	}
+    	target.setFetch(origin.getFetch());
+    }
+
+    private AssociationInfo getAssociationInfoInRevengStrategy(
+    		ForeignKey foreignKey, 
+    		boolean inverseProperty) {
+    	if (inverseProperty) {
+    		return getRevengStrategy().foreignKeyToInverseAssociationInfo(foreignKey);
+    	} else {
+    		return getRevengStrategy().foreignKeyToAssociationInfo(foreignKey);
+    	}
+    }
+    
+    private void updateFetchMode(Fetchable value, String fetchMode) {
+        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
+        	value.setFetchMode(FetchMode.JOIN);
+        }
+        else {
+        	value.setFetchMode(FetchMode.SELECT);
+        }    	
+    }
+    
 }

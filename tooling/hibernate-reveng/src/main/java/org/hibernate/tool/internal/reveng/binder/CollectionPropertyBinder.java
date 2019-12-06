@@ -2,6 +2,7 @@ package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.FetchMode;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -41,30 +42,34 @@ class CollectionPropertyBinder extends AbstractBinder {
         		null);
 	}
     
-    private AssociationInfo determineAssociationInfo(
+    private DefaultAssociationInfo determineAssociationInfo(
     		ForeignKey foreignKey, 
     		boolean inverseProperty, 
     		boolean mutable) {
-    	AssociationInfo foreignKeyAssociationInfo = 
+    	AssociationInfo origin = 
     			getAssociationInfoInRevengStrategy(foreignKey, inverseProperty);
     	DefaultAssociationInfo result = DefaultAssociationInfo.create(null, null, mutable, mutable);
-    	if(foreignKeyAssociationInfo != null){
-        	if (foreignKeyAssociationInfo.getCascade() == null) {
-        		result.setCascade("all");
-        	} else {
-        		result.setCascade(foreignKeyAssociationInfo.getCascade());
-        	}
-        	if(foreignKeyAssociationInfo.getUpdate()!=null) {
-        		result.setUpdate(foreignKeyAssociationInfo.getUpdate());;
-        	} 
-        	if(foreignKeyAssociationInfo.getInsert()!=null) {
-        		result.setInsert(foreignKeyAssociationInfo.getInsert());
-        	}
-        	result.setFetch(foreignKeyAssociationInfo.getFetch());
+    	if(origin != null){
+        	updateAssociationInfo(origin, result);
         }
         return result;
     }
     
+    private void updateAssociationInfo(AssociationInfo origin, DefaultAssociationInfo target) {
+    	if (origin.getCascade() != null) {
+    		target.setCascade(origin.getCascade());
+    	} else {
+    		target.setCascade("all");
+    	}
+    	if(origin.getUpdate()!=null) {
+    		target.setUpdate(origin.getUpdate());;
+    	} 
+    	if(origin.getInsert()!=null) {
+    		target.setInsert(origin.getInsert());
+    	}
+    	target.setFetch(origin.getFetch());
+    }
+
     private AssociationInfo getAssociationInfoInRevengStrategy(
     		ForeignKey foreignKey, 
     		boolean inverseProperty) {
@@ -75,7 +80,7 @@ class CollectionPropertyBinder extends AbstractBinder {
     	}
     }
     
-    private void updateFetchMode(Collection value, String fetchMode) {
+    private void updateFetchMode(Fetchable value, String fetchMode) {
         if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
         	value.setFetchMode(FetchMode.JOIN);
         }
@@ -83,5 +88,4 @@ class CollectionPropertyBinder extends AbstractBinder {
         	value.setFetchMode(FetchMode.SELECT);
         }    	
     }
-    
 }

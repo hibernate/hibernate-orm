@@ -9,9 +9,9 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 
-public class EntityPropertyBinder extends AbstractBinder {
+class EntityPropertyBinder extends AbstractBinder {
 	
-	public static EntityPropertyBinder create(BinderContext binderContext) {
+	static EntityPropertyBinder create(BinderContext binderContext) {
 		return new EntityPropertyBinder(binderContext);
 	}
 	
@@ -22,7 +22,7 @@ public class EntityPropertyBinder extends AbstractBinder {
 		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
-	public Property bind(
+	Property bind(
 			String propertyName, 
 			boolean mutable,
 			Table table, 

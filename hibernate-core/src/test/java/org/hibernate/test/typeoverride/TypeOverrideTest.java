@@ -13,18 +13,10 @@ import static org.junit.Assert.assertSame;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.*;
 import org.junit.Test;
 
 /**
@@ -47,7 +39,13 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 		assertSame( IntegerTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
 
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
-		if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) )  {
+		if ( CockroachDB1920Dialect.class.isInstance( getDialect() ))  {
+			assertSame(
+					VarbinaryTypeDescriptor.INSTANCE,
+					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+			);
+		}
+		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) )  {
 			assertSame(
 					BlobTypeDescriptor.BLOB_BINDING,
 					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )

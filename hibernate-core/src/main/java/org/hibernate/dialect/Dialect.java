@@ -2977,6 +2977,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect/database support LO_CREATE and related functions.
+	 *
+	 * @return {@code true} if LO_CREATE and related functions are supported
+	 */
+	public boolean supportsLoFunctions() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect/database support mixed type arithmetic (e.g. <int> + <float>).
 	 *
 	 * @return {@code true} if mixed type arithmetic is supported

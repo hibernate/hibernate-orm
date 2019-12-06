@@ -45,24 +45,7 @@ import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.InterbaseDialect;
-import org.hibernate.dialect.MckoiDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle12cDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PointbaseDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SAPDBDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -391,6 +374,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "CockroachDB does stricter type inference")
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

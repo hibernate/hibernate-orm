@@ -1,7 +1,6 @@
 package org.hibernate.tool.internal.reveng.binder;
 
 import org.hibernate.FetchMode;
-import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -30,7 +29,7 @@ class EntityPropertyBinder extends AbstractBinder {
 			ToOne value, 
 			boolean inverseProperty) {
     	AssociationInfo associationInfo = determineAssociationInfo(fk, inverseProperty, mutable);
-    	updateFetchMode(value, associationInfo.getFetch());
+    	BinderUtils.updateFetchMode(value, associationInfo.getFetch());
         return propertyBinder.bind(
         		table, 
          		propertyName, 
@@ -74,15 +73,6 @@ class EntityPropertyBinder extends AbstractBinder {
     	} else {
     		return getRevengStrategy().foreignKeyToAssociationInfo(foreignKey);
     	}
-    }
-    
-    private void updateFetchMode(Fetchable value, String fetchMode) {
-        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-        	value.setFetchMode(FetchMode.JOIN);
-        }
-        else {
-        	value.setFetchMode(FetchMode.SELECT);
-        }    	
     }
     
 }

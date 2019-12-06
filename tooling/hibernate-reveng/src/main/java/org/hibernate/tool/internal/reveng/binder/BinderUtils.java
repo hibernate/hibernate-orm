@@ -8,9 +8,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.hibernate.FetchMode;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -64,5 +66,15 @@ public class BinderUtils {
 //			throw new RuntimeException("Binding column twice should not happen. " + column);
 		}
 	}
+	
+    public static void updateFetchMode(Fetchable value, String fetchMode) {
+        if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
+        	value.setFetchMode(FetchMode.JOIN);
+        }
+        else {
+        	value.setFetchMode(FetchMode.SELECT);
+        }    	
+    }
+
 
 }

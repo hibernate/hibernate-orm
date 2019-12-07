@@ -13,11 +13,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class VersionPropertyBinder extends AbstractBinder {
+class VersionPropertyBinder extends AbstractBinder {
 	
 	private final static Logger LOGGER = Logger.getLogger(VersionPropertyBinder.class.getName());
 	
-	public static VersionPropertyBinder create(BinderContext binderContext) {
+	static VersionPropertyBinder create(BinderContext binderContext) {
 		return new VersionPropertyBinder(binderContext);
 	}
 	
@@ -28,7 +28,7 @@ public class VersionPropertyBinder extends AbstractBinder {
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 	
-	public void bind(
+	void bind(
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -916,6 +917,12 @@ public class ProcedureCallImpl<R>
 		final QueryParameterBinding binding = paramBindings.getBinding( position );
 		binding.setBindValue( value, temporalType );
 		return this;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Stream getResultStream() {
+		return getResultList().stream();
 	}
 
 }

@@ -58,10 +58,9 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		final EmbeddableMappingType mappingType = new EmbeddableMappingType(
 				bootDescriptor,
 				representationStrategy,
+				embeddedPartBuilder,
 				creationContext.getSessionFactory()
 		);
-
-		mappingType.valueMapping = embeddedPartBuilder.apply( mappingType );
 
 		creationProcess.registerInitializationCallback(
 				() -> mappingType.finishInitialization(
@@ -81,20 +80,20 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	private final SortedMap<String,AttributeMapping> attributeMappings = new TreeMap<>();
 
-	/**
-	 * This is logically final.  However given the chicken-and-egg situation between
-	 * EmbeddableMappingType and EmbeddableValuedModelPart one side will need to be
-	 * physically non-final
-	 */
-	private EmbeddableValuedModelPart valueMapping;
+	private final EmbeddableValuedModelPart valueMapping;
 
-	public EmbeddableMappingType(
-			Component bootDescriptor,
+	private EmbeddableMappingType(
+			@SuppressWarnings("unused") Component bootDescriptor,
 			EmbeddableRepresentationStrategy representationStrategy,
+			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			SessionFactoryImplementor sessionFactory) {
 		this.embeddableJtd = representationStrategy.getMappedJavaTypeDescriptor();
 		this.representationStrategy = representationStrategy;
 		this.sessionFactory = sessionFactory;
+
+		this.valueMapping = embeddedPartBuilder.apply( this );
+
+
 	}
 
 	private boolean finishInitialization(

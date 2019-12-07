@@ -16,8 +16,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.jpa.QueryHints;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -26,6 +31,7 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -71,7 +77,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-				"select distinct p from Person p" )
+				"select distinct p from Person p", Person.class)
 			.getResultList();
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue( sqlQuery.contains( " distinct " ) );
@@ -80,7 +86,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-				"select distinct p from Person p" )
+				"select distinct p from Person p", Person.class)
 			.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
 			.getResultList();
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
@@ -89,7 +95,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		doInHibernate( this::sessionFactory, session -> {
 			List<Person> persons = session.createQuery(
-				"select p from Person p left join fetch p.phones " )
+				"select p from Person p left join fetch p.phones ", Person.class)
 			.getResultList();
 			assertEquals(2, persons.size());
 		} );
@@ -97,7 +103,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-				"select distinct p from Person p left join fetch p.phones " )
+				"select distinct p from Person p left join fetch p.phones ", Person.class)
 			.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
@@ -111,7 +117,7 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-					"select distinct p from Person p left join fetch p.phones ")
+					"select distinct p from Person p left join fetch p.phones ", Person.class)
 					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, false)
 					.setMaxResults(5)
 					.getResultList();
@@ -127,13 +133,41 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons = session.createQuery(
-					"select distinct p from Person p left join fetch p.phones ")
+					"select distinct p from Person p left join fetch p.phones ", Person.class)
 					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, true)
 					.setMaxResults(5)
 					.getResultList();
 			assertEquals(1, persons.size());
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue(sqlQuery.contains(" distinct "));
+		});
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11726" )
+	@RequiresDialect(value = {
+			PostgreSQL82Dialect.class,
+			Oracle8iDialect.class,
+			MySQL5Dialect.class,
+			SQLServer2005Dialect.class
+	})
+	public void testDistinctPassThroughFalseWithAdditionalScalarDistinct() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createQuery(
+					"select distinct p " +
+					"from Person p " +
+					"left join fetch p.phones " +
+					"where p.id < all (" +
+					"	select distinct length(number) " +
+					"	from Phone " +
+					")", Person.class)
+					.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, false)
+					.setMaxResults(5)
+					.getResultList();
+			assertEquals(1, persons.size());
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertSame(2, sqlQuery.split(" distinct ").length);
 		});
 	}
 

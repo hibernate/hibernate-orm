@@ -3004,8 +3004,20 @@ public abstract class Loader {
 			String sql,
 			QueryParameters parameters) {
 		if ( !parameters.isPassDistinctThrough() ) {
-			if ( sql.startsWith( SELECT_DISTINCT ) ) {
-				return SELECT + sql.substring( SELECT_DISTINCT.length() );
+			int selectDistinctIndex = sql.indexOf( SELECT_DISTINCT );
+
+			if ( selectDistinctIndex > -1 ) {
+
+				StringBuilder builder = ( selectDistinctIndex > 0 ) ?
+						new StringBuilder(
+								sql.substring( 0, selectDistinctIndex )
+						) :
+						new StringBuilder();
+
+				builder.append( SELECT )
+						.append( sql.substring( selectDistinctIndex + SELECT_DISTINCT.length() ) );
+
+				return builder.toString();
 			}
 		}
 		return sql;

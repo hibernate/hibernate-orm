@@ -114,7 +114,7 @@ public class RootClassBinder extends AbstractBinder {
 			RootClass rc, 
 			Set<Column> processed, 
 			Mapping mapping) {
-		versionPropertyBinder.bind(table, rc, processed, mapping);
+		versionPropertyBinder.bind(table, rc, processed);
 	}
 
 	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, DatabaseCollector collector, Mapping mapping) {

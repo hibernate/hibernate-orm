@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -31,8 +30,7 @@ class VersionPropertyBinder extends AbstractBinder {
 	void bind(
 			Table table, 
 			RootClass rc, 
-			Set<Column> processed, 
-			Mapping mapping) {
+			Set<Column> processed) {
 		TableIdentifier identifier = TableIdentifier.create(table);
 		String optimisticLockColumnName = getRevengStrategy().getOptimisticLockColumnName(identifier);
 		if(optimisticLockColumnName!=null) {
@@ -40,7 +38,7 @@ class VersionPropertyBinder extends AbstractBinder {
 			if(column==null) {
 				LOGGER.log(Level.WARNING, "Column " + column + " wanted for <version>/<timestamp> not found in " + identifier);
 			} else {
-				bindVersionProperty(table, identifier, column, rc, processed, mapping);
+				bindVersionProperty(table, identifier, column, rc, processed);
 			}
 		} else {
 			LOGGER.log(Level.INFO, "Scanning " + identifier + " for <version>/<timestamp> columns.");
@@ -49,7 +47,7 @@ class VersionPropertyBinder extends AbstractBinder {
 				Column column = (Column) columnIterator.next();
 				boolean useIt = getRevengStrategy().useColumnForOptimisticLock(identifier, column.getName());
 				if(useIt && !processed.contains(column)) {
-					bindVersionProperty( table, identifier, column, rc, processed, mapping );
+					bindVersionProperty( table, identifier, column, rc, processed);
 					return;
 				}
 			}
@@ -62,8 +60,7 @@ class VersionPropertyBinder extends AbstractBinder {
 			TableIdentifier identifier, 
 			Column column, 
 			RootClass rc, 
-			Set<Column> processed, 
-			Mapping mapping) {
+			Set<Column> processed) {
 		processed.add(column);
 		String propertyName = getRevengStrategy().columnToPropertyName( identifier, column.getName() );
 		Property property = basicPropertyBinder.bind(

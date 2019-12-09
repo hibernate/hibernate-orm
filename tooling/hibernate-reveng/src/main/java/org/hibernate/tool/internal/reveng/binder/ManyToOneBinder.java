@@ -12,7 +12,7 @@ import org.hibernate.mapping.Table;
 
 public class ManyToOneBinder extends AbstractBinder {
 	
-	public static ManyToOneBinder create(BinderContext binderContext) {
+	static ManyToOneBinder create(BinderContext binderContext) {
 		return new ManyToOneBinder(binderContext);
 	}
 	
@@ -23,7 +23,7 @@ public class ManyToOneBinder extends AbstractBinder {
 		this.entityPropertyBinder = EntityPropertyBinder.create(binderContext);
 	}
 
-    public Property bind(
+    Property bind(
     		String propertyName, 
     		boolean mutable, 
     		Table table, 

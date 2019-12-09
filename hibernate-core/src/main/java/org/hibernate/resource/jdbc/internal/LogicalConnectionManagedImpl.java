@@ -97,11 +97,11 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.closed = closed;
 	}
 	
-	 /**
-	   * Check connection is closed, avoid exception while physicalConnection is null but it was closed.
-	   * @return true while connection is closed
-	   */
-	private boolean isPhysicalConnectionClosed(){
+	/**
+	 * Check connection is closed, avoid exception while physicalConnection is null but it was closed.
+	 * @return true while connection is closed
+	 */
+	private boolean isPhysicalConnectionClosed() {
 		try {
 			return physicalConnection == null || physicalConnection.isClosed();
 		} catch (SQLException e) {

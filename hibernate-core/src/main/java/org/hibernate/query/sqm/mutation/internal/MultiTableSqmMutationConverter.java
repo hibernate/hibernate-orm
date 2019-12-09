@@ -27,19 +27,18 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
@@ -80,7 +79,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
 				navigablePath,
 				null,
-				JoinType.LEFT,
+				true,
 				LockMode.PESSIMISTIC_WRITE,
 				getSqlAliasBaseGenerator(),
 				getSqlExpressionResolver(),
@@ -88,9 +87,6 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 				},
 				creationContext.getSessionFactory()
 		);
-
-		// because this is a multi-table update, here we expect multiple TableReferences
-		assert !mutatingTableGroup.getTableReferenceJoins().isEmpty();
 
 		getFromClauseAccess().registerTableGroup( navigablePath, mutatingTableGroup );
 	}

@@ -103,6 +103,11 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		return collectionTableGroup.getTableReference( tableExpression );
+	}
+
+	@Override
 	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
 		return collectionTableGroup.resolveTableReference( tableExpression, creator );
 	}

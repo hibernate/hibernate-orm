@@ -17,6 +17,9 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 
 /**
+ * Acts as a TableGroup for DML query operations.  It is used to simply
+ * wrap the TableReference of the "mutating table"
+ *
  * @author Steve Ebersole
  */
 public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
@@ -54,15 +57,20 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		return mutatingTableReference.getTableExpression().equals( tableExpression )
+				? mutatingTableReference
+				: null;
+	}
+
+	@Override
 	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
 		return resolveTableReference( tableExpression );
 	}
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression) {
-		return mutatingTableReference.getTableExpression().equals( tableExpression )
-				? mutatingTableReference
-				: null;
+		return getTableReference( tableExpression );
 	}
 
 	@Override

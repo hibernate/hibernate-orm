@@ -89,6 +89,7 @@ public class CteTable {
 				tableValueConstructorReference,
 				Collections.emptyList(),
 				null,
+				null,
 				sessionFactory
 		);
 

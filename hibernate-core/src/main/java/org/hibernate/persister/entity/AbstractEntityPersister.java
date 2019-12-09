@@ -173,6 +173,7 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -1216,7 +1217,7 @@ public abstract class AbstractEntityPersister
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			org.hibernate.sql.ast.JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -1229,24 +1230,104 @@ public abstract class AbstractEntityPersister
 				this,
 				lockMode,
 				sqlAliasBase,
+				(tableExpression, tableGroup) -> {
+					for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
+						final String subclassTableName = getSubclassTableName( i );
+						if ( subclassTableName.equals( tableExpression ) ) {
+							final boolean isNullableTable = isNullableSubclassTable( i );
+							final TableReference joinedTableReference = new TableReference(
+									tableExpression,
+									sqlAliasBase.generateNewAlias(),
+									isNullableTable,
+									getFactory()
+							);
+
+							return new TableReferenceJoin(
+									determineSubclassTableJoinType(
+											i,
+											canUseInnerJoins,
+											true,
+											Collections.emptySet()
+									),
+									joinedTableReference,
+									generateJoinPredicate(
+											tableGroup.getPrimaryTableReference(),
+											joinedTableReference,
+											i,
+											sqlExpressionResolver
+									)
+							);
+						}
+					}
+
+					return null;
+				},
 				creationContext.getSessionFactory()
 		);
 
-		applyTableReferences(
-				sqlAliasBase,
-				tableReferenceJoinType,
-				builder,
-				sqlExpressionResolver,
-				creationContext
+
+		builder.applyPrimaryReference(
+				createPrimaryTableReference(
+						sqlAliasBase,
+						sqlExpressionResolver,
+						creationContext
+				)
 		);
+
+		//		applyTableReferences(
+//				sqlAliasBase,
+//				tableReferenceJoinType,
+//				builder,
+//				sqlExpressionResolver,
+//				creationContext
+//		);
 
 		return builder.build();
 	}
 
-	protected TableReference resolvePrimaryTableReference(
+	@Override
+	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver) {
-		// todo (6.0) : temporary
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return resolvePrimaryTableReference( sqlAliasBase );
+	}
+
+	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
+			final String subclassTableName = getSubclassTableName( i );
+			if ( subclassTableName.equals( joinTableExpression ) ) {
+				final TableReference joinedTableReference = new TableReference(
+						joinTableExpression,
+						sqlAliasBase.generateNewAlias(),
+						isNullableSubclassTable( i ),
+						getFactory()
+				);
+
+				return new TableReferenceJoin(
+						canUseInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+						joinedTableReference,
+						generateJoinPredicate(
+								lhs,
+								joinedTableReference,
+								i,
+								sqlExpressionResolver
+						)
+				);
+			}
+		}
+
+		return null;
+	}
+
+	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
 		return new TableReference(
 				getRootTableName(),
 				sqlAliasBase.generateNewAlias(),
@@ -1258,14 +1339,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			org.hibernate.sql.ast.JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final TableReference primaryTableReference = resolvePrimaryTableReference(
-				sqlAliasBase,
-				sqlExpressionResolver
-		);
+		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
 
 		collector.applyPrimaryReference( primaryTableReference );
 
@@ -1285,7 +1363,7 @@ public abstract class AbstractEntityPersister
 	protected TableReferenceJoin createTableReferenceJoin(
 			int subClassTablePosition,
 			TableReference rootTableReference,
-			org.hibernate.sql.ast.JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver) {
 		final boolean nullable = isNullableSubclassTable( subClassTablePosition );
@@ -1298,7 +1376,7 @@ public abstract class AbstractEntityPersister
 		);
 
 		return new TableReferenceJoin(
-				nullable ? org.hibernate.sql.ast.JoinType.LEFT : joinType,
+				nullable ? SqlAstJoinType.LEFT : sqlAstJoinType,
 				joinedTableReference,
 				generateJoinPredicate( rootTableReference, joinedTableReference, subClassTablePosition, sqlExpressionResolver )
 		);
@@ -4091,7 +4169,7 @@ public abstract class AbstractEntityPersister
 		return join;
 	}
 
-	protected org.hibernate.sql.ast.JoinType determineSubclassTableJoinType(
+	protected SqlAstJoinType determineSubclassTableJoinType(
 			int subclassTableNumber,
 			boolean canInnerJoin,
 			boolean includeSubclasses,
@@ -4102,7 +4180,7 @@ public abstract class AbstractEntityPersister
 					&& !isNullableTable( subclassTableNumber );
 			// the table is either this persister's driving table or (one of) its super class persister's driving
 			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
-			return shouldInnerJoin ? org.hibernate.sql.ast.JoinType.INNER : org.hibernate.sql.ast.JoinType.LEFT;
+			return shouldInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT;
 		}
 
 		// otherwise we have a subclass table and need to look a little deeper...
@@ -4112,15 +4190,15 @@ public abstract class AbstractEntityPersister
 		// so we give TREAT-AS higher precedence...
 
 		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
-			return org.hibernate.sql.ast.JoinType.INNER;
+			return SqlAstJoinType.INNER;
 		}
 
 		if ( includeSubclasses
 				&& !isSubclassTableSequentialSelect( subclassTableNumber )
 				&& !isSubclassTableLazy( subclassTableNumber ) ) {
-			return org.hibernate.sql.ast.JoinType.LEFT;
+			return SqlAstJoinType.LEFT;
 		}
-		return org.hibernate.sql.ast.JoinType.INNER;
+		return SqlAstJoinType.INNER;
 	}
 
 	protected JoinType determineSubclassTableJoinType(

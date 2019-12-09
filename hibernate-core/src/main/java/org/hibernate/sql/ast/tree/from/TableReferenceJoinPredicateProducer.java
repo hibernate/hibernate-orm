@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -20,5 +20,5 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 @FunctionalInterface
 public
 interface TableReferenceJoinPredicateProducer {
-	Predicate producePredicate(TableReference lhs, TableReference rhs, JoinType joinType);
+	Predicate producePredicate(TableReference lhs, TableReference rhs, SqlAstJoinType sqlAstJoinType);
 }

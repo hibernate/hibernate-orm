@@ -29,7 +29,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -39,16 +39,17 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
-import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
-import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
+import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 
 /**
  * @author Steve Ebersole
@@ -252,7 +253,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 								fetchablePath,
 								lhsTableGroup,
 								null,
-								JoinType.LEFT,
+								SqlAstJoinType.LEFT,
 								lockMode,
 								creationState.getSqlAliasBaseManager(),
 								creationState.getSqlAstCreationState().getSqlExpressionResolver(),
@@ -295,7 +296,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -308,12 +309,27 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				this,
 				lockMode,
 				sqlAliasBase,
+				(tableExpression, tableGroup) -> createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						tableGroup.getPrimaryTableReference(),
+						sqlAstJoinType == SqlAstJoinType.INNER && ! getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
+						sqlExpressionResolver,
+						creationContext
+				),
 				creationContext.getSessionFactory()
 		);
 
-		applyTableReferences(
-				sqlAliasBase,
-				joinType,
+		tableGroupBuilder.applyPrimaryReference(
+				// returns null when there is no "collection table"
+				getCollectionDescriptor().createPrimaryTableReference(
+						sqlAliasBase,
+						sqlExpressionResolver,
+						creationContext
+				)
+		);
+
+		elementDescriptor.applyPrimaryTableReference(
 				tableGroupBuilder,
 				sqlExpressionResolver,
 				creationContext
@@ -322,12 +338,12 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		final TableGroup tableGroup = tableGroupBuilder.build();
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
-				joinType,
+				sqlAstJoinType,
 				tableGroup,
 				getKeyDescriptor().generateJoinPredicate(
 						lhs,
 						tableGroup,
-						joinType,
+						sqlAstJoinType,
 						sqlExpressionResolver,
 						creationContext
 				)
@@ -339,20 +355,56 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean sqlAstJoinType,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return getCollectionDescriptor().createTableReferenceJoin(
+				joinTableExpression,
+				sqlAliasBase,
+				lhs,
+				sqlAstJoinType,
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	@Override
+	public TableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return getCollectionDescriptor().createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		getCollectionDescriptor().applyTableReferences( sqlAliasBase, baseJoinType, collector, sqlExpressionResolver, creationContext );
+		getCollectionDescriptor().applyTableReferences(
+				sqlAliasBase,
+				baseSqlAstJoinType,
+				collector,
+				sqlExpressionResolver,
+				creationContext
+		);
 	}
 
 	@Override
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -365,16 +417,53 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				this,
 				lockMode,
 				sqlAliasBase,
+				(tableExpression, tableGroup) -> createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						tableGroup.getPrimaryTableReference(),
+						canUseInnerJoins && ! getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
+						sqlExpressionResolver,
+						creationContext
+				),
 				creationContext.getSessionFactory()
 		);
 
-		applyTableReferences(
-				sqlAliasBase,
-				tableReferenceJoinType,
+		getElementDescriptor().applyPrimaryTableReference(
 				tableGroupBuilder,
 				sqlExpressionResolver,
 				creationContext
 		);
+
+		if ( getIndexDescriptor() != null ) {
+			getIndexDescriptor().applyPrimaryTableReference(
+					tableGroupBuilder,
+					sqlExpressionResolver,
+					creationContext
+			);
+		}
+
+		final TableReference collectionTableReference = getCollectionDescriptor().createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		if ( collectionTableReference != null ) {
+			tableGroupBuilder.applySecondaryTableReferences(
+					collectionTableReference,
+					canUseInnerJoins && ! getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable()
+							? SqlAstJoinType.INNER
+							: SqlAstJoinType.LEFT,
+					(lhs, rhs, sqlAstJoinType) -> fkDescriptor.generateJoinPredicate(
+							lhs,
+							rhs,
+							sqlAstJoinType,
+							sqlExpressionResolver,
+							creationContext
+					)
+
+			);
+		}
 
 		return tableGroupBuilder.build();
 	}

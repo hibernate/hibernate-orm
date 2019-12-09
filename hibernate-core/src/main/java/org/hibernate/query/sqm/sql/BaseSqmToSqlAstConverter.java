@@ -99,7 +99,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -487,7 +487,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmRoot.getNavigablePath(),
 				sqmRoot.getExplicitAlias(),
-				JoinType.INNER,
+				true,
 				LockMode.NONE,
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
@@ -573,7 +573,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				JoinType.CROSS,
+				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
@@ -583,7 +583,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
-				JoinType.CROSS,
+				SqlAstJoinType.CROSS,
 				tableGroup
 		);
 
@@ -601,7 +601,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+				true,
 				determineLockMode( sqmJoin.getExplicitAlias() ),
 				sqlAliasBaseManager,
 				getSqlExpressionResolver(),
@@ -651,7 +651,7 @@ public abstract class BaseSqmToSqlAstConverter
 							joinedPath.getNavigablePath(),
 							tableGroup,
 							null,
-							tableGroup.isInnerJoinPossible() ? JoinType.INNER : JoinType.LEFT,
+							tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
 							null,
 							sqlAliasBaseManager,
 							getSqlExpressionResolver(),

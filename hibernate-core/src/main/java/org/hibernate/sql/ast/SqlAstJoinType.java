@@ -9,7 +9,7 @@ package org.hibernate.sql.ast;
 /**
  * @author Steve Ebersole
  */
-public enum JoinType {
+public enum SqlAstJoinType {
 	/**
 	 * Represents an inner join.
 	 */
@@ -37,7 +37,7 @@ public enum JoinType {
 
 	private final String text;
 
-	JoinType(String text) {
+	SqlAstJoinType(String text) {
 		this.text = text;
 	}
 

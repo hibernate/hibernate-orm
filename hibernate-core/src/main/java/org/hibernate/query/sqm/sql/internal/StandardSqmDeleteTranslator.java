@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -82,7 +81,7 @@ public class StandardSqmDeleteTranslator
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					null,
-					JoinType.LEFT,
+					false,
 					LockMode.WRITE,
 					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),
 					getSqlExpressionResolver(),

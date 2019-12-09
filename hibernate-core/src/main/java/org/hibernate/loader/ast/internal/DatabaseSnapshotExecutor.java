@@ -83,7 +83,7 @@ class DatabaseSnapshotExecutor {
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				rootPath,
 				null,
-				null,
+				true,
 				LockMode.NONE,
 				sqlAliasBaseManager,
 				state.getSqlExpressionResolver(),

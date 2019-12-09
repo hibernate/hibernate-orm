@@ -20,7 +20,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -32,7 +32,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -120,18 +122,18 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
-				JoinType joinType;
+				SqlAstJoinType sqlAstJoinType;
 				if ( isNullable ) {
-					joinType = JoinType.LEFT;
+					sqlAstJoinType = SqlAstJoinType.LEFT;
 				}
 				else {
-					joinType = JoinType.INNER;
+					sqlAstJoinType = SqlAstJoinType.INNER;
 				}
 				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 						fetchablePath,
 						lhsTableGroup,
 						null,
-						joinType,
+						sqlAstJoinType,
 						lockMode,
 						creationState.getSqlAliasBaseManager(),
 						creationState.getSqlAstCreationState().getSqlExpressionResolver(),
@@ -199,7 +201,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -212,23 +214,39 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				this,
 				lockMode,
 				sqlAliasBase,
+				(tableExpression, tableGroup) -> createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						tableGroup.getPrimaryTableReference(),
+						false,
+						sqlExpressionResolver,
+						creationContext
+				),
 				creationContext.getSessionFactory()
 		);
 
-		applyTableReferences(
-				sqlAliasBase,
-				joinType,
-				tableGroupBuilder,
-				sqlExpressionResolver,
-				creationContext
+		tableGroupBuilder.applyPrimaryReference(
+				getEntityMappingType().createPrimaryTableReference(
+						sqlAliasBase,
+						sqlExpressionResolver,
+						creationContext
+				)
 		);
+
+//		applyTableReferences(
+//				sqlAliasBase,
+//				joinType,
+//				tableGroupBuilder,
+//				sqlExpressionResolver,
+//				creationContext
+//		);
 
 		getMappedTypeDescriptor().getIdentifierMapping();
 
 		final TableGroup tableGroup = tableGroupBuilder.build();
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
-				joinType,
+				sqlAstJoinType,
 				tableGroup,
 				null
 		);
@@ -238,7 +256,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		final Predicate predicate = foreignKeyDescriptor.generateJoinPredicate(
 				lhs,
 				tableGroup,
-				joinType,
+				sqlAstJoinType,
 				sqlExpressionResolver,
 				creationContext
 		);
@@ -253,15 +271,41 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
+	public TableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return getEntityMappingType().createPrimaryTableReference( sqlAliasBase, sqlExpressionResolver, creationContext );
+	}
+
+	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return getEntityMappingType().createTableReferenceJoin(
+				joinTableExpression,
+				sqlAliasBase,
+				lhs,
+				canUseInnerJoin && ! getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		getMappedTypeDescriptor().applyTableReferences(
 				sqlAliasBase,
-				baseJoinType,
+				baseSqlAstJoinType,
 				collector,
 				sqlExpressionResolver,
 				creationContext

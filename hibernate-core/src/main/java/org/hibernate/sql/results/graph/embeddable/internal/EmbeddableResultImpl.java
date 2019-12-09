@@ -12,7 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -48,7 +48,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							navigablePath,
 							fromClauseAccess.findTableGroup( navigablePath.getParent() ),
 							resultVariable,
-							JoinType.INNER,
+							SqlAstJoinType.INNER,
 							LockMode.NONE,
 							creationState.getSqlAstCreationState().getSqlAliasBaseGenerator(),
 							creationState.getSqlAstCreationState().getSqlExpressionResolver(),

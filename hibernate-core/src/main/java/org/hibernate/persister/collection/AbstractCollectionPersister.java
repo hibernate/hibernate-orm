@@ -109,7 +109,7 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -2469,9 +2469,68 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public TableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		if ( qualifiedTableName != null && ! isOneToMany() ) {
+			return new TableReference(
+					qualifiedTableName,
+					sqlAliasBase.generateNewAlias(),
+					false,
+					getFactory()
+			);
+		}
+
+		return null;
+	}
+
+	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		if ( elementPersister == null ) {
+			return null;
+		}
+
+		final String entityPrimaryTableName = ( (Joinable) elementPersister ).getTableName();
+		if ( entityPrimaryTableName.equals( joinTableExpression ) ) {
+			assert qualifiedTableName != null;
+			assert lhs.getTableExpression().equals( qualifiedTableName );
+
+			final TableReference tableReference = elementPersister.createPrimaryTableReference( sqlAliasBase, sqlExpressionResolver, creationContext );
+			final SqlAstJoinType sqlAstJoinType = canUseInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT;
+			return new TableReferenceJoin(
+					sqlAstJoinType,
+					tableReference,
+					generateEntityElementJoinPredicate(
+							lhs,
+							tableReference,
+							sqlAstJoinType,
+							sqlExpressionResolver,
+							creationContext
+					)
+			);
+		}
+
+		return elementPersister.createTableReferenceJoin(
+				joinTableExpression,
+				sqlAliasBase,
+				lhs,
+				canUseInnerJoin,
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -2499,10 +2558,10 @@ public abstract class AbstractCollectionPersister
 			// entity's primary table
 			collector.applyPrimaryJoinProducer(
 					(lhs, rhs) -> new TableReferenceJoin(
-							baseJoinType,
+							baseSqlAstJoinType,
 							rhs,
 							generateEntityElementJoinPredicate(
-									lhs, rhs, baseJoinType, sqlExpressionResolver, creationContext
+									lhs, rhs, baseSqlAstJoinType, sqlExpressionResolver, creationContext
 							)
 					)
 			);
@@ -2510,7 +2569,7 @@ public abstract class AbstractCollectionPersister
 			elementPersister.applyTableReferences(
 					sqlAliasBase,
 					// todo (6.0) : determine the proper join-type to use
-					JoinType.LEFT,
+					SqlAstJoinType.LEFT,
 					collector,
 					sqlExpressionResolver,
 					creationContext
@@ -2523,12 +2582,12 @@ public abstract class AbstractCollectionPersister
 
 			collector.applyPrimaryJoinProducer(
 					(lhs, rhs) -> new TableReferenceJoin(
-							baseJoinType,
+							baseSqlAstJoinType,
 							rhs,
 							generateIndexJoinPredicate(
 									lhs,
 									rhs,
-									JoinType.CROSS,
+									SqlAstJoinType.CROSS,
 									sqlExpressionResolver,
 									creationContext
 							)
@@ -2537,7 +2596,7 @@ public abstract class AbstractCollectionPersister
 
 			contributor.applyTableReferences(
 					sqlAliasBase,
-					baseJoinType,
+					baseSqlAstJoinType,
 					collector,
 					sqlExpressionResolver,
 					creationContext
@@ -2548,7 +2607,7 @@ public abstract class AbstractCollectionPersister
 	private Predicate generateIndexJoinPredicate(
 			TableReference lhs,
 			TableReference rhs,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
@@ -2649,7 +2708,7 @@ public abstract class AbstractCollectionPersister
 	private Predicate generateEntityElementJoinPredicate(
 			TableReference lhs,
 			TableReference rhs,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();

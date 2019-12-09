@@ -14,7 +14,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -57,7 +57,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 									.getFromClauseAccess()
 									.findTableGroup( fetchParent.getNavigablePath() ),
 							null,
-							nullable ? JoinType.LEFT : JoinType.INNER,
+							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
 							LockMode.NONE,
 							stem -> creationState.getSqlAliasBaseManager().createSqlAliasBase( stem ),
 							creationState.getSqlAstCreationState().getSqlExpressionResolver(),

@@ -568,5 +568,4 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return getElementPersister().getFilterAliasGenerator( rootAlias );
 	}
-
 }

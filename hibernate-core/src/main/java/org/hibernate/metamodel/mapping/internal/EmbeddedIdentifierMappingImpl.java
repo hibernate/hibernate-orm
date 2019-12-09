@@ -15,6 +15,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -29,7 +30,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -195,7 +196,7 @@ public class EmbeddedIdentifierMappingImpl
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -206,11 +207,11 @@ public class EmbeddedIdentifierMappingImpl
 				lhs
 		);
 
-		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, JoinType.INNER, compositeTableGroup, null ) );
+		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, SqlAstJoinType.INNER, compositeTableGroup, null ) );
 
 		return new TableGroupJoin(
 				navigablePath,
-				joinType,
+				sqlAstJoinType,
 				compositeTableGroup
 		);
 	}
@@ -234,7 +235,7 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -243,7 +244,7 @@ public class EmbeddedIdentifierMappingImpl
 					if ( attrMapping instanceof TableGroupProducer ) {
 						( (TableGroupProducer) attrMapping ).applyTableReferences(
 								sqlAliasBase,
-								baseJoinType,
+								baseSqlAstJoinType,
 								collector,
 								sqlExpressionResolver,
 								creationContext
@@ -252,7 +253,7 @@ public class EmbeddedIdentifierMappingImpl
 					else if ( attrMapping.getMappedTypeDescriptor() instanceof TableGroupProducer ) {
 						( (TableGroupProducer) attrMapping.getMappedTypeDescriptor() ).applyTableReferences(
 								sqlAliasBase,
-								baseJoinType,
+								baseSqlAstJoinType,
 								collector,
 								sqlExpressionResolver,
 								creationContext
@@ -260,6 +261,25 @@ public class EmbeddedIdentifierMappingImpl
 					}
 				}
 		);
+	}
+
+	@Override
+	public TableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		throw new UnsupportedOperationException( "Unexpected call to EmbeddedIdentifierImpl#createPrimaryTableReference" );
+	}
+
+	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		throw new UnsupportedOperationException( "Unexpected call to EmbeddedIdentifierImpl#createTableReferenceJoin" );
 	}
 
 	@Override

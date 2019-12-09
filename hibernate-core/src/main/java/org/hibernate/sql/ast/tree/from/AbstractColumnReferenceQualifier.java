@@ -46,6 +46,21 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 		return tableReference;
 	}
 
+	@Override
+	public TableReference getTableReference(String tableExpression) {
+		if ( getPrimaryTableReference().getTableExpression().equals( tableExpression ) ) {
+			return getPrimaryTableReference();
+		}
+
+		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
+			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
+				return tableJoin.getJoinedTableReference();
+			}
+		}
+
+		return null;
+	}
+
 	protected TableReference resolveTableReferenceInternal(String tableExpression) {
 		if ( getPrimaryTableReference().getTableExpression().equals( tableExpression ) ) {
 			return getPrimaryTableReference();

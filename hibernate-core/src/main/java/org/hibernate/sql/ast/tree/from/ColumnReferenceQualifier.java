@@ -8,13 +8,11 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.function.Supplier;
 
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-
 /**
  * @author Steve Ebersole
  */
 public interface ColumnReferenceQualifier {
 	TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator);
 	TableReference resolveTableReference(String tableExpression);
-
+	TableReference getTableReference(String tableExpression);
 }

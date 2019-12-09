@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -27,14 +27,14 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	Predicate generateJoinPredicate(
 			TableGroup lhs,
 			TableGroup tableGroup,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
 
 	Predicate generateJoinPredicate(
 			TableReference lhs,
 			TableReference rhs,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
 

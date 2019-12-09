@@ -18,7 +18,6 @@ import org.hibernate.query.sqm.sql.SqmInsertSelectTranslation;
 import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -69,7 +68,7 @@ public class StandardSqmInsertSelectTranslator
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					null,
-					JoinType.LEFT,
+					false,
 					LockMode.WRITE,
 					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),
 					getSqlExpressionResolver(),

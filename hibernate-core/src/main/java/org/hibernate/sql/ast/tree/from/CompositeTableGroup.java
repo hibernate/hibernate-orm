@@ -115,6 +115,11 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		return underlyingTableGroup.getTableReference( tableExpression );
+	}
+
+	@Override
 	public TableReference resolveTableReference(
 			String tableExpression,
 			Supplier<TableReference> creator) {

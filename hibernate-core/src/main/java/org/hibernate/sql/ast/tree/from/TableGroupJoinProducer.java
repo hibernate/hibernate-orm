@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.from;
 
 import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -24,7 +24,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,

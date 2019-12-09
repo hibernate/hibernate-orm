@@ -6,7 +6,10 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
@@ -19,7 +22,9 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  */
 public class StandardTableGroup extends AbstractTableGroup {
 	private final TableReference primaryTableReference;
-	private final List<TableReferenceJoin> tableJoins;
+	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
+
+	private List<TableReferenceJoin> tableJoins;
 
 	public StandardTableGroup(
 			NavigablePath navigablePath,
@@ -28,10 +33,12 @@ public class StandardTableGroup extends AbstractTableGroup {
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableJoins,
 			SqlAliasBase sqlAliasBase,
+			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
+		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
 	}
 
 	@Override
@@ -50,18 +57,23 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
-		return tableJoins;
+		return tableJoins == null ? Collections.emptyList() : tableJoins;
 	}
 
 	@Override
 	public TableReference resolveTableReferenceInternal(String tableExpression) {
-		TableReference tableReference = super.resolveTableReferenceInternal( tableExpression );
+		final TableReference tableReference = super.resolveTableReferenceInternal( tableExpression );
 		if ( tableReference != null ) {
 			return tableReference;
 		}
-		for ( TableReferenceJoin tableJoin : tableJoins ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
-				return tableJoin.getJoinedTableReference();
+
+		if ( tableJoins != null ) {
+			for ( int i = 0; i < tableJoins.size(); i++ ) {
+				final TableReferenceJoin join = tableJoins.get( i );
+				assert join != null;
+				if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
+					return join.getJoinedTableReference();
+				}
 			}
 		}
 
@@ -71,6 +83,21 @@ public class StandardTableGroup extends AbstractTableGroup {
 				return primaryTableReference;
 			}
 		}
+
+		return potentiallyCreateTableReference( tableExpression );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected TableReference potentiallyCreateTableReference(String tableExpression) {
+		final TableReferenceJoin join = tableReferenceJoinCreator.apply( tableExpression, this );
+		if ( join != null ) {
+			if ( tableJoins == null ) {
+				tableJoins = new ArrayList<>();
+			}
+			tableJoins.add( join );
+			return join.getJoinedTableReference();
+		}
+
 		return null;
 	}
 }

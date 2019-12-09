@@ -12,9 +12,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -59,7 +61,6 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -531,7 +532,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( persistentClass.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 
-			discriminatorValuesByTableName = new HashMap<>( subclassSpan + 1 );
+			discriminatorValuesByTableName = new LinkedHashMap<>( subclassSpan + 1 );
 			subclassNameByTableName = new HashMap<>( subclassSpan + 1);
 			discriminatorValuesByTableName.put( persistentClass.getTable().getName(),  discriminatorSQLString);
 			discriminatorValues = new String[subclassSpan];
@@ -1216,7 +1217,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -1225,7 +1226,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				tableReferenceJoinType,
+				canUseInnerJoins,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -1279,25 +1280,30 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		CaseSearchedExpressionInfo info = new CaseSearchedExpressionInfo();
 
 		final TableReference primaryTableReference = entityTableGroup.getPrimaryTableReference();
-		final List<TableReferenceJoin> tableReferenceJoins = entityTableGroup.getTableReferenceJoins();
 		final BasicType discriminatorType = (BasicType) getDiscriminatorType();
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
 
-		for ( int i = tableReferenceJoins.size() - 1; i >= 0; i-- ) {
-			final TableReferenceJoin tableReferenceJoin = tableReferenceJoins.get( i );
-			final TableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
-			if ( discriminatorValuesByTableName.containsKey( joinedTableReference.getTableExpression() ) ) {
-				final ColumnReference identifierColumnReference = getIdentifierColumnReference(
-						joinedTableReference );
-				info.columnReferences.add( identifierColumnReference );
-				addWhen(
-						caseSearchedExpression,
-						joinedTableReference,
-						identifierColumnReference,
-						discriminatorType
-				);
-			}
-		}
+		discriminatorValuesByTableName.forEach(
+				(tableName, discriminatorValue) -> {
+					if ( ! primaryTableReference.getTableExpression().equals( tableName ) ) {
+						TableReference tableReference = entityTableGroup.getTableReference( tableName );
+						if ( tableReference == null ) {
+							// we have not yet created a TableReference for this sub-class table, but we need to because
+							// it has a discriminator value associated with it
+							tableReference = entityTableGroup.resolveTableReference( tableName );
+						}
+
+						final ColumnReference identifierColumnReference = getIdentifierColumnReference( tableReference );
+						info.columnReferences.add( identifierColumnReference );
+						addWhen(
+								caseSearchedExpression,
+								tableReference,
+								identifierColumnReference,
+								discriminatorType
+						);
+					}
+				}
+		);
 
 		addWhen(
 				caseSearchedExpression,

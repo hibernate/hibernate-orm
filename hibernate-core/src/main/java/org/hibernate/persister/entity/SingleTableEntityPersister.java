@@ -46,7 +46,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -882,7 +881,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -891,7 +890,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				tableReferenceJoinType,
+				canUseInnerJoins,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,

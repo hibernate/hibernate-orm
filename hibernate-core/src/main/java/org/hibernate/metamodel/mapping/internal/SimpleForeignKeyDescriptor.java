@@ -23,7 +23,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -109,7 +109,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableReference lhs,
 			TableReference rhs,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		if ( lhs.getTableExpression().equals( keyColumnContainingTable ) ) {
@@ -154,7 +154,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableGroup lhs,
 			TableGroup tableGroup,
-			JoinType joinType,
+			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableReference keyTableReference = getTableReference( lhs, tableGroup, keyColumnContainingTable );
@@ -244,10 +244,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return tableGroup.getPrimaryTableReference();
 		}
 
-		for ( TableReferenceJoin tableJoin : lhs.getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( table ) ) {
-				return tableJoin.getJoinedTableReference();
-			}
+		final TableReference tableReference = lhs.resolveTableReference( table );
+		if ( tableReference != null ) {
+			return tableReference;
 		}
 
 		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );

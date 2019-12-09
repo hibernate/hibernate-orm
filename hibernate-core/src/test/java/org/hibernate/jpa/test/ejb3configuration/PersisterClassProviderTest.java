@@ -60,7 +60,7 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
@@ -727,7 +727,7 @@ public class PersisterClassProviderTest {
 		@Override
 		public void applyTableReferences(
 				SqlAliasBase sqlAliasBase,
-				JoinType baseJoinType,
+				SqlAstJoinType baseSqlAstJoinType,
 				TableReferenceCollector collector,
 				SqlExpressionResolver sqlExpressionResolver,
 				SqlAstCreationContext creationContext) {

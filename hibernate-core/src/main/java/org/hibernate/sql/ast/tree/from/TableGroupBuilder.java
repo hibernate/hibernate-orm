@@ -7,14 +7,12 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
@@ -26,22 +24,14 @@ public class TableGroupBuilder implements TableReferenceCollector {
 			TableGroupProducer producer,
 			LockMode lockMode,
 			SqlAliasBase sqlAliasBase,
+			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
-		return new TableGroupBuilder( path, producer, lockMode, sqlAliasBase, sessionFactory );
-	}
-
-	public static TableGroupBuilder builder(
-			NavigablePath path,
-			TableGroupProducer producer,
-			LockMode lockMode,
-			SqlAliasBase sqlAliasBase,
-			BiFunction<TableReference, TableReference,TableReferenceJoin> primaryJoinProducer,
-			SessionFactoryImplementor sessionFactory) {
-		return new TableGroupBuilder( path, producer, lockMode, sqlAliasBase, primaryJoinProducer, sessionFactory );
+		return new TableGroupBuilder( path, producer, lockMode, sqlAliasBase, tableReferenceJoinCreator, sessionFactory );
 	}
 
 	private final NavigablePath path;
 	private final TableGroupProducer producer;
+	private final BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final SqlAliasBase sqlAliasBase;
@@ -59,23 +49,26 @@ public class TableGroupBuilder implements TableReferenceCollector {
 			TableGroupProducer producer,
 			LockMode lockMode,
 			SqlAliasBase sqlAliasBase,
-			SessionFactoryImplementor sessionFactory) {
-		this( path, producer, lockMode, sqlAliasBase, null, sessionFactory );
-	}
-
-	private TableGroupBuilder(
-			NavigablePath path,
-			TableGroupProducer producer,
-			LockMode lockMode,
-			SqlAliasBase sqlAliasBase,
-			BiFunction<TableReference, TableReference,TableReferenceJoin> primaryJoinProducer,
+			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		this.path = path;
 		this.producer = producer;
 		this.lockMode = lockMode;
 		this.sqlAliasBase = sqlAliasBase;
-		this.primaryJoinProducer = primaryJoinProducer;
+		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
 		this.sessionFactory = sessionFactory;
+	}
+
+	public NavigablePath getPath() {
+		return path;
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public SqlAliasBase getSqlAliasBase() {
+		return sqlAliasBase;
 	}
 
 	@Override
@@ -93,8 +86,9 @@ public class TableGroupBuilder implements TableReferenceCollector {
 				producer,
 				lockMode,
 				primaryTableReference,
-				tableJoins == null ? Collections.emptyList() : tableJoins,
+				tableJoins,
 				sqlAliasBase,
+				tableReferenceJoinCreator,
 				sessionFactory
 		);
 	}
@@ -115,7 +109,7 @@ public class TableGroupBuilder implements TableReferenceCollector {
 	@Override
 	public void applySecondaryTableReferences(
 			TableReference tableReference,
-			JoinType tableReferenceJoinType,
+			SqlAstJoinType tableReferenceSqlAstJoinType,
 			TableReferenceJoinPredicateProducer predicateProducer) {
 		if ( primaryTableReference == null ) {
 			primaryTableReference = tableReference;
@@ -124,12 +118,12 @@ public class TableGroupBuilder implements TableReferenceCollector {
 		else {
 			addTableReferenceJoin(
 					new TableReferenceJoin(
-							tableReferenceJoinType,
+							tableReferenceSqlAstJoinType,
 							tableReference,
 							predicateProducer.producePredicate(
 									secondaryTableLhs,
 									tableReference,
-									tableReferenceJoinType
+									tableReferenceSqlAstJoinType
 							)
 					)
 			);

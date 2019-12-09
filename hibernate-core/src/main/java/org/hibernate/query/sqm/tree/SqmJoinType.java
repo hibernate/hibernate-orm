@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * Represents a canonical join type.
@@ -24,38 +24,38 @@ public enum SqmJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner", JoinType.INNER, javax.persistence.criteria.JoinType.INNER ),
+	INNER( "inner", SqlAstJoinType.INNER, javax.persistence.criteria.JoinType.INNER ),
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer", JoinType.LEFT, javax.persistence.criteria.JoinType.LEFT ),
+	LEFT( "left outer", SqlAstJoinType.LEFT, javax.persistence.criteria.JoinType.LEFT ),
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer", JoinType.RIGHT, javax.persistence.criteria.JoinType.RIGHT ),
+	RIGHT( "right outer", SqlAstJoinType.RIGHT, javax.persistence.criteria.JoinType.RIGHT ),
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
 	 */
-	CROSS( "cross", JoinType.CROSS, null ),
+	CROSS( "cross", SqlAstJoinType.CROSS, null ),
 
 	/**
 	 * Represents a full join.
 	 */
-	FULL( "full", JoinType.FULL, null );
+	FULL( "full", SqlAstJoinType.FULL, null );
 
 	private final String text;
-	private final JoinType correspondingSqlJoinType;
+	private final SqlAstJoinType correspondingSqlAstJoinType;
 	private final javax.persistence.criteria.JoinType correspondingJpaJoinType;
 
 	SqmJoinType(
 			String text,
-			JoinType correspondingSqlJoinType,
+			SqlAstJoinType correspondingSqlAstJoinType,
 			javax.persistence.criteria.JoinType correspondingJpaJoinType) {
 		this.text = text;
-		this.correspondingSqlJoinType = correspondingSqlJoinType;
+		this.correspondingSqlAstJoinType = correspondingSqlAstJoinType;
 		this.correspondingJpaJoinType = correspondingJpaJoinType;
 	}
 
@@ -68,8 +68,8 @@ public enum SqmJoinType {
 		return text;
 	}
 
-	public JoinType getCorrespondingSqlJoinType() {
-		return correspondingSqlJoinType;
+	public SqlAstJoinType getCorrespondingSqlJoinType() {
+		return correspondingSqlAstJoinType;
 	}
 
 	public javax.persistence.criteria.JoinType getCorrespondingJpaJoinType() {

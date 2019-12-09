@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -17,12 +17,12 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * @author Steve Ebersole
  */
 public class TableReferenceJoin implements SqlAstNode {
-	private final JoinType joinType;
+	private final SqlAstJoinType sqlAstJoinType;
 	private final TableReference joinedTableBinding;
 	private final Predicate predicate;
 
-	public TableReferenceJoin(JoinType joinType, TableReference joinedTableBinding, Predicate predicate) {
-		this.joinType = joinType == null ? JoinType.LEFT : joinType;
+	public TableReferenceJoin(SqlAstJoinType sqlAstJoinType, TableReference joinedTableBinding, Predicate predicate) {
+		this.sqlAstJoinType = sqlAstJoinType == null ? SqlAstJoinType.LEFT : sqlAstJoinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
 
@@ -33,8 +33,8 @@ public class TableReferenceJoin implements SqlAstNode {
 //		}
 	}
 
-	public JoinType getJoinType() {
-		return joinType;
+	public SqlAstJoinType getJoinType() {
+		return sqlAstJoinType;
 	}
 
 	public TableReference getJoinedTableReference() {

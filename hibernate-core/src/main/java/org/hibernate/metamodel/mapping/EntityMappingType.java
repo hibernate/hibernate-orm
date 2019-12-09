@@ -18,7 +18,7 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -222,7 +222,7 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 	default TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -231,7 +231,7 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 		return getEntityPersister().createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				tableReferenceJoinType,
+				canUseInnerJoins,
 				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
@@ -243,13 +243,13 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 	@Override
 	default void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
-			JoinType baseJoinType,
+			SqlAstJoinType baseSqlAstJoinType,
 			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		getEntityPersister().applyTableReferences(
 				sqlAliasBase,
-				baseJoinType,
+				baseSqlAstJoinType,
 				collector,
 				sqlExpressionResolver,
 				creationContext

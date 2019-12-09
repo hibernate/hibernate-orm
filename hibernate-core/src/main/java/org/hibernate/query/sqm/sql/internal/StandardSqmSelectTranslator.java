@@ -43,7 +43,7 @@ import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.sql.ast.JoinType;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -299,7 +299,7 @@ public class StandardSqmSelectTranslator
 									fetchablePath,
 									lhs,
 									alias,
-									JoinType.LEFT,
+									SqlAstJoinType.LEFT,
 									LockMode.NONE,
 									getSqlAliasBaseManager(),
 									getSqlExpressionResolver(),

@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -98,13 +97,20 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(
-			String tableExpression, Supplier<TableReference> creator) {
+	public TableReference getTableReference(String tableExpression) {
+		assert tableReference.getTableExpression().equals( tableExpression );
+		return tableReference;
+	}
+
+	@Override
+	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
+		assert tableReference.getTableExpression().equals( tableExpression );
 		return tableReference;
 	}
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression) {
+//		assert tableReference.getTableExpression().equals( tableExpression );
 		return tableReference;
 	}
 }

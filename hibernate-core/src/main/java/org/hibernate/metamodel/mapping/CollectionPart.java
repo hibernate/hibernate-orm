@@ -6,6 +6,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -62,4 +67,6 @@ public interface CollectionPart extends ModelPart, Fetchable {
 	default String getPartName() {
 		return getNature().getName();
 	}
+
+	void applyPrimaryTableReference(TableGroupBuilder tableGroupBuilder, SqlExpressionResolver sqlExpressionResolver, SqlAstCreationContext creationContext);
 }

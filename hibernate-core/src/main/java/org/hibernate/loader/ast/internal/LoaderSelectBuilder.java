@@ -192,7 +192,7 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				null,
+				true,
 				lockOptions.getLockMode(),
 				sqlAstCreationState.getSqlAliasBaseManager(),
 				sqlAstCreationState.getSqlExpressionResolver(),
@@ -449,7 +449,7 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				null,
+				true,
 				lockOptions.getLockMode(),
 				sqlAstCreationState.getSqlAliasBaseManager(),
 				sqlAstCreationState.getSqlExpressionResolver(),

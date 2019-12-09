@@ -58,6 +58,14 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
+			return cteTableReference;
+		}
+		return null;
+	}
+
+	@Override
 	public TableReference resolveTableReference(String tableExpression) {
 		return cteTableReference;
 	}

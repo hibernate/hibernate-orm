@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
@@ -28,6 +29,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 
 	private Set<TableGroupJoin> tableGroupJoins;
 	private boolean isInnerJoinPossible;
+
 	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings("WeakerAccess")

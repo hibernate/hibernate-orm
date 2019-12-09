@@ -19,10 +19,14 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -72,6 +76,14 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	@Override
 	public BasicType getPartTypeDescriptor() {
 		return mapper;
+	}
+
+	@Override
+	public void applyPrimaryTableReference(
+			TableGroupBuilder tableGroupBuilder,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		// nothing to do
 	}
 
 	@Override

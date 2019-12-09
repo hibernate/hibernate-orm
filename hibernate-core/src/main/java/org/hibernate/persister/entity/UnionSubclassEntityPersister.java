@@ -47,8 +47,6 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.sql.SimpleSelect;
-import org.hibernate.sql.ast.JoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -233,7 +231,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			JoinType tableReferenceJoinType,
+			boolean canUseInnerJoins,
 			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,

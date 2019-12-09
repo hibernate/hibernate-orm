@@ -18,7 +18,14 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -72,6 +79,24 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	}
 
 	@Override
+	public void applyPrimaryTableReference(
+			TableGroupBuilder tableGroupBuilder,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		tableGroupBuilder.applySecondaryTableReferences(
+				getEntityMappingType().createPrimaryTableReference( tableGroupBuilder.getSqlAliasBase(), sqlExpressionResolver, creationContext ),
+				SqlAstJoinType.LEFT,
+				(lhs, rhs, sqlAstJoinType) -> foreignKeyDescriptor.generateJoinPredicate(
+						lhs,
+						rhs,
+						sqlAstJoinType,
+						sqlExpressionResolver,
+						creationContext
+				)
+		);
+	}
+
+	@Override
 	public EntityMappingType getEntityMappingType() {
 		return entityMappingType;
 	}
@@ -113,13 +138,19 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 		assert fetchParent.getReferencedMappingContainer() instanceof PluralAttributeMapping;
 
 		// find or create the TableGroup associated with this `fetchablePath`
-		final TableGroup tableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				fetchablePath,
 				np -> {
-					// we need to create one.  first, find the collection's TableGroup
+					// We need to create one.  The Result will be able to find it later by path
+
+					// first, find the collection's TableGroup
 					final TableGroup collectionTableGroup = creationState.getSqlAstCreationState()
 							.getFromClauseAccess()
-							.getTableGroup( fetchablePath.getParent() );
+							.getTableGroup( fetchParent.getNavigablePath() );
+
+					assert collectionTableGroup != null;
+
+					// create a "wrapper" around the collection TableGroup adding in the entity's table references
 					return new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, this );
 				}
 		);

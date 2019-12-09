@@ -72,6 +72,14 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	@Override
+	public TableReference getTableReference(String tableExpression) {
+		if ( this.tableExpression.equals( tableExpression ) ) {
+			return this;
+		}
+		return null;
+	}
+
+	@Override
 	public String toString() {
 		return getTableExpression() + "(" + getIdentificationVariable() + ')';
 	}

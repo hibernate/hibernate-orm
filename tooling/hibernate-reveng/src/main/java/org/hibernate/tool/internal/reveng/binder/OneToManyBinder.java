@@ -21,9 +21,9 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.JdbcCollectionSecondPass;
 
-public class OneToManyBinder extends AbstractBinder {
+class OneToManyBinder extends AbstractBinder {
 	
-	public static OneToManyBinder create(BinderContext binderContext) {
+	static OneToManyBinder create(BinderContext binderContext) {
 		return new OneToManyBinder(binderContext);
 	}
 	
@@ -34,25 +34,14 @@ public class OneToManyBinder extends AbstractBinder {
 		this.collectionPropertyBinder = CollectionPropertyBinder.create(binderContext);
 	}
 
-	public Property bind(PersistentClass rc, ForeignKey foreignKey, Set<Column> processed) {
-
+	Property bind(PersistentClass rc, ForeignKey foreignKey, Set<Column> processed) {
 		Table collectionTable = foreignKey.getTable();
-
-		Collection collection = new org.hibernate.mapping.Set(getMetadataBuildingContext(), rc); // MASTER TODO: allow overriding collection type
-
-		collection.setCollectionTable(collectionTable); // CHILD+
-
-
-
+		// TODO: allow overriding collection type
+		Collection collection = new org.hibernate.mapping.Set(getMetadataBuildingContext(), rc); 
+		collection.setCollectionTable(collectionTable); 
 		boolean manyToMany = getRevengStrategy().isManyToManyTable( collectionTable );
+
 		if(manyToMany) {
-			//log.debug("Rev.eng said here is a many-to-many");
-			// TODO: handle "the other side should influence the name"
-		}
-
-
-
-        if(manyToMany) {
 
         	ManyToOne element = new ManyToOne(getMetadataBuildingContext(), collection.getCollectionTable() );
         	//TODO: find the other foreignkey and choose the other side.

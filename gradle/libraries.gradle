@@ -30,6 +30,8 @@ ext {
 
     agroalVersion = '1.7'
 
+    assertjVersion = '3.14.0'
+
     geolatteVersion = '1.4.0'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
@@ -147,7 +149,7 @@ ext {
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:3.2.0",
-            vibur:           "org.vibur:vibur-dbcp:22.2",
+            vibur:           "org.vibur:vibur-dbcp:25.0",
             agroal_api:      "io.agroal:agroal-api:${agroalVersion}",
             agroal_pool:     "io.agroal:agroal-pool:${agroalVersion}",
 
@@ -156,6 +158,8 @@ ext {
 
             cdi: "javax.enterprise:cdi-api:${cdiVersion}",
             weld: "org.jboss.weld.se:weld-se-shaded:${weldVersion}",
+
+            assertj: "org.assertj:assertj-core:${assertjVersion}",
 
             // Arquillian/Shrinkwrap
             arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",

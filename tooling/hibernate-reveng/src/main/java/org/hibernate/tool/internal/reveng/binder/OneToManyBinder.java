@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -35,11 +34,7 @@ public class OneToManyBinder extends AbstractBinder {
 		this.collectionPropertyBinder = CollectionPropertyBinder.create(binderContext);
 	}
 
-	public Property bind(
-			PersistentClass rc, 
-			ForeignKey foreignKey, 
-			Set<Column> processed, 
-			Mapping mapping) {
+	public Property bind(PersistentClass rc, ForeignKey foreignKey, Set<Column> processed) {
 
 		Table collectionTable = foreignKey.getTable();
 

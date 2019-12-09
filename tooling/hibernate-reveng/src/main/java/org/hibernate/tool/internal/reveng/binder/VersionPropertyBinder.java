@@ -31,36 +31,53 @@ class VersionPropertyBinder extends AbstractBinder {
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed) {
-		TableIdentifier identifier = TableIdentifier.create(table);
-		String optimisticLockColumnName = getRevengStrategy().getOptimisticLockColumnName(identifier);
+		String optimisticLockColumnName = getRevengStrategy()
+				.getOptimisticLockColumnName(TableIdentifier.create(table));
 		if(optimisticLockColumnName!=null) {
-			Column column = table.getColumn(new Column(optimisticLockColumnName));
-			if(column==null) {
-				LOGGER.log(Level.WARNING, "Column " + column + " wanted for <version>/<timestamp> not found in " + identifier);
-			} else {
-				bindVersionProperty(table, identifier, column, rc, processed);
-			}
+			handleSpecifiedVersionColumn(table, optimisticLockColumnName, rc, processed);
 		} else {
-			LOGGER.log(Level.INFO, "Scanning " + identifier + " for <version>/<timestamp> columns.");
-			Iterator<?> columnIterator = table.getColumnIterator();
-			while(columnIterator.hasNext()) {
-				Column column = (Column) columnIterator.next();
-				boolean useIt = getRevengStrategy().useColumnForOptimisticLock(identifier, column.getName());
-				if(useIt && !processed.contains(column)) {
-					bindVersionProperty( table, identifier, column, rc, processed);
-					return;
-				}
-			}
-			LOGGER.log(Level.INFO, "No columns reported while scanning for <version>/<timestamp> columns in " + identifier);
+			scanForAppropriateVersionColumn(table, rc, processed);
 		}
+	}
+	
+	private void scanForAppropriateVersionColumn(
+			Table table,
+			RootClass rc, 
+			Set<Column> processed) {
+		TableIdentifier identifier = TableIdentifier.create(table);
+		LOGGER.log(Level.INFO, "Scanning " + identifier + " for <version>/<timestamp> columns.");
+		Iterator<?> columnIterator = table.getColumnIterator();
+		while(columnIterator.hasNext()) {
+			Column column = (Column) columnIterator.next();
+			boolean useIt = getRevengStrategy().useColumnForOptimisticLock(identifier, column.getName());
+			if(useIt && !processed.contains(column)) {
+				bindVersionProperty(table, column, rc, processed);
+				return;
+			}
+		}
+		LOGGER.log(Level.INFO, "No columns reported while scanning for <version>/<timestamp> columns in " + identifier);
+	}
+	
+	private void handleSpecifiedVersionColumn(
+			Table table,
+			String optimisticLockColumnName,
+			RootClass rc, 
+			Set<Column> processed) {
+		TableIdentifier identifier = TableIdentifier.create(table);
+		Column column = table.getColumn(new Column(optimisticLockColumnName));
+		if(column==null) {
+			LOGGER.log(Level.WARNING, "Column " + column + " wanted for <version>/<timestamp> not found in " + identifier);
+		} else {
+			bindVersionProperty(table, column, rc, processed);
+		}	
 	}
 
 	private void bindVersionProperty(
 			Table table, 
-			TableIdentifier identifier, 
 			Column column, 
 			RootClass rc, 
 			Set<Column> processed) {
+		TableIdentifier identifier = TableIdentifier.create(table);
 		processed.add(column);
 		String propertyName = getRevengStrategy().columnToPropertyName( identifier, column.getName() );
 		Property property = basicPropertyBinder.bind(

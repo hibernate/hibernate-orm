@@ -28,19 +28,11 @@ public class ManyToOneBinder extends AbstractBinder {
     		boolean mutable, 
     		Table table, 
     		ForeignKey fk, 
-    		Set<Column> processedColumns) {
-    	
+    		Set<Column> processedColumns) {   	
         ManyToOne value = new ManyToOne(getMetadataBuildingContext(), table);
         value.setReferencedEntityName( fk.getReferencedEntityName() );
-		Iterator<Column> columns = fk.getColumnIterator();
-        while ( columns.hasNext() ) {
-			Column fkcolumn = (Column) columns.next();
-			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
-            value.addColumn(fkcolumn);
-            processedColumns.add(fkcolumn);
-		}
+		addColumns(value, fk, processedColumns);
         value.setFetchMode(FetchMode.SELECT);
-
         return entityPropertyBinder
         		.bind(
         				propertyName, 
@@ -50,5 +42,18 @@ public class ManyToOneBinder extends AbstractBinder {
         				value, 
         				false);
      }
+    
+    private void addColumns(
+    		ManyToOne value,
+    		ForeignKey fk, 
+    		Set<Column> processedColumns) {
+		Iterator<Column> columns = fk.getColumnIterator();
+        while ( columns.hasNext() ) {
+			Column fkcolumn = (Column) columns.next();
+			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
+            value.addColumn(fkcolumn);
+            processedColumns.add(fkcolumn);
+		}
+    }
 
 }

@@ -119,7 +119,6 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
 	@RequiresDialect(PostgreSQL82Dialect.class)
-	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "CockroachDB does not support recursive CTE")
 	public void testCteNativeQueryOrdinalParameter() {
 
 		Node root1 = new Node();

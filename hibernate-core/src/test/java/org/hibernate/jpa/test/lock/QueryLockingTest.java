@@ -143,7 +143,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(CockroachDB1920Dialect.class)
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testPessimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -169,7 +169,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(CockroachDB1920Dialect.class)
+	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
 	public void testPessimisticForcedIncrementSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

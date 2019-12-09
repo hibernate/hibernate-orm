@@ -40,7 +40,7 @@ import org.junit.Test;
  */
 @TestForIssue(jiraKey = "HHH-1872")
 @RequiresDialect(PostgreSQL81Dialect.class)
-@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses CREATE OR REPLACE VIEW")
+@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/24897")
 public class SchemaUpdateWithViewsTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	protected ServiceRegistry serviceRegistry;

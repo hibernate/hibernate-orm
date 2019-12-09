@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
  */
 @TestForIssue(jiraKey = "HHH-12973")
 @RequiresDialect(PostgreSQL82Dialect.class)
-@SkipForDialect(CockroachDB1920Dialect.class)
+@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Does not use sequences by default.")
 public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule

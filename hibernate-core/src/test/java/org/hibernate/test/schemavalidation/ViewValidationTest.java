@@ -38,7 +38,7 @@ import org.junit.Test;
 		@RequiresDialect(PostgreSQL81Dialect.class),
 		@RequiresDialect(H2Dialect.class)
 })
-@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses * in view creation")
+@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/10028")
 public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 	private StandardServiceRegistry ssr;
 

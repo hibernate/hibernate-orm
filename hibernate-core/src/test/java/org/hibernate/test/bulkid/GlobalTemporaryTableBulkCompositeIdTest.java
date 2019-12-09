@@ -15,7 +15,7 @@ import org.hibernate.testing.SkipForDialect;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL82Dialect.class)
-@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses temporary tables directly")
+@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/5807")
 public class GlobalTemporaryTableBulkCompositeIdTest extends AbstractBulkCompositeIdTest {
 
 	@Override

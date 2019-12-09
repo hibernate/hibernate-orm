@@ -29,7 +29,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL82Dialect.class)
-@SkipForDialect(CockroachDB1920Dialect.class)
+@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
 @TestForIssue( jiraKey = "HHH-13493")
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
@@ -49,9 +49,10 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 
 				fail("Should have thrown lock timeout exception!");
 			} catch (Exception expected) {
+				expected.printStackTrace();
 				assertTrue(
 					ExceptionUtil.rootCause(expected)
-						.getMessage().contains("canceling statement due to user request")
+						.getMessage().contains("csanceling statement due to user request")
 				);
 			}
 		} );

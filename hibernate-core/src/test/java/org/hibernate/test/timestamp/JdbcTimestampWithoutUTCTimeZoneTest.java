@@ -60,7 +60,7 @@ public class JdbcTimestampWithoutUTCTimeZoneTest
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Missing function to_char")
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/3781")
 	public void testTimeZone() {
 		doInHibernate( this::sessionFactory, session -> {
 			Person person = new Person();

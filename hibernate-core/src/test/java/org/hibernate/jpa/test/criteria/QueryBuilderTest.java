@@ -234,7 +234,6 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value= CockroachDB1920Dialect.class, comment = "CockroachDB does not support current_time")
 	public void testDateTimeFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

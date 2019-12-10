@@ -47,7 +47,6 @@ import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -456,7 +455,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				lockMode,
 				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression, tg) -> createTableReferenceJoin(
+				(tableExpression, tg) -> entityPartDescriptor.getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
@@ -542,7 +541,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 					creationContext
 			);
 
-			tableReferenceJoinCreator = (tableExpression, tableGroup) -> createTableReferenceJoin(
+			tableReferenceJoinCreator = (tableExpression, tableGroup) -> mappingType.createTableReferenceJoin(
 					tableExpression,
 					sqlAliasBase,
 					associatedPrimaryTable,
@@ -593,52 +592,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		}
 
 		return tableGroup;
-	}
-
-	@Override
-	public TableReferenceJoin createTableReferenceJoin(
-			String joinTableExpression,
-			SqlAliasBase sqlAliasBase,
-			TableReference lhs,
-			boolean canUseInnerJoin,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		return getCollectionDescriptor().createTableReferenceJoin(
-				joinTableExpression,
-				sqlAliasBase,
-				lhs,
-				canUseInnerJoin,
-				sqlExpressionResolver,
-				creationContext
-		);
-	}
-
-	@Override
-	public TableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		return getCollectionDescriptor().createPrimaryTableReference(
-				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
-		);
-	}
-
-	@Override
-	public void applyTableReferences(
-			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		getCollectionDescriptor().applyTableReferences(
-				sqlAliasBase,
-				baseSqlAstJoinType,
-				collector,
-				sqlExpressionResolver,
-				creationContext
-		);
 	}
 
 	@Override

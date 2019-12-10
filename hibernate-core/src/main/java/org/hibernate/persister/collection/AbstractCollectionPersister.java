@@ -10,14 +10,12 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -75,20 +73,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -104,23 +93,10 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -2470,274 +2446,6 @@ public abstract class AbstractCollectionPersister
 		}
 
 		return false;
-	}
-
-	@Override
-	public void applyTableReferences(
-			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-
-		if ( isOneToMany() ) {
-			// one-to-many does not define a "collection table"
-			assert elementPersister != null;
-		}
-		else {
-			collector.applyPrimaryReference(
-					new TableReference(
-							qualifiedTableName,
-							sqlAliasBase.generateNewAlias(),
-							false,
-							getFactory()
-					)
-			);
-		}
-
-		if ( elementPersister != null ) {
-			// apply the strategy for how to create the join predicate between the collection table
-			// and the entity's primary table.  Only used when there is a collection-table.
-			//
-			// when triggered the `lhs` will be the collection-table and the `rhs` will be the
-			// entity's primary table
-			collector.applyPrimaryJoinProducer(
-					(lhs, rhs) -> new TableReferenceJoin(
-							baseSqlAstJoinType,
-							rhs,
-							generateEntityElementJoinPredicate(
-									lhs, rhs, baseSqlAstJoinType, sqlExpressionResolver, creationContext
-							)
-					)
-			);
-
-			elementPersister.applyTableReferences(
-					sqlAliasBase,
-					// todo (6.0) : determine the proper join-type to use
-					SqlAstJoinType.LEFT,
-					collector,
-					sqlExpressionResolver,
-					creationContext
-			);
-		}
-
-		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
-		if ( indexDescriptor != null && indexDescriptor.getPartTypeDescriptor() instanceof TableReferenceContributor ) {
-			final TableReferenceContributor contributor = (TableReferenceContributor) indexDescriptor.getPartTypeDescriptor();
-
-			collector.applyPrimaryJoinProducer(
-					(lhs, rhs) -> new TableReferenceJoin(
-							baseSqlAstJoinType,
-							rhs,
-							generateIndexJoinPredicate(
-									lhs,
-									rhs,
-									SqlAstJoinType.CROSS,
-									sqlExpressionResolver,
-									creationContext
-							)
-					)
-			);
-
-			contributor.applyTableReferences(
-					sqlAliasBase,
-					baseSqlAstJoinType,
-					collector,
-					sqlExpressionResolver,
-					creationContext
-			);
-		}
-	}
-
-	private Predicate generateIndexJoinPredicate(
-			TableReference lhs,
-			TableReference rhs,
-			SqlAstJoinType sqlAstJoinType,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
-		final MappingType indexMappingType = indexDescriptor.getPartTypeDescriptor();
-
-		assert indexMappingType instanceof EntityMappingType;
-		final EntityMappingType indexEntityType = (EntityMappingType) indexMappingType;
-
-		// `lhs` should be the collection-table or the primary element table (one-to-many)
-		// `rhs` is the primary table for the index
-		if ( isOneToMany() ) {
-			assert elementPersister != null;
-			assert lhs.getTableExpression().equals( ( (Joinable) elementPersister ).getTableName() );
-		}
-		else {
-			assert lhs.getTableExpression().equals( getTableName() );
-		}
-
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final EntityIdentifierMapping identifierMapping = indexEntityType.getIdentifierMapping();
-
-		final int jdbcTypeCount = identifierMapping.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
-
-		assert jdbcTypeCount == indexColumnNames.length;
-
-		if ( jdbcTypeCount == 1 ) {
-			assert identifierMapping instanceof BasicEntityIdentifierMapping;
-			assert elementColumnNames.length == 1;
-
-			final BasicEntityIdentifierMapping basicKeyMapping = (BasicEntityIdentifierMapping) identifierMapping;
-
-			return new ComparisonPredicate(
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
-							sqlAstProcessingState -> new ColumnReference(
-									lhs,
-									elementColumnNames[0],
-									basicKeyMapping.getJdbcMapping(),
-									sessionFactory
-							)
-					),
-					ComparisonOperator.EQUAL,
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
-							sqlAstProcessingState -> new ColumnReference(
-									rhs,
-									basicKeyMapping.getMappedColumnExpression(),
-									basicKeyMapping.getJdbcMapping(),
-									sessionFactory
-							)
-					)
-			);
-		}
-		else {
-			final SqlTuple.Builder comparisonLhsBuilder = new SqlTuple.Builder( indexDescriptor, jdbcTypeCount );
-			final SqlTuple.Builder comparisonRhsBuilder = new SqlTuple.Builder( identifierMapping, jdbcTypeCount );
-
-			final AtomicInteger count = new AtomicInteger();
-
-			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						assert rhs.getTableExpression().equals( containingTableExpression );
-						int position = count.getAndIncrement();
-
-						comparisonRhsBuilder.addSubExpression(
-								sqlExpressionResolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
-										sqlAstProcessingState -> new ColumnReference(
-												rhs,
-												columnExpression,
-												jdbcMapping,
-												sessionFactory
-										)
-								)
-						);
-
-						comparisonLhsBuilder.addSubExpression(
-								sqlExpressionResolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
-										sqlAstProcessingState -> new ColumnReference(
-												lhs,
-												elementColumnNames[ position ],
-												jdbcMapping,
-												sessionFactory
-										)
-								)
-						);
-					}
-			);
-
-			final SqlTuple comparisionLhs = comparisonLhsBuilder.buildTuple();
-			final SqlTuple comparisonRhs = comparisonRhsBuilder.buildTuple();
-
-			return new ComparisonPredicate( comparisionLhs, ComparisonOperator.EQUAL, comparisonRhs );
-		}
-	}
-
-	private Predicate generateEntityElementJoinPredicate(
-			TableReference lhs,
-			TableReference rhs,
-			SqlAstJoinType baseSqlAstJoinType,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-
-		final String fkTargetModelPartName = getCollectionType().getRHSUniqueKeyPropertyName();
-		final ModelPart fkTargetDescriptor;
-		if ( fkTargetModelPartName != null ) {
-			fkTargetDescriptor = elementPersister.findSubPart( fkTargetModelPartName );
-		}
-		else {
-			fkTargetDescriptor = elementPersister.getIdentifierMapping();
-		}
-
-		final int jdbcTypeCount = fkTargetDescriptor.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
-		assert jdbcTypeCount == elementColumnNames.length;
-
-		if ( jdbcTypeCount == 1 ) {
-			final BasicValuedModelPart fkModelPartType = (BasicValuedModelPart) fkTargetDescriptor;
-			return new ComparisonPredicate(
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
-							sqlAstProcessingState -> new ColumnReference(
-									lhs,
-									elementColumnNames[0],
-									fkModelPartType.getJdbcMapping(),
-									sessionFactory
-							)
-					),
-					ComparisonOperator.EQUAL,
-					sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
-							sqlAstProcessingState -> new ColumnReference(
-									rhs,
-									fkModelPartType.getMappedColumnExpression(),
-									fkModelPartType.getJdbcMapping(),
-									sessionFactory
-							)
-					)
-			);
-		}
-		else {
-			// todo (6.0) : tuple or disjunction?
-			//		for now use a tuple - its easier to build, even though disjunction is more universally supported at DB level
-			final java.util.List<JdbcMapping> jdbcMappings = new ArrayList<>( jdbcTypeCount );
-			final SqlTuple.Builder comparisonRhsBuilder = new SqlTuple.Builder( fkTargetDescriptor, jdbcTypeCount );
-			fkTargetDescriptor.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						assert rhs.getTableExpression().equals( containingTableExpression );
-						jdbcMappings.add( jdbcMapping );
-						comparisonRhsBuilder.addSubExpression(
-								sqlExpressionResolver.resolveSqlExpression(
-										SqlExpressionResolver.createColumnReferenceKey( rhs, elementColumnNames[0] ),
-										sqlAstProcessingState -> new ColumnReference(
-												rhs,
-												columnExpression,
-												jdbcMapping,
-												sessionFactory
-										)
-								)
-						);
-					}
-			);
-			final SqlTuple comparisonRhs = comparisonRhsBuilder.buildTuple();
-
-			final SqlTuple.Builder comparisonLhsBuilder = new SqlTuple.Builder( fkTargetDescriptor, jdbcTypeCount );
-			for ( int i = 0; i < elementColumnNames.length; i++ ) {
-				final String lhsColumnName = elementColumnNames[i];
-				final JdbcMapping jdbcMapping = jdbcMappings.get( i );
-				comparisonLhsBuilder.addSubExpression(
-						sqlExpressionResolver.resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey( lhs, elementColumnNames[0] ),
-								sqlAstProcessingState -> new ColumnReference(
-										lhs,
-										lhsColumnName,
-										jdbcMapping,
-										sessionFactory
-								)
-						)
-				);
-			}
-			final SqlTuple comparisionLhs = comparisonLhsBuilder.buildTuple();
-
-			return new ComparisonPredicate( comparisionLhs, ComparisonOperator.EQUAL, comparisonRhs );
-		}
 	}
 
 	@Override

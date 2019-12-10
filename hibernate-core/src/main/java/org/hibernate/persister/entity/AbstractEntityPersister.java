@@ -184,7 +184,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -1322,30 +1321,6 @@ public abstract class AbstractEntityPersister
 				false,
 				getFactory()
 		);
-	}
-
-	@Override
-	public void applyTableReferences(
-			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final TableReference primaryTableReference = resolvePrimaryTableReference( sqlAliasBase );
-
-		collector.applyPrimaryReference( primaryTableReference );
-
-		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
-			collector.addTableReferenceJoin(
-					createTableReferenceJoin(
-							i,
-							primaryTableReference,
-							determineSubclassTableJoinType( i, true, true, null ),
-							sqlAliasBase,
-							sqlExpressionResolver
-					)
-			);
-		}
 	}
 
 	protected TableReferenceJoin createTableReferenceJoin(

@@ -12,9 +12,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * Functional contract for producing the join-predicate related to a {@link TableReferenceJoin}.
  *
- * @see TableReferenceJoin#getJoinPredicate
- * @see TableReferenceCollector#applySecondaryTableReferences
- *
  * @author Steve Ebersole
  */
 @FunctionalInterface

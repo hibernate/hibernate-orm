@@ -33,8 +33,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -207,7 +205,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		final String aliasRoot = explicitSourceAlias == null ? sqlAliasStem : explicitSourceAlias;
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
 
-		final TableReference primaryTableReference = createPrimaryTableReference(
+		final TableReference primaryTableReference = getEntityMappingType().createPrimaryTableReference(
 				sqlAliasBase,
 				sqlExpressionResolver,
 				creationContext
@@ -219,7 +217,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				lockMode,
 				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression, tg) -> createTableReferenceJoin(
+				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
@@ -254,48 +252,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public String getSqlAliasStem() {
 		return sqlAliasStem;
-	}
-
-	@Override
-	public TableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		return getEntityMappingType().createPrimaryTableReference( sqlAliasBase, sqlExpressionResolver, creationContext );
-	}
-
-	@Override
-	public TableReferenceJoin createTableReferenceJoin(
-			String joinTableExpression,
-			SqlAliasBase sqlAliasBase,
-			TableReference lhs,
-			boolean canUseInnerJoin,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		return getEntityMappingType().createTableReferenceJoin(
-				joinTableExpression,
-				sqlAliasBase,
-				lhs,
-				canUseInnerJoin && ! getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
-				sqlExpressionResolver,
-				creationContext
-		);
-	}
-
-	@Override
-	public void applyTableReferences(
-			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		getMappedTypeDescriptor().applyTableReferences(
-				sqlAliasBase,
-				baseSqlAstJoinType,
-				collector,
-				sqlExpressionResolver,
-				creationContext
-		);
 	}
 
 	@Override

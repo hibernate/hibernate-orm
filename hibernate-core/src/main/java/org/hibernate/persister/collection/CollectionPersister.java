@@ -29,12 +29,6 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
-import org.hibernate.sql.ast.tree.from.TableReferenceContributor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -72,7 +66,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister extends CollectionDefinition, TableReferenceContributor {
+public interface CollectionPersister extends CollectionDefinition {
 	NavigableRole getNavigableRole();
 
 	/**
@@ -375,20 +369,6 @@ public interface CollectionPersister extends CollectionDefinition, TableReferenc
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping model
-
-	@Override
-	default void applyTableReferences(
-			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception(
-				"The persister used for this collection [" + getNavigableRole()
-						+ "] does not yet implement support for use in SQL AST creation;"
-						+ " should implement `TableReferenceContributor#applyTableReferences`"
-		);
-	}
 
 	default CollectionSemantics getCollectionSemantics() {
 		throw new NotYetImplementedFor6Exception(

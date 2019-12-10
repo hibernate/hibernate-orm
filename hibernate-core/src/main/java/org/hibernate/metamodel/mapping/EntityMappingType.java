@@ -18,13 +18,13 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -240,19 +240,26 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 		);
 	}
 
-	@Override
-	default void applyTableReferences(
+	default TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType baseSqlAstJoinType,
-			TableReferenceCollector collector,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		getEntityPersister().applyTableReferences(
-				sqlAliasBase,
-				baseSqlAstJoinType,
-				collector,
-				sqlExpressionResolver,
-				creationContext
+		throw new UnsupportedOperationException(
+				"Entity mapping does not support primary TableReference creation [" +
+						getClass().getName() + " : " + getEntityName() + "]"
+		);
+	}
+
+	default TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		throw new UnsupportedOperationException(
+				"Entity mapping does not support primary TableReference join creation [" +
+						getClass().getName() + " : " + getEntityName() + "]"
 		);
 	}
 

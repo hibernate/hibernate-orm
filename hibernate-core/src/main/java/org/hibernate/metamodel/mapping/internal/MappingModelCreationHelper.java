@@ -26,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -35,10 +36,12 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
@@ -66,7 +69,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -912,7 +914,8 @@ public class MappingModelCreationHelper {
 			ManagedMappingType declaringType,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		final Type keyType = bootValueMapping.getKey().getType();
+		final KeyValue bootValueMappingKey = bootValueMapping.getKey();
+		final Type keyType = bootValueMappingKey.getType();
 
 		final ModelPart fkTarget;
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
@@ -924,14 +927,14 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( keyType instanceof BasicType ) {
-			assert bootValueMapping.getKey().getColumnSpan() == 1;
+			assert bootValueMappingKey.getColumnSpan() == 1;
 			assert fkTarget instanceof BasicValuedModelPart;
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
 			return new SimpleForeignKeyDescriptor(
 					( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
-					bootValueMapping.getKey().getTable().getName(),
-					bootValueMapping.getKey().getColumnIterator().next().getText( dialect ),
+					getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess ),
+					bootValueMappingKey.getColumnIterator().next().getText( dialect ),
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),
 					(BasicType) keyType
@@ -968,28 +971,21 @@ public class MappingModelCreationHelper {
 		final JdbcServices jdbcServices = creationProcess.getCreationContext().getSessionFactory().getJdbcServices();
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final String keyColumnExpression;
-			final String keyTableIdentifierExpression;
 			if ( bootValueMapping.isReferenceToPrimaryKey() ) {
 				final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+				final Table table = bootValueMapping.getTable();
 				if ( columnIterator.hasNext() ) {
 					keyColumnExpression = columnIterator.next().getText( dialect );
 				}
 				else {
 					// case of ToOne with @PrimaryKeyJoinColumn
-					keyColumnExpression = bootValueMapping.getTable().getColumn( 0 ).getName();
+					keyColumnExpression = table.getColumn( 0 ).getName();
 				}
 
-				keyTableIdentifierExpression = creationProcess.getCreationContext()
-						.getBootstrapContext()
-						.getMetadataBuildingOptions()
-						.getPhysicalNamingStrategy().toPhysicalTableName(
-								bootValueMapping.getTable().getNameIdentifier(),
-								jdbcServices.getJdbcEnvironment()
-						).getText();
 				final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 				ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
 						foreignKeyDirection,
-						keyTableIdentifierExpression,
+						getTableIdentifierExpression( table, creationProcess ),
 						keyColumnExpression,
 						simpleFkTarget.getContainingTableExpression(),
 						simpleFkTarget.getMappedColumnExpression(),
@@ -1032,6 +1028,18 @@ public class MappingModelCreationHelper {
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
 		}
+	}
+
+	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		final JdbcEnvironment jdbcEnvironment = creationProcess.getCreationContext()
+				.getMetadata()
+				.getDatabase()
+				.getJdbcEnvironment();
+		return jdbcEnvironment
+				.getQualifiedObjectNameFormatter().format(
+						table.getQualifiedTableName(),
+						jdbcEnvironment.getDialect()
+				);
 	}
 
 	private static CollectionPart interpretMapKey(

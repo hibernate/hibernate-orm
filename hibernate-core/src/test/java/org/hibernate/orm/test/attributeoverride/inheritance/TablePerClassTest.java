@@ -21,6 +21,7 @@ import javax.persistence.Table;
 import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,10 +50,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TablePerClassTest {
 
 	@Test
+	@FailureExpected(reason = "@AttributeOverrides not applied for Table per class")
 	public void testSchema(SessionFactoryScope scope) {
 		MetadataImplementor metadata = scope.getMetadataImplementor();
-		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_address_street", metadata ) );
+		assertTrue( SchemaUtil.isColumnPresent( "CUSTOMER", "STREET", metadata ) );
 		assertTrue( SchemaUtil.isColumnPresent( "FOREIGN_CUSTOMER", "STREET", metadata ) );
+		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_name", metadata ) );
+		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_address_street", metadata ) );
 	}
 
 	@Test
@@ -153,7 +157,8 @@ public class TablePerClassTest {
 
 	@Entity(name = "Customer")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	public static abstract class Customer {
+	@Table(name = "CUSTOMER")
+	public static class Customer {
 		private Integer id;
 		private String name;
 		private Address address;

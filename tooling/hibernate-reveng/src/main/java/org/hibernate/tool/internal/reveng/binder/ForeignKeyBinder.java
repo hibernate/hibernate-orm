@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
@@ -34,8 +33,7 @@ class ForeignKeyBinder extends AbstractBinder {
 	void bindIncoming(
 			ForeignKey foreignKey,
 			PersistentClass persistentClass,
-			Set<Column> processed,
-			Mapping mapping) {
+			Set<Column> processed) {
 		if(excludeForeignKeyAsCollection(foreignKey)) {
 			LOGGER.log(Level.INFO, "Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
 		} else if (getRevengStrategy().isOneToOne(foreignKey)){

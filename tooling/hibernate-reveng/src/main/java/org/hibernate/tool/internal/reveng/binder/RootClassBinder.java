@@ -121,7 +121,7 @@ public class RootClassBinder extends AbstractBinder {
 		List<ForeignKey> foreignKeys = collector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
-				foreignKeyBinder.bindIncoming(iter.next(), rc, processed, mapping);
+				foreignKeyBinder.bindIncoming(iter.next(), rc, processed);
 			}
 		}
 	}

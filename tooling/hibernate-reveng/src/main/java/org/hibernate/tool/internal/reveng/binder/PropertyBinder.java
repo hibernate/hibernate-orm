@@ -15,7 +15,7 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
-public class PropertyBinder extends AbstractBinder {
+class PropertyBinder extends AbstractBinder {
 
 	static PropertyBinder create(BinderContext binderContext) {
 		return new PropertyBinder(binderContext);

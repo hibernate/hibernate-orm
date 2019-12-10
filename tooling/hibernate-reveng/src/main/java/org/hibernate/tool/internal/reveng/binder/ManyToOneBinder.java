@@ -10,7 +10,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 
-public class ManyToOneBinder extends AbstractBinder {
+class ManyToOneBinder extends AbstractBinder {
 	
 	static ManyToOneBinder create(BinderContext binderContext) {
 		return new ManyToOneBinder(binderContext);

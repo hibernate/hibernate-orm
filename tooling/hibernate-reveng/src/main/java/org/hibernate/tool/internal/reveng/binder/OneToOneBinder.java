@@ -13,9 +13,9 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.type.ForeignKeyDirection;
 
-public class OneToOneBinder extends AbstractBinder {
+class OneToOneBinder extends AbstractBinder {
 	
-	public static OneToOneBinder create(BinderContext binderContext) {
+	static OneToOneBinder create(BinderContext binderContext) {
 		return new OneToOneBinder(binderContext); 
 	}
 	
@@ -26,7 +26,7 @@ public class OneToOneBinder extends AbstractBinder {
 		this.entityPropertyBinder = EntityPropertyBinder.create(binderContext);
 	}
 
-    public Property bind(
+    Property bind(
     		PersistentClass rc, 
     		Table targetTable,
             ForeignKey fk, 

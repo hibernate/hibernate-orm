@@ -36,26 +36,12 @@ class ForeignKeyBinder extends AbstractBinder {
 			PersistentClass persistentClass,
 			Set<Column> processed,
 			Mapping mapping) {
-		if(getRevengStrategy().excludeForeignKeyAsCollection(
-				foreignKey.getName(),
-				TableIdentifier.create(foreignKey.getTable() ),
-				foreignKey.getColumns(),
-				TableIdentifier.create(foreignKey.getReferencedTable() ),
-				foreignKey.getReferencedColumns())) {
+		if(excludeForeignKeyAsCollection(foreignKey)) {
 			LOGGER.log(Level.INFO, "Rev.eng excluded one-to-many or one-to-one for foreignkey " + foreignKey.getName());
 		} else if (getRevengStrategy().isOneToOne(foreignKey)){
-        	Property property = oneToOneBinder
-        			.bind(
-        					persistentClass, 
-        					foreignKey.getTable(), 
-        					foreignKey, 
-        					processed, 
-        					false, 
-        					true);
-			persistentClass.addProperty(property);
+			addOneToOne(foreignKey, persistentClass, processed, false);
 		} else {
-			Property property = oneToManyBinder.bind(persistentClass, foreignKey);
-			persistentClass.addProperty(property);
+			addOneToMany(foreignKey, persistentClass);
 		}		
 	}
 	
@@ -65,45 +51,81 @@ class ForeignKeyBinder extends AbstractBinder {
 			PersistentClass rc,
 			Set<Column> processedColumns,
 			boolean mutable) {
-
-        if(getRevengStrategy().excludeForeignKeyAsManytoOne(foreignKey.getName(),
+        if(excludeForeignKeyAsManyToOne(foreignKey)) {
+        	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
+        	LOGGER.log(Level.INFO, "Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
+        } else if (isOneToOne(foreignKey)){
+        	addOneToOne(foreignKey, rc, processedColumns, true);
+		} else {
+        	addManyToOne(foreignKey, table, rc, processedColumns, mutable);
+        }		
+	}
+	
+	private String getForeignKeyToEntityName(ForeignKey foreignKey) {
+		return getRevengStrategy().foreignKeyToEntityName(
+    			foreignKey.getName(),
     			TableIdentifier.create(foreignKey.getTable() ),
     			foreignKey.getColumns(),
     			TableIdentifier.create(foreignKey.getReferencedTable() ),
-    			foreignKey.getReferencedColumns())) {
-        	// TODO: if many-to-one is excluded should the column be marked as processed so it won't show up at all ?
-        	LOGGER.log(Level.INFO, "Rev.eng excluded *-to-one for foreignkey " + foreignKey.getName());
-        } else if (getRevengStrategy().isOneToOne(foreignKey)){
-        	Property property = oneToOneBinder
-        			.bind(
-        					rc, 
-        					foreignKey.getReferencedTable(), 
-        					foreignKey, 
-        					processedColumns, 
-        					true, 
-        					false);
-			rc.addProperty(property);
-		} else {
-        	boolean isUnique = ForeignKeyUtils.isUniqueReference(foreignKey);
-        	String propertyName = getRevengStrategy().foreignKeyToEntityName(
-        			foreignKey.getName(),
-        			TableIdentifier.create(foreignKey.getTable() ),
-        			foreignKey.getColumns(),
-        			TableIdentifier.create(foreignKey.getReferencedTable() ),
-        			foreignKey.getReferencedColumns(),
-        			isUnique
-        	);
-
-        	Property property = manyToOneBinder
-        			.bind(
-        					BinderUtils.makeUnique(rc, propertyName), 
-        					mutable, 
-        					table, 
-        					foreignKey, 
-        					processedColumns);
-
-        	rc.addProperty(property);
-        }		
+    			foreignKey.getReferencedColumns(),
+    			ForeignKeyUtils.isUniqueReference(foreignKey));		
+	}
+	
+	private void addManyToOne(
+			ForeignKey foreignKey,
+			Table table,
+			PersistentClass rc,
+			Set<Column> processedColumns,
+			boolean mutable) {
+    	Property property = manyToOneBinder.bind(
+    			BinderUtils.makeUnique(rc, getForeignKeyToEntityName(foreignKey)), 
+    			mutable, 
+    			table, 
+    			foreignKey, 
+    			processedColumns);
+    	rc.addProperty(property);
+	}
+	
+	private void addOneToOne(
+			ForeignKey foreignKey,
+			PersistentClass rc,
+			Set<Column> processedColumns,
+			boolean outgoing) {
+		Table table = outgoing ? foreignKey.getReferencedTable() : foreignKey.getTable();
+    	Property property = oneToOneBinder.bind(
+    			rc, 
+    			table, 
+    			foreignKey, 
+    			processedColumns, 
+    			outgoing, 
+    			!outgoing);
+		rc.addProperty(property);
+	}
+	
+	private void addOneToMany(ForeignKey foreignKey, PersistentClass persistentClass) {
+		persistentClass.addProperty(oneToManyBinder.bind(persistentClass, foreignKey));
+	}
+	
+	private boolean excludeForeignKeyAsCollection(ForeignKey foreignKey) {
+		return getRevengStrategy().excludeForeignKeyAsCollection(
+				foreignKey.getName(),
+				TableIdentifier.create(foreignKey.getTable() ),
+				foreignKey.getColumns(),
+				TableIdentifier.create(foreignKey.getReferencedTable() ),
+				foreignKey.getReferencedColumns());
+	}
+	
+	private boolean excludeForeignKeyAsManyToOne(ForeignKey foreignKey) {
+		return getRevengStrategy().excludeForeignKeyAsManytoOne(
+				foreignKey.getName(),
+    			TableIdentifier.create(foreignKey.getTable() ),
+    			foreignKey.getColumns(),
+    			TableIdentifier.create(foreignKey.getReferencedTable()),
+    			foreignKey.getReferencedColumns());
+	}
+	
+	private boolean isOneToOne(ForeignKey foreignKey) {
+		return getRevengStrategy().isOneToOne(foreignKey);
 	}
 
 }

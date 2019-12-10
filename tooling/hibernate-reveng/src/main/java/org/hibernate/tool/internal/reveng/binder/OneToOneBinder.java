@@ -51,7 +51,6 @@ class OneToOneBinder extends AbstractBinder {
         				fk, 
         				value, 
         				inverseProperty);
-
     }
     
     private void addColumns(ForeignKey foreignKey, OneToOne oneToOne, Set<Column> processedColumns) {

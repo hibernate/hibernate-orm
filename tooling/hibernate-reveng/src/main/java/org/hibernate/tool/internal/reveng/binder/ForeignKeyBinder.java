@@ -12,11 +12,11 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class ForeignKeyBinder extends AbstractBinder {
+class ForeignKeyBinder extends AbstractBinder {
 	
 	private static Logger LOGGER = Logger.getLogger(ForeignKeyBinder.class.getName());
 	
-	public static ForeignKeyBinder create(BinderContext binderContext) {
+	static ForeignKeyBinder create(BinderContext binderContext) {
 		return new ForeignKeyBinder(binderContext);
 	}
 	
@@ -31,7 +31,7 @@ public class ForeignKeyBinder extends AbstractBinder {
 		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
 	}
 	
-	public void bindIncoming(
+	void bindIncoming(
 			ForeignKey foreignKey,
 			PersistentClass persistentClass,
 			Set<Column> processed,
@@ -59,7 +59,7 @@ public class ForeignKeyBinder extends AbstractBinder {
 		}		
 	}
 	
-	public void bindOutgoing(
+	void bindOutgoing(
 			ForeignKey foreignKey,
 			Table table,
 			PersistentClass rc,

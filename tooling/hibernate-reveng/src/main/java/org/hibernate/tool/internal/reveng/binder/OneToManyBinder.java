@@ -35,73 +35,34 @@ class OneToManyBinder extends AbstractBinder {
 	}
 
 	Property bind(PersistentClass rc, ForeignKey foreignKey, Set<Column> processed) {
-		Table collectionTable = foreignKey.getTable();
-		// TODO: allow overriding collection type
-		Collection collection = new org.hibernate.mapping.Set(getMetadataBuildingContext(), rc); 
-		collection.setCollectionTable(collectionTable); 
-		boolean manyToMany = getRevengStrategy().isManyToManyTable( collectionTable );
-
+		Collection collection = bindCollection(rc, foreignKey);
+		getMetadataCollector().addCollectionBinding(collection);
+		return collectionPropertyBinder
+				.bind(
+						StringHelper.unqualify(collection.getRole()), 
+						true, 
+						rc.getTable(), 
+						foreignKey, 
+						collection, 
+						true);
+	}
+	
+	private Collection bindCollection(PersistentClass pc, ForeignKey foreignKey) {
+		Table table = foreignKey.getTable();
+		Collection collection = new org.hibernate.mapping.Set(getMetadataBuildingContext(), pc); 
+		collection.setCollectionTable(table); 
+		boolean manyToMany = getRevengStrategy().isManyToManyTable( table );		
 		if(manyToMany) {
-
-        	ManyToOne element = new ManyToOne(getMetadataBuildingContext(), collection.getCollectionTable() );
-        	//TODO: find the other foreignkey and choose the other side.
-        	Iterator<?> foreignKeyIterator = foreignKey.getTable().getForeignKeyIterator();
-        	List<ForeignKey> keys = new ArrayList<ForeignKey>();
-        	while ( foreignKeyIterator.hasNext() ) {
-				ForeignKey next = (ForeignKey)foreignKeyIterator.next();
-				if(next!=foreignKey) {
-					keys.add(next);
-				}
-			}
-
-        	if(keys.size()>1) {
-        		throw new RuntimeException("more than one other foreign key to choose from!"); // todo: handle better ?
-        	}
-
-        	ForeignKey fk = (ForeignKey) keys.get( 0 );
-
-        	String tableToClassName = bindCollection( rc, foreignKey, fk, collection );
-
-			element.setReferencedEntityName( tableToClassName );
-			
-			Iterator<Column> columnIterator = fk.getColumns().iterator();
-			while (columnIterator.hasNext()) {
-				Column fkcolumn = (Column) columnIterator.next();
-				if(fkcolumn.getSqlTypeCode() != null) {  // TODO: user defined foreign ref columns does not have a type set.
-					TypeUtils.determinePreferredType(
-							getMetadataCollector(), 
-							getRevengStrategy(), 
-							fk.getTable(), 
-							fkcolumn, 
-							false); // needed to ensure foreign key columns has same type as the "property" column.
-				}
-				element.addColumn(fkcolumn);
-			}
-			collection.setElement( element );
-
-        } else {
-        	String tableToClassName = bindCollection( rc, foreignKey, null, collection );
-
-        	OneToMany oneToMany = new OneToMany(getMetadataBuildingContext(), collection.getOwner() );
-
-			oneToMany.setReferencedEntityName( tableToClassName ); // Child
-        	getMetadataCollector().addSecondPass( new JdbcCollectionSecondPass(getMetadataBuildingContext(), collection) );
-
-        	collection.setElement(oneToMany);
+        	bindManyToMany(pc, foreignKey, collection);
+        } else {       	
+        	bindOneToMany(pc, foreignKey, collection);
         }
-		// bind keyvalue
-		KeyValue referencedKeyValue;
-		String propRef = collection.getReferencedPropertyName();
-		if (propRef==null) {
-			referencedKeyValue = collection.getOwner().getIdentifier();
-		}
-		else {
-			referencedKeyValue = (KeyValue) collection.getOwner()
-				.getProperty(propRef)
-				.getValue();
-		}
-
-		SimpleValue keyValue = new DependantValue(getMetadataBuildingContext(), collectionTable, referencedKeyValue );
+		collection.setKey(createKeyValue(table, foreignKey, getReferencedKeyValue(collection)));
+		return collection;
+	}
+		
+	private KeyValue createKeyValue(Table collectionTable, ForeignKey foreignKey, KeyValue referencedKeyValue) {
+		SimpleValue keyValue = new DependantValue(getMetadataBuildingContext(), collectionTable, referencedKeyValue);
 		//keyValue.setForeignKeyName("none"); // Avoid creating the foreignkey
 		//key.setCascadeDeleteEnabled( "cascade".equals( subnode.attributeValue("on-delete") ) );
 		Iterator<Column> columnIterator = foreignKey.getColumnIterator();
@@ -117,83 +78,129 @@ class OneToManyBinder extends AbstractBinder {
 			}
 			keyValue.addColumn( fkcolumn );
 		}
-
-		collection.setKey(keyValue);
-
-		getMetadataCollector().addCollectionBinding(collection);
-
-		return collectionPropertyBinder
-				.bind(
-						StringHelper.unqualify( collection.getRole()), 
-						true, rc.getTable(), 
-						foreignKey, 
-						collection, 
-						true);
-
-
+		return keyValue;
+	}
+	
+	private KeyValue getReferencedKeyValue(Collection collection) {
+		String propRef = collection.getReferencedPropertyName();
+		if (propRef==null) {
+			return collection.getOwner().getIdentifier();
+		}
+		else {
+			return (KeyValue)collection.getOwner().getProperty(propRef).getValue();
+		}
+	}
+	
+	private void bindManyToMany(PersistentClass pc, ForeignKey fromForeignKey, Collection collection) {
+    	ForeignKey toForeignKey = getToForeignKey(fromForeignKey);
+    	bindCollection( pc, fromForeignKey, toForeignKey, collection );
+    	ManyToOne manyToOne = new ManyToOne(getMetadataBuildingContext(), collection.getCollectionTable());
+		manyToOne.setReferencedEntityName(getTableToClassName(toForeignKey.getReferencedTable()));	
+		addColumns(manyToOne, toForeignKey);
+		collection.setElement(manyToOne);
+	}
+	
+	private void addColumns(ManyToOne manyToOne, ForeignKey fk) {
+		Iterator<Column> columnIterator = fk.getColumns().iterator();
+		while (columnIterator.hasNext()) {
+			Column fkcolumn = (Column) columnIterator.next();
+			if(fkcolumn.getSqlTypeCode() != null) {  // TODO: user defined foreign ref columns does not have a type set.
+				TypeUtils.determinePreferredType(
+						getMetadataCollector(), 
+						getRevengStrategy(), 
+						fk.getTable(), 
+						fkcolumn, 
+						false); // needed to ensure foreign key columns has same type as the "property" column.
+			}
+			manyToOne.addColumn(fkcolumn);
+		}
+	}
+	
+	private ForeignKey getToForeignKey(ForeignKey fromForeignKey) {
+    	Iterator<?> foreignKeyIterator = fromForeignKey.getTable().getForeignKeyIterator();
+    	List<ForeignKey> keys = new ArrayList<ForeignKey>();
+    	while (foreignKeyIterator.hasNext()) {
+			ForeignKey next = (ForeignKey)foreignKeyIterator.next();
+			if(next!=fromForeignKey) {
+				keys.add(next);
+			}
+		}
+    	if(keys.size()>1) {
+    		throw new RuntimeException("more than one other foreign key to choose from!"); // todo: handle better ?
+    	}
+    	return (ForeignKey) keys.get( 0 );		
+	}
+	
+	private void bindOneToMany(PersistentClass pc, ForeignKey fromForeignKey, Collection collection) {
+    	bindCollection(pc, fromForeignKey, null, collection);
+    	OneToMany oneToMany = new OneToMany(getMetadataBuildingContext(), collection.getOwner());
+		oneToMany.setReferencedEntityName(getTableToClassName(fromForeignKey.getTable())); 
+    	getMetadataCollector().addSecondPass(
+    			new JdbcCollectionSecondPass(getMetadataBuildingContext(), collection));
+    	collection.setElement(oneToMany);
 	}
 
 
-	private String bindCollection(PersistentClass rc, ForeignKey fromForeignKey, ForeignKey toForeignKey, Collection collection) {
-		ForeignKey targetKey = fromForeignKey;
-		String collectionRole = null;
-		boolean collectionLazy = false;
-		boolean collectionInverse = false;
-		TableIdentifier foreignKeyTable = null;
-		String tableToClassName;
-
-		if(toForeignKey!=null) {
-			targetKey = toForeignKey;
-		}
-
-		boolean uniqueReference = ForeignKeyUtils.isUniqueReference(targetKey); // TODO: need to look one step further for many-to-many!
-		foreignKeyTable = TableIdentifier.create( targetKey.getTable() );
-		TableIdentifier foreignKeyReferencedTable = TableIdentifier.create( targetKey.getReferencedTable() );
-
-		if(toForeignKey==null) {
-
-			collectionRole = getRevengStrategy().foreignKeyToCollectionName(
-				fromForeignKey.getName(),
-				foreignKeyTable,
-				fromForeignKey.getColumns(),
-				foreignKeyReferencedTable,
-				fromForeignKey.getReferencedColumns(),
-				uniqueReference
-			);
-
-			tableToClassName = getRevengStrategy().tableToClassName( foreignKeyTable );
-		} else {
-
-			collectionRole = getRevengStrategy().foreignKeyToManyToManyName(
-					fromForeignKey, TableIdentifier.create( fromForeignKey.getTable()), toForeignKey, uniqueReference );
-
-			tableToClassName = getRevengStrategy().tableToClassName( foreignKeyReferencedTable );
-		}
-
-		collectionInverse = getRevengStrategy().isForeignKeyCollectionInverse(
-			targetKey.getName(),
-			foreignKeyTable,
-			targetKey.getColumns(),
-			foreignKeyReferencedTable,
-			targetKey.getReferencedColumns());
-
-		collectionLazy = getRevengStrategy().isForeignKeyCollectionLazy(
-			targetKey.getName(),
-			foreignKeyTable,
-			targetKey.getColumns(),
-			foreignKeyReferencedTable,
-			targetKey.getReferencedColumns());
-
-		collectionRole = BinderUtils.makeUnique(rc,collectionRole);
-
-		String fullRolePath = StringHelper.qualify(rc.getEntityName(), collectionRole);
-		collection.setRole(fullRolePath);  // Master.setOfChildren+
-		collection.setInverse(collectionInverse); // TODO: allow overriding this
-		collection.setLazy(collectionLazy);
+	private void bindCollection(PersistentClass pc, ForeignKey fromForeignKey, ForeignKey toForeignKey, Collection collection) {
+		ForeignKey targetKey = toForeignKey != null ? toForeignKey : fromForeignKey;
+		collection.setRole(getFullRolePath(pc, fromForeignKey, toForeignKey));  
+		collection.setInverse(isCollectionInverse(targetKey)); 
+		collection.setLazy(isCollectionLazy(targetKey));
 		collection.setFetchMode(FetchMode.SELECT);
-
-
-		return tableToClassName;
 	}
-
+	
+	private boolean isCollectionLazy(ForeignKey foreignKey) {
+		return getRevengStrategy().isForeignKeyCollectionLazy(
+				foreignKey.getName(),
+				TableIdentifier.create( foreignKey.getTable()),
+				foreignKey.getColumns(),
+				TableIdentifier.create(foreignKey.getReferencedTable()),
+				foreignKey.getReferencedColumns());
+	}	
+	
+	private boolean isCollectionInverse(ForeignKey foreignKey) {
+		return getRevengStrategy().isForeignKeyCollectionInverse(
+				foreignKey.getName(),
+				TableIdentifier.create( foreignKey.getTable()),
+				foreignKey.getColumns(),
+				TableIdentifier.create( foreignKey.getReferencedTable()),
+				foreignKey.getReferencedColumns());
+	}
+	
+	private String getTableToClassName(Table table) {
+		return getRevengStrategy().tableToClassName(TableIdentifier.create(table));
+	}
+	
+	private String getFullRolePath(
+			PersistentClass pc, 
+			ForeignKey fromForeignKey, 
+			ForeignKey toForeignKey) {
+		String collectionRole = null;
+		if(toForeignKey==null) {
+			collectionRole = getForeignKeyToCollectionName(fromForeignKey);
+		} else {
+			collectionRole = getForeignKeyToManyToManyName(fromForeignKey, toForeignKey);
+		}
+		collectionRole = BinderUtils.makeUnique(pc,collectionRole);
+		return StringHelper.qualify(pc.getEntityName(), collectionRole);
+	}
+	
+	private String getForeignKeyToCollectionName(ForeignKey foreignKey) {
+		return getRevengStrategy().foreignKeyToCollectionName(
+				foreignKey.getName(),
+				TableIdentifier.create(foreignKey.getTable()),
+				foreignKey.getColumns(),
+				TableIdentifier.create( foreignKey.getReferencedTable()),
+				foreignKey.getReferencedColumns(),
+				ForeignKeyUtils.isUniqueReference(foreignKey));
+	}
+	
+	private String getForeignKeyToManyToManyName(ForeignKey fromForeignKey, ForeignKey toForeignKey) {
+		return getRevengStrategy().foreignKeyToManyToManyName(
+				fromForeignKey, 
+				TableIdentifier.create(fromForeignKey.getTable()), 
+				toForeignKey, 
+				ForeignKeyUtils.isUniqueReference(toForeignKey));
+	}
+	
 }

@@ -54,7 +54,7 @@ public class ForeignKeyBinder extends AbstractBinder {
         					true);
 			persistentClass.addProperty(property);
 		} else {
-			Property property = oneToManyBinder.bind(persistentClass, foreignKey, processed);
+			Property property = oneToManyBinder.bind(persistentClass, foreignKey);
 			persistentClass.addProperty(property);
 		}		
 	}

@@ -3,7 +3,6 @@ package org.hibernate.tool.internal.reveng.binder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.internal.util.StringHelper;
@@ -34,7 +33,7 @@ class OneToManyBinder extends AbstractBinder {
 		this.collectionPropertyBinder = CollectionPropertyBinder.create(binderContext);
 	}
 
-	Property bind(PersistentClass rc, ForeignKey foreignKey, Set<Column> processed) {
+	Property bind(PersistentClass rc, ForeignKey foreignKey) {
 		Collection collection = bindCollection(rc, foreignKey);
 		getMetadataCollector().addCollectionBinding(collection);
 		return collectionPropertyBinder

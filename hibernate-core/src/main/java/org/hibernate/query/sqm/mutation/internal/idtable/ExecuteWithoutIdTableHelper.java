@@ -47,7 +47,6 @@ public final class ExecuteWithoutIdTableHelper {
 				rootTableReference,
 				Collections.emptyList(),
 				null,
-				null,
 				sessionFactory
 		);
 

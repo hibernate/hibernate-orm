@@ -719,6 +719,7 @@ public class MappingModelCreationHelper {
 				dialect,
 				creationProcess
 		);
+
 		final CollectionPart indexDescriptor;
 		CollectionIdentifierDescriptor identifierDescriptor = null;
 
@@ -882,7 +883,7 @@ public class MappingModelCreationHelper {
 				sessionFactory
 		);
 
-		return new PluralAttributeMappingImpl(
+		final PluralAttributeMappingImpl pluralAttributeMapping = new PluralAttributeMappingImpl(
 				attrName,
 				bootValueMapping,
 				propertyAccess,
@@ -905,6 +906,22 @@ public class MappingModelCreationHelper {
 				declaringType,
 				collectionDescriptor
 		);
+		creationProcess.registerInitializationCallback(
+				() -> {
+					try {
+						pluralAttributeMapping.finishInitialization( bootProperty, bootValueMapping, creationProcess );
+						return true;
+					}
+					catch (NotYetImplementedFor6Exception nye) {
+						throw nye;
+					}
+					catch (Exception wait) {
+						return false;
+					}
+				}
+		);
+
+		return pluralAttributeMapping;
 	}
 
 	private static ForeignKeyDescriptor interpretKeyDescriptor(
@@ -1095,29 +1112,38 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
-			final EntityPersister associatedEntity;
-
-			if ( bootMapKeyDescriptor instanceof OneToMany ) {
-				associatedEntity = creationProcess.getEntityPersister(
-						( (OneToMany) bootMapKeyDescriptor ).getReferencedEntityName()
-				);
-			}
-			else {
-				// many-to-many
-				associatedEntity = creationProcess.getEntityPersister(
-						( (ToOne) bootMapKeyDescriptor ).getReferencedEntityName()
-				);
-			}
-
 			final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
+			final EntityPersister associatedEntity = creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
-			return new EntityCollectionPart(
-					CollectionPart.Nature.ELEMENT,
-					bootValueMapping.getElement(),
+			final EntityCollectionPart indexDescriptor = new EntityCollectionPart(
+					CollectionPart.Nature.INDEX,
+					bootMapKeyDescriptor,
 					associatedEntity,
-					indexEntityType.getRHSUniqueKeyPropertyName(),
 					creationProcess
 			);
+
+			creationProcess.registerInitializationCallback(
+					() -> {
+						try {
+							indexDescriptor.finishInitialization(
+									collectionDescriptor,
+									bootValueMapping,
+									indexEntityType.getRHSUniqueKeyPropertyName(),
+									creationProcess
+							);
+
+							return true;
+						}
+						catch (NotYetImplementedFor6Exception nye) {
+							throw nye;
+						}
+						catch (Exception wait) {
+							return false;
+						}
+					}
+			);
+
+			return indexDescriptor;
 		}
 
 		throw new NotYetImplementedFor6Exception(
@@ -1176,29 +1202,38 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( element instanceof OneToMany || element instanceof ToOne ) {
-			final EntityPersister associatedEntity;
+			final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
+			final EntityPersister associatedEntity = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
-			if ( element instanceof OneToMany ) {
-				associatedEntity = creationProcess.getEntityPersister(
-						( (OneToMany) element ).getReferencedEntityName()
-				);
-			}
-			else {
-				// many-to-many
-				associatedEntity = creationProcess.getEntityPersister(
-						( (ToOne) element ).getReferencedEntityName()
-				);
-			}
-
-			final EntityType indexEntityType = (EntityType) collectionDescriptor.getElementType();
-
-			return new EntityCollectionPart(
+			final EntityCollectionPart elementDescriptor = new EntityCollectionPart(
 					CollectionPart.Nature.ELEMENT,
 					bootDescriptor.getElement(),
 					associatedEntity,
-					indexEntityType.getRHSUniqueKeyPropertyName(),
 					creationProcess
 			);
+
+			creationProcess.registerInitializationCallback(
+					() -> {
+						try {
+							elementDescriptor.finishInitialization(
+									collectionDescriptor,
+									bootDescriptor,
+									elementEntityType.getRHSUniqueKeyPropertyName(),
+									creationProcess
+							);
+
+							return true;
+						}
+						catch (NotYetImplementedFor6Exception nye) {
+							throw nye;
+						}
+						catch (Exception wait) {
+							return false;
+						}
+					}
+			);
+
+			return elementDescriptor;
 		}
 
 		throw new NotYetImplementedFor6Exception(

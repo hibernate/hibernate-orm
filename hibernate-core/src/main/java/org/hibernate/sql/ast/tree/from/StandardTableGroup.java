@@ -33,11 +33,24 @@ public class StandardTableGroup extends AbstractTableGroup {
 			TableReference primaryTableReference,
 			List<TableReferenceJoin> tableJoins,
 			SqlAliasBase sqlAliasBase,
-			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
+		this.tableReferenceJoinCreator = null;
+	}
+
+	public StandardTableGroup(
+			NavigablePath navigablePath,
+			TableGroupProducer tableGroupProducer,
+			LockMode lockMode,
+			TableReference primaryTableReference,
+			SqlAliasBase sqlAliasBase,
+			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
+			SessionFactoryImplementor sessionFactory) {
+		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
+		this.primaryTableReference = primaryTableReference;
+		this.tableJoins = null;
 		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
 	}
 
@@ -58,6 +71,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
 		return tableJoins == null ? Collections.emptyList() : tableJoins;
+	}
+
+	public void addTableReferenceJoin(TableReferenceJoin join) {
+		if ( tableJoins == null ) {
+			tableJoins = new ArrayList<>();
+		}
+
+		tableJoins.add( join );
 	}
 
 	@Override

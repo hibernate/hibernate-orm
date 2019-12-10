@@ -34,7 +34,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
@@ -196,13 +195,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		// nothing to do
-	}
-
-	@Override
-	public void applyPrimaryTableReference(
-			TableGroupBuilder tableGroupBuilder,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
 	}
 
 	@Override

@@ -1882,6 +1882,10 @@ public abstract class AbstractCollectionPersister
 		return elementPersister;
 	}
 
+	protected EntityPersister getElementPersisterInternal() {
+		return elementPersister;
+	}
+
 	@Override
 	public boolean isCollection() {
 		return true;
@@ -2469,65 +2473,6 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public TableReference createPrimaryTableReference(
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		if ( qualifiedTableName != null && ! isOneToMany() ) {
-			return new TableReference(
-					qualifiedTableName,
-					sqlAliasBase.generateNewAlias(),
-					false,
-					getFactory()
-			);
-		}
-
-		return null;
-	}
-
-	@Override
-	public TableReferenceJoin createTableReferenceJoin(
-			String joinTableExpression,
-			SqlAliasBase sqlAliasBase,
-			TableReference lhs,
-			boolean canUseInnerJoin,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		if ( elementPersister == null ) {
-			return null;
-		}
-
-		final String entityPrimaryTableName = ( (Joinable) elementPersister ).getTableName();
-		if ( entityPrimaryTableName.equals( joinTableExpression ) ) {
-			assert qualifiedTableName != null;
-			assert lhs.getTableExpression().equals( qualifiedTableName );
-
-			final TableReference tableReference = elementPersister.createPrimaryTableReference( sqlAliasBase, sqlExpressionResolver, creationContext );
-			final SqlAstJoinType sqlAstJoinType = canUseInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT;
-			return new TableReferenceJoin(
-					sqlAstJoinType,
-					tableReference,
-					generateEntityElementJoinPredicate(
-							lhs,
-							tableReference,
-							sqlAstJoinType,
-							sqlExpressionResolver,
-							creationContext
-					)
-			);
-		}
-
-		return elementPersister.createTableReferenceJoin(
-				joinTableExpression,
-				sqlAliasBase,
-				lhs,
-				canUseInnerJoin,
-				sqlExpressionResolver,
-				creationContext
-		);
-	}
-
-	@Override
 	public void applyTableReferences(
 			SqlAliasBase sqlAliasBase,
 			SqlAstJoinType baseSqlAstJoinType,
@@ -2712,10 +2657,6 @@ public abstract class AbstractCollectionPersister
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-
-		// `lhs` should be the collection table
-		// `rhs` should be the primary element table
-		assert lhs.getTableExpression().equals( getTableName() );
 
 		final String fkTargetModelPartName = getCollectionType().getRHSUniqueKeyPropertyName();
 		final ModelPart fkTargetDescriptor;

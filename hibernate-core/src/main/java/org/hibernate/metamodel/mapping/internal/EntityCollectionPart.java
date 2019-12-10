@@ -10,22 +10,16 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -42,7 +36,6 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
-	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ModelPart fkTargetModelPart;
 
 	@SuppressWarnings("WeakerAccess")
@@ -50,23 +43,19 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 			Nature nature,
 			Value bootModelValue,
 			EntityMappingType entityMappingType,
-			String fkTargetModelPartName,
 			MappingModelCreationProcess creationProcess) {
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
-
-		creationProcess.registerInitializationCallback(
-				() -> {
-					fkTargetModelPart = fkTargetModelPartName == null
-							? entityMappingType.getIdentifierMapping()
-							: entityMappingType.findSubPart( fkTargetModelPartName, entityMappingType );
-					assert fkTargetModelPart != null;
-
-
-					return true;
-				}
-		);
 	}
+
+	public void finishInitialization(
+			CollectionPersister collectionDescriptor,
+			Collection bootValueMapping,
+			String fkTargetModelPartName,
+			MappingModelCreationProcess creationProcess) {
+		fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
+	}
+
 
 	@Override
 	public Nature getNature() {
@@ -76,24 +65,6 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	@Override
 	public EntityMappingType getPartTypeDescriptor() {
 		return getEntityMappingType();
-	}
-
-	@Override
-	public void applyPrimaryTableReference(
-			TableGroupBuilder tableGroupBuilder,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		tableGroupBuilder.applySecondaryTableReferences(
-				getEntityMappingType().createPrimaryTableReference( tableGroupBuilder.getSqlAliasBase(), sqlExpressionResolver, creationContext ),
-				SqlAstJoinType.LEFT,
-				(lhs, rhs, sqlAstJoinType) -> foreignKeyDescriptor.generateJoinPredicate(
-						lhs,
-						rhs,
-						sqlAstJoinType,
-						sqlExpressionResolver,
-						creationContext
-				)
-		);
 	}
 
 	@Override

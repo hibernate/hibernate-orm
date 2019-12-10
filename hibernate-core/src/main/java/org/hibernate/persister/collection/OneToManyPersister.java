@@ -24,11 +24,17 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * Collection persister for one-to-many associations.
@@ -65,6 +71,43 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				&& creationContext.getSessionFactory().getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
 		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
+	}
+
+	@Override
+	public TableReference createPrimaryTableReference(
+			SqlAliasBase sqlAliasBase,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		// for a one-to-many, the "primary table" is the primary table of the associated entity
+		final EntityPersister elementPersister = getElementPersister();
+		assert elementPersister != null;
+
+		return elementPersister.createPrimaryTableReference( sqlAliasBase, sqlExpressionResolver, creationContext );
+	}
+
+	@Override
+	public TableReferenceJoin createTableReferenceJoin(
+			String joinTableExpression,
+			SqlAliasBase sqlAliasBase,
+			TableReference lhs,
+			boolean canUseInnerJoin,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final EntityPersister elementPersister = getElementPersister();
+		assert elementPersister != null;
+
+		assert qualifiedTableName != null;
+		assert lhs.getTableExpression().equals( qualifiedTableName );
+		assert lhs.getTableExpression().equals( ( (Joinable) elementPersister ).getTableName() );
+
+		return elementPersister.createTableReferenceJoin(
+				joinTableExpression,
+				sqlAliasBase,
+				lhs,
+				canUseInnerJoin,
+				sqlExpressionResolver,
+				creationContext
+		);
 	}
 
 	/**

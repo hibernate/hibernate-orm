@@ -82,6 +82,11 @@ public class MappingModelCreationProcess {
 					postInitCallbacks.remove( callback );
 				}
 			}
+
+			if ( copy.size() == postInitCallbacks.size() ) {
+				// none of the processes could complete fully, this is an error
+				throw new IllegalStateException( "No post-init callbacks could complete" );
+			}
 		}
 	}
 

@@ -28,8 +28,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -207,15 +207,22 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		final String aliasRoot = explicitSourceAlias == null ? sqlAliasStem : explicitSourceAlias;
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
 
-		final TableGroupBuilder tableGroupBuilder = TableGroupBuilder.builder(
+		final TableReference primaryTableReference = createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		final TableGroup tableGroup = new StandardTableGroup(
 				navigablePath,
 				this,
 				lockMode,
+				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression, tableGroup) -> createTableReferenceJoin(
+				(tableExpression, tg) -> createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
-						tableGroup.getPrimaryTableReference(),
+						primaryTableReference,
 						false,
 						sqlExpressionResolver,
 						creationContext
@@ -223,25 +230,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				creationContext.getSessionFactory()
 		);
 
-		tableGroupBuilder.applyPrimaryReference(
-				getEntityMappingType().createPrimaryTableReference(
-						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
-				)
-		);
-
-//		applyTableReferences(
-//				sqlAliasBase,
-//				joinType,
-//				tableGroupBuilder,
-//				sqlExpressionResolver,
-//				creationContext
-//		);
-
-		getMappedTypeDescriptor().getIdentifierMapping();
-
-		final TableGroup tableGroup = tableGroupBuilder.build();
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,

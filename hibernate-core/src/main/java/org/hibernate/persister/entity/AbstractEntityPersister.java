@@ -181,8 +181,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupBuilder;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceCollector;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -1225,10 +1225,17 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final TableGroupBuilder builder = TableGroupBuilder.builder(
+		final TableReference primaryTableReference = createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		return new StandardTableGroup(
 				navigablePath,
 				this,
 				lockMode,
+				primaryTableReference,
 				sqlAliasBase,
 				(tableExpression, tableGroup) -> {
 					for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
@@ -1251,7 +1258,7 @@ public abstract class AbstractEntityPersister
 									),
 									joinedTableReference,
 									generateJoinPredicate(
-											tableGroup.getPrimaryTableReference(),
+											primaryTableReference,
 											joinedTableReference,
 											i,
 											sqlExpressionResolver
@@ -1262,27 +1269,8 @@ public abstract class AbstractEntityPersister
 
 					return null;
 				},
-				creationContext.getSessionFactory()
+				getFactory()
 		);
-
-
-		builder.applyPrimaryReference(
-				createPrimaryTableReference(
-						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
-				)
-		);
-
-		//		applyTableReferences(
-//				sqlAliasBase,
-//				tableReferenceJoinType,
-//				builder,
-//				sqlExpressionResolver,
-//				creationContext
-//		);
-
-		return builder.build();
 	}
 
 	@Override

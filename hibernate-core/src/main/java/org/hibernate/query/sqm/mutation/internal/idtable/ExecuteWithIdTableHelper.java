@@ -166,7 +166,6 @@ public final class ExecuteWithIdTableHelper {
 				idTableReference,
 				Collections.emptyList(),
 				null,
-				null,
 				executionContext.getSession().getFactory()
 		);
 

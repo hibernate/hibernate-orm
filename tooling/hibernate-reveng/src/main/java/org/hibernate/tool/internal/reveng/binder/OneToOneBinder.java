@@ -33,49 +33,19 @@ class OneToOneBinder extends AbstractBinder {
             Set<Column> processedColumns, 
             boolean constrained, 
             boolean inverseProperty) {
-
         OneToOne value = new OneToOne(getMetadataBuildingContext(), targetTable, rc);
         value.setReferencedEntityName(
         		getRevengStrategy().tableToClassName(TableIdentifier.create(targetTable)));
-
-        boolean isUnique = ForeignKeyUtils.isUniqueReference(fk);
-        String propertyName = null;
-        if(inverseProperty) {
-            propertyName = getRevengStrategy().foreignKeyToInverseEntityName(
-        		fk.getName(),
-                TableIdentifier.create(fk.getReferencedTable()), 
-                fk.getReferencedColumns(), 
-                TableIdentifier.create(targetTable), 
-                fk.getColumns(), 
-                isUnique);
-        } else {
-            propertyName = getRevengStrategy().foreignKeyToEntityName(
-        		fk.getName(),
-                TableIdentifier.create(fk.getReferencedTable()), 
-                fk.getReferencedColumns(), 
-                TableIdentifier.create(targetTable), 
-                fk.getColumns(), 
-                isUnique);
-        }
-
-        Iterator<Column> columns = fk.getColumnIterator();
-        while (columns.hasNext()) {
-            Column fkcolumn = (Column) columns.next();
-			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
-            value.addColumn(fkcolumn);
-            processedColumns.add(fkcolumn);
-        }
-
+        addColumns(fk, value, processedColumns);
         value.setFetchMode(FetchMode.SELECT);
-
         value.setConstrained(constrained);
-        value.setForeignKeyType( constrained ?
+        value.setForeignKeyType( 
+        		constrained ?
 				ForeignKeyDirection.FROM_PARENT :
 				ForeignKeyDirection.TO_PARENT );
-
         return entityPropertyBinder
         		.bind(
-        				propertyName, 
+        				getPropertyName(fk, targetTable, inverseProperty), 
         				true, 
         				targetTable, 
         				fk, 
@@ -83,5 +53,43 @@ class OneToOneBinder extends AbstractBinder {
         				inverseProperty);
 
     }
+    
+    private void addColumns(ForeignKey foreignKey, OneToOne oneToOne, Set<Column> processedColumns) {
+        Iterator<Column> columns = foreignKey.getColumnIterator();
+        while (columns.hasNext()) {
+            Column fkcolumn = (Column) columns.next();
+			BinderUtils.checkColumnForMultipleBinding(fkcolumn);
+            oneToOne.addColumn(fkcolumn);
+            processedColumns.add(fkcolumn);
+        }
 
+    }
+    
+    private String getPropertyName(ForeignKey foreignKey, Table table, boolean inverseProperty) {
+    	if (inverseProperty) {
+    		return getForeignKeyToInverseEntityName(foreignKey, table);
+    	} else  {
+    		return getForeignKeyToTentityName(foreignKey, table);
+    	}
+    }
+    
+    private String getForeignKeyToTentityName(ForeignKey foreignKey, Table table) {
+    	return getRevengStrategy().foreignKeyToEntityName(
+    			foreignKey.getName(),
+                TableIdentifier.create(foreignKey.getReferencedTable()), 
+                foreignKey.getReferencedColumns(), 
+                TableIdentifier.create(table), 
+                foreignKey.getColumns(), 
+                ForeignKeyUtils.isUniqueReference(foreignKey));
+    }
+    
+    private String getForeignKeyToInverseEntityName(ForeignKey foreignKey, Table table) {
+    	return getRevengStrategy().foreignKeyToInverseEntityName(
+    			foreignKey.getName(),
+                TableIdentifier.create(foreignKey.getReferencedTable()), 
+                foreignKey.getReferencedColumns(), 
+                TableIdentifier.create(table), 
+                foreignKey.getColumns(), 
+                ForeignKeyUtils.isUniqueReference(foreignKey));
+    }
 }

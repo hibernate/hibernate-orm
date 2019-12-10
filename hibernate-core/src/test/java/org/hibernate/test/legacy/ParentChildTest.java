@@ -1206,7 +1206,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
-//	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses READ_COMMITTED isolation")
+	@SkipForDialect(value = CockroachDB1920Dialect.class, comment = "Uses READ_COMMITTED isolation")
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {

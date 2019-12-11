@@ -65,7 +65,7 @@ public class RootClassBinder extends AbstractBinder {
 			Set<Column> processed, 
 			Mapping mapping, 
 			DatabaseCollector collector) {
-		return primaryKeyBinder.bind(table, rc, processed, mapping, collector);	
+		return primaryKeyBinder.bind(table, rc, processed, collector);	
 	}
 	
 	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {

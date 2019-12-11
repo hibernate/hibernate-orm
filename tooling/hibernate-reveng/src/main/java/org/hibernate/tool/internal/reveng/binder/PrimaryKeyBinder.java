@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ForeignKey;
@@ -53,7 +52,6 @@ class PrimaryKeyBinder extends AbstractBinder {
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 
-			Mapping mapping, 
 			DatabaseCollector collector) {
 		
 		SimpleValue id = null;
@@ -85,7 +83,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 			LOGGER.log(Level.INFO, "id strategy for " + rc.getEntityName() + " since it has a multiple column primary key");
 			naturalId = true;
 
-			id = handleCompositeKey(rc, processed, keyColumns, mapping);
+			id = handleCompositeKey(rc, processed, keyColumns);
 			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
 			if(idPropertyname==null) {
 				idPropertyname = "id";
@@ -161,8 +159,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 	private SimpleValue handleCompositeKey(
 			RootClass rc, 
 			Set<Column> processedColumns, 
-			List<Column> keyColumns, 
-			Mapping mapping) {
+			List<Column> keyColumns) {
 		Component pkc = new Component(getMetadataBuildingContext(), rc);
         pkc.setMetaAttributes(Collections.EMPTY_MAP);
         pkc.setEmbedded(false);

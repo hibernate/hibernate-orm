@@ -27,11 +27,11 @@ import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
 
-public class PrimaryKeyBinder extends AbstractBinder {
+class PrimaryKeyBinder extends AbstractBinder {
 	
 	private static final Logger LOGGER = Logger.getLogger(PrimaryKeyBinder.class.getName());
 	
-	public static PrimaryKeyBinder create(BinderContext binderContext) {
+	static PrimaryKeyBinder create(BinderContext binderContext) {
 		return new PrimaryKeyBinder(binderContext);
 	}
 	
@@ -49,7 +49,7 @@ public class PrimaryKeyBinder extends AbstractBinder {
 		this.propertyBinder = PropertyBinder.create(binderContext);
 	}
 
-	public PrimaryKeyInfo bind(
+	PrimaryKeyInfo bind(
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 
@@ -138,7 +138,7 @@ public class PrimaryKeyBinder extends AbstractBinder {
 		return pki;
 	}
 
-	public void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
+	void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
 		SimpleValue idValue = (SimpleValue) rc.getIdentifierProperty().getValue();
 
 		Properties defaultStrategyProperties = new Properties();

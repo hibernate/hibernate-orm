@@ -65,6 +65,8 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 					&& persistentField.hasAnnotation( Embedded.class ) ) {
 
 				// HHH-13759 - Call getter on superclass if field is not visible
+				// An embedded field won't be visible if declared private in a superclass
+				// annotated with @MappedSuperclass
 				Advice.WithCustomMapping advice = Advice.withCustomMapping();
 				advice = persistentField.isVisibleTo( managedCtClass )
 						? advice.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )

@@ -109,7 +109,27 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
-
+	
+	/**
+	 * @see this#doCreateQuery(String)
+	 */
+	private static class PlanAwareQueryImpl<T> extends QueryImpl<T> {
+		private final HQLQueryPlan plan;
+		
+		public PlanAwareQueryImpl(
+				SharedSessionContractImplementor producer,
+				ParameterMetadata parameterMetadata,
+				String queryString,
+				HQLQueryPlan plan) {
+			super( producer, parameterMetadata, queryString );
+			this.plan = plan;
+		}
+		
+		public HQLQueryPlan getPlan() {
+			return plan;
+		}
+	}
+	
 	private transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
 	protected transient FastSessionServices fastSessionServices;
@@ -627,11 +647,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected QueryImplementor createQuery(NamedQueryDefinition queryDefinition) {
 		String queryString = queryDefinition.getQueryString();
-		final QueryImpl query = new QueryImpl(
-				this,
-				getQueryPlan( queryString, false ).getParameterMetadata(),
-				queryString
-		);
+		final QueryImplementor query = doCreateQuery( queryString );
 		applyQuerySettingsAndHints( query );
 		query.setHibernateFlushMode( queryDefinition.getFlushMode() );
 		query.setComment( queryDefinition.getComment() != null ? queryDefinition.getComment() : queryDefinition.getName() );
@@ -642,6 +658,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		initQueryFromNamedDefinition( query, queryDefinition );
 
 		return query;
+	}
+	
+	private PlanAwareQueryImpl doCreateQuery(String queryString) {
+		final HQLQueryPlan plan = getQueryPlan( queryString, false );
+		return new PlanAwareQueryImpl(
+				this,
+				plan.getParameterMetadata(),
+				queryString,
+				plan
+		);
 	}
 
 	private NativeQueryImplementor createNativeQuery(NamedSQLQueryDefinition queryDefinition, boolean isOrdinalParameterZeroBased) {
@@ -704,11 +730,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		delayedAfterCompletion();
 
 		try {
-			final QueryImpl query = new QueryImpl(
-					this,
-					getQueryPlan( queryString, false ).getParameterMetadata(),
-					queryString
-			);
+			final QueryImpl query = doCreateQuery( queryString );
 			applyQuerySettingsAndHints( query );
 			query.setComment( queryString );
 			return query;
@@ -818,11 +840,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings({"unchecked", "WeakerAccess", "StatementWithEmptyBody"})
 	protected void resultClassChecking(Class resultClass, org.hibernate.Query hqlQuery) {
 		// make sure the query is a select -> HHH-7192
-		final HQLQueryPlan queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
-				hqlQuery.getQueryString(),
-				false,
-				getLoadQueryInfluencers().getEnabledFilters()
-		);
+		HQLQueryPlan queryPlan = null;
+		if ( hqlQuery instanceof PlanAwareQueryImpl ) {
+			queryPlan = ( (PlanAwareQueryImpl) hqlQuery).getPlan();
+		}
+		if ( queryPlan == null ) {
+			queryPlan = getFactory().getQueryPlanCache().getHQLQueryPlan(
+					hqlQuery.getQueryString(),
+					false,
+					getLoadQueryInfluencers().getEnabledFilters()
+			);
+		}
 		if ( queryPlan.getTranslators()[0].isManipulationStatement() ) {
 			throw new IllegalArgumentException( "Update/delete queries cannot be typed" );
 		}

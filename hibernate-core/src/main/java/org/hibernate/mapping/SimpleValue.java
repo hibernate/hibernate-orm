@@ -450,7 +450,9 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {
-		return getColumnSpan()==getType().getColumnSpan(mapping);
+		int columnSpan = getColumnSpan();
+		int typeColumnSpan = getType().getColumnSpan( mapping );
+		return columnSpan == typeColumnSpan;
 	}
 
 //	public Type getType() throws MappingException {

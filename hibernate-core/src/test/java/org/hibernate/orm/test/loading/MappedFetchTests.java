@@ -23,7 +23,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -64,7 +64,7 @@ public class MappedFetchTests {
 	@Test
 	public void baseline(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
+		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( RootEntity.class );
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(

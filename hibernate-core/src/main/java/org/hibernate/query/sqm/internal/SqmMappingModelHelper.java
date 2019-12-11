@@ -24,7 +24,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -103,7 +103,7 @@ public class SqmMappingModelHelper {
 
 	public static MappingModelExpressable resolveMappingModelExpressable(
 			SqmTypedNode<?> sqmNode,
-			DomainMetamodel domainModel,
+			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 		if ( sqmNode instanceof SqmPath ) {
 			return resolveSqmPath( (SqmPath) sqmNode, domainModel, tableGroupLocator );
@@ -119,7 +119,7 @@ public class SqmMappingModelHelper {
 
 	private static ModelPart resolveSqmPath(
 			SqmPath<?> sqmPath,
-			DomainMetamodel domainModel,
+			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
 		if ( sqmPath instanceof SqmTreatedPath ) {

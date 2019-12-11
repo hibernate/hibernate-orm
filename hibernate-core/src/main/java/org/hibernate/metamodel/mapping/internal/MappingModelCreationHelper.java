@@ -63,7 +63,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
@@ -690,7 +690,7 @@ public class MappingModelCreationHelper {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
-		final DomainMetamodel domainModel = creationContext.getDomainModel();
+		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
 		assert collectionDescriptor != null;

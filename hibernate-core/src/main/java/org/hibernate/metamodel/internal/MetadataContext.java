@@ -43,16 +43,16 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
+import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines a context for storing information during the building of the {@link DomainMetamodelImpl}.
+ * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
  * <p/>
  * This contextual information includes data needing to be processed in a second pass as well as
  * cross-references into the built metamodel classes.
@@ -94,7 +94,7 @@ public class MetadataContext {
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
-	private DomainMetamodel metamodel;
+	private MappingMetamodel metamodel;
 
 	public MetadataContext(
 			JpaMetamodel jpaMetamodel,
@@ -125,7 +125,7 @@ public class MetadataContext {
 		return typeConfiguration.getJavaTypeDescriptorRegistry();
 	}
 
-	DomainMetamodel getMetamodel() {
+	MappingMetamodel getMetamodel() {
 		return metamodel;
 	}
 

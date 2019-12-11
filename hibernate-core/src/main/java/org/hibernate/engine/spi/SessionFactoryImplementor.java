@@ -31,7 +31,8 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -81,7 +82,7 @@ public interface SessionFactoryImplementor
 	}
 
 	@Override
-	default DomainMetamodel getDomainModel() {
+	default MappingMetamodel getDomainModel() {
 		return getMetamodel();
 	}
 
@@ -103,6 +104,8 @@ public interface SessionFactoryImplementor
 
 	@Override
 	StatisticsImplementor getStatistics();
+
+	RuntimeMetamodels getRuntimeMetamodels();
 
 	/**
 	 * Access to the ServiceRegistry for this SessionFactory.

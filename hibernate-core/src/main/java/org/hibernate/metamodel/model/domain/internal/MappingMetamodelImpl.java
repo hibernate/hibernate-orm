@@ -42,15 +42,16 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.DomainMetamodel;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -70,14 +71,17 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
  *
  * Really more of the mapping model then the domain model, though it does have reference to the `JpaMetamodel`
  *
+ * NOTE : we suppress deprecation warnings because at the moment we still implement a deprecated API so
+ * have to reference deprecated things
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  * @author Andrea Boriero
  */
-public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplementor, Serializable {
+@SuppressWarnings("deprecation")
+public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplementor, Serializable {
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( DomainMetamodelImpl.class );
+	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
 
 	private static final String INVALID_IMPORT = "";
 	private static final String[] EMPTY_IMPLEMENTORS = new String[0];
@@ -123,7 +127,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	//
 	// To account for this, we track both paradigms here...
 
-	/**
+	/*
 	 * There can be multiple instances of an Embeddable type, each one being relative to its parent entity.
 	 */
 
@@ -142,10 +146,14 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 
-	public DomainMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
+	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
 		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration );
+	}
+
+	public JpaMetamodel getJpaMetamodel() {
+		return jpaMetamodel;
 	}
 
 	public void finishInitialization(
@@ -170,8 +178,8 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			}
 
 			@Override
-			public DomainMetamodel getDomainModel() {
-				return DomainMetamodelImpl.this;
+			public MappingMetamodel getDomainModel() {
+				return MappingMetamodelImpl.this;
 			}
 		};
 
@@ -294,6 +302,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			if ( indexType != null && indexType.isEntityType() && !indexType.isAnyType() ) {
 				String entityName = ( (org.hibernate.type.EntityType) indexType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
+				//noinspection Java8MapApi
 				if ( roles == null ) {
 					roles = new HashSet<>();
 					collectionRolesByEntityParticipant.put( entityName, roles );
@@ -304,6 +313,7 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 			if ( elementType.isEntityType() && !elementType.isAnyType() ) {
 				String entityName = ( (org.hibernate.type.EntityType) elementType ).getAssociatedEntityName();
 				Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
+				//noinspection Java8MapApi
 				if ( roles == null ) {
 					roles = new HashSet<>();
 					collectionRolesByEntityParticipant.put( entityName, roles );
@@ -337,16 +347,6 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
-	}
-
-	@Override
-	public JpaMetamodel getJpaMetamodel() {
-		return this.jpaMetamodel;
-	}
-
-	@Override
-	public EntityPersister determineEntityPersister(Object entity) {
-		return findEntityDescriptor( entity.getClass() );
 	}
 
 	@Override
@@ -423,42 +423,38 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public <X> EntityDomainType<X> entity(Class<X> cls) {
-		return getJpaMetamodel().entity( cls );
+		return jpaMetamodel.entity( cls );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-		return getJpaMetamodel().managedType( cls );
+		return jpaMetamodel.managedType( cls );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
-		return getJpaMetamodel().embeddable( cls );
+		return jpaMetamodel.embeddable( cls );
 	}
 
 	@Override
 	public Set<ManagedType<?>> getManagedTypes() {
-		return getJpaMetamodel().getManagedTypes();
+		return jpaMetamodel.getManagedTypes();
 	}
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return getJpaMetamodel().getEntities();
+		return jpaMetamodel.getEntities();
 	}
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
-		return getJpaMetamodel().getEmbeddables();
+		return jpaMetamodel.getEmbeddables();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> EntityDomainType<X> entity(String entityName) {
-		return getJpaMetamodel().entity( entityName );
+		return jpaMetamodel.entity( entityName );
 	}
 
 	@Override
@@ -596,15 +592,13 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
-		return getJpaMetamodel().findEntityGraphByName( name );
+		return jpaMetamodel.findEntityGraphByName( name );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
+		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
 	}
 
 	@Override
@@ -708,5 +702,22 @@ public class DomainMetamodelImpl implements DomainMetamodel, MetamodelImplemento
 		}
 
 		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );
+	}
+
+	@Override
+	public  <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType) {
+		final BasicType basicType = getTypeConfiguration().getBasicTypeForJavaType( javaType );
+		if ( basicType != null ) {
+			//noinspection unchecked
+			return basicType;
+		}
+
+		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaType );
+		if ( managedType instanceof AllowableParameterType ) {
+			//noinspection unchecked
+			return (AllowableParameterType) managedType;
+		}
+
+		return null;
 	}
 }

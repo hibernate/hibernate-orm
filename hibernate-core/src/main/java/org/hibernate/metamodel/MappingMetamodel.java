@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.spi;
+package org.hibernate.metamodel;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -14,45 +14,29 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Access to information about Hibernate's runtime type system
+ * Access to information about Hibernate's runtime relational mapping model
  *
  * @author Steve Ebersole
  */
 @Incubating
-public interface DomainMetamodel {
-	/**
-	 * Access to the JPA metamodel sub-set of the overall run-time metamodel
-	 *
-	 * @apiNote The distinction is mainly used in building SQM trees, which rely
-	 * on the JPA type subset
-	 */
-	JpaMetamodel getJpaMetamodel();
-
+public interface MappingMetamodel {
 	/**
 	 * The TypeConfiguration this metamodel is associated with
 	 */
-	default TypeConfiguration getTypeConfiguration() {
-		return getJpaMetamodel().getTypeConfiguration();
-	}
+	TypeConfiguration getTypeConfiguration();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Mapping model
+	// SQM model -> Mapping model
 
 	/**
 	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
-	 *
-	 * @param sqmExpressable
-	 * @return
 	 */
 	MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable);
 
@@ -60,28 +44,7 @@ public interface DomainMetamodel {
 	 * Given a Java type, determine the corresponding AllowableParameterType to
 	 * use implicitly
 	 */
-	default <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType) {
-		final BasicType basicType = getTypeConfiguration().getBasicTypeForJavaType( javaType );
-		if ( basicType != null ) {
-			//noinspection unchecked
-			return basicType;
-		}
-
-		final ManagedDomainType<T> managedType = getJpaMetamodel().findManagedType( javaType );
-		if ( managedType instanceof AllowableParameterType ) {
-			//noinspection unchecked
-			return (AllowableParameterType) managedType;
-		}
-
-		return null;
-	}
-
-	/**
-	 * Given an (assumed) entity instance, determine its descriptor
-	 *
-	 * @see org.hibernate.EntityNameResolver
-	 */
-	EntityPersister determineEntityPersister(Object entity);
+	<T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

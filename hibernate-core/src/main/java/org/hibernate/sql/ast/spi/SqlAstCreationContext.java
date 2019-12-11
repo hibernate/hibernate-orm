@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -19,7 +19,7 @@ import org.hibernate.service.ServiceRegistry;
 public interface SqlAstCreationContext {
 	SessionFactoryImplementor getSessionFactory();
 
-	DomainMetamodel getDomainModel();
+	MappingMetamodel getDomainModel();
 
 	ServiceRegistry getServiceRegistry();
 

@@ -101,10 +101,11 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.internal.DomainMetamodelImpl;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -179,7 +180,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
-	private final transient DomainMetamodel metamodel;
+	private final transient RuntimeMetamodels runtimeMetamodels;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient QueryEngine queryEngine;
@@ -298,8 +299,9 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
-			this.metamodel = typeConfiguration.scope( this );
-			( (DomainMetamodelImpl) metamodel ).finishInitialization(
+			final RuntimeMetamodelsImpl runtimeMetamodels = new RuntimeMetamodelsImpl();
+			this.runtimeMetamodels = runtimeMetamodels;
+			runtimeMetamodels.finishInitialization(
 					bootMetamodel,
 					bootstrapContext,
 					this
@@ -334,10 +336,10 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
 				for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 					// resolve the persister owning the fetch
-					final String entityName = metamodel.getImportedName( mappingFetch.getEntity() );
+					final String entityName = this.runtimeMetamodels.getImportedName( mappingFetch.getEntity() );
 					final EntityPersister owner = entityName == null
 							? null
-							: metamodel.getEntityDescriptor( entityName );
+							: this.runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
 					if ( owner == null ) {
 						throw new HibernateException(
 								"Unable to resolve entity reference [" + mappingFetch.getEntity()
@@ -715,7 +717,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public MetamodelImplementor getMetamodel() {
 		validateNotClosed();
-		return (MetamodelImplementor) metamodel;
+		return (MetamodelImplementor) runtimeMetamodels.getMappingMetamodel();
 	}
 
 	@Override
@@ -826,8 +828,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 			cacheAccess.close();
 		}
 
-		if ( metamodel != null ) {
-			( (DomainMetamodelImpl) metamodel ).close();
+		if ( runtimeMetamodels != null ) {
+			( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
 		}
 
 		if ( queryEngine != null ) {
@@ -1022,8 +1024,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public RuntimeMetamodels getRuntimeMetamodels() {
+		return runtimeMetamodels;
+
+	}
+
+	@Override
 	public JpaMetamodel getJpaMetamodel() {
-		return getMetamodel().getJpaMetamodel();
+		return runtimeMetamodels.getJpaMetamodel();
 	}
 
 	@Override

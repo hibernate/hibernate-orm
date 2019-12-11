@@ -20,7 +20,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -106,7 +106,7 @@ public class TableBasedUpdateHandler
 
 	private ExecutionDelegate resolveDelegate(ExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final DomainMetamodel domainModel = sessionFactory.getDomainModel();
+		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();

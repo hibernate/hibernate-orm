@@ -13,7 +13,7 @@ import java.util.function.Function;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -246,7 +246,7 @@ public class StandardSqmUpdateTranslator
 					getJdbcParamsBySqmParam().put( sqmParameter, jdbcParametersForSqm );
 				}
 				else {
-					final DomainMetamodel domainModel = getCreationContext().getDomainModel();
+					final MappingMetamodel domainModel = getCreationContext().getDomainModel();
 					final TypeConfiguration typeConfiguration = domainModel.getTypeConfiguration();
 
 					final Expression valueExpression = (Expression) sqmAssignment.getValue().accept( this );

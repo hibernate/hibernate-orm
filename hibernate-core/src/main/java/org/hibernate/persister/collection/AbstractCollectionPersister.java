@@ -77,6 +77,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -259,7 +260,11 @@ public abstract class AbstractCollectionPersister
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext) throws MappingException, CacheException {
+			PersisterCreationContext pcc) throws MappingException, CacheException {
+		assert pcc instanceof RuntimeModelCreationContext;
+
+		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) pcc;
+
 		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
 		final Value indexBootDescriptor = collectionBootDescriptor instanceof IndexedCollection
 				? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
@@ -284,7 +289,7 @@ public abstract class AbstractCollectionPersister
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
 		entityName = collectionBootDescriptor.getOwnerEntityName();
-		ownerPersister = factory.getEntityPersister( entityName );
+		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
 		queryLoaderName = collectionBootDescriptor.getLoaderName();
 		isMutable = collectionBootDescriptor.isMutable();
 		mappedByProperty = collectionBootDescriptor.getMappedByProperty();
@@ -346,7 +351,7 @@ public abstract class AbstractCollectionPersister
 
 		if ( elementType.isEntityType() ) {
 			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
-			elementPersister = factory.getEntityPersister( entityName );
+			elementPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
 			// NativeSQL: collect element column and auto-aliases
 
 		}
@@ -2414,6 +2419,11 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
 		this.attributeMapping = attributeMapping;
+	}
+
+	@Override
+	public PluralAttributeMapping getAttributeMapping() {
+		return attributeMapping;
 	}
 
 	@Override

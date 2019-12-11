@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -156,7 +156,7 @@ public class SqmUtil {
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
 			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamXref,
-			DomainMetamodel domainModel,
+			MappingMetamodel domainModel,
 			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(

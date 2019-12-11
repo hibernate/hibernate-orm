@@ -18,6 +18,12 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
+ * An embedded (embeddable-valued) model part.
+ *
+ * @see javax.persistence.Embedded
+ * @see javax.persistence.EmbeddedId
+ * @see javax.persistence.Embeddable
+ *
  * @author Steve Ebersole
  */
 public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {

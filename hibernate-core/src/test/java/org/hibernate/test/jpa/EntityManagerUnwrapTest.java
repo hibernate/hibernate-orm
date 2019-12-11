@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
@@ -53,7 +53,7 @@ public class EntityManagerUnwrapTest extends BaseEntityManagerFunctionalTestCase
 		entityManagerFactory().unwrap( javax.persistence.metamodel.Metamodel.class );
 		entityManagerFactory().unwrap( Metamodel.class );
 		entityManagerFactory().unwrap( MetamodelImplementor.class );
-		entityManagerFactory().unwrap( DomainMetamodel.class );
+		entityManagerFactory().unwrap( MappingMetamodel.class );
 
 		entityManagerFactory().unwrap( QueryEngine.class );
 	}

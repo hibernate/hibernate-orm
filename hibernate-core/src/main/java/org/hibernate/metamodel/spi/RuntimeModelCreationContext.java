@@ -9,6 +9,7 @@ package org.hibernate.metamodel.spi;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -24,7 +25,7 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 
 	MetadataImplementor getBootModel();
 
-	DomainMetamodel getDomainModel();
+	MappingMetamodel getDomainModel();
 
 	default TypeConfiguration getTypeConfiguration() {
 		return getBootstrapContext().getTypeConfiguration();

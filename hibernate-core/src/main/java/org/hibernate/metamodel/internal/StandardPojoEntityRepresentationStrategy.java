@@ -77,7 +77,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 			PersistentClass bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JavaTypeDescriptorRegistry jtdRegistry = sessionFactory.getTypeConfiguration()
+		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();

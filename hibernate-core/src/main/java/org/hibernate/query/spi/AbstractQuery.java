@@ -1084,7 +1084,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			}
 			else {
 				final ManagedDomainType managedDomainType = getSession().getFactory()
-						.getDomainModel()
+						.getRuntimeMetamodels()
 						.getJpaMetamodel()
 						.managedType( javaType );
 				if ( managedDomainType != null ) {
@@ -1119,7 +1119,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			}
 			else {
 				final ManagedDomainType managedDomainType = getSession().getFactory()
-						.getDomainModel()
+						.getRuntimeMetamodels()
 						.getJpaMetamodel()
 						.managedType( javaType );
 				if ( managedDomainType != null ) {

@@ -15,7 +15,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -23,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Hibernate extension to the JPA {@link javax.persistence.metamodel.Metamodel} contract
  *
  * @author Steve Ebersole
- * @see DomainMetamodel
+ * @see MappingMetamodel
  */
 @Incubating
 public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {

@@ -17,6 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -29,10 +30,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) - Prefer {@link org.hibernate.metamodel.spi.DomainMetamodel}
+ * @deprecated (since 6.0) - Prefer {@link MappingMetamodel}
  */
 @Deprecated
-public interface MetamodelImplementor extends DomainMetamodel, Metamodel {
+public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	/**
 	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
 	 *

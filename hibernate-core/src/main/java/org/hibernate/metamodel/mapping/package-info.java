@@ -6,9 +6,14 @@
  */
 
 /**
- * Hibernate's run-time mapping model.
+ * Hibernate's run-time mapping model.  This model defines the mapping of the application's domain model
+ * to database objects (tables, columns, etc).
  *
- * @implNote At the moment, this mapping model is built on top of the
- * {@link org.hibernate.persister} package.
+ * @implNote At the moment, this mapping model is built on top of the {@link org.hibernate.persister} package.
+ *
+ * @implSpec This entire package is considered an SPI and incubating at the moment
  */
+@Incubating
 package org.hibernate.metamodel.mapping;
+
+import org.hibernate.Incubating;

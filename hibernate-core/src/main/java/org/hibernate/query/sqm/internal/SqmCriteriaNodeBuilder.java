@@ -113,10 +113,13 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
  * @author Steve Ebersole
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder {
+	/**
+	 * Simplified creation from a SessionFactory
+	 */
 	public static SqmCriteriaNodeBuilder create(SessionFactoryImplementor sf) {
 		return new SqmCriteriaNodeBuilder( 
 				sf.getQueryEngine(),
-				sf.getMetamodel().getJpaMetamodel(),
+				sf.getRuntimeMetamodels().getJpaMetamodel(),
 				sf.getServiceRegistry()
 		);
 	}

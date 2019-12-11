@@ -9,7 +9,7 @@ package org.hibernate.orm.test.metamodel.mapping.collections;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.spi.DomainMetamodel;
+import org.hibernate.metamodel.MappingMetamodel;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
@@ -36,7 +36,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testLists(SessionFactoryScope scope) {
-		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfLists.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 7 ) );
@@ -62,7 +62,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testSets(SessionFactoryScope scope) {
-		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfSets.class );
 
 		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 9 ) );
@@ -94,7 +94,7 @@ public class PluralAttributeMappingTests {
 
 	@Test
 	public void testMaps(SessionFactoryScope scope) {
-		final DomainMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
 		// 8 for now, until entity-valued map keys is supported

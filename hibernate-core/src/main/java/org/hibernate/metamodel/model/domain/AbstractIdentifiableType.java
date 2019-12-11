@@ -20,7 +20,6 @@ import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -389,7 +388,14 @@ public abstract class AbstractIdentifiableType<J>
 			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 		else {
+			if ( isNotDeclaredIdentifierDescriptorLegal() ) {
+				return null;
+			}
 			throw new UnsupportedOperationException( "Could not build SqmPathSource for entity identifier : " + getTypeName() );
 		}
+	}
+
+	protected boolean isNotDeclaredIdentifierDescriptorLegal() {
+		return false;
 	}
 }

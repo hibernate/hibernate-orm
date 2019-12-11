@@ -54,4 +54,9 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 	public <S extends X> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
 		throw new NotYetImplementedException(  );
 	}
+
+	@Override
+	protected boolean isNotDeclaredIdentifierDescriptorLegal() {
+		return true;
+	}
 }

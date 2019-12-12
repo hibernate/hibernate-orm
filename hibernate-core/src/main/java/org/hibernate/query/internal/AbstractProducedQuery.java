@@ -77,6 +77,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingType;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -749,6 +750,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	public <T> T getParameterValue(Parameter<T> parameter) {
 		LOGGER.tracef( "#getParameterValue(%s)", parameter );
 
+		/*
 		getProducer().checkOpen( false );
 
 		if ( !getParameterMetadata().containsReference( (QueryParameter) parameter ) ) {
@@ -761,44 +763,44 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
 		}
 		return binding.getBindValue();
+		*/
+		return (T) doGetParameterValue( (QueryParameter) parameter );
 	}
 
 	@Override
 	public Object getParameterValue(String name) {
-		getProducer().checkOpen( false );
-
-		final QueryParameterBinding binding;
-		try {
-			binding = getQueryParameterBindings().getBinding( name );
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name, e );
-		}
-
-		LOGGER.debugf( "Checking whether named parameter [%s] is bound : %s", name, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + name );
-		}
-		return binding.getBindValue();
+		QueryParameter parameter = getQueryParameterBindings().getQueryParameter( name );
+		return doGetParameterValue( parameter );
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
+		QueryParameter parameter = getQueryParameterBindings().getQueryParameter( position );
+		return doGetParameterValue( parameter );
+	}
+
+	private Object doGetParameterValue(QueryParameter parameter) {
 		getProducer().checkOpen( false );
 
-		final QueryParameterBinding binding;
+		final QueryParameterBindings bindings = getQueryParameterBindings();
+
 		try {
-			binding = getQueryParameterBindings().getBinding( position );
+			final QueryParameterBindingType bindingType = bindings.getBindingType( parameter );
+
+			switch ( bindingType ) {
+				case PARAMETER:
+					return bindings.getBinding( parameter ).getBindValue();
+				case PARAMETER_LIST:
+					return bindings.getQueryParameterListBinding( parameter ).getBindValues();
+				case NONE:
+					throw new IllegalStateException( "Parameter value not yet bound : " + parameter );
+				default:
+					throw new IllegalStateException( "Unknown query parameter binding type : " + bindingType );
+			}
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position, e );
+			throw new IllegalArgumentException( "Could not resolve parameter - " + parameter, e );
 		}
-
-		LOGGER.debugf( "Checking whether positional  parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + position );
-		}
-		return binding.getBindValue();
 	}
 
 	@Override

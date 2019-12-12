@@ -19,7 +19,13 @@ import org.hibernate.type.Type;
  */
 @Incubating
 public interface QueryParameterBindings {
+
+	QueryParameter getQueryParameter(String name);
+	QueryParameter getQueryParameter(int position);
+
 	boolean isBound(QueryParameter parameter);
+
+	QueryParameterBindingType getBindingType(QueryParameter parameter);
 
 	<T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter);
 	<T> QueryParameterBinding<T> getBinding(String name);

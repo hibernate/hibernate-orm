@@ -37,6 +37,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingType;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.type.SerializableType;
@@ -152,11 +153,33 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
+	public QueryParameter getQueryParameter(String name) {
+		return parameterMetadata.getQueryParameter( name );
+	}
+
+	@Override
+	public QueryParameter getQueryParameter(int position) {
+		return parameterMetadata.getQueryParameter( position );
+	}
+
+	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean isBound(QueryParameter parameter) {
 		final QueryParameterBinding binding = getBinding( parameter );
 
 		return binding.isBound();
+	}
+
+
+
+	@Override
+	public QueryParameterBindingType getBindingType(QueryParameter parameter) {
+		if ( parameterListBindingMap.containsKey( parameter ) ) {
+			return QueryParameterBindingType.PARAMETER_LIST;
+		}
+		return parameterBindingMap.containsKey( parameter )
+				? QueryParameterBindingType.PARAMETER
+				: QueryParameterBindingType.NONE;
 	}
 
 	@SuppressWarnings("unchecked")

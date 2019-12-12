@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +153,23 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
 		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
 		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13310" )
+	public void testGetParameterListValue() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Query query = s.createQuery( "from Animal a where a.id in :ids" );
+		query.setParameterList( "ids", Arrays.asList( 1L, 2L ) );
+
+		Object parameterListValue = query.getParameterValue( "ids" );
+
+		assertThat( parameterListValue, is(Arrays.asList( 1L, 2L ) ) );
 
 		s.getTransaction().commit();
 		s.close();

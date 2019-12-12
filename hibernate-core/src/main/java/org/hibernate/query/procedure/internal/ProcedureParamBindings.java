@@ -18,6 +18,7 @@ import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingType;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.type.Type;
@@ -47,8 +48,24 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
+	public QueryParameter getQueryParameter(String name) {
+		return parameterMetadata.getQueryParameter( name );
+	}
+
+	@Override
+	public QueryParameter getQueryParameter(int position) {
+		return parameterMetadata.getQueryParameter( position );
+	}
+
+	@Override
 	public boolean isBound(QueryParameter parameter) {
 		return getBinding( parameter ).isBound();
+	}
+
+	@Override
+	public QueryParameterBindingType getBindingType(QueryParameter parameter) {
+		final ProcedureParameterImplementor procParam = parameterMetadata.resolve( parameter );
+		return bindingMap.containsKey( procParam ) ? QueryParameterBindingType.PARAMETER : QueryParameterBindingType.NONE;
 	}
 
 	@Override

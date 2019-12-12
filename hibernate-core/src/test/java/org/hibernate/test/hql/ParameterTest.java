@@ -7,6 +7,7 @@
 package org.hibernate.test.hql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,14 +16,16 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.junit.Test;
+
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Isolated test for various usages of parameters
@@ -152,6 +155,24 @@ public class ParameterTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
 		s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
 		s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13321" )
+	public void testParameterListBindingIsBound() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Query query = s.createQuery( "from Animal a where a.id in :ids" );
+
+		assertFalse( query.isBound( query.getParameter("ids") ) );
+
+		query.setParameterList( "ids", Arrays.asList( 1L, 2L ) );
+
+		assertTrue( query.isBound( query.getParameter("ids") ) );
 
 		s.getTransaction().commit();
 		s.close();

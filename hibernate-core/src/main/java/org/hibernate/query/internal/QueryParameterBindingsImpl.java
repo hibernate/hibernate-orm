@@ -154,9 +154,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean isBound(QueryParameter parameter) {
-		final QueryParameterBinding binding = getBinding( parameter );
 
-		return binding.isBound();
+		// HHH-13321
+		if ( parameterListBindingMap != null ) {
+			final QueryParameterListBinding listBinding = parameterListBindingMap.get( parameter );
+			if ( listBinding != null ) {
+				return listBinding.getBindValues() != null;
+			}
+		}
+
+		return getBinding( parameter ).isBound();
+
 	}
 
 	@SuppressWarnings("unchecked")

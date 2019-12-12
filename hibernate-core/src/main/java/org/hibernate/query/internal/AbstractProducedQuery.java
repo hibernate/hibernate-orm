@@ -749,21 +749,6 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	public <T> T getParameterValue(Parameter<T> parameter) {
 		LOGGER.tracef( "#getParameterValue(%s)", parameter );
-
-		/*
-		getProducer().checkOpen( false );
-
-		if ( !getParameterMetadata().containsReference( (QueryParameter) parameter ) ) {
-			throw new IllegalArgumentException( "Parameter reference [" + parameter + "] did not come from this query" );
-		}
-
-		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( (QueryParameter<T>) parameter );
-		LOGGER.debugf( "Checking whether parameter reference [%s] is bound : %s", parameter, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
-		}
-		return binding.getBindValue();
-		*/
 		return (T) doGetParameterValue( (QueryParameter) parameter );
 	}
 

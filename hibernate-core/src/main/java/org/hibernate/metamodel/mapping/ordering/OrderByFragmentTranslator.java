@@ -14,7 +14,8 @@ import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
 import org.hibernate.metamodel.mapping.ordering.ast.SortSpecification;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 import org.jboss.logging.Logger;
 
@@ -57,9 +58,23 @@ public class OrderByFragmentTranslator {
 
 		final ParseTreeVisitor visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
 
-		final List<SortSpecification> interpretation = visitor.visitOrderByFragment( parseTree );
+		final List<SortSpecification> tree = visitor.visitOrderByFragment( parseTree );
 
-		throw new NotYetImplementedFor6Exception( OrderByFragmentTranslator.class );
+		return new OrderByFragment() {
+			final List<SortSpecification> sortSpecifications = tree;
+
+			@Override
+			public List<org.hibernate.sql.ast.tree.select.SortSpecification> toSqlAst(
+					TableGroup tableGroup,
+					SqlAstCreationState creationState) {
+				throw new NotYetImplementedFor6Exception( OrderByFragmentTranslator.class );
+			}
+
+			@Override
+			public String injectAliases(AliasResolver aliasResolver) {
+				throw new NotYetImplementedFor6Exception( OrderByFragmentTranslator.class );
+			}
+		};
 	}
 
 
@@ -90,18 +105,4 @@ public class OrderByFragmentTranslator {
 		}
 	}
 
-	/**
-	 * Represents the translation result
-	 */
-	public interface OrderByFragment {
-		/**
-		 * Inject table aliases into the translated fragment to properly qualify column references, using
-		 * the given 'aliasResolver' to determine the the proper table alias to use for each column reference.
-		 *
-		 * @param aliasResolver The strategy to resolver the proper table alias to use per column
-		 *
-		 * @return The fully translated and replaced fragment.
-		 */
-		String injectAliases(AliasResolver aliasResolver);
-	}
 }

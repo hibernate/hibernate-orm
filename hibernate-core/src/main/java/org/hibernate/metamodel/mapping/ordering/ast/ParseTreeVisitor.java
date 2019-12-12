@@ -10,15 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
 import org.hibernate.grammars.ordering.OrderingParser;
+import org.hibernate.grammars.ordering.OrderingParser.ExpressionContext;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.persister.collection.CollectionPersister;
 
 import org.jboss.logging.Logger;
+
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * @author Steve Ebersole
@@ -46,10 +47,9 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 		this.specifications = new ArrayList<>( parsedSortSpecifications.size() );
 
 		for ( OrderingParser.SortSpecificationContext parsedSortSpecification : parsedSortSpecifications ) {
-			visitSortSpecification( parsedSortSpecification );
+			specifications.add( visitSortSpecification( parsedSortSpecification ) );
 		}
 
-		Objects.requireNonNull( specifications );
 		return specifications;
 	}
 
@@ -76,8 +76,63 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 	}
 
 	@Override
-	public SortExpression visitExpression(OrderingParser.ExpressionContext ctx) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public SortExpression visitExpression(ExpressionContext ctx) {
+		if ( ctx.function() != null ) {
+			return visitFunction( ctx.function() );
+		}
+
+		if ( ctx.identifier() != null ) {
+			pathConsumer.consumeIdentifier( ctx.identifier().getText(), true, true );
+			return (SortExpression) pathConsumer.getConsumedPart();
+		}
+
+		assert ctx.dotIdentifier() != null;
+		final int numberOfParts = ctx.dotIdentifier().IDENTIFIER().size();
+		boolean firstPass = true;
+
+		for ( int i = 0; i < numberOfParts; i++ ) {
+			final TerminalNode partNode = ctx.dotIdentifier().IDENTIFIER().get( i );
+			partNode.getText();
+			pathConsumer.consumeIdentifier(
+					ctx.identifier().getText(),
+					firstPass,
+					true
+			);
+			firstPass = false;
+		}
+
+		return (SortExpression) pathConsumer.getConsumedPart();
+	}
+
+	@Override
+	public FunctionExpression visitFunction(OrderingParser.FunctionContext ctx) {
+		if ( ctx.simpleFunction() != null ) {
+			final FunctionExpression function = new FunctionExpression(
+					ctx.simpleFunction().identifier().getText(),
+					ctx.simpleFunction().functionArguments().expression().size()
+			);
+
+			for ( int i = 0; i < ctx.simpleFunction().functionArguments().expression().size(); i++ ) {
+				final ExpressionContext arg = ctx.simpleFunction().functionArguments().expression( i );
+				function.addArgument( visitExpression( arg ) );
+			}
+
+			return function;
+		}
+
+		assert ctx.packagedFunction() != null;
+
+		final FunctionExpression function = new FunctionExpression(
+				ctx.packagedFunction().dotIdentifier().getText(),
+				ctx.packagedFunction().functionArguments().expression().size()
+		);
+
+		for ( int i = 0; i < ctx.packagedFunction().functionArguments().expression().size(); i++ ) {
+			final ExpressionContext arg = ctx.packagedFunction().functionArguments().expression( i );
+			function.addArgument( visitExpression( arg ) );
+		}
+
+		return function;
 	}
 
 	@Override

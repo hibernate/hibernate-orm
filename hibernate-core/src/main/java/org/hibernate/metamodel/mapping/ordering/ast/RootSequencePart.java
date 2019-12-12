@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -33,6 +34,19 @@ public class RootSequencePart implements SequencePart {
 
 		if ( subPart != null ) {
 			return new CollectionSubPath( pluralAttributeMapping, subPart );
+		}
+
+		// the above checks for explicit `{element}` or `{index}` usage.  Try also as an implicit element sub-part reference
+		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart elementDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getElementDescriptor();
+			final ModelPart elementSubPart = elementDescriptor.findSubPart( name, null );
+			if ( elementSubPart != null ) {
+				final CollectionSubPath elementPath = new CollectionSubPath(
+						pluralAttributeMapping,
+						elementDescriptor
+				);
+				return new SubDomainPath( elementPath, elementSubPart );
+			}
 		}
 
 		if ( isTerminal ) {

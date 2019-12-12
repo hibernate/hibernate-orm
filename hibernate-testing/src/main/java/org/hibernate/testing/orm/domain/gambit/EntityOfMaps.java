@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.domain.gambit;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
@@ -14,8 +15,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
+
+import org.hibernate.annotations.OrderBy;
 
 /**
  * @author Steve Ebersole
@@ -36,6 +40,8 @@ public class EntityOfMaps {
 	private Map<String, SimpleEntity> oneToManyByBasic;
 	private Map<SimpleEntity,String> basicByOneToMany;
 	private Map<String, SimpleEntity> manyToManyByBasic;
+
+	private Map<String, SimpleComponent> componentByBasicOrdered;
 
 	public EntityOfMaps() {
 	}
@@ -178,7 +184,7 @@ public class EntityOfMaps {
 		this.oneToManyByBasic = oneToManyByBasic;
 	}
 
-	public void addOneToManyByComponent(String key, SimpleEntity value) {
+	public void addOneToManyByBasic(String key, SimpleEntity value) {
 		if ( oneToManyByBasic == null ) {
 			oneToManyByBasic = new HashMap<>();
 		}
@@ -225,4 +231,27 @@ public class EntityOfMaps {
 		manyToManyByBasic.put( key, value );
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// componentByBasicOrdered
+
+	// NOTE : effectively the same as a natural-sorted map in terms of reading
+
+	@ElementCollection
+	@MapKeyColumn( name = "ordered_component_key")
+	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
+	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
+		return componentByBasicOrdered;
+	}
+
+	public void setComponentByBasicOrdered(Map<String, SimpleComponent> componentByBasicOrdered) {
+		this.componentByBasicOrdered = componentByBasicOrdered;
+	}
+
+	public void addComponentByBasicOrdered(String key, SimpleComponent value) {
+		if ( componentByBasicOrdered == null ) {
+			componentByBasicOrdered = new LinkedHashMap<>();
+		}
+		componentByBasicOrdered.put( key, value );
+	}
 }

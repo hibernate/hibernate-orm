@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.metamodel.mapping.collections;
 
 import org.hibernate.Hibernate;
+import org.hibernate.persister.collection.CollectionPersister;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
@@ -20,6 +21,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -98,5 +102,18 @@ public class MapOperationTests {
 
 		// re-create it so the drop-data can succeed
 		createData( scope );
+	}
+
+	@Test
+	public void testOrderedMap(SessionFactoryScope scope) {
+		// atm we can only check the fragment translation
+		final CollectionPersister collectionDescriptor = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findCollectionDescriptor( EntityOfMaps.class.getName() + ".componentByBasicOrdered" );
+		assertThat(
+				collectionDescriptor.getAttributeMapping().getOrderByFragment(),
+				notNullValue()
+		);
 	}
 }

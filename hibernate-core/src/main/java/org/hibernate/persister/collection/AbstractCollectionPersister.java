@@ -141,10 +141,7 @@ public abstract class AbstractCollectionPersister
 	private final String sqlWhereStringTemplate;
 
 	private final boolean hasOrder;
-//	private final OrderByTranslation orderByTranslation;
-
 	private final boolean hasManyToManyOrder;
-//	private final OrderByTranslation manyToManyOrderByTranslation;
 
 	private final int baseIndex;
 
@@ -601,21 +598,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		hasOrder = collectionBootDescriptor.getOrderBy() != null;
-		if ( hasOrder ) {
-			LOG.debugf( "Translating order-by fragment [%s] for collection role : %s",  collectionBootDescriptor.getOrderBy(), getRole() );
-//			orderByTranslation = Template.translateOrderBy(
-//					collectionBinding.getOrderBy(),
-//					new ColumnMapperImpl(),
-//					factory,
-//					dialect,
-//					factory.getSqlFunctionRegistry()
-//			);
-			throw new NotYetImplementedFor6Exception( getClass() );
-		}
-		else {
-//			orderByTranslation = null;
-
-		}
+		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;
 
 		// Handle any filters applied to this collectionBinding
 		filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), factory);
@@ -628,22 +611,6 @@ public abstract class AbstractCollectionPersister
 		manyToManyWhereTemplate = manyToManyWhereString == null ?
 				null :
 				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getSqlFunctionRegistry() );
-
-		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;
-		if ( hasManyToManyOrder ) {
-			LOG.debugf( "Translating many-to-many order-by fragment [%s] for collection role : %s",  collectionBootDescriptor.getOrderBy(), getRole() );
-//			manyToManyOrderByTranslation = Template.translateOrderBy(
-//					collectionBinding.getManyToManyOrdering(),
-//					new ColumnMapperImpl(),
-//					factory,
-//					dialect,
-//					factory.getSqlFunctionRegistry()
-//			);
-			throw new NotYetImplementedFor6Exception( getClass() );
-		}
-		else {
-//			manyToManyOrderByTranslation = null;
-		}
 
 		comparator = collectionBootDescriptor.getComparator();
 

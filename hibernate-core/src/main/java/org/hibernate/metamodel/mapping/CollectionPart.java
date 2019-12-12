@@ -46,11 +46,7 @@ public interface CollectionPart extends ModelPart, Fetchable {
 				return ID;
 			}
 
-			throw new IllegalArgumentException(
-					"Unrecognized CollectionPart Nature name [" + name
-							+ "]; expecting `" + ELEMENT.name + "` or `"
-							+ INDEX.name + "`"
-			);
+			return null;
 		}
 	}
 

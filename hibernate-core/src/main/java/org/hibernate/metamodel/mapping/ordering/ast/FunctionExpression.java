@@ -15,7 +15,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public class FunctionExpression {
+public class FunctionExpression implements SortExpression {
 	private final String name;
 	private final List<SortExpression> arguments;
 

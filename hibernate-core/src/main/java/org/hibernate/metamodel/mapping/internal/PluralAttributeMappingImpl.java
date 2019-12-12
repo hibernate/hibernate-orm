@@ -31,6 +31,9 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -59,10 +62,14 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class PluralAttributeMappingImpl extends AbstractAttributeMapping implements PluralAttributeMapping {
+	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
+
 
 	public interface Aware {
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
@@ -88,6 +95,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final IndexMetadata indexMetadata;
 
 	private ForeignKeyDescriptor manyToManyFkDescriptor;
+
+	private OrderByFragment orderByFragment;
+	private OrderByFragment manyToManyOrderByFragment;
 
 	@SuppressWarnings("WeakerAccess")
 	public PluralAttributeMappingImpl(
@@ -211,6 +221,40 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				);
 			}
 		}
+
+		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
+		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
+
+		if ( hasOrder || hasManyToManyOrder ) {
+			final TranslationContext context = new TranslationContext() {
+			};
+
+			if ( hasOrder ) {
+				log.debugf(
+						"Translating order-by fragment [%s] for collection role : %s",
+						bootDescriptor.getOrderBy(),
+						collectionDescriptor.getRole()
+				);
+				orderByFragment = OrderByFragmentTranslator.translate(
+						bootDescriptor.getOrderBy(),
+						this,
+						context
+				);
+			}
+
+			if ( hasManyToManyOrder ) {
+				log.debugf(
+						"Translating many-to-many order-by fragment [%s] for collection role : %s",
+						bootDescriptor.getOrderBy(),
+						collectionDescriptor.getRole()
+				);
+				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
+						bootDescriptor.getManyToManyOrdering(),
+						this,
+						context
+				);
+			}
+		}
 	}
 
 	@Override
@@ -246,6 +290,16 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	@Override
 	public CollectionIdentifierDescriptor getIdentifierDescriptor() {
 		return identifierDescriptor;
+	}
+
+	@Override
+	public OrderByFragment getOrderByFragment() {
+		return orderByFragment;
+	}
+
+	@Override
+	public OrderByFragment getManyToManyOrderByFragment() {
+		return manyToManyOrderByFragment;
 	}
 
 	@Override

@@ -29,6 +29,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface ModelPart extends MappingModelExpressable {
+	MappingType getPartMappingType();
+
 	JavaTypeDescriptor getJavaTypeDescriptor();
 
 	String getPartName();

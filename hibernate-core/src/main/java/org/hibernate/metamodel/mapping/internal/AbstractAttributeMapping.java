@@ -28,6 +28,11 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	}
 
 	@Override
+	public MappingType getPartMappingType() {
+		return type;
+	}
+
+	@Override
 	public String getAttributeName() {
 		return name;
 	}

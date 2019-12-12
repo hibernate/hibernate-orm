@@ -73,7 +73,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public MappingType getPartTypeDescriptor() {
+	public MappingType getPartMappingType() {
 		return type;
 	}
 
@@ -187,5 +187,10 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(" + collectionDescriptor.getRole() + ")";
+	}
+
+	@Override
+	public BasicType getBasicType() {
+		return type;
 	}
 }

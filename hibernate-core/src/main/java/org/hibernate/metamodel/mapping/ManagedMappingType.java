@@ -24,6 +24,11 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		return getMappedJavaTypeDescriptor();
 	}
 
+	@Override
+	default MappingType getPartMappingType() {
+		return this;
+	}
+
 	/**
 	 * Get the number of attributes defined on this class and any supers
 	 */

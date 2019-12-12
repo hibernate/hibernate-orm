@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 /**
  * @author Steve Ebersole
  */
@@ -15,5 +17,15 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	@Override
 	default String getPartName() {
 		return ROLE_NAME;
+	}
+
+	@Override
+	default MappingType getPartMappingType() {
+		return getBasicType();
+	}
+
+	@Override
+	default JavaTypeDescriptor getJavaTypeDescriptor() {
+		return null;
 	}
 }

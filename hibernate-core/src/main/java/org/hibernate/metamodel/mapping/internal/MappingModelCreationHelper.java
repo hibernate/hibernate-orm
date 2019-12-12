@@ -45,6 +45,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -63,7 +64,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
@@ -80,12 +80,12 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
@@ -135,8 +135,18 @@ public class MappingModelCreationHelper {
 			}
 
 			@Override
+			public MappingType getPartMappingType() {
+				return getBasicType();
+			}
+
+			@Override
 			public MappingType getMappedTypeDescriptor() {
-				return ( (BasicType) entityPersister.getIdentifierType() ).getMappedTypeDescriptor();
+				return getBasicType();
+			}
+
+			@Override
+			public BasicType getBasicType() {
+				return (BasicType) entityPersister.getIdentifierType();
 			}
 
 			@Override
@@ -336,6 +346,13 @@ public class MappingModelCreationHelper {
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
 		return new EntityIdentifierMapping() {
+
+			@Override
+			public MappingType getPartMappingType() {
+				// non-encapsulated means that the id attributes are directly defined on the entity
+				//		- alternatively we could have the type here be the IdClass descriptor
+				return entityPersister;
+			}
 
 			@Override
 			public PropertyAccess getPropertyAccess() {

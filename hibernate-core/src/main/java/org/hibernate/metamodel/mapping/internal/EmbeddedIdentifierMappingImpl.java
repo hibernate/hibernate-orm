@@ -78,6 +78,11 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
+	public MappingType getPartMappingType() {
+		return type;
+	}
+
+	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
 	}

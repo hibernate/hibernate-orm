@@ -15,7 +15,6 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -64,10 +63,10 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	private HqlParser.StatementContext parseHql(String hql) {
 		// Build the lexer
-		final HqlLexer hqlLexer = new HqlLexer( CharStreams.fromString( hql ) );
+		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
 
-		// first, ask Antlr to build the parse tree
-		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.generateHqlParser( hql );
+		// Build the parse tree
+		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
 		// try to use SLL(k)-based parsing first - its faster
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );

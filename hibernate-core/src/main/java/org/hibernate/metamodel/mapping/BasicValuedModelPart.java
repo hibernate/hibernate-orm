@@ -29,4 +29,9 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fet
 	 * Get the value converter applied to this model part if any
 	 */
 	BasicValueConverter getConverter();
+
+	@Override
+	default MappingType getPartMappingType() {
+		return getBasicType();
+	}
 }

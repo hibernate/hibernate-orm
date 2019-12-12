@@ -70,7 +70,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	}
 
 	@Override
-	public BasicType getPartTypeDescriptor() {
+	public MappingType getPartMappingType() {
 		return mapper;
 	}
 
@@ -196,5 +196,10 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	@Override
 	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
 		return Collections.singletonList( getJdbcMapping() );
+	}
+
+	@Override
+	public BasicType getBasicType() {
+		return mapper;
 	}
 }

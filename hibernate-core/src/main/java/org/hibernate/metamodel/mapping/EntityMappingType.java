@@ -64,6 +64,12 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 		return getMappedJavaTypeDescriptor();
 	}
 
+	@Override
+	default MappingType getPartMappingType() {
+		return this;
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
 

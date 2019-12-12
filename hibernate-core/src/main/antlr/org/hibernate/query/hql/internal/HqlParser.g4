@@ -298,13 +298,25 @@ havingClause
 // ORDER BY clause
 
 orderByClause
-// todo (6.0) : null precedence
 	: ORDER BY sortSpecification (COMMA sortSpecification)*
 	;
 
+/**
+ * Specialized rule for ordered Map and Set `@OrderBy` handling
+ */
+orderByFragment
+	: sortSpecification (COMMA sortSpecification)*
+	;
+
 sortSpecification
+// todo (6.0) : null precedence
+//	: sortExpression collationSpecification? orderingSpecification? nullsPrecedence?
 	: sortExpression collationSpecification? orderingSpecification?
 	;
+
+//nullsPrecedence
+//	: NULLS (FIRST | LAST)
+//	;
 
 sortExpression
 	: identifier

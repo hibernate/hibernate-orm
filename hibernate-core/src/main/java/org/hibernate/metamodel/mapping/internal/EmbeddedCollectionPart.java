@@ -16,6 +16,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -84,7 +85,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public EmbeddableMappingType getPartTypeDescriptor() {
+	public MappingType getPartMappingType() {
 		return getEmbeddableTypeDescriptor();
 	}
 

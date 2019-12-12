@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -95,6 +96,11 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 	@Override
 	public String getPartName() {
 		return fetchable.getFetchableName();
+	}
+
+	@Override
+	public MappingType getPartMappingType() {
+		return fetchable.getPartMappingType();
 	}
 
 	@Override

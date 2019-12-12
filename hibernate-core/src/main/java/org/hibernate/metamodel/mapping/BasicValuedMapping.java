@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -32,4 +33,7 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressable {
 	default List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
 		return Collections.singletonList( getJdbcMapping() );
 	}
+
+	BasicType getBasicType();
+
 }

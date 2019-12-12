@@ -15,6 +15,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -63,7 +64,7 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	}
 
 	@Override
-	public EntityMappingType getPartTypeDescriptor() {
+	public MappingType getPartMappingType() {
 		return getEntityMappingType();
 	}
 

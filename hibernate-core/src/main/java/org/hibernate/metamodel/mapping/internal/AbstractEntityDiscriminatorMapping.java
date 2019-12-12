@@ -49,6 +49,11 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
+	public BasicType getBasicType() {
+		return mappingType;
+	}
+
+	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}

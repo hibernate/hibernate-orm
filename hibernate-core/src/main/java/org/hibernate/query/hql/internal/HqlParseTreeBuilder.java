@@ -28,11 +28,12 @@ public class HqlParseTreeBuilder {
 	 */
 	public static final HqlParseTreeBuilder INSTANCE = new HqlParseTreeBuilder();
 
-	public HqlParser generateHqlParser(String hql) {
-		// Build the lexer
-		HqlLexer hqlLexer = new HqlLexer( CharStreams.fromString( hql ) );
+	public HqlLexer buildHqlLexer(String hql) {
+		return new HqlLexer( CharStreams.fromString( hql ) );
+	}
 
-		// Build the parser...
+	public HqlParser buildHqlParser(String hql, HqlLexer hqlLexer) {
+		// Build the parser
 		return new HqlParser( new CommonTokenStream( hqlLexer ) ) {
 			@Override
 			protected void logUseOfReservedWordAsIdentifier(Token token) {
@@ -41,5 +42,10 @@ public class HqlParseTreeBuilder {
 				}
 			}
 		};
+	}
+
+	public HqlParser buildHqlParser(String hql) {
+		// Build the lexer
+		return buildHqlParser( hql, buildHqlLexer( hql ) );
 	}
 }

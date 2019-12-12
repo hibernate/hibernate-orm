@@ -6,8 +6,9 @@
  */
 
 /**
- * This package defines an API for accessing the Hibernate runtime metamodel.
+ * Support for set and map ordering
  *
- * @deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
+ * @see javax.persistence.OrderBy
+ * @see org.hibernate.annotations.OrderBy
  */
-package org.hibernate.metadata;
+package org.hibernate.metamodel.mapping.ordering;

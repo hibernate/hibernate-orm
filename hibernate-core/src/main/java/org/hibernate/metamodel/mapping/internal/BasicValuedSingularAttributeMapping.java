@@ -68,6 +68,11 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
+	public BasicType getBasicType() {
+		return getMappedTypeDescriptor();
+	}
+
+	@Override
 	public BasicType getMappedTypeDescriptor() {
 		return (BasicType) super.getMappedTypeDescriptor();
 	}

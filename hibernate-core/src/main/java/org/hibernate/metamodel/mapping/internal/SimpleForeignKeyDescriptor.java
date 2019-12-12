@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
@@ -39,6 +40,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -296,6 +298,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
 		return Collections.singletonList( jdbcMapping );
+	}
+
+	@Override
+	public BasicType getBasicType() {
+		throw new HibernateException( "Unexpected call to SimpleForeignKeyDescriptor#getBasicType" );
 	}
 
 	@Override

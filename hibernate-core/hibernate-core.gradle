@@ -289,9 +289,10 @@ test {
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Custom Antlr v4 Plugin (to work with Gradle 3)
+// Custom Antlr v4 Plugin
+//      - the Gradle-supplied Antlr plugin attempts to simultaneously support
+//      multiple versions of Antlr which leads to many difficulties.  this custom
+//      plugin provides dedicated and simplified support for Antlr v4
 
 ext {
     baseAntlrInputPath = 'src/main/antlr'
@@ -354,6 +355,7 @@ class Antlr4GenerationTask extends DefaultTask {
     static final String HQL_PCKG = 'org.hibernate.query.hql.internal'
     static final String IMPORT_SQL_PCKG = 'org.hibernate.tool.hbm2ddl.grammar'
     static final String GRAPH_PCKG = 'org.hibernate.graph.internal.parse'
+    static final String ORDER_PCKG = 'org.hibernate.grammars.ordering'
 
     List<GrammarDescriptor> grammarDescriptors = [
             new GrammarDescriptor( HQL_PCKG, 'HqlLexer' ),
@@ -361,7 +363,9 @@ class Antlr4GenerationTask extends DefaultTask {
             new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementLexer' ),
             new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementParser' ),
             new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageLexer' ),
-            new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageParser' )
+            new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageParser' ),
+            new GrammarDescriptor( ORDER_PCKG, 'OrderingLexer' ),
+            new GrammarDescriptor( ORDER_PCKG, 'OrderingParser' )
     ]
 
     @InputFiles

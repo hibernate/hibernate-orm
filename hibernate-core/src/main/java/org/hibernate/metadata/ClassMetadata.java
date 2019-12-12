@@ -18,8 +18,11 @@ import org.hibernate.type.Type;
  *
  * @see org.hibernate.SessionFactory#getClassMetadata(Class)
  * @author Gavin King
+ *
+ * @deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
  */
 @SuppressWarnings( {"JavaDoc"})
+@Deprecated
 public interface ClassMetadata {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

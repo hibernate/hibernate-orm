@@ -11,7 +11,10 @@ import org.hibernate.type.Type;
  * Exposes collection metadata to the application
  *
  * @author Gavin King
+ *
+ * @deprecated (since 6.0) Use Hibernate's mapping model {@link org.hibernate.metamodel.MappingMetamodel}
  */
+@Deprecated
 public interface CollectionMetadata {
 	/**
 	 * The collection key type

@@ -21,6 +21,10 @@ import org.hibernate.type.Type;
 public interface QueryParameterBindings {
 	boolean isBound(QueryParameter parameter);
 
+	<T> T getQueryParameterValue(QueryParameter<T> parameter);
+	Object getQueryParameterValue(String name);
+	Object getQueryParameterValue(int position);
+
 	<T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter);
 	<T> QueryParameterBinding<T> getBinding(String name);
 	<T> QueryParameterBinding<T> getBinding(int position);

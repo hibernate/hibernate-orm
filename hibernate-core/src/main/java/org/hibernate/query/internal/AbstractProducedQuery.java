@@ -750,55 +750,19 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		LOGGER.tracef( "#getParameterValue(%s)", parameter );
 
 		getProducer().checkOpen( false );
-
-		if ( !getParameterMetadata().containsReference( (QueryParameter) parameter ) ) {
-			throw new IllegalArgumentException( "Parameter reference [" + parameter + "] did not come from this query" );
-		}
-
-		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( (QueryParameter<T>) parameter );
-		LOGGER.debugf( "Checking whether parameter reference [%s] is bound : %s", parameter, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
-		}
-		return binding.getBindValue();
+		return getQueryParameterBindings().getQueryParameterValue( (QueryParameter<T>) parameter );
 	}
 
 	@Override
 	public Object getParameterValue(String name) {
 		getProducer().checkOpen( false );
-
-		final QueryParameterBinding binding;
-		try {
-			binding = getQueryParameterBindings().getBinding( name );
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name, e );
-		}
-
-		LOGGER.debugf( "Checking whether named parameter [%s] is bound : %s", name, binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + name );
-		}
-		return binding.getBindValue();
+		return getQueryParameterBindings().getQueryParameterValue( name );
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
 		getProducer().checkOpen( false );
-
-		final QueryParameterBinding binding;
-		try {
-			binding = getQueryParameterBindings().getBinding( position );
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position, e );
-		}
-
-		LOGGER.debugf( "Checking whether positional  parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
-		if ( !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + position );
-		}
-		return binding.getBindValue();
+		return getQueryParameterBindings().getQueryParameterValue( position );
 	}
 
 	@Override
@@ -1373,8 +1337,8 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			);
 		}
 
-	QueryParameters queryParameters = new QueryParameters(
-			getQueryParameterBindings(),
+		QueryParameters queryParameters = new QueryParameters(
+				getQueryParameterBindings(),
 				getLockOptions(),
 				queryOptions,
 				true,

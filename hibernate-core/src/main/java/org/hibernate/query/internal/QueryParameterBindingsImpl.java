@@ -154,9 +154,58 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public boolean isBound(QueryParameter parameter) {
-		final QueryParameterBinding binding = getBinding( parameter );
+		final QueryParameter resolvedParameter = resolveParameter( parameter );
+		if ( parameterBindingMap != null && parameterBindingMap.containsKey( resolvedParameter ) ) {
+			final QueryParameterBinding binding = parameterBindingMap.get( resolvedParameter );
+			if ( binding != null ) {
+				return binding.isBound();
+			}
+		}
+		if ( parameterListBindingMap != null && parameterListBindingMap.containsKey( resolvedParameter ) ) {
+			final QueryParameterListBinding listBinding = parameterListBindingMap.get( resolvedParameter );
+			if ( listBinding != null ) {
+				return listBinding.getBindValues() != null;
+			}
+		}
+		return false;
+	}
 
-		return binding.isBound();
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T getQueryParameterValue(QueryParameter<T> parameter) {
+		QueryParameter<T> resolvedParameter = resolveParameter( parameter );
+		return (T) doGetQueryParameterValue( resolvedParameter );
+	}
+
+	@Override
+	public Object getQueryParameterValue(String name) {
+		QueryParameter parameter = parameterMetadata.getQueryParameter( name );
+		return doGetQueryParameterValue( parameter );
+	}
+
+	@Override
+	public Object getQueryParameterValue(int position) {
+		QueryParameter parameter = parameterMetadata.getQueryParameter( position );
+		return doGetQueryParameterValue( parameter );
+	}
+
+	private Object doGetQueryParameterValue(QueryParameter resolvedParameter) {
+		if (parameterBindingMap != null) {
+			final QueryParameterBinding binding = parameterBindingMap.get( resolvedParameter );
+			if ( binding != null) {
+				if ( !binding.isBound() ) {
+					throw new IllegalStateException("Resolved parameter [" + resolvedParameter + "] found in parameterBindingMap but is not bound");
+				}
+				return binding.getBindValue();
+			}
+		}
+		if (parameterListBindingMap != null) {
+			final QueryParameterListBinding listBinding = parameterListBindingMap.get( resolvedParameter );
+			if ( listBinding != null ) {
+				return listBinding.getBindValues();
+			}
+		}
+		throw new IllegalStateException("Resolved parameter [" + resolvedParameter + "] not found in either parameterBindingMap or parameterListBindingMap");
 	}
 
 	@SuppressWarnings("unchecked")

@@ -52,6 +52,21 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
+	public <T> T getQueryParameterValue(QueryParameter<T> parameter) {
+		return getBinding( parameter ).getBindValue();
+	}
+
+	@Override
+	public Object getQueryParameterValue(String name) {
+		return getBinding( name ).getBindValue();
+	}
+
+	@Override
+	public Object getQueryParameterValue(int position) {
+		return getBinding( position ).getBindValue();
+	}
+
+	@Override
 	public <T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter) {
 		final ProcedureParameterImplementor<T> procParam = parameterMetadata.resolve( parameter );
 		ParameterBind binding = bindingMap.get( procParam );

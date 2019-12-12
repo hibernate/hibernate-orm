@@ -27,16 +27,15 @@ public class RevEngUtils {
 	
 	public static String getTableIdentifierStrategyNameInRevengStrategy(
 			ReverseEngineeringStrategy revengStrat, 
-			Table table, 
+			TableIdentifier tableIdentifier, 
 			String defaultCatalog, 
 			String defaultSchema) {
 		String result = null;
-		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = revengStrat.getTableIdentifierStrategyName(tableIdentifier);
 		if (result == null) {
-			String catalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
-			String schema = getSchemaForModel(table.getSchema(), defaultSchema);
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			String catalog = getCatalogForModel(tableIdentifier.getCatalog(), defaultCatalog);
+			String schema = getSchemaForModel(tableIdentifier.getSchema(), defaultSchema);
+			tableIdentifier = new TableIdentifier(catalog, schema, tableIdentifier.getName());
 			result = revengStrat.getTableIdentifierStrategyName(tableIdentifier);
 		}
 		return result;	

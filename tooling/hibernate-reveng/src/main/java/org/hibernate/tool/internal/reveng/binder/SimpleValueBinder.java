@@ -26,6 +26,9 @@ class SimpleValueBinder extends AbstractBinder {
 				table, 
 				column, 
 				generatedIdentifier));
+		if (generatedIdentifier) {
+			value.setNullValue("undefined");
+		}
 		return value;
 	}
 

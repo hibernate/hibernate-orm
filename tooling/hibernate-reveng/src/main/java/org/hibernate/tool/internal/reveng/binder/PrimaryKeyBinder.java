@@ -16,6 +16,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.OneToOne;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -25,6 +26,7 @@ import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
 import org.hibernate.tool.internal.reveng.RevEngUtils;
+import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils.ForeignKeyForColumns;
 
 class PrimaryKeyBinder extends AbstractBinder {
 	
@@ -53,175 +55,156 @@ class PrimaryKeyBinder extends AbstractBinder {
 			RootClass rc, 
 			Set<Column> processed, 
 			DatabaseCollector collector) {
-		
-		SimpleValue id = null;
-		String idPropertyname = null;
-
-		PrimaryKeyInfo pki = new PrimaryKeyInfo();
-
-		List<Column> keyColumns = null;
-		if (table.getPrimaryKey()!=null) {
-			keyColumns = table.getPrimaryKey().getColumns();
-		}
-		else {
-			LOGGER.log(Level.INFO, "No primary key found for " + table + ", using all properties as the identifier.");
-			keyColumns = new ArrayList<Column>();
-			Iterator<?> iter = table.getColumnIterator();
-			while (iter.hasNext() ) {
-				Column col = (Column) iter.next();
-				keyColumns.add(col);
-			}
-		}
-
+		List<Column> keyColumns = getKeyColumns(table);
 		final TableIdentifier tableIdentifier = TableIdentifier.create(table);
-
-		String tableIdentifierStrategyName = "assigned";
-
-		boolean naturalId;
-
-		if (keyColumns.size()>1) {
-			LOGGER.log(Level.INFO, "id strategy for " + rc.getEntityName() + " since it has a multiple column primary key");
-			naturalId = true;
-
-			id = handleCompositeKey(rc, processed, keyColumns);
-			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
-			if(idPropertyname==null) {
-				idPropertyname = "id";
-			}
-		}
-		else {
-			pki.suggestedStrategy = RevEngUtils.getTableIdentifierStrategyNameInRevengStrategy(getRevengStrategy(), table, getDefaultCatalog(), getDefaultSchema());
-			String suggestedStrategy = pki.suggestedStrategy;
-			if(suggestedStrategy==null) {
-				suggestedStrategy = collector.getSuggestedIdentifierStrategy( tableIdentifier.getCatalog(), tableIdentifier.getSchema(), tableIdentifier.getName() );
-				if(suggestedStrategy==null) {
-					suggestedStrategy = "assigned";
-				}
-				tableIdentifierStrategyName = suggestedStrategy;
-			} else {
-				tableIdentifierStrategyName = suggestedStrategy;
-			}
-
-			naturalId = "assigned".equals( tableIdentifierStrategyName );
-			Column pkc = (Column) keyColumns.get(0);
-			BinderUtils.checkColumnForMultipleBinding(pkc);
-
-			id = simpleValueBinder.bind(
-					table, 
-					pkc, 
-					!naturalId);
-
-			idPropertyname = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
-			if(idPropertyname==null) {
-				idPropertyname = getRevengStrategy().columnToPropertyName(tableIdentifier, pkc.getName() );
-			}
-
-			processed.add(pkc);
-		}
-		id.setIdentifierGeneratorStrategy(tableIdentifierStrategyName);
-		pki.suggestedProperties = getRevengStrategy().getTableIdentifierProperties(tableIdentifier);
+		PrimaryKeyInfo pki = createPrimaryKeyInfo(tableIdentifier, keyColumns);
+		SimpleValue id = createKeyValue(rc, keyColumns, pki.suggestedStrategy, table, collector, processed);		
 		id.setIdentifierGeneratorProperties(pki.suggestedProperties);
-		if(naturalId) {
-			id.setNullValue("undefined");
-		}
-
 		Property property = propertyBinder.bind(
 				table, 
-				BinderUtils.makeUnique(rc,idPropertyname), 
+				BinderUtils.makeUnique(rc,getIdPropertyName(tableIdentifier, keyColumns)), 
 				id, 
 				DefaultAssociationInfo.create(null, null, true, true));
 		rc.setIdentifierProperty(property);
 		rc.setIdentifier(id);
-
 		return pki;
 	}
 
 	void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
 		SimpleValue idValue = (SimpleValue) rc.getIdentifierProperty().getValue();
-
 		Properties defaultStrategyProperties = new Properties();
 		Property constrainedOneToOne = getConstrainedOneToOne(rc);
 		if(constrainedOneToOne!=null) {
 			if(pki.suggestedStrategy==null) {
 				idValue.setIdentifierGeneratorStrategy("foreign");
 			}
-
 			if(pki.suggestedProperties==null) {
 				defaultStrategyProperties.setProperty("property", constrainedOneToOne.getName());
 				idValue.setIdentifierGeneratorProperties(defaultStrategyProperties);
 			}
 		}
-
-
-
+	}
+	
+	private SimpleValue createKeyValue(
+			PersistentClass rc, 
+			List<Column> keyColumns, 
+			String suggestedStrategyName,
+			Table table, 
+			DatabaseCollector collector, 
+			Set<Column> processed) {
+		if (keyColumns.size()>1) {
+			LOGGER.log(Level.INFO, "id strategy for " + rc.getEntityName() + " since it has a multiple column primary key");
+			return handleCompositeKey(rc, processed, keyColumns);
+		}
+		else {
+			String tableIdentifierStrategyName = 
+					getTableIdentifierStrategyName(suggestedStrategyName, collector, table);
+			return handleColumnKey(table, tableIdentifierStrategyName, processed, keyColumns);
+		}
+	}
+	
+	private PrimaryKeyInfo createPrimaryKeyInfo(
+			TableIdentifier tableIdentifier, 
+			List<Column> keyColumns) {
+		PrimaryKeyInfo result = new PrimaryKeyInfo();
+		result.suggestedProperties = getRevengStrategy().getTableIdentifierProperties(tableIdentifier);
+		if (keyColumns.size() == 1) {
+			result.suggestedStrategy = RevEngUtils.getTableIdentifierStrategyNameInRevengStrategy(
+					getRevengStrategy(), 
+					tableIdentifier, 
+					getDefaultCatalog(), 
+					getDefaultSchema());			
+		}
+		return result;
+	}
+	
+	private String getTableIdentifierStrategyName(
+			String suggestedStrategy, 
+			DatabaseCollector collector, 
+			Table table) {
+		if(suggestedStrategy==null) {
+			suggestedStrategy = collector.getSuggestedIdentifierStrategy(
+					table.getCatalog(), 
+					table.getSchema(), 
+					table.getName() );
+			return suggestedStrategy == null ? "assigned" : suggestedStrategy;
+		} else {
+			return suggestedStrategy;
+		}
+	}
+	
+	private String getIdPropertyName(
+			TableIdentifier tableIdentifier, 
+			
+			List<Column> keyColumns) {
+		String result = getRevengStrategy().tableToIdentifierPropertyName(tableIdentifier);
+		if (result ==  null) {
+			if (keyColumns.size() > 1) {
+				result = "id";
+			} else {
+				result = getRevengStrategy().columnToPropertyName(
+						tableIdentifier, 
+						keyColumns.get(0).getName());
+			}
+		}
+		return result;
+	}
+		
+	private boolean isGeneratedId(
+			List<Column> keyColumns, 
+			String tableIdentifierStrategyName) {
+		boolean result = false;
+		if (keyColumns.size() == 1) {
+			result = !"assigned".equals(tableIdentifierStrategyName);
+		}
+		return result;
+	}
+	
+	private List<Column> getKeyColumns(Table table) {
+		List<Column> result = null;
+		if (table.getPrimaryKey()!=null) {
+			result = table.getPrimaryKey().getColumns();
+		}
+		else {
+			LOGGER.log(Level.INFO, "No primary key found for " + table + ", using all properties as the identifier.");
+			result = new ArrayList<Column>();
+			Iterator<?> iter = table.getColumnIterator();
+			while (iter.hasNext() ) {
+				Column col = (Column) iter.next();
+				result.add(col);
+			}
+		}
+		return result;
+	}
+	
+	private SimpleValue handleColumnKey(
+			Table table, 
+			String tableIdentifierStrategyName, 
+			Set<Column> processed, 
+			List<Column> keyColumns) {
+		Column pkc = (Column) keyColumns.get(0);
+		BinderUtils.checkColumnForMultipleBinding(pkc);
+		processed.add(pkc);
+		SimpleValue result = simpleValueBinder.bind(
+				table, 
+				pkc, 
+				isGeneratedId(keyColumns, tableIdentifierStrategyName));
+		result.setIdentifierGeneratorStrategy(tableIdentifierStrategyName);
+		return result;
 	}
 
 	private SimpleValue handleCompositeKey(
-			RootClass rc, 
+			PersistentClass rc, 
 			Set<Column> processedColumns, 
 			List<Column> keyColumns) {
-		Component pkc = new Component(getMetadataBuildingContext(), rc);
-        pkc.setMetaAttributes(Collections.EMPTY_MAP);
-        pkc.setEmbedded(false);
-
-        String compositeIdName = getRevengStrategy().tableToCompositeIdName(TableIdentifier.create(rc.getTable()));
-        if(compositeIdName==null) {
-        	compositeIdName = getRevengStrategy().classNameToCompositeIdName(rc.getClassName());
-        }
-        pkc.setComponentClassName(compositeIdName);
-		Table table = rc.getTable();
-        List<?> list = null;
-		if (preferBasicCompositeIds() ) {
-            list = new ArrayList<Object>(keyColumns);
-        }
-		else {
-            list = ForeignKeyUtils.findForeignKeys(table.getForeignKeyIterator(), keyColumns);
-        }
-        for (Iterator<?> iter = list.iterator(); iter.hasNext();) {
-            Object element = iter.next();
-			Property property;
-            if (element instanceof Column) {
-                Column column = (Column) element;
-                if ( processedColumns.contains(column) ) {
-                    throw new RuntimeException("Binding column twice for primary key should not happen: " + column);
-                }
-				else {
-					BinderUtils.checkColumnForMultipleBinding(column);
-                    String propertyName = getRevengStrategy().columnToPropertyName( TableIdentifier.create(table), column.getName() );
-                    property = basicPropertyBinder.bind(
-            				BinderUtils.makeUnique(pkc, propertyName), 
-            				table, 
-            				column);
-                    processedColumns.add(column);
-                }
-            }
-			else if (element instanceof ForeignKeyUtils.ForeignKeyForColumns) {
-				ForeignKeyUtils.ForeignKeyForColumns fkfc = (ForeignKeyUtils.ForeignKeyForColumns) element;
-                ForeignKey foreignKey = fkfc.key;
-                String propertyName = getRevengStrategy().foreignKeyToEntityName(
-						foreignKey.getName(),
-						TableIdentifier.create(foreignKey.getTable() ),
-						foreignKey.getColumns(), TableIdentifier.create(foreignKey.getReferencedTable() ), foreignKey.getReferencedColumns(), true
-					);
-                property = manyToOneBinder
-                		.bind(
-                				BinderUtils.makeUnique(pkc, propertyName), 
-                				true, 
-                				table, 
-                				foreignKey, 
-                				processedColumns);
-                processedColumns.addAll(fkfc.columns);
-            }
-			else {
-				throw new RuntimeException("unknown thing");
-			}
-
-            markAsUseInEquals(property);
-            pkc.addProperty(property);
-
-		}
-
-		return pkc;
+		Component result = new Component(getMetadataBuildingContext(), rc);
+        result.setMetaAttributes(Collections.EMPTY_MAP);
+        result.setEmbedded(false);
+        result.setComponentClassName(getCompositeIdName(rc));
+        addKeyColumns(result, rc.getTable(), getKeyColumns(rc.getTable(), keyColumns), processedColumns);
+        result.setNullValue("undefined");
+        result.setIdentifierGeneratorStrategy("assigned");
+		return result;
 	}
 
     private static void markAsUseInEquals(Property property) {
@@ -244,6 +227,99 @@ class PrimaryKeyBinder extends AbstractBinder {
 			}
 		}
 		return null;
+	}
+	
+	private Property bindManyToOneProperty(
+			Component pkc, 
+			ForeignKeyForColumns fkfc, 
+			Table table, Set<Column> 
+			processedColumns) {
+        ForeignKey foreignKey = fkfc.key;
+        Property property = manyToOneBinder.bind(
+        		BinderUtils.makeUnique(pkc, getForeignKeyToEntityName(foreignKey)), 
+        		true, 
+        		table, 
+        		foreignKey, 
+        		processedColumns);
+        processedColumns.addAll(fkfc.columns);
+        return property;
+	}
+	
+	private Property bindBasicProperty(
+			Component pkc, 
+			Column column, 
+			Table table, 
+			Set<Column> processedColumns) {
+		Property result = null;
+        if ( processedColumns.contains(column) ) {
+            throw new RuntimeException("Binding column twice for primary key should not happen: " + column);
+        }
+		else {
+			BinderUtils.checkColumnForMultipleBinding(column);
+            result = basicPropertyBinder.bind(
+    				BinderUtils.makeUnique(pkc, getColumnToPropertyName(table, column)), 
+    				table, 
+    				column);
+            processedColumns.add(column);
+        }
+        return result;		
+	}
+	
+	private String getForeignKeyToEntityName(ForeignKey foreignKey) {
+		return getRevengStrategy().foreignKeyToEntityName(
+				foreignKey.getName(),
+				TableIdentifier.create(foreignKey.getTable()),
+				foreignKey.getColumns(), 
+				TableIdentifier.create(foreignKey.getReferencedTable()), 
+				foreignKey.getReferencedColumns(), 
+				true
+			);
+	}
+	
+	private String getColumnToPropertyName(Table table, Column column) {
+		return getRevengStrategy().columnToPropertyName(
+				TableIdentifier.create(table), 
+				column.getName());
+	}
+	
+	private void addKeyColumns(
+			Component pkc, 
+			Table table, 
+			List<?> list, 
+			Set<Column> processedColumns) {
+        for (Iterator<?> iter = list.iterator(); iter.hasNext();) {
+            Object element = iter.next();
+			Property property;
+            if (element instanceof Column) {
+                property = bindBasicProperty(pkc, (Column)element, table, processedColumns);
+            }
+			else if (element instanceof ForeignKeyForColumns) {
+				property = bindManyToOneProperty(pkc, (ForeignKeyForColumns)element, table, processedColumns);
+            }
+			else {
+				throw new RuntimeException("unknown thing");
+			}
+            markAsUseInEquals(property);
+            pkc.addProperty(property);
+		}
+	}
+	
+	private List<?> getKeyColumns(Table table, List<Column> keyColumns) {
+		if (preferBasicCompositeIds() ) {
+            return new ArrayList<Object>(keyColumns);
+        }
+		else {
+            return ForeignKeyUtils.findForeignKeys(table.getForeignKeyIterator(), keyColumns);
+        }
+	}
+	
+	private String getCompositeIdName(PersistentClass pc) {
+        String compositeIdName = getRevengStrategy().tableToCompositeIdName(
+        		TableIdentifier.create(pc.getTable()));
+        if(compositeIdName==null) {
+        	compositeIdName = getRevengStrategy().classNameToCompositeIdName(pc.getClassName());
+        }
+        return compositeIdName;
 	}
 
 }

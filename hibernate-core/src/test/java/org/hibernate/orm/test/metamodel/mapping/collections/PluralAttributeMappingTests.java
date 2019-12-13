@@ -98,7 +98,7 @@ public class PluralAttributeMappingTests {
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
 		// 8 for now, until entity-valued map keys is supported
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 9 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 10 ) );
 
 		final PluralAttributeMapping basicByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByBasic" );
 		assertThat( basicByBasic, notNullValue() );
@@ -139,6 +139,12 @@ public class PluralAttributeMappingTests {
 		assertThat( manyToManyByBasic, notNullValue() );
 		assertThat( manyToManyByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( manyToManyByBasic.getElementDescriptor(), notNullValue() );
+
+		final PluralAttributeMapping componentByBasicOrdered = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "componentByBasicOrdered" );
+		assertThat( componentByBasicOrdered, notNullValue() );
+		assertThat( componentByBasicOrdered.getKeyDescriptor(), notNullValue() );
+		assertThat( componentByBasicOrdered.getElementDescriptor(), notNullValue() );
+		assertThat( componentByBasicOrdered.getOrderByFragment(), notNullValue() );
 	}
 
 }

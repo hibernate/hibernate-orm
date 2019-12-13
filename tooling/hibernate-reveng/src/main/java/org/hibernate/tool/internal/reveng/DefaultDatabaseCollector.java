@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.metadata;
+package org.hibernate.tool.internal.reveng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.internal.reveng.AbstractDatabaseCollector;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 
 public class DefaultDatabaseCollector extends AbstractDatabaseCollector  {

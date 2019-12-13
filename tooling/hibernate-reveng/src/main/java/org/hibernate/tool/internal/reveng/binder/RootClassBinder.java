@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -46,16 +45,16 @@ public class RootClassBinder extends AbstractBinder {
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 
-	public void bind(Table table, DatabaseCollector collector, Mapping mapping) {
+	public void bind(Table table, DatabaseCollector collector) {
 		Set<Column> processed = new HashSet<Column>();
 		nullifyDefaultCatalogAndSchema(table);
 		RootClass rc = createRootClass(table);
 		addToMetadataCollector(rc, table);
-		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, mapping, collector);		
-		bindVersionProperty(table, rc, processed, mapping);
+		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, collector);		
+		bindVersionProperty(table, rc, processed);
 		bindOutgoingForeignKeys(table, rc, processed);
-		bindColumnsToProperties(table, rc, processed, mapping);
-		bindIncomingForeignKeys(rc, processed, collector, mapping);
+		bindColumnsToProperties(table, rc, processed);
+		bindIncomingForeignKeys(rc, processed, collector);
 		updatePrimaryKey(rc, pki);	
 	}
 	
@@ -63,7 +62,6 @@ public class RootClassBinder extends AbstractBinder {
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 
-			Mapping mapping, 
 			DatabaseCollector collector) {
 		return primaryKeyBinder.bind(table, rc, processed, collector);	
 	}
@@ -112,12 +110,14 @@ public class RootClassBinder extends AbstractBinder {
 	private void bindVersionProperty(
 			Table table, 
 			RootClass rc, 
-			Set<Column> processed, 
-			Mapping mapping) {
+			Set<Column> processed) {
 		versionPropertyBinder.bind(table, rc, processed);
 	}
 
-	private void bindIncomingForeignKeys(PersistentClass rc, Set<Column> processed, DatabaseCollector collector, Mapping mapping) {
+	private void bindIncomingForeignKeys(
+			PersistentClass rc, 
+			Set<Column> processed, 
+			DatabaseCollector collector) {
 		List<ForeignKey> foreignKeys = collector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
@@ -140,7 +140,7 @@ public class RootClassBinder extends AbstractBinder {
 		}
 	}
 
-	private void bindColumnsToProperties(Table table, RootClass rc, Set<Column> processedColumns, Mapping mapping) {
+	private void bindColumnsToProperties(Table table, RootClass rc, Set<Column> processedColumns) {
 		for (Iterator<?> iterator = table.getColumnIterator(); iterator.hasNext();) {
 			Column column = (Column) iterator.next();
 			if ( !processedColumns.contains(column) ) {

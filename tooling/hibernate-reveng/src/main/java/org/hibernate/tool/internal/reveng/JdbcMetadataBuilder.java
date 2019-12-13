@@ -24,7 +24,6 @@ import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
-import org.hibernate.tool.internal.reveng.binder.BinderMapping;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
 import org.jboss.logging.Logger;
 
@@ -115,7 +114,6 @@ public class JdbcMetadataBuilder {
         // TODO: just create one big embedded composite id instead.
     }*/
 	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
-		BinderMapping mapping = new BinderMapping(metadata);
 		RootClassBinder rootClassBinder = RootClassBinder.create(binderContext);
 		for (Table table : metadataCollector.collectTableMappings()) {
 			if(table.getColumnSpan()==0) {
@@ -126,7 +124,7 @@ public class JdbcMetadataBuilder {
 				LOGGER.debug( "Ignoring " + table + " as class since rev.eng. says it is a many-to-many" );
 				continue;
 			}	    	
-			rootClassBinder.bind(table, collector, mapping);
+			rootClassBinder.bind(table, collector);
 		}		
 		metadataCollector.processSecondPasses(metadataBuildingContext);		
 	}

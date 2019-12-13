@@ -66,6 +66,7 @@ public abstract class QueryBinder {
 				.setCacheMode( hints.getCacheMode( queryName ) )
 				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
 				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
+				.setPassDistinctThrough( hints.getBoolean( queryName, QueryHints.PASS_DISTINCT_THROUGH ) )
 				.setParameterTypes( null )
 				.createNamedQueryDefinition();
 
@@ -80,8 +81,6 @@ public abstract class QueryBinder {
 			LOG.debugf( "Binding named query: %s => %s", queryDefinition.getName(), queryDefinition.getQueryString() );
 		}
 	}
-
-
 
 	public static void bindNativeQuery(
 			NamedNativeQuery queryAnn,

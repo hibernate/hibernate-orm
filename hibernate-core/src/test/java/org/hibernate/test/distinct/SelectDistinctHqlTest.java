@@ -13,14 +13,16 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.QueryHint;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.jpa.QueryHints;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -137,6 +139,20 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		});
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-13782" )
+	public void testDistinctPassThroughNamedQuery() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.getNamedQuery("Person_Phones")
+					.setMaxResults(5)
+					.getResultList();
+			assertEquals(1, persons.size());
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertFalse(sqlQuery.contains(" distinct "));
+		});
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -153,6 +169,14 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Phone")
+	@NamedQuery(
+			name = "Person_Phones",
+			query = "select distinct p from Person p left join fetch p.phones",
+			hints = @QueryHint(
+					name = QueryHints.HINT_PASS_DISTINCT_THROUGH,
+					value = "false"
+			)
+	)
 	public static class Phone {
 
 		@Id

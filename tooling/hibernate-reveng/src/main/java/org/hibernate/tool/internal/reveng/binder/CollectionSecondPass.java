@@ -1,23 +1,25 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.binder;
 
+import java.io.ObjectStreamClass;
 import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
 
-@SuppressWarnings("serial")
-public class JdbcCollectionSecondPass extends CollectionSecondPass {
+public class CollectionSecondPass extends org.hibernate.cfg.CollectionSecondPass {
+	
+	private static final long serialVersionUID = 
+			ObjectStreamClass.lookup(CollectionSecondPass.class).getSerialVersionUID();
 
-	MetadataBuildingContext mdbc;
+	private MetadataBuildingContext mdbc;
 
-    public JdbcCollectionSecondPass(MetadataBuildingContext mdbc, Collection coll) {
+    public CollectionSecondPass(MetadataBuildingContext mdbc, Collection coll) {
         super(mdbc, coll);
         this.mdbc = mdbc;
     }

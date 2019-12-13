@@ -18,7 +18,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.JdbcCollectionSecondPass;
 
 class OneToManyBinder extends AbstractBinder {
 	
@@ -135,7 +134,7 @@ class OneToManyBinder extends AbstractBinder {
     	OneToMany oneToMany = new OneToMany(getMetadataBuildingContext(), collection.getOwner());
 		oneToMany.setReferencedEntityName(getTableToClassName(fromForeignKey.getTable())); 
     	getMetadataCollector().addSecondPass(
-    			new JdbcCollectionSecondPass(getMetadataBuildingContext(), collection));
+    			new CollectionSecondPass(getMetadataBuildingContext(), collection));
     	collection.setElement(oneToMany);
 	}
 

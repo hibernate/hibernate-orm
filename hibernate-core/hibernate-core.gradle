@@ -51,7 +51,8 @@ configurations {
 dependencies {
 
     compile( libraries.jpa )
-    provided( libraries.javassist )
+    // This can now be made provided
+    compile( libraries.javassist )
     // Could be made optional?
     compile( libraries.byteBuddy )
     compile( libraries.antlr )

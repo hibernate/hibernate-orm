@@ -11,7 +11,11 @@ apply plugin: 'hibernate-matrix-testing'
 description = 'Hibernate\'s entity version (audit/history) support'
 
 dependencies {
-    compile( project( ':hibernate-core' ) )
+    compile( project( ':hibernate-core' ) ) {
+        // Exclude access to this to avoid future use.
+        exclude group: "org.javassist", module: "javassist"
+    }
+
     provided( libraries.ant )
     annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 

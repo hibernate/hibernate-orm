@@ -10,7 +10,7 @@ import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 
 public class MetadataDescriptorFactory {
 	
-	public static MetadataDescriptor createJdbcDescriptor(
+	public static MetadataDescriptor createReverseEngineeringDescriptor(
 			ReverseEngineeringStrategy reverseEngineeringStrategy, 
 			Properties properties) {
 		return new JdbcMetadataDescriptor(

@@ -112,7 +112,7 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
     private MetadataDescriptor createJdbcDescriptor(ReverseEngineeringStrategy strategy, Properties properties) {
     	properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
         return MetadataDescriptorFactory
-                .createJdbcDescriptor(
+                .createReverseEngineeringDescriptor(
                         strategy,
                         properties);
     }

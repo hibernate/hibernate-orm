@@ -43,7 +43,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 		ReverseEngineeringStrategy res = createReverseEngineeringStrategy();
 		properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
 		return MetadataDescriptorFactory
-				.createJdbcDescriptor(
+				.createReverseEngineeringDescriptor(
 						res, 
 						properties);
 	}

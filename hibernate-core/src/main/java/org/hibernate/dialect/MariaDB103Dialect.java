@@ -14,7 +14,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for MariaDB 10.3 and later, provides sequence support, lock-timeouts, etc.
- * 
+ *
  * @author Philippe Marschall
  */
 public class MariaDB103Dialect extends MariaDB102Dialect {
@@ -57,7 +57,7 @@ public class MariaDB103Dialect extends MariaDB102Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select table_name from information_schema.TABLES where table_type='SEQUENCE'";
+		return "select table_name from information_schema.TABLES where table_schema = database() and table_type = 'SEQUENCE'";
 	}
 
 	@Override

@@ -377,7 +377,12 @@ class FromElementType {
 		checkInitialized();
 		if ( this.persister != null ) {
 			AbstractEntityPersister aep = (AbstractEntityPersister) this.persister;
-			return aep.getPropertyTableName( propertyName );
+			try {
+				return aep.getSubclassTableName( aep.getSubclassPropertyTableNumber( propertyName ) );
+			}
+			catch (QueryException e) {
+				return null;
+			}
 		}
 		return null;
 	}

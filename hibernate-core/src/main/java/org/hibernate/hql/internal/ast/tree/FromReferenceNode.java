@@ -137,14 +137,4 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 				|| getWalker().getStatementType() == HqlSqlTokenTypes.UPDATE;
 	}
 
-	/**
-	 * Returns table names which are referenced by this node. If the tables
-	 * can not be determined it returns null.
-	 *
-	 * @return table names or null.
-	 */
-	public String[] getReferencedTables() {
-		return null;
-	}
-
 }

@@ -238,7 +238,11 @@ public class SequenceStyleGenerator
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
 
-		if ( isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
+		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
+
+		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
+
+		if ( isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
 			String databaseSequenceName = sequenceName.getObjectName().getText();
 			Long databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 
@@ -269,11 +273,10 @@ public class SequenceStyleGenerator
 			}
 		}
 
-		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
 		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
 
 		if ( dialect.supportsSequences() && !forceTableUse ) {
-			if ( !dialect.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
+			if ( !dialect.supportsPooledSequences() && isPooledOptimizer ) {
 				forceTableUse = true;
 				LOG.forcingTableUse();
 			}

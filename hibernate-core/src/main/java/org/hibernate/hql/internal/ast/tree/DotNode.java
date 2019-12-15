@@ -36,7 +36,7 @@ import antlr.collections.AST;
  *
  * @author Joshua Davis
  */
-public class DotNode extends FromReferenceNode implements DisplayableNode, SelectExpression {
+public class DotNode extends FromReferenceNode implements DisplayableNode, SelectExpression, TableReferenceNode {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DotNode.class );
 
 	///////////////////////////////////////////////////////////////////////////
@@ -76,12 +76,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	 * The identifier that is the name of the property.
 	 */
 	private String propertyName;
-
-	/**
-	 * The identifier that is the name of the property. In comparison with {@link #propertyName}
-	 * it is always identical with identifier in the query, it is not changed during processing.
-	 */
-	private String originalPropertyName;
 
 	/**
 	 * The full path, to the root alias of this dot node.
@@ -168,7 +162,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// Set the attributes of the property reference expression.
 		String propName = property.getText();
 		propertyName = propName;
-		originalPropertyName = propName;
 		// If the uresolved property path isn't set yet, just use the property name.
 		if ( propertyPath == null ) {
 			propertyPath = propName;
@@ -703,21 +696,15 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	@Override
 	public String[] getReferencedTables() {
-		String[] referencedTables = null;
-		AST firstChild = getFirstChild();
-		if ( firstChild != null ) {
-			if ( firstChild instanceof FromReferenceNode ) {
-				FromReferenceNode fromReferenceNode = (FromReferenceNode) firstChild;
-				FromElement fromElement = fromReferenceNode.getFromElement();
-				if ( fromElement != null ) {
-					String table = fromElement.getPropertyTableName( getOriginalPropertyName() );
-					if ( table != null ) {
-						referencedTables = new String[] { table };
-					}
-				}
+		FromReferenceNode lhs = ( (FromReferenceNode) getFirstChild() );
+		if ( lhs != null) {
+			FromElement fromElement = lhs.getFromElement();
+			if ( fromElement != null ) {
+				String propertyTableName = fromElement.getPropertyTableName( propertyPath );
+				return new String[] { propertyTableName };
 			}
 		}
-		return referencedTables;
+		return null;
 	}
 
 	public void setPropertyPath(String propertyPath) {
@@ -726,14 +713,6 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	public String getPropertyPath() {
 		return propertyPath;
-	}
-
-	public String getPropertyName() {
-		return propertyName;
-	}
-
-	public String getOriginalPropertyName() {
-		return originalPropertyName;
 	}
 
 	public FromReferenceNode getLhs() {

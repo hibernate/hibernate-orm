@@ -24,7 +24,7 @@ import antlr.collections.AST;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMapComponentNode extends FromReferenceNode implements HqlSqlTokenTypes {
+public abstract class AbstractMapComponentNode extends FromReferenceNode implements HqlSqlTokenTypes, TableReferenceNode {
 	private FromElement mapFromElement;
 	private String[] columns;
 

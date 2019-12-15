@@ -17,9 +17,10 @@ import org.hibernate.sql.JoinFragment;
  *
  * @author josh
  */
-public class SqlFragment extends Node implements ParameterContainer {
+public class SqlFragment extends Node implements ParameterContainer, TableReferenceNode {
 	private JoinFragment joinFragment;
 	private FromElement fromElement;
+	private String[] referencedTables;
 
 	public void setJoinFragment(JoinFragment joinFragment) {
 		this.joinFragment = joinFragment;
@@ -56,4 +57,13 @@ public class SqlFragment extends Node implements ParameterContainer {
 	public ParameterSpecification[] getEmbeddedParameters() {
 		return embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
 	}
+
+	public String[] getReferencedTables() {
+		return referencedTables;
+	}
+
+	public void setReferencedTables(String[] referencedTables) {
+		this.referencedTables = referencedTables;
+	}
+
 }

@@ -42,13 +42,10 @@ public class ASTReferencedTablesPrinter extends ASTPrinter {
 			EntityPersister entityPersister = fromElement != null ? fromElement.getEntityPersister() : null;
 			String entityPersisterStr = entityPersister != null ? entityPersister.toString() : null;
 			props.put( "persister", entityPersisterStr );
-			String referencedTablesStr = Arrays.toString( frn.getReferencedTables() );
-			props.put( "referencedTables", referencedTablesStr );
 		}
 		if ( node instanceof DotNode ) {
 			DotNode dn = (DotNode) node;
 			props.put( "path", dn.getPath() );
-			props.put( "originalPropertyName", dn.getOriginalPropertyName() );
 		}
 		if ( node instanceof IdentNode ) {
 			IdentNode in = (IdentNode) node;

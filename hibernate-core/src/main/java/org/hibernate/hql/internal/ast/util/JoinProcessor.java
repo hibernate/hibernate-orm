@@ -33,6 +33,7 @@ import org.hibernate.hql.internal.ast.tree.ImpliedFromElement;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SqlFragment;
+import org.hibernate.hql.internal.ast.tree.TableReferenceNode;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -167,14 +168,14 @@ public class JoinProcessor implements SqlTokenTypes {
 	private void collectReferencedTables(ASTIterator iterator, Set<String> result) {
 		while ( iterator.hasNext() ) {
 			AST node = iterator.nextNode();
-			if ( node instanceof FromReferenceNode ) {
-				FromReferenceNode fromReferenceNode = (FromReferenceNode) node;
+			if ( node instanceof TableReferenceNode) {
+				TableReferenceNode fromReferenceNode = (TableReferenceNode) node;
 				String[] tables = fromReferenceNode.getReferencedTables();
 				if ( tables != null ) {
 					Collections.addAll(result, tables);
 				}
 			}
-			else if (node instanceof SqlFragment) {
+			if (node instanceof SqlFragment) {
 				SqlFragment sqlFragment = (SqlFragment) node;
 				FromElement fromElement = sqlFragment.getFromElement();
 

@@ -9,8 +9,8 @@ package org.hibernate.tool.hbm2ddl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.tool.hbm2ddl.grammar.SqlStatementParser;
-import org.hibernate.tool.hbm2ddl.grammar.SqlStatementParserBaseListener;
+import org.hibernate.grammars.importsql.SqlStatementParser;
+import org.hibernate.grammars.importsql.SqlStatementParserBaseListener;
 
 /**
  * @author Andrea Boriero

@@ -385,10 +385,10 @@ class Antlr4Plugin implements Plugin<Project> {
 }
 
 class Antlr4GenerationTask extends DefaultTask {
-    static final String HQL_PCKG = 'org.hibernate.query.hql.internal'
-    static final String IMPORT_SQL_PCKG = 'org.hibernate.tool.hbm2ddl.grammar'
-    static final String GRAPH_PCKG = 'org.hibernate.graph.internal.parse'
-    static final String ORDER_PCKG = 'org.hibernate.grammars.ordering'
+    static final String HQL_PCKG        = 'org.hibernate.grammars.hql'
+    static final String IMPORT_SQL_PCKG = 'org.hibernate.grammars.importsql'
+    static final String GRAPH_PCKG      = 'org.hibernate.grammars.graph'
+    static final String ORDER_PCKG      = 'org.hibernate.grammars.ordering'
 
     List<GrammarDescriptor> grammarDescriptors = [
             new GrammarDescriptor( HQL_PCKG, 'HqlLexer' ),

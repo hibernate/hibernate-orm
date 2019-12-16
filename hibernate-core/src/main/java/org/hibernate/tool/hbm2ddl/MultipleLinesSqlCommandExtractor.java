@@ -9,8 +9,8 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.Reader;
 import java.util.List;
 
-import org.hibernate.tool.hbm2ddl.grammar.SqlStatementLexer;
-import org.hibernate.tool.hbm2ddl.grammar.SqlStatementParser;
+import org.hibernate.grammars.importsql.SqlStatementLexer;
+import org.hibernate.grammars.importsql.SqlStatementParser;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.UnbufferedCharStream;

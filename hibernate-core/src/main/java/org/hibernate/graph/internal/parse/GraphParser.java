@@ -7,6 +7,9 @@
 package org.hibernate.graph.internal.parse;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.grammars.graph.GraphLanguageLexer;
+import org.hibernate.grammars.graph.GraphLanguageParser;
+import org.hibernate.grammars.graph.GraphLanguageParserBaseVisitor;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;

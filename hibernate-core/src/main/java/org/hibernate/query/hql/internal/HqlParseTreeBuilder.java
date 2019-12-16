@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.hql.internal;
 
+import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.HqlLogger;
 
 import org.jboss.logging.Logger;

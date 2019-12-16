@@ -7,6 +7,8 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.QueryException;
+import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;

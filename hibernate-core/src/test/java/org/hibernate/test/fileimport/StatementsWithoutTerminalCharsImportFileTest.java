@@ -21,7 +21,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.hbm2ddl.ImportScriptException;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
-import org.hibernate.tool.hbm2ddl.grammar.SqlStatementParser;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;

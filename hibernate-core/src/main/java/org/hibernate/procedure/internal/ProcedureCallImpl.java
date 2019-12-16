@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -902,4 +904,11 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
 		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
 	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Stream getResultStream() {
+		return getResultList().stream();
+	}
+
 }

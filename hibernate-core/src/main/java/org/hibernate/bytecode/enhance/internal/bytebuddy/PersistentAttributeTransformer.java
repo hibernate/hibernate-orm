@@ -175,7 +175,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return false;
 	}
 
-	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder, boolean accessor) {
+	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
 		boolean compositeOwner = false;
 
 		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
@@ -186,10 +186,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							enhancedField.getType().asErasure(),
 							Visibility.PUBLIC
 					)
-					.intercept(
-							accessor
-									? FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() )
-									: fieldReader( enhancedField )
+					.intercept( fieldReader( enhancedField )
 					)
 					.defineMethod(
 							EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
@@ -197,12 +194,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							Visibility.PUBLIC
 					)
 					.withParameters( enhancedField.getType().asErasure() )
-					.intercept( accessor
-										? FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() )
-										: fieldWriter( enhancedField ) );
+					.intercept( fieldWriter( enhancedField ) );
 
 			if ( !compositeOwner
-					&& !accessor
+					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
 					&& enhancedField.hasAnnotation( Embedded.class )
 					&& enhancementContext.isCompositeClass( enhancedField.getType().asErasure() )
 					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
@@ -228,6 +223,9 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	}
 
 	private Implementation fieldReader(AnnotatedFieldDescription enhancedField) {
+		if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
+		}
 		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
 			if ( enhancedField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
 				return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
@@ -242,20 +240,29 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	}
 
 	private Implementation fieldWriter(AnnotatedFieldDescription enhancedField) {
-		Implementation implementation;
+		Implementation implementation = fieldWriterImplementation( enhancedField );
+		if ( !enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			implementation = InlineDirtyCheckingHandler.wrap( managedCtClass, enhancementContext, enhancedField, implementation );
+			implementation = BiDirectionalAssociationHandler.wrap( managedCtClass, enhancementContext, enhancedField, implementation );
+		}
+		return implementation;
+	}
+
+	private Implementation fieldWriterImplementation(AnnotatedFieldDescription enhancedField) {
+		if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
+		}
 		if ( !enhancementContext.hasLazyLoadableAttributes( managedCtClass ) || !enhancementContext.isLazyLoadable( enhancedField ) ) {
 			if ( enhancedField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
-				implementation = FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
+				return FieldAccessor.ofField( enhancedField.getName() ).in( enhancedField.getDeclaringType().asErasure() );
 			}
 			else {
-				implementation = new Implementation.Simple( new FieldMethodWriter( managedCtClass, enhancedField ) );
+				return new Implementation.Simple( new FieldMethodWriter( managedCtClass, enhancedField ) );
 			}
 		}
 		else {
-			implementation = new Implementation.Simple( FieldWriterAppender.of( managedCtClass, enhancedField ) );
+			return new Implementation.Simple( FieldWriterAppender.of( managedCtClass, enhancedField ) );
 		}
-		implementation = InlineDirtyCheckingHandler.wrap( managedCtClass, enhancementContext, enhancedField, implementation );
-		return BiDirectionalAssociationHandler.wrap( managedCtClass, enhancementContext, enhancedField, implementation );
 	}
 
 	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder) {

@@ -285,7 +285,7 @@ public class EnhancerImpl implements Enhancer {
 				}
 			}
 
-			return createTransformer( managedCtClass ).applyTo( builder, false );
+			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
@@ -318,13 +318,13 @@ public class EnhancerImpl implements Enhancer {
 								.intercept( implementationClearOwner );
 			}
 
-			return createTransformer( managedCtClass ).applyTo( builder, false );
+			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			builder = builder.implement( ManagedMappedSuperclass.class );
-			return createTransformer( managedCtClass ).applyTo( builder, true );
+			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
 			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );

@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,8 +31,6 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 	private final PathConsumer pathConsumer;
 	private final TranslationContext translationContext;
 
-	private List<SortSpecification> specifications;
-
 	public ParseTreeVisitor(
 			PluralAttributeMapping pluralAttributeMapping,
 			TranslationContext translationContext) {
@@ -40,11 +39,15 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 	}
 
 	@Override
-	public List<SortSpecification> visitOrderByFragment(OrderingParser.OrderByFragmentContext parsedFragment) {
+	public List<OrderingSpecification> visitOrderByFragment(OrderingParser.OrderByFragmentContext parsedFragment) {
 		final List<OrderingParser.SortSpecificationContext> parsedSortSpecifications = parsedFragment.sortSpecification();
-		Objects.requireNonNull( parsedSortSpecifications );
+		assert parsedSortSpecifications != null;
 
-		this.specifications = new ArrayList<>( parsedSortSpecifications.size() );
+		if ( parsedSortSpecifications.size() == 1 ) {
+			return Collections.singletonList( visitSortSpecification( parsedSortSpecifications.get( 0 ) ) );
+		}
+
+		final List<OrderingSpecification> specifications = new ArrayList<>( parsedSortSpecifications.size() );
 
 		for ( OrderingParser.SortSpecificationContext parsedSortSpecification : parsedSortSpecifications ) {
 			specifications.add( visitSortSpecification( parsedSortSpecification ) );
@@ -54,20 +57,21 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 	}
 
 	@Override
-	public SortSpecification visitSortSpecification(OrderingParser.SortSpecificationContext parsedSpec) {
+	public OrderingSpecification visitSortSpecification(OrderingParser.SortSpecificationContext parsedSpec) {
 		assert parsedSpec != null;
 		assert parsedSpec.expression() != null;
 
-		final SortSpecification result = new SortSpecification( visitExpression( parsedSpec.expression() ) );
+		final OrderingSpecification result = new OrderingSpecification( visitExpression( parsedSpec.expression() ) );
 
 		if ( parsedSpec.collationSpecification() != null ) {
 			result.setCollation( parsedSpec.collationSpecification().identifier().getText() );
 		}
 
-		if ( parsedSpec.direction() != null ) {
-			if ( parsedSpec.direction().ASC() != null ) {
-				result.setSortOrder( SortOrder.ASCENDING );
-			}
+		if ( parsedSpec.direction() != null && parsedSpec.direction().DESC() != null ) {
+			result.setSortOrder( SortOrder.DESCENDING );
+		}
+		else {
+			result.setSortOrder( SortOrder.ASCENDING );
 		}
 
 		// todo (6.0) : null-precedence (see grammar notes)
@@ -76,14 +80,14 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 	}
 
 	@Override
-	public SortExpression visitExpression(ExpressionContext ctx) {
+	public OrderingExpression visitExpression(ExpressionContext ctx) {
 		if ( ctx.function() != null ) {
 			return visitFunction( ctx.function() );
 		}
 
 		if ( ctx.identifier() != null ) {
 			pathConsumer.consumeIdentifier( ctx.identifier().getText(), true, true );
-			return (SortExpression) pathConsumer.getConsumedPart();
+			return (OrderingExpression) pathConsumer.getConsumedPart();
 		}
 
 		assert ctx.dotIdentifier() != null;
@@ -101,7 +105,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 			firstPass = false;
 		}
 
-		return (SortExpression) pathConsumer.getConsumedPart();
+		return (OrderingExpression) pathConsumer.getConsumedPart();
 	}
 
 	@Override

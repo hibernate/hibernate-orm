@@ -10,13 +10,10 @@ import java.util.Objects;
 
 import org.hibernate.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
- * A representation of the path to a particular Navigable
- * as part of a query relative to a "navigable root".
- *
- * @see NavigableRole
+ * Compound-name where each path references to a domain or mapping model-part relative to a root path.  Generally
+ * this root path is an entity name or a collection-role.
  *
  * @author Steve Ebersole
  */

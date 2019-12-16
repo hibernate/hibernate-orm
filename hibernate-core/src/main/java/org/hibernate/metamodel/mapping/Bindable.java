@@ -27,6 +27,24 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface Bindable {
+	/*
+	 * todo (6.0) : much of this contract uses Clause which (1) kludgy and (2) not always necessary
+	 *  		- e.g. see the note below wrt "2 forms of JDBC-type visiting"
+	 *
+	 * Instead, in keeping with the general shift away from the getter paradigm to a more functional (Consumer,
+	 * Function, etc) paradigm, I propose something more like:
+	 *
+	 * interface Bindable {
+	 * 		void apply(UpdateStatement sqlAst, ..., SqlAstCreationState creationState);
+	 * 		void apply(DeleteStatement sqlAst, ..., SqlAstCreationState creationState);
+	 *
+	 * 		Expression toSqlAst(..., SqlAstCreationState creationState);
+	 *
+	 * 		// plus the `DomainResult`, `Fetch` (via `DomainResultProducer` and `Fetchable`)
+	 * 		// handling most impls already provide
+	 * }
+	 */
+
 	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
 		final AtomicInteger value = new AtomicInteger( 0 );
 		visitJdbcTypes(

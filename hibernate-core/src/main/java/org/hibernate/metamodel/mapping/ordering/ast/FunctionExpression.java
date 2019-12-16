@@ -10,14 +10,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.SortOrder;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+
 /**
  * Represents a function used in an order-by fragment
  *
  * @author Steve Ebersole
  */
-public class FunctionExpression implements SortExpression {
+public class FunctionExpression implements OrderingExpression {
 	private final String name;
-	private final List<SortExpression> arguments;
+	private final List<OrderingExpression> arguments;
 
 	public FunctionExpression(String name, int numberOfArguments) {
 		this.name = name;
@@ -30,11 +36,21 @@ public class FunctionExpression implements SortExpression {
 		return name;
 	}
 
-	public List<SortExpression> getArguments() {
+	public List<OrderingExpression> getArguments() {
 		return arguments;
 	}
 
-	public void addArgument(SortExpression argument) {
+	public void addArgument(OrderingExpression argument) {
 		arguments.add( argument );
+	}
+
+	@Override
+	public void apply(
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String collation,
+			SortOrder sortOrder,
+			SqlAstCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

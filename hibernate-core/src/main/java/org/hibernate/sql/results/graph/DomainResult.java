@@ -8,27 +8,15 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
-import org.hibernate.sql.results.graph.basic.BasicResultGraphNode;
-import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
-import org.hibernate.sql.results.graph.entity.EntityResult;
-
 /**
- * Represents a result value in the domain query results.  Acts as the
- * producer for the {@link DomainResultAssembler} for this result as well
- * as any {@link Initializer} instances needed
- * <p/>
- * Not the same as a result column in the JDBC ResultSet!  This contract
- * represents an individual domain-model-level query result.  A QueryResult
- * will usually consume multiple JDBC result columns.
- * <p/>
- * QueryResult is distinctly different from a {@link Fetch} and so modeled as
- * completely separate hierarchy.
+ * Represents a result value in the domain query results.  Acts as the producer for the
+ * {@link DomainResultAssembler} for this result as well as any {@link Initializer} instances needed
  *
- * @see BasicResultGraphNode
- * @see DynamicInstantiationResult
- * @see EntityResult
- * @see CollectionResult
- * @see CompositeResult
+ * Not the same as a result column in the JDBC ResultSet!  This contract represents an individual
+ * domain-model-level query result.  A DomainResult will usually consume multiple JDBC result columns.
+ *
+ * DomainResult is distinctly different from a {@link Fetch} and so modeled as completely separate hierarchy.
+ *
  * @see Fetch
  *
  * @author Steve Ebersole

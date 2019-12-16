@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -41,6 +42,16 @@ public class DelayedCollectionFetch extends CollectionFetch {
 				collector,
 				creationState
 		);
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.DELAYED;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return false;
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -59,5 +60,15 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 				collector,
 				creationState
 		);
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return true;
 	}
 }

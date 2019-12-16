@@ -19,6 +19,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.LazyCollection;
@@ -37,6 +38,7 @@ public class EntityOfSets {
 
 	private Set<String> setOfBasics;
 	private SortedSet<String> sortedSetOfBasics;
+	private Set<String> orderedSetOfBasics;
 
 	private Set<EnumValue> setOfEnums;
 	private Set<EnumValue> setOfConvertedEnums;
@@ -46,6 +48,7 @@ public class EntityOfSets {
 
 	private Set<SimpleEntity> setOfOneToMany;
 	private Set<SimpleEntity> setOfManyToMany;
+
 
 	public EntityOfSets() {
 	}
@@ -91,6 +94,28 @@ public class EntityOfSets {
 			setOfBasics = new HashSet<>();
 		}
 		setOfBasics.add( value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// orderedSetOfBasics
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_orderedSetOfBasics")
+	@OrderBy( "" )
+	public Set<String> getOrderedSetOfBasics() {
+		return orderedSetOfBasics;
+	}
+
+	public void setOrderedSetOfBasics(Set<String> orderedSetOfBasics) {
+		this.orderedSetOfBasics = orderedSetOfBasics;
+	}
+
+	public void addOrderedBasic(String value) {
+		if ( orderedSetOfBasics == null ) {
+			orderedSetOfBasics = new TreeSet<>();
+		}
+		orderedSetOfBasics.add( value );
 	}
 
 

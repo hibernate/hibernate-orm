@@ -168,6 +168,7 @@ public class EmbeddedAttributeMapping
 				this,
 				fetchParent,
 				fetchTiming,
+				selected,
 				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);

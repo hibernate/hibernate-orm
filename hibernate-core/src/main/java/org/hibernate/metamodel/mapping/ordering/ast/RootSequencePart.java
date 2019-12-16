@@ -6,21 +6,21 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 
 /**
- * PathPart implementation used to translate the root of a path
+ * SequencePart implementation used to translate the root of a path
+ *
+ * @see PluralAttributePath
  *
  * @author Steve Ebersole
  */
 public class RootSequencePart implements SequencePart {
-	private final PluralAttributeMapping pluralAttributeMapping;
+	private final PluralAttributePath pluralAttributePath;
 
 	public RootSequencePart(PluralAttributeMapping pluralAttributeMapping) {
-		this.pluralAttributeMapping = pluralAttributeMapping;
+		this.pluralAttributePath = new PluralAttributePath( pluralAttributeMapping );
 	}
 
 	@Override
@@ -30,33 +30,19 @@ public class RootSequencePart implements SequencePart {
 			TranslationContext translationContext) {
 		// could be a column-reference (isTerminal would have to be true) or a domain-path
 
-		final ModelPart subPart = pluralAttributeMapping.findSubPart( name, null );
-
-		if ( subPart != null ) {
-			return new CollectionSubPath( pluralAttributeMapping, subPart );
-		}
-
-		// the above checks for explicit `{element}` or `{index}` usage.  Try also as an implicit element sub-part reference
-		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart elementDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getElementDescriptor();
-			final ModelPart elementSubPart = elementDescriptor.findSubPart( name, null );
-			if ( elementSubPart != null ) {
-				final CollectionSubPath elementPath = new CollectionSubPath(
-						pluralAttributeMapping,
-						elementDescriptor
-				);
-				return new SubDomainPath( elementPath, elementSubPart );
-			}
+		final DomainPath subDomainPath = pluralAttributePath.resolvePathPart( name, isTerminal, translationContext );
+		if ( subDomainPath != null ) {
+			return subDomainPath;
 		}
 
 		if ( isTerminal ) {
 			// assume a column-reference
-			return new ColumnReference( name );
+			return new ColumnReference( name, pluralAttributePath.getNavigablePath() );
 		}
 
-		throw new UnexpectedTokenException(
-				"Could not resolve order-by token : " +
-						pluralAttributeMapping.getCollectionDescriptor().getRole() + " -> " + name
+		throw new PathResolutionException(
+				"Could not resolve order-by path : " +
+						pluralAttributePath.getReferenceModelPart().getCollectionDescriptor().getRole() + " -> " + name
 		);
 	}
 }

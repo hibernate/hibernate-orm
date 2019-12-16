@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.spi;
 
 
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -33,6 +34,7 @@ public class CircularFetchDetector {
 		final NavigablePath navigablePath = fetchParent.getNavigablePath();
 		if ( navigablePath.getParent().getParent() == null ) {
 			return new BiDirectionalFetchImpl(
+					FetchTiming.IMMEDIATE,
 					navigablePath,
 					fetchParent,
 					fetchable,
@@ -41,6 +43,9 @@ public class CircularFetchDetector {
 		}
 		else {
 			return new BiDirectionalFetchImpl(
+					// todo (6.0) : needs to be the parent-parent's fetch timing
+					//  	atm we do not have the ability to get this
+					null,
 					navigablePath.append( fetchable.getFetchableName() ),
 					fetchParent,
 					fetchable,

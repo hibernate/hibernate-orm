@@ -9,6 +9,7 @@ package org.hibernate.orm.test.metamodel.mapping.collections;
 import java.util.Iterator;
 
 import org.hibernate.Hibernate;
+import org.hibernate.persister.collection.CollectionPersister;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.hamcrest.InitializationCheckMatcher;
@@ -172,6 +173,23 @@ public class SetOperationTests {
 					assertThat( first, is( "abc" ) );
 					assertThat( second, is( "def" ) );
 				}
+		);
+	}
+
+	@Test
+	public void testOrderedSet(SessionFactoryScope scope) {
+		// atm we can only check the fragment translation
+		final CollectionPersister collectionDescriptor = scope.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findCollectionDescriptor( EntityOfSets.class.getName() + ".orderedSetOfBasics" );
+		assertThat(
+				collectionDescriptor.getAttributeMapping().getOrderByFragment(),
+				notNullValue()
+		);
+
+		scope.inTransaction(
+				session -> session.createQuery( "from EntityOfSets e join fetch e.orderedSetOfBasics" ).list()
 		);
 	}
 }

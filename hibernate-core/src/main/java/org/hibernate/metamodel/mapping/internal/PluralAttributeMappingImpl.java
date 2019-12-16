@@ -386,6 +386,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			return new EagerCollectionFetch(
 					fetchablePath,
 					this,
+					collectionTableGroup,
 					getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 					fetchParent,
 					creationState

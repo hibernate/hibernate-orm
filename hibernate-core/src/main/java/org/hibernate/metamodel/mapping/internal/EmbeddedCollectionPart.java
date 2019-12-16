@@ -13,9 +13,11 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -41,6 +43,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -115,6 +118,30 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
+	public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
+		return getEmbeddableTypeDescriptor().getJdbcTypeCount( typeConfiguration );
+	}
+
+	@Override
+	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
+		return getEmbeddableTypeDescriptor().getJdbcMappings( typeConfiguration );
+	}
+
+	@Override
+	public void visitJdbcTypes(Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
+		getEmbeddableTypeDescriptor().visitJdbcTypes( action, clause, typeConfiguration );
+	}
+
+	@Override
+	public void visitJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().visitJdbcValues( value, clause, valuesConsumer, session );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -128,6 +155,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				this,
 				fetchParent,
 				FetchTiming.IMMEDIATE,
+				selected,
 				false,
 				creationState
 		);

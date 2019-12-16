@@ -9,12 +9,12 @@ package org.hibernate.sql.ast.spi;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
- * todo (6.0) : most of this is SQM -> SQL specific.  Should move to that package.
- * 		As-is, this complicates SQL AST creation from model walking e.g.
+ * Access to stuff used while creating a SQL AST
  *
  * @author Steve Ebersole
  */

@@ -14,19 +14,24 @@ import org.hibernate.SortOrder;
  *
  * @author Steve Ebersole
  */
-public class SortSpecification implements Node {
-	private final SortExpression sortExpression;
+public class OrderingSpecification implements Node {
+	private final OrderingExpression orderingExpression;
 
 	private String collation;
 	private SortOrder sortOrder;
 	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
 
-	public SortSpecification(SortExpression sortExpression) {
-		this.sortExpression = sortExpression;
+	public OrderingSpecification(OrderingExpression orderingExpression) {
+		this.orderingExpression = orderingExpression;
 	}
 
-	public SortExpression getSortExpression() {
-		return sortExpression;
+	public OrderingSpecification(OrderingExpression orderingExpression, SortOrder sortOrder) {
+		this.orderingExpression = orderingExpression;
+		this.sortOrder = sortOrder;
+	}
+
+	public OrderingExpression getExpression() {
+		return orderingExpression;
 	}
 
 	public String getCollation() {

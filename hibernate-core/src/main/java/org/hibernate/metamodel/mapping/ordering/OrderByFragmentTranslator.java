@@ -8,14 +8,15 @@ package org.hibernate.metamodel.mapping.ordering;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.grammars.ordering.OrderingLexer;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
-import org.hibernate.metamodel.mapping.ordering.ast.SortSpecification;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import org.jboss.logging.Logger;
 
@@ -58,21 +59,24 @@ public class OrderByFragmentTranslator {
 
 		final ParseTreeVisitor visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
 
-		final List<SortSpecification> tree = visitor.visitOrderByFragment( parseTree );
+		final List<OrderingSpecification> specs = visitor.visitOrderByFragment( parseTree );
 
 		return new OrderByFragment() {
-			final List<SortSpecification> sortSpecifications = tree;
+			private final List<OrderingSpecification> fragmentSpecs = specs;
 
 			@Override
-			public List<org.hibernate.sql.ast.tree.select.SortSpecification> toSqlAst(
-					TableGroup tableGroup,
-					SqlAstCreationState creationState) {
-				throw new NotYetImplementedFor6Exception( OrderByFragmentTranslator.class );
-			}
+			public void apply(QuerySpec ast, TableGroup tableGroup, SqlAstCreationState creationState) {
+				for ( int i = 0; i < fragmentSpecs.size(); i++ ) {
+					final OrderingSpecification orderingSpec = fragmentSpecs.get( i );
 
-			@Override
-			public String injectAliases(AliasResolver aliasResolver) {
-				throw new NotYetImplementedFor6Exception( OrderByFragmentTranslator.class );
+					orderingSpec.getExpression().apply(
+							ast,
+							tableGroup,
+							orderingSpec.getCollation(),
+							orderingSpec.getSortOrder(),
+							creationState
+					);
+				}
 			}
 		};
 	}

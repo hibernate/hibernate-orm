@@ -9,8 +9,6 @@ package org.hibernate.sql.ast.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
-
 /**
  * Helper used in creating unique SQL table aliases for a SQL AST
  *
@@ -32,28 +30,4 @@ public class SqlAliasBaseManager implements SqlAliasBaseGenerator {
 		return new SqlAliasBaseImpl( stem + acronymCount );
 	}
 
-	private static class SqlAliasBaseImpl implements SqlAliasBase {
-		private final String stem;
-		private int aliasCount;
-
-		SqlAliasBaseImpl(String stem) {
-			this.stem = stem;
-		}
-
-		@Override
-		public String getAliasStem() {
-			return stem;
-		}
-
-		@Override
-		public String generateNewAlias() {
-			synchronized ( this ) {
-				final String alias = stem + "_" + ( aliasCount++ );
-				if ( SqlTreeCreationLogger.DEBUG_ENABLED ) {
-					SqlTreeCreationLogger.LOGGER.debugf( "Created new SQL alias : %s", alias );
-				}
-				return alias;
-			}
-		}
-	}
 }

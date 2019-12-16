@@ -10,11 +10,11 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -23,8 +23,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @see DomainResultProducer
  * @see javax.persistence.metamodel.Bindable
- *
- * todo (6.0) : do we need to expose ModelPartContainer here?  Only if _necessary_
  *
  * @author Steve Ebersole
  */

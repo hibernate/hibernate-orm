@@ -347,6 +347,8 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 
 		try {
+			prepareQuerySpec( sqlQuerySpec );
+
 			// we want to visit the from-clause first
 			visitFromClause( sqmQuerySpec.getFromClause() );
 
@@ -388,11 +390,19 @@ public abstract class BaseSqmToSqlAstConverter
 			sqlQuerySpec.setLimitClauseExpression( visitLimitExpression( sqmQuerySpec.getLimitExpression() ) );
 			sqlQuerySpec.setOffsetClauseExpression( visitOffsetExpression( sqmQuerySpec.getOffsetExpression() ) );
 
+			postProcessQuerySpec( sqlQuerySpec );
+
 			return sqlQuerySpec;
 		}
 		finally {
 			processingStateStack.pop();
 		}
+	}
+
+	protected void prepareQuerySpec(QuerySpec sqlQuerySpec) {
+	}
+
+	protected void postProcessQuerySpec(QuerySpec sqlQuerySpec) {
 	}
 
 	@Override

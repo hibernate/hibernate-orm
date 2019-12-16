@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -21,7 +23,11 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.DynamicInstantiationNature;
@@ -55,14 +61,14 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
-import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
+import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -129,6 +135,35 @@ public class StandardSqmSelectTranslator
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// walker
 
+	private final Stack<OrderByFragmentConsumer> orderByFragmentConsumerStack = new StandardStack<>();
+
+	private interface OrderByFragmentConsumer {
+		void accept(OrderByFragment orderByFragment, TableGroup tableGroup);
+
+		void visitFragments(BiConsumer<OrderByFragment,TableGroup> consumer);
+	}
+
+	private static class StandardOrderByFragmentConsumer implements OrderByFragmentConsumer {
+		private Map<OrderByFragment, TableGroup> fragments;
+
+		@Override
+		public void accept(OrderByFragment orderByFragment, TableGroup tableGroup) {
+			if ( fragments == null ) {
+				fragments = new LinkedHashMap<>();
+			}
+			fragments.put( orderByFragment, tableGroup );
+		}
+
+		@Override
+		public void visitFragments(BiConsumer<OrderByFragment, TableGroup> consumer) {
+			if ( fragments == null || fragments.isEmpty() ) {
+				return;
+			}
+
+			fragments.forEach( consumer );
+		}
+	}
+
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement statement) {
 		final QuerySpec querySpec = visitQuerySpec( statement.getQuerySpec() );
@@ -136,6 +171,33 @@ public class StandardSqmSelectTranslator
 		return new SelectStatement( querySpec, domainResults );
 	}
 
+	@Override
+	protected void prepareQuerySpec(QuerySpec sqlQuerySpec) {
+		final boolean topLevel = orderByFragmentConsumerStack.isEmpty();
+		if ( topLevel ) {
+			orderByFragmentConsumerStack.push( new StandardOrderByFragmentConsumer() );
+		}
+		else {
+			orderByFragmentConsumerStack.push( null );
+		}
+	}
+
+	@Override
+	protected void postProcessQuerySpec(QuerySpec sqlQuerySpec) {
+		try {
+			final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
+			if ( orderByFragmentConsumer != null ) {
+				orderByFragmentConsumer.visitFragments(
+						(orderByFragment, tableGroup) -> {
+							orderByFragment.apply( sqlQuerySpec, tableGroup, this );
+						}
+				);
+			}
+		}
+		finally {
+			orderByFragmentConsumerStack.pop();
+		}
+	}
 
 	@Override
 	public Void visitSelection(SqmSelection sqmSelection) {
@@ -314,7 +376,7 @@ public class StandardSqmSelectTranslator
 		}
 
 		try {
-			return fetchable.generateFetch(
+			final Fetch fetch = fetchable.generateFetch(
 					fetchParent,
 					fetchablePath,
 					fetchTiming,
@@ -323,6 +385,25 @@ public class StandardSqmSelectTranslator
 					alias,
 					StandardSqmSelectTranslator.this
 			);
+
+			final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
+			if ( orderByFragmentConsumer != null ) {
+				if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+					final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
+					assert tableGroup.getModelPart() == pluralAttributeMapping;
+
+					if ( pluralAttributeMapping.getOrderByFragment() != null ) {
+						orderByFragmentConsumer.accept( pluralAttributeMapping.getOrderByFragment(), tableGroup );
+					}
+
+					if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
+						orderByFragmentConsumer.accept( pluralAttributeMapping.getManyToManyOrderByFragment(), tableGroup );
+					}
+				}
+			}
+
+			return fetch;
 		}
 		catch (RuntimeException e) {
 			throw new HibernateException(

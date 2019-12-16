@@ -257,6 +257,7 @@ public class EmbeddedIdentifierMappingImpl
 				this,
 				fetchParent,
 				fetchTiming,
+				selected,
 				attributeMetadataAccess.resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);

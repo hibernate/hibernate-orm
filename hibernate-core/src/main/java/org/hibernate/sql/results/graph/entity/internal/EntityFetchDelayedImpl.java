@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -41,6 +42,16 @@ public class EntityFetchDelayedImpl extends AbstractNonJoinedEntityFetch {
 		this.nullable = nullable;
 
 		this.keyResult = keyResult;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.DELAYED;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return false;
 	}
 
 	@Override

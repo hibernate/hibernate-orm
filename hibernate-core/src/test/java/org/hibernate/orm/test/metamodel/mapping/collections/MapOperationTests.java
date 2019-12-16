@@ -115,5 +115,9 @@ public class MapOperationTests {
 				collectionDescriptor.getAttributeMapping().getOrderByFragment(),
 				notNullValue()
 		);
+
+		scope.inTransaction(
+				session -> session.createQuery( "from EntityOfMaps e join fetch e.componentByBasicOrdered" ).list()
+		);
 	}
 }

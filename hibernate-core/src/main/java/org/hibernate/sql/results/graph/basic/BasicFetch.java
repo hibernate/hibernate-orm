@@ -51,6 +51,8 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
 
+		// todo (6.0) : account for lazy basic attributes (bytecode)
+
 		//noinspection unchecked
 		this.assembler = new BasicResultAssembler(
 				valuesArrayPosition,
@@ -58,6 +60,16 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 				valueConverter
 		);
 
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return fetchTiming;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return fetchTiming == FetchTiming.IMMEDIATE;
 	}
 
 	@Override

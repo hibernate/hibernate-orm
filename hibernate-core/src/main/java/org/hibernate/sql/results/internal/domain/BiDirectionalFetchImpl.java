@@ -31,16 +31,20 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Andrea Boriero
  */
 public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
+	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
-	private Fetchable fetchable;
-	private NavigablePath referencedNavigablePath;
+	private final Fetchable fetchable;
+
 	private final FetchParent fetchParent;
+	private final NavigablePath referencedNavigablePath;
 
 	public BiDirectionalFetchImpl(
+			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			Fetchable fetchable,
 			NavigablePath referencedNavigablePath) {
+		this.timing = timing;
 		this.fetchParent = fetchParent;
 		this.navigablePath = navigablePath;
 		this.fetchable = fetchable;
@@ -86,6 +90,16 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 				getReferencedPath(),
 				fetchable.getJavaTypeDescriptor()
 		);
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return timing;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return true;
 	}
 
 	@Override

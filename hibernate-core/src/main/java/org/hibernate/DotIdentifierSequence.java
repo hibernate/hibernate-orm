@@ -7,8 +7,7 @@
 package org.hibernate;
 
 /**
- * Hibernate often deals with compound names/paths.  This interface
- * defines a standard way of interacting with them
+ * Hibernate often deals with compound names/paths.  This interface defines a standard way of interacting with them
  *
  * @author Steve Ebersole
  */

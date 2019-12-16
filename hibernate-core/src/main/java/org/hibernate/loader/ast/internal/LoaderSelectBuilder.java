@@ -8,7 +8,9 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -27,6 +29,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -172,9 +175,9 @@ public class LoaderSelectBuilder {
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
 
-
-
 	private SelectStatement generateSelect() {
+		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
 		final List<DomainResult> domainResults;
 
@@ -186,8 +189,6 @@ public class LoaderSelectBuilder {
 				this::visitFetches,
 				creationContext
 		);
-
-		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
@@ -202,6 +203,10 @@ public class LoaderSelectBuilder {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+
+		if ( loadable instanceof PluralAttributeMapping ) {
+			applyOrdering( rootTableGroup, (PluralAttributeMapping) loadable );
+		}
 
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
 			domainResults = new ArrayList<>();
@@ -252,6 +257,12 @@ public class LoaderSelectBuilder {
 				jdbcParameterConsumer,
 				sqlAstCreationState
 		);
+
+		if ( orderByFragments != null ) {
+			orderByFragments.forEach(
+					(orderByFragment, tableGroup) -> orderByFragment.apply( rootQuerySpec, tableGroup, sqlAstCreationState )
+			);
+		}
 
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}
@@ -344,10 +355,31 @@ public class LoaderSelectBuilder {
 		}
 	}
 
+	private Map<OrderByFragment,TableGroup> orderByFragments;
+
+	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
+		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
+			applyOrdering( tableGroup, pluralAttributeMapping.getOrderByFragment() );
+		}
+
+		if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
+			applyOrdering( tableGroup, pluralAttributeMapping.getManyToManyOrderByFragment() );
+		}
+	}
+
+	private void applyOrdering(
+			TableGroup tableGroup,
+			OrderByFragment orderByFragment) {
+		if ( orderByFragments == null ) {
+			orderByFragments = new LinkedHashMap<>();
+		}
+		orderByFragments.put( orderByFragment, tableGroup );
+	}
+
 	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 	private int fetchDepth = 0;
 
-	private List<Fetch> visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
+	private List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
 		log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 
 		final List<Fetch> fetches = new ArrayList<>();
@@ -393,7 +425,7 @@ public class LoaderSelectBuilder {
 			}
 
 			try {
-				if(!(fetchable instanceof BasicValuedModelPart)) {
+				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
 					fetchDepth--;
 				}
 				Fetch fetch = fetchable.generateFetch(
@@ -406,9 +438,18 @@ public class LoaderSelectBuilder {
 						creationState
 				);
 				fetches.add( fetch );
+
+				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE ) {
+					applyOrdering(
+							querySpec,
+							fetchablePath,
+							( (PluralAttributeMapping) fetchable ),
+							creationState
+					);
+				}
 			}
 			finally {
-				if(!(fetchable instanceof BasicValuedModelPart)) {
+				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
 					fetchDepth--;
 				}
 			}
@@ -419,7 +460,22 @@ public class LoaderSelectBuilder {
 		referencedMappingContainer.visitFetchables( processor, null );
 
 		return fetches;
-	}	private SelectStatement generateSelect(SubselectFetch subselect) {
+	}
+
+	private void applyOrdering(
+			QuerySpec ast,
+			NavigablePath navigablePath,
+			PluralAttributeMapping pluralAttributeMapping,
+			LoaderSqlAstCreationState sqlAstCreationState) {
+		assert pluralAttributeMapping.getAttributeName().equals( navigablePath.getLocalName() );
+
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
+		assert tableGroup != null;
+
+		applyOrdering( tableGroup, pluralAttributeMapping );
+	}
+
+	private SelectStatement generateSelect(SubselectFetch subselect) {
 		// todo (6.0) : i think we may even be able to convert this to a join by piecing together
 		//		parts from the subselect-fetch sql-ast..
 
@@ -459,6 +515,9 @@ public class LoaderSelectBuilder {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+
+		// NOTE : no need to check - we are explicitly processing a plural-attribute
+		applyOrdering( rootTableGroup, (PluralAttributeMapping) loadable );
 
 		// generate and apply the restriction
 		applySubSelectRestriction(

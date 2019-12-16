@@ -28,17 +28,22 @@ public interface CollectionPart extends ModelPart, Fetchable {
 		}
 
 		public static Nature fromName(String name) {
+			// NOTE : the `$x$` form comes form order-by handling
+			//		todo (6.0) : ^^ convert these to use the `{x}` form instead?
+
 			if ( "key".equals( name ) || "{key}".equals( name )
 					|| "keys".equals( name ) || "{keys}".equals( name )
 					|| "index".equals( name ) || "{index}".equals( name )
-					|| "indices".equals( name ) || "{indices}".equals( name ) ) {
+					|| "indices".equals( name ) || "{indices}".equals( name )
+					|| "$index$".equals( name )) {
 				return INDEX;
 			}
 
 			if ( "element".equals( name ) || "{element}".equals( name )
 					|| "elements".equals( name ) || "{elements}".equals( name )
 					|| "value".equals( name ) || "{value}".equals( name )
-					|| "values".equals( name ) || "{values}".equals( name ) ) {
+					|| "values".equals( name ) || "{values}".equals( name )
+					|| "$element$".equals( name ) ) {
 				return ELEMENT;
 			}
 

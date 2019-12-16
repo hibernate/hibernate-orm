@@ -33,6 +33,7 @@ import org.hibernate.sql.results.graph.Initializer;
 public class EmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
+	private final boolean hasTableGroup;
 	private final boolean nullable;
 
 	public EmbeddableFetchImpl(
@@ -40,12 +41,14 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			EmbeddableValuedFetchable embeddedPartDescriptor,
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
+			boolean hasTableGroup,
 			boolean nullable,
 			DomainResultCreationState creationState) {
 		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
+		this.hasTableGroup = hasTableGroup;
 		this.nullable = nullable;
 
 		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
@@ -70,6 +73,16 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		);
 
 		afterInitialize( creationState );
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return fetchTiming;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return hasTableGroup;
 	}
 
 	@Override

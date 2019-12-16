@@ -43,20 +43,24 @@ import org.hibernate.sql.results.graph.FetchParent;
  */
 public class LoaderSqlAstCreationState
 		implements SqlAstProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
+	interface FetchProcessor {
+		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
+	}
+
 	private final QuerySpec querySpec;
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 	private final SqlAstCreationContext sf;
 	private final SqlAstQuerySpecProcessingStateImpl processingState;
 	private final FromClauseAccess fromClauseAccess;
 	private final LockOptions lockOptions;
-	private final BiFunction<FetchParent, LoaderSqlAstCreationState, List<Fetch>> fetchProcessor;
+	private final FetchProcessor fetchProcessor;
 
 	public LoaderSqlAstCreationState(
 			QuerySpec querySpec,
 			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseAccess fromClauseAccess,
 			LockOptions lockOptions,
-			BiFunction<FetchParent, LoaderSqlAstCreationState, List<Fetch>> fetchProcessor,
+			FetchProcessor fetchProcessor,
 			SqlAstCreationContext sf) {
 		this.querySpec = querySpec;
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
@@ -83,7 +87,7 @@ public class LoaderSqlAstCreationState
 				sqlAliasBaseManager,
 				new FromClauseIndex(),
 				lockOptions,
-				(fetchParent,state) -> Collections.emptyList(),
+				(fetchParent, ast, state) -> Collections.emptyList(),
 				sf
 		);
 	}
@@ -124,7 +128,7 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return fetchProcessor.apply( fetchParent, this );
+		return fetchProcessor.visitFetches( fetchParent, getQuerySpec(), this );
 	}
 
 	@Override

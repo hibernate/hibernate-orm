@@ -12,7 +12,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * Interpretation of a {@link SqmPath} as part of the translation to SQL AST
+ * Interpretation of a {@link SqmPath} as part of the translation to SQL AST.  We need specialized handling
+ * for path interpretations because it can (and likely) contains multiple SqlExpressions (entity to its columns, e.g.)
  *
  * @see org.hibernate.query.sqm.sql.SqmToSqlAstConverter
  * @see #getInterpretedSqmPath

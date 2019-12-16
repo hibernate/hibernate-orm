@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -47,13 +48,13 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	public EagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
+			TableGroup collectionTableGroup,
 			boolean nullable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		super( fetchedPath, fetchedAttribute, nullable, fetchParent );
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		final TableGroup collectionTableGroup = fromClauseAccess.getTableGroup( fetchedPath );
 		final NavigablePath parentPath = fetchedPath.getParent();
 		final TableGroup parentTableGroup = parentPath == null ? null : fromClauseAccess.findTableGroup( parentPath );
 
@@ -133,6 +134,16 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		collector.accept( initializer );
 
 		return new EagerCollectionAssembler( getFetchedMapping(), initializer );
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean hasTableGroup() {
+		return true;
 	}
 
 	@Override

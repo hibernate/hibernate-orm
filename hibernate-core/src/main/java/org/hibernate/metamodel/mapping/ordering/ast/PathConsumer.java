@@ -30,7 +30,8 @@ public class PathConsumer {
 	private SequencePart currentPart;
 
 	public PathConsumer(
-			PluralAttributeMapping pluralAttributeMapping, TranslationContext translationContext) {
+			PluralAttributeMapping pluralAttributeMapping,
+			TranslationContext translationContext) {
 		this.translationContext = translationContext;
 
 		this.rootSequencePart = new RootSequencePart( pluralAttributeMapping );

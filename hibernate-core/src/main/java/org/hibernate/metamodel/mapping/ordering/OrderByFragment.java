@@ -6,29 +6,24 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
-import java.util.List;
-
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
- * Represents the translation result
+ * Represents the translation result.  Defines the ability to apply the indicated ordering to the SQL AST
+ * being built
  *
  * @author Steve Ebersole
  */
 public interface OrderByFragment {
-	// Something like:
-
-	List<SortSpecification> toSqlAst(TableGroup tableGroup, SqlAstCreationState creationState);
-
 	/**
-	 * Inject table aliases into the translated fragment to properly qualify column references, using
-	 * the given 'aliasResolver' to determine the the proper table alias to use for each column reference.
+	 * Apply the ordering to the given SQL AST
 	 *
-	 * @param aliasResolver The strategy to resolver the proper table alias to use per column
-	 *
-	 * @return The fully translated and replaced fragment.
+	 * @param ast The SQL AST
+	 * @param tableGroup The TableGroup the order-by is applied "against"
+	 * @param creationState The SQL AST creation state
 	 */
-	String injectAliases(AliasResolver aliasResolver);
+	void apply(QuerySpec ast, TableGroup tableGroup, SqlAstCreationState creationState);
 }

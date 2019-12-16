@@ -1281,12 +1281,11 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-
 	public static SingularAssociationAttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			Property bootProperty,
-			ManagedMappingType declaringType,
+			EntityPersister declaringType,
 			EntityType attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
@@ -1316,7 +1315,7 @@ public class MappingModelCreationHelper {
 
 		final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
 
-		return new SingularAssociationAttributeMapping(
+		final SingularAssociationAttributeMapping attributeMapping = new SingularAssociationAttributeMapping(
 				attrName,
 				stateArrayPosition,
 				(ToOne) bootProperty.getValue(),
@@ -1326,6 +1325,25 @@ public class MappingModelCreationHelper {
 				declaringType,
 				propertyAccess
 		);
+		creationProcess.registerInitializationCallback(
+				() -> {
+					final Dialect dialect = creationProcess.getCreationContext()
+							.getSessionFactory()
+							.getJdbcServices()
+							.getDialect();
+
+					MappingModelCreationHelper.interpretKeyDescriptor(
+							attributeMapping,
+							bootProperty,
+							(ToOne) bootProperty.getValue(),
+							declaringType,
+							dialect,
+							creationProcess
+					);
+					return true;
+				}
+		);
+		return attributeMapping;
 	}
 
 }

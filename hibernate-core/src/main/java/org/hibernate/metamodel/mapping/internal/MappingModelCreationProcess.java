@@ -66,12 +66,6 @@ public class MappingModelCreationProcess {
 			entityPersister.prepareMappingModel( this );
 		}
 
-		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
-			currentlyProcessingRole = entityPersister.getEntityName();
-
-			entityPersister.finishMappingModelInitialization( this );
-		}
-
 		while ( postInitCallbacks != null && ! postInitCallbacks.isEmpty() ) {
 			// copy to avoid CCME
 			final ArrayList<PostInitCallback> copy = new ArrayList<>( new ArrayList<>( postInitCallbacks ) );

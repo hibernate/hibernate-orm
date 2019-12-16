@@ -124,7 +124,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -5781,27 +5780,6 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	@Override
-	public void finishMappingModelInitialization(MappingModelCreationProcess creationProcess) {
-		singularAssociationsToFinilize.forEach( (property, singularAssociationAttributeMapping) -> {
-			final Dialect dialect = creationProcess.getCreationContext()
-					.getSessionFactory()
-					.getJdbcServices()
-					.getDialect();
-
-			MappingModelCreationHelper.interpretKeyDescriptor(
-					singularAssociationAttributeMapping,
-					property,
-					(ToOne) property.getValue(),
-					this,
-					dialect,
-					creationProcess
-			);
-		} );
-
-		singularAssociationsToFinilize.clear();
-	}
-
 	protected static SqmMultiTableMutationStrategy interpretSqmMultiTableStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
@@ -5969,8 +5947,6 @@ public abstract class AbstractEntityPersister
 		throw new NotYetImplementedFor6Exception( AbstractEntityPersister.class );
 	}
 
-	Map<Property,SingularAssociationAttributeMapping> singularAssociationsToFinilize = new HashMap<>(  );
-
 	private AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
@@ -6042,7 +6018,6 @@ public abstract class AbstractEntityPersister
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
 			);
-			singularAssociationsToFinilize.put( bootProperty,attributeMapping );
 			return attributeMapping;
 		}
 

@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
@@ -192,14 +191,6 @@ public class EmbeddableMappingType implements ManagedMappingType {
 							(EntityType) subtype,
 							getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),
 							compositeType.getCascadeStyle( attributeIndex ),
-							creationProcess
-					);
-					MappingModelCreationHelper.interpretKeyDescriptor(
-							singularAssociationAttributeMapping,
-							bootPropertyDescriptor,
-							(ToOne) bootPropertyDescriptor.getValue(),
-							entityPersister,
-							dialect,
 							creationProcess
 					);
 					attributeMappings.put( bootPropertyDescriptor.getName(), singularAssociationAttributeMapping );

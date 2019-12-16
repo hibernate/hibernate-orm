@@ -49,7 +49,7 @@ import static org.junit.Assert.fail;
 		PostgreSQL82Dialect.class,
 		SQLServer2012Dialect.class,
 })
-@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
 	@Override

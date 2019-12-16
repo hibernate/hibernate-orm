@@ -50,7 +50,7 @@ import static org.junit.Assert.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQL81Dialect.class)
-@RequiresDialectFeature(value = DialectChecks.SupportSchemaCreation.class)
+@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
 public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 
 	private File output;

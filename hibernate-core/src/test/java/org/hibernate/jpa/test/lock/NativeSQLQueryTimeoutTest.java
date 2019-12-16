@@ -52,7 +52,7 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 				expected.printStackTrace();
 				assertTrue(
 					ExceptionUtil.rootCause(expected)
-						.getMessage().contains("csanceling statement due to user request")
+						.getMessage().contains("canceling statement due to user request")
 				);
 			}
 		} );

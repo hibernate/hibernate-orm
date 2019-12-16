@@ -978,7 +978,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(value = DialectChecks.SupportsMixedTypeArithmetic.class)
+	@RequiresDialectFeature(DialectChecks.SupportsMixedTypeArithmetic.class)
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2951,7 +2951,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(value = DialectChecks.SupportsMixedTypeArithmetic.class)
+	@RequiresDialectFeature(DialectChecks.SupportsMixedTypeArithmetic.class)
 	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();

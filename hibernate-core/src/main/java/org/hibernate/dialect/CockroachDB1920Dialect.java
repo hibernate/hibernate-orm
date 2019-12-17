@@ -6,15 +6,15 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.Types;
 import org.hibernate.dialect.identity.CockroachDB1920IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy;
-import org.hibernate.type.descriptor.sql.*;
-
-import java.sql.*;
-
-import java.sql.DatabaseMetaData;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * An SQL dialect for CockroachDB 19.2 and later. This is the first dialect for CockroachDB. It extends
@@ -81,13 +81,13 @@ public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
     @Override
     public boolean supportsSkipLocked() {
-        // CockroachDB doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+        // CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
         return false;
     }
 
     @Override
     public boolean supportsNoWait() {
-        // CockroachDB doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+        // CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
         return false;
     }
 

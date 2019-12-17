@@ -8,20 +8,17 @@ package org.hibernate.test.optlock;
 
 
 import javax.persistence.PersistenceException;
-
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.CockroachDB1920Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
@@ -178,7 +175,7 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 		else if ( !(cause instanceof StaleObjectStateException) && !(cause instanceof StaleStateException) ) {
-			fail( "expected StaleObjectStateException or StaleStateException exception but is" + cause );
+			fail( "expected StaleObjectStateException or StaleStateException exception but is " + cause );
 		}
 	}
 

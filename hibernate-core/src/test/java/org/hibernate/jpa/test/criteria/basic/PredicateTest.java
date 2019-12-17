@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpa.test.criteria.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -28,6 +26,9 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the various predicates.
@@ -246,7 +247,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5803" )
-	@RequiresDialectFeature(DialectChecks.SupportsMixedTypeArithmetic.class)
+	@RequiresDialectFeature( DialectChecks.SupportsMixedTypeArithmetic.class )
 	public void testQuotientConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

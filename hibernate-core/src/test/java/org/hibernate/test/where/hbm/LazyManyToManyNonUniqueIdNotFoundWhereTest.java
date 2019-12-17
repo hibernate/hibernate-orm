@@ -8,10 +8,7 @@ package org.hibernate.test.where.hbm;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -38,10 +35,10 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 		doInHibernate(
 				this::sessionFactory, session -> {
 
-					session.createSQLQuery("drop table if exists MATERIAL_RATINGS cascade").executeUpdate();
-					session.createSQLQuery("drop table if exists BUILDING_RATINGS cascade").executeUpdate();
-					session.createSQLQuery("drop table if exists ASSOCIATION_TABLE cascade").executeUpdate();
-					session.createSQLQuery("drop table if exists MAIN_TABLE cascade").executeUpdate();
+					session.createSQLQuery( "drop table if exists MATERIAL_RATINGS cascade" ).executeUpdate();
+					session.createSQLQuery( "drop table if exists BUILDING_RATINGS cascade" ).executeUpdate();
+					session.createSQLQuery( "drop table if exists ASSOCIATION_TABLE cascade" ).executeUpdate();
+					session.createSQLQuery( "drop table if exists MAIN_TABLE cascade" ).executeUpdate();
 				}
 		);
 
@@ -162,7 +159,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@TestForIssue( jiraKey = "HHH-12875" )
 	public void testInitializeFromUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -191,7 +188,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12875")
+	@TestForIssue( jiraKey = "HHH-12875" )
 	public void testInitializeFromNonUniqueAssociationTable() {
 		doInHibernate(
 				this::sessionFactory, session -> {

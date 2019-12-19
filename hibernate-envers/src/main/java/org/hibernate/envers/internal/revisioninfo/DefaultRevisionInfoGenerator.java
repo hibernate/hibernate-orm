@@ -65,10 +65,8 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	@Override
 	public void saveRevisionData(Session session, Object revisionData) {
 		session.save( revisionInfoEntityName, revisionData );
-		if ( revisionInfoNumberReader != null ) {
-			if ( revisionInfoNumberReader.getRevisionNumber( revisionData ).longValue() < 0 ) {
-				throw new AuditException( "Negative revision numbers are not allowed" );
-			}
+		if ( revisionInfoNumberReader != null && revisionInfoNumberReader.getRevisionNumber( revisionData ).longValue() < 0 ) {
+			throw new AuditException( "Negative revision numbers are not allowed" );
 		}
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, revisionData );
 	}

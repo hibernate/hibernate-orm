@@ -90,7 +90,7 @@ public class RevisionNumberOverflowTest extends BaseEnversJPAFunctionalTestCase 
 			root = root.getCause();
 		}
 		assertTyping( type, root );
-		assertEquals( root.getMessage(), message );
+		assertEquals( message, root.getMessage() );
 	}
 
 	// We create a custom revision entity here with an explicit configuration for the revision
@@ -102,10 +102,10 @@ public class RevisionNumberOverflowTest extends BaseEnversJPAFunctionalTestCase 
 	@GenericGenerator(name = "EnversCappedRevisionNumberGenerator",
 			strategy = "org.hibernate.id.enhanced.TableGenerator",
 			parameters = {
-			@Parameter(name = TableGenerator.TABLE_PARAM, value = "REVISION_GENERATOR"),
-			@Parameter(name = TableGenerator.INITIAL_PARAM, value = "2147483647"),
-			@Parameter(name = TableGenerator.INCREMENT_PARAM, value = "1"),
-			@Parameter(name = TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, value = "true")
+				@Parameter(name = TableGenerator.TABLE_PARAM, value = "REVISION_GENERATOR"),
+				@Parameter(name = TableGenerator.INITIAL_PARAM, value = "2147483647"),
+				@Parameter(name = TableGenerator.INCREMENT_PARAM, value = "1"),
+				@Parameter(name = TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, value = "true")
 	})
 	@RevisionEntity
 	public static class CustomCappedRevEntity {

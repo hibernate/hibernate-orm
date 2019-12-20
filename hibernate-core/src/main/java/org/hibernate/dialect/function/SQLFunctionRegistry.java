@@ -10,13 +10,14 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 
 /**
  * Defines a registry for SQLFunction instances
  *
  * @author Steve Ebersole
  *
- * @deprecated Replaced by {@link org.hibernate.query.sqm.function.SqmFunction}
+ * @deprecated Replaced by {@link SqmFunction}
  */
 @Deprecated
 public class SQLFunctionRegistry {

@@ -50,7 +50,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -62,7 +61,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.query.sqm.function.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

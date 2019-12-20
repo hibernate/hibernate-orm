@@ -29,7 +29,7 @@ import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.sqm.produce.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;

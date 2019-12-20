@@ -37,7 +37,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.function.SqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -924,42 +925,27 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// non-standard functions
-
-
 	@Override
-	public Object visitFunction(SqmFunction sqmFunction) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		shallownessStack.push( Shallowness.FUNCTION );
-//		try {
-//			return new NonStandardFunction(
-//					sqmFunction.getFunctionName(),
-//					determineValueMapping( sqmFunction ),
-//					visitArguments( sqmFunction.getArguments() )
-//			);
-//		}
-//		finally {
-//			shallownessStack.pop();
-//		}
+	public Expression visitFunction(SqmFunction sqmFunction) {
+		final SqmFunctionDescriptor functionDescriptor = creationContext.getSessionFactory()
+				.getQueryEngine()
+				.getSqmFunctionRegistry()
+				.findFunctionDescriptor( sqmFunction.getFunctionName() );
+
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return functionDescriptor.generateSqlExpression(
+					sqmFunction.getFunctionName(),
+					sqmFunction.getArguments(),
+					inferableTypeAccessStack.getCurrent(),
+					this,
+					this
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
 	}
-
-//	private List<Expression> visitArguments(List<SqmExpression> sqmArguments) {
-//		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
-//			return Collections.emptyList();
-//		}
-//
-//		final ArrayList<Expression> sqlAstArguments = new ArrayList<>();
-//		for ( SqmExpression sqmArgument : sqmArguments ) {
-//			sqlAstArguments.add( (Expression) sqmArgument.accept( this ) );
-//		}
-//
-//		return sqlAstArguments;
-//	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// standard functions
 
 
 //	@Override

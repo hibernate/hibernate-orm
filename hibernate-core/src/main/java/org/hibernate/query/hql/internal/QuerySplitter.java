@@ -18,7 +18,6 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.query.sqm.function.SqmFunction;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -588,14 +587,6 @@ public class QuerySplitter {
 					expression.getOperation(),
 					(SqmExpression) expression.getOperand().accept( this )
 			);
-		}
-
-		@Override
-		public SqmFunction visitFunction(SqmFunction functionProducer) {
-			// todo (6.0) : likely this needs a copy too
-			//		how to model that?
-			//		for now, return the same reference
-			return functionProducer;
 		}
 
 		@Override

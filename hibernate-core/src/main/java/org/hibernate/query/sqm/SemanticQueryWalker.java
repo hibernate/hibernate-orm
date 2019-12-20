@@ -25,8 +25,11 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -39,12 +42,10 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.function.SqmCastTarget;
-import org.hibernate.query.sqm.function.SqmDistinct;
-import org.hibernate.query.sqm.function.SqmExtractUnit;
-import org.hibernate.query.sqm.function.SqmFunction;
-import org.hibernate.query.sqm.function.SqmStar;
-import org.hibernate.query.sqm.function.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -196,15 +197,21 @@ public interface SemanticQueryWalker<T> {
 
 	T visitUnaryOperationExpression(SqmUnaryOperation<?> expression);
 
+	T visitFunction(SqmFunction tSqmFunction);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// expressions - non-standard functions
+	T visitExtractUnit(SqmExtractUnit extractUnit);
 
-	T visitFunction(SqmFunction<?> sqmFunction);
+	T visitCastTarget(SqmCastTarget sqmCastTarget);
+
+	T visitTrimSpecification(SqmTrimSpecification trimSpecification);
+
+	T visitDistinct(SqmDistinct distinct);
+
+	T visitStar(SqmStar sqmStar);
+
+	T visitCoalesce(SqmCoalesce sqmCoalesce);
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// expressions - standard functions
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// predicates
@@ -262,14 +269,4 @@ public interface SemanticQueryWalker<T> {
 	T visitMapEntryFunction(SqmMapEntryReference function);
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
-
-	T visitExtractUnit(SqmExtractUnit extractUnit);
-
-	T visitCastTarget(SqmCastTarget sqmCastTarget);
-
-	T visitTrimSpecification(SqmTrimSpecification trimSpecification);
-
-	T visitDistinct(SqmDistinct distinct);
-
-	T visitStar(SqmStar sqmStar);
 }

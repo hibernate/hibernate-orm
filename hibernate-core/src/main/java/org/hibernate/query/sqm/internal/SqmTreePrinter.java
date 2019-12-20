@@ -27,29 +27,30 @@ import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.function.SqmCastTarget;
-import org.hibernate.query.sqm.function.SqmDistinct;
-import org.hibernate.query.sqm.function.SqmExtractUnit;
-import org.hibernate.query.sqm.function.SqmFunction;
-import org.hibernate.query.sqm.function.SqmStar;
-import org.hibernate.query.sqm.function.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -605,7 +606,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitFunction(SqmFunction sqmFunction) {
+	public Object visitFunction(SqmFunction tSqmFunction) {
+		return null;
+	}
+
+	@Override
+	public Object visitCoalesce(SqmCoalesce sqmCoalesce) {
 		return null;
 	}
 

@@ -6,7 +6,7 @@
  */
 
 /**
- * Package defining support for {@link org.hibernate.query.sqm.produce.function.SqmFunctionTemplate} handling.
+ * Package defining support for {@link org.hibernate.query.sqm.function.SqmFunctionDescriptor} handling.
  * <p/>
  * Between {@link org.hibernate.query.sqm.produce.function.ArgumentsValidator} and
  * {@link org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver} creating

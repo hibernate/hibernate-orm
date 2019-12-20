@@ -47,6 +47,6 @@
  * 				* str 			- generally defined as `cast(?1 as CHAR )`
  * 		* non-standard functions
  * 			* using JPA's function('function_name', [args]*) syntax.
- * 			* directly leveraging Hibernate's {@link org.hibernate.query.sqm.produce.function.SqmFunctionRegistry}
+ * 			* directly leveraging Hibernate's {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}
  */
 package org.hibernate.query.sqm.function;

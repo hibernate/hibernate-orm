@@ -8,16 +8,15 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.Person;
-import org.hibernate.query.sqm.function.SqmCoalesce;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +86,6 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "Support for functions not yet defined" )
 	public void testBasicCoalesceExpression() {
 		SqmSelectStatement select = interpretSelect(
 				"select coalesce(p.nickName, p.mate.nickName) from Person p"
@@ -95,9 +93,9 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 
 		assertThat( select.getQuerySpec().getSelectClause().getSelections(), hasSize( 1 ) );
 
-		final SqmCoalesce<?> coalesce = TestingUtil.cast(
+		final SqmFunction<?> coalesce = TestingUtil.cast(
 				select.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),
-				SqmCoalesce.class
+				SqmFunction.class
 		);
 
 		assertThat( coalesce.getArguments(), hasSize( 2 ) );
@@ -105,7 +103,6 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "Support for functions not yet defined" )
 	public void testBasicNullifExpression() {
 		SqmSelectStatement select = interpretSelect(
 				"select nullif(p.nickName, p.mate.nickName) from Person p"

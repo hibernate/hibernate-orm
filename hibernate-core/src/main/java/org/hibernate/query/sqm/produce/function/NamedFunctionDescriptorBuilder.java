@@ -7,15 +7,17 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.produce.function.spi.NamedSqmFunctionTemplate;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 
 import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class NamedFunctionTemplateBuilder {
-	private static final Logger log = Logger.getLogger( NamedFunctionTemplateBuilder.class );
+public class NamedFunctionDescriptorBuilder {
+	private static final Logger log = Logger.getLogger( NamedFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
@@ -27,54 +29,53 @@ public class NamedFunctionTemplateBuilder {
 
 	private boolean useParenthesesWhenNoArgs;
 
-	public NamedFunctionTemplateBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
+	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;
 		this.functionName = functionName;
 	}
 
-	public NamedFunctionTemplateBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
+	public NamedFunctionDescriptorBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
 		this.argumentsValidator = argumentsValidator;
 		return this;
 	}
 
-	public NamedFunctionTemplateBuilder setArgumentCountBetween(int min, int max) {
+	public NamedFunctionDescriptorBuilder setArgumentCountBetween(int min, int max) {
 		return setArgumentsValidator( StandardArgumentsValidators.between( min, max ) );
 	}
 
-	public NamedFunctionTemplateBuilder setExactArgumentCount(int exactArgumentCount) {
+	public NamedFunctionDescriptorBuilder setExactArgumentCount(int exactArgumentCount) {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
-	public NamedFunctionTemplateBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
+	public NamedFunctionDescriptorBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public NamedFunctionTemplateBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public NamedFunctionDescriptorBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
 
-	public NamedFunctionTemplateBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
+	public NamedFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
 		return this;
 	}
 
-	public SqmFunctionTemplate register() {
+	public SqmFunctionDescriptor register() {
 		return registry.register(
 				registrationKey,
-				template()
+				build()
 		);
 	}
 
-	public SqmFunctionTemplate template() {
-		return new NamedSqmFunctionTemplate(
+	public SqmFunctionDescriptor build() {
+		return new NamedSqmFunctionDescriptor(
+				registrationKey,
 				functionName,
 				useParenthesesWhenNoArgs,
-				argumentsValidator,
-				returnTypeResolver,
-				registrationKey
+				argumentsValidator
 		);
 	}
 }

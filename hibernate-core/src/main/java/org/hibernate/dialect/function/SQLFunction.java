@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.type.Type;
 
 /**
@@ -24,7 +25,7 @@ import org.hibernate.type.Type;
  * @author David Channon
  * @author Steve Ebersole
  *
- * @deprecated Replaced by {@link org.hibernate.query.sqm.function.SqmFunction}
+ * @deprecated Replaced by {@link SqmFunction}
  */
 @Deprecated
 public interface SQLFunction {

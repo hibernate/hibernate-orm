@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 /**
  * @author Steve Ebersole
@@ -100,16 +101,21 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator of(Class<?> javaType) {
 		return arguments -> arguments.forEach(
 				arg -> {
-					Class<?> argType = arg.getNodeType().getExpressableJavaTypeDescriptor().getJavaType();
-					if ( !javaType.isAssignableFrom(argType) ) {
-						throw new QueryException(
-								String.format(
-										Locale.ROOT,
-										"Function expects arguments to be of type %s, but %s found",
-										javaType.getName(),
-										argType.getName()
-								)
-						);
+					if ( arg instanceof SqmTypedNode ) {
+						Class<?> argType = ( (SqmTypedNode) arg ).getNodeType().getExpressableJavaTypeDescriptor().getJavaType();
+						if ( !javaType.isAssignableFrom(argType) ) {
+							throw new QueryException(
+									String.format(
+											Locale.ROOT,
+											"Function expects arguments to be of type %s, but %s found",
+											javaType.getName(),
+											argType.getName()
+									)
+							);
+						}
+					}
+					else {
+						throw new QueryException( "Found un-typed arguments with typed argument validator" );
 					}
 				}
 		);

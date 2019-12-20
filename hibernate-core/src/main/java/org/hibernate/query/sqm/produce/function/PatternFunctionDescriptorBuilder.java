@@ -7,13 +7,15 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.query.sqm.produce.function.spi.PatternBasedSqmFunctionTemplate;
+import org.hibernate.query.sqm.function.PatternBasedSqmFunctionTemplate;
 
 /**
  * @author Steve Ebersole
  */
-public class PatternFunctionTemplateBuilder {
+public class PatternFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
 	private final String pattern;
@@ -23,50 +25,49 @@ public class PatternFunctionTemplateBuilder {
 
 	private boolean useParenthesesWhenNoArgs;
 
-	public PatternFunctionTemplateBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
+	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;
 		this.pattern = pattern;
 	}
 
-	public PatternFunctionTemplateBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
+	public PatternFunctionDescriptorBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
 		this.argumentsValidator = argumentsValidator;
 		return this;
 	}
 
-	public PatternFunctionTemplateBuilder setExactArgumentCount(int exactArgumentCount) {
+	public PatternFunctionDescriptorBuilder setExactArgumentCount(int exactArgumentCount) {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
-	public PatternFunctionTemplateBuilder setArgumentCountBetween(int min, int max) {
+	public PatternFunctionDescriptorBuilder setArgumentCountBetween(int min, int max) {
 		return setArgumentsValidator( StandardArgumentsValidators.between( min, max ) );
 	}
 
-	public PatternFunctionTemplateBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
+	public PatternFunctionDescriptorBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public PatternFunctionTemplateBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public PatternFunctionDescriptorBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
 
-	public PatternFunctionTemplateBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
+	public PatternFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
 		return this;
 	}
 
-	public SqmFunctionTemplate register() {
+	public SqmFunctionDescriptor register() {
 		return registry.register( registrationKey, template() );
 	}
 
-	public SqmFunctionTemplate template() {
+	public SqmFunctionDescriptor template() {
 		return new PatternBasedSqmFunctionTemplate(
 				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
 				argumentsValidator,
-				returnTypeResolver,
-				registrationKey
+				returnTypeResolver
 		);
 	}
 }

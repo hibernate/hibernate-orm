@@ -4,21 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.produce.function.spi;
+package org.hibernate.query.sqm.function;
+
+import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-
-import java.util.List;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that
@@ -33,8 +30,8 @@ import java.util.List;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
 public class PatternBasedSqmFunctionTemplate
-		extends AbstractSelfRenderingFunctionTemplate
-		implements SelfRenderingFunctionSupport {
+		extends AbstractSqmFunctionDescriptor
+		implements FunctionRenderingSupport {
 	private final PatternRenderer renderer;
 
 	/**
@@ -43,11 +40,8 @@ public class PatternBasedSqmFunctionTemplate
 	public PatternBasedSqmFunctionTemplate(
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			String name) {
+			FunctionReturnTypeResolver returnTypeResolver) {
 		super(
-				name,
-				returnTypeResolver,
 				argumentsValidator != null
 						? argumentsValidator
 						// If no validator is given, it's still better to validate against the parameter count as given
@@ -58,16 +52,14 @@ public class PatternBasedSqmFunctionTemplate
 	}
 
 	@Override
-	protected SelfRenderingFunctionSupport getRenderingFunctionSupport(
-			List<SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<?> impliedResultType,
-			QueryEngine queryEngine) {
+	protected FunctionRenderingSupport getRenderingSupport() {
 		return this;
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
+			String functionName,
 			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {

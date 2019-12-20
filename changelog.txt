@@ -3,6 +3,27 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 6.0.0.Alpha4 (December 20, 2019)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31817
+
+** Bug
+    * [HHH-13777] - UnsupportedOperationException is thrown for MappedSuperclass if the id is declared on subclasses
+
+** Task
+    * [HHH-13746] - Implement Load by Multiple Ids using SQL AST
+    * [HHH-13763] - Update all load-by-key handling to use SQL AST
+    * [HHH-13778] - `@OrderBy` handling using SQL AST
+
+** Improvement
+    * [HHH-13718] - secondary tables support
+    * [HHH-13769] - Avoid unnecessary joins
+
+
+
+
 Changes in 5.4.10.Final (December 05, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

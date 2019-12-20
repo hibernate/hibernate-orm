@@ -8,7 +8,7 @@
 apply plugin: 'base'
 
 ext {
-	ormVersion = new HibernateVersion( '6.0.0-SNAPSHOT', project )
+	ormVersion = new HibernateVersion( '6.0.0.Alpha4', project )
 	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
 }
@@ -18,7 +18,7 @@ version = project.ormVersion.fullName
 
 class JpaVersion {
 	/** The *normal* name (1.0, 2.0, ..) */
-	final String name;
+	final String name
 
 	final String osgiName
 

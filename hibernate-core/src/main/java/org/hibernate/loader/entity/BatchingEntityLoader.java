@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.QueryParameters;
@@ -50,11 +51,27 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}
 
+	@Override
+	public Object load(
+			Serializable id,
+			Object optionalObject,
+			SharedSessionContractImplementor session,
+			LockOptions lockOptions,
+			Boolean readOnly) {
+		return load( id, optionalObject, session, lockOptions, readOnly );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) {
+		return load( id, optionalObject, session, LockOptions.NONE, readOnly );
+	}
+
 	protected QueryParameters buildQueryParameters(
 			Serializable id,
 			Serializable[] ids,
 			Object optionalObject,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Boolean readOnly) {
 		Type[] types = new Type[ids.length];
 		Arrays.fill( types, persister().getIdentifierType() );
 
@@ -65,6 +82,9 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 		qp.setOptionalEntityName( persister().getEntityName() );
 		qp.setOptionalId( id );
 		qp.setLockOptions( lockOptions );
+		if ( readOnly != null ) {
+			qp.setReadOnly( readOnly );
+		}
 		return qp;
 	}
 
@@ -88,12 +108,13 @@ public abstract class BatchingEntityLoader implements UniqueEntityLoader {
 			SharedSessionContractImplementor session,
 			Serializable[] ids,
 			Object optionalObject,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Boolean readOnly) {
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister, ids, session.getFactory() ) );
 		}
 
-		QueryParameters qp = buildQueryParameters( id, ids, optionalObject, lockOptions );
+		QueryParameters qp = buildQueryParameters( id, ids, optionalObject, lockOptions, readOnly );
 
 		try {
 			final List results = loaderToUse.doQueryAndInitializeNonLazyCollections( session, qp, false );

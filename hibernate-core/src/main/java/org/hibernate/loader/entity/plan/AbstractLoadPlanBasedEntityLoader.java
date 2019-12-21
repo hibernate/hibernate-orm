@@ -139,8 +139,20 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			final String optionalEntityName,
 			final Serializable optionalId,
 			final EntityPersister persister,
-			LockOptions lockOptions) throws HibernateException {
+			final LockOptions lockOptions) throws HibernateException {
+		return loadEntityBatch( session, ids, idType, optionalObject, optionalEntityName, optionalId, persister, lockOptions, null );
+	}
 
+	public final List loadEntityBatch(
+			final SharedSessionContractImplementor session,
+			final Serializable[] ids,
+			final Type idType,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			final EntityPersister persister,
+			final LockOptions lockOptions,
+			final Boolean readOnly) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister, ids, getFactory() ) );
 		}
@@ -153,7 +165,9 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			qp.setPositionalParameterTypes( types );
 			qp.setPositionalParameterValues( ids );
 			qp.setLockOptions( lockOptions );
-
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			result = executeLoad(
 					session,
 					qp,
@@ -178,11 +192,21 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) throws HibernateException {
-		return load( id, optionalObject, session, LockOptions.NONE );
+		return load( id, optionalObject, session, (Boolean) null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) throws HibernateException {
+		return load( id, optionalObject, session, LockOptions.NONE, readOnly );
 	}
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
+		return load( id, optionalObject, session, lockOptions, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
 
 		final Object result;
 		try {
@@ -193,7 +217,9 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			qp.setOptionalEntityName( entityPersister.getEntityName() );
 			qp.setOptionalId( id );
 			qp.setLockOptions( lockOptions );
-
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			final List results = executeLoad(
 					session,
 					qp,

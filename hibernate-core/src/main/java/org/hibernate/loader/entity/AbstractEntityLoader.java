@@ -8,8 +8,6 @@ package org.hibernate.loader.entity;
 
 import java.io.Serializable;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -46,12 +44,23 @@ public abstract class AbstractEntityLoader
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) {
 		// this form is deprecated!
-		return load( id, optionalObject, session, LockOptions.NONE );
+		return load( id, optionalObject, session, LockOptions.NONE, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) {
+		// this form is deprecated!
+		return load( id, optionalObject, session, LockOptions.NONE, readOnly );
 	}
 
 	@Override
 	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
-		return load( session, id, optionalObject, id, lockOptions );
+		return load( id, optionalObject, session, lockOptions, null );
+	}
+
+	@Override
+	public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
+		return load( session, id, optionalObject, id, lockOptions, readOnly );
 	}
 
 	protected Object load(
@@ -59,7 +68,8 @@ public abstract class AbstractEntityLoader
 			Object id,
 			Object optionalObject,
 			Serializable optionalId,
-			LockOptions lockOptions) {
+			LockOptions lockOptions,
+			Boolean readOnly) {
 
 		List list = loadEntity(
 				session,
@@ -69,7 +79,8 @@ public abstract class AbstractEntityLoader
 				entityName,
 				optionalId,
 				persister,
-				lockOptions
+				lockOptions,
+				readOnly
 			);
 
 		if ( list.size()==1 ) {

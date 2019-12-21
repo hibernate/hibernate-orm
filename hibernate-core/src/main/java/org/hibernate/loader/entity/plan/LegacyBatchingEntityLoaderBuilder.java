@@ -94,6 +94,11 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 
 		@Override
 		public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions) {
+			return load( id, optionalObject, session, lockOptions, null );
+		}
+
+		@Override
+		public Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, LockOptions lockOptions, Boolean readOnly) {
 			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getEntityBatch( persister(), id, batchSizes[0], persister().getEntityMode() );
@@ -112,7 +117,8 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 							persister().getEntityName(),
 							id,
 							persister(),
-							lockOptions
+							lockOptions,
+							readOnly
 					);
 					// The EntityKey for any entity that is not found will remain in the batch.
 					// Explicitly remove the EntityKeys for entities that were not found to

@@ -105,7 +105,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 						id,
 						persister.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
+						(EventSource) session,
+						null
 				);
 
 				Object managedEntity = null;
@@ -231,7 +232,8 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 						id,
 						persister.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
+						(EventSource) session,
+						null
 				);
 
 				Object managedEntity = null;
@@ -397,6 +399,16 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				Object optionalObject,
 				SharedSessionContractImplementor session,
 				LockOptions lockOptions) {
+			return load (id, optionalObject, session, lockOptions, null );
+		}
+
+		@Override
+		public Object load(
+				Serializable id,
+				Object optionalObject,
+				SharedSessionContractImplementor session,
+				LockOptions lockOptions,
+				Boolean readOnly) {
 			final Serializable[] batch = session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.getEntityBatch( persister(), id, maxBatchSize, persister().getEntityMode() );
@@ -419,7 +431,7 @@ public class DynamicBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuil
 				log.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister(), idsToLoad, session.getFactory() ) );
 			}
 
-			QueryParameters qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions );
+			QueryParameters qp = buildQueryParameters( id, idsToLoad, optionalObject, lockOptions, readOnly );
 			List results = dynamicLoader.doEntityBatchFetch( session, qp, idsToLoad );
 
 			// The EntityKey for any entity that is not found will remain in the batch.

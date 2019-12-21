@@ -2389,7 +2389,8 @@ public abstract class Loader {
 			final String optionalEntityName,
 			final Serializable optionalIdentifier,
 			final EntityPersister persister,
-			LockOptions lockOptions) throws HibernateException {
+			final LockOptions lockOptions,
+			final Boolean readOnly) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Loading entity: %s", MessageHelper.infoString( persister, id, identifierType, getFactory() ) );
 		}
@@ -2403,6 +2404,9 @@ public abstract class Loader {
 			qp.setOptionalEntityName( optionalEntityName );
 			qp.setOptionalId( optionalIdentifier );
 			qp.setLockOptions( lockOptions );
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch (SQLException sqle) {
@@ -2477,6 +2481,22 @@ public abstract class Loader {
 			final Serializable optionalId,
 			final EntityPersister persister,
 			LockOptions lockOptions) throws HibernateException {
+		return loadEntityBatch( session, ids, idType, optionalObject, optionalEntityName, optionalId, persister, lockOptions, null );
+	}
+
+	/**
+	 * Called by wrappers that batch load entities
+	 */
+	public final List loadEntityBatch(
+			final SharedSessionContractImplementor session,
+			final Serializable[] ids,
+			final Type idType,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			final EntityPersister persister,
+			final LockOptions lockOptions,
+			final Boolean readOnly) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Batch loading entity: %s", MessageHelper.infoString( persister, ids, getFactory() ) );
 		}
@@ -2492,6 +2512,9 @@ public abstract class Loader {
 			qp.setOptionalEntityName( optionalEntityName );
 			qp.setOptionalId( optionalId );
 			qp.setLockOptions( lockOptions );
+			if ( readOnly != null ) {
+				qp.setReadOnly( readOnly );
+			}
 			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch (SQLException sqle) {

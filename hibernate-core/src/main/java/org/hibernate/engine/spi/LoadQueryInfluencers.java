@@ -52,12 +52,19 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
+	private Boolean readOnly;
+
 	public LoadQueryInfluencers() {
-		this( null );
+		this( null, null );
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
+		this(sessionFactory, null);
+	}
+
+	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Boolean readOnly) {
 		this.sessionFactory = sessionFactory;
+		this.readOnly = readOnly;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -282,4 +289,11 @@ public class LoadQueryInfluencers implements Serializable {
 		effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
 	}
 
+	public Boolean getReadOnly() {
+		return readOnly;
+	}
+
+	public void setReadOnly(Boolean readOnly) {
+		this.readOnly = readOnly;
+	}
 }

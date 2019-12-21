@@ -141,7 +141,11 @@ public class EntityLoader extends AbstractEntityLoader {
 	}
 
 	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key) {
-		return load( session, key, null, null, LockOptions.NONE );
+		return loadByUniqueKey( session, key, null );
+	}
+
+	public Object loadByUniqueKey(SharedSessionContractImplementor session, Object key, Boolean readOnly) {
+		return load( session, key, null, null, LockOptions.NONE, readOnly );
 	}
 
 	@Override

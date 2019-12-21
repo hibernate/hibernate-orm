@@ -151,9 +151,4 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	public SoftLock lockRegion() {
 		return null;
 	}
-
-	@Override
-	public void unlockRegion(SoftLock lock) {
-
-	}
 }

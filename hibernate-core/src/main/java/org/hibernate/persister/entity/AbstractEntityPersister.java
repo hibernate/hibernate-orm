@@ -4359,13 +4359,22 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
+		return doLoad( id, optionalObject, lockOptions, session, null );
+	}
 
+	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+			throws HibernateException {
+		return doLoad( id, optionalObject, lockOptions, session, readOnly );
+	}
+
+	private Object doLoad(Serializable id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}
 
 		final UniqueEntityLoader loader = getAppropriateLoader( lockOptions, session );
-		return loader.load( id, optionalObject, session, lockOptions );
+		return loader.load( id, optionalObject, session, lockOptions, readOnly );
 	}
 
 	@Override

@@ -928,7 +928,7 @@ public final class SessionImpl
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		if ( event == null ) {
-			event = new LoadEvent( id, object, this );
+			event = new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() );
 		}
 		else {
 			event.setEntityClassName( null );
@@ -1059,7 +1059,7 @@ public final class SessionImpl
 	 */
 	private LoadEvent recycleEventInstance(final LoadEvent event, final Serializable id, final String entityName) {
 		if ( event == null ) {
-			return new LoadEvent( id, entityName, true, this );
+			return new LoadEvent( id, entityName, true, this, getReadOnlyFromLoadQueryInfluencers() );
 		}
 		else {
 			event.setEntityClassName( entityName );
@@ -2748,12 +2748,12 @@ public final class SessionImpl
 		@SuppressWarnings("unchecked")
 		protected T doGetReference(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
+				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 				fireLoad( event, LoadEventListener.LOAD );
 				return (T) event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
+			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.LOAD );
@@ -2784,12 +2784,12 @@ public final class SessionImpl
 		@SuppressWarnings("unchecked")
 		protected final T doLoad(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
+				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 				fireLoad( event, LoadEventListener.GET );
 				return (T) event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
+			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this, getReadOnlyFromLoadQueryInfluencers() );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.GET );
@@ -3311,7 +3311,8 @@ public final class SessionImpl
 
 		try {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().applyConfiguredGraph( properties );
-
+			Boolean readOnly = properties == null ? null : (Boolean) properties.get( QueryHints.HINT_READONLY );
+			getLoadQueryInfluencers().setReadOnly( readOnly );
 			final IdentifierLoadAccess<T> loadAccess = byId( entityClass );
 			loadAccess.with( determineAppropriateLocalCacheMode( properties ) );
 
@@ -3366,6 +3367,7 @@ public final class SessionImpl
 		}
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
+			getLoadQueryInfluencers().setReadOnly( null );
 		}
 	}
 
@@ -3785,5 +3787,13 @@ public final class SessionImpl
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
 		}
+	}
+
+	private Boolean getReadOnlyFromLoadQueryInfluencers() {
+		Boolean readOnly = null;
+		if ( loadQueryInfluencers != null ) {
+			readOnly = loadQueryInfluencers.getReadOnly();
+		}
+		return readOnly;
 	}
 }

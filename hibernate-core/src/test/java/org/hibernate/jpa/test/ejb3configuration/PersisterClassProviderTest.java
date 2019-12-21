@@ -264,7 +264,7 @@ public class PersisterClassProviderTest {
 		public boolean hasNaturalIdentifier() {
 			return false;
 		}
-		
+
         @Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
@@ -280,7 +280,7 @@ public class PersisterClassProviderTest {
 				SharedSessionContractImplementor session) {
 			return null;
 		}
-		
+
 		@Override
         public boolean hasNaturalIdCache() {
             return false;

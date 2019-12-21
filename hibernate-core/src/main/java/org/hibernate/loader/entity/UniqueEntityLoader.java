@@ -29,6 +29,10 @@ public interface UniqueEntityLoader {
 	@Deprecated
 	Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session) throws HibernateException;
 
+	default Object load(Serializable id, Object optionalObject, SharedSessionContractImplementor session, Boolean readOnly) throws HibernateException {
+		return load( id, optionalObject, session );
+	}
+
 	/**
 	 * Load an entity instance by id.  If <tt>optionalObject</tt> is supplied (non-<tt>null</tt>,
 	 * the entity state is loaded into that object instance instead of instantiating a new one.
@@ -47,4 +51,13 @@ public interface UniqueEntityLoader {
 			Object optionalObject,
 			SharedSessionContractImplementor session,
 			LockOptions lockOptions);
+
+	default Object load(
+			Serializable id,
+			Object optionalObject,
+			SharedSessionContractImplementor session,
+			LockOptions lockOptions,
+			Boolean readOnly) {
+		return load( id, optionalObject, session, lockOptions );
+	}
 }

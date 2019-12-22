@@ -119,7 +119,7 @@ public class XmlParserHelper {
 		ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
 			staxEventReader = new JpaNamespaceTransformingEventReader( staxEventReader );
-			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class );
+			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class.getPackageName(), getClass().getClassLoader() );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema );
 			unmarshaller.setEventHandler( handler );

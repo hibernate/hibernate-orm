@@ -9,12 +9,12 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.JdbcMetadataBuilder;
 
-public class JdbcMetadataDescriptor implements MetadataDescriptor {
+public class RevengMetadataDescriptor implements MetadataDescriptor {
 	
 	private ReverseEngineeringStrategy reverseEngineeringStrategy = new DefaultReverseEngineeringStrategy();
     private Properties properties = new Properties();
 
-	public JdbcMetadataDescriptor(
+	public RevengMetadataDescriptor(
 			ReverseEngineeringStrategy reverseEngineeringStrategy, 
 			Properties properties) {
 		this.properties.putAll(Environment.getProperties());

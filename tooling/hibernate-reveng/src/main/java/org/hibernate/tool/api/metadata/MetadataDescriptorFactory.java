@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Properties;
 
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.metadata.JdbcMetadataDescriptor;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.metadata.JpaMetadataDescriptor;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 
@@ -13,7 +13,7 @@ public class MetadataDescriptorFactory {
 	public static MetadataDescriptor createReverseEngineeringDescriptor(
 			ReverseEngineeringStrategy reverseEngineeringStrategy, 
 			Properties properties) {
-		return new JdbcMetadataDescriptor(
+		return new RevengMetadataDescriptor(
 				reverseEngineeringStrategy, 
 				properties);
 	}

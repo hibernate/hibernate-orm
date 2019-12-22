@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +43,6 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "function support not yet implemented" )
 	public void testSubQueryWithMaxFunction() {
 		inTransaction(
 				session -> {
@@ -63,7 +61,6 @@ public class SubQueryTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "function support not yet implemented" )
 	public void testSubQueryWithMinFunction() {
 		inTransaction(
 				session -> {

@@ -8,6 +8,10 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -20,6 +24,69 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		//this doesn't work 100% on earlier versions of Sybase
+		//which were missing the third parameter in charindex()
+		//TODO: we could emulate it with substring() like in Postgres
+		CommonFunctionFactory.locate_charindex( queryEngine );
+
+		CommonFunctionFactory.replace_strReplace( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register(
+				"trim", new TransactSQLTrimEmulation(
+						TransactSQLTrimEmulation.LTRIM,
+						TransactSQLTrimEmulation.RTRIM,
+						"str_replace"
+				)
+		);
+
+		//these functions need parens
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.setInvariantType( StandardBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+				.setInvariantType( StandardBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.setInvariantType( StandardBasicTypes.DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.setInvariantType( StandardBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register( "current_instant" );
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+				.setInvariantType( StandardBasicTypes.LOCAL_TIME )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register( "current time" );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.setInvariantType( StandardBasicTypes.LOCAL_DATE )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register( "current date" );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register( "current datetime" );
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.setInvariantType( StandardBasicTypes.INSTANT )
+				.setUseParenthesesWhenNoArgs(true)
+				.setExactArgumentCount( 0 )
+				.register( "current instant" );
+	}
 
 	@Override
 	public int getInExpressionCountLimit() {

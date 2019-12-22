@@ -28,7 +28,6 @@ import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.DateType;
@@ -66,12 +65,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
-		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
-		String dateFunctionRendered = dateFunction.render(
-				null,
-				java.util.Collections.EMPTY_LIST,
-				sessionFactory()
-		);
+		final String dateFunctionRendered = "current_date()";
 
 		String sql = String.format(
 				"select t.TABLE_NAME as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.TABLE_NAME = 'AUDIT_ACTIONS' ",
@@ -97,16 +91,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
-		String dateFunctionRendered = dateFunction.render(
-				null,
-				java.util.Collections.EMPTY_LIST,
-				sessionFactory()
-		);
-		String sql = String.format(
-				"select TABLE_NAME , %s from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ",
-				dateFunctionRendered
-		);
+		String sql = "select TABLE_NAME , current_date() from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
 		s.beginTransaction();
 		s.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();

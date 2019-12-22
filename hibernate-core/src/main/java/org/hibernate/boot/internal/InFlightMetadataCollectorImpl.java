@@ -78,7 +78,6 @@ import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -104,6 +103,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -144,7 +144,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
 	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
 
-	private Map<String, SQLFunction> sqlFunctionMap;
+	private Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// All the annotation-processing-specific state :(
@@ -173,7 +173,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.identifierGeneratorFactory = options.getServiceRegistry()
 				.getService( MutableIdentifierGeneratorFactory.class );
 
-		for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
+		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
 				// we need this to be a ConcurrentHashMap for the one we ultimately pass along to the SF
 				// but is this the reference that gets passed along?
@@ -220,7 +220,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 

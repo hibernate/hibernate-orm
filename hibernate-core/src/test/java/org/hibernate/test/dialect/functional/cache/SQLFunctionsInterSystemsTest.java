@@ -24,7 +24,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
@@ -36,8 +35,6 @@ import org.hibernate.test.legacy.Fixed;
 import org.hibernate.test.legacy.Simple;
 import org.hibernate.test.legacy.Single;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -554,13 +551,13 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"ForLoopReplaceableByForEach"})
 	private String locateAppropriateDialectFunctionNameForAliasTest() {
-		for (Iterator itr = getDialect().getFunctions().entrySet().iterator(); itr.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
-			final SQLFunction function = (SQLFunction) entry.getValue();
-			if ( !function.hasArguments() && !function.hasParenthesesIfNoArguments() ) {
-				return (String) entry.getKey();
-			}
-		}
+//		for (Iterator itr = getDialect().getFunctions().entrySet().iterator(); itr.hasNext(); ) {
+//			final Map.Entry entry = (Map.Entry) itr.next();
+//			final SQLFunction function = (SQLFunction) entry.getValue();
+//			if ( !function.hasArguments() && !function.hasParenthesesIfNoArguments() ) {
+//				return (String) entry.getKey();
+//			}
+//		}
 		return null;
 	}
 

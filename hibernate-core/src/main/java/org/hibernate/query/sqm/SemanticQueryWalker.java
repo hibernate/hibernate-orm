@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -200,6 +201,8 @@ public interface SemanticQueryWalker<T> {
 	T visitFunction(SqmFunction tSqmFunction);
 
 	T visitExtractUnit(SqmExtractUnit extractUnit);
+
+	T visitFormat(SqmFormat sqmFormat);
 
 	T visitCastTarget(SqmCastTarget sqmCastTarget);
 

@@ -11,12 +11,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
-import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.dialect.function.AnsiTrimFunction;
-import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -27,6 +25,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -74,8 +73,6 @@ public class DerbyDialect extends DB2Dialect {
 			LOG.deprecatedDerbyDialect();
 		}
 
-		registerFunction( "concat", new DerbyConcatFunction() );
-		registerFunction( "trim", new AnsiTrimFunction() );
 		registerColumnType( Types.BLOB, "blob" );
 		registerDerbyKeywords();
 		determineDriverVersion();
@@ -85,6 +82,12 @@ public class DerbyDialect extends DB2Dialect {
 		}
 
 		this.limitHandler = new DerbyLimitHandler();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 	}
 
 	private void determineDriverVersion() {

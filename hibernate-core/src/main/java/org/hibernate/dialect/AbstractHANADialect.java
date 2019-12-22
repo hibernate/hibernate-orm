@@ -43,11 +43,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.function.AnsiTrimFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -79,6 +76,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -806,127 +804,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerHibernateType( Types.BLOB, StandardBasicTypes.MATERIALIZED_BLOB.getName() );
 		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.STRING.getName() );
 
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.DATE ) );
-		registerFunction( "to_seconddate", new StandardSQLFunction( "to_seconddate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "to_time", new StandardSQLFunction( "to_time", StandardBasicTypes.TIME ) );
-		registerFunction( "to_timestamp", new StandardSQLFunction( "to_timestamp", StandardBasicTypes.TIMESTAMP ) );
-
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "current_timestamp",
-				new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_utcdate", new NoArgSQLFunction( "current_utcdate", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_utctime", new NoArgSQLFunction( "current_utctime", StandardBasicTypes.TIME, false ) );
-		registerFunction( "current_utctimestamp",
-				new NoArgSQLFunction( "current_utctimestamp", StandardBasicTypes.TIMESTAMP, false ) );
-
-		registerFunction( "add_days", new StandardSQLFunction( "add_days" ) );
-		registerFunction( "add_months", new StandardSQLFunction( "add_months" ) );
-		registerFunction( "add_seconds", new StandardSQLFunction( "add_seconds" ) );
-		registerFunction( "add_years", new StandardSQLFunction( "add_years" ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "days_between", new StandardSQLFunction( "days_between", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "isoweek", new StandardSQLFunction( "isoweek", StandardBasicTypes.STRING ) );
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "localtoutc", new StandardSQLFunction( "localtoutc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "next_day", new StandardSQLFunction( "next_day", StandardBasicTypes.DATE ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP, true ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.STRING ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "seconds_between", new StandardSQLFunction( "seconds_between", StandardBasicTypes.LONG ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "weekday", new StandardSQLFunction( "weekday", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "utctolocal", new StandardSQLFunction( "utctolocal", StandardBasicTypes.TIMESTAMP ) );
-
-		registerFunction( "to_bigint", new StandardSQLFunction( "to_bigint", StandardBasicTypes.LONG ) );
-		registerFunction( "to_binary", new StandardSQLFunction( "to_binary", StandardBasicTypes.BINARY ) );
-		registerFunction( "to_decimal", new StandardSQLFunction( "to_decimal", StandardBasicTypes.BIG_DECIMAL ) );
-		registerFunction( "to_double", new StandardSQLFunction( "to_double", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "to_int", new StandardSQLFunction( "to_int", StandardBasicTypes.INTEGER ) );
-		registerFunction( "to_integer", new StandardSQLFunction( "to_integer", StandardBasicTypes.INTEGER ) );
-		registerFunction( "to_real", new StandardSQLFunction( "to_real", StandardBasicTypes.FLOAT ) );
-		registerFunction( "to_smalldecimal", new StandardSQLFunction( "to_smalldecimal", StandardBasicTypes.BIG_DECIMAL ) );
-		registerFunction( "to_smallint", new StandardSQLFunction( "to_smallint", StandardBasicTypes.SHORT ) );
-		registerFunction( "to_tinyint", new StandardSQLFunction( "to_tinyint", StandardBasicTypes.BYTE ) );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bin2hex", new StandardSQLFunction( "bin2hex", StandardBasicTypes.STRING ) );
-		registerFunction( "bitand", new StandardSQLFunction( "bitand", StandardBasicTypes.LONG ) );
-		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-		registerFunction( "greatest", new StandardSQLFunction( "greatest" ) );
-		registerFunction( "hex2bin", new StandardSQLFunction( "hex2bin", StandardBasicTypes.BINARY ) );
-		registerFunction( "least", new StandardSQLFunction( "least" ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "power", new StandardSQLFunction( "power" ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "uminus", new StandardSQLFunction( "uminus" ) );
-
-		registerFunction( "to_alphanum", new StandardSQLFunction( "to_alphanum", StandardBasicTypes.STRING ) );
-		registerFunction( "to_nvarchar", new StandardSQLFunction( "to_nvarchar", StandardBasicTypes.STRING ) );
-		registerFunction( "to_varchar", new StandardSQLFunction( "to_varchar", StandardBasicTypes.STRING ) );
-
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase", StandardBasicTypes.STRING ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?2, ?1, ?3)" ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", StandardBasicTypes.STRING ) );
-		registerFunction( "nchar", new StandardSQLFunction( "nchar", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
-		registerFunction( "substr_after", new StandardSQLFunction( "substr_after", StandardBasicTypes.STRING ) );
-		registerFunction( "substr_before", new StandardSQLFunction( "substr_before", StandardBasicTypes.STRING ) );
-		registerFunction( "substring", new StandardSQLFunction( "substring", StandardBasicTypes.STRING ) );
-		registerFunction( "trim", new AnsiTrimFunction() );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase", StandardBasicTypes.STRING ) );
-		registerFunction( "unicode", new StandardSQLFunction( "unicode", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "length(to_binary(?1))*8" ) );
-
-		registerFunction( "to_blob", new StandardSQLFunction( "to_blob", StandardBasicTypes.BLOB ) );
-		registerFunction( "to_clob", new StandardSQLFunction( "to_clob", StandardBasicTypes.CLOB ) );
-		registerFunction( "to_nclob", new StandardSQLFunction( "to_nclob", StandardBasicTypes.NCLOB ) );
-
-		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
-		registerFunction( "current_connection",
-				new NoArgSQLFunction( "current_connection", StandardBasicTypes.INTEGER, false ) );
-		registerFunction( "current_schema", new NoArgSQLFunction( "current_schema", StandardBasicTypes.STRING, false ) );
-		registerFunction( "current_user", new NoArgSQLFunction( "current_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "grouping_id", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "(", ",", ")" ) );
-		registerFunction( "ifnull", new StandardSQLFunction( "ifnull" ) );
-		registerFunction( "map", new StandardSQLFunction( "map" ) );
-		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
-		registerFunction( "session_context", new StandardSQLFunction( "session_context" ) );
-		registerFunction( "session_user", new NoArgSQLFunction( "session_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "sysuuid", new NoArgSQLFunction( "sysuuid", StandardBasicTypes.STRING, false ) );
-
 		registerHanaKeywords();
 
 		// createBlob() and createClob() are not supported by the HANA JDBC
@@ -935,6 +812,41 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
+	}
+
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
+
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.bitand( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
+		CommonFunctionFactory.daysBetween( queryEngine );
+		CommonFunctionFactory.secondsBetween( queryEngine );
+		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
+		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );
 	}
 
 	@Override
@@ -1662,5 +1574,11 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	public boolean supportsNoColumnsInsert() {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think HANA needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
 }

@@ -19,7 +19,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -28,6 +27,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.named.NamedQueryRepository;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -195,7 +195,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return delegate.getSqlFunctionMap();
 	}
 

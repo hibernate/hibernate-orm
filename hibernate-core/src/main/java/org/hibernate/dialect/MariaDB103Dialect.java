@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -19,10 +19,11 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class MariaDB103Dialect extends MariaDB102Dialect {
 
-	public MariaDB103Dialect() {
-		super();
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
-		this.registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER) );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "chr", StandardBasicTypes.CHARACTER );
 	}
 
 	@Override

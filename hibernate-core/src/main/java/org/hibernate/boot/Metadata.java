@@ -19,13 +19,13 @@ import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
 /**
  * Represents the ORM model as determined from all provided mapping sources.
@@ -191,5 +191,5 @@ public interface Metadata extends Mapping {
 
 	java.util.Collection<Table> collectTableMappings();
 
-	Map<String,SQLFunction> getSqlFunctionMap();
+	Map<String, SqmFunctionDescriptor> getSqlFunctionMap();
 }

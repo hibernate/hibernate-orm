@@ -34,7 +34,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitTrimSpecification(this);
+		return walker.visitTrimSpecification( this );
 	}
 
 	@Override

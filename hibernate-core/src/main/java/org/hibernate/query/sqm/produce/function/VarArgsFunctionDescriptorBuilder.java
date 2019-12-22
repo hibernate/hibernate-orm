@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.function.FunctionAsExpressionTemplate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -20,17 +20,16 @@ public class VarArgsFunctionDescriptorBuilder {
 	private static final Logger log = Logger.getLogger( VarArgsFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
-	private final String registrationKey;
 
 	private final String begin;
 	private final String sep;
 	private final String end;
 
 	private ArgumentsValidator argumentsValidator;
+	private FunctionReturnTypeResolver returnTypeResolver;
 
-	public VarArgsFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String begin, String sep, String end) {
+	public VarArgsFunctionDescriptorBuilder(SqmFunctionRegistry registry, String begin, String sep, String end) {
 		this.registry = registry;
-		this.registrationKey = registrationKey;
 		this.begin = begin;
 		this.sep = sep;
 		this.end = end;
@@ -54,23 +53,24 @@ public class VarArgsFunctionDescriptorBuilder {
 	}
 
 	public VarArgsFunctionDescriptorBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
-//		this.returnTypeResolver = returnTypeResolver;
+		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public VarArgsFunctionDescriptorBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public VarArgsFunctionDescriptorBuilder setInvariantType(BasicValuedMapping invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
 
-	public SqmFunctionDescriptor register() {
+	public SqmFunctionDescriptor register(String registrationKey) {
 		return registry.register(
 				registrationKey,
 				new FunctionAsExpressionTemplate(
 						begin,
 						sep,
 						end,
-						argumentsValidator
+						argumentsValidator,
+						returnTypeResolver
 				)
 		);
 	}

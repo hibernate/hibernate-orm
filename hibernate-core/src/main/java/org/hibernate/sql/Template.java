@@ -15,9 +15,9 @@ import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -91,26 +91,27 @@ public final class Template {
 		return fragment;
 	}
 
-	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public static String renderWhereStringTemplate(String sqlWhereString, Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return renderWhereStringTemplate(sqlWhereString, TEMPLATE, dialect, functionRegistry);
 	}
 
 	/**
-	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)},
+	 * Same functionality as {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)},
 	 * except that a SQLFunctionRegistry is not provided (i.e., only the dialect-defined functions are
 	 * considered).  This is only intended for use by the annotations project until the
 	 * many-to-many/map-key-from-target-table feature is pulled into core.
 	 *
-	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
+	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SqmFunctionRegistry)} instead
 	 */
 	@Deprecated
 	@SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
+		final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
 		return renderWhereStringTemplate(
 				sqlWhereString,
 				placeholder,
 				dialect,
-				new SQLFunctionRegistry( dialect, java.util.Collections.<String, SQLFunction>emptyMap() )
+				sqmFunctionRegistry
 		);
 	}
 
@@ -125,7 +126,7 @@ public final class Template {
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
 	 */
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SQLFunctionRegistry functionRegistry ) {
+	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry ) {
 
 		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
@@ -629,7 +630,7 @@ public final class Template {
 			String lcToken,
 			String nextToken,
 			Dialect dialect,
-			SQLFunctionRegistry functionRegistry) {
+			SqmFunctionRegistry functionRegistry) {
 		return "(".equals( nextToken ) ||
 				KEYWORDS.contains( lcToken ) ||
 				isType( lcToken, dialect ) ||
@@ -642,20 +643,15 @@ public final class Template {
 		return dialect.isTypeNameRegistered( lcToken );
 	}
 
-	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
+	private static boolean isFunction(String lcToken, String nextToken, SqmFunctionRegistry functionRegistry) {
 		// checking for "(" is currently redundant because it is checked before getting here;
 		// doing the check anyhow, in case that earlier check goes away;
 		if ( "(".equals( nextToken ) ) {
 			return true;
 		}
-		SQLFunction function = functionRegistry.findSQLFunction(lcToken);
-		if ( function == null ) {
-			// lcToken does not refer to a function
-			return false;
-		}
-		// if function.hasParenthesesIfNoArguments() is true, then assume
-		// lcToken is not a function (since it is not followed by '(')
-		return ! function.hasParenthesesIfNoArguments();
+
+		final SqmFunctionDescriptor function = functionRegistry.findFunctionDescriptor( lcToken );
+		return function != null;
 	}
 
 	private static boolean isIdentifier(String token) {

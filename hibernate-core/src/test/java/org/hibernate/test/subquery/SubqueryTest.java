@@ -9,15 +9,17 @@
 
 package org.hibernate.test.subquery;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.FailureExpected;
+
 import org.hibernate.type.Type;
 import org.junit.Test;
 
@@ -33,24 +35,24 @@ import java.util.function.Consumer;
 @RequiresDialect(H2Dialect.class)
 public class SubqueryTest extends BaseCoreFunctionalTestCase {
 
-    private static final SQLFunction LIMIT_FUNCTION = new SQLFunction() {
-        public boolean hasArguments() {
-            return true;
-        }
-
-        public boolean hasParenthesesIfNoArguments() {
-            return true;
-        }
-
-        public Type getReturnType(Type type, Mapping mpng) throws QueryException {
-            return type;
-        }
-
-        public String render(Type type, List list, SessionFactoryImplementor sfi) throws QueryException {
-            String subquery = list.get(0).toString();
-            return subquery.substring(0, subquery.length() - 1) + " limit " + list.get(1) + ")";
-        }
-    };
+//    private static final SQLFunction LIMIT_FUNCTION = new SQLFunction() {
+//        public boolean hasArguments() {
+//            return true;
+//        }
+//
+//        public boolean hasParenthesesIfNoArguments() {
+//            return true;
+//        }
+//
+//        public Type getReturnType(Type type, Mapping mpng) throws QueryException {
+//            return type;
+//        }
+//
+//        public String render(Type type, List list, SessionFactoryImplementor sfi) throws QueryException {
+//            String subquery = list.get(0).toString();
+//            return subquery.substring(0, subquery.length() - 1) + " limit " + list.get(1) + ")";
+//        }
+//    };
 
     @Override
     protected Class<?>[] getAnnotatedClasses() {
@@ -60,40 +62,42 @@ public class SubqueryTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    @FailureExpected
     public void testNestedOrderBySubqueryInFunction() {
-        withLimit(s -> {
-            Query q = s.createQuery(
-                    "SELECT a.id FROM EntityA a " +
-                    "ORDER BY CASE WHEN (" +
-                        "SELECT 1 FROM EntityA s1 " +
-                        "WHERE s1.id IN(" +
-                            "LIMIT(" +
-                                "(" +
-                                    "SELECT 1 FROM EntityA sub " +
-                                    "ORDER BY " +
-                                    "CASE WHEN sub.name IS NULL THEN 1 ELSE 0 END, " +
-                                    "sub.name DESC, " +
-                                    "CASE WHEN sub.id IS NULL THEN 1 ELSE 0 END, " +
-                                    "sub.id DESC" +
-                                ")," +
-                            "1)" +
-                        ")" +
-                    ") = 1 THEN 1 ELSE 0 END"
-            );
-            q.getResultList();
-        });
+        throw new NotYetImplementedFor6Exception( getClass() );
+//        withLimit(s -> {
+//            Query q = s.createQuery(
+//                    "SELECT a.id FROM EntityA a " +
+//                    "ORDER BY CASE WHEN (" +
+//                        "SELECT 1 FROM EntityA s1 " +
+//                        "WHERE s1.id IN(" +
+//                            "LIMIT(" +
+//                                "(" +
+//                                    "SELECT 1 FROM EntityA sub " +
+//                                    "ORDER BY " +
+//                                    "CASE WHEN sub.name IS NULL THEN 1 ELSE 0 END, " +
+//                                    "sub.name DESC, " +
+//                                    "CASE WHEN sub.id IS NULL THEN 1 ELSE 0 END, " +
+//                                    "sub.id DESC" +
+//                                ")," +
+//                            "1)" +
+//                        ")" +
+//                    ") = 1 THEN 1 ELSE 0 END"
+//            );
+//            q.getResultList();
+//        });
     }
 
-    private void withLimit(Consumer<Session> consumer) {
-        rebuildSessionFactory( c -> c.addSqlFunction( "limit", LIMIT_FUNCTION ) );
-
-        try {
-            Session s = openSession();
-            consumer.accept( s );
-        } finally {
-            // Rebuild to remove the function
-            rebuildSessionFactory();
-        }
-    }
+//    private void withLimit(Consumer<Session> consumer) {
+//        rebuildSessionFactory( c -> c.addSqlFunction( "limit", LIMIT_FUNCTION ) );
+//
+//        try {
+//            Session s = openSession();
+//            consumer.accept( s );
+//        } finally {
+//            // Rebuild to remove the function
+//            rebuildSessionFactory();
+//        }
+//    }
 
 }

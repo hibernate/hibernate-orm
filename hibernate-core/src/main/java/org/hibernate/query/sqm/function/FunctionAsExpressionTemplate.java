@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -33,15 +34,16 @@ public class FunctionAsExpressionTemplate
 			String expressionStart,
 			String argumentSeparator,
 			String expressionEnd,
-			ArgumentsValidator argumentsValidator) {
-		super( argumentsValidator );
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		super( argumentsValidator, returnTypeResolver );
 		this.expressionStart = expressionStart;
 		this.argumentSeparator = argumentSeparator;
 		this.expressionEnd = expressionEnd;
 	}
 
 	@Override
-	protected FunctionRenderingSupport getRenderingSupport() {
+	public FunctionRenderingSupport getRenderingSupport() {
 		return this;
 	}
 

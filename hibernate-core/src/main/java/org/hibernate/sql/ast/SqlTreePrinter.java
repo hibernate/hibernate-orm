@@ -17,14 +17,20 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -375,6 +381,36 @@ public class SqlTreePrinter implements SqlAstWalker {
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
 		logNode( "{%s}.{%s}", columnReference.getQualifier(), columnReference.getColumnExpression() );
+	}
+
+	@Override
+	public void visitExtractUnit(ExtractUnit extractUnit) {
+		logNode( extractUnit.getUnit().toString() );
+	}
+
+	@Override
+	public void visitFormat(Format format) {
+		logNode( format.getFormat() );
+	}
+
+	@Override
+	public void visitDistinct(Distinct distinct) {
+		logNode( "{distinct}" );
+	}
+
+	@Override
+	public void visitStar(Star star) {
+		logNode( "{*}" );
+	}
+
+	@Override
+	public void visitTrimSpecification(TrimSpecification trimSpecification) {
+		logNode( "{" + trimSpecification.getSpecification().toSqlText() + "}" );
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
+		logNode( "`" + castTarget.getExpressionType().getJdbcMapping().getSqlTypeDescriptor() + "`" );
 	}
 
 	@Override

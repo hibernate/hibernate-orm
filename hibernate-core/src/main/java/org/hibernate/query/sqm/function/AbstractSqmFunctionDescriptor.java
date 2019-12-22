@@ -9,37 +9,49 @@ package org.hibernate.query.sqm.function;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Support for SQM function descriptors which ultimately render themselves
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescriptor {
+public abstract class AbstractSqmFunctionDescriptor implements SqmSelfRenderingFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
+	private final FunctionReturnTypeResolver returnTypeResolver;
 
-	public AbstractSqmFunctionDescriptor() {
-		this( null );
-	}
-
-	public AbstractSqmFunctionDescriptor(ArgumentsValidator argumentsValidator) {
+	public AbstractSqmFunctionDescriptor(ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
 				: argumentsValidator;
+		this.returnTypeResolver = returnTypeResolver == null
+				? (impliedTypeAccess, arguments) -> impliedTypeAccess.get()
+				: returnTypeResolver;
 	}
 
 	@Override
@@ -70,27 +82,35 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			}
 		}
 
+		final BasicValuedMapping returnType = returnTypeResolver.resolveFunctionReturnType(
+				() -> (BasicValuedMapping) inferableTypeAccess.get(),
+				sqlAstArgs
+		);
+
+
 		return new SelfRenderingSqlFunctionExpression(
-				functionName,
-				inferableTypeAccess.get(),
+				resolveFunctionName( functionName ),
+				returnType,
 				sqlAstArgs,
 				getRenderingSupport()
 		);
 	}
 
-	protected abstract FunctionRenderingSupport getRenderingSupport();
+	protected String resolveFunctionName(String functionName) {
+		return functionName;
+	}
 
 
-	private static class SelfRenderingSqlFunctionExpression implements SelfRenderingExpression {
+	private static class SelfRenderingSqlFunctionExpression implements SelfRenderingExpression, DomainResultProducer {
 		private final String name;
-		private final MappingModelExpressable type;
+		private final BasicValuedMapping type;
 		private final List<SqlAstNode> arguments;
 
 		private final FunctionRenderingSupport renderingSupport;
 
 		public SelfRenderingSqlFunctionExpression(
 				String name,
-				MappingModelExpressable type,
+				BasicValuedMapping type,
 				List<SqlAstNode> arguments,
 				FunctionRenderingSupport renderingSupport) {
 			this.name = name;
@@ -108,8 +128,57 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		}
 
 		@Override
-		public MappingModelExpressable getExpressionType() {
+		public BasicValuedMapping getExpressionType() {
 			return type;
+		}
+
+		@Override
+		public void visitJdbcTypes(
+				Consumer action,
+				TypeConfiguration typeConfiguration) {
+			getExpressionType().visitJdbcTypes( action, Clause.IRRELEVANT, typeConfiguration );
+		}
+
+		@Override
+		public DomainResult createDomainResult(
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			final SqlSelection sqlSelection = resolveSqlSelection( creationState );
+			return new BasicResult(
+					sqlSelection.getValuesArrayPosition(),
+					resultVariable,
+					type.getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
+			);
+		}
+
+		private SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
+			return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+					this,
+					type.getJdbcMapping().getJavaTypeDescriptor(),
+					creationState.getSqlAstCreationState()
+							.getCreationContext()
+							.getSessionFactory()
+							.getTypeConfiguration()
+			);
+		}
+
+		@Override
+		public void applySqlSelections(DomainResultCreationState creationState) {
+			resolveSqlSelection( creationState );
+		}
+
+		@Override
+		public SqlSelection createSqlSelection(
+				int jdbcPosition,
+				int valuesArrayPosition,
+				JavaTypeDescriptor javaTypeDescriptor,
+				TypeConfiguration typeConfiguration) {
+			return new SqlSelectionImpl(
+					jdbcPosition,
+					valuesArrayPosition,
+					this,
+					getExpressionType().getJdbcMapping()
+			);
 		}
 	}
 }

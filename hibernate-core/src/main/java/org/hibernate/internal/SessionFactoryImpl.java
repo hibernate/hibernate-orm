@@ -66,7 +66,6 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -176,8 +175,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient JdbcServices jdbcServices;
 
-	private final transient SQLFunctionRegistry sqlFunctionRegistry;
-
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
 	private final transient RuntimeMetamodels runtimeMetamodels;
@@ -246,7 +243,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		maskOutSensitiveInformation(this.properties);
 		logIfEmptyCompositesEnabled( this.properties );
 
-		this.sqlFunctionRegistry = new SQLFunctionRegistry( jdbcServices.getJdbcEnvironment().getDialect(), options.getCustomSqlFunctionMap() );
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
@@ -299,6 +295,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
+			this.queryEngine = QueryEngine.from( this, bootMetamodel );
+
 			final RuntimeMetamodelsImpl runtimeMetamodels = new RuntimeMetamodelsImpl();
 			this.runtimeMetamodels = runtimeMetamodels;
 			runtimeMetamodels.finishInitialization(
@@ -307,7 +305,8 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 					this
 			);
 
-			this.queryEngine = QueryEngine.from( this, bootMetamodel );
+			this.queryEngine.prepare( this, bootMetamodel, bootstrapContext );
+
 			if ( options.isNamedQueryStartupCheckingEnabled() ) {
 				queryEngine.getNamedQueryRepository().checkNamedQueries( queryEngine );
 			}
@@ -1047,10 +1046,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	public SQLFunctionRegistry getSqlFunctionRegistry() {
-		return sqlFunctionRegistry;
 	}
 
 	public FetchProfile getFetchProfile(String name) {

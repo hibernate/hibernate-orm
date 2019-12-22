@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -20,18 +20,16 @@ public class NamedFunctionDescriptorBuilder {
 	private static final Logger log = Logger.getLogger( NamedFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
-	private final String registrationKey;
 
 	private final String functionName;
 
 	private ArgumentsValidator argumentsValidator;
-	private FunctionReturnTypeResolver returnTypeResolver;
+	private FunctionReturnTypeResolver returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
 
 	private boolean useParenthesesWhenNoArgs;
 
-	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
+	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName) {
 		this.registry = registry;
-		this.registrationKey = registrationKey;
 		this.functionName = functionName;
 	}
 
@@ -53,7 +51,7 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public NamedFunctionDescriptorBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public NamedFunctionDescriptorBuilder setInvariantType(BasicValuedMapping invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
@@ -65,6 +63,13 @@ public class NamedFunctionDescriptorBuilder {
 
 	public SqmFunctionDescriptor register() {
 		return registry.register(
+				functionName,
+				build()
+		);
+	}
+
+	public SqmFunctionDescriptor register(String registrationKey) {
+		return registry.register(
 				registrationKey,
 				build()
 		);
@@ -72,10 +77,10 @@ public class NamedFunctionDescriptorBuilder {
 
 	public SqmFunctionDescriptor build() {
 		return new NamedSqmFunctionDescriptor(
-				registrationKey,
 				functionName,
 				useParenthesesWhenNoArgs,
-				argumentsValidator
+				argumentsValidator,
+				returnTypeResolver
 		);
 	}
 }

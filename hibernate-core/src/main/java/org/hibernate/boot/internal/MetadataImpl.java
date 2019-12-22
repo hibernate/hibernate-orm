@@ -35,7 +35,6 @@ import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
@@ -51,7 +50,7 @@ import org.hibernate.query.internal.NamedQueryRepositoryImpl;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
-import org.hibernate.type.Type;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -81,7 +80,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDefinition> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
-	private final Map<String, SQLFunction> sqlFunctionMap;
+	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
 
 	@SuppressWarnings("WeakerAccess")
@@ -102,7 +101,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDefinition> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
-			Map<String, SQLFunction> sqlFunctionMap,
+			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
@@ -292,7 +291,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 
@@ -308,10 +307,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return new NamedQueryRepositoryImpl(
-				buildNamedHqlMementos( sessionFactory ),
-				buildNamedNativeMementos( sessionFactory ),
-				buildProcedureCallMementos( sessionFactory ),
-				buildResultSetMappingMementos( sessionFactory )
+				new HashMap<>( namedQueryMap.size() ),
+				new HashMap<>( namedNativeQueryMap.size() ),
+				new HashMap<>( namedProcedureCallMap.size() ),
+				new HashMap<>( sqlResultSetMappingMap.size() )
 		);
 	}
 

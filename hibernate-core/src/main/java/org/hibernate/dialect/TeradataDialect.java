@@ -11,12 +11,15 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -25,7 +28,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Jay Nance
  */
 public class TeradataDialect extends Dialect {
-	
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	/**
@@ -33,6 +36,7 @@ public class TeradataDialect extends Dialect {
 	 */
 	public TeradataDialect() {
 		super();
+
 		//registerColumnType data types
 		registerColumnType( Types.NUMERIC, "NUMERIC($p,$s)" );
 		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
@@ -55,32 +59,6 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.BLOB, "BLOB" );
 		registerColumnType( Types.CLOB, "CLOB" );
 
-		registerFunction( "year", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "extract(year from ?1)" ) );
-		registerFunction( "length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "character_length(?1)" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 from ?2 for ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "position(?1 in ?2)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1 mod ?2" ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(255))" ) );
-
-		// bit_length feels a bit broken to me. We have to cast to char in order to
-		// pass when a numeric value is supplied. But of course the answers given will
-		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
-		// a char string but will be 8 or 16 bytes as a true numeric.
-		// Jay Nance 2006-09-22
-		registerFunction(
-				"bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(cast(?1 as char))*4" )
-		);
-
-		// The preference here would be
-		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
-		// but this appears not to work.
-		// Jay Nance 2006-09-22
-		registerFunction( "current_timestamp", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp" ) );
-		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_date" ) );
-		// IBID for current_time and current_date
-
 		registerKeyword( "password" );
 		registerKeyword( "type" );
 		registerKeyword( "title" );
@@ -96,8 +74,127 @@ public class TeradataDialect extends Dialect {
 
 		// Tell hibernate to use getBytes instead of getBinaryStream
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
+
 		// No batch statements
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerPattern(
+				"substring",
+				"substring(?1 from ?2 for ?3)",
+				StandardBasicTypes.STRING
+		);
+		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "(?1 mod ?2)", StandardBasicTypes.STRING );
+
+	}
+
+	@Override
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from,
+			Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp,
+			boolean toTimestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append( "1e9*" );
+
+		}
+		sqlAppender.append( "((" );
+		to.render();
+		sqlAppender.append( " - " );
+		from.render();
+		sqlAppender.append( ") " );
+		switch ( unit ) {
+			case NANOSECOND: {
+				sqlAppender.append( "second(19,9)" );
+				break;
+			}
+			case WEEK: {
+				sqlAppender.append( "day(19,0)" );
+				break;
+			}
+			case QUARTER: {
+				sqlAppender.append( "month(19,0)" );
+				break;
+			}
+			default: {
+				sqlAppender.append( unit.toString() );
+				sqlAppender.append( "(19,0)" );
+			}
+		}
+		sqlAppender.append( ")" );
+		switch ( unit ) {
+			case WEEK: {
+				sqlAppender.append( "/7" );
+				break;
+			}
+			case QUARTER: {
+				sqlAppender.append( "/3" );
+				break;
+			}
+		}
+	}
+
+	@Override
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude,
+			Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		sqlAppender.append( "(" );
+		to.render();
+		boolean subtract = false;
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append( subtract ? " - " : " + " );
+		switch ( unit ) {
+			case NANOSECOND: {
+				sqlAppender.append( "(" );
+				magnitude.render();
+				sqlAppender.append( ")/1e9 * interval '1' second" );
+				break;
+			}
+			case QUARTER: {
+				sqlAppender.append( "(" );
+				magnitude.render();
+				sqlAppender.append( ") * interval '3' month" );
+				break;
+			}
+			case WEEK: {
+				sqlAppender.append( "(" );
+				magnitude.render();
+				sqlAppender.append( ") * interval '7' day" );
+				break;
+			}
+			default: {
+//				if ( magnitude.matches("\\d+") ) {
+//					sqlAppender.append("interval '");
+//					sqlAppender.append( magnitude );
+//					sqlAppender.append("'");
+//				}
+//				else {
+				sqlAppender.append( "(" );
+				magnitude.render();
+				sqlAppender.append( ") * interval '1'" );
+//				}
+				sqlAppender.append( " " );
+				sqlAppender.append( unit.toString() );
+			}
+		}
+		sqlAppender.append( ")" );
 	}
 
 	/**
@@ -161,9 +258,7 @@ public class TeradataDialect extends Dialect {
 	 * @param length the length or precision of the column
 	 * @param precision the precision of the column
 	 * @param scale the scale of the column
-	 *
 	 * @return the database type name
-	 *
 	 * @throws HibernateException
 	 */
 	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
@@ -171,9 +266,9 @@ public class TeradataDialect extends Dialect {
 		 * We might want a special case for 19,2. This is very common for money types
 		 * and here it is converted to 18,1
 		 */
-		float f = precision > 0 ? ( float ) scale / ( float ) precision : 0;
+		float f = precision > 0 ? (float) scale / (float) precision : 0;
 		int p = ( precision > 18 ? 18 : precision );
-		int s = ( precision > 18 ? ( int ) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
+		int s = ( precision > 18 ? (int) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
 
 		return super.getTypeName( code, length, p, s );
 	}

@@ -10,11 +10,12 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole
@@ -32,30 +33,36 @@ public class StandardFunctionReturnTypeResolvers {
 	 * such, this resolver allows the context-impled expression type to be the
 	 * return type so long as the Java types are compatible.
 	 */
-	public static FunctionReturnTypeResolver invariant(AllowableFunctionReturnType invariantType) {
+	public static FunctionReturnTypeResolver invariant(BasicValuedMapping invariantType) {
 		if ( invariantType == null ) {
 			throw new IllegalArgumentException( "Passed `invariantType` for function return cannot be null" );
 		}
 
-		return (impliedType, arguments) -> useImpliedTypeIfPossible( invariantType, impliedType );
+		return (impliedTypeAccess, arguments) -> useImpliedTypeIfPossible( invariantType, impliedTypeAccess.get() );
 	}
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
-		return (impliedType, arguments) -> {
-			final AllowableFunctionReturnType specifiedArgType = extractArgumentType( arguments, argPosition );
-			return useImpliedTypeIfPossible( specifiedArgType, impliedType );
+		return (impliedTypeAccess, arguments) -> {
+			final BasicValuedMapping specifiedArgType = extractArgumentType( arguments, argPosition );
+			return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 		};
 	}
 
 	public static FunctionReturnTypeResolver useFirstNonNull() {
-		return (impliedType, arguments) -> {
-			for (SqmTypedNode<?> arg: arguments) {
-				if (arg!=null && arg.getNodeType() instanceof AllowableFunctionReturnType) {
-					AllowableFunctionReturnType<?> argType = (AllowableFunctionReturnType<?>) arg.getNodeType();
-					return useImpliedTypeIfPossible(argType, impliedType);
+		return (impliedTypeAccess, arguments) -> {
+			for ( SqlAstNode arg: arguments ) {
+				if ( ! ( arg instanceof Expression ) ) {
+					continue;
+				}
+
+				final MappingModelExpressable nodeType = ( (Expression) arg ).getExpressionType();
+				if ( nodeType instanceof BasicValuedMapping ) {
+					final BasicValuedMapping argType = (BasicValuedMapping) nodeType;
+					return useImpliedTypeIfPossible( argType, impliedTypeAccess.get() );
 				}
 			}
-			return impliedType;
+
+			return impliedTypeAccess.get();
 		};
 	}
 
@@ -64,37 +71,47 @@ public class StandardFunctionReturnTypeResolvers {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Internal helpers
 
-	@SuppressWarnings("unchecked")
-	private static AllowableFunctionReturnType<?> useImpliedTypeIfPossible(
-			AllowableFunctionReturnType<?> defined,
-			AllowableFunctionReturnType<?> implied) {
+	private static BasicValuedMapping useImpliedTypeIfPossible(
+			BasicValuedMapping defined,
+			BasicValuedMapping implied) {
+		if ( defined == null ) {
+			return implied;
+		}
+
+		if ( implied == null ) {
+			return defined;
+		}
+
 		return areCompatible( defined, implied ) ? implied : defined;
 	}
 
-	@SuppressWarnings({"unchecked", "SimplifiableIfStatement"})
+	@SuppressWarnings({"SimplifiableIfStatement"})
 	private static boolean areCompatible(
-			AllowableFunctionReturnType<?> defined,
-			AllowableFunctionReturnType<?> implied) {
-		throw new NotYetImplementedFor6Exception( StandardFunctionReturnTypeResolvers.class );
+			BasicValuedMapping defined,
+			BasicValuedMapping implied) {
+		if ( defined == null || implied == null) {
+			return true;
+		}
 
-//		if ( defined == null || defined.getSqlExpressableType() == null ) {
-//			return true;
-//		}
-//
-//		if ( implied == null || implied.getSqlExpressableType() == null ) {
-//			return false;
-//		}
-//
-//		//This list of cases defines legal promotions from a SQL function return
-//		//type specified in the function template (i.e. in the Dialect) and a type
-//		//that is determined by how the function is used in the HQL query. In essence
-//		//the types are compatible if the map to the same JDBC type, of if they are
-//		//both numeric types.
-//		int impliedTypeCode = implied.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-//		int definedTypeCode = defined.getSqlExpressableType().getSqlTypeDescriptor().getJdbcTypeCode();
-//		return impliedTypeCode == definedTypeCode
-//			|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
-//			|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
+		if ( defined.getJdbcMapping() == null ) {
+			return true;
+		}
+
+		if ( implied.getJdbcMapping() == null ) {
+			return true;
+		}
+
+		//This list of cases defines legal promotions from a SQL function return
+		//type specified in the function template (i.e. in the Dialect) and a type
+		//that is determined by how the function is used in the HQL query. In essence
+		//the types are compatible if the map to the same JDBC type, of if they are
+		//both numeric types.
+		int impliedTypeCode = implied.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
+		int definedTypeCode = defined.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
+		return impliedTypeCode == definedTypeCode
+			|| isInteger(impliedTypeCode) && isInteger(definedTypeCode)
+			|| isFloat(impliedTypeCode) && isFloat(definedTypeCode);
+
 	}
 
 	private static boolean isInteger(int type) {
@@ -108,20 +125,23 @@ public class StandardFunctionReturnTypeResolvers {
 		return type == Types.FLOAT || type == Types.DOUBLE;
 	}
 
-	private static AllowableFunctionReturnType extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
-		final SqmTypedNode specifiedArgument = arguments.get( position-1 );
-		final SqmExpressable specifiedArgType = specifiedArgument.getNodeType();
-		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
-			throw new QueryException(
-					String.format(
-							Locale.ROOT,
-							"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
-							specifiedArgument,
-							position
-					)
-			);
+	private static BasicValuedMapping extractArgumentType(List<? extends SqlAstNode> arguments, int position) {
+		final SqlAstNode specifiedArgument = arguments.get( position-1 );
+		final MappingModelExpressable specifiedArgType = specifiedArgument instanceof Expression
+				? ( (Expression) specifiedArgument ).getExpressionType()
+				: null;
+
+		if ( specifiedArgType instanceof BasicValuedMapping ) {
+			return (BasicValuedMapping) specifiedArgType;
 		}
 
-		return (AllowableFunctionReturnType) specifiedArgType;
+		throw new QueryException(
+				String.format(
+						Locale.ROOT,
+						"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
+						specifiedArgument,
+						position
+				)
+		);
 	}
 }

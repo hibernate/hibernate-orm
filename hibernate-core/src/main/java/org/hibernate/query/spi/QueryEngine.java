@@ -7,9 +7,11 @@
 package org.hibernate.query.spi;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
@@ -27,9 +29,9 @@ import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -62,7 +64,7 @@ public class QueryEngine {
 		final SqmTranslatorFactory sqmTranslatorFactory = resolveSqmTranslatorFactory( queryEngineOptions, dialect );
 
 		return new QueryEngine(
-				sessionFactory.getJpaMetamodel(),
+				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
 				metadata.buildNamedQueryRepository( sessionFactory ),
 				hqlTranslator,
 				sqmTranslatorFactory,
@@ -74,8 +76,6 @@ public class QueryEngine {
 		);
 	}
 
-	private final JpaMetamodel jpaMetamodel;
-
 	private final NamedQueryRepository namedQueryRepository;
 	private final SqmCriteriaNodeBuilder criteriaBuilder;
 	private final HqlTranslator hqlTranslator;
@@ -85,7 +85,7 @@ public class QueryEngine {
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 
 	public QueryEngine(
-			JpaMetamodel jpaMetamodel,
+			Supplier<JpaMetamodel> jpaMetamodelAccess,
 			NamedQueryRepository namedQueryRepository,
 			HqlTranslator hqlTranslator,
 			SqmTranslatorFactory sqmTranslatorFactory,
@@ -94,7 +94,6 @@ public class QueryEngine {
 			Dialect dialect,
 			SqmFunctionRegistry userDefinedRegistry,
 			ServiceRegistry serviceRegistry) {
-		this.jpaMetamodel = jpaMetamodel;
 		this.namedQueryRepository = namedQueryRepository;
 		this.sqmTranslatorFactory = sqmTranslatorFactory;
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
@@ -103,7 +102,7 @@ public class QueryEngine {
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
-				jpaMetamodel,
+				jpaMetamodelAccess,
 				serviceRegistry
 		);
 
@@ -124,7 +123,6 @@ public class QueryEngine {
 			NativeQueryInterpreter nativeQueryInterpreter,
 			Dialect dialect,
 			ServiceRegistry serviceRegistry) {
-		this.jpaMetamodel = jpaMetamodel;
 		this.namedQueryRepository = namedQueryRepository;
 		this.sqmTranslatorFactory = null;
 		this.nativeQueryInterpreter = nativeQueryInterpreter;
@@ -134,7 +132,7 @@ public class QueryEngine {
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				this,
-				jpaMetamodel,
+				() -> jpaMetamodel,
 				serviceRegistry
 		);
 
@@ -277,7 +275,12 @@ public class QueryEngine {
 		}
 	}
 
-	public void prepare(SessionFactoryImplementor sessionFactory) {
+	public void prepare(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor bootMetamodel,
+			BootstrapContext bootstrapContext) {
+		namedQueryRepository.prepare( sessionFactory, bootMetamodel, bootstrapContext );
+
 		//checking for named queries
 		if ( sessionFactory.getSessionFactoryOptions().isNamedQueryStartupCheckingEnabled() ) {
 			final Map<String, HibernateException> errors = namedQueryRepository.checkNamedQueries( this );

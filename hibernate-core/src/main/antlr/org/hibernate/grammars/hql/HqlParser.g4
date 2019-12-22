@@ -808,6 +808,14 @@ currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
 	;
 
+formatFunction
+	: FORMAT LEFT_PAREN expression AS format RIGHT_PAREN
+	;
+
+format
+	: STRING_LITERAL
+	;
+
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
 	| datetimeField LEFT_PAREN expression RIGHT_PAREN
@@ -815,8 +823,10 @@ extractFunction
 
 extractField
 	: datetimeField
+	| dayField
+	| weekField
 	| timeZoneField
-	| secondsField
+	| dateOrTimeField
 	;
 
 datetimeField
@@ -828,16 +838,27 @@ datetimeField
 	| HOUR
 	| MINUTE
 	| SECOND
+	| NANOSECOND
 	;
 
-secondsField
-	: MILLISECOND
-	| MICROSECOND
+dayField
+	: DAY OF MONTH
+	| DAY OF WEEK
+	| DAY OF YEAR
+	;
+
+weekField
+	: WEEK OF MONTH
+	| WEEK OF YEAR
 	;
 
 timeZoneField
-	: TIMEZONE_HOUR
-	| TIMEZONE_MINUTE
+	: OFFSET (HOUR | MINUTE)?
+	;
+
+dateOrTimeField
+	: DATE
+	| TIME
 	;
 
 positionFunction

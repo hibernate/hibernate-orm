@@ -15,12 +15,10 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
@@ -201,11 +199,11 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-			return;
-		}
+//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+//			return;
+//		}
 
 		inTransaction(
 				s -> {
@@ -257,11 +255,11 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-			return;
-		}
+//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+//			return;
+//		}
 
 		EntityWithFunctionAsColumnHolder holder1 = new EntityWithFunctionAsColumnHolder();
 		EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
@@ -317,11 +315,11 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-			return;
-		}
+//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+//			return;
+//		}
 
 		EntityWithNoArgFunctionAsColumn e1 = new EntityWithNoArgFunctionAsColumn();
 		EntityWithNoArgFunctionAsColumn e2 = new EntityWithNoArgFunctionAsColumn();
@@ -360,11 +358,11 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@After
 	public void cleanup() {
-		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-			return;
-		}
+//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
+//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+//			return;
+//		}
 		inTransaction(
 				s -> {
 					s.createQuery( "delete from EntityWithArgFunctionAsColumn" ).executeUpdate();

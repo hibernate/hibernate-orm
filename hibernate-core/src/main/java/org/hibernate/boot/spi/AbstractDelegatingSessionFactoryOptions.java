@@ -24,13 +24,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -370,7 +370,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Map<String, SQLFunction> getCustomSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap() {
 		return delegate.getCustomSqlFunctionMap();
 	}
 

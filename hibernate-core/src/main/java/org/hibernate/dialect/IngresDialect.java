@@ -10,15 +10,14 @@ import java.sql.Types;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
 import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -56,6 +55,7 @@ public class IngresDialect extends Dialect {
 	 */
 	public IngresDialect() {
 		super();
+
 		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.TINYINT, "tinyint" );
 		registerColumnType( Types.SMALLINT, "smallint" );
@@ -81,75 +81,6 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bit_add", new StandardSQLFunction( "bit_add" ) );
-		registerFunction( "bit_and", new StandardSQLFunction( "bit_and" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(hex(?1))*4" ) );
-		registerFunction( "bit_not", new StandardSQLFunction( "bit_not" ) );
-		registerFunction( "bit_or", new StandardSQLFunction( "bit_or" ) );
-		registerFunction( "bit_xor", new StandardSQLFunction( "bit_xor" ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.LONG ) );
-		registerFunction( "charextract", new StandardSQLFunction( "charextract", StandardBasicTypes.STRING ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "+", ")" ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "current_user", new NoArgSQLFunction( "current_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "date('now')", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dba", new NoArgSQLFunction( "dba", StandardBasicTypes.STRING, true ) );
-		registerFunction( "dow", new StandardSQLFunction( "dow", StandardBasicTypes.STRING ) );
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "date_part('?1', ?3)" ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "gmt_timestamp", new StandardSQLFunction( "gmt_timestamp", StandardBasicTypes.STRING ) );
-		registerFunction( "hash", new StandardSQLFunction( "hash", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hex", new StandardSQLFunction( "hex", StandardBasicTypes.STRING ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "initial_user", new NoArgSQLFunction( "initial_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "intextract", new StandardSQLFunction( "intextract", StandardBasicTypes.INTEGER ) );
-		registerFunction( "left", new StandardSQLFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.LONG, "locate(?1, ?2)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.LONG ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "lowercase", new StandardSQLFunction( "lowercase" ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardBasicTypes.LONG ) );
-		registerFunction( "pad", new StandardSQLFunction( "pad", StandardBasicTypes.STRING ) );
-		registerFunction( "position", new StandardSQLFunction( "position", StandardBasicTypes.LONG ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "random", new NoArgSQLFunction( "random", StandardBasicTypes.LONG, true ) );
-		registerFunction( "randomf", new NoArgSQLFunction( "randomf", StandardBasicTypes.DOUBLE, true ) );
-		registerFunction( "right", new StandardSQLFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "session_user", new NoArgSQLFunction( "session_user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "size", new NoArgSQLFunction( "size", StandardBasicTypes.LONG, true ) );
-		registerFunction( "squeeze", new StandardSQLFunction( "squeeze" ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)" ) );
-		registerFunction( "system_user", new NoArgSQLFunction( "system_user", StandardBasicTypes.STRING, false ) );
-		//registerFunction( "trim", new StandardSQLFunction( "trim", StandardBasicTypes.STRING ) );
-		registerFunction( "unhex", new StandardSQLFunction( "unhex", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "uppercase", new StandardSQLFunction( "uppercase" ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "usercode", new NoArgSQLFunction( "usercode", StandardBasicTypes.STRING, true ) );
-		registerFunction( "username", new NoArgSQLFunction( "username", StandardBasicTypes.STRING, true ) );
-		registerFunction( "uuid_create", new StandardSQLFunction( "uuid_create", StandardBasicTypes.BYTE ) );
-		registerFunction( "uuid_compare", new StandardSQLFunction( "uuid_compare", StandardBasicTypes.INTEGER ) );
-		registerFunction( "uuid_from_char", new StandardSQLFunction( "uuid_from_char", StandardBasicTypes.BYTE ) );
-		registerFunction( "uuid_to_char", new StandardSQLFunction( "uuid_to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		// Casting to char of numeric values introduces space padding up to the
-		// maximum width of a value for that return type.  Casting to varchar
-		// does not introduce space padding.
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -161,10 +92,100 @@ public class IngresDialect extends Dialect {
 		// rows, a single row with one column, or a single row with two columns.
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
+
 		// There is no support for a native boolean type that accepts values
 		// of true, false or unknown. Using the tinyint type requires
 		// substitions of true and false.
 		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Common functions
+
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardBasicTypes.INTEGER );
+
+		bitwiseFunctions(queryEngine);
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "squeeze" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.register();
+
+	}
+
+	static void bitwiseFunctions(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_and" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitand", "bit_and");
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_or" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitor", "bit_xor");
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_xor" )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitxor", "bit_xor");
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_not" )
+				.setExactArgumentCount( 1 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bit_not");
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

@@ -20,9 +20,8 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
@@ -366,7 +365,7 @@ public interface MetadataBuilder {
 	 */
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
-	MetadataBuilder applySqlFunction(String functionName, SQLFunction function);
+	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);
 
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 

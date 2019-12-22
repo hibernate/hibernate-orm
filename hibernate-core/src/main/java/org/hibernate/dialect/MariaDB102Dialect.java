@@ -6,10 +6,10 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
-
 import java.sql.Types;
+
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.StandardBasicTypes;
 
 public class MariaDB102Dialect extends MariaDB10Dialect {
 
@@ -17,8 +17,13 @@ public class MariaDB102Dialect extends MariaDB10Dialect {
 		super();
 
 		this.registerColumnType( Types.JAVA_OBJECT, "json" );
-		this.registerFunction( "json_valid", new StandardSQLFunction( "json_valid", StandardBasicTypes.NUMERIC_BOOLEAN ) );
+	}
 
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "json_valid", StandardBasicTypes.NUMERIC_BOOLEAN );
 	}
 
 	@Override

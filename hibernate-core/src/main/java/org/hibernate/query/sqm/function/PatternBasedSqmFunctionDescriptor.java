@@ -6,16 +6,9 @@
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.List;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that
@@ -29,41 +22,24 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class PatternBasedSqmFunctionTemplate
-		extends AbstractSqmFunctionDescriptor
-		implements FunctionRenderingSupport {
+public class PatternBasedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
 	private final PatternRenderer renderer;
 
-	/**
+		/**
 	 * Constructs a pattern-based function template
 	 */
-	public PatternBasedSqmFunctionTemplate(
+	public PatternBasedSqmFunctionDescriptor(
 			PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		super(
-				argumentsValidator != null
-						? argumentsValidator
-						// If no validator is given, it's still better to validate against the parameter count as given
-						// by the pattern than accepting every input blindly and producing wrong output
-						: StandardArgumentsValidators.exactly( renderer.getParamCount() )
-		);
+		super( argumentsValidator, returnTypeResolver );
 		this.renderer = renderer;
 	}
 
 	@Override
-	protected FunctionRenderingSupport getRenderingSupport() {
-		return this;
+	public FunctionRenderingSupport getRenderingSupport() {
+		return (sqlAppender, functionName, sqlAstArguments, walker, sessionFactory) -> {
+			renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+		};
 	}
-
-	@Override
-	public void render(
-			SqlAppender sqlAppender,
-			String functionName,
-			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory) {
-		renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
-	}
-
 }

@@ -18,7 +18,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashMap;
+import java.time.temporal.TemporalAccessor;
+
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +31,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -43,11 +47,9 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardAnsiSqlAggregationFunctions;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TimestampaddFunction;
+import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -97,6 +99,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -128,6 +131,13 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import static org.hibernate.type.descriptor.DateTimeUtils.formatAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestamp;
+import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsJdbcDateLiteral;
+import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsJdbcTimeLiteral;
+import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsJdbcTimestampLiteral;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.  Subclasses implement Hibernate compatibility
@@ -169,7 +179,6 @@ public abstract class Dialect implements ConversionContext {
 	private final TypeNames hibernateTypeNames = new TypeNames();
 
 	private final Properties properties = new Properties();
-	private final Map<String, SQLFunction> sqlFunctions = new HashMap<>();
 	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final UniqueDelegate uniqueDelegate;
@@ -180,33 +189,6 @@ public abstract class Dialect implements ConversionContext {
 
 	protected Dialect() {
 		LOG.usingDialect( this );
-		StandardAnsiSqlAggregationFunctions.primeFunctionMap( sqlFunctions );
-
-		// standard sql92 functions (can be overridden by subclasses)
-		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
-		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "cast", new CastFunction() );
-		registerFunction( "extract", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
-
-		//map second/minute/hour/day/month/year to ANSI extract(), override on subclasses
-		registerFunction( "second", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(second from ?1)") );
-		registerFunction( "minute", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(minute from ?1)") );
-		registerFunction( "hour", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(hour from ?1)") );
-		registerFunction( "day", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(day from ?1)") );
-		registerFunction( "month", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(month from ?1)") );
-		registerFunction( "year", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(year from ?1)") );
-
-		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as char)") );
 
 		registerColumnType( Types.BIT, "bit" );
 		registerColumnType( Types.BOOLEAN, "boolean" );
@@ -264,15 +246,200 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
 		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
 
-		if(supportsPartitionBy()) {
+		if ( supportsPartitionBy() ) {
 			registerKeyword( "PARTITION" );
 		}
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 	}
 
+	/**
+	 * todo (6.0) : add this to the HQL/SQM language guide
+	 *
+	 * Initialize the given registry with any dialect-specific functions.
+	 *
+	 * Support for certain SQL functions is required, and if the database
+	 * does not support a required function, then the dialect must define
+	 * a way to emulate it.
+	 *
+	 * These required functions include the functions defined by the JPA
+	 * query language specification:
+	 *
+	 * 		* avg
+	 * 		* count
+	 * 		* max, min
+	 * 		* sum
+	 *
+	 * 		* coalesce
+	 * 		* nullif
+	 *
+	 * 		* concat
+	 * 		* locate
+	 * 		* substring
+	 * 		* trim
+	 * 		* lower, upper
+	 * 		* length
+	 *
+	 * 		* abs
+	 * 		* mod
+	 * 		* sqrt
+	 *
+	 * 		* current_date
+	 * 		* current_time
+	 * 		* current_timestamp
+	 *
+	 * Along with an additional set of functions defined by ANSI SQL:
+	 *
+	 * 		* cast
+	 * 		* extract
+	 *      * ln, exp
+	 *      * power
+	 *      * floor, ceiling
+	 *
+	 * And a number of additional "standard" functions:
+	 *
+	 *      * replace
+	 *      * least, greatest
+	 *      * sign
+	 *      * sin, cos, tan, asin, acos, atan, atan2
+	 *      * round
+	 *
+	 * And the following functions for working with java.time types:
+	 *
+	 *      * current date
+	 *      * current time
+	 *      * current datetime
+	 *      * current instant
+	 *
+	 * In addition to the above functions, HQL implements the
+	 * following additional "standard" functions as synonyms:
+	 *
+	 *      * format
+	 *
+	 *      * ifnull        - two-argument synonym for coalesce
+	 *
+	 * 	    * position      - ANSI SQL alternative syntax for locate
+	 *
+	 * 		* str 			- defined as `cast(arg as varchar)`
+	 *
+	 * 		* second		- defined as `extract(second from arg)`
+	 * 		* minute		- defined as `extract(minute from arg)`
+	 * 		* hour			- defined as `extract(hour from arg)`
+	 * 		* day			- defined as `extract(day from arg)`
+	 * 		* month			- defined as `extract(month from arg)`
+	 * 		* year			- defined as `extract(year from arg)`
+	 *
+	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 
+		//aggregate functions, supported on every database
+
+		CommonFunctionFactory.aggregates( queryEngine);
+
+		//math functions supported on almost every database
+
+		CommonFunctionFactory.math(queryEngine);
+
+		//trig functions supported on almost every database
+
+		CommonFunctionFactory.trigonometry(queryEngine);
+
+		//coalesce function, must be redefined in terms of nvl where not supported
+
+		CommonFunctionFactory.coalesce(queryEngine);
+
+		//nullif function, supported on almost every database
+
+		CommonFunctionFactory.nullif(queryEngine);
+
+		//string functions, must be redefined where not supported
+
+		CommonFunctionFactory.characterLength(queryEngine);
+		CommonFunctionFactory.locate(queryEngine);
+		CommonFunctionFactory.substring(queryEngine);
+		CommonFunctionFactory.replace(queryEngine);
+		CommonFunctionFactory.concat(queryEngine);
+		CommonFunctionFactory.lowerUpper(queryEngine);
+
+		//ANSI SQL functions with weird syntax, not supported on every database
+
+		CommonFunctionFactory.trim(queryEngine);
+		CommonFunctionFactory.cast(queryEngine);
+		CommonFunctionFactory.extract(queryEngine);
+
+		//TODO: currently not used because concrete Dialects don't redefine it
+//		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder("position", "position(?1 in ?2)")
+//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+//				.setExactArgumentCount(2)
+//				.register();
+
+		//ANSI current date/time functions, supported on almost every database
+
+		CommonFunctionFactory.currentDateTimeTimestamp(queryEngine);
+
+		//comparison functions supported on every known database
+
+		CommonFunctionFactory.leastGreatest(queryEngine);
+
+		//datetime formatting function, Oracle-style to_char() on most databases
+
+		CommonFunctionFactory.formatdatetime_toChar(queryEngine);
+
+		//timestampadd/timestampdiff implemented by Dialect itself
+
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TimestampaddFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TimestampdiffFunction( this ) );
+
+	}
+
+	public interface Renderer {
+		void render();
+	}
+
+	public interface Appender {
+		void append(String text);
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampdiff() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param from the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param fromTimestamp true if the first argument is
+	 *                      a timestamp, false if a date
+	 * @param toTimestamp true if the second argument is
+	 *                    a timestamp, false if a date
+	 */
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from,
+			Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		throw new NotYetImplementedFor6Exception();
+	}
+
+	/**
+	 * Write SQL equivalent to a timestampadd() function
+	 * to the given {@link Appender}.
+	 *
+	 * @param unit the first argument of timestampdiff()
+	 * @param magnitude the second argument of timestampdiff()
+	 * @param to the third argument of timestampdiff()
+	 * @param sqlAppender an {@link Appender} to write to
+	 * @param timestamp true if the second argument is a
+	 *                  timestamp, false if a date
+	 */
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude,
+			Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	/**
@@ -751,25 +918,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	protected void registerHibernateType(int code, String name) {
 		hibernateTypeNames.put( code, name );
-	}
-
-
-	// function support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	protected void registerFunction(String name, SQLFunction function) {
-		// HHH-7721: SQLFunctionRegistry expects all lowercase.  Enforce,
-		// just in case a user's customer dialect uses mixed cases.
-		sqlFunctions.put( name.toLowerCase( Locale.ROOT ), function );
-	}
-
-	/**
-	 * Retrieves a map of the dialect's registered functions
-	 * (functionName => {@link SQLFunction}).
-	 *
-	 * @return The map of registered functions.
-	 */
-	public final Map<String, SQLFunction> getFunctions() {
-		return sqlFunctions;
 	}
 
 
@@ -3138,4 +3286,71 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+
+	public String translateDatetimeFormat(String format) {
+		//most databases support a datetime format
+		//copied from Oracle's to_char() function,
+		//with some minor variation
+		return Oracle8iDialect.datetimeFormat( format, true ).result();
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "dd";
+			case DAY_OF_YEAR: return "dy";
+			case DAY_OF_WEEK: return "dw";
+			default: return unit.toString();
+		}
+	}
+
+	protected String wrapTimestampLiteral(String timestamp) {
+		return wrapAsJdbcTimestampLiteral(timestamp);
+	}
+
+	protected String wrapDateLiteral(String date) {
+		return wrapAsJdbcDateLiteral(date);
+	}
+
+	protected String wrapTimeLiteral(String time) {
+		return wrapAsJdbcTimeLiteral(time);
+	}
+
+	public String formatDateTimeLiteral(TemporalAccessor temporalAccessor, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(temporalAccessor) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(temporalAccessor) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(temporalAccessor) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Date date, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(date) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(date) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(date) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision) {
+		switch ( precision ) {
+			case DATE:
+				return wrapDateLiteral( formatAsDate(calendar) );
+			case TIME:
+				return wrapTimeLiteral( formatAsTime(calendar) );
+			case TIMESTAMP:
+				return wrapTimestampLiteral( formatAsTimestamp(calendar) );
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
 }

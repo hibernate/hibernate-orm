@@ -11,8 +11,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -27,12 +26,13 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -77,16 +77,56 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "concat", new StandardSQLFunction( "concat", StandardBasicTypes.STRING ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("timestampadd(sql_tsi_");
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+		}
+		else {
+			sqlAppender.append(unit.toString());
+		}
+		//TODO: millisecond, microsecond
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("timestampdiff(sql_tsi_");
+		if (unit == TemporalUnit.NANOSECOND) {
+			sqlAppender.append("frac_second");
+
+		}
+		else {
+			sqlAppender.append(unit.toString());
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

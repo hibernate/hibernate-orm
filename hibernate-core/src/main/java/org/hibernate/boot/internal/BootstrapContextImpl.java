@@ -34,12 +34,12 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -74,7 +74,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private IndexView jandexView;
 
-	private HashMap<String,SQLFunction> sqlFunctionMap;
+	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
@@ -194,7 +194,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
 		return sqlFunctionMap == null ? Collections.emptyMap() : sqlFunctionMap;
 	}
 
@@ -299,7 +299,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.jandexView = jandexView;
 	}
 
-	public void addSqlFunction(String functionName, SQLFunction function) {
+	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( this.sqlFunctionMap == null ) {
 			this.sqlFunctionMap = new HashMap<>();
 		}

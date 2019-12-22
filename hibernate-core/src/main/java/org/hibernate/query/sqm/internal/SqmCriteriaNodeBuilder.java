@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
@@ -121,27 +122,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public static SqmCriteriaNodeBuilder create(SessionFactoryImplementor sf) {
 		return new SqmCriteriaNodeBuilder( 
 				sf.getQueryEngine(),
-				sf.getRuntimeMetamodels().getJpaMetamodel(),
+				() -> sf.getRuntimeMetamodels().getJpaMetamodel(),
 				sf.getServiceRegistry()
 		);
 	}
 
 	private final QueryEngine queryEngine;
-	private final JpaMetamodel domainModel;
+	private final Supplier<JpaMetamodel> domainModelAccess;
 	private final ServiceRegistry serviceRegistry;
 
 	public SqmCriteriaNodeBuilder(
 			QueryEngine queryEngine,
-			JpaMetamodel domainModel,
+			Supplier<JpaMetamodel> domainModelAccess,
 			ServiceRegistry serviceRegistry) {
 		this.queryEngine = queryEngine;
-		this.domainModel = domainModel;
+		this.domainModelAccess = domainModelAccess;
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
 	public JpaMetamodel getDomainModel() {
-		return domainModel;
+		return domainModelAccess.get();
 	}
 
 	@Override
@@ -156,7 +157,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public JpaMetamodel getJpaMetamodel() {
-		return domainModel;
+		return domainModelAccess.get();
 	}
 
 	public void close() {

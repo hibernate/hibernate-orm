@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.function;
 import java.util.Locale;
 
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 
 /**
  * Provides a standard implementation that supports the majority of the HQL
@@ -21,24 +21,30 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Steve Ebersole
  */
 public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
-	private final String functionKey;
 	private final String functionName;
-	private final boolean useParenthesesWhenNoArgs;
+	private final FunctionRenderingSupport renderingSupport;
 
 	public NamedSqmFunctionDescriptor(
-			String functionKey,
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator) {
-		super( argumentsValidator );
-		this.functionKey = functionKey;
-
-		this.functionName = functionName;
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+		this(
+				functionName,
+				useParenthesesWhenNoArgs,
+				argumentsValidator,
+				(impliedTypeAccess, arguments) -> impliedTypeAccess.get()
+		);
 	}
 
-	public String getFunctionKey() {
-		return functionKey;
+	public NamedSqmFunctionDescriptor(
+			String functionName,
+			boolean useParenthesesWhenNoArgs,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		super( argumentsValidator, returnTypeResolver );
+
+		this.functionName = functionName;
+		this.renderingSupport = new StandardFunctionRenderingSupport( useParenthesesWhenNoArgs );
 	}
 
 	public String getFunctionName() {
@@ -46,28 +52,13 @@ public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
 	}
 
 	@Override
-	protected FunctionRenderingSupport getRenderingSupport() {
-		return (sqlAppender, functionName1, sqlAstArguments, walker, sessionFactory) -> {
-			final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
+	protected String resolveFunctionName(String functionName) {
+		return this.functionName;
+	}
 
-			sqlAppender.appendSql( functionName );
-			if ( useParens ) {
-				sqlAppender.appendSql( "(" );
-			}
-
-			boolean firstPass = true;
-			for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
-				if ( !firstPass ) {
-					sqlAppender.appendSql( ", " );
-				}
-				sqlAstArgument.accept( walker );
-				firstPass = false;
-			}
-
-			if ( useParens ) {
-				sqlAppender.appendSql( ")" );
-			}
-		};
+	@Override
+	public FunctionRenderingSupport getRenderingSupport() {
+		return renderingSupport;
 	}
 
 	@Override

@@ -14,14 +14,7 @@ import java.sql.Types;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.ConditionalParenthesisFunction;
-import org.hibernate.dialect.function.ConvertFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardJDBCEscapeFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.Chache71IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -41,10 +34,14 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * Cach&eacute; 2007.1 dialect.
@@ -206,7 +203,6 @@ public class Cache71Dialect extends Dialect {
 	public Cache71Dialect() {
 		super();
 		commonRegistration();
-		register71Functions();
 		this.limitHandler = new TopLimitHandler( true, true );
 	}
 
@@ -242,131 +238,102 @@ public class Cache71Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	}
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "acos", new StandardJDBCEscapeFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%alphaup", new StandardSQLFunction( "%alphaup", StandardBasicTypes.STRING ) );
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.STRING ) );
-		registerFunction( "asin", new StandardJDBCEscapeFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardJDBCEscapeFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "($length(?1)*8)" ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardJDBCEscapeFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "cos", new StandardJDBCEscapeFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardJDBCEscapeFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-		registerFunction( "convert", new ConvertFunction() );
-		registerFunction( "curdate", new StandardJDBCEscapeFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction(
-				"current_timestamp", new ConditionalParenthesisFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP )
+	static void useJdbcEscape(QueryEngine queryEngine, String name) {
+		queryEngine.getSqmFunctionRegistry().wrapInJdbcEscape(
+				name,
+				queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( name )
 		);
-		registerFunction( "curtime", new StandardJDBCEscapeFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "database", new StandardJDBCEscapeFunction( "database", StandardBasicTypes.STRING ) );
-		registerFunction( "dateadd", new VarArgsSQLFunction( StandardBasicTypes.TIMESTAMP, "dateadd(", ",", ")" ) );
-		registerFunction( "datediff", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datediff(", ",", ")" ) );
-		registerFunction( "datename", new VarArgsSQLFunction( StandardBasicTypes.STRING, "datename(", ",", ")" ) );
-		registerFunction( "datepart", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datepart(", ",", ")" ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardJDBCEscapeFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofmonth", new StandardJDBCEscapeFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardJDBCEscapeFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardJDBCEscapeFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		// is it necessary to register %exact since it can only appear in a where clause?
-		registerFunction( "%exact", new StandardSQLFunction( "%exact", StandardBasicTypes.STRING ) );
-		registerFunction( "exp", new StandardJDBCEscapeFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%external", new StandardSQLFunction( "%external", StandardBasicTypes.STRING ) );
-		registerFunction( "$extract", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$extract(", ",", ")" ) );
-		registerFunction( "$find", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$find(", ",", ")" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", StandardBasicTypes.INTEGER ) );
-		registerFunction( "getdate", new StandardSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "hour", new StandardJDBCEscapeFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "ifnull", new VarArgsSQLFunction( "ifnull(", ",", ")" ) );
-		registerFunction( "%internal", new StandardSQLFunction( "%internal" ) );
-		registerFunction( "isnull", new VarArgsSQLFunction( "isnull(", ",", ")" ) );
-		registerFunction( "isnumeric", new StandardSQLFunction( "isnumeric", StandardBasicTypes.INTEGER ) );
-		registerFunction( "lcase", new StandardJDBCEscapeFunction( "lcase", StandardBasicTypes.STRING ) );
-		registerFunction( "left", new StandardJDBCEscapeFunction( "left", StandardBasicTypes.STRING ) );
-		registerFunction( "len", new StandardSQLFunction( "len", StandardBasicTypes.INTEGER ) );
-		registerFunction( "$length", new VarArgsSQLFunction( "$length(", ",", ")" ) );
-		registerFunction( "$list", new VarArgsSQLFunction( "$list(", ",", ")" ) );
-		registerFunction( "$listdata", new VarArgsSQLFunction( "$listdata(", ",", ")" ) );
-		registerFunction( "$listfind", new VarArgsSQLFunction( "$listfind(", ",", ")" ) );
-		registerFunction( "$listget", new VarArgsSQLFunction( "$listget(", ",", ")" ) );
-		registerFunction( "$listlength", new StandardSQLFunction( "$listlength", StandardBasicTypes.INTEGER ) );
-		registerFunction( "locate", new StandardSQLFunction( "$FIND", StandardBasicTypes.INTEGER ) );
-		registerFunction( "log", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "minute", new StandardJDBCEscapeFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "mod", new StandardJDBCEscapeFunction( "mod", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "month", new StandardJDBCEscapeFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "now", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "nullif", new VarArgsSQLFunction( "nullif(", ",", ")" ) );
-		registerFunction( "nvl", new NvlFunction() );
-		registerFunction( "%odbcin", new StandardSQLFunction( "%odbcin" ) );
-		registerFunction( "%odbcout", new StandardSQLFunction( "%odbcin" ) );
-		registerFunction( "%pattern", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%pattern", "" ) );
-		registerFunction( "pi", new StandardJDBCEscapeFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "$piece", new VarArgsSQLFunction( StandardBasicTypes.STRING, "$piece(", ",", ")" ) );
-		registerFunction( "position", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "position(", " in ", ")" ) );
-		registerFunction( "power", new VarArgsSQLFunction( StandardBasicTypes.STRING, "power(", ",", ")" ) );
-		registerFunction( "quarter", new StandardJDBCEscapeFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "repeat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "repeat(", ",", ")" ) );
-		registerFunction( "replicate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "replicate(", ",", ")" ) );
-		registerFunction( "right", new StandardJDBCEscapeFunction( "right", StandardBasicTypes.STRING ) );
-		registerFunction( "round", new VarArgsSQLFunction( StandardBasicTypes.FLOAT, "round(", ",", ")" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
-		registerFunction( "second", new StandardJDBCEscapeFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sin", new StandardJDBCEscapeFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "%sqlstring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlstring(", ",", ")" ) );
-		registerFunction( "%sqlupper", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlupper(", ",", ")" ) );
-		registerFunction( "sqrt", new StandardJDBCEscapeFunction( "SQRT", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "%startswith", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%startswith", "" ) );
-		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as char varying)" ) );
-		registerFunction( "string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "string(", ",", ")" ) );
-		// note that %string is deprecated
-		registerFunction( "%string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%string(", ",", ")" ) );
-		registerFunction( "substr", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substr(", ",", ")" ) );
-		registerFunction( "substring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substring(", ",", ")" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "tan", new StandardJDBCEscapeFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "timestampadd", new StandardJDBCEscapeFunction( "timestampadd", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "timestampdiff", new StandardJDBCEscapeFunction( "timestampdiff", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tochar", new VarArgsSQLFunction( StandardBasicTypes.STRING, "tochar(", ",", ")" ) );
-		registerFunction( "to_char", new VarArgsSQLFunction( StandardBasicTypes.STRING, "to_char(", ",", ")" ) );
-		registerFunction( "todate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
-		registerFunction( "to_date", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
-		registerFunction( "tonumber", new StandardSQLFunction( "tonumber" ) );
-		registerFunction( "to_number", new StandardSQLFunction( "tonumber" ) );
-		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
-		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
-		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
-		registerFunction( "truncate", new StandardJDBCEscapeFunction( "truncate", StandardBasicTypes.STRING ) );
-		registerFunction( "ucase", new StandardJDBCEscapeFunction( "ucase", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		// %upper is deprecated
-		registerFunction( "%upper", new StandardSQLFunction( "%upper" ) );
-		registerFunction( "user", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "week", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.INTEGER ) );
-		registerFunction( "xmlconcat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlconcat(", ",", ")" ) );
-		registerFunction( "xmlelement", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlelement(", ",", ")" ) );
-		// xmlforest requires a new kind of function constructor
-		registerFunction( "year", new StandardJDBCEscapeFunction( "year", StandardBasicTypes.INTEGER ) );
 	}
 
-	protected final void register71Functions() {
-		this.registerFunction( "str", new VarArgsSQLFunction( StandardBasicTypes.STRING, "str(", ",", ")" ) );
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.repeat_replicate( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "$find(?2, ?1)", "$find(?2, ?1, ?3)");
+
+		useJdbcEscape(queryEngine, "sin");
+		useJdbcEscape(queryEngine, "cos");
+		useJdbcEscape(queryEngine, "tan");
+		useJdbcEscape(queryEngine, "asin");
+		useJdbcEscape(queryEngine, "acos");
+		useJdbcEscape(queryEngine, "atan");
+		useJdbcEscape(queryEngine, "atan2");
+		useJdbcEscape(queryEngine, "exp");
+		useJdbcEscape(queryEngine, "log");
+		useJdbcEscape(queryEngine, "log10");
+		useJdbcEscape(queryEngine, "pi");
+		useJdbcEscape(queryEngine, "truncate");
+
+		useJdbcEscape(queryEngine, "left");
+		useJdbcEscape(queryEngine, "right");
+
+		useJdbcEscape(queryEngine, "hour");
+		useJdbcEscape(queryEngine, "minute");
+		useJdbcEscape(queryEngine, "second");
+		useJdbcEscape(queryEngine, "week");
+		useJdbcEscape(queryEngine, "quarter");
+		useJdbcEscape(queryEngine, "dayname");
+		useJdbcEscape(queryEngine, "monthname");
+		useJdbcEscape(queryEngine, "dayofweek");
+		useJdbcEscape(queryEngine, "dayofmonth");
+		useJdbcEscape(queryEngine, "dayofyear");
 	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("millisecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("/1e6");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -677,5 +644,11 @@ public class Cache71Dialect extends Dialect {
 	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I don't think Cache needs FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
 	}
 }

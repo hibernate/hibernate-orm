@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -18,13 +19,17 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  * @author Gavin King
  */
 public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
-	private String name;
-	private AllowableFunctionReturnType type;
+	private final TemporalUnit unit;
+	private final AllowableFunctionReturnType type;
 
-	public SqmExtractUnit(String name, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
+	public SqmExtractUnit(TemporalUnit unit, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+		this.unit = unit;
 		this.type = type;
-		this.name = name;
+	}
+
+	public TemporalUnit getTemporalUnit() {
+		return unit;
 	}
 
 	public AllowableFunctionReturnType getType() {
@@ -32,12 +37,8 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitExtractUnit(this);
-	}
-
-	public String getUnitName() {
-		return name;
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitExtractUnit( this );
 	}
 
 	@Override

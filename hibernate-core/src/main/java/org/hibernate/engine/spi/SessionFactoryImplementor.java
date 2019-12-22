@@ -24,7 +24,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
@@ -129,9 +128,6 @@ public interface SessionFactoryImplementor
 
 
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
-
-	SQLFunctionRegistry getSqlFunctionRegistry();
-
 
 	void addObserver(SessionFactoryObserver observer);
 

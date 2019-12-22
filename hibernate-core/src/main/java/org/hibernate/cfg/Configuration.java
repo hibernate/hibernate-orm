@@ -49,11 +49,11 @@ import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
@@ -103,7 +103,7 @@ public class Configuration {
 	private Map<String, NamedResultSetMappingDefinition> sqlResultSetMappings;
 	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
-	private Map<String, SQLFunction> sqlFunctions;
+	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class, ConverterDescriptor> attributeConverterDescriptorsByClass;
 
@@ -688,8 +688,8 @@ public class Configuration {
 			}
 		}
 
-		if ( sqlFunctions != null ) {
-			for ( Map.Entry<String, SQLFunction> entry : sqlFunctions.entrySet() ) {
+		if ( customFunctionDescriptors != null ) {
+			for ( Map.Entry<String, SqmFunctionDescriptor> entry : customFunctionDescriptors.entrySet() ) {
 				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
 			}
 		}
@@ -748,15 +748,15 @@ public class Configuration {
 
 
 
-	public Map<String,SQLFunction> getSqlFunctions() {
-		return sqlFunctions;
+	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
+		return customFunctionDescriptors;
 	}
 
-	public void addSqlFunction(String functionName, SQLFunction function) {
-		if ( sqlFunctions == null ) {
-			sqlFunctions = new HashMap<String, SQLFunction>();
+	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
+		if ( customFunctionDescriptors == null ) {
+			customFunctionDescriptors = new HashMap<>();
 		}
-		sqlFunctions.put( functionName, function );
+		customFunctionDescriptors.put( functionName, function );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {

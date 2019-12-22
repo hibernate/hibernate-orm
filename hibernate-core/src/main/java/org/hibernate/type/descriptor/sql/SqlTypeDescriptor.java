@@ -27,9 +27,20 @@ public interface SqlTypeDescriptor extends Serializable {
 	/**
 	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
 	 *
+	 * @apiNote Prefer {@link #getJdbcTypeCode}
+	 *
 	 * @return typeCode The JDBC type-code
 	 */
 	int getSqlType();
+
+	/**
+	 * Get the JDBC type code associated with this SQL type descriptor
+	 *
+	 * @see #getSqlType
+	 */
+	default int getJdbcTypeCode() {
+		return getSqlType();
+	}
 
 	/**
 	 * Is this descriptor available for remapping?

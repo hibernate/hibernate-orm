@@ -63,8 +63,11 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -72,6 +75,8 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -116,8 +121,13 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -142,6 +152,8 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -930,7 +942,7 @@ public abstract class BaseSqmToSqlAstConverter
 		final SqmFunctionDescriptor functionDescriptor = creationContext.getSessionFactory()
 				.getQueryEngine()
 				.getSqmFunctionRegistry()
-				.findFunctionDescriptor( sqmFunction.getFunctionName() );
+				.getFunctionDescriptor( sqmFunction.getFunctionName() );
 
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
@@ -947,8 +959,57 @@ public abstract class BaseSqmToSqlAstConverter
 		}
 	}
 
+	@Override
+	public Star visitStar(SqmStar sqmStar) {
+		return new Star();
+	}
 
-//	@Override
+	@Override
+	public Object visitDistinct(SqmDistinct sqmDistinct) {
+		return new Distinct( (Expression) sqmDistinct.getExpression().accept( this ) );
+	}
+
+	@Override
+	public Object visitTrimSpecification(SqmTrimSpecification specification) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return new TrimSpecification( specification.getSpecification() );
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitCastTarget(SqmCastTarget target) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			final JavaTypeDescriptor jtd = target.getNodeType().getExpressableJavaTypeDescriptor();
+			final BasicType basicType = creationContext.getDomainModel()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( jtd.getJavaType() );
+			return new CastTarget( basicType );
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	@Override
+	public Object visitExtractUnit(SqmExtractUnit unit) {
+		shallownessStack.push( Shallowness.FUNCTION );
+		try {
+			return new ExtractUnit(
+					unit.getTemporalUnit(),
+					(BasicValuedMapping) unit.getType()
+			);
+		}
+		finally {
+			shallownessStack.pop();
+		}
+	}
+
+	//	@Override
 //	public Object visitAbsFunction(SqmAbsFunction function) {
 //		shallownessStack.push( Shallowness.FUNCTION );
 //

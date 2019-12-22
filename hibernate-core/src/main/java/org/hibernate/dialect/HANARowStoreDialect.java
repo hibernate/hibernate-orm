@@ -6,9 +6,12 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.PhysicalIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 /**
@@ -38,16 +41,18 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
-//
-//			@Override
-//			public String getCreateIdTableCommand() {
-//				return "create global temporary row table";
-//			}
-//		}, AfterUseAction.CLEAN );
+		return new GlobalTemporaryTableStrategy(
+				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				() -> new PhysicalIdTableExporter() {
+					@Override
+					protected String getCreateCommand() {
+						return "create global temporary row table";
+					}
+				},
+				AfterUseAction.CLEAN,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 }

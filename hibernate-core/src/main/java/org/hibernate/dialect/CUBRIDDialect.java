@@ -9,16 +9,23 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CUBRIDExtractEmulation;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.CUBRIDLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -57,151 +64,6 @@ public class CUBRIDDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bin", new StandardSQLFunction( "bin", StandardBasicTypes.STRING ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.LONG ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.LONG ) );
-		registerFunction( "lengthb", new StandardSQLFunction( "lengthb", StandardBasicTypes.LONG ) );
-		registerFunction( "lengthh", new StandardSQLFunction( "lengthh", StandardBasicTypes.LONG ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "trim", new StandardSQLFunction( "trim" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log2", new StandardSQLFunction( "log2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "random", new NoArgSQLFunction( "random", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-
-		registerFunction( "ceil", new StandardSQLFunction( "ceil", StandardBasicTypes.INTEGER ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", StandardBasicTypes.INTEGER ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-
-		registerFunction( "datediff", new StandardSQLFunction( "datediff", StandardBasicTypes.INTEGER ) );
-		registerFunction( "timediff", new StandardSQLFunction( "timediff", StandardBasicTypes.TIME ) );
-
-		registerFunction( "date", new StandardSQLFunction( "date", StandardBasicTypes.DATE ) );
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "sys_date", new NoArgSQLFunction( "sys_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
-
-		registerFunction( "time", new StandardSQLFunction( "time", StandardBasicTypes.TIME ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "sys_time", new NoArgSQLFunction( "sys_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "systime", new NoArgSQLFunction( "systime", StandardBasicTypes.TIME, false ) );
-
-		registerFunction( "timestamp", new StandardSQLFunction( "timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction(
-				"current_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
-		)
-		);
-		registerFunction(
-				"sys_timestamp", new NoArgSQLFunction(
-				"sys_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
-		)
-		);
-		registerFunction( "systimestamp", new NoArgSQLFunction( "systimestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "localtime", new NoArgSQLFunction( "localtime", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction(
-				"localtimestamp", new NoArgSQLFunction(
-				"localtimestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
-		)
-		);
-
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "from_days", new StandardSQLFunction( "from_days", StandardBasicTypes.DATE ) );
-		registerFunction( "from_unixtime", new StandardSQLFunction( "from_unixtime", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "months_between", new StandardSQLFunction( "months_between", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "sec_to_time", new StandardSQLFunction( "sec_to_time", StandardBasicTypes.TIME ) );
-		registerFunction( "time_to_sec", new StandardSQLFunction( "time_to_sec", StandardBasicTypes.INTEGER ) );
-		registerFunction( "to_days", new StandardSQLFunction( "to_days", StandardBasicTypes.LONG ) );
-		registerFunction( "unix_timestamp", new StandardSQLFunction( "unix_timestamp", StandardBasicTypes.LONG ) );
-		registerFunction( "utc_date", new NoArgSQLFunction( "utc_date", StandardBasicTypes.STRING ) );
-		registerFunction( "utc_time", new NoArgSQLFunction( "utc_time", StandardBasicTypes.STRING ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "weekday", new StandardSQLFunction( "weekday", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "hex", new StandardSQLFunction( "hex", StandardBasicTypes.STRING ) );
-
-		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", StandardBasicTypes.LONG ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.LONG ) );
-
-		registerFunction( "bit_count", new StandardSQLFunction( "bit_count", StandardBasicTypes.LONG ) );
-		registerFunction( "md5", new StandardSQLFunction( "md5", StandardBasicTypes.STRING ) );
-
-		registerFunction( "concat", new StandardSQLFunction( "concat", StandardBasicTypes.STRING ) );
-
-		registerFunction( "substring", new StandardSQLFunction( "substring", StandardBasicTypes.STRING ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-
-		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
-		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod" ) );
-
-		registerFunction( "power", new StandardSQLFunction( "power" ) );
-		registerFunction( "stddev", new StandardSQLFunction( "stddev" ) );
-		registerFunction( "variance", new StandardSQLFunction( "variance" ) );
-		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
-		registerFunction( "nvl2", new StandardSQLFunction( "nvl2" ) );
-		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER ) );
-		registerFunction( "instrb", new StandardSQLFunction( "instrb", StandardBasicTypes.INTEGER ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "translate", new StandardSQLFunction( "translate", StandardBasicTypes.STRING ) );
-
-		registerFunction( "add_months", new StandardSQLFunction( "add_months", StandardBasicTypes.DATE ) );
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
-		registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardBasicTypes.LONG, false ) );
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-
 		registerKeyword( "TYPE" );
 		registerKeyword( "YEAR" );
 		registerKeyword( "MONTH" );
@@ -232,6 +94,169 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "ATTRIBUTE" );
 		registerKeyword( "STRING" );
 		registerKeyword( "SEARCH" );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.crc32( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log2( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.md5( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.sha1sha2( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.datediff( queryEngine );
+		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+//		CommonFunctionFactory.concat_operator( queryEngine );
+		IngresDialect.bitwiseFunctions( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new CUBRIDExtractEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().registerNoArgs( "rownum", StandardBasicTypes.INTEGER );
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "makedate" )
+				.setInvariantType( StandardBasicTypes.DATE )
+				.setExactArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "maketime" )
+				.setInvariantType( StandardBasicTypes.TIME )
+				.setExactArgumentCount( 3 )
+				.register();
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//I do not know if CUBRID supports FM, but it
+		//seems that it does pad by default, so it needs it!
+		return Oracle8iDialect.datetimeFormat( format, true )
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("adddate(");
+		to.render();
+		sqlAppender.append(",interval ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e6");
+		}
+		sqlAppender.append(" ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("microsecond");
+		}
+		else {
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		switch ( unit ) {
+			case DAY:
+				sqlAppender.append("datediff(");
+				to.render();
+				sqlAppender.append(",");
+				from.render();
+				sqlAppender.append(")");
+				break;
+			case HOUR:
+				timediff(from, to, sqlAppender, HOUR, unit);
+				break;
+			case MINUTE:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			case SECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, SECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			case NANOSECOND:
+				sqlAppender.append("(");
+				timediff(from, to, sqlAppender, NANOSECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, SECOND, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, MINUTE, unit);
+				sqlAppender.append("+");
+				timediff(from, to, sqlAppender, HOUR, unit);
+				sqlAppender.append(")");
+				break;
+			default:
+				throw new SqlTreeCreationException( "unsupported temporal unit for CUBRID: " + unit);
+		}
+	}
+
+	private void timediff(
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			TemporalUnit diffUnit,
+			TemporalUnit toUnit) {
+		if ( diffUnit == NANOSECOND ) {
+			sqlAppender.append("1e6*");
+		}
+		sqlAppender.append("extract(");
+		if ( diffUnit == NANOSECOND ) {
+			sqlAppender.append("millisecond");
+		}
+		else {
+			sqlAppender.append( diffUnit.toString() );
+		}
+		sqlAppender.append(",timediff(");
+		to.render();
+		sqlAppender.append(",");
+		from.render();
+		sqlAppender.append("))");
+		sqlAppender.append( diffUnit.conversionFactor(toUnit) );
 	}
 
 	@Override

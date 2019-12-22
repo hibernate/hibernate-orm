@@ -24,7 +24,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
@@ -207,7 +207,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applySqlFunction(String functionName, SQLFunction function) {
+	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function) {
 		delegate.applySqlFunction( functionName, function );
 		return getThis();
 	}

@@ -56,7 +56,7 @@ public class FilterHelper {
 							filter.getCondition(),
 							FilterImpl.MARKER,
 							factory.getDialect(),
-							factory.getSqlFunctionRegistry()
+							factory.getQueryEngine().getSqmFunctionRegistry()
 					)
 				);
 				filterAutoAliasFlags[filterCount] = true;

@@ -7,9 +7,11 @@
 package org.hibernate.query.sqm.produce.function;
 
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * Pluggable strategy for resolving a function return type for a specific call.
@@ -26,12 +28,9 @@ public interface FunctionReturnTypeResolver {
 	 * the implied type of the return from `some_function` would be defined by the type
 	 * of `some_function`.
 	 *
-	 * @param impliedType the context-impled type
-	 * @param arguments the arguments "passed" to this call.
-	 *
 	 * @return The resolved type.
 	 */
-	AllowableFunctionReturnType<?> resolveFunctionReturnType(
-			AllowableFunctionReturnType<?> impliedType,
-			List<SqmTypedNode<?>> arguments);
+	BasicValuedMapping resolveFunctionReturnType(
+			Supplier<BasicValuedMapping> impliedTypeAccess,
+			List<? extends SqlAstNode> arguments);
 }

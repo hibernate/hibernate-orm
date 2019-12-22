@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
@@ -118,6 +121,40 @@ public class NamedQueryRepositoryImpl implements NamedQueryRepository {
 	@Override
 	public void registerResultSetMappingMemento(String name, NamedResultSetMappingMemento memento) {
 		resultSetMappingMementoMap.put( name, memento );
+	}
+
+	@Override
+	public void prepare(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor bootMetamodel,
+			BootstrapContext bootstrapContext) {
+		bootMetamodel.visitNamedHqlQueryDefinitions(
+				namedHqlQueryDefinition -> {
+					final NamedHqlQueryMemento resolved = namedHqlQueryDefinition.resolve( sessionFactory );
+					hqlMementoMap.put( namedHqlQueryDefinition.getRegistrationName(), resolved );
+				}
+		);
+
+		bootMetamodel.visitNamedNativeQueryDefinitions(
+				namedNativeQueryDefinition -> {
+					final NamedNativeQueryMemento resolved = namedNativeQueryDefinition.resolve( sessionFactory );
+					sqlMementoMap.put( namedNativeQueryDefinition.getRegistrationName(), resolved );
+				}
+		);
+
+		bootMetamodel.visitNamedProcedureCallDefinition(
+				namedProcedureCallDefinition -> {
+					final NamedCallableQueryMemento resolved = namedProcedureCallDefinition.resolve( sessionFactory );
+					callableMementoMap.put( namedProcedureCallDefinition.getRegistrationName(), resolved );
+				}
+		);
+
+		bootMetamodel.visitNamedResultSetMappingDefinition(
+				namedResultSetMappingDefinition -> {
+					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( sessionFactory );
+					resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(), resolved );
+				}
+		);
 	}
 
 

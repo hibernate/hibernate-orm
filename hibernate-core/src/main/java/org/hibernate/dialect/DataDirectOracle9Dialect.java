@@ -13,8 +13,7 @@ import java.sql.SQLException;
 /**
  * A Dialect for accessing Oracle through DataDirect driver
  */
-@SuppressWarnings("deprecation")
-public class DataDirectOracle9Dialect extends Oracle9Dialect {
+public class DataDirectOracle9Dialect extends Oracle9iDialect {
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		return col;

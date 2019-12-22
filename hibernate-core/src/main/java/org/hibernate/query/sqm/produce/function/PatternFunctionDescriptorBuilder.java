@@ -6,18 +6,17 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.sqm.function.PatternBasedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.query.sqm.function.PatternBasedSqmFunctionTemplate;
 
 /**
  * @author Steve Ebersole
  */
 public class PatternFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
-	private final String registrationKey;
 	private final String pattern;
 
 	private ArgumentsValidator argumentsValidator;
@@ -25,9 +24,8 @@ public class PatternFunctionDescriptorBuilder {
 
 	private boolean useParenthesesWhenNoArgs;
 
-	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
+	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String pattern) {
 		this.registry = registry;
-		this.registrationKey = registrationKey;
 		this.pattern = pattern;
 	}
 
@@ -49,7 +47,7 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setInvariantType(AllowableFunctionReturnType invariantType) {
+	public PatternFunctionDescriptorBuilder setInvariantType(BasicValuedMapping invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
@@ -59,12 +57,12 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public SqmFunctionDescriptor register() {
-		return registry.register( registrationKey, template() );
+	public SqmFunctionDescriptor register(String registrationKey) {
+		return registry.register( registrationKey, build() );
 	}
 
-	public SqmFunctionDescriptor template() {
-		return new PatternBasedSqmFunctionTemplate(
+	public SqmFunctionDescriptor build() {
+		return new PatternBasedSqmFunctionDescriptor(
 				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
 				argumentsValidator,
 				returnTypeResolver

@@ -25,7 +25,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
@@ -34,6 +33,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -262,7 +262,7 @@ public interface SessionFactoryOptions {
 	 */
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
-	Map<String, SQLFunction> getCustomSqlFunctionMap();
+	Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap();
 
 	void setCheckNullability(boolean enabled);
 

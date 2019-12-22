@@ -6,11 +6,8 @@
  */
 package org.hibernate.test.component.basic;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -23,11 +20,9 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
@@ -64,17 +59,17 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		Component component = ( Component ) personProperty.getValue();
 		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
 
-		SQLFunction yearFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "year" );
-		if ( yearFunction == null ) {
-			// the dialect not know to support a year() function, so rely on the
-			// ANSI SQL extract function
-			f.setFormula( "extract( year from dob )");
-		}
-		else {
-			List args = new ArrayList();
-			args.add( "dob" );
-			f.setFormula( yearFunction.render( StandardBasicTypes.INTEGER, args, null ) );
-		}
+//		SQLFunction yearFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "year" );
+//		if ( yearFunction == null ) {
+//			// the dialect not know to support a year() function, so rely on the
+//			// ANSI SQL extract function
+//			f.setFormula( "extract( year from dob )");
+//		}
+//		else {
+//			List args = new ArrayList();
+//			args.add( "dob" );
+//			f.setFormula( yearFunction.render( StandardBasicTypes.INTEGER, args, null ) );
+//		}
 	}
 
 	@Test

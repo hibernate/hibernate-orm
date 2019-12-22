@@ -6,12 +6,23 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.spi.QueryEngine;
+
 /**
  * An SQL dialect for Postgres 9 and later.  Adds support for "if exists" when dropping constraints
  * 
  * @author edalquist
  */
 public class PostgreSQL9Dialect extends PostgreSQL82Dialect {
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.soundex( queryEngine );
+
+	}
+
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;

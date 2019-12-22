@@ -11,6 +11,9 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
@@ -59,11 +62,11 @@ public interface NamedQueryRepository {
 
 	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
 
+	void prepare(SessionFactoryImplementor sessionFactory, MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// shut down
 
 	void close();
-
 
 }

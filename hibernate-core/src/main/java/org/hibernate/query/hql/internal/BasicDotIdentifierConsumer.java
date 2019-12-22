@@ -14,12 +14,14 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -162,6 +164,19 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 			if ( !isTerminal ) {
 				return this;
+			}
+
+			final SqmFunctionDescriptor functionDescriptor = creationState.getCreationContext()
+					.getQueryEngine()
+					.getSqmFunctionRegistry()
+					.findFunctionDescriptor( pathSoFar );
+			if ( functionDescriptor != null ) {
+				return new SqmFunction(
+						pathSoFar,
+						functionDescriptor,
+						null,
+						creationState.getCreationContext().getNodeBuilder()
+				);
 			}
 
 //			// see if it is a Class name...

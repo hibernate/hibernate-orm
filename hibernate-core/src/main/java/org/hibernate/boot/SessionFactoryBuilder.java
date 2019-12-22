@@ -20,10 +20,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -700,17 +700,17 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applySqlComments(boolean enabled);
 
 	/**
-	 * Apply a SQLFunction to the underlying {@link org.hibernate.dialect.function.SQLFunctionRegistry}.
+	 * Apply a SQLFunction to the underlying {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
 	 * <p/>
 	 * TODO : Ultimately I would like this to move to {@link org.hibernate.boot.MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
 	 * today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
 	 *
 	 * @param registrationName The name to register it under.
-	 * @param sqlFunction The SQLFunction impl
+	 * @param functionDescriptor The SQLFunction impl
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction);
+	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor);
 
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 

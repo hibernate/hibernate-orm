@@ -313,7 +313,7 @@ public abstract class AbstractCollectionPersister
 		sqlWhereString = StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ? "( " + collectionBootDescriptor.getWhere() + ") " : null;
 		hasWhere = sqlWhereString != null;
 		sqlWhereStringTemplate = hasWhere ?
-				Template.renderWhereStringTemplate( sqlWhereString, dialect, factory.getSqlFunctionRegistry() ) :
+				Template.renderWhereStringTemplate( sqlWhereString, dialect, factory.getQueryEngine().getSqmFunctionRegistry() ) :
 				null;
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
@@ -381,7 +381,7 @@ public abstract class AbstractCollectionPersister
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
 			if ( selectable.isFormula() ) {
 				Formula form = (Formula) selectable;
-				elementFormulaTemplates[j] = form.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+				elementFormulaTemplates[j] = form.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				elementFormulas[j] = form.getFormula();
 			}
 			else {
@@ -389,7 +389,7 @@ public abstract class AbstractCollectionPersister
 				elementColumnNames[j] = col.getQuotedName( dialect );
 				elementColumnWriters[j] = col.getWriteExpr();
 				elementColumnReaders[j] = col.getReadExpr( dialect );
-				elementColumnReaderTemplates[j] = col.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+				elementColumnReaderTemplates[j] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				elementColumnIsGettable[j] = true;
 				if ( elementType.isComponentType() ) {
 					// Implements desired behavior specifically for @ElementCollection mappings.
@@ -440,7 +440,7 @@ public abstract class AbstractCollectionPersister
 				indexColumnAliases[i] = s.getAlias( dialect );
 				if ( s.isFormula() ) {
 					Formula indexForm = (Formula) s;
-					indexFormulaTemplates[i] = indexForm.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+					indexFormulaTemplates[i] = indexForm.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
 				}
@@ -610,7 +610,7 @@ public abstract class AbstractCollectionPersister
 				null;
 		manyToManyWhereTemplate = manyToManyWhereString == null ?
 				null :
-				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getSqlFunctionRegistry() );
+				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 
 		comparator = collectionBootDescriptor.getComparator();
 

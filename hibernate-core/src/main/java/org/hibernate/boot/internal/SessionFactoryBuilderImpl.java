@@ -26,10 +26,10 @@ import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -56,7 +56,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
 		if ( metadata.getSqlFunctionMap() != null ) {
-			for ( Map.Entry<String, SQLFunction> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
+			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
@@ -383,8 +383,8 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applySqlFunction(String registrationName, SQLFunction sqlFunction) {
-		this.optionsBuilder.applySqlFunction( registrationName, sqlFunction );
+	public SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor) {
+		this.optionsBuilder.applySqlFunction( registrationName, functionDescriptor );
 		return this;
 	}
 

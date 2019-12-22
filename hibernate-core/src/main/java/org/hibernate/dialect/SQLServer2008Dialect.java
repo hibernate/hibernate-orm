@@ -9,7 +9,8 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.NullPrecedence;
-import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -29,10 +30,23 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		registerColumnType( Types.TIMESTAMP, "datetime2" );
 		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
 		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
+	}
 
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
-		);
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		CommonFunctionFactory.locate_charindex( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "row_number" )
+				.setInvariantType( StandardBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rank" )
+				.setInvariantType( StandardBasicTypes.LONG )
+				.setUseParenthesesWhenNoArgs( true )
+				.register();
 	}
 	
 	@Override

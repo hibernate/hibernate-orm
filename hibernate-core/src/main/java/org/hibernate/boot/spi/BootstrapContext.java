@@ -19,9 +19,9 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -132,7 +132,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The SQLFunctions registered through MetadataBuilder
 	 */
-	Map<String,SQLFunction> getSqlFunctions();
+	Map<String, SqmFunctionDescriptor> getSqlFunctions();
 
 	/**
 	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This

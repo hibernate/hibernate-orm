@@ -34,6 +34,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -487,6 +488,11 @@ public class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitExtractUnit(SqmExtractUnit extractUnit) {
 		return extractUnit;
+	}
+
+	@Override
+	public Object visitFormat(SqmFormat sqmFormat) {
+		return sqmFormat;
 	}
 
 	@Override

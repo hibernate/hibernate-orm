@@ -6,12 +6,13 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.PhysicalIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -31,16 +32,17 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 
-	public HANAColumnStoreDialect() {
-		super();
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
 
 		// full-text search functions
-		registerFunction( "score", new StandardSQLFunction( "score", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "snippets", new StandardSQLFunction( "snippets" ) );
-		registerFunction( "highlighted", new StandardSQLFunction( "highlighted" ) );
-		registerFunction( "contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" ) );
-		registerFunction( "contains_rhs", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "*/" ) );
-		registerFunction( "not_contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "not contains(", ",", ") /*" ) );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardBasicTypes.BOOLEAN );
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
 	}
 
 	@Override
@@ -50,22 +52,23 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
+			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new GlobalTemporaryTableStrategy(
+				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				() -> new PhysicalIdTableExporter() {
+					@Override
+					protected String getCreateCommand() {
+						return "create global temporary column table";
+					}
 
-//		return new GlobalTemporaryTableBulkIdStrategy( new IdTableSupportStandardImpl() {
-//
-//			@Override
-//			public String getCreateIdTableCommand() {
-//				return "create global temporary column table";
-//			}
-//
-//			@Override
-//			public String getTruncateIdTableCommand() {
-//				return "truncate table";
-//			}
-//
-//		}, AfterUseAction.CLEAN );
+					@Override
+					protected String getTruncateIdTableCommand() {
+						return "truncate table";
+					}
+				},
+				AfterUseAction.CLEAN,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 }

@@ -11,15 +11,14 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -44,21 +43,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.BOOLEAN, "bit" );
 
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(hour, ?1)" ) );
-		registerFunction( "locate", new StandardSQLFunction( "charindex", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1) * 8" ) );
-
-		registerFunction( "trim", new AnsiTrimEmulationFunction() );
-
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 
 		this.limitHandler = new TopLimitHandler( false, false );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		//note: this function was introduced in SQL Server 2012
+		CommonFunctionFactory.formatdatetime_format( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
 	}
 
 	@Override

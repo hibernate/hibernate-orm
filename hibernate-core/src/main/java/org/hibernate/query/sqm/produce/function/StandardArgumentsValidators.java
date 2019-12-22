@@ -32,20 +32,20 @@ public final class StandardArgumentsValidators {
 	 * Static validator for verifying that we have no arguments
 	 */
 	public static final ArgumentsValidator NO_ARGS = arguments -> {
-		if ( !arguments.isEmpty() ) {
+		if ( ! ( arguments == null || arguments.isEmpty() ) ) {
 			throw new QueryException( "Expecting no arguments, but found " + arguments.size() );
 		}
 	};
 
 	public static ArgumentsValidator min(int minNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() < minNumOfArgs ) {
+			if ( arguments == null || arguments.size() < minNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
 								"Function requires %d or more arguments, but only %d found",
 								minNumOfArgs,
-								arguments.size()
+								arguments == null ? 0 : arguments.size()
 						)
 				);
 			}
@@ -54,13 +54,18 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator exactly(int number) {
 		return arguments -> {
-			if ( arguments.size() != number ) {
+			if ( arguments == null ) {
+				if ( number == 0 ) {
+					return;
+				}
+			}
+			if ( arguments == null || arguments.size() != number ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
 								"Function requires %d arguments, but %d found",
 								number,
-								arguments.size()
+								arguments == null ? 0 : arguments.size()
 						)
 				);
 			}
@@ -69,13 +74,13 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() > maxNumOfArgs ) {
+			if ( arguments == null || arguments.size() > maxNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
 								"Function requires %d or fewer arguments, but %d found",
 								maxNumOfArgs,
-								arguments.size()
+								arguments == null ? 0 : arguments.size()
 						)
 				);
 			}
@@ -84,14 +89,14 @@ public final class StandardArgumentsValidators {
 
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return arguments -> {
-			if ( arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs ) {
+			if ( arguments == null || arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
 								"Function requires between %d and %d arguments, but %d found",
 								minNumOfArgs,
 								maxNumOfArgs,
-								arguments.size()
+								arguments == null ? 0 : arguments.size()
 						)
 				);
 			}

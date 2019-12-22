@@ -10,9 +10,9 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -38,7 +38,7 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		String template = Template.renderWhereStringTemplate(formula, dialect, functionRegistry);
 		return safeInterning( StringHelper.replace( template, "{alias}", Template.TEMPLATE ) );
 	}

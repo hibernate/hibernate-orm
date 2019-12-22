@@ -11,10 +11,8 @@ import java.sql.Types;
 import java.util.Locale;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.InformixExtractEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -27,6 +25,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -34,7 +33,6 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Informix dialect.<br>
@@ -80,15 +78,43 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
 
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate(StandardBasicTypes.STRING, "substring(?1 FROM ?2 FOR ?3)"));
-		registerFunction( "substr", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substr(?1, ?2, ?3)"));
-		registerFunction( "coalesce", new NvlFunction());
-		registerFunction( "nvl", new NvlFunction());
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardBasicTypes.DATE, false ) );
-
 		uniqueDelegate = new InformixUniqueDelegate( this );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		//coalesce() and nullif() both supported since Informix 12
+
+//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new InformixExtractEmulation() );
+
 	}
 
 	@Override

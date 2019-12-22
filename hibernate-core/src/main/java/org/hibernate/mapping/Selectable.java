@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 /**
  * Models the commonality between a column and a formula (computed value).
@@ -16,7 +16,7 @@ public interface Selectable {
 	public String getAlias(Dialect dialect);
 	public String getAlias(Dialect dialect, Table table);
 	public boolean isFormula();
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry);
+	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry);
 	public String getText(Dialect dialect);
 	public String getText();
 }

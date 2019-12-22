@@ -20,7 +20,7 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitStar(this);
+		return walker.visitStar( this );
 	}
 
 }

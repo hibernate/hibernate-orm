@@ -18,11 +18,9 @@ import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.NvlCoalesceEmulation;
+import org.hibernate.dialect.function.OracleExtractEmulation;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -39,11 +37,14 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
@@ -51,6 +52,14 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.TemporalUnit.conversionFactor;
 
 /**
  * A dialect for Oracle 8i.
@@ -68,7 +77,10 @@ public class Oracle8iDialect extends Dialect {
 
 	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
 
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile(
+			"^(?:\\/\\*.*?\\*\\/)?\\s*(select|insert|update|delete)\\s+.*?",
+			Pattern.CASE_INSENSITIVE
+	);
 
 	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
 		@Override
@@ -76,27 +88,27 @@ public class Oracle8iDialect extends Dialect {
 			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
 			sql = sql.trim();
 			boolean isForUpdate = false;
-			if (sql.toLowerCase(Locale.ROOT).endsWith( " for update" )) {
+			if ( sql.toLowerCase( Locale.ROOT ).endsWith( " for update" ) ) {
 				sql = sql.substring( 0, sql.length() - 11 );
 				isForUpdate = true;
 			}
 
 			final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-			if (hasOffset) {
+			if ( hasOffset ) {
 				pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
 			}
 			else {
 				pagingSelect.append( "select * from ( " );
 			}
 			pagingSelect.append( sql );
-			if (hasOffset) {
+			if ( hasOffset ) {
 				pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
 			}
 			else {
 				pagingSelect.append( " ) where rownum <= ?" );
 			}
 
-			if (isForUpdate) {
+			if ( isForUpdate ) {
 				pagingSelect.append( " for update" );
 			}
 
@@ -131,8 +143,210 @@ public class Oracle8iDialect extends Dialect {
 		registerDateTimeTypeMappings();
 		registerLargeObjectTypeMappings();
 		registerReverseHibernateTypeMappings();
-		registerFunctions();
 		registerDefaultProperties();
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.bitand( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.rownumRowid( queryEngine );
+		CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new OracleExtractEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER,
+				"instr(?2, ?1)",
+				"instr(?2, ?1, ?3)"
+		);
+
+	}
+
+	@Override
+	public void timestampadd(
+			TemporalUnit unit,
+			Renderer magnitude,
+			Renderer to,
+			Appender sqlAppender,
+			boolean timestamp) {
+		sqlAppender.append( "(" );
+		to.render();
+		boolean subtract = false;
+//		if ( magnitude.startsWith("-") ) {
+//			subtract = true;
+//			magnitude = magnitude.substring(1);
+//		}
+		sqlAppender.append( subtract ? " - " : " + " );
+		switch ( unit ) {
+			case YEAR:
+			case QUARTER:
+			case MONTH:
+				sqlAppender.append( "numtoyminterval" );
+				break;
+			case WEEK:
+			case DAY:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+			case NANOSECOND:
+				sqlAppender.append( "numtodsinterval" );
+				break;
+			default:
+				throw new SqlTreeCreationException( unit + " is not a legal field" );
+		}
+		sqlAppender.append( "(" );
+		switch ( unit ) {
+			case QUARTER:
+				sqlAppender.append( "3*(" );
+				break;
+			case WEEK:
+				sqlAppender.append( "7*(" );
+				break;
+			case NANOSECOND:
+				sqlAppender.append( "1e-9*(" );
+				break;
+		}
+		magnitude.render();
+		switch ( unit ) {
+			case NANOSECOND:
+			case QUARTER:
+			case WEEK:
+				sqlAppender.append( ")" );
+				break;
+		}
+		sqlAppender.append( ",'" );
+		switch ( unit ) {
+			case QUARTER:
+				sqlAppender.append( "month" );
+				break;
+			case WEEK:
+				sqlAppender.append( "day" );
+				break;
+			case NANOSECOND:
+				sqlAppender.append( "second" );
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append( "')" );
+		sqlAppender.append( ")" );
+	}
+
+	@Override
+	public void timestampdiff(
+			TemporalUnit unit,
+			Renderer from, Renderer to,
+			Appender sqlAppender,
+			boolean fromTimestamp, boolean toTimestamp) {
+		boolean timestamp = toTimestamp || fromTimestamp;
+		switch ( unit ) {
+			case YEAR:
+				extractField( sqlAppender, from, to, YEAR, unit );
+				break;
+			case QUARTER:
+			case MONTH:
+				sqlAppender.append( "(" );
+				extractField( sqlAppender, from, to, YEAR, unit );
+				sqlAppender.append( "+" );
+				extractField( sqlAppender, from, to, MONTH, unit );
+				sqlAppender.append( ")" );
+				break;
+			case WEEK:
+			case DAY:
+				extractField( sqlAppender, from, to, DAY, unit );
+				break;
+			case HOUR:
+				sqlAppender.append( "(" );
+				extractField( sqlAppender, from, to, DAY, unit );
+				if ( timestamp ) {
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, HOUR, unit );
+				}
+				sqlAppender.append( ")" );
+				break;
+			case MINUTE:
+				sqlAppender.append( "(" );
+				extractField( sqlAppender, from, to, DAY, unit );
+				if ( timestamp ) {
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, HOUR, unit );
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, MINUTE, unit );
+				}
+				sqlAppender.append( ")" );
+				break;
+			case NANOSECOND:
+			case SECOND:
+				sqlAppender.append( "(" );
+				extractField( sqlAppender, from, to, DAY, unit );
+				if ( timestamp ) {
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, HOUR, unit );
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, MINUTE, unit );
+					sqlAppender.append( "+" );
+					extractField( sqlAppender, from, to, SECOND, unit );
+				}
+				sqlAppender.append( ")" );
+				break;
+			default:
+				throw new SqlTreeCreationException( "unrecognized field: " + unit );
+		}
+	}
+
+	void extractField(
+			Appender sqlAppender,
+			Renderer from, Renderer to,
+			TemporalUnit unit, TemporalUnit toUnit) {
+		sqlAppender.append( "extract(" );
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append( " from (" );
+		to.render();
+		sqlAppender.append( "-" );
+		from.render();
+		sqlAppender.append( ") " );
+		switch ( unit ) {
+			case YEAR:
+			case MONTH:
+				sqlAppender.append( "year to month" );
+				break;
+			case DAY:
+			case HOUR:
+			case MINUTE:
+			case SECOND:
+				sqlAppender.append( "day to second" );
+				break;
+			default:
+				throw new SqlTreeCreationException( unit + " is not a legal field" );
+		}
+		sqlAppender.append( ")" );
+		sqlAppender.append( conversionFactor( unit, toUnit ) );
 	}
 
 	protected void registerCharacterTypeMappings() {
@@ -177,88 +391,6 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	protected void registerReverseHibernateTypeMappings() {
-	}
-
-	protected void registerFunctions() {
-		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
-
-		registerFunction( "acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "bitand", new StandardSQLFunction("bitand") );
-		registerFunction( "cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
-		registerFunction( "cosh", new StandardSQLFunction("cosh", StandardBasicTypes.DOUBLE) );
-		registerFunction( "exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
-		registerFunction( "ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sinh", new StandardSQLFunction("sinh", StandardBasicTypes.DOUBLE) );
-		registerFunction( "stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
-		registerFunction( "sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction( "tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
-		registerFunction( "tanh", new StandardSQLFunction("tanh", StandardBasicTypes.DOUBLE) );
-		registerFunction( "variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
-
-		registerFunction( "round", new StandardSQLFunction("round") );
-		registerFunction( "trunc", new StandardSQLFunction("trunc") );
-		registerFunction( "ceil", new StandardSQLFunction("ceil") );
-		registerFunction( "floor", new StandardSQLFunction("floor") );
-
-		registerFunction( "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
-		registerFunction( "initcap", new StandardSQLFunction("initcap") );
-		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "ltrim", new StandardSQLFunction("ltrim") );
-		registerFunction( "rtrim", new StandardSQLFunction("rtrim") );
-		registerFunction( "soundex", new StandardSQLFunction("soundex") );
-		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "ascii", new StandardSQLFunction("ascii", StandardBasicTypes.INTEGER) );
-
-		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.TIMESTAMP) );
-
-		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIME, false) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
-
-		registerFunction( "last_day", new StandardSQLFunction("last_day", StandardBasicTypes.DATE) );
-		registerFunction( "sysdate", new NoArgSQLFunction("sysdate", StandardBasicTypes.DATE, false) );
-		registerFunction( "systimestamp", new NoArgSQLFunction("systimestamp", StandardBasicTypes.TIMESTAMP, false) );
-		registerFunction( "uid", new NoArgSQLFunction("uid", StandardBasicTypes.INTEGER, false) );
-		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
-
-		registerFunction( "rowid", new NoArgSQLFunction("rowid", StandardBasicTypes.LONG, false) );
-		registerFunction( "rownum", new NoArgSQLFunction("rownum", StandardBasicTypes.LONG, false) );
-
-		// Multi-param string dialect functions...
-		registerFunction( "concat", new VarArgsSQLFunction(StandardBasicTypes.STRING, "", "||", "") );
-		registerFunction( "instr", new StandardSQLFunction("instr", StandardBasicTypes.INTEGER) );
-		registerFunction( "instrb", new StandardSQLFunction("instrb", StandardBasicTypes.INTEGER) );
-		registerFunction( "lpad", new StandardSQLFunction("lpad", StandardBasicTypes.STRING) );
-		registerFunction( "replace", new StandardSQLFunction("replace", StandardBasicTypes.STRING) );
-		registerFunction( "rpad", new StandardSQLFunction("rpad", StandardBasicTypes.STRING) );
-		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
-		registerFunction( "substrb", new StandardSQLFunction("substrb", StandardBasicTypes.STRING) );
-		registerFunction( "translate", new StandardSQLFunction("translate", StandardBasicTypes.STRING) );
-
-		registerFunction( "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "instr(?2,?1)" ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "vsize(?1)*8" ) );
-		registerFunction( "coalesce", new NvlFunction() );
-
-		// Multi-param numeric dialect functions...
-		registerFunction( "atan2", new StandardSQLFunction("atan2", StandardBasicTypes.FLOAT) );
-		registerFunction( "log", new StandardSQLFunction("log", StandardBasicTypes.INTEGER) );
-		registerFunction( "mod", new StandardSQLFunction("mod", StandardBasicTypes.INTEGER) );
-		registerFunction( "nvl", new StandardSQLFunction("nvl") );
-		registerFunction( "nvl2", new StandardSQLFunction("nvl2") );
-		registerFunction( "power", new StandardSQLFunction("power", StandardBasicTypes.FLOAT) );
-
-		// Multi-param date dialect functions...
-		registerFunction( "add_months", new StandardSQLFunction("add_months", StandardBasicTypes.DATE) );
-		registerFunction( "months_between", new StandardSQLFunction("months_between", StandardBasicTypes.FLOAT) );
-		registerFunction( "next_day", new StandardSQLFunction("next_day", StandardBasicTypes.DATE) );
-
-		registerFunction( "str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
 	}
 
 	protected void registerDefaultProperties() {
@@ -315,20 +447,20 @@ public class Oracle8iDialect extends Dialect {
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
 		boolean isForUpdate = false;
-		if ( sql.toLowerCase(Locale.ROOT).endsWith( " for update" ) ) {
-			sql = sql.substring( 0, sql.length()-11 );
+		if ( sql.toLowerCase( Locale.ROOT ).endsWith( " for update" ) ) {
+			sql = sql.substring( 0, sql.length() - 11 );
 			isForUpdate = true;
 		}
 
-		final StringBuilder pagingSelect = new StringBuilder( sql.length()+100 );
-		if (hasOffset) {
+		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
+		if ( hasOffset ) {
 			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
 		}
 		else {
 			pagingSelect.append( "select * from ( " );
 		}
 		pagingSelect.append( sql );
-		if (hasOffset) {
+		if ( hasOffset ) {
 			pagingSelect.append( " ) row_ ) where rownum_ <= ? and rownum_ > ?" );
 		}
 		else {
@@ -355,7 +487,7 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		switch(sqlType) {
+		switch ( sqlType ) {
 			case Types.VARCHAR:
 			case Types.CHAR:
 				return "to_char(null)";
@@ -406,32 +538,32 @@ public class Oracle8iDialect extends Dialect {
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
 		if ( initialValue < 0 && incrementSize > 0 ) {
 			return
-				String.format(
-						"%s minvalue %d start with %d increment by %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						initialValue,
-						incrementSize
-				);
+					String.format(
+							"%s minvalue %d start with %d increment by %d",
+							getCreateSequenceString( sequenceName ),
+							initialValue,
+							initialValue,
+							incrementSize
+					);
 		}
 		else if ( initialValue > 0 && incrementSize < 0 ) {
 			return
-				String.format(
-						"%s maxvalue %d start with %d increment by %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						initialValue,
-						incrementSize
-				);
+					String.format(
+							"%s maxvalue %d start with %d increment by %d",
+							getCreateSequenceString( sequenceName ),
+							initialValue,
+							initialValue,
+							incrementSize
+					);
 		}
 		else {
 			return
-				String.format(
-						"%s start with %d increment by  %d",
-						getCreateSequenceString( sequenceName ),
-						initialValue,
-						incrementSize
-				);
+					String.format(
+							"%s start with %d increment by  %d",
+							getCreateSequenceString( sequenceName ),
+							initialValue,
+							incrementSize
+					);
 		}
 	}
 
@@ -581,7 +713,7 @@ public class Oracle8iDialect extends Dialect {
 
 				if ( 1013 == errorCode ) {
 					// ORA-01013: user requested cancel of current operation
-					throw new QueryTimeoutException(  message, sqlException, sql );
+					throw new QueryTimeoutException( message, sqlException, sql );
 				}
 
 
@@ -589,7 +721,8 @@ public class Oracle8iDialect extends Dialect {
 
 				if ( 1407 == errorCode ) {
 					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
+							sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}
 
@@ -664,7 +797,7 @@ public class Oracle8iDialect extends Dialect {
 	public boolean supportsEmptyInList() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
@@ -674,7 +807,7 @@ public class Oracle8iDialect extends Dialect {
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
-	
+
 	@Override
 	public boolean forceLobAsLastValue() {
 		return true;
@@ -682,41 +815,42 @@ public class Oracle8iDialect extends Dialect {
 
 	/**
 	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
+	 *
 	 * @param parameters
 	 * @return
-	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
+	 * @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
 	 */
 	@Override
 	public boolean useFollowOnLocking(QueryParameters parameters) {
 
-		if (parameters != null ) {
+		if ( parameters != null ) {
 			String lowerCaseSQL = parameters.getFilteredSQL().toLowerCase();
 
 			return
-				DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-				(
-					parameters.hasRowSelection() &&
-						(
-							ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
-							parameters.getRowSelection().getFirstRow() != null
-						)
-				);
+					DISTINCT_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+							GROUP_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+							UNION_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+							(
+									parameters.hasRowSelection() &&
+											(
+													ORDER_BY_KEYWORD_PATTERN.matcher( lowerCaseSQL ).find() ||
+															parameters.getRowSelection().getFirstRow() != null
+											)
+							);
 		}
 		else {
 			return true;
 		}
 	}
-	
+
 	@Override
-	public String getNotExpression( String expression ) {
+	public String getNotExpression(String expression) {
 		return "not (" + expression + ")";
 	}
-	
+
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		String statementType = statementType(sql);
+		String statementType = statementType( sql );
 
 		final int pos = sql.indexOf( statementType );
 		if ( pos > -1 ) {
@@ -725,17 +859,17 @@ public class Oracle8iDialect extends Dialect {
 				buffer.append( sql.substring( 0, pos ) );
 			}
 			buffer
-			.append( statementType )
-			.append( " /*+ " )
-			.append( hints )
-			.append( " */" )
-			.append( sql.substring( pos + statementType.length() ) );
+					.append( statementType )
+					.append( " /*+ " )
+					.append( hints )
+					.append( " */" )
+					.append( sql.substring( pos + statementType.length() ) );
 			sql = buffer.toString();
 		}
 
 		return sql;
 	}
-	
+
 	@Override
 	public int getMaxAliasLength() {
 		// Oracle's max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that,
@@ -766,8 +900,8 @@ public class Oracle8iDialect extends Dialect {
 	protected String statementType(String sql) {
 		Matcher matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
 
-		if(matcher.matches() && matcher.groupCount() == 1) {
-			return matcher.group(1);
+		if ( matcher.matches() && matcher.groupCount() == 1 ) {
+			return matcher.group( 1 );
 		}
 
 		throw new IllegalArgumentException( "Can't determine SQL statement type for statement: " + sql );
@@ -776,5 +910,90 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public boolean supportsNoWait() {
 		return true;
+	}
+
+
+	public static Replacer datetimeFormat(String format, boolean useFm) {
+		String fm = useFm ? "fm" : "";
+		return new Replacer( format, "'", "\"" )
+				//era
+				.replace("GG", "AD")
+				.replace("G", "AD")
+
+				//year
+				.replace("yyyy", "YYYY")
+				.replace("yyy", fm + "YYYY")
+				.replace("yy", "YY")
+				.replace("y", fm + "YYYY")
+
+				//month of year
+				.replace("MMMM", fm + "Month")
+				.replace("MMM", "Mon")
+				.replace("MM", "MM")
+				.replace("M", fm + "MM")
+
+				//week of year
+				.replace("ww", "IW")
+				.replace("w", fm + "IW")
+				//year for week
+				.replace("YYYY", "IYYY")
+				.replace("YYY", fm + "IYYY")
+				.replace("YY", "IY")
+				.replace("Y", fm + "IYYY")
+
+				//week of month
+				.replace("W", "W")
+
+				//day of week
+				.replace("EEEE", fm + "Day")
+				.replace("EEE", "Dy")
+				.replace("ee", "D")
+				.replace("e", fm + "D")
+
+				//day of month
+				.replace("dd", "DD")
+				.replace("d", fm + "DD")
+
+				//day of year
+				.replace("DDD", "DDD")
+				.replace("DD", fm + "DDD")
+				.replace("D", fm + "DDD")
+
+				//am pm
+				.replace("aa", "AM")
+				.replace("a", "AM")
+
+				//hour
+				.replace("hh", "HH12")
+				.replace("HH", "HH24")
+				.replace("h", fm + "HH12")
+				.replace("H", fm + "HH24")
+
+				//minute
+				.replace("mm", "MI")
+				.replace("m", fm + "MI")
+
+				//second
+				.replace("ss", "SS")
+				.replace("s", fm + "SS")
+
+				//fractional seconds
+				.replace("SSSSSS", "FF6")
+				.replace("SSSSS", "FF5")
+				.replace("SSSS", "FF4")
+				.replace("SSS", "FF3")
+				.replace("SS", "FF2")
+				.replace("S", "FF1")
+
+				//timezones
+				.replace("zzz", "TZR")
+				.replace("zz", "TZR")
+				.replace("z", "TZR")
+				.replace("ZZZ", "TZHTZM")
+				.replace("ZZ", "TZHTZM")
+				.replace("Z", "TZHTZM")
+				.replace("xxx", "TZH:TZM")
+				.replace("xx", "TZHTZM")
+				.replace("x", "TZH"); //note special case
 	}
 }

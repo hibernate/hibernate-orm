@@ -17,11 +17,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -45,12 +41,16 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -163,99 +163,138 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "clob($l)" );
 		}
 
-		// aggregate functions
-		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
-
-		// string functions
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(256))" ) );
-		registerFunction( "to_char", new StandardSQLFunction( "to_char", StandardBasicTypes.STRING ) );
-		registerFunction( "rawtohex", new StandardSQLFunction( "rawtohex" ) );
-		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw" ) );
-
-		// system functions
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
-		registerFunction( "database", new NoArgSQLFunction( "database", StandardBasicTypes.STRING ) );
-
-		// datetime functions
-		if ( hsqldbVersion < 200 ) {
-			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
-		}
-		else {
-			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
-		}
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false )
-		);
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "cast(second(?1) as int)" ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-
-		// numeric functions
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new StandardSQLFunction( "rand", StandardBasicTypes.FLOAT ) );
-
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic" ) );
-		registerFunction( "truncate", new StandardSQLFunction( "truncate" ) );
-		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
-
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-
-		// special functions
-		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
-		if ( hsqldbVersion > 219 ) {
-			registerFunction( "rownum", new NoArgSQLFunction( "rownum", StandardBasicTypes.INTEGER ) );
-		}
-
-		// function templates
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		limitHandler = new HSQLLimitHandler();
+	}
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.bitand( queryEngine );
+		CommonFunctionFactory.bitor( queryEngine );
+		CommonFunctionFactory.bitxor( queryEngine );
+		CommonFunctionFactory.bitnot( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		CommonFunctionFactory.bitLength( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		if ( hsqldbVersion >= 200 ) {
+			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
+			CommonFunctionFactory.sysdateSystimestamp( queryEngine );
+		}
+
+		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
+		if ( hsqldbVersion > 219 ) {
+			queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
+					.setInvariantType( StandardBasicTypes.LONG )
+					.setUseParenthesesWhenNoArgs(true)
+					.register();
+		}
+
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("dateadd(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff(sql_tsi_frac_second"); //nanos
+		}
+		else {
+			sqlAppender.append("datediff(");
+			sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append(", ");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(", ");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat(format, false)
+				.replace("SSSSSS", "FF")
+				.replace("SSSSS", "FF")
+				.replace("SSSS", "FF")
+				.replace("SSS", "FF")
+				.replace("SS", "FF")
+				.replace("S", "FF")
+				.result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		//TODO: does not support MICROSECOND, but on the
+		//      other hand it doesn't support microsecond
+		//      precision in timestamps either so who cares?
+		switch (unit) {
+			case WEEK: return "week_of_year"; //this is the ISO week number, I believe
+			default: return unit.toString();
+		}
 	}
 
 	@Override

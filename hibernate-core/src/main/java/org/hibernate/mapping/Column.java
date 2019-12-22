@@ -12,10 +12,10 @@ import java.util.Locale;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -274,7 +274,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
+	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return safeInterning(
 				hasCustomRead()
 				// see note in renderTransformerReadFragment wrt access to SessionFactory

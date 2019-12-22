@@ -32,7 +32,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
@@ -282,11 +281,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return delegate.getEntityNotFoundDelegate();
-	}
-
-	@Override
-	public SQLFunctionRegistry getSqlFunctionRegistry() {
-		return delegate.getSqlFunctionRegistry();
 	}
 
 	@Override

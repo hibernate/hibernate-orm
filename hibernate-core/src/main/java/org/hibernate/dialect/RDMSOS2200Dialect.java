@@ -9,9 +9,9 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.RDMSExtractEmulation;
+import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
@@ -26,13 +26,16 @@ import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.ast.spi.CaseExpressionWalker;
 import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
-import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -109,101 +112,7 @@ public class RDMSOS2200Dialect extends Dialect {
 		// Display the dialect version.
 		LOG.rdmsOs2200Dialect();
 
-		/**
-		 * This section registers RDMS Built-in Functions (BIFs) with Hibernate.
-		 * The first parameter is the 'register' function name with Hibernate.
-		 * The second parameter is the defined RDMS SQL Function and it's
-		 * characteristics. If StandardSQLFunction(...) is used, the RDMS BIF
-		 * name and the return type (if any) is specified.  If
-		 * SQLFunctionTemplate(...) is used, the return type and a template
-		 * string is provided, plus an optional hasParenthesesIfNoArgs flag.
-		 */
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.INTEGER ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.INTEGER ) );
-
-		// The RDMS concat() function only supports 2 parameters
-		registerFunction( "concat", new SQLFunctionTemplate( StandardBasicTypes.STRING, "concat(?1, ?2)" ) );
-		registerFunction( "instr", new StandardSQLFunction( "instr", StandardBasicTypes.STRING ) );
-		registerFunction( "lpad", new StandardSQLFunction( "lpad", StandardBasicTypes.STRING ) );
-		registerFunction( "replace", new StandardSQLFunction( "replace", StandardBasicTypes.STRING ) );
-		registerFunction( "rpad", new StandardSQLFunction( "rpad", StandardBasicTypes.STRING ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-
-		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-
-		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "ltrim(rtrim(?1))" ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cosh", new StandardSQLFunction( "cosh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sinh", new StandardSQLFunction( "sinh", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tanh", new StandardSQLFunction( "tanh", StandardBasicTypes.DOUBLE ) );
-
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "trunc", new StandardSQLFunction( "trunc" ) );
-		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-
-		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "initcap", new StandardSQLFunction( "initcap" ) );
-
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING, false ) );
-
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIME, false ) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP, false ) );
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", StandardBasicTypes.TIME ) );
-		registerFunction( "days", new StandardSQLFunction( "days", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "last_day", new StandardSQLFunction( "last_day", StandardBasicTypes.DATE ) );
-		registerFunction( "microsecond", new StandardSQLFunction( "microsecond", StandardBasicTypes.INTEGER ) );
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "now", new NoArgSQLFunction( "now", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "time", new StandardSQLFunction( "time", StandardBasicTypes.TIME ) );
-		registerFunction( "timestamp", new StandardSQLFunction( "timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "atan2", new StandardSQLFunction( "atan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
-		registerFunction( "nvl", new StandardSQLFunction( "nvl" ) );
-		registerFunction( "power", new StandardSQLFunction( "power", StandardBasicTypes.DOUBLE ) );
-
-		/**
+		/*
 		 * For a list of column types to register, see section A-1
 		 * in 7862 7395, the Unisys JDBC manual.
 		 *
@@ -253,6 +162,105 @@ public class RDMSOS2200Dialect extends Dialect {
 		// registerColumnType(Types.BLOB, "CHARACTER($l)" );  // For use prior to CP 11.0
 		// registerColumnType(Types.CLOB, "CHARACTER($l)" );
 	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.initcap( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.addMonths( queryEngine );
+		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().register( "extract", new RDMSExtractEmulation() );
+
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("dateadd('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("(");
+		}
+		magnitude.render();
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append(")/1e3");
+		}
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
+		}
+		else {
+			sqlAppender.append("datediff('");
+			sqlAppender.append( unit.toString() );
+			sqlAppender.append("'");
+		}
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+		if ( unit == NANOSECOND ) {
+			sqlAppender.append("*1e3");
+		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return Oracle8iDialect.datetimeFormat( format, true ) //Does it really support FM?
+				.replace("SSSSSS", "MLS")
+				.replace("SSSSS", "MLS")
+				.replace("SSSS", "MLS")
+				.replace("SSS", "MLS")
+				.replace("SS", "MLS")
+				.replace("S", "MLS")
+				.result();
+	}
+
 
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

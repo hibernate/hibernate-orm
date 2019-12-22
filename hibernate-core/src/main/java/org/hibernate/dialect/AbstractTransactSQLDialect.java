@@ -17,15 +17,13 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CharIndexFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
@@ -58,64 +56,74 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
 
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "len", new StandardSQLFunction( "len", StandardBasicTypes.LONG ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "str", new StandardSQLFunction( "str", StandardBasicTypes.STRING ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
-		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
-
-		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
-
-		registerFunction( "current_timestamp", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIME ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "getdate", StandardBasicTypes.DATE ) );
-
-		registerFunction( "getdate", new NoArgSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "getutcdate", new NoArgSQLFunction( "getutcdate", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-		registerFunction( "datename", new StandardSQLFunction( "datename", StandardBasicTypes.STRING ) );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "pi", new NoArgSQLFunction( "pi", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "square", new StandardSQLFunction( "square" ) );
-		registerFunction( "rand", new StandardSQLFunction( "rand", StandardBasicTypes.FLOAT ) );
-
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-
-		registerFunction( "isnull", new StandardSQLFunction( "isnull" ) );
-
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "+", ")" ) );
-
-		registerFunction( "length", new StandardSQLFunction( "len", StandardBasicTypes.INTEGER ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "ltrim(rtrim(?1))" ) );
-		registerFunction( "locate", new CharIndexFunction() );
-
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.reverse( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.ascii(queryEngine);
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
+		CommonFunctionFactory.repeat_replicate( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.characterLength_len( queryEngine );
+		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.lastDay_eomonth( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "square" )
+				.setExactArgumentCount( 1 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "(?1 % ?2)" )
+				.setInvariantType( StandardBasicTypes.INTEGER )
+				.setExactArgumentCount( 2 )
+				.register( "mod" );
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "atn2" )
+				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setExactArgumentCount( 2 )
+				.register();
+
+		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardBasicTypes.STRING, "(", "+", ")" );
+
+		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
+
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		sqlAppender.append("dateadd(");
+		//TODO: SQL Server supports nanosecond, but what about Sybase?
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		magnitude.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		sqlAppender.append("datediff(");
+		//TODO: SQL Server supports nanosecond, but what about Sybase?
+		sqlAppender.append( unit.toString() );
+		sqlAppender.append(", ");
+		from.render();
+		sqlAppender.append(", ");
+		to.render();
+		sqlAppender.append(")");
 	}
 
 	@Override

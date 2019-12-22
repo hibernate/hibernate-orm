@@ -9,9 +9,9 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -59,72 +59,60 @@ public class MimerSQLDialect extends Dialect {
 		registerColumnType( Types.BLOB, "BLOB($l)" );
 		registerColumnType( Types.CLOB, "NCLOB($l)" );
 
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-
-		registerFunction( "dacos", new StandardSQLFunction( "dacos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "acos", new StandardSQLFunction( "dacos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dasin", new StandardSQLFunction( "dasin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "dasin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "datan", new StandardSQLFunction( "datan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "datan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "datan2", new StandardSQLFunction( "datan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan2", new StandardSQLFunction( "datan2", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dcos", new StandardSQLFunction( "dcos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "dcos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dcot", new StandardSQLFunction( "dcot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "dcot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "ddegrees", new StandardSQLFunction( "ddegrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "ddegrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dexp", new StandardSQLFunction( "dexp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "dexp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dlog", new StandardSQLFunction( "dlog", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "dlog", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dlog10", new StandardSQLFunction( "dlog10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "dlog10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dradian", new StandardSQLFunction( "dradian", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "radian", new StandardSQLFunction( "dradian", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dsin", new StandardSQLFunction( "dsin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "dsin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "dsqrt", new StandardSQLFunction( "dsqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "dsqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dtan", new StandardSQLFunction( "dtan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "dtan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "dpower", new StandardSQLFunction( "dpower" ) );
-		registerFunction( "power", new StandardSQLFunction( "dpower" ) );
-
-		registerFunction( "date", new StandardSQLFunction( "date", StandardBasicTypes.DATE ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "time", new StandardSQLFunction( "time", StandardBasicTypes.TIME ) );
-		registerFunction( "timestamp", new StandardSQLFunction( "timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-
-
-		registerFunction( "varchar", new StandardSQLFunction( "varchar", StandardBasicTypes.STRING ) );
-		registerFunction( "real", new StandardSQLFunction( "real", StandardBasicTypes.FLOAT ) );
-		registerFunction( "bigint", new StandardSQLFunction( "bigint", StandardBasicTypes.LONG ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "integer", new StandardSQLFunction( "integer", StandardBasicTypes.INTEGER ) );
-		registerFunction( "smallint", new StandardSQLFunction( "smallint", StandardBasicTypes.SHORT ) );
-
-		registerFunction( "ascii_char", new StandardSQLFunction( "ascii_char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "ascii_code", new StandardSQLFunction( "ascii_code", StandardBasicTypes.STRING ) );
-		registerFunction( "unicode_char", new StandardSQLFunction( "unicode_char", StandardBasicTypes.LONG ) );
-		registerFunction( "unicode_code", new StandardSQLFunction( "unicode_code", StandardBasicTypes.STRING ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.LONG ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.STRING ) );
-
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
 	}
 
+
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dacos", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dasin", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datan", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "datan2", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dcos", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dcot", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ddegrees", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "degrees", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dexp", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog10", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "log10", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dradian", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "radian", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dsin", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dsqrt", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dtan", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dpower" );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardBasicTypes.DATE );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardBasicTypes.TIME );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardBasicTypes.TIMESTAMP );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardBasicTypes.INTEGER );
+
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "varchar", StandardBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "real", StandardBasicTypes.FLOAT );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "bigint", StandardBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardBasicTypes.CHARACTER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "integer", StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "smallint", StandardBasicTypes.SHORT );
+
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_char", StandardBasicTypes.CHARACTER );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_code", StandardBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_char", StandardBasicTypes.LONG );
+		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_code", StandardBasicTypes.STRING );
+	}
 
 	@Override
 	public String getAddColumnString() {

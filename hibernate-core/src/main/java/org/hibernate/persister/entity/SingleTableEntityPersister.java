@@ -306,7 +306,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorFormula = formula.getFormula();
 				discriminatorFormulaTemplate = formula.getTemplate(
 						factory.getDialect(),
-						factory.getSqlFunctionRegistry()
+						factory.getQueryEngine().getSqmFunctionRegistry()
 				);
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
@@ -319,7 +319,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorColumnReaders = column.getReadExpr( factory.getDialect() );
 				discriminatorColumnReaderTemplate = column.getTemplate(
 						factory.getDialect(),
-						factory.getSqlFunctionRegistry()
+						factory.getQueryEngine().getSqmFunctionRegistry()
 				);
 				discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
 				discriminatorFormula = null;

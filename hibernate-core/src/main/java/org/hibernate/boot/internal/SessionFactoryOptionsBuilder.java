@@ -42,7 +42,6 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -59,8 +58,9 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -251,7 +251,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
-	private Map<String, SQLFunction> sqlFunctions;
+	private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
 	private JpaCompliance jpaCompliance;
 
@@ -1118,7 +1118,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getCustomSqlFunctionMap() {
+	public Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap() {
 		return sqlFunctions == null ? Collections.emptyMap() : sqlFunctions;
 	}
 
@@ -1427,7 +1427,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.commentsEnabled = enabled;
 	}
 
-	public void applySqlFunction(String registrationName, SQLFunction sqlFunction) {
+	public void applySqlFunction(String registrationName, SqmFunctionDescriptor sqlFunction) {
 		if ( this.sqlFunctions == null ) {
 			this.sqlFunctions = new HashMap<>();
 		}

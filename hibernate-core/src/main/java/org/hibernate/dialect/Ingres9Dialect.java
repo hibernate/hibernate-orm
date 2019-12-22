@@ -8,17 +8,14 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorIngresDatabaseImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.query.spi.QueryEngine;
 
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
@@ -71,33 +68,18 @@ public class Ingres9Dialect extends IngresDialect {
 	 */
 	public Ingres9Dialect() {
 		super();
-		registerDateTimeFunctions();
-		registerDateTimeColumnTypes();
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
-	}
 
-	/**
-	 * Register functions current_time, current_timestamp, current_date
-	 */
-	protected void registerDateTimeFunctions() {
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
-		registerFunction(
-				"current_timestamp", new NoArgSQLFunction(
-				"current_timestamp",
-				StandardBasicTypes.TIMESTAMP,
-				false
-		)
-		);
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
-	}
-
-	/**
-	 * Register column types date, time, timestamp
-	 */
-	protected void registerDateTimeColumnTypes() {
 		registerColumnType( Types.DATE, "ansidate" );
 		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
 	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.concat_operator( queryEngine );
+	}
+
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

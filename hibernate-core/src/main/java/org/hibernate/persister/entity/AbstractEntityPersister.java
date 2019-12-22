@@ -634,7 +634,9 @@ public abstract class AbstractEntityPersister
 			final PersistentClass bootDescriptor,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final PersisterCreationContext creationContext) throws HibernateException {
+			final PersisterCreationContext pcc) throws HibernateException {
+
+		final RuntimeModelCreationContext creationContext = (RuntimeModelCreationContext) pcc;
 
 		this.factory = creationContext.getSessionFactory();
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( bootDescriptor.getEntityName() );
@@ -727,7 +729,7 @@ public abstract class AbstractEntityPersister
 			rootTableKeyColumnReaders[i] = col.getReadExpr( dialect );
 			rootTableKeyColumnReaderTemplates[i] = col.getTemplate(
 					dialect,
-					factory.getSqlFunctionRegistry()
+					factory.getQueryEngine().getSqmFunctionRegistry()
 			);
 			identifierAliases[i] = col.getAlias( dialect, bootDescriptor.getRootTable() );
 			i++;
@@ -752,7 +754,7 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate(
 						sqlWhereString,
 						dialect,
-						factory.getSqlFunctionRegistry()
+						factory.getQueryEngine().getSqmFunctionRegistry()
 				);
 
 		// PROPERTIES
@@ -801,12 +803,12 @@ public abstract class AbstractEntityPersister
 				if ( thing.isFormula() ) {
 					foundFormula = true;
 					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
-					formulaTemplates[k] = thing.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+					formulaTemplates[k] = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				}
 				else {
 					Column col = (Column) thing;
 					colNames[k] = col.getQuotedName( dialect );
-					colReaderTemplates[k] = col.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+					colReaderTemplates[k] = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					colWriters[k] = col.getWriteExpr();
 				}
 				k++;
@@ -901,7 +903,7 @@ public abstract class AbstractEntityPersister
 			while ( colIter.hasNext() ) {
 				Selectable thing = (Selectable) colIter.next();
 				if ( thing.isFormula() ) {
-					String template = thing.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+					String template = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					formnos[l] = formulaTemplates.size();
 					colnos[l] = -1;
 					formulaTemplates.add( template );
@@ -922,7 +924,7 @@ public abstract class AbstractEntityPersister
 					columnSelectables.add( Boolean.valueOf( prop.isSelectable() ) );
 
 					readers[l] = col.getReadExpr( dialect );
-					String readerTemplate = col.getTemplate( dialect, factory.getSqlFunctionRegistry() );
+					String readerTemplate = col.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 					readerTemplates[l] = readerTemplate;
 					columnReaderTemplates.add( readerTemplate );
 				}
@@ -1112,7 +1114,7 @@ public abstract class AbstractEntityPersister
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
 		return string == null ?
 				null :
-				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
+				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 	}
 
 	protected Map<String,String> generateLazySelectStringsByFetchGroup() {

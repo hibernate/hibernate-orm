@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -46,6 +49,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
@@ -535,5 +539,23 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					return creator.apply( javaTypeDescriptor );
 				}
 		);
+	}
+
+	public static boolean isSqlTimestampType(MappingModelExpressable type) {
+		if ( type instanceof BasicValuedMapping ) {
+			return isSqlTimestampType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
+		}
+
+		return false;
+	}
+
+	public static boolean isSqlTimestampType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+	}
+
+	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
+		return matchesJavaType( type, Date.class );
 	}
 }

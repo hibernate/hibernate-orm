@@ -11,7 +11,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -37,7 +36,6 @@ public class OrderingTests extends SessionFactoryBasedFunctionalTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-1356" )
-	@FailureExpected( reason = "functions not yet implemented" )
 	public void testFunctionBasedOrdering() {
 		inTransaction(
 				session -> {

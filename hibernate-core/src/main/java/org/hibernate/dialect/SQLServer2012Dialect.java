@@ -6,8 +6,11 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -15,6 +18,40 @@ import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
  * @author Brett Meyer
  */
 public class SQLServer2012Dialect extends SQLServer2008Dialect {
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		//actually translate() was added in 2017 but
+		//it's not worth adding a new dialect for that!
+		CommonFunctionFactory.translate( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
+				.setInvariantType( StandardBasicTypes.DATE )
+				.setExactArgumentCount( 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
+				.setInvariantType( StandardBasicTypes.TIME )
+				.setExactArgumentCount( 5 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
+				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 5 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
+				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 7 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
+				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 8 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
+				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setExactArgumentCount( 10 )
+				.register();
+	}
 
 	@Override
 	public boolean supportsSequences() {

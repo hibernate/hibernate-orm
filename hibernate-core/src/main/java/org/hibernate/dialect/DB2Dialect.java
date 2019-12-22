@@ -17,11 +17,8 @@ import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -35,6 +32,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -114,97 +113,6 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
 		registerColumnType( Types.BOOLEAN, "smallint" );
 
-		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
-
-		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "absval", new StandardSQLFunction( "absval" ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
-		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
-		registerFunction( "round", new StandardSQLFunction( "round" ) );
-
-		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "float", new StandardSQLFunction( "float", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "hex", new StandardSQLFunction( "hex", StandardBasicTypes.STRING ) );
-		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "variance", new StandardSQLFunction( "variance", StandardBasicTypes.DOUBLE ) );
-
-		registerFunction( "julian_day", new StandardSQLFunction( "julian_day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "microsecond", new StandardSQLFunction( "microsecond", StandardBasicTypes.INTEGER ) );
-		registerFunction(
-				"midnight_seconds",
-				new StandardSQLFunction( "midnight_seconds", StandardBasicTypes.INTEGER )
-		);
-		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
-		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
-		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current date", StandardBasicTypes.DATE, false ) );
-		registerFunction( "date", new StandardSQLFunction( "date", StandardBasicTypes.DATE ) );
-		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
-		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofweek_iso", new StandardSQLFunction( "dayofweek_iso", StandardBasicTypes.INTEGER ) );
-		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
-		registerFunction( "days", new StandardSQLFunction( "days", StandardBasicTypes.LONG ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current time", StandardBasicTypes.TIME, false ) );
-		registerFunction( "time", new StandardSQLFunction( "time", StandardBasicTypes.TIME ) );
-		registerFunction(
-				"current_timestamp",
-				new NoArgSQLFunction( "current timestamp", StandardBasicTypes.TIMESTAMP, false )
-		);
-		registerFunction( "timestamp", new StandardSQLFunction( "timestamp", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "timestamp_iso", new StandardSQLFunction( "timestamp_iso", StandardBasicTypes.TIMESTAMP ) );
-		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
-		registerFunction( "week_iso", new StandardSQLFunction( "week_iso", StandardBasicTypes.INTEGER ) );
-		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "double", new StandardSQLFunction( "double", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "varchar", new StandardSQLFunction( "varchar", StandardBasicTypes.STRING ) );
-		registerFunction( "real", new StandardSQLFunction( "real", StandardBasicTypes.FLOAT ) );
-		registerFunction( "bigint", new StandardSQLFunction( "bigint", StandardBasicTypes.LONG ) );
-		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "integer", new StandardSQLFunction( "integer", StandardBasicTypes.INTEGER ) );
-		registerFunction( "smallint", new StandardSQLFunction( "smallint", StandardBasicTypes.SHORT ) );
-
-		registerFunction( "digits", new StandardSQLFunction( "digits", StandardBasicTypes.STRING ) );
-		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
-		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
-		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
-		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
-		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
-		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "posstr", new StandardSQLFunction( "posstr", StandardBasicTypes.INTEGER ) );
-
-		registerFunction( "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "length(?1)*8" ) );
-		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-
-		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
-
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "rtrim(char(?1))" ) );
-
 		registerKeyword( "current" );
 		registerKeyword( "date" );
 		registerKeyword( "time" );
@@ -217,6 +125,182 @@ public class DB2Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 
 		uniqueDelegate = new DB2UniqueDelegate( this );
+	}
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.translate( queryEngine );
+		CommonFunctionFactory.bitand( queryEngine );
+		CommonFunctionFactory.bitor( queryEngine );
+		CommonFunctionFactory.bitxor( queryEngine );
+		CommonFunctionFactory.bitnot( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.weekQuarter( queryEngine );
+		CommonFunctionFactory.daynameMonthname( queryEngine );
+		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
+		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
+		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.ascii( queryEngine );
+		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
+		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
+		CommonFunctionFactory.dateTrunc( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().register( "formatdatetime", new DB2FormatEmulation() );
+
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "upper" )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 3 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "lower" )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.setArgumentCountBetween( 1, 3 )
+				.register();
+
+//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "posstr" )
+//				.setInvariantType( StandardSpiBasicTypes.INTEGER )
+//				.setExactArgumentCount( 2 )
+//				.register();
+
+	}
+
+	@Override
+	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
+		boolean castFrom = !fromTimestamp && !unit.isDateUnit();
+		boolean castTo = !toTimestamp && !unit.isDateUnit();
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("(second");
+				break;
+			//note: DB2 does have weeks_between()
+			case MONTH:
+			case QUARTER:
+				// the months_between() function results
+				// in a non-integral value, so trunc() it
+				sqlAppender.append("trunc(month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s_between(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		if (castFrom) {
+			sqlAppender.append("cast(");
+		}
+		from.render();
+		if (castFrom) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(")");
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("*1e9+(microsecond(");
+				to.render();
+				sqlAppender.append(")-microsecond(");
+				from.render();
+				sqlAppender.append("))*1e3)");
+				break;
+			case MONTH:
+				sqlAppender.append(")");
+				break;
+			case QUARTER:
+				sqlAppender.append("/3)");
+				break;
+		}
+	}
+
+	@Override
+	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
+		boolean castTo = !timestamp && !unit.isDateUnit();
+		sqlAppender.append("add_");
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append("second");
+				break;
+			case WEEK:
+				//note: DB2 does not have add_weeks()
+				sqlAppender.append("day");
+				break;
+			case QUARTER:
+				sqlAppender.append("month");
+				break;
+			default:
+				sqlAppender.append( unit.toString() );
+		}
+		sqlAppender.append("s(");
+		if (castTo) {
+			sqlAppender.append("cast(");
+		}
+		to.render();
+		if (castTo) {
+			sqlAppender.append(" as timestamp)");
+		}
+		sqlAppender.append(",");
+		switch (unit) {
+			case NANOSECOND:
+			case WEEK:
+			case QUARTER:
+				sqlAppender.append("(");
+				break;
+		}
+		magnitude.render();
+		switch (unit) {
+			case NANOSECOND:
+				sqlAppender.append(")/1e9");
+				break;
+			case WEEK:
+				sqlAppender.append(")*7");
+				break;
+			case QUARTER:
+				sqlAppender.append(")*3");
+				break;
+		}
+		sqlAppender.append(")");
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//DB2 does not need nor support FM
+		return Oracle8iDialect.datetimeFormat( format, false ).result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			//WEEK means the ISO week number on DB2
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			default: return unit.toString();
+		}
 	}
 
 	@Override

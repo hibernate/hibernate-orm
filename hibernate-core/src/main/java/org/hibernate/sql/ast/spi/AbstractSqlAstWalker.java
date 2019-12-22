@@ -24,15 +24,22 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -56,7 +63,6 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -422,6 +428,44 @@ public abstract class AbstractSqlAstWalker
 			appendSql( "." );
 		}
 		appendSql( columnReference.getColumnExpression() );
+	}
+
+	@Override
+	public void visitExtractUnit(ExtractUnit extractUnit) {
+		appendSql( sessionFactory.getJdbcServices().getDialect().translateExtractField( extractUnit.getUnit() ) );
+	}
+
+	@Override
+	public void visitFormat(Format format) {
+		final String dialectFormat = sessionFactory.getJdbcServices().getDialect().translateDatetimeFormat( format.getFormat() );
+		appendSql( "'" );
+		appendSql( dialectFormat );
+		appendSql( "'" );
+	}
+
+	@Override
+	public void visitStar(Star star) {
+		appendSql( "*" );
+	}
+
+	@Override
+	public void visitTrimSpecification(TrimSpecification trimSpecification) {
+		appendSql( " " );
+		appendSql( trimSpecification.getSpecification().toSqlText() );
+		appendSql( " " );
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
+		final int jdbcTypeCode = castTarget.getExpressionType().getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
+		final String sqlTypeName = sessionFactory.getJdbcServices().getDialect().getCastTypeName( jdbcTypeCode );
+		appendSql( sqlTypeName );
+	}
+
+	@Override
+	public void visitDistinct(Distinct distinct) {
+		appendSql( "distinct " );
+		distinct.getExpression().accept( this );
 	}
 
 	@Override

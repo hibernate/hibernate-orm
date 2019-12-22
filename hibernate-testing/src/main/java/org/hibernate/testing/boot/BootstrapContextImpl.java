@@ -23,10 +23,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -122,7 +122,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Map<String, SQLFunction> getSqlFunctions() {
+	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
 		return delegate.getSqlFunctions();
 	}
 

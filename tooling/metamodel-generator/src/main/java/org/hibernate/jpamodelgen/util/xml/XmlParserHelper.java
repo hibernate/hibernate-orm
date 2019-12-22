@@ -133,6 +133,8 @@ public class XmlParserHelper {
 			builder.append( handler.getColumnNumber() );
 			builder.append( ". Message: " );
 			builder.append( handler.getMessage() );
+			builder.append( ". Exception message: " );
+			builder.append( e.getMessage() );
 			throw new XmlParsingException( builder.toString(), e );
 		}
 	}

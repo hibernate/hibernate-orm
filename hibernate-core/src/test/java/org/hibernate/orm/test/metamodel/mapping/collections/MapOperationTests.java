@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.metamodel.mapping.collections;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import org.hibernate.testing.hamcrest.InitializationCheckMatcher;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -22,11 +26,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
+ * @author Fabio Massimo Ercoli
  */
 @SuppressWarnings("WeakerAccess")
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
@@ -40,6 +46,9 @@ public class MapOperationTests {
 					final EntityOfMaps entityContainingMaps = new EntityOfMaps( 1, "first-map-entity" );
 					entityContainingMaps.addBasicByBasic( "someKey", "someValue" );
 					entityContainingMaps.addBasicByBasic( "anotherKey", "anotherValue" );
+
+					entityContainingMaps.addSortedBasicByBasic( "key1", "value1" );
+					entityContainingMaps.addSortedBasicByBasic( "key2", "value2" );
 
 					entityContainingMaps.addBasicByEnum( EnumValue.ONE, "one" );
 					entityContainingMaps.addBasicByEnum( EnumValue.TWO, "two" );
@@ -102,6 +111,30 @@ public class MapOperationTests {
 
 		// re-create it so the drop-data can succeed
 		createData( scope );
+	}
+
+	@Test
+	public void testSortedMapAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityOfMaps entity = session.get( EntityOfMaps.class, 1 );
+					assertThat( entity.getSortedBasicByBasic(), InitializationCheckMatcher.isNotInitialized() );
+
+					// trigger the init
+					Hibernate.initialize( entity.getSortedBasicByBasic() );
+					assertThat( entity.getSortedBasicByBasic(), InitializationCheckMatcher.isInitialized() );
+					assertThat( entity.getSortedBasicByBasic().size(), is( 2 ) );
+					assertThat( entity.getBasicByEnum(), InitializationCheckMatcher.isNotInitialized() );
+
+					final Iterator<Map.Entry<String, String>> iterator = entity.getSortedBasicByBasic().entrySet().iterator();
+					final Map.Entry<String, String> first = iterator.next();
+					final Map.Entry<String, String> second = iterator.next();
+					assertThat( first.getKey(), is( "key1" ) );
+					assertThat( first.getValue(), is( "value1" ) );
+					assertThat( second.getKey(), is( "key2" ) );
+					assertThat( second.getValue(), is( "value2" ) );
+				}
+		);
 	}
 
 	@Test

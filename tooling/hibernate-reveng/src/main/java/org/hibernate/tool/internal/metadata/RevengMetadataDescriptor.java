@@ -7,7 +7,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.JdbcMetadataBuilder;
+import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 	
@@ -36,7 +36,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
 	}
     
 	public Metadata createMetadata() {
-		return JdbcMetadataBuilder
+		return RevengMetadataBuilder
 				.create(properties, reverseEngineeringStrategy)
 				.build();
 	}

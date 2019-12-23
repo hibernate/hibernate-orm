@@ -32,16 +32,16 @@ import org.jboss.logging.Logger;
  * @author max
  * @author koen
  */
-public class JdbcMetadataBuilder {
+public class RevengMetadataBuilder {
 	
 	
-	public static JdbcMetadataBuilder create(
+	public static RevengMetadataBuilder create(
 			Properties properties, 
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
-		return new JdbcMetadataBuilder(properties, reverseEngineeringStrategy);
+		return new RevengMetadataBuilder(properties, reverseEngineeringStrategy);
 	}
 	
-	private static final Logger LOGGER = Logger.getLogger(JdbcMetadataBuilder.class);
+	private static final Logger LOGGER = Logger.getLogger(RevengMetadataBuilder.class);
 
 	private final Properties properties;
 	private final MetadataBuildingContext metadataBuildingContext;	
@@ -53,7 +53,7 @@ public class JdbcMetadataBuilder {
 	private final String defaultCatalog;
 	private final String defaultSchema;
 	
-	private JdbcMetadataBuilder(
+	private RevengMetadataBuilder(
 			Properties properties,
 			ReverseEngineeringStrategy reverseEngineeringStrategy) {
 		this.properties = properties;

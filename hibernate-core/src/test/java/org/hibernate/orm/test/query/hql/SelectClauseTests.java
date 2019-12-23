@@ -285,8 +285,11 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testMapEntryFunction() {
-		SqmSelectStatement statement = interpretSelect( "select entry(m) from EntityOfMaps e join e.manyToManyByBasic m" );
+		testMapEntryFunctionAssertions( interpretSelect( "select entry(m) from EntityOfMaps e join e.manyToManyByBasic m" ) );
+		testMapEntryFunctionAssertions( interpretSelect( "select entry(m) from EntityOfMaps e join e.sortedManyToManyByBasic m" ) );
+	}
 
+	private void testMapEntryFunctionAssertions(SqmSelectStatement statement) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 
 		final SqmMapEntryReference mapEntryPath = (SqmMapEntryReference) statement.getQuerySpec()

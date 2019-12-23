@@ -9,6 +9,8 @@ package org.hibernate.testing.orm.domain.gambit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -20,9 +22,11 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Steve Ebersole
+ * @author Fabio Massimo Ercoli
  */
 @SuppressWarnings("unused")
 @Entity
@@ -31,6 +35,8 @@ public class EntityOfMaps {
 	private String name;
 
 	private Map<String,String> basicByBasic;
+	private SortedMap<String, String> sortedBasicByBasic;
+
 	private Map<EnumValue,String> basicByEnum;
 	private Map<EnumValue,String> basicByConvertedEnum;
 
@@ -39,7 +45,9 @@ public class EntityOfMaps {
 
 	private Map<String, SimpleEntity> oneToManyByBasic;
 	private Map<SimpleEntity,String> basicByOneToMany;
+
 	private Map<String, SimpleEntity> manyToManyByBasic;
+	private SortedMap<String, SimpleEntity> sortedManyToManyByBasic;
 
 	private Map<String, SimpleComponent> componentByBasicOrdered;
 
@@ -88,6 +96,25 @@ public class EntityOfMaps {
 		basicByBasic.put( key, val );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedBasicByBasic
+
+	@ElementCollection
+	@SortNatural
+	public SortedMap<String, String> getSortedBasicByBasic() {
+		return sortedBasicByBasic;
+	}
+
+	public void setSortedBasicByBasic(SortedMap<String, String> sortedBasicByBasic) {
+		this.sortedBasicByBasic = sortedBasicByBasic;
+	}
+
+	public void addSortedBasicByBasic(String key, String val) {
+		if ( sortedBasicByBasic == null ) {
+			sortedBasicByBasic = new TreeMap<>();
+		}
+		sortedBasicByBasic.put( key, val );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// basicByEnum
@@ -231,6 +258,25 @@ public class EntityOfMaps {
 		manyToManyByBasic.put( key, value );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedManyToManyByBasic
+
+	@ManyToMany
+	@SortNatural
+	public SortedMap<String, SimpleEntity> getSortedManyToManyByBasic() {
+		return sortedManyToManyByBasic;
+	}
+
+	public void setSortedManyToManyByBasic(SortedMap<String, SimpleEntity> sortedManyToManyByBasic) {
+		this.sortedManyToManyByBasic = sortedManyToManyByBasic;
+	}
+
+	public void addSortedManyToManyByComponent(String key, SimpleEntity value) {
+		if ( sortedManyToManyByBasic == null ) {
+			sortedManyToManyByBasic = new TreeMap<>();
+		}
+		sortedManyToManyByBasic.put( key, value );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// componentByBasicOrdered

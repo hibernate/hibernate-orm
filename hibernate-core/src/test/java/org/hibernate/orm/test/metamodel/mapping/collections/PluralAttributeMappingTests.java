@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
+ * @author Fabio Massimo Ercoli
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
@@ -101,12 +102,17 @@ public class PluralAttributeMappingTests {
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
 		// 8 for now, until entity-valued map keys is supported
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 10 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 12 ) );
 
 		final PluralAttributeMapping basicByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByBasic" );
 		assertThat( basicByBasic, notNullValue() );
 		assertThat( basicByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( basicByBasic.getElementDescriptor(), notNullValue() );
+
+		final PluralAttributeMapping sortedBasicByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "sortedBasicByBasic" );
+		assertThat( sortedBasicByBasic, notNullValue() );
+		assertThat( sortedBasicByBasic.getKeyDescriptor(), notNullValue() );
+		assertThat( sortedBasicByBasic.getElementDescriptor(), notNullValue() );
 
 		final PluralAttributeMapping basicByEnum = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByEnum" );
 		assertThat( basicByEnum, notNullValue() );
@@ -142,6 +148,11 @@ public class PluralAttributeMappingTests {
 		assertThat( manyToManyByBasic, notNullValue() );
 		assertThat( manyToManyByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( manyToManyByBasic.getElementDescriptor(), notNullValue() );
+
+		final PluralAttributeMapping sortedManyToManyByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "sortedManyToManyByBasic" );
+		assertThat( sortedManyToManyByBasic, notNullValue() );
+		assertThat( sortedManyToManyByBasic.getKeyDescriptor(), notNullValue() );
+		assertThat( sortedManyToManyByBasic.getElementDescriptor(), notNullValue() );
 
 		final PluralAttributeMapping componentByBasicOrdered = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "componentByBasicOrdered" );
 		assertThat( componentByBasicOrdered, notNullValue() );

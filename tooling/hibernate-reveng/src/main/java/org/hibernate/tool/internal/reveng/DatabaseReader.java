@@ -25,9 +25,9 @@ import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 
-public class JDBCReader {
+public class DatabaseReader {
 
-	public static JDBCReader create(
+	public static DatabaseReader create(
 			Properties properties, 
 			ReverseEngineeringStrategy revengStrategy, 
 			MetaDataDialect mdd,
@@ -38,7 +38,7 @@ public class JDBCReader {
 				.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		String defaultSchemaName = properties
 				.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		return new JDBCReader(
+		return new DatabaseReader(
 				mdd, 
 				connectionProvider, 
 				defaultCatalogName, 
@@ -55,7 +55,7 @@ public class JDBCReader {
 	private final String defaultSchema;
 	private final String defaultCatalog;
 	
-	public JDBCReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
+	public DatabaseReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
 		this.metadataDialect = dialect;
 		this.provider = provider;
 		this.revengStrategy = reveng;

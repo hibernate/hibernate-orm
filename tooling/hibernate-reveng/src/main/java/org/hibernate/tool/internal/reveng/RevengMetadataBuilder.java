@@ -100,7 +100,7 @@ public class RevengMetadataBuilder {
 				.createMetaDataDialect(
 						serviceRegistry.getService(JdbcServices.class).getDialect(), 
 						properties );
-	    JDBCReader reader = JDBCReader.create(properties,revengStrategy,mdd, serviceRegistry);
+	    DatabaseReader reader = DatabaseReader.create(properties,revengStrategy,mdd, serviceRegistry);
 	    DatabaseCollector collector = new MappingsDatabaseCollector(metadataCollector, reader.getMetaDataDialect());
         reader.readDatabaseSchema(collector, defaultCatalog, defaultSchema);
         return collector;

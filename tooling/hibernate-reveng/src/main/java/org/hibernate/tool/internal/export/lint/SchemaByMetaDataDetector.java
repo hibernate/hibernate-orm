@@ -32,7 +32,7 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.DefaultDatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.JDBCReader;
+import org.hibernate.tool.internal.reveng.DatabaseReader;
 import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
@@ -43,7 +43,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		return "schema";
 	}
 	
-	JDBCReader reader;
+	DatabaseReader reader;
 
 	private TableSelectorStrategy tableSelector;
 
@@ -70,7 +70,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				.createMetaDataDialect(
 						dialect, 
 						properties );
-		reader = JDBCReader.create( 
+		reader = DatabaseReader.create( 
 				properties,
 				tableSelector, 
 				mdd,

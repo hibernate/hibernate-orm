@@ -105,7 +105,7 @@ public class ActionQueue {
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS_MAP = new LinkedHashMap<Class<? extends Executable>,ListProvider>( 8 );
+		EXECUTABLE_LISTS_MAP = new LinkedHashMap<>();
 
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,
@@ -1039,23 +1039,24 @@ public class ActionQueue {
 			private final String entityName;
 			private final String rootEntityName;
 
-			private Set<String> parentEntityNames = new HashSet<>( );
+			private Set<String> parentEntityNames = new HashSet<>();
 
-			private Set<String> childEntityNames = new HashSet<>( );
+			private Set<String> childEntityNames = new HashSet<>();
 
-			private BatchIdentifier parent;
+			private int parentCount;
+			private List<BatchIdentifier> children = new LinkedList<>( );
 
 			BatchIdentifier(String entityName, String rootEntityName) {
 				this.entityName = entityName;
 				this.rootEntityName = rootEntityName;
 			}
 
-			public BatchIdentifier getParent() {
-				return parent;
+			public int getParentCount() {
+				return parentCount;
 			}
 
-			public void setParent(BatchIdentifier parent) {
-				this.parent = parent;
+			public List<BatchIdentifier> getChildren() {
+				return children;
 			}
 
 			@Override
@@ -1100,33 +1101,6 @@ public class ActionQueue {
 				return childEntityNames.contains( batchIdentifier.getEntityName() );
 			}
 
-			/**
-			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
-			 * matching the given {@link BatchIdentifier} reference.
-			 *
-			 * @param batchIdentifier {@link BatchIdentifier} reference
-			 *
-			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier} reference
-			 */
-			boolean hasParent(BatchIdentifier batchIdentifier) {
-				return (
-					parent == batchIdentifier
-					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
-					|| ( parentEntityNames.contains( batchIdentifier.getRootEntityName() ) && !this.getEntityName().equals( batchIdentifier.getRootEntityName() ) )
-					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
-				);
-			}
-
-			private boolean hasParent(BatchIdentifier batchIdentifier, List<BatchIdentifier> stack) {
-				if ( !stack.contains( this ) && parent != null ) {
-					stack.add( this );
-					return parent.hasParent( batchIdentifier, stack );
-				}
-				return (
-					parent == batchIdentifier
-					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
-				);
-			}
 		}
 
 		// the mapping of entity names to their latest batch numbers.
@@ -1143,7 +1117,7 @@ public class ActionQueue {
 		 */
 		public void sort(List<AbstractEntityInsertAction> insertions) {
 			// optimize the hash size to eliminate a rehash.
-			this.latestBatches = new ArrayList<>( );
+			this.latestBatches = new ArrayList<>();
 			this.actionBatches = new HashMap<>();
 
 			for ( AbstractEntityInsertAction action : insertions ) {
@@ -1174,77 +1148,58 @@ public class ActionQueue {
 			for ( int i = 0; i < latestBatches.size(); i++ ) {
 				BatchIdentifier batchIdentifier = latestBatches.get( i );
 
+				List<BatchIdentifier> childrenFound = new LinkedList<>();
+
 				for ( int j = i - 1; j >= 0; j-- ) {
 					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
-					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
-						prevBatchIdentifier.parent = batchIdentifier;
-					}
-					if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
-						prevBatchIdentifier.parent = batchIdentifier;
+					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) || batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
+						childrenFound.add( prevBatchIdentifier );
 					}
 				}
 
 				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
 					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
-						nextBatchIdentifier.parent = batchIdentifier;
+					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) || batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
+						childrenFound.add( nextBatchIdentifier );
 					}
-					if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
-						nextBatchIdentifier.parent = batchIdentifier;
+				}
+
+				for ( BatchIdentifier child : childrenFound ) {
+					child.parentCount++;
+					batchIdentifier.getChildren().add( child );
+				}
+			}
+
+			final List<BatchIdentifier> sortedBatches = new ArrayList<>( latestBatches.size() );
+
+			// Topological Sorting by Kahn's algorithm
+			LinkedList<BatchIdentifier> queue = new LinkedList<>();
+			for ( BatchIdentifier batch : latestBatches ) {
+				if ( batch.parentCount == 0 ) {
+					queue.add( batch );
+				}
+			}
+			while ( ! queue.isEmpty() ) {
+				BatchIdentifier batch = queue.poll();
+				sortedBatches.add( batch );
+				for ( BatchIdentifier child : batch.getChildren() ) {
+					child.parentCount--;
+					if ( child.parentCount == 0 ) {
+						queue.push( child );
 					}
 				}
 			}
 
-			boolean sorted = false;
-
-			long maxIterations = latestBatches.size() * latestBatches.size();
-			long iterations = 0;
-
-			sort:
-			do {
-				// Examine each entry in the batch list, sorting them based on parent/child association
-				// as depicted by the dependency graph.
-				iterations++;
-
-				for ( int i = 0; i < latestBatches.size(); i++ ) {
-					BatchIdentifier batchIdentifier = latestBatches.get( i );
-
-					// Iterate next batches and make sure that children types are after parents.
-					// Since the outer loop looks at each batch entry individually and the prior loop will reorder
-					// entries as well, we need to look and verify if the current batch is a child of the next
-					// batch or if the current batch is seen as a parent or child of the next batch.
-					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
-						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-						if ( batchIdentifier.hasParent( nextBatchIdentifier ) ) {
-							if ( nextBatchIdentifier.hasParent( batchIdentifier ) ) {
-								//cycle detected, no need to continue
-								break sort;
-							}
-
-							latestBatches.remove( batchIdentifier );
-							latestBatches.add( j, batchIdentifier );
-
-							continue sort;
-						}
-					}
-				}
-				sorted = true;
+			if ( sortedBatches.size() < latestBatches.size() ) {
+				// the cycle participants correspond to the two collection diff
+				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted because of circular dependencies");
 			}
-			while ( !sorted && iterations <= maxIterations );
-
-			if ( iterations > maxIterations ) {
-				LOG.warn( "The batch containing " + latestBatches.size() + " statements could not be sorted after " + maxIterations + " iterations. " +
-								"This might indicate a circular entity relationship." );
-			}
-
-			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
-			if ( sorted ) {
+			else {
+				// Now, rebuild the insertions list. There is a batch for each entry in the name list.
 				insertions.clear();
 
-				for ( BatchIdentifier rootIdentifier : latestBatches ) {
-					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
+				for ( BatchIdentifier rootIdentifier : sortedBatches ) {
+					final List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
 					insertions.addAll( batch );
 				}
 			}

@@ -1,31 +1,30 @@
 package org.hibernate.spatial.integration;
 
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.SpatialPredicates;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.integration.jts.JtsGeomEntity;
+import org.hibernate.spatial.SpatialPredicates;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
-
-import org.jboss.logging.Logger;
-
 import org.junit.Test;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

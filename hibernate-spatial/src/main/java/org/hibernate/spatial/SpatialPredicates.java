@@ -20,7 +20,7 @@ import org.locationtech.jts.geom.Geometry;
  * @author Daniel Shuy
  * @see SpatialRestrictions
  */
-public class SpatialPredicates {
+public final class SpatialPredicates {
 
 	private SpatialPredicates() {
 	}

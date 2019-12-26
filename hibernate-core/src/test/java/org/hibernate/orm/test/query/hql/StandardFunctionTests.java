@@ -11,7 +11,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -78,6 +77,54 @@ public class StandardFunctionTests {
 
 					session.createQuery( "select e from EntityOfBasics e where current_instant between e.theInstant and e.theInstant" ).list();
 					session.createQuery( "select e from EntityOfBasics e where current_instant() between e.theInstant and e.theInstant" ).list();
+				}
+		);
+	}
+
+	@Test
+	public void localDateTimeTests(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select local_datetime from EntityOfBasics" ).list();
+					session.createQuery( "select local_datetime() from EntityOfBasics" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_datetime" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_datetime()()" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where local_datetime() between e.theTimestamp and e.theTimestamp" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_datetime()() between e.theTimestamp and e.theTimestamp" ).list();
+				}
+		);
+	}
+
+	@Test
+	public void localDateTests(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select local_date from EntityOfBasics" ).list();
+					session.createQuery( "select local_date() from EntityOfBasics" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_date()()" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where local_date() between e.theTimestamp and e.theTimestamp" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_date()() between e.theTimestamp and e.theTimestamp" ).list();
+				}
+		);
+	}
+
+	@Test
+	public void localTimeTests(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select local_time from EntityOfBasics" ).list();
+					session.createQuery( "select local_time() from EntityOfBasics" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_time" ).list();
+					session.createQuery( "select e from EntityOfBasics e where e.theTimestamp = local_time()()" ).list();
+
+					session.createQuery( "select e from EntityOfBasics e where local_time() between e.theTimestamp and e.theTimestamp" ).list();
+					session.createQuery( "select e from EntityOfBasics e where local_time()() between e.theTimestamp and e.theTimestamp" ).list();
 				}
 		);
 	}
@@ -489,7 +536,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testExtractFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -534,20 +580,44 @@ public class StandardFunctionTests {
 
 					session.createQuery("select extract(offset hour from e.theTime) from EntityOfBasics e")
 							.list();
-					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
-							.list();
+
+// the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
+//					session.createQuery("select extract(offset hour minute from e.theTime) from EntityOfBasics e")
+//							.list();
 
 					session.createQuery("select extract(offset from e.theTimestamp) from EntityOfBasics e")
 							.list();
 
 					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e")
 							.list();
-					session.createQuery("select extract(time from current datetime), extract(date from current datetime) from EntityOfBasics e")
+					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select extract(week of month from current date) from EntityOfBasics e")
+// Not a fan of these "current date", "current time" and "current timestamp" forms.  They were meant to represent `LocalDate`,
+// `LocalTime` and `LocalDateTime` values.  Which imo is just super confusing with `current_date`, `current_time` and
+// `current_timestamp` returning the `Date`, `Time` and `Timestamp` forms
+//					session.createQuery("select extract(time from current datetime), extract(date from current datetime) from EntityOfBasics e")
+//							.list();
+// So I added `local_date`, `local_time` and `local_datetime` functions instead.  See the `localDateTests`, etc
+
+					session.createQuery("select extract(week of month from current_date) from EntityOfBasics e")
 							.list();
-					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
+					session.createQuery("select extract(week of year from current_date) from EntityOfBasics e")
+							.list();
+
+// I really don't like this "separate word" approach - here, even moreso.  The problem is the PR also defines a
+// `FIELD( temporalValue)` form which here, e.g., would mean this is a valid expression: `week of year( current date )` which is awful imo
+//					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
+//							.list();
+				}
+		);
+	}
+
+	@Test
+	public void isolated(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e")
 							.list();
 				}
 		);

@@ -711,6 +711,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void currentDateTimeTimestamp(QueryEngine queryEngine) {
+		// Legacy JDK `Date`-based functions
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
 				.setInvariantType( StandardBasicTypes.TIME )
 				.register();
@@ -721,15 +722,18 @@ public class CommonFunctionFactory {
 				.setInvariantType( StandardBasicTypes.TIMESTAMP )
 				.register();
 
+		// "JDK 8" temporal-type functions.
+		// 		- These are essentially aliases for the `current_XYZ` forms
+		//		but defining JDK 8 temporal type return values
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
 				.setInvariantType( StandardBasicTypes.LOCAL_TIME )
-				.register();
+				.register( "local_time" );
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE )
-				.register();
+				.register( "local_date" );
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
-				.register();
+				.register( "local_datetime");
 		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.INSTANT )
 				.register( "current_instant" );

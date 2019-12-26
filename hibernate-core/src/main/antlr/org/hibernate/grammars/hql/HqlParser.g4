@@ -617,6 +617,9 @@ standardFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
 	|	currentInstantFunction
+	|	localDateFunction
+	| 	localDateTimeFunction
+	| 	localTimeFunction
 	;
 
 
@@ -808,6 +811,18 @@ currentInstantFunction
 	: CURRENT_INSTANT (LEFT_PAREN RIGHT_PAREN)?
 	;
 
+localDateTimeFunction
+	: LOCAL_DATETIME (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+localDateFunction
+	: LOCAL_DATE (LEFT_PAREN RIGHT_PAREN)?
+	;
+
+localTimeFunction
+	: LOCAL_TIME (LEFT_PAREN RIGHT_PAREN)?
+	;
+
 formatFunction
 	: FORMAT LEFT_PAREN expression AS format RIGHT_PAREN
 	;
@@ -906,10 +921,12 @@ identifier
 	| COUNT
 	| CROSS
 	| CURRENT_DATE
+	| CURRENT_DATETIME
 	| CURRENT_INSTANT
 	| CURRENT_TIME
 	| CURRENT_TIMESTAMP
 	| DAY
+	| DATE
 	| DELETE
 	| DESC
 	| DISTINCT
@@ -963,6 +980,7 @@ identifier
 	| MINUTE
 	| MOD
 	| MONTH
+	| NANOSECOND
 	| NEW
 	| NOT
 	| NULLIF
@@ -989,6 +1007,7 @@ identifier
 	| SUBSTRING
 	| SUM
 	| THEN
+	| TIME
 	| TIMEZONE_HOUR
 	| TIMEZONE_MINUTE
 	| TRAILING

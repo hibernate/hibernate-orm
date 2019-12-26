@@ -1508,6 +1508,39 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
+	public Object visitLocalDateTimeFunction(HqlParser.LocalDateTimeFunctionContext ctx) {
+		//noinspection unchecked
+		return new SqmFunction(
+				"local_datetime",
+				getFunctionDescriptor( "local_datetime" ),
+				StandardBasicTypes.TIMESTAMP,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public Object visitLocalDateFunction(HqlParser.LocalDateFunctionContext ctx) {
+		//noinspection unchecked
+		return new SqmFunction(
+				"local_date",
+				getFunctionDescriptor( "local_date" ),
+				StandardBasicTypes.TIMESTAMP,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public Object visitLocalTimeFunction(HqlParser.LocalTimeFunctionContext ctx) {
+		//noinspection unchecked
+		return new SqmFunction(
+				"local_time",
+				getFunctionDescriptor( "local_time" ),
+				StandardBasicTypes.TIMESTAMP,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
 	public SqmExpression visitCurrentInstantFunction(HqlParser.CurrentInstantFunctionContext ctx) {
 		//noinspection unchecked
 		return new SqmFunction(
@@ -1901,11 +1934,15 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public List<SqmTypedNode<?>> visitNonStandardFunctionArguments(HqlParser.NonStandardFunctionArgumentsContext ctx) {
+		if ( ctx == null || ctx.expression() == null ) {
+			return Collections.emptyList();
+		}
+
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
-		for ( int i=0, size=ctx.expression().size(); i<size; i++ ) {
+		for ( int i = 0, size = ctx.expression().size(); i < size; i++ ) {
 			// we handle the final argument differently...
-			if ( i == size-1 ) {
+			if ( i == size - 1 ) {
 				arguments.add( visitFinalFunctionArgument( ctx.expression( i ) ) );
 			}
 			else {
@@ -2109,56 +2146,56 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.DAY()!=null) {
+		if ( ctx.DAY() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.DAY,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.MONTH()!=null) {
+		if ( ctx.MONTH() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.MONTH,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.YEAR()!=null) {
+		if ( ctx.YEAR() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.YEAR,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.HOUR()!=null) {
+		if ( ctx.HOUR() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.HOUR,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.MINUTE()!=null) {
+		if ( ctx.MINUTE() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.MINUTE,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.SECOND()!=null) {
+		if ( ctx.SECOND() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.SECOND,
 					resolveExpressableTypeBasic( Float.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.WEEK()!=null) {
+		if ( ctx.WEEK() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.WEEK,
 					resolveExpressableTypeBasic( Integer.class ),
 					nodeBuilder
 			);
 		}
-		if (ctx.QUARTER()!=null) {
+		if ( ctx.QUARTER() != null ) {
 			return new SqmExtractUnit<>(
 					TemporalUnit.QUARTER,
 					resolveExpressableTypeBasic( Integer.class ),
@@ -2166,7 +2203,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			);
 		}
 
-		return super.visitDatetimeField(ctx);
+		return super.visitDatetimeField( ctx );
 	}
 
 	@Override

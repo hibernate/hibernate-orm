@@ -160,7 +160,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be flushed prior transaction completion.
+	 * @return Whether or not the the session should be flushed prior to transaction completion.
 	 */
 	protected boolean isAutoFlushEnabled() {
 		return true;

@@ -9,8 +9,8 @@ package org.hibernate.jdbc;
 
 /**
  * Much like {@link TooManyRowsAffectedException}, indicates that more
- * rows than what we were expcecting were affected.  Additionally, this form
- * occurs from a batch and carries along the batch positon that failed.
+ * rows than what we were expecting were affected.  Additionally, this form
+ * occurs from a batch and carries along the batch position that failed.
  *
  * @author Steve Ebersole
  */

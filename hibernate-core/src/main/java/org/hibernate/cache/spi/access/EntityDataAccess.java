@@ -62,7 +62,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @param key The item key
 	 * @param value The item
 	 * @param version The item's version value
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version);
@@ -92,7 +92,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @param value The item
 	 * @param currentVersion The item's current version value
 	 * @param previousVersion The item's previous version value
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean update(
@@ -113,7 +113,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @param currentVersion The item's current version value
 	 * @param previousVersion The item's previous version value
 	 * @param lock The lock previously obtained from {@link #lockItem}
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean afterUpdate(

@@ -18,7 +18,7 @@ import org.hibernate.tuple.component.ComponentMetamodel;
 public class EmbeddedComponentType extends ComponentType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public EmbeddedComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {

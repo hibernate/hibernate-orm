@@ -191,7 +191,7 @@ public final class ReflectHelper {
 	 * Is this member publicly accessible.
 	 *
 	 * @param clazz The class which defines the member
-	 * @param member The memeber.
+	 * @param member The member.
 	 * @return True if the member is publicly accessible, false otherwise.
 	 */
 	public static boolean isPublic(Class clazz, Member member) {
@@ -299,7 +299,7 @@ public final class ReflectHelper {
 	 * Determine is the given class is declared final.
 	 *
 	 * @param clazz The class to check.
-	 * @return True if the class is final, flase otherwise.
+	 * @return True if the class is final, false otherwise.
 	 */
 	public static boolean isFinalClass(Class clazz) {
 		return Modifier.isFinal( clazz.getModifiers() );

@@ -21,7 +21,7 @@ public class SortedMapType extends MapType {
 	private final Comparator comparator;
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public SortedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator) {

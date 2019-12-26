@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class ListType extends CollectionType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public ListType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {

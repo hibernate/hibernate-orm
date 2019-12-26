@@ -13,7 +13,7 @@ import org.hibernate.mapping.Property;
  */
 public interface NaturalIdUniqueKeyBinder {
 	/**
-	 * Adds a attribute binding.  The attribute is a (top-level) part of the natural-id
+	 * Adds an attribute binding.  The attribute is a (top-level) part of the natural-id
 	 *
 	 * @param attributeBinding The attribute binding that is part of the natural-id
 	 */

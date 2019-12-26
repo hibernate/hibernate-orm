@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import java.sql.Types;
 
 /**
- * Some databases strictly return the type of the of the aggregation value for <tt>AVG</tt> which is
+ * Some databases strictly return the type of the aggregation value for <tt>AVG</tt> which is
  * problematic in the case of averaging integers because the decimals will be dropped.  The usual workaround
  * is to cast the integer argument as some form of double/decimal.
  *

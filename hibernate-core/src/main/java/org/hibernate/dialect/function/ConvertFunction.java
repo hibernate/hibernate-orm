@@ -14,7 +14,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
- * A Cach&eacute; defintion of a convert function.
+ * A Cach&eacute; definition of a convert function.
  *
  * @author Jonathan Levinson
  */

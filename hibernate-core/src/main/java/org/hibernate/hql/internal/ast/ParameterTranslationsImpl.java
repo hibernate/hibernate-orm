@@ -32,7 +32,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	 * specifications.
 	 * </p>
 	 * Note: the order in the incoming list denotes the parameter's
-	 * psudeo-position within the resulting sql statement.
+	 * pseudo-position within the resulting sql statement.
 	 *
 	 * @param parameterSpecifications The parameter specifications
 	 */

@@ -8,7 +8,7 @@ package org.hibernate.type;
 import org.hibernate.HibernateException;
 
 /**
- * Thrown when a property cannot be serializaed/deserialized
+ * Thrown when a property cannot be serialized/deserialized
  * @author Gavin King
  */
 public class SerializationException extends HibernateException {

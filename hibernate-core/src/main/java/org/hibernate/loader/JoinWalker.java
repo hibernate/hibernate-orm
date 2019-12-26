@@ -570,7 +570,7 @@ public class JoinWalker {
 	 * @param componentType The component type to be walked.
 	 * @param propertyNumber The property number for the component property (relative to
 	 * persister).
-	 * @param begin todo unknowm
+	 * @param begin todo unknown
 	 * @param persister The owner of the component property
 	 * @param alias The root alias
 	 * @param path The property access path
@@ -661,7 +661,7 @@ public class JoinWalker {
 			if ( types[i].isAssociationType() ) {
 				AssociationType associationType = (AssociationType) types[i];
 
-				// simple, because we can't have a one-to-one or a collection 
+				// simple, because we can't have a one-to-one or a collection
 				// (or even a property-ref) in a composite-element:
 				String[] aliasedLhsColumns = StringHelper.qualify( alias, lhsColumns );
 
@@ -707,11 +707,11 @@ public class JoinWalker {
 	 * is the "first" join in a series
 	 */
 	protected JoinType getJoinType(boolean nullable, int currentDepth) {
-		//TODO: this is too conservative; if all preceding joins were 
+		//TODO: this is too conservative; if all preceding joins were
 		//      also inner joins, we could use an inner join here
 		//
 		// IMPL NOTE : currentDepth might be less-than zero if this is the
-		// 		root of a many-to-many collection initializer 
+		// 		root of a many-to-many collection initializer
 		return !nullable && currentDepth <= 0
 				? JoinType.INNER_JOIN
 				: JoinType.LEFT_OUTER_JOIN;
@@ -743,7 +743,7 @@ public class JoinWalker {
 				return false;
 			}
 			if ( type.isEntityType() ) {
-				//TODO: look at the owning property and check that it 
+				//TODO: look at the owning property and check that it
 				//      isn't lazy (by instrumentation)
 				EntityType entityType = (EntityType) type;
 				EntityPersister persister = getFactory().getEntityPersister( entityType.getAssociatedEntityName() );

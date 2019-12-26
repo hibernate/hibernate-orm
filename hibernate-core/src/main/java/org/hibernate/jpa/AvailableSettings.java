@@ -236,7 +236,7 @@ public interface AvailableSettings {
 	 *         <b>enabled</b> - Do the build
 	 *     </li>
 	 *     <li>
-	 *         <b>disabled</b> - Do not so the build
+	 *         <b>disabled</b> - Do not do the build
 	 *     </li>
 	 *     <li>
 	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise

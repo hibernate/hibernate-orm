@@ -548,7 +548,7 @@ class FromElementType {
 
 		// indexed, many-to-many collections must be treated specially here if the property to
 		// be mapped touches on the index as we must adjust the alias to use the alias from
-		// the association table (which i different than the one passed in
+		// the association table (which i different than the one passed in)
 		if ( queryableCollection.isManyToMany()
 				&& queryableCollection.hasIndex()
 				&& SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES.contains( propertyName ) ) {

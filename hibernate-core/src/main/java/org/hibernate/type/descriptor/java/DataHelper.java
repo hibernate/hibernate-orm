@@ -239,7 +239,7 @@ public final class DataHelper {
 	}
 
 	/**
-	 * Extract a portion of the bytes from the given stream., wrapping them in a new stream.
+	 * Extract a portion of the bytes from the given stream, wrapping them in a new stream.
 	 *
 	 * @param inputStream The stream of bytes.
 	 * @param start The start position/offset (0-based, per general stream/reader contracts).
@@ -292,7 +292,7 @@ public final class DataHelper {
 	/**
 	 * Make sure we allocate a buffer sized not bigger than 2048,
 	 * not higher than what is actually needed, and at least one.
-	 * 
+	 *
 	 * @param lengthHint the expected size of the full value
 	 * @return the buffer size
 	 */

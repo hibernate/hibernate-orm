@@ -143,7 +143,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	/**
 	 * Is this a many-to-many association?  Note that this is mainly
 	 * a convenience feature as the single persister does not
-	 * conatin all the information needed to handle a many-to-many
+	 * contain all the information needed to handle a many-to-many
 	 * itself, as internally it is looked at as two many-to-ones.
 	 */
 	boolean isManyToMany();
@@ -160,7 +160,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	boolean isLazy();
 	/**
 	 * Is this collection "inverse", so state changes are not
-	 * propogated to the database.
+	 * propagated to the database.
 	 */
 	boolean isInverse();
 	/**
@@ -201,7 +201,7 @@ public interface CollectionPersister extends CollectionDefinition {
 			Serializable key,
 			SharedSessionContractImplementor session)
 		throws HibernateException;
-	
+
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
@@ -210,7 +210,7 @@ public interface CollectionPersister extends CollectionDefinition {
 			Serializable key,
 			SharedSessionContractImplementor session)
 			throws HibernateException;
-	
+
 	/**
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")
@@ -253,22 +253,22 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * foreign key constraint definition?
 	 */
 	boolean isCascadeDeleteEnabled();
-	
+
 	/**
-	 * Does this collection cause version increment of the 
+	 * Does this collection cause version increment of the
 	 * owning entity?
 	 */
 	boolean isVersioned();
-	
+
 	/**
 	 * Can the elements of this collection change?
 	 */
 	boolean isMutable();
-	
+
 	//public boolean isSubselectLoadable();
-	
+
 	void postInstantiate() throws MappingException;
-	
+
 	SessionFactoryImplementor getFactory();
 
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
@@ -308,7 +308,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * @return The key column aliases.
 	 */
 	String getIdentifierColumnAlias(String suffix);
-	
+
 	boolean isExtraLazy();
 	int getSize(Serializable key, SharedSessionContractImplementor session);
 	boolean indexExists(Serializable key, Object index, SharedSessionContractImplementor session);

@@ -52,7 +52,7 @@ public interface TransactionCoordinatorOwner {
 	 * An after-completion callback from the coordinator to its owner.
 	 *
 	 * @param successful Was the transaction successful?
-	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
+	 * @param delayed Is this delayed after transaction completion call (aka after a timeout)?
 	 */
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 

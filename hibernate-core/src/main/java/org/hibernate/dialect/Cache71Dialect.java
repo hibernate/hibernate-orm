@@ -49,7 +49,7 @@ import org.hibernate.type.StandardBasicTypes;
 /**
  * Cach&eacute; 2007.1 dialect.
  *
- * This class is required in order to use Hibernate with Intersystems Cach&eacute; SQL.  Compatible with
+ * This class is required in order to use Hibernate with InterSystems Cach&eacute; SQL.  Compatible with
  * Cach&eacute; 2007.1.
  *
  * <h2>PREREQUISITES</h2>

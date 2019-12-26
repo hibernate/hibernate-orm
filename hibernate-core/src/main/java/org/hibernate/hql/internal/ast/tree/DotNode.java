@@ -109,7 +109,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private boolean fetch;
 
 	/**
-	 * The type of dereference that hapened
+	 * The type of dereference that happened
 	 */
 	private DereferenceType dereferenceType = DereferenceType.UNKNOWN;
 

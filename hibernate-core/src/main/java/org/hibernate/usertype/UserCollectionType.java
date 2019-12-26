@@ -65,7 +65,7 @@ public interface UserCollectionType {
 	 * but with the given anticipated size (i.e. accounting for initial size
 	 * and perhaps load factor).
 	 *
-	 * @param anticipatedSize The anticipated size of the instaniated collection
+	 * @param anticipatedSize The anticipated size of the instantiated collection
 	 * after we are done populating it.  Note, may be negative to indicate that
 	 * we not yet know anything about the anticipated size (i.e., when initializing
 	 * from a result set row by row).

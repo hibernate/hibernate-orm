@@ -8,7 +8,7 @@ package org.hibernate;
 
 /**
  * Thrown when a version number or timestamp check failed, indicating that the Session contained
- * stale data (when using long transactions with versioning). Also occurs if we try delete or update
+ * stale data (when using long transactions with versioning). Also occurs if we try to delete or update
  * a row that does not exist.
  *
  * Note that this exception often indicates that the user failed to specify the correct

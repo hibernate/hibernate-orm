@@ -533,7 +533,7 @@ public class CustomLoader extends Loader {
 	 * *after* {@link #list(SharedSessionContractImplementor, QueryParameters)} has already been called.  It's a bit of a
 	 * chicken-and-the-egg issue since {@link #autoDiscoverTypes(ResultSet)} needs the {@link ResultSet}.
 	 * <p/>
-	 * As a hacky workaround, overriden here to provide the {@link #resultTypes}.
+	 * As a hacky workaround, overridden here to provide the {@link #resultTypes}.
 	 *
 	 * see HHH-3051
 	 */

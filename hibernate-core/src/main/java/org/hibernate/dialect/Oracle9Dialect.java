@@ -51,7 +51,7 @@ public class Oracle9Dialect extends Dialect {
 	);
 
 	/**
-	 * Constructs a Oracle9Dialect
+	 * Constructs an Oracle9Dialect
 	 */
 	public Oracle9Dialect() {
 		super();

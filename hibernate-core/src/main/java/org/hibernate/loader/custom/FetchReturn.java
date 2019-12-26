@@ -20,7 +20,7 @@ public abstract class FetchReturn extends NonScalarReturn {
 	 * Creates a return descriptor for an association fetch.
 	 *
 	 * @param owner The return descriptor for the owner of the fetch
-	 * @param ownerProperty The name of the property represernting the association being fetched
+	 * @param ownerProperty The name of the property representing the association being fetched
 	 * @param alias The alias for the fetch
 	 * @param lockMode The lock mode to apply to the fetched association.
 	 */

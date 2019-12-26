@@ -419,7 +419,7 @@ public final class TypeFactory implements Serializable {
 	 *
 	 * @param metaType meta type
 	 * @param identifierType identifier type
-	 * @param lazy is teh underlying proeprty lazy
+	 * @param lazy is the underlying property lazy
 	 * @return AnyType
 	 */
 	public Type any(Type metaType, Type identifierType, boolean lazy) {

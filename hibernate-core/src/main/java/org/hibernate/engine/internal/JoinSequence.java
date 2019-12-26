@@ -156,9 +156,9 @@ public class JoinSequence {
 	}
 
 	/**
-	 * Embedds an implied from element into this sequence
+	 * Embeds an implied from element into this sequence
 	 *
-	 * @param fromElement The implied from element to embedd
+	 * @param fromElement The implied from element to embed
 	 * @return The Join memento
 	 */
 	public JoinSequence addJoin(ImpliedFromElement fromElement) {

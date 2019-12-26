@@ -14,7 +14,7 @@ package org.hibernate.hql.internal.ast.tree;
 public class ImpliedFromElement extends FromElement {
 	/**
 	 * True if this from element was implied from a path in the FROM clause, but not
-	 * explicitly declard in the from clause.
+	 * explicitly declared in the from clause.
 	 */
 	private boolean impliedInFromClause;
 

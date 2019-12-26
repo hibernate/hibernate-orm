@@ -33,7 +33,7 @@ public interface FilterSource {
 	public String getCondition();
 
 	/**
-	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default it to
+	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default is to
 	 * perform auto injection *unless* explicit alias(es) are supplied.
 	 *
 	 * @return {@code true} indicates auto injection should occur; {@code false} that it should not

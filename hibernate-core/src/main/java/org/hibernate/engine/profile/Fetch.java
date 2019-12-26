@@ -37,7 +37,7 @@ public class Fetch {
 	/**
 	 * The type or style of fetch.  For the moment we limit this to
 	 * join and select, though technically subselect would be valid
-	 * here as as well; however, to support subselect here would
+	 * here as well; however, to support subselect here would
 	 * require major changes to the subselect loading code (which is
 	 * needed for other things as well anyway).
 	 */

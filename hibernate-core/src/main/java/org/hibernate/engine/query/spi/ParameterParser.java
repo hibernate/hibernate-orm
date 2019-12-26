@@ -54,7 +54,7 @@ public class ParameterParser {
 		void jpaPositionalParameter(int identifier, int position);
 
 		/**
-		 * Called when a character that is not a parameter (or part of a parameter dfinition) is recognized.
+		 * Called when a character that is not a parameter (or part of a parameter definition) is recognized.
 		 *
 		 * @param character The recognized character
 		 */

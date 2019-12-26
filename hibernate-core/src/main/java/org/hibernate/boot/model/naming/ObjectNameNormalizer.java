@@ -24,7 +24,7 @@ public abstract class ObjectNameNormalizer {
 	 * This implements the rules set forth in JPA 2 (section "2.13 Naming of Database Objects") which
 	 * states that the double-quote (") is the character which should be used to denote a <tt>quoted
 	 * identifier</tt>.  Here, we handle recognizing that and converting it to the more elegant
-	 * bactick (`) approach used in Hibernate..  Additionally we account for applying what JPA2 terms
+	 * backtick (`) approach used in Hibernate..  Additionally we account for applying what JPA2 terms
 	 * "globally quoted identifiers".
 	 *
 	 * @param identifierText The identifier to be quoting-normalized.

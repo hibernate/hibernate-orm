@@ -120,7 +120,7 @@ public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	/**
-	 * Constructs a Oracle8iDialect
+	 * Constructs an Oracle8iDialect
 	 */
 	public Oracle8iDialect() {
 		super();
@@ -340,7 +340,7 @@ public class Oracle8iDialect extends Dialect {
 	 * implementation...
 	 *
 	 * @param sqlType The {@link java.sql.Types} mapping type code
-	 * @return The appropriate select cluse fragment
+	 * @return The appropriate select clause fragment
 	 */
 	public String getBasicSelectClauseNullString(int sqlType) {
 		return super.getSelectClauseNullString( sqlType );

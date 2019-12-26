@@ -17,7 +17,7 @@ public interface UnsavedValueStrategy {
 	 *
 	 * @param test The value to be tested
 	 *
-	 * @return {@code true} indicates the value corresponds to unsaved data (aka, transient state; {@code false}
+	 * @return {@code true} indicates the value corresponds to unsaved data (aka, transient state); {@code false}
 	 * indicates the value does not corresponds to unsaved data (aka, detached state); {@code null} indicates that
 	 * this strategy was not able to determine conclusively.
 	 */

@@ -263,7 +263,7 @@ public class HQLQueryPlan implements Serializable {
 
 	/**
 	 * If we're able to guess a likely size of the results we can optimize allocation
-	 * of our datastructures.
+	 * of our data structures.
 	 * Essentially if we detect the user is not using pagination, we attempt to use the FetchSize
 	 * as a reasonable hint. If fetch size is not being set either, it is reasonable to expect
 	 * that we're going to have a single hit. In such a case it would be tempting to return a constant

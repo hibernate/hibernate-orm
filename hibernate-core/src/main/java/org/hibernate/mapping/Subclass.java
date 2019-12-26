@@ -19,14 +19,14 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
 
 /**
- * A sublass in a table-per-class-hierarchy mapping
+ * A subclass in a table-per-class-hierarchy mapping
  * @author Gavin King
  */
 public class Subclass extends PersistentClass {
 	private PersistentClass superclass;
 	private Class classPersisterClass;
 	private final int subclassId;
-	
+
 	public Subclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
 		super( metadataBuildingContext );
 		this.superclass = superclass;
@@ -36,11 +36,11 @@ public class Subclass extends PersistentClass {
 	int nextSubclassId() {
 		return getSuperclass().nextSubclassId();
 	}
-	
+
 	public int getSubclassId() {
 		return subclassId;
 	}
-	
+
 	@Override
 	public String getNaturalIdCacheRegionName() {
 		return getSuperclass().getNaturalIdCacheRegionName();
@@ -243,7 +243,7 @@ public class Subclass extends PersistentClass {
 	}
 
 	public boolean hasSubselectLoadableCollections() {
-		return super.hasSubselectLoadableCollections() || 
+		return super.hasSubselectLoadableCollections() ||
 			getSuperclass().hasSubselectLoadableCollections();
 	}
 

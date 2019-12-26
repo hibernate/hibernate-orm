@@ -47,7 +47,7 @@ import org.hibernate.type.Type;
 
 /**
  * A hilo <tt>IdentifierGenerator</tt> that returns a <tt>Long</tt>, constructed using
- * a hi/lo algorithm. The hi value MUST be fetched in a seperate transaction
+ * a hi/lo algorithm. The hi value MUST be fetched in a separate transaction
  * to the <tt>Session</tt> transaction so the generator must be able to obtain
  * a new connection and commit it. Hence this implementation may not
  * be used  when the user is supplying connections. In this

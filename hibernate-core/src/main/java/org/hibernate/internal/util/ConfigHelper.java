@@ -30,7 +30,7 @@ public final class ConfigHelper {
 	/**
 	 * Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this
-	 * does not work, then the next attempts try to locate this UURL as a java system
+	 * does not work, then the next attempts try to locate this URL as a java system
 	 * resource.
 	 *
 	 * @param path The path representing the config location.

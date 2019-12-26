@@ -606,7 +606,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	/**
-	 * Get the a typed value for the given property value.
+	 * Get the typed value for the given property value.
 	 */
 	@Override
 	public TypedValue getTypedValue(Criteria subcriteria, String propertyName, Object value) throws HibernateException {

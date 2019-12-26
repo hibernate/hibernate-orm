@@ -49,7 +49,7 @@ import org.hibernate.mapping.Value;
 @SuppressWarnings("unchecked")
 public class Ejb3JoinColumn extends Ejb3Column {
 	/**
-	 * property name repated to this column
+	 * property name related to this column
 	 */
 	private String referencedColumn;
 	private String mappedBy;
@@ -769,7 +769,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			// was the column explicitly quoted in the mapping/annotation
 			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names
 			boolean isLogicalColumnQuoted = StringHelper.isQuoted( getLogicalColumnName() );
-			
+
 			final ObjectNameNormalizer nameNormalizer = getBuildingContext().getObjectNameNormalizer();
 			final String logicalColumnName = nameNormalizer.normalizeIdentifierQuotingAsString( getLogicalColumnName() );
 			final String referencedColumn = nameNormalizer.normalizeIdentifierQuotingAsString( getReferencedColumn() );

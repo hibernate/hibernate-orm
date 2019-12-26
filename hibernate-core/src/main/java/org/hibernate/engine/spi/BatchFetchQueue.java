@@ -52,7 +52,7 @@ public class BatchFetchQueue {
 	 * type at a time.
 	 */
 	private Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys;
-	
+
 	/**
 	 * Used to hold information about the collections that are currently eligible for batch-fetching.  Ultimately
 	 * used by {@link #getCollectionBatch} to build collection load batches.
@@ -97,7 +97,7 @@ public class BatchFetchQueue {
 	}
 
 	/**
-	 * Adds a subselect fetch decriptor for the given entity key.
+	 * Adds a subselect fetch descriptor for the given entity key.
 	 *
 	 * @param key The entity for which to register the subselect fetch.
 	 * @param subquery The fetch descriptor.
@@ -146,7 +146,7 @@ public class BatchFetchQueue {
 			keysForEntity.add( key );
 		}
 	}
-	
+
 
 	/**
 	 * After evicting or deleting or loading an entity, we don't
@@ -244,7 +244,7 @@ public class BatchFetchQueue {
 		}
 		return false;
 	}
-	
+
 
 	// collection batch support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -311,7 +311,7 @@ public class BatchFetchQueue {
 			for ( Entry<CollectionEntry, PersistentCollection> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();
 				final PersistentCollection collection = me.getValue();
-				
+
 				if ( ce.getLoadedKey() == null ) {
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null
 					// (see for example Collections.processDereferencedCollection()

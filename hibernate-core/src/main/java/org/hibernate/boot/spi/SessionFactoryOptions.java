@@ -85,7 +85,7 @@ public interface SessionFactoryOptions {
 	}
 
 	/**
-	 * The name to be used for the SessionFactory.  This is use both in:<ul>
+	 * The name to be used for the SessionFactory.  This is used both in:<ul>
 	 *     <li>in-VM serialization</li>
 	 *     <li>JNDI binding, depending on {@link #isSessionFactoryNameAlsoJndiName}</li>
 	 * </ul>

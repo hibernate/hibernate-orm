@@ -22,7 +22,7 @@ import org.hibernate.pretty.MessageHelper;
 /**
  * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged and provides logging of the entity copies that
- * that are detected.
+ * are detected.
  *
  * @author Gail Badner
  */

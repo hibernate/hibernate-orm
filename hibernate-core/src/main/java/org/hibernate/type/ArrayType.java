@@ -33,7 +33,7 @@ public class ArrayType extends CollectionType {
 	private final Class arrayClass;
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass) {
@@ -104,23 +104,23 @@ public class ArrayType extends CollectionType {
 	public Object replaceElements(
 		Object original,
 		Object target,
-		Object owner, 
+		Object owner,
 		Map copyCache,
 		SharedSessionContractImplementor session) throws HibernateException {
-		
+
 		int length = Array.getLength(original);
 		if ( length!=Array.getLength(target) ) {
 			//note: this affects the return value!
 			target=instantiateResult(original);
 		}
-		
+
 		Type elemType = getElementType( session.getFactory() );
 		for ( int i=0; i<length; i++ ) {
 			Array.set( target, i, elemType.replace( Array.get(original, i), null, session, owner, copyCache ) );
 		}
-		
+
 		return target;
-	
+
 	}
 
 	@Override

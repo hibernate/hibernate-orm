@@ -502,7 +502,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Performs cleanup of any held cache softlocks.
+	 * Performs cleanup of any held cache soft locks.
 	 *
 	 * @param success Was the transaction successful.
 	 */

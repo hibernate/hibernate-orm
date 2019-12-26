@@ -424,7 +424,7 @@ public class EntityBinder {
 					);
 				}
 			}
-			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(), 
+			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(),
 					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
 		LOG.debugf( "Import with entity name %s", name );
@@ -460,7 +460,7 @@ public class EntityBinder {
 				new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() )
 		);
 	}
-	
+
 	public void bindDiscriminatorValue() {
 		if ( StringHelper.isEmpty( discriminatorValue ) ) {
 			Value discriminator = persistentClass.getDiscriminator();

@@ -59,7 +59,7 @@ public class XMLContext implements Serializable {
 
 	/**
 	 * @param doc The xml document to add
-	 * @return Add a xml document to this context and return the list of added class names.
+	 * @return Add an xml document to this context and return the list of added class names.
 	 */
 	@SuppressWarnings( "unchecked" )
 	public List<String> addDocument(Document doc) {
@@ -108,7 +108,7 @@ public class XMLContext implements Serializable {
 		unitElement = root.element( "access" );
 		setAccess( unitElement, entityMappingDefault );
 		defaultElements.add( root );
-		
+
 		setLocalAttributeConverterDefinitions( root.elements( "converter" ) );
 
 		List<Element> entities = root.elements( "entity" );
@@ -190,7 +190,7 @@ public class XMLContext implements Serializable {
 		addedClasses.addAll( localAddedClasses );
 		return localAddedClasses;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private void setLocalAttributeConverterDefinitions(List<Element> converterElements) {
 		for ( Element converterElement : converterElements ) {

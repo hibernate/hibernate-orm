@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 public class OrderedMapType extends MapType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {

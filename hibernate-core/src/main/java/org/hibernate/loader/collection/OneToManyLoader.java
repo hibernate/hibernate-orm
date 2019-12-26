@@ -18,7 +18,7 @@ import org.jboss.logging.Logger;
 /**
  * Loads one-to-many associations<br>
  * <br>
- * The collection persister must implement <tt>QueryableCOllection<tt>. For
+ * The collection persister must implement <tt>QueryableCollection<tt>. For
  * other collections, create a customized subclass of <tt>Loader</tt>.
  *
  * @see BasicCollectionLoader

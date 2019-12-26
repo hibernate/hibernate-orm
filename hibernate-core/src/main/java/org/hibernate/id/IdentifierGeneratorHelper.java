@@ -46,7 +46,7 @@ public final class IdentifierGeneratorHelper {
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's identifier will
-	 * be generated as part of the datbase insertion.
+	 * be generated as part of the database insertion.
 	 */
 	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
 		@Override
@@ -80,7 +80,7 @@ public final class IdentifierGeneratorHelper {
 	}
 
 	/**
-	 * Extract the value from the result set (which is assumed to already have been positioned to the apopriate row)
+	 * Extract the value from the result set (which is assumed to already have been positioned to the appropriate row)
 	 * and wrp it in the appropriate Java numeric type.
 	 *
 	 * @param rs The result set from which to extract the value.

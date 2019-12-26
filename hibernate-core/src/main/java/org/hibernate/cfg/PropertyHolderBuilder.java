@@ -17,7 +17,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 
 /**
- * This factory is here ot build a PropertyHolder and prevent .mapping interface adding
+ * This factory is here to build a PropertyHolder and prevent .mapping interface adding
  *
  * @author Emmanuel Bernard
  */
@@ -58,7 +58,7 @@ public final class PropertyHolderBuilder {
 	}
 
 	/**
-	 * buid a property holder on top of a collection
+	 * build a property holder on top of a collection
 	 */
 	public static CollectionPropertyHolder buildPropertyHolder(
 			Collection collection,

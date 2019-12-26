@@ -123,7 +123,7 @@ public class Example implements Criterion {
 	/**
 	 * Set the property selector to use.
 	 *
-	 * The property selector operates separate from excluding a property.
+	 * The property selector operates separately from excluding a property.
 	 *
 	 * @param selector The selector to use
 	 *
@@ -285,11 +285,11 @@ public class Example implements Criterion {
 	}
 
 	protected void addComponentTypedValues(
-			String path, 
-			Object component, 
+			String path,
+			Object component,
 			CompositeType type,
 			List<TypedValue> list,
-			Criteria criteria, 
+			Criteria criteria,
 			CriteriaQuery criteriaQuery) {
 		if ( component != null ) {
 			final String[] propertyNames = type.getPropertyNames();
@@ -418,7 +418,7 @@ public class Example implements Criterion {
 		 * @param propertyName The name of the property
 		 * @param type The type of the property
 		 *
-		 * @return {@code true} indicates the property should be included; {@code false} indiates it should not.
+		 * @return {@code true} indicates the property should be included; {@code false} indicates it should not.
 		 */
 		public boolean include(Object propertyValue, String propertyName, Type type);
 	}

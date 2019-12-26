@@ -9,7 +9,7 @@ import org.hibernate.LockMode;
 import org.hibernate.loader.EntityAliases;
 
 /**
- * Spefically a fetch return that refers to an entity association.
+ * Specifically a fetch return that refers to an entity association.
  *
  * @author Steve Ebersole
  */

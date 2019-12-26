@@ -14,7 +14,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 
 /**
- * Definition of a named query, defined in the mapping metadata.  Additional, as of JPA 2.1, named query definition
+ * Definition of a named query, defined in the mapping metadata.  Additionally, as of JPA 2.1, named query definition
  * can also come from a compiled query.
  *
  * @author Gavin King

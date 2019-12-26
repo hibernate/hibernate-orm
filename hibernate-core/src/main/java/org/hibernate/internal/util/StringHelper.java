@@ -548,7 +548,7 @@ public final class StringHelper {
 
 	/**
 	 * Generates a root alias by truncating the "root name" defined by
-	 * the incoming decription and removing/modifying any non-valid
+	 * the incoming description and removing/modifying any non-valid
 	 * alias characters.
 	 *
 	 * @param description The root name from which to generate a root alias.

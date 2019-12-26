@@ -44,7 +44,7 @@ public interface PropertyHolder {
 	boolean isOrWithinEmbeddedId();
 
 	/**
-	 * Return true if this component is withing an @ElementCollection.
+	 * Return true if this component is within an @ElementCollection.
 	 */
 	boolean isWithinElementCollection();
 

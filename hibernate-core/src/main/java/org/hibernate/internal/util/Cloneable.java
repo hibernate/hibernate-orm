@@ -16,7 +16,7 @@ import java.security.PrivilegedAction;
 import org.hibernate.HibernateException;
 
 /**
- * An object that is shallow-coneable
+ * An object that is shallow-cloneable
  *
  * @author Steve Ebersole
  */
@@ -87,7 +87,7 @@ public class Cloneable {
 		}
 		finally {
 			if ( beanInfo != null ) {
-				// release the jdk internal caches everytime to ensure this
+				// release the jdk internal caches every time to ensure this
 				// plays nicely with destroyable class-loaders
 				Introspector.flushFromCaches( getClass() );
 			}
@@ -107,7 +107,7 @@ public class Cloneable {
 		}
 		finally {
 			if ( beanInfo != null ) {
-				// release the jdk internal caches everytime to ensure this
+				// release the jdk internal caches every time to ensure this
 				// plays nicely with destroyable class-loaders
 				Introspector.flushFromCaches( getClass() );
 			}

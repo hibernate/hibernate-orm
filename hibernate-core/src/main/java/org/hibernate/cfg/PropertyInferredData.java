@@ -14,7 +14,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 
 /**
- * Retrieve all inferred data from an annnoted element
+ * Retrieve all inferred data from an annotated element
  *
  * @author Emmanuel Bernard
  * @author Paolo Perrotta
@@ -37,7 +37,7 @@ public class PropertyInferredData implements PropertyData {
 	}
 
 	/**
-	 * Take the annoted element for lazy process
+	 * Take the annotated element for lazy process
 	 */
 	public PropertyInferredData(XClass declaringClass, XProperty property, String propertyAccessor, ReflectionManager reflectionManager) {
 		this.declaringClass = declaringClass;

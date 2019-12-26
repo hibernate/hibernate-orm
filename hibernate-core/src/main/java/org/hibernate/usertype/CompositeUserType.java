@@ -145,7 +145,7 @@ public interface CompositeUserType {
 	 *
 	 * @param value the object to be cached
 	 * @param session
-	 * @return a cachable representation of the object
+	 * @return a cacheable representation of the object
 	 * @throws HibernateException
 	 */
 	Serializable disassemble(Object value, SharedSessionContractImplementor session) throws HibernateException;
@@ -157,7 +157,7 @@ public interface CompositeUserType {
 	 * @param cached the object to be cached
 	 * @param session
 	 * @param owner the owner of the cached object
-	 * @return a reconstructed object from the cachable representation
+	 * @return a reconstructed object from the cacheable representation
 	 * @throws HibernateException
 	 */
 	Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException;

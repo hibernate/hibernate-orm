@@ -46,7 +46,7 @@ import org.jboss.logging.Logger;
  * <ul>
  *     <li>Methods that return collections (e.g., {@link #keySet()},
  *          {@link #values()}, {@link #entrySet()}) return an
- *          unnmodifiable view of the collection;</li>
+ *          unmodifiable view of the collection;</li>
  *     <li>If {@link #put(Object mergeEntity, Object) managedEntity} or
  *         {@link #put(Object mergeEntity, Object managedEntity, boolean isOperatedOn)}
  *         is executed and this MergeMap already contains a cross-reference for

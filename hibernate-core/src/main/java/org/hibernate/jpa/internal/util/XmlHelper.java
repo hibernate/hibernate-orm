@@ -29,7 +29,7 @@ public final class XmlHelper {
 	 *
 	 * @param element The parent element
 	 * @param tagName The name of the desired child
-	 * @return An interator of children or null if element is null.
+	 * @return An iterator of children or null if element is null.
 	 */
 	public static Iterator getChildrenByTagName(
 			Element element,

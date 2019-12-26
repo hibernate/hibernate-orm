@@ -15,9 +15,10 @@ import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.locationtech.jts.geom.Geometry;
 
 /**
- * JPA Criteria API support for hibernate-spatial.
+ * A factory for spatial JPA Criteria API {@link Predicate}s.
  *
  * @author Daniel Shuy
+ * @see SpatialRestrictions
  */
 public class SpatialPredicates {
 

@@ -13,7 +13,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.integration.jts.JtsGeomEntity;
 import org.hibernate.spatial.SpatialPredicates;
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * @see SpatialRestrictions
+ * @see TestSpatialRestrictions
  */
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")

@@ -28,6 +28,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially equal" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -49,6 +50,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially equal" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -67,6 +69,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -88,6 +91,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -106,6 +110,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially contains" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -127,6 +132,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially contains" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -145,6 +151,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially crosses" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -166,6 +173,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially crosses" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -184,6 +192,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially disjoint" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -205,6 +214,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially disjoint" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -223,6 +233,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially intersects" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -244,6 +255,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially intersects" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -262,6 +274,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially overlaps" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -283,6 +296,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially overlaps" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -301,6 +315,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially touches" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 *
@@ -322,6 +337,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "spatially touches" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 *
@@ -340,6 +356,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "distance within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 * @param distance distance expression
@@ -362,6 +379,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "distance within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 * @param distance distance expression
@@ -381,6 +399,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "distance within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry value
 	 * @param distance distance value
@@ -400,6 +419,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "distance within" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry1 geometry expression
 	 * @param geometry2 geometry expression
 	 * @param distance distance value
@@ -419,6 +439,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "having srid" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry geometry expression
 	 * @param srid SRID expression
 	 *
@@ -438,6 +459,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "having srid" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry geometry expression
 	 * @param srid SRID expression
 	 *
@@ -456,6 +478,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "is empty" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry geometry expression
 	 *
 	 * @return "is empty" predicate
@@ -474,6 +497,7 @@ public class SpatialPredicates {
 	/**
 	 * Create a predicate for testing the arguments for "is not empty" constraint.
 	 *
+	 * @param criteriaBuilder CriteriaBuilder
 	 * @param geometry geometry expression
 	 *
 	 * @return "is not empty" predicate

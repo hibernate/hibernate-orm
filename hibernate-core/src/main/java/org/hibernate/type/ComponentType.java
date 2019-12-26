@@ -56,7 +56,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
@@ -433,7 +433,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			component = new Object[propertySpan];
 		}
 		if ( component instanceof Object[] ) {
-			// A few calls to hashCode pass the property values already in an 
+			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
 			// trying reflection.

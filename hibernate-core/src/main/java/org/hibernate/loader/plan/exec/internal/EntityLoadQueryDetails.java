@@ -55,7 +55,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	 *
 	 * @param loadPlan The load plan
 	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
 	 */

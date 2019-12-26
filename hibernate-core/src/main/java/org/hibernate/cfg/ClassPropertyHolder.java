@@ -259,7 +259,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	/**
 	 * Needed for proper compliance with naming strategy, the property table
-	 * can be overriden if the properties are part of secondary tables
+	 * can be overridden if the properties are part of secondary tables
 	 */
 	private Map<String, Join> getJoinsPerRealTableName() {
 		if ( joinsPerRealTableName == null ) {

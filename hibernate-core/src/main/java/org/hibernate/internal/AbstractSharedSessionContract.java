@@ -193,7 +193,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			this.transactionCoordinator = sharedOptions.getTransactionCoordinator();
 			this.jdbcCoordinator = sharedOptions.getJdbcCoordinator();
 
-			// todo : "wrap" the transaction to no-op cmmit/rollback attempts?
+			// todo : "wrap" the transaction to no-op comit/rollback attempts?
 			this.currentHibernateTransaction = sharedOptions.getTransaction();
 
 			if ( sharedOptions.shouldAutoJoinTransactions() ) {

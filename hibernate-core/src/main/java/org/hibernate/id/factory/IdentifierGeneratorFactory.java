@@ -40,7 +40,7 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @param strategy The generation strategy.
 	 * @param type The mapping type for the identifier values.
-	 * @param config Any configuraion properties given in the generator mapping.
+	 * @param config Any configuration properties given in the generator mapping.
 	 *
 	 * @return The appropriate generator instance.
 	 */

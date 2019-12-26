@@ -31,7 +31,7 @@ import org.hibernate.type.StandardBasicTypes;
  * <li>Added support for pooled sequences</li>
  * <li>Added support for SELECT queries with limit and offset</li>
  * <li>Added getIdentitySelectString</li>
- * <li>Modified concatination operator</li>
+ * <li>Modified concatenation operator</li>
  * </ul>
  *
  * @author Enrico Schenk

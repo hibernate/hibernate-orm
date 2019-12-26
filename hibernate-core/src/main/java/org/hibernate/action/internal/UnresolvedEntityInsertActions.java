@@ -281,7 +281,7 @@ public class UnresolvedEntityInsertActions {
 	}
 
 	/**
-	 * Deerialize a {@link UnresolvedEntityInsertActions} object.
+	 * Deserialize an {@link UnresolvedEntityInsertActions} object.
 	 *
 	 * @param ois - the input stream.
 	 * @param session - the session.

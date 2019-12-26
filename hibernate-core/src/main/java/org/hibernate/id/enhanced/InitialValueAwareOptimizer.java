@@ -7,7 +7,7 @@
 package org.hibernate.id.enhanced;
 
 /**
- * Marker interface for optimizer which wish to know the user-specified initial value.
+ * Marker interface for optimizer which wishes to know the user-specified initial value.
  * <p/>
  * Used instead of constructor injection since that is already a public understanding and
  * because not all optimizers care.

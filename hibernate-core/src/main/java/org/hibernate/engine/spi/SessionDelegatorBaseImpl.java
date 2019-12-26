@@ -108,7 +108,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * Returns the underlying delegate. Be careful that is has a different behavior from the {@link #getDelegate()}
+	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
 	 * method coming from the EntityManager interface which returns the current session.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()

@@ -22,7 +22,7 @@ public interface CollectionAliases {
 	public String[] getSuffixedKeyAliases();
 
 	/**
-	 * Returns the suffixed result-set column-aliases for the collumns
+	 * Returns the suffixed result-set column-aliases for the columns
 	 * making up the collection's index (map or list).
 	 *
 	 * @return The index result-set column aliases.

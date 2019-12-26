@@ -93,7 +93,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	private ParameterTranslations paramTranslations;
 	private List<ParameterSpecification> collectedParameterSpecifications;
-	
+
 	private EntityGraphQueryHint entityGraphQueryHint;
 
 
@@ -117,7 +117,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		this.enabledFilters = enabledFilters;
 		this.factory = factory;
 	}
-	
+
 	public QueryTranslatorImpl(
 			String queryIdentifier,
 			String query,

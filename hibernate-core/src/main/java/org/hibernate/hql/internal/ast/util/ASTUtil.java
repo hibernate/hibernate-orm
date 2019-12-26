@@ -89,7 +89,7 @@ public final class ASTUtil {
 
 	/**
 	 * Creates a 'binary operator' subtree, given the information about the
-	 * parent and the two child nodex.
+	 * parent and the two child nodes.
 	 *
 	 * @param factory The AST factory.
 	 * @param parentType The type of the parent node.
@@ -143,7 +143,7 @@ public final class ASTUtil {
 	 * Determine if a given node (test) is contained anywhere in the subtree
 	 * of another given node (fixture).
 	 *
-	 * @param fixture The node against which to testto be checked for children.
+	 * @param fixture The node against which to test to be checked for children.
 	 * @param test The node to be tested as being a subtree child of the parent.
 	 *
 	 * @return True if child is contained in the parent's collection of children.

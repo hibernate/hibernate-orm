@@ -284,7 +284,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read mappings as a application resourceName (i.e. classpath lookup).
+	 * Read mappings as an application resourceName (i.e. classpath lookup).
 	 *
 	 * @param name The resource name
 	 *

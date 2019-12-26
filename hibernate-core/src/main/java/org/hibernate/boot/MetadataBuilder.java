@@ -201,7 +201,7 @@ public interface MetadataBuilder {
 	 * setting if using property-based configuration.
 	 *
 	 *
-	 * @param enable {@code true} to enable; {@code false} to disable;don't call for
+	 * @param enable {@code true} to enable; {@code false} to disable; don't call for
 	 * default.
 	 *
 	 * @return {@code this}, for method chaining
@@ -382,7 +382,7 @@ public interface MetadataBuilder {
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
-	 * Adds an AttributeConverter by a AttributeConverterDefinition
+	 * Adds an AttributeConverter by an AttributeConverterDefinition
 	 *
 	 * @param definition The definition
 	 *

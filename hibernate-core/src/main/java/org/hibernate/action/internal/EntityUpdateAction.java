@@ -60,7 +60,7 @@ public final class EntityUpdateAction extends EntityAction {
 	 * @param previousVersion The previous (stored) version
 	 * @param nextVersion The incremented version
 	 * @param instance The entity instance
-	 * @param rowId The entity's rowid
+	 * @param rowId The entity's row id
 	 * @param persister The entity's persister
 	 * @param session The session
 	 */
@@ -129,12 +129,12 @@ public final class EntityUpdateAction extends EntityAction {
 			// multiple actions queued during the same flush
 			previousVersion = persister.getVersion( instance );
 		}
-		
+
 		final Object ck;
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			ck = cache.generateCacheKey(
-					id, 
+					id,
 					persister,
 					factory,
 					session.getTenantIdentifier()
@@ -146,16 +146,16 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 
 		if ( !veto ) {
-			persister.update( 
-					id, 
-					state, 
-					dirtyFields, 
-					hasDirtyCollection, 
-					previousState, 
-					previousVersion, 
-					instance, 
-					rowId, 
-					session 
+			persister.update(
+					id,
+					state,
+					dirtyFields,
+					hasDirtyCollection,
+					previousState,
+					previousVersion,
+					instance,
+					rowId,
+					session
 			);
 		}
 
@@ -163,7 +163,7 @@ public final class EntityUpdateAction extends EntityAction {
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
-		
+
 		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)
@@ -326,7 +326,7 @@ public final class EntityUpdateAction extends EntityAction {
 					persister,
 					factory,
 					session.getTenantIdentifier()
-					
+
 			);
 
 			if ( success &&

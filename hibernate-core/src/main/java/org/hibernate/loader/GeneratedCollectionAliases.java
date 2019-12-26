@@ -66,7 +66,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	}
 
 	/**
-	 * Returns the suffixed result-set column-aliases for the collumns making up the collection's index (map or list).
+	 * Returns the suffixed result-set column-aliases for the columns making up the collection's index (map or list).
 	 *
 	 * @return The index result-set column aliases.
 	 */

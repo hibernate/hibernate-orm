@@ -36,7 +36,7 @@ public abstract class AbstractEmptinessExpression implements Criterion {
 	/**
 	 * Should empty rows be excluded?
 	 *
-	 * @return {@code true} Indicates the expression should be 'exists'; {@code false} indicates 'not exists'
+	 * @return {@code true} Indicates the expression should 'exists'; {@code false} indicates 'not exists'
 	 */
 	protected abstract boolean excludeEmpty();
 

@@ -414,7 +414,7 @@ public abstract class AbstractSaveEventListener
 	/**
 	 * Handles the calls needed to perform pre-save cascades for the given entity.
 	 *
-	 * @param source The session from whcih the save event originated.
+	 * @param source The session from which the save event originated.
 	 * @param persister The entity's persister instance.
 	 * @param entity The entity to be saved.
 	 * @param anything Generally cascade-specific data
@@ -448,7 +448,7 @@ public abstract class AbstractSaveEventListener
 	 *
 	 * @param source The session from which the event originated.
 	 * @param persister The entity's persister instance.
-	 * @param entity The entity beng saved.
+	 * @param entity The entity being saved.
 	 * @param anything Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(

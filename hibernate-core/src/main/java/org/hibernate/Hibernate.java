@@ -47,7 +47,7 @@ public final class Hibernate {
 	/**
 	 * Force initialization of a proxy or persistent collection.
 	 * <p/>
-	 * Note: This only ensures intialization of a proxy object or collection;
+	 * Note: This only ensures initialization of a proxy object or collection;
 	 * it is not guaranteed that the elements INSIDE the collection will be initialized/materialized.
 	 *
 	 * @param proxy a persistable object, proxy, persistent collection or <tt>null</tt>

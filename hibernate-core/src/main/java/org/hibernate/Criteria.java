@@ -334,7 +334,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * @param withClause The criteria to be added to the join condition (<tt>ON</tt> clause)
 	 *
 	 * @return the created "sub criteria"
-	 * 
+	 *
 	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException;
@@ -490,13 +490,13 @@ public interface Criteria extends CriteriaSpecification {
 	 */
 	public Criteria setComment(String comment);
 	
-	  
+	
 	/**
 	 * Add a DB query hint to the SQL.  These differ from JPA's {@link javax.persistence.QueryHint}, which is specific
 	 * to the JPA implementation and ignores DB vendor-specific hints.  Instead, these are intended solely for the
 	 * vendor-specific hints, such as Oracle's optimizers.  Multiple query hints are supported; the Dialect will
 	 * determine concatenation and placement.
-	 * 
+	 *
 	 * @param hint The database specific query hint to add.
 	 * @return this (for method chaining)
 	 */
@@ -550,7 +550,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * query results.
 	 *
 	 * @throws HibernateException Indicates a problem either translating the criteria to SQL,
-	 * exeucting the SQL or processing the SQL results.
+	 * executing the SQL or processing the SQL results.
 	 */
 	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException;
 

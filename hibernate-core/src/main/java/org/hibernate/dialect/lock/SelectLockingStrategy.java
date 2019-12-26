@@ -40,7 +40,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 	 * Construct a locking strategy based on SQL SELECT statements.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.
+	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public SelectLockingStrategy(Lockable lockable, LockMode lockMode) {
 		super( lockable, lockMode );

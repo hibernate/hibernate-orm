@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Models a SELECT values lists.  Eventually, rather than Strings, pass in the Column/Formula representations (something
- * like {@link org.hibernate.sql.ordering.antlr.ColumnReference}/{@link org.hibernate.sql.ordering.antlr.FormulaReference}
+ * like {@link org.hibernate.sql.ordering.antlr.ColumnReference}/{@link org.hibernate.sql.ordering.antlr.FormulaReference})
  *
  * @author Steve Ebersole
  */

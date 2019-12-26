@@ -55,7 +55,7 @@ public class DeleteEvent extends AbstractEvent {
 	}
 
 	/**
-     * Returns the encapsulated entity to be deleed.
+     * Returns the encapsulated entity to be deleted.
      *
      * @return The entity to be deleted.
      */
@@ -66,11 +66,11 @@ public class DeleteEvent extends AbstractEvent {
 	public String getEntityName() {
 		return entityName;
 	}
-	
+
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
 	}
-	
+
 	public boolean isOrphanRemovalBeforeUpdates() {
 		return orphanRemovalBeforeUpdates;
 	}

@@ -29,8 +29,8 @@ public class MimerSQLDialect extends Dialect {
 	private static final int BINARY_MAX_LENGTH = 2000;
 
 	/**
-	 * Even thoug Mimer SQL supports character and binary columns up to 15 000 in lenght,
-	 * this is also the maximum width of the table (exluding LOBs). To avoid breaking the limit all the
+	 * Even though Mimer SQL supports character and binary columns up to 15 000 in length,
+	 * this is also the maximum width of the table (excluding LOBs). To avoid breaking the limit all the
 	 * time we limit the length of the character columns to CHAR_MAX_LENTH, NATIONAL_CHAR_LENGTH for national
 	 * characters, and BINARY_MAX_LENGTH for binary types.
 	 */

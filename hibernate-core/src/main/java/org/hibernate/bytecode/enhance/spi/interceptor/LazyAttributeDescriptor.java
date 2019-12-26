@@ -65,7 +65,7 @@ public class LazyAttributeDescriptor {
 	}
 
 	/**
-	 * Access to the index of the attribute in terms of its position withing the lazy attributes of the persister
+	 * Access to the index of the attribute in terms of its position within the lazy attributes of the persister
 	 *
 	 * @return The persister lazy attribute index
 	 */

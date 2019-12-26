@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 
 /**
- * The standard aproach for defining a MutabilityPlan for converted (AttributeConverter)
+ * The standard approach for defining a MutabilityPlan for converted (AttributeConverter)
  * values is to always assume that they are immutable to make sure that dirty checking,
  * deep copying and second-level caching all work properly no matter what.  That was work
  * done under https://hibernate.atlassian.net/browse/HHH-10111

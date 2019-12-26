@@ -9,7 +9,7 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.SQLException;
 
 /**
- * Because JDBC (at least up to an including Java 7, JDBC 4) still does not have support for obtaining information
+ * Because JDBC (at least up to and including Java 7, JDBC 4) still does not have support for obtaining information
  * about sequences from DatabaseMetaData.
  *
  * @author Steve Ebersole

@@ -22,7 +22,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
- * immutable in terms of its internal state; the term immutable here refers to the entity is describes.
+ * immutable in terms of its internal state; the term immutable here refers to the entity it describes.
  *
  * @author Gavin King
  * @author Emmanuel Bernard <emmanuel@hibernate.org>

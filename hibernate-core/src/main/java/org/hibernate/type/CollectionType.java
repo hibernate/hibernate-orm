@@ -68,7 +68,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	private volatile CollectionPersister persister;
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public CollectionType(TypeFactory.TypeScope typeScope, String role, String foreignKeyPropertyName) {
@@ -683,7 +683,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	/**
 	 * Instantiate a new "underlying" collection exhibiting the same capacity
-	 * charactersitcs and the passed "original".
+	 * characteristics and the passed "original".
 	 *
 	 * @param original The original collection.
 	 * @return The newly instantiated collection.
@@ -699,7 +699,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * but with the given anticipated size (i.e. accounting for initial capacity
 	 * and perhaps load factor).
 	 *
-	 * @param anticipatedSize The anticipated size of the instaniated collection
+	 * @param anticipatedSize The anticipated size of the instantiated collection
 	 * after we are done populating it.
 	 * @return A newly instantiated collection to be wrapped.
 	 */
@@ -874,7 +874,7 @@ public abstract class CollectionType extends AbstractType implements Association
 
 	/**
 	 * We always need to dirty check the collection because we sometimes
-	 * need to incremement version number of owner and also because of
+	 * need to increment version number of owner and also because of
 	 * how assemble/disassemble is implemented for uks
 	 */
 	@Override

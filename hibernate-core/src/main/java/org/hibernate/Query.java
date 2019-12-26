@@ -240,7 +240,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	Query<R> setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Are the results of this query eligible for second level query caching?  This is different that second level
+	 * Are the results of this query eligible for second level query caching?  This is different than second level
 	 * caching of any returned entities and collections.
 	 *
 	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level

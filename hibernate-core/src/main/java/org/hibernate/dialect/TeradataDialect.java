@@ -25,7 +25,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Jay Nance
  */
 public class TeradataDialect extends Dialect implements IdTableSupport {
-	
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	/**
@@ -65,7 +65,7 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 
 		// bit_length feels a bit broken to me. We have to cast to char in order to
 		// pass when a numeric value is supplied. But of course the answers given will
-		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
+		// be wildly different for these two data types. 1234.5678 will be 9 bytes as
 		// a char string but will be 8 or 16 bytes as a true numeric.
 		// Jay Nance 2006-09-22
 		registerFunction(
@@ -144,7 +144,7 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	public String getDropIdTableCommand() {
 		return "drop table";
 	}
-	
+
 	@Override
 	public String getTruncateIdTableCommand() {
 		return "delete from";

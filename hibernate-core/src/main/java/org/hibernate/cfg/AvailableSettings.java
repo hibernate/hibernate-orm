@@ -199,7 +199,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *     * delayed access to the BeanManager reference.  Here, Hibernate
 	 *      will not access the reference passed as the BeanManager during
 	 *      bootstrap until it is first needed.  Note however that this has
-	 *      the effect of delaying any deployement problems until after
+	 *      the effect of delaying any deployment problems until after
 	 *      bootstrapping.
 	 *
 	 * This setting is used to configure Hibernate ORM's access to
@@ -255,7 +255,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
 
 	/**
-	 * Names the {@link ClassLoader} used when Hibernate is unable to locates classes on the
+	 * Names the {@link ClassLoader} used when Hibernate is unable to locate classes on the
 	 * {@link #APP_CLASSLOADER} or {@link #HIBERNATE_CLASSLOADER}.
 	 * @since 4.0
 	 * @deprecated Use {@link #CLASSLOADERS} instead
@@ -276,7 +276,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *         <b>enabled</b> - Do the build
 	 *     </li>
 	 *     <li>
-	 *         <b>disabled</b> - Do not so the build
+	 *         <b>disabled</b> - Do not do the build
 	 *     </li>
 	 *     <li>
 	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise
@@ -336,7 +336,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Names the connection user.  This might mean one of 2 things in out-of-the-box Hibernate
 	 * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}: <ul>
-	 *     <li>The username used to pass along to creating the JDBC connection</li>
+	 *     <li>The username used to pass along to create the JDBC connection</li>
 	 *     <li>The username used to obtain a JDBC connection from a data source</li>
 	 * </ul>
 	 */
@@ -1336,7 +1336,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DDL_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**
-	 * Specifies whether schema generation commands for schema creation are to be determine based on object/relational
+	 * Specifies whether schema generation commands for schema creation are to be determined based on object/relational
 	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
 	 * If no value is specified, a default is assumed as follows:<ul>
 	 *     <li>
@@ -1352,7 +1352,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determine based on object/relational
+	 * Specifies whether schema generation commands for schema dropping are to be determined based on object/relational
 	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
 	 * If no value is specified, a default is assumed as follows:<ul>
 	 *     <li>
@@ -1742,7 +1742,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * handling.  Implicitly Hibernate will not pass the NULL, the intention being to allow
 	 * any default argument values to be applied.
 	 * <p/>
-	 * This defines a global setting, which can them be controlled per parameter via
+	 * This defines a global setting, which can then be controlled per parameter via
 	 * {@link org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)}
 	 * <p/>
 	 * Values are {@code true} (pass the NULLs) or {@code false} (do not pass the NULLs).
@@ -1804,7 +1804,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * a JPA {@link javax.persistence.EntityManager}).
 	 * <p>
 	 * <p/>
-	 * Values are {@code true} permits the refresh, {@code false} does not permit the detached instance refresh and an {@link IllegalArgumentException} is thrown.
+	 * Values are: {@code true} permits the refresh, {@code false} does not permit the detached instance refresh and an {@link IllegalArgumentException} is thrown.
 	 * <p/>
 	 * The default value is {@code false} when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}, otherwise is {@code true}
 	 *
@@ -1971,7 +1971,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * Determine if the scope of {@link javax.persistence.TableGenerator#name()} and {@link javax.persistence.SequenceGenerator#name()} should be
 	 * considered globally or locally defined.
 	 *
-	 * If enabled, the names will considered globally scoped so defining two different generators with the same name
+	 * If enabled, the names will be considered globally scoped so defining two different generators with the same name
 	 * will cause a name collision and an exception will be thrown during the bootstrap phase.
 	 *
 	 * @see JpaCompliance#isGlobalGeneratorScopeEnabled()

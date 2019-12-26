@@ -102,7 +102,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 			}
 
 			final String potentialTrimCharacter = (String) args.get( potentialTrimCharacterArgIndex );
-			if ( "from".equalsIgnoreCase( potentialTrimCharacter ) ) { 
+			if ( "from".equalsIgnoreCase( potentialTrimCharacter ) ) {
 				trimCharacter = "' '";
 				trimSource = (String) args.get( potentialTrimCharacterArgIndex + 1 );
 			}
@@ -152,7 +152,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	/**
 	 * Resolve the function definition which should be used to trim both leading and trailing spaces.
 	 * <p/>
-	 * In this form, the imput arguments is missing the <tt>FROM</tt> keyword.
+	 * In this form, the input arguments is missing the <tt>FROM</tt> keyword.
 	 *
 	 * @return The sql function
 	 */
@@ -163,7 +163,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	 * <p/>
 	 * The same as {#link resolveBothSpaceTrimFunction} except that here the<tt>FROM</tt> is included and
 	 * will need to be accounted for during {@link SQLFunction#render} processing.
-	 * 
+	 *
 	 * @return The sql function
 	 */
 	protected abstract SQLFunction resolveBothSpaceTrimFromFunction();

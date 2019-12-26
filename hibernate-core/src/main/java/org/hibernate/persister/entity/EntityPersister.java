@@ -396,7 +396,7 @@ public interface EntityPersister extends EntityDefinition {
 	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
 	 *
 	 * @param ids The identifiers to load
-	 * @param session The originating Sesison
+	 * @param session The originating Session
 	 * @param loadOptions The options for loading
 	 *
 	 * @return The loaded, matching entities

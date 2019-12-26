@@ -262,7 +262,7 @@ public final class ConfigurationHelper {
 	 * replace a property by a starred version
 	 *
 	 * @param props properties to check
-	 * @param key proeprty to mask
+	 * @param key property to mask
 	 *
 	 * @return cloned and masked properties
 	 */

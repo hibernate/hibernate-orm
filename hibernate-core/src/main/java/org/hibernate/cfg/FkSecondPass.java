@@ -20,7 +20,7 @@ public abstract class FkSecondPass implements SecondPass {
 	 * unique counter is needed to differentiate 2 instances of FKSecondPass
 	 * as they are compared.
 	 * Fairly hacky but IBM VM sometimes returns the same hashCode for 2 different objects
-	 * TODO is it doable to rely on the Ejb3JoinColumn names? Not sure at they could be inferred
+	 * TODO is it doable to rely on the Ejb3JoinColumn names? Not sure as they could be inferred
 	 */
 	private int uniqueCounter;
 	private static AtomicInteger globalCounter = new AtomicInteger();

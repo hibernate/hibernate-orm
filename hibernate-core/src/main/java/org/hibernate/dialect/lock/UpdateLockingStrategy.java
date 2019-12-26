@@ -49,7 +49,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * Construct a locking strategy based on SQL UPDATE statements.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.  Note that
+	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
 	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {

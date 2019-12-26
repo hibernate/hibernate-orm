@@ -16,7 +16,7 @@ import org.hibernate.internal.util.StringHelper;
 public class DatabaseIdentifier extends Identifier {
 
 	/**
-	 * Constructs a datatabase identifier instance.
+	 * Constructs a database identifier instance.
 	 * It is assumed that <code>text</code> is unquoted.
 	 *
 	 * @param text The identifier text.

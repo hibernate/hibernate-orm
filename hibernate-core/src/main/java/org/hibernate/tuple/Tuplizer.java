@@ -69,9 +69,9 @@ public interface Tuplizer {
 	 * @return The new, empty entity instance.
 	 */
 	public Object instantiate();
-	
+
 	/**
-	 * Is the given object considered an instance of the the entity (acconting
+	 * Is the given object considered an instance of the the entity (accounting
 	 * for entity-mode) managed by this tuplizer.
 	 *
 	 * @param object The object to be checked.

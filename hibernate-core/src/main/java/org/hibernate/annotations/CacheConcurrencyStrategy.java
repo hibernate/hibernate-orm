@@ -71,7 +71,7 @@ public enum CacheConcurrencyStrategy {
 		if ( null == accessType ) {
 			return NONE;
 		}
-		
+
 		switch ( accessType ) {
 			case READ_ONLY: {
 				return READ_ONLY;

@@ -232,7 +232,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		boolean isUnlockable(SoftLock lock);
 
 		/**
-		 * Locks this entry, stamping it with the UUID and lockId given, with the lock timeout occuring at the specified
+		 * Locks this entry, stamping it with the UUID and lockId given, with the lock timeout occurring at the specified
 		 * time.  The returned Lock object can be used to unlock the entry in the future.
 		 */
 		SoftLockImpl lock(long timeout, UUID uuid, long lockId);

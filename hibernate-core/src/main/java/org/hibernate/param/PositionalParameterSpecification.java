@@ -44,7 +44,7 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 	 *
 	 * @param statement The statement into which the value should be bound.
 	 * @param qp The defined values for the current query execution.
-	 * @param session The session against which the current execution is occuring.
+	 * @param session The session against which the current execution is occurring.
 	 * @param position The position from which to start binding value(s).
 	 *
 	 * @return The number of sql bind positions "eaten" by this bind operation.

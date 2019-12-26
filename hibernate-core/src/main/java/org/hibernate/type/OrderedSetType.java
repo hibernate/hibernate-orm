@@ -13,7 +13,7 @@ import java.util.LinkedHashSet;
 public class OrderedSetType extends SetType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public OrderedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {

@@ -93,7 +93,7 @@ public class EntityTuplizerFactory implements Serializable {
 	}
 
 	/**
-	 * Construct am instance of the default tuplizer for the given entity-mode.
+	 * Construct an instance of the default tuplizer for the given entity-mode.
 	 *
 	 * @param entityMode The entity mode for which to build a default tuplizer.
 	 * @param metamodel The entity metadata.

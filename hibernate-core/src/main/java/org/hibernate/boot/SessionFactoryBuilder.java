@@ -653,7 +653,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Apply a fetch size to the JDBC driver for fetching results.
 	 *
-	 * @param size The fetch saize to be passed to the driver.
+	 * @param size The fetch size to be passed to the driver.
 	 *
 	 * @return {@code this}, for method chaining
 	 *

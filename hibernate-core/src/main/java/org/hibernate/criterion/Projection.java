@@ -81,7 +81,7 @@ public interface Projection extends Serializable {
 	 * Get the SQL column aliases used by this projection for the columns it writes for inclusion into the
 	 * <tt>SELECT</tt> clause ({@link #toSqlString}.  Hibernate always uses column aliases to extract data from the
 	 * JDBC {@link java.sql.ResultSet}, so it is important that these be implemented correctly in order for
-	 * Hibernate to be able to extract these val;ues correctly.
+	 * Hibernate to be able to extract these values correctly.
 	 *
 	 * @param position Just as in {@link #toSqlString}, represents the number of <b>columns</b> rendered
 	 * prior to this projection.

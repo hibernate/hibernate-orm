@@ -71,17 +71,16 @@ public final class BytesHelper {
 		fromLong(longValue, bytes, 0);
 		return bytes;
 	}
-	
+
 	/**
 	 * Interpret a long as its binary form
 	 *
 	 * @param longValue The long to interpret to binary
 	 * @param dest the destination array.
      * @param destPos starting position in the destination array.
-	 * @return The binary
 	 */
 	public static void fromLong(long longValue, byte[] dest, int destPos) {
-		
+
 		dest[destPos] = (byte) ( longValue >> 56 );
 		dest[destPos + 1] = (byte) ( ( longValue << 8 ) >> 56 );
 		dest[destPos + 2] = (byte) ( ( longValue << 16 ) >> 56 );
@@ -102,7 +101,7 @@ public final class BytesHelper {
 	public static long asLong(byte[] bytes) {
 		return asLong(bytes, 0);
 	}
-	
+
 	/**
 	 * Interpret the binary representation of a long.
 	 *

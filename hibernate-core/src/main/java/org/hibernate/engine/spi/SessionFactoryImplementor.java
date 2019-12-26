@@ -108,7 +108,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	Interceptor getInterceptor();
 
 	/**
-	 * Access to the cachres of HQL/JPQL and native query plans.
+	 * Access to the caches of HQL/JPQL and native query plans.
 	 *
 	 * @return The query plan cache
 	 *

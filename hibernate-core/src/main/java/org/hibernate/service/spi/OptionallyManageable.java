@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Extension to Manageable for things that are optionally Manageable depending
  * on some internal state.  E.g. services that wrap other services wanting to
- * delegate manageablity if the wrapped service is Manageable.
+ * delegate manageability if the wrapped service is Manageable.
  *
  * @author Steve Ebersole
  */

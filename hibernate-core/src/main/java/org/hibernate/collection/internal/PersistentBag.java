@@ -519,7 +519,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	 *
 	 * @param o The object to check
 	 *
-	 * @return The number of occurences.
+	 * @return The number of occurrences.
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	public int occurrences(Object o) {

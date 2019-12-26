@@ -315,7 +315,7 @@ public class FromParser implements Parser {
 
 	public void end(QueryTranslatorImpl q) {
 		if ( afterMemberDeclarations ) {
-			//The exception throwned by the AST query translator contains the error token location, respensent by line and colum, 
+			//The exception throwned by the AST query translator contains the error token location, represented by line and column,
 			//but it hard to get that info here.
 			throw new QueryException( "alias not specified for IN" );
 		}

@@ -41,7 +41,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * If a constraint is not explicitly named, this is called to generate
 	 * a unique hash using the table and column names.
@@ -92,10 +92,10 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
-	 * 
+	 *
 	 * @param s
 	 *            The name to be hashed.
-	 * @return String The hased name.
+	 * @return String The hashed name.
 	 */
 	public static String hashedName(String s) {
 		try {
@@ -214,7 +214,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
-	
+
 	/**
 	 * @return String The prefix to use in generated constraint names.  Examples:
 	 * "UK_", "FK_", and "PK_".

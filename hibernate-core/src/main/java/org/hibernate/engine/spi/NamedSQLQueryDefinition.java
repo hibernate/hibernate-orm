@@ -15,7 +15,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 /**
  * Definition of a named native SQL query, defined in the mapping metadata.
- * 
+ *
  * @author Max Andersen
  * @author Steve Ebersole
  */
@@ -27,7 +27,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	private String resultSetRef;
 
 	/**
-	 * This form was initially used to construct a NamedSQLQueryDefinition from the binder code when a the
+	 * This form was initially used to construct a NamedSQLQueryDefinition from the binder code when the
 	 * result-set mapping information is not explicitly  provided in the query definition
 	 * (i.e., no resultset-mapping used).
 	 *

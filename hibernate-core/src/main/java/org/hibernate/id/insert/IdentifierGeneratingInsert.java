@@ -11,7 +11,7 @@ import org.hibernate.sql.Insert;
 /**
  * Nothing more than a distinguishing subclass of Insert used to indicate
  * intent.  Some subclasses of this also provided some additional
- * functionality or semantic to the genernated SQL statement string.
+ * functionality or semantic to the generated SQL statement string.
  *
  * @author Steve Ebersole
  */

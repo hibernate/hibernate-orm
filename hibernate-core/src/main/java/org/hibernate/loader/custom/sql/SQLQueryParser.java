@@ -74,7 +74,7 @@ public class SQLQueryParser {
 		return processedSql;
 	}
 
-	// TODO: should "record" how many properties we have reffered to - and if we 
+	// TODO: should "record" how many properties we have reffered to - and if we
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
 	protected String substituteBrackets(String sqlQuery) throws QueryException {
 
@@ -125,7 +125,7 @@ public class SQLQueryParser {
 						result.append(schemaName);
 						result.append(".");
 					}
-				} 
+				}
 				// Catalog replacement
 				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
 					final String catalogName = factory.getSettings().getDefaultCatalogName();
@@ -145,10 +145,10 @@ public class SQLQueryParser {
 						// it is a simple table alias {foo}
 						result.append( aliasPath );
 						aliasesFound++;
-					} 
+					}
 					else {
 						// passing through anything we do not know : to support jdbc escape sequences HB-898
-						result.append( '{' ).append(aliasPath).append( '}' );					
+						result.append( '{' ).append(aliasPath).append( '}' );
 					}
 				}
 				else {
@@ -158,7 +158,7 @@ public class SQLQueryParser {
 						String propertyName = aliasPath.substring( firstDot + 1 );
 						result.append( resolveCollectionProperties( aliasName, propertyName ) );
 						aliasesFound++;
-					} 
+					}
 					else if ( context.isEntityAlias( aliasName ) ) {
 						// it is a property reference {foo.bar}
 						String propertyName = aliasPath.substring( firstDot + 1 );
@@ -179,7 +179,7 @@ public class SQLQueryParser {
 		// Possibly handle :something parameters for the query ?
 
 		return result.toString();
-	}	
+	}
 
 	private String resolveCollectionProperties(
 			String aliasName,
@@ -193,11 +193,11 @@ public class SQLQueryParser {
 			if( !fieldResults.isEmpty() ) {
 				throw new QueryException("Using return-propertys together with * syntax is not supported.");
 			}
-			
+
 			String selectFragment = collectionPersister.selectFragment( aliasName, collectionSuffix );
 			aliasesFound++;
-			return selectFragment 
-						+ ", " 
+			return selectFragment
+						+ ", "
 						+ resolveProperties( aliasName, propertyName );
 		}
 		else if ( "element.*".equals( propertyName ) ) {
@@ -211,7 +211,7 @@ public class SQLQueryParser {
 			if ( columnAliases==null ) {
 				columnAliases = collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
 			}
-			
+
 			if ( columnAliases == null || columnAliases.length == 0 ) {
 				throw new QueryException(
 						"No column name found for property [" + propertyName + "] for alias [" + aliasName + "]",
@@ -228,7 +228,7 @@ public class SQLQueryParser {
 			}
 			aliasesFound++;
 			return columnAliases[0];
-		
+
 		}
 	}
 	private String resolveProperties(String aliasName, String propertyName) {
@@ -239,7 +239,7 @@ public class SQLQueryParser {
 		if ( "*".equals( propertyName ) ) {
 			if( !fieldResults.isEmpty() ) {
 				throw new QueryException("Using return-propertys together with * syntax is not supported.");
-			}			
+			}
 			aliasesFound++;
 			return persister.selectFragment( aliasName, suffix ) ;
 		}
@@ -265,14 +265,14 @@ public class SQLQueryParser {
 						"SQL queries only support properties mapped to a single column - property [" + propertyName + "] is mapped to " + columnAliases.length + " columns.",
 						originalQueryString
 				);
-			}			
+			}
 			aliasesFound++;
 			return columnAliases[0];
 		}
 	}
 
 	/**
-	 * Substitues JDBC parameter placeholders (?) for all encountered
+	 * Substitutes JDBC parameter placeholders (?) for all encountered
 	 * parameter specifications.  It also tracks the positions of these
 	 * parameter specifications within the query string.  This accounts for
 	 * ordinal-params, named-params, and ejb3-positional-params.

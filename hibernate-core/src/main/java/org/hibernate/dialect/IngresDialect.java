@@ -42,7 +42,7 @@ import org.hibernate.type.StandardBasicTypes;
  *         Perform string casts to varchar; removes space padding.
  *     </li>
  * </ul>
- * 
+ *
  * @author Ian Booth
  * @author Bruce Lunsford
  * @author Max Rydahl Andersen

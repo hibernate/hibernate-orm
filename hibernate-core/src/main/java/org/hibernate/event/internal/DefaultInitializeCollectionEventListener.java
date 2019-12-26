@@ -91,7 +91,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	/**
 	 * Try to initialize a collection from the cache
 	 *
-	 * @param id The id of the collection of initialize
+	 * @param id The id of the collection to initialize
 	 * @param persister The collection persister
 	 * @param collection The collection to initialize
 	 * @param source The originating session

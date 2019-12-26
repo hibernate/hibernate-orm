@@ -54,7 +54,7 @@ public interface LazyInitializer {
 	Class getPersistentClass();
 
 	/**
-	 * Is the proxy uninitialzed?
+	 * Is the proxy uninitialized?
 	 *
 	 * @return True if uninitialized; false otherwise.
 	 */
@@ -94,7 +94,7 @@ public interface LazyInitializer {
 	boolean isReadOnlySettingAvailable();
 
 	/**
-	 * Is the proxy read-only?.
+	 * Is the proxy read-only?
 	 *
 	 * The read-only/modifiable setting is not available when the proxy is
 	 * detached or its associated session is closed.
@@ -103,7 +103,7 @@ public interface LazyInitializer {
 	 *
 	 * @return true, if this proxy is read-only; false, otherwise
 	 * @throws org.hibernate.TransientObjectException if the proxy is detached (getSession() == null)
-	 * @throws org.hibernate.SessionException if the proxy is associated with a sesssion that is closed
+	 * @throws org.hibernate.SessionException if the proxy is associated with a session that is closed
 	 *
 	 * @see org.hibernate.proxy.LazyInitializer#isReadOnlySettingAvailable()
 	 * @see org.hibernate.Session#isReadOnly(Object entityOrProxy)
@@ -125,7 +125,7 @@ public interface LazyInitializer {
 	 *                  if false, the associated proxy is made modifiable.
 	 * @throws org.hibernate.TransientObjectException if the proxy is not association with a session
 	 * @throws org.hibernate.SessionException if the proxy is associated with a session that is closed
-	 * 
+	 *
 	 * @see org.hibernate.Session#setReadOnly(Object entityOrProxy, boolean readOnly)
 	 */
 	void setReadOnly(boolean readOnly);
@@ -141,9 +141,9 @@ public interface LazyInitializer {
 	 * Associate the proxy with the given session.
 	 * <p/>
 	 * Care should be given to make certain that the proxy is added to the session's persistence context as well
-	 * to maintain the symetry of the association.  That must be done seperately as this method simply sets an
+	 * to maintain the symmetry of the association.  That must be done separately as this method simply sets an
 	 * internal reference.  We do also check that if there is already an associated session that the proxy
-	 * reference was removed from that previous session's persistence contet.
+	 * reference was removed from that previous session's persistence context.
 	 *
 	 * @param session The session
 	 * @throws HibernateException Indicates that the proxy was still contained in the persistence context of the
@@ -159,7 +159,7 @@ public interface LazyInitializer {
 	 * {@link org.hibernate.Session#clear} processing; most other use-cases should call {@link #setSession} instead.
 	 */
 	void unsetSession();
-	
+
 	void setUnwrap(boolean unwrap);
 	boolean isUnwrap();
 }

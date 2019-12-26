@@ -46,7 +46,7 @@ public class SelectClause extends SelectExpressionList {
 	/**
 	 * Does this SelectClause represent a scalar query
 	 *
-	 * @return True if this is a scalara select clause; false otherwise.
+	 * @return True if this is a scalar select clause; false otherwise.
 	 */
 	public boolean isScalarSelect() {
 		return scalarSelect;
@@ -110,7 +110,7 @@ public class SelectClause extends SelectExpressionList {
 	 *
 	 * @param fromClause The from clause linked to this select clause.
 	 *
-	 * @throws SemanticException indicates a semntic issue with the explicit select clause.
+	 * @throws SemanticException indicates a semantic issue with the explicit select clause.
 	 */
 	public void initializeExplicitSelectClause(FromClause fromClause) throws SemanticException {
 		if ( prepared ) {

@@ -284,7 +284,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	/**
-	 * The value in {@link #getSegmentColumnName segment column} which
+	 * The value in {@link #getSegmentColumnName segment column}
 	 * corresponding to this generator instance.  In other words this value
 	 * indicates the row in which this generator instance will store values.
 	 *

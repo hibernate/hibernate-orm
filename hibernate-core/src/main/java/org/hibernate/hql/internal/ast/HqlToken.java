@@ -8,7 +8,7 @@ package org.hibernate.hql.internal.ast;
 
 /**
  * A custom token class for the HQL grammar.
- * <p><i>NOTE:<i> This class must be public becuase it is instantiated by the ANTLR library.  Ignore any suggestions
+ * <p><i>NOTE:<i> This class must be public because it is instantiated by the ANTLR library.  Ignore any suggestions
  * by various code 'analyzers' about this class being package local.</p>
  */
 public class HqlToken extends antlr.CommonToken {

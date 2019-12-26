@@ -35,7 +35,7 @@ public interface Manageable {
 	}
 
 	/**
-	 * The the management bean (MBean) for this service.
+	 * The management bean (MBean) for this service.
 	 *
 	 * @return The management bean.
 	 */

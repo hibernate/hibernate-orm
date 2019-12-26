@@ -31,11 +31,11 @@ public class BatchingLoadQueryDetailsFactory {
 	}
 
 	/**
-	 * Returns a EntityLoadQueryDetails object from the given inputs.
+	 * Returns an EntityLoadQueryDetails object from the given inputs.
 	 *
 	 * @param loadPlan The load plan
 	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
 	 *
@@ -72,7 +72,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 * Returns a EntityLoadQueryDetails object based on an existing one and additional elements specific to this one.
 	 *
 	 * @param entityLoadQueryDetailsTemplate the template
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @return The EntityLoadQueryDetails
 	 */
@@ -90,7 +90,7 @@ public class BatchingLoadQueryDetailsFactory {
 	 *
 	 * @param collectionPersister The collection persister.
 	 * @param loadPlan The load plan.
-	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 *
 	 * @return The EntityLoadQueryDetails

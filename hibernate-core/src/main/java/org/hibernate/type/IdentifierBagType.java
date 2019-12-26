@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class IdentifierBagType extends CollectionType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public IdentifierBagType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {

@@ -71,7 +71,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
-	 * collection was previous added () or was previously removed.
+	 * collection was previously added () or was previously removed.
 	 * <p/>
 	 * This should indicate the owner is being loaded and we are ready to "link" them.
 	 *
@@ -87,7 +87,7 @@ public interface PersistenceContext {
 	 * @return The batch fetch queue in effect for this persistence context
 	 */
 	BatchFetchQueue getBatchFetchQueue();
-	
+
 	/**
 	 * Clear the state of the persistence context
 	 */
@@ -128,9 +128,9 @@ public interface PersistenceContext {
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
 	 * <p/>
-	 * This differs from {@link #getDatabaseSnapshot} is two important respects:<ol>
+	 * This differs from {@link #getDatabaseSnapshot} in two important respects:<ol>
 	 * <li>no snapshot is obtained from the database if not already cached</li>
-	 * <li>an entry of {@link #NO_ROW} here is interpretet as an exception</li>
+	 * <li>an entry of {@link #NO_ROW} here is interpreted as an exception</li>
 	 * </ol>
 	 * @param key The entity key for which to retrieve the cached snapshot
 	 * @return The cached snapshot
@@ -269,7 +269,7 @@ public interface PersistenceContext {
 	 * Is the given collection associated with this persistence context?
 	 */
 	boolean containsCollection(PersistentCollection collection);
-	
+
 	/**
 	 * Is the given proxy associated with this persistence context?
 	 */
@@ -438,7 +438,7 @@ public interface PersistenceContext {
 	 * array, since the array instance is not created until endLoad().
 	 */
 	void addCollectionHolder(PersistentCollection holder);
-	
+
 	/**
 	 * Remove the mapping of collection to holder during eviction
 	 * of the owning entity
@@ -539,7 +539,7 @@ public interface PersistenceContext {
 	 * How deep are we cascaded?
 	 */
 	int getCascadeLevel();
-	
+
 	/**
 	 * Called before cascading
 	 */
@@ -555,14 +555,14 @@ public interface PersistenceContext {
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean isFlushing();
-	
+
 	/**
-	 * Called before and after the flushcycle
+	 * Called before and after the flush cycle
 	 */
 	void setFlushing(boolean flushing);
 
 	/**
-	 * Call this before begining a two-phase load
+	 * Call this before beginning a two-phase load
 	 */
 	void beforeLoad();
 
@@ -570,7 +570,7 @@ public interface PersistenceContext {
 	 * Call this after finishing a two-phase load
 	 */
 	void afterLoad();
-	
+
 	/**
 	 * Is in a two-phase load?
 	 */
@@ -744,7 +744,7 @@ public interface PersistenceContext {
 	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
 	 *
 	 * @param sek a supplier for the EntityKey; this allows to not always needing to create the key;
-	 * for example is the map is known to be empty there is no need to create one to check.
+	 * for example if the map is known to be empty there is no need to create one to check.
 	 * @return true if the EntityKey had been registered before using {@link #registerNullifiableEntityKey(EntityKey)}
 	 * @see #registerNullifiableEntityKey(EntityKey)
 	 */

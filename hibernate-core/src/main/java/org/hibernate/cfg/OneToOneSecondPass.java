@@ -86,7 +86,7 @@ public class OneToOneSecondPass implements SecondPass {
 		final String propertyName = inferredData.getPropertyName();
 		value.setPropertyName( propertyName );
 		String referencedEntityName = ToOneBinder.getReferenceEntityName( inferredData, targetEntity, buildingContext );
-		value.setReferencedEntityName( referencedEntityName );  
+		value.setReferencedEntityName( referencedEntityName );
 		AnnotationBinder.defineFetchingStrategy( value, inferredData.getProperty() );
 		//value.setFetchMode( fetchMode );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
@@ -218,7 +218,7 @@ public class OneToOneSecondPass implements SecondPass {
 				else {
 					propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 				}
-				
+
 				value.setReferencedPropertyName( mappedBy );
 
 				// HHH-6813
@@ -234,7 +234,7 @@ public class OneToOneSecondPass implements SecondPass {
 				}
 				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
 				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
-				
+
 				// If the other side is a derived ID, prevent an infinite
 				// loop of attempts to resolve identifiers.
 				if ( referencesDerivedId ) {
@@ -263,8 +263,8 @@ public class OneToOneSecondPass implements SecondPass {
 	}
 
 	/**
-	 * Builds the <code>Join</code> instance for the mapped by side of a <i>OneToOne</i> association using 
-	 * a join tables.
+	 * Builds the <code>Join</code> instance for the mapped by side of a <i>OneToOne</i> association using
+	 * a join table.
 	 * <p>
 	 * Note:<br/>
 	 * <ul>

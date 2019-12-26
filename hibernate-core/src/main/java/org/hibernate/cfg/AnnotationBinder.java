@@ -1020,7 +1020,7 @@ public final class AnnotationBinder {
 		 * and we create an identifier mapper containing the id properties of the main entity
 		 *
 		 * In JPA 2, there is a shortcut if the id class is the Pk of the associated class pointed to by the id
-		 * it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way
+		 * it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way)
 		 */
 		XClass classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
@@ -3186,7 +3186,7 @@ public final class AnnotationBinder {
 			//try to find a hidden true one to one (FK == PK columns)
 			KeyValue identifier = propertyHolder.getIdentifier();
 			if ( identifier == null ) {
-				//this is a @OneToOne in a @EmbeddedId (the persistentClass.identifier is not set yet, it's being built)
+				//this is a @OneToOne in an @EmbeddedId (the persistentClass.identifier is not set yet, it's being built)
 				//by definition the PK cannot refers to itself so it cannot map to itself
 				mapToPK = false;
 			}

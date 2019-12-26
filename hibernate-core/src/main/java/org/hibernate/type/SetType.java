@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class SetType extends CollectionType {
 
 	/**
-	 * @deprecated Use the other contructor
+	 * @deprecated Use the other constructor
 	 */
 	@Deprecated
 	public SetType(TypeFactory.TypeScope typeScope, String role, String propertyRef) {
@@ -49,5 +49,5 @@ public class SetType extends CollectionType {
 				? new HashSet()
 				: new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
 	}
-	
+
 }

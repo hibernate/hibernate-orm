@@ -133,7 +133,7 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	/**
-	 * Is this a quoted identifier>
+	 * Is this a quoted identifier?
 	 *
 	 * @return True if this is a quote identifier; false otherwise.
 	 */

@@ -54,7 +54,7 @@ public interface DatabaseInformation {
 	/**
 	 * Obtain reference to the named TableInformation
 	 *
-	 * @param tableName The qualfied table name
+	 * @param tableName The qualified table name
 	 *
 	 * @return The table information.  May return {@code null} if not found.
 	 */

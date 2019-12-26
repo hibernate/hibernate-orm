@@ -179,7 +179,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @throws org.hibernate.MappingException Indicates problems resolving
 	 * things referenced in the query.
-	 * @throws org.hibernate.QueryException Generally some form of syntatic
+	 * @throws org.hibernate.QueryException Generally some form of syntactic
 	 * failure.
 	 */
 	void compile(QueryTranslatorImpl superquery) throws QueryException, MappingException {
@@ -231,7 +231,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @throws org.hibernate.MappingException Indicates problems resolving
 	 * things referenced in the query.
-	 * @throws org.hibernate.QueryException Generally some form of syntatic
+	 * @throws org.hibernate.QueryException Generally some form of syntactic
 	 * failure.
 	 */
 	private void compile() throws QueryException, MappingException {

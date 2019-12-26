@@ -53,7 +53,7 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator, Expo
 	String CATALOG = "catalog";
 
 	/**
-	 * The key under whcih to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
+	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
 	 */
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 

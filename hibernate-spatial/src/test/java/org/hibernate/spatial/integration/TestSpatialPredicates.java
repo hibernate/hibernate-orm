@@ -15,7 +15,7 @@ import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.integration.jts.JtsGeomEntity;
-import org.hibernate.spatial.SpatialPredicates;
+import org.hibernate.spatial.predicate.SpatialPredicates;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 

@@ -4,15 +4,18 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.spatial;
+package org.hibernate.spatial.predicate;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
 
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Polygon;
 
 /**
  * A factory for spatial JPA Criteria API {@link Predicate}s.
@@ -351,6 +354,97 @@ public final class SpatialPredicates {
 		return touches( criteriaBuilder, geometry1,
 				criteriaBuilder.literal( geometry2 )
 		);
+	}
+
+	/**
+	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+	 *
+	 * @param criteriaBuilder CriteriaBuilder
+	 * @param geometry1 geometry expression
+	 * @param geometry2 geometry expression whose bounding box to use in the comparison
+	 *
+	 * @return bounding box overlap predicate
+	 *
+	 * @see SpatialRestrictions#filter(String, Geometry)
+	 * @see FilterPredicate
+	 */
+	public static Predicate filterByGeometry(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
+			Expression<? extends Geometry> geometry2) {
+		return FilterPredicate.byGeometry( criteriaBuilder, geometry1, geometry2 );
+	}
+
+	/**
+	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+	 *
+	 * @param criteriaBuilder CriteriaBuilder
+	 * @param geometry1 geometry expression
+	 * @param geometry2 geometry value whose bounding box to use in the comparison
+	 *
+	 * @return bounding box overlap predicate
+	 *
+	 * @see SpatialRestrictions#filter(String, Geometry)
+	 * @see FilterPredicate
+	 */
+	public static Predicate filterByGeometry(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
+			Geometry geometry2) {
+		return FilterPredicate.byGeometry( criteriaBuilder, geometry1, geometry2 );
+	}
+
+	/**
+	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+	 *
+	 * @param criteriaBuilder CriteriaBuilder
+	 * @param geometry geometry expression
+	 * @param polygon polygon expression whose bounding box to use in the comparison
+	 *
+	 * @return bounding box overlap predicate
+	 *
+	 * @see SpatialRestrictions#filter(String, Envelope, int)
+	 * @see FilterPredicate
+	 */
+	public static Predicate filterByPolygon(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+			Expression<Polygon> polygon) {
+		return FilterPredicate.byPolygon( criteriaBuilder, geometry, polygon );
+	}
+
+	/**
+	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+	 *
+	 * @param criteriaBuilder CriteriaBuilder
+	 * @param geometry geometry expression
+	 * @param polygon polygon expression whose bounding box to use in the comparison
+	 *
+	 * @return bounding box overlap predicate
+	 *
+	 * @see SpatialRestrictions#filter(String, Envelope, int)
+	 * @see FilterPredicate
+	 */
+	public static Predicate filterByPolygon(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+			Polygon polygon) {
+		return FilterPredicate.byPolygon( criteriaBuilder, geometry, polygon );
+	}
+
+	/**
+	 * Create a predicate for testing the arguments for bounding box overlap constraint.
+	 *
+	 * @param criteriaBuilder CriteriaBuilder
+	 * @param geometry geometry expression
+	 * @param envelope envelope or bounding box to use in the comparison
+	 * @param srid the SRID of the bounding box
+	 *
+	 * @return bounding box overlap predicate
+	 *
+	 * @see SpatialRestrictions#filter(String, Envelope, int)
+	 * @see FilterPredicate
+	 */
+	public static Predicate filterByPolygon(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+			Envelope envelope, int srid) {
+		return FilterPredicate.byPolygon( criteriaBuilder, geometry, envelope, srid );
 	}
 
 	/**

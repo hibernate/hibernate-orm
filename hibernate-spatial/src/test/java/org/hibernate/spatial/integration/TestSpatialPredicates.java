@@ -56,6 +56,17 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 	}
 
 	@Test
+	public void filter() throws SQLException {
+		if ( !dialectSupportsFiltering() ) {
+			return;
+		}
+		Map<Integer, Boolean> dbexpected = expectationsFactory.getFilter( expectationsFactory.getTestPolygon() );
+		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
+				SpatialPredicates.filterByGeometry( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+		retrieveAndCompare( dbexpected, predicateFactory );
+	}
+
+	@Test
 	public void contains() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.contains ) ) {
 			return;

@@ -245,7 +245,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 			}
 		}
 		assertEquals( cnt, list.size() );
-		LOG.info( String.format( "Found %d objects within testsuite-suite polygon.", cnt ) );
+		LOG.infof( "Found %d objects within testsuite-suite polygon.", cnt );
 	}
 
 	private boolean findInList(Integer id, List<JtsGeomEntity> list) {

@@ -38,7 +38,7 @@ public class TestSupportFactories {
 
 	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
 		String canonicalName = dialect.getClass().getCanonicalName();
-
+		System.out.println(canonicalName);
 		if ( ( dialect instanceof SpatialDialect ) && PostgreSQL82Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			//this test works because all postgis dialects ultimately derive of the Postgresql82Dialect
 			return PostgisTestSupport.class;

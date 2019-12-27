@@ -235,25 +235,21 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 	}
 
 	private void compare(Map<Integer, Boolean> dbexpected, List<JtsGeomEntity> list) {
-		int cnt = 0;
-		for ( Map.Entry<Integer, Boolean> entry : dbexpected.entrySet() ) {
-			if ( entry.getValue() ) {
-				cnt++;
-				if ( !findInList( entry.getKey(), list ) ) {
-					fail( String.format( "Expected object with id= %d, but not found in result", entry.getKey() ) );
-				}
-			}
-		}
+		int cnt = dbexpected.entrySet()
+				.stream()
+				.filter( Map.Entry::getValue )
+				.reduce( 0, (accumulator, entry) -> {
+					if ( !findInList( entry.getKey(), list ) ) {
+						fail( String.format( "Expected object with id= %d, but not found in result", entry.getKey() ) );
+					}
+					return accumulator + 1;
+				}, Integer::sum );
 		assertEquals( cnt, list.size() );
 		LOG.infof( "Found %d objects within testsuite-suite polygon.", cnt );
 	}
 
 	private boolean findInList(Integer id, List<JtsGeomEntity> list) {
-		for ( JtsGeomEntity entity : list ) {
-			if ( entity.getId().equals( id ) ) {
-				return true;
-			}
-		}
-		return false;
+		return list.stream()
+				.anyMatch( entity -> entity.getId().equals( id ) );
 	}
 }

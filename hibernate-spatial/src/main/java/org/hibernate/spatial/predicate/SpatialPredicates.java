@@ -365,13 +365,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see SpatialRestrictions#filter(String, Geometry)
 	 * @see FilterPredicate
+	 * @see SpatialRestrictions#filter(String, Geometry)
 	 */
-	public static Predicate filterByGeometry(
+	public static Predicate filter(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2) {
-		return FilterPredicate.byGeometry( criteriaBuilder, geometry1, geometry2 );
+		return new FilterPredicate( criteriaBuilder, geometry1, geometry2 );
 	}
 
 	/**
@@ -383,49 +383,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see SpatialRestrictions#filter(String, Geometry)
 	 * @see FilterPredicate
+	 * @see SpatialRestrictions#filter(String, Geometry)
 	 */
-	public static Predicate filterByGeometry(
+	public static Predicate filter(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return FilterPredicate.byGeometry( criteriaBuilder, geometry1, geometry2 );
-	}
-
-	/**
-	 * Create a predicate for testing the arguments for bounding box overlap constraint.
-	 *
-	 * @param criteriaBuilder CriteriaBuilder
-	 * @param geometry geometry expression
-	 * @param polygon polygon expression whose bounding box to use in the comparison
-	 *
-	 * @return bounding box overlap predicate
-	 *
-	 * @see SpatialRestrictions#filter(String, Envelope, int)
-	 * @see FilterPredicate
-	 */
-	public static Predicate filterByPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
-			Expression<Polygon> polygon) {
-		return FilterPredicate.byPolygon( criteriaBuilder, geometry, polygon );
-	}
-
-	/**
-	 * Create a predicate for testing the arguments for bounding box overlap constraint.
-	 *
-	 * @param criteriaBuilder CriteriaBuilder
-	 * @param geometry geometry expression
-	 * @param polygon polygon expression whose bounding box to use in the comparison
-	 *
-	 * @return bounding box overlap predicate
-	 *
-	 * @see SpatialRestrictions#filter(String, Envelope, int)
-	 * @see FilterPredicate
-	 */
-	public static Predicate filterByPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
-			Polygon polygon) {
-		return FilterPredicate.byPolygon( criteriaBuilder, geometry, polygon );
+		return new FilterPredicate( criteriaBuilder, geometry1, geometry2 );
 	}
 
 	/**
@@ -438,13 +402,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see SpatialRestrictions#filter(String, Envelope, int)
 	 * @see FilterPredicate
+	 * @see SpatialRestrictions#filter(String, Envelope, int)
 	 */
 	public static Predicate filterByPolygon(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
-		return FilterPredicate.byPolygon( criteriaBuilder, geometry, envelope, srid );
+		return new FilterPredicate( criteriaBuilder, geometry, envelope, srid );
 	}
 
 	/**

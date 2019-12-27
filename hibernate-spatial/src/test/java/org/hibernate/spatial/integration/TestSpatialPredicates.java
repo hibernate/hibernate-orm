@@ -62,7 +62,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getFilter( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.filterByGeometry( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				SpatialPredicates.filter( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 

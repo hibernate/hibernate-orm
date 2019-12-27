@@ -24,7 +24,6 @@ import org.hibernate.spatial.jts.EnvelopeAdapter;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Polygon;
 
 /**
  * JPA Criteria API {@link Predicate} equivalent of {@link SpatialFilter}.
@@ -32,90 +31,49 @@ import org.locationtech.jts.geom.Polygon;
 public class FilterPredicate extends AbstractSimplePredicate implements Serializable {
 	private static final Pattern REGEX_PATTERN_PARAMETER_PLACEHOLDER = Pattern.compile( "\\?" );
 
-	private final Expression<? extends Geometry> geometryLeftHandSide;
+	private final Expression<? extends Geometry> geometry;
+	private final Expression<? extends Geometry> filter;
 
-	private final Expression<? extends Geometry> geometryRightHandSide;
-
-	private final Expression<? extends Polygon> polygon;
-
-	private FilterPredicate(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
-			Expression<? extends Geometry> geometryRightHandSide, Expression<? extends Polygon> polygon) {
+	public FilterPredicate(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+			Expression<? extends Geometry> filter) {
 		super( (CriteriaBuilderImpl) criteriaBuilder );
-		this.geometryLeftHandSide = geometryLeftHandSide;
-		this.geometryRightHandSide = geometryRightHandSide;
-		this.polygon = polygon;
+		this.geometry = geometry;
+		this.filter = filter;
 	}
 
-	public static FilterPredicate byGeometry(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
-			Expression<? extends Geometry> geometryRightHandSide) {
-		return new FilterPredicate( criteriaBuilder, geometryLeftHandSide,
-				geometryRightHandSide, null
+	public FilterPredicate(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
+			Geometry filter) {
+		this( criteriaBuilder, geometry,
+				criteriaBuilder.literal( filter )
 		);
 	}
 
-	public static FilterPredicate byGeometry(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
-			Geometry geometryRightHandSide) {
-		return byGeometry( criteriaBuilder, geometryLeftHandSide,
-				criteriaBuilder.literal( geometryRightHandSide )
-		);
-	}
-
-	public static FilterPredicate byPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
-			Expression<? extends Polygon> polygon) {
-		return new FilterPredicate( criteriaBuilder, geometryLeftHandSide,
-				null, polygon
-		);
-	}
-
-	public static FilterPredicate byPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
-			Polygon polygon) {
-		return byPolygon( criteriaBuilder, geometryLeftHandSide,
-				criteriaBuilder.literal( polygon )
-		);
-	}
-
-	public static FilterPredicate byPolygon(
-			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometryLeftHandSide,
+	public FilterPredicate(
+			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
-		return byPolygon( criteriaBuilder, geometryLeftHandSide,
+		this( criteriaBuilder, geometry,
 				EnvelopeAdapter.toPolygon( envelope, srid )
 		);
 	}
 
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( geometryLeftHandSide, registry );
-		if ( geometryRightHandSide != null ) {
-			Helper.possibleParameter( geometryRightHandSide, registry );
-		}
-		if ( polygon != null ) {
-			Helper.possibleParameter( polygon, registry );
-		}
+		Helper.possibleParameter( geometry, registry );
+		Helper.possibleParameter( filter, registry );
 	}
 
 	@Override
 	public String render(boolean isNegated, RenderingContext renderingContext) {
-		String geometryLeftHandSideColumn = ( (Renderable) geometryLeftHandSide ).render( renderingContext );
+		String geometryParameter = ( (Renderable) geometry ).render( renderingContext );
+		String filterParameter = ( (Renderable) filter ).render( renderingContext );
 		Dialect dialect = renderingContext.getDialect();
 		if ( dialect instanceof SpatialDialect ) {
 			final SpatialDialect seDialect = (SpatialDialect) dialect;
-			String sql = seDialect.getSpatialFilterExpression( geometryLeftHandSideColumn );
-			if ( geometryRightHandSide != null ) {
-				String geometryRightHandSideParameter = ( (Renderable) geometryRightHandSide ).render( renderingContext );
-				sql = REGEX_PATTERN_PARAMETER_PLACEHOLDER.matcher( sql )
-						.replaceFirst( geometryRightHandSideParameter );
-			}
-			if ( polygon != null ) {
-				String polygonParameter = ( (Renderable) polygon ).render( renderingContext );
-				sql = REGEX_PATTERN_PARAMETER_PLACEHOLDER.matcher( sql )
-						.replaceFirst( polygonParameter );
-			}
-			return sql;
+			String sql = seDialect.getSpatialFilterExpression( geometryParameter );
+			return REGEX_PATTERN_PARAMETER_PLACEHOLDER.matcher( sql )
+					.replaceFirst( filterParameter );
 		}
 		else {
 			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );

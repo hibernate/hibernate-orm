@@ -26,7 +26,7 @@ public interface Orderable {
 	 * If the ordering element is not specified, ordering by
 	 * the primary key of the associated entity is assumed
 	 *
-	 * {@see javax.persistence.OrderBy#value()}
+	 * @see javax.persistence.OrderBy#value()
 	 *
 	 * @return The {@code ORDER BY} fragment used during loading this plural attribute from DB.
 	 */

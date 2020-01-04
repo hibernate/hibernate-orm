@@ -40,7 +40,7 @@ public class BatchFetchQueue {
 
 	/**
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the
-	 * {@link EntityKey) against which the descriptor is registered.
+	 * {@link EntityKey} against which the descriptor is registered.
 	 */
 	private Map<EntityKey, SubselectFetch> subselectsByEntityKey;
 

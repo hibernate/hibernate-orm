@@ -88,7 +88,7 @@ public class Identifier implements Comparable<Identifier> {
 	 *
 	 * @param name
 	 *
-	 * @return
+	 * @return {@code true} if the given identifier text is considered quoted; {@code false} otherwise.
 	 */
 	public static boolean isQuoted(String name) {
 		return ( name.startsWith( "`" ) && name.endsWith( "`" ) )

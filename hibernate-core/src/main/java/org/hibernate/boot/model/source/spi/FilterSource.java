@@ -9,7 +9,7 @@ package org.hibernate.boot.model.source.spi;
 import java.util.Map;
 
 /**
- * Defines the source of filter information.  May have an associated {@link FilterDefinitionSource}.
+ * Defines the source of filter information.  May have an associated {@link org.hibernate.engine.spi.FilterDefinition}.
  * Relates to both {@code <filter/>} and {@link org.hibernate.annotations.Filter @Filter}
  *
  * @author Steve Ebersole
@@ -28,7 +28,7 @@ public interface FilterSource {
 	 *
 	 * @return The condition defined on the filter.
 	 *
-	 * @see {@link FilterDefinitionSource#getCondition()}
+	 * @see org.hibernate.boot.model.source.internal.hbm.FilterSourceImpl#getCondition()
 	 */
 	public String getCondition();
 

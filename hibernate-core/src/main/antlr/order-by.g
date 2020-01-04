@@ -127,7 +127,7 @@ tokens
     /**
      * Process the given node as a function.
      *
-     * @param The node representing the function invocation (including parameters as subtree components).
+     * @param ast The node representing the function invocation (including parameters as subtree components).
      *
      * @return The processed node.
      */
@@ -149,7 +149,7 @@ tokens
     /**
      * Allow post processing of each <tt>sort specification</tt>
      *
-     * @param The grammar-built sort specification subtree.
+     * @param sortSpec The grammar-built sort specification subtree.
      *
      * @return The processed sort specification subtree.
      */

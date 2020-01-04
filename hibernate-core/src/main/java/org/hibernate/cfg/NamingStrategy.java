@@ -21,7 +21,7 @@ package org.hibernate.cfg;
  * @author Gavin King
  * @author Emmanuel Bernard
  *
- * @deprecated A {@link org.hibernate.cfg.naming.NamingStrategyDelegator} should be used instead.
+ * @deprecated {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy} should be used instead.
  */
 @Deprecated
 public interface NamingStrategy {

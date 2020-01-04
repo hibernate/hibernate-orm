@@ -1674,7 +1674,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Dialect's preferred SQLExceptionConverter, or null to
 	 * indicate that the default {@link SQLExceptionConverter} should be used.
 	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()}
+	 * @see #buildSQLExceptionConversionDelegate()
 	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
 	 * overridden instead.
 	 */
@@ -1687,11 +1687,11 @@ public abstract class Dialect implements ConversionContext {
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
 	 * <p/>
-	 * When {@link #buildSQLExceptionConverter} returns null, the default 
+	 * When {@link #buildSQLExceptionConverter} returns null, the default
 	 * {@link SQLExceptionConverter} is used to interpret SQLState and
 	 * error codes. If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
-	 * {@link SQLExceptionConversionDelegate} in addition to the following 
+	 * {@link SQLExceptionConversionDelegate} in addition to the following
 	 * standard delegates:
 	 * <ol>
 	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
@@ -2877,7 +2877,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * By default interpret this based on DatabaseMetaData.
 	 *
-	 * @return
+	 * @return The NameQualifierSupport.
 	 */
 	public NameQualifierSupport getNameQualifierSupport() {
 		return null;

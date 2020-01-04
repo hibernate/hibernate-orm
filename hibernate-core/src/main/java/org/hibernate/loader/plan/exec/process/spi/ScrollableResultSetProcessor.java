@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Contract for processing JDBC ResultSets a single logical row at a time.  These are intended for use by
@@ -25,7 +26,7 @@ public interface ScrollableResultSetProcessor {
 	/**
 	 * Give a ResultSet, extract just a single result row.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSingleRow(ResultSet, SharedSessionContractImplementor, QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -47,7 +48,7 @@ public interface ScrollableResultSetProcessor {
 	 * properly ordered to account for any to-many fetches.  Multiple ResultSet rows are read into a single query
 	 * result "row".
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsForward(ResultSet, SharedSessionContractImplementor, QueryParameters, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...)
 	 *
@@ -67,7 +68,7 @@ public interface ScrollableResultSetProcessor {
 	/**
 	 * Like {@link #extractLogicalRowForward} but here moving through the ResultSet in reverse.
 	 *
-	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(java.sql.ResultSet, org.hibernate.engine.spi.SessionImplementor, org.hibernate.engine.spi.QueryParameters, boolean, boolean)}
+	 * Copy of {@link org.hibernate.loader.Loader#loadSequentialRowsReverse(ResultSet, SharedSessionContractImplementor, QueryParameters, boolean, boolean)}
 	 * but dropping the 'returnProxies' (that method has only one use in the entire codebase and it always passes in
 	 * false...).
 	 *

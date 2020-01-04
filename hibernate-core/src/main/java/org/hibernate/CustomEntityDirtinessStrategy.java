@@ -41,7 +41,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param persister The persister corresponding to the given entity
 	 * @param session The session from which this check originates.
 	 *
-	 * @return {@code true} indicates the entity is dirty; {@link false} indicates the entity is not dirty.
+	 * @return {@code true} indicates the entity is dirty; {@code false} indicates the entity is not dirty.
 	 */
 	public boolean isDirty(Object entity, EntityPersister persister, Session session);
 

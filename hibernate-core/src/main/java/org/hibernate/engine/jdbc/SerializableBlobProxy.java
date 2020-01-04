@@ -31,7 +31,7 @@ public class SerializableBlobProxy implements InvocationHandler, Serializable {
 	 * Builds a serializable {@link Blob} wrapper around the given {@link Blob}.
 	 *
 	 * @param blob The {@link Blob} to be wrapped.
-	 * @see
+	 * @see #generateProxy(java.sql.Blob) 
 	 */
 	private SerializableBlobProxy(Blob blob) {
 		this.blob = blob;

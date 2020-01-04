@@ -350,7 +350,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		 * For the Client entity:
 		 * naturalOrderTableNames -> PERSON, CLIENT; this reflects the sequence in which the tableNames are
 		 * added to the meta-data when the annotated entities are processed.
-		 * However, in some instances, for example when generating joins, the CLIENT table needs to be 
+		 * However, in some instances, for example when generating joins, the CLIENT table needs to be
 		 * the first table as it will the driving table.
 		 * tableNames -> CLIENT, PERSON
 		 */
@@ -623,7 +623,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	 *
 	 * @param persistentClass
 	 * @param factory
-	 * @return
+	 * @return subclassNamesBySubclassTable
 	 */
 	private String[][] buildSubclassNamesBySubclassTableMapping(PersistentClass persistentClass, SessionFactoryImplementor factory) {
 		// this value represents the number of subclasses (and not the class itself)

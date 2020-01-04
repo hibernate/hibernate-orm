@@ -2548,7 +2548,7 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @param lockMode The lock mode to apply to the thing being loaded.
 	 *
-	 * @return
+	 * @return The UniqueEntityLoader.
 	 *
 	 * @throws MappingException
 	 */

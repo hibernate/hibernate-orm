@@ -54,7 +54,7 @@ public interface MetadataBuildingContext {
 	/**
 	 * Not sure how I feel about this exposed here
 	 *
-	 * @return
+	 * @return The ObjectNameNormalizer
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 }

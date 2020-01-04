@@ -545,7 +545,7 @@ public class DB2Dialect extends Dialect {
 	 * if expression has not been explicitly specified.
 	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
 	 *
-	 * @return
+	 * @return SQL string.
 	 */
 	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {

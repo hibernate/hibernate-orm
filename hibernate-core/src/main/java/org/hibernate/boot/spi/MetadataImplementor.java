@@ -33,7 +33,7 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	/**
 	 * Access to the options used to build this Metadata
 	 *
-	 * @return
+	 * @return Access to the MetadataBuildingOptions
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 

@@ -50,7 +50,7 @@ public final class NationalizedTypeMappings {
 	/**
 	 * @deprecated use {@link #toNationalizedTypeCode(int)}
 	 * @param jdbcCode
-	 * @return
+	 * @return corresponding nationalized code
 	 */
 	@Deprecated
 	public int getCorrespondingNationalizedCode(int jdbcCode) {

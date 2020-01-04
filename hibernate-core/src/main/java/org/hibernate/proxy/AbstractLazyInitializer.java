@@ -432,7 +432,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * This method should only be called during deserialization, before associating
 	 * the proxy with a session.
 	 *
-	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when
+	 * @param readOnlyBeforeAttachedToSession the read-only/modifiable setting to use when
 	 * associated with a session; null indicates that the default should be used.
 	 * @param sessionFactoryUuid the session factory uuid, to be used if {@code allowLoadOutsideTransaction} is {@code true}.
 	 * @param allowLoadOutsideTransaction whether the proxy can load data even

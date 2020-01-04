@@ -49,7 +49,7 @@ public interface ResultSetProcessingContext extends LockModeResolver {
 
 		/**
 		 *
-		 * @return
+		 * @return Whether there is no identifier for this entity reference
 		 */
 		boolean isMissingIdentifier();
 

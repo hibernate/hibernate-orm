@@ -30,8 +30,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 *
 	 * @param name The name of the property representing the identifier within
 	 * its owning entity.
-	 * @param node The node name to use for XML-based representation of this
-	 * property.
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
 	 * @param unsavedValue The value which, if found as the value on the identifier

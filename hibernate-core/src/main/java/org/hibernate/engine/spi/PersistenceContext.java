@@ -33,7 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * </ul>
  * <p/>
  * Often referred to as the "first level cache".
- * 
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
@@ -250,7 +250,7 @@ public interface PersistenceContext {
 			final boolean disableVersionIncrement);
 
 	/**
-	 * Generates an appropriate EntityEntry instance and adds it 
+	 * Generates an appropriate EntityEntry instance and adds it
 	 * to the event source's internal caches.
 	 */
 	EntityEntry addEntry(
@@ -286,7 +286,7 @@ public interface PersistenceContext {
 
 	/**
 	 * If a deleted entity instance is re-saved, and it has a proxy, we need to
-	 * reset the identifier of the proxy 
+	 * reset the identifier of the proxy
 	 */
 	void reassociateProxy(Object value, Serializable id) throws MappingException;
 
@@ -478,7 +478,7 @@ public interface PersistenceContext {
 	 */
 	Object removeProxy(EntityKey key);
 
-	/** 
+	/**
 	 * Retrieve the set of EntityKeys representing nullifiable references
 	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
 	 */
@@ -496,8 +496,6 @@ public interface PersistenceContext {
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
-	 *
-	 * @return
 	 */
 	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
 
@@ -574,7 +572,7 @@ public interface PersistenceContext {
 	void afterLoad();
 	
 	/**
-	 * Is in a two-phase load? 
+	 * Is in a two-phase load?
 	 */
 	boolean isLoadFinished();
 	/**
@@ -631,12 +629,12 @@ public interface PersistenceContext {
 	 * To determine the read-only/modifiable setting for a particular entity
 	 * or proxy:
 	 * @see PersistenceContext#isReadOnly(Object)
-	 * @see org.hibernate.Session#isReadOnly(Object) 
+	 * @see org.hibernate.Session#isReadOnly(Object)
 	 *
 	 * @return true, loaded entities/proxies will be made read-only by default;
 	 *         false, loaded entities/proxies will be made modifiable by default.
 	 *
-	 * @see org.hibernate.Session#isDefaultReadOnly() 
+	 * @see org.hibernate.Session#isDefaultReadOnly()
 	 */
 	boolean isDefaultReadOnly();
 
@@ -799,7 +797,6 @@ public interface PersistenceContext {
 
 	/**
 	 * A read-only iterator on all entities managed by this persistence context
-	 * @return
 	 */
 	Iterator managedEntitiesIterator();
 
@@ -811,10 +808,10 @@ public interface PersistenceContext {
 
 		/**
 		 * Given an array of "full entity state", extract the portions that represent the natural id
-		 * 
+		 *
 		 * @param state The attribute state array
 		 * @param persister The persister representing the entity type.
-		 * 
+		 *
 		 * @return The extracted natural id values
 		 */
 		Object[] extractNaturalIdValues(Object[] state, EntityPersister persister);
@@ -848,7 +845,7 @@ public interface PersistenceContext {
 		 * @param persister The persister representing the entity type.
 		 * @param id The primary key value
 		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.  
+		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
 		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
 		 * @param source Enumeration representing how these values are coming into cache.
 		 */
@@ -861,11 +858,11 @@ public interface PersistenceContext {
 
 		/**
 		 * Cleans up local cross-reference entries.
-		 * 
+		 *
 		 * @param persister The persister representing the entity type.
 		 * @param id The primary key value
 		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * 
+		 *
 		 * @return The local cached natural id values (could be different from given values).
 		 */
 		Object[] removeLocalNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] state);
@@ -876,7 +873,7 @@ public interface PersistenceContext {
 		 * @param persister The persister representing the entity type.
 		 * @param id The primary key value
 		 * @param state Generally the "full entity state array", though could also be the natural id values array
-		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.  
+		 * @param previousState Generally the "full entity state array", though could also be the natural id values array.
 		 * 		Specifically represents the previous values on update, and so is only used with {@link CachedNaturalIdValueSource#UPDATE}
 		 * @param source Enumeration representing how these values are coming into cache.
 		 */
@@ -901,7 +898,7 @@ public interface PersistenceContext {
 		 *
 		 * @param persister The persister representing the entity type.
 		 * @param pk The primary key value
-		 * 
+		 *
 		 * @return The cross-referenced natural-id values, or {@code null}
 		 */
 		Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
@@ -914,9 +911,9 @@ public interface PersistenceContext {
 		 * @param persister The persister representing the entity type.
 		 * @param naturalIdValues The natural id value(s)
 		 *
-		 * @return The corresponding cross-referenced primary key, 
+		 * @return The corresponding cross-referenced primary key,
 		 * 		{@link PersistenceContext.NaturalIdHelper#INVALID_NATURAL_ID_REFERENCE},
-		 * 		or {@code null}. 
+		 * 		or {@code null}.
 		 */
 		Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalIdValues);
 
@@ -924,14 +921,14 @@ public interface PersistenceContext {
 		 * Find all the locally cached primary key cross-reference entries for the given persister.
 		 *
 		 * @param persister The persister representing the entity type.
-		 * 
+		 *
 		 * @return The primary keys
 		 */
 		Collection<Serializable> getCachedPkResolutions(EntityPersister persister);
 
 		/**
 		 * Part of the "load synchronization process".  Responsible for maintaining cross-reference entries
-		 * when natural-id values were found to have changed.  Also responsible for tracking the old values 
+		 * when natural-id values were found to have changed.  Also responsible for tracking the old values
 		 * as no longer valid until the next flush because otherwise going to the database would just re-pull
 		 * the old values as valid.  In this last responsibility, {@link #cleanupFromSynchronizations} is
 		 * the inverse process called after flush to clean up those entries.
@@ -939,7 +936,7 @@ public interface PersistenceContext {
 		 * @param persister The persister representing the entity type.
 		 * @param pk The primary key
 		 * @param entity The entity instance
-		 * 
+		 *
 		 * @see #cleanupFromSynchronizations
 		 */
 		void handleSynchronization(EntityPersister persister, Serializable pk, Object entity);
@@ -962,7 +959,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Access to the natural-id helper for this persistence context
-	 * 
+	 *
 	 * @return This persistence context's natural-id helper
 	 */
 	NaturalIdHelper getNaturalIdHelper();

@@ -142,7 +142,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * bound here.  See {@link Scope} for more details regarding the stages
 	 * a TypeConfiguration goes through
 	 *
-	 * @return
+	 * @return The MetadataBuildingContext
 	 */
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();

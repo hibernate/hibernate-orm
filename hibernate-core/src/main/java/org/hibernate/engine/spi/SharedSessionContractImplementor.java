@@ -194,7 +194,7 @@ public interface SharedSessionContractImplementor
 	 * Check if an active Transaction is necessary for the update operation to be executed.
 	 * If an active Transaction is necessary but it is not then a TransactionRequiredException is raised.
 	 *
-	 * @param exceptionMessage, the message to use for the TransactionRequiredException
+	 * @param exceptionMessage the message to use for the TransactionRequiredException
 	 */
 	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !isTransactionInProgress() ) {

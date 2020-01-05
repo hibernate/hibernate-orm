@@ -117,7 +117,7 @@ public interface Type extends Serializable {
 	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
-	 * TODO: Would be much much better to have this aware of Dialect once the service/metamodel split is done
+	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
 	 *
 	 * @return The dictated sizes.
 	 *
@@ -132,7 +132,7 @@ public interface Type extends Serializable {
 	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
-	 * TODO: Would be much much better to have this aware of Dialect once the service/metamodel split is done
+	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
 	 *
 	 * @return The default sizes.
 	 *

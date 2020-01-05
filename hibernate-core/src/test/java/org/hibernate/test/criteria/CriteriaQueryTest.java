@@ -20,6 +20,7 @@ import java.util.Set;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -2046,7 +2047,7 @@ public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.close();
 		
 	}
-        
+    
     @Test
     @TestForIssue( jiraKey = "HHH-6643" )
     public void testNotNot() {
@@ -2107,6 +2108,74 @@ public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		t.rollback();
 		s.close();
     }
-
+    
+    @Test
+	@TestForIssue( jiraKey = "hhh-5508" )
+	public void testFlushModeWithIncorrectPath() {
+	    Session s = openSession();
+	    Transaction t = s.beginTransaction();
+	
+	    Course course = new Course();
+	    course.setCourseCode("HIB");
+	    course.setDescription("Hibernate Training");
+	    s.save(course);
+	
+	    Student gavin = new Student();
+	    gavin.setName("Gavin King");
+	    gavin.setStudentNumber(667);
+	    s.save(gavin);
+	
+	    Student xam = new Student();
+	    xam.setName("Max Rydahl Andersen");
+	    xam.setStudentNumber(101);
+	    s.save(xam);
+	
+	    Enrolment enrolment = new Enrolment();
+	    enrolment.setCourse(course);
+	    enrolment.setCourseCode(course.getCourseCode());
+	    enrolment.setSemester((short) 1);
+	    enrolment.setYear((short) 1999);
+	    enrolment.setStudent(xam);
+	    enrolment.setStudentNumber(xam.getStudentNumber());
+	    xam.getEnrolments().add(enrolment);
+	    s.save(enrolment);
+	
+	    enrolment = new Enrolment();
+	    enrolment.setCourse(course);
+	    enrolment.setCourseCode(course.getCourseCode());
+	    enrolment.setSemester((short) 3);
+	    enrolment.setYear((short) 1998);
+	    enrolment.setStudent(gavin);
+	    enrolment.setStudentNumber(gavin.getStudentNumber());
+	    gavin.getEnrolments().add(enrolment);
+	    s.save(enrolment);
+	    
+	    s.flush();
+	    s.clear();
+	    
+	    Criteria criteria = s.createCriteria(Enrolment.class);
+	    criteria.setFetchMode("student", FetchMode.JOIN);
+	    criteria.setFetchMode("course", FetchMode.JOIN);
+	    
+	    criteria.list();
+	    
+	    s.flush();
+	    s.clear();
+	    
+	    criteria = s.createCriteria(Enrolment.class);
+	    criteria.setFetchMode("student", FetchMode.JOIN);
+	    criteria.setFetchMode("corse", FetchMode.JOIN);
+	    
+	    try {
+		    criteria.list();
+		    fail( "Exception should be thrown for the fetch mode association path typo ('corse' should be 'course')" );
+	    }
+	    catch ( HibernateException ex ) {
+	    	// expected
+	    }
+	
+	    t.commit();
+	    s.close();
+    }
 }
 

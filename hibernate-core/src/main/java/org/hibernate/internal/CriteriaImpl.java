@@ -9,9 +9,11 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -49,6 +51,8 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private List<Subcriteria> subcriteriaList = new ArrayList<>();
 
 	private Map<String, FetchMode> fetchModes = new HashMap<>();
+	private Set<String> usedFetchModesKeys = new HashSet<>();
+	
 	private Map<String, LockMode> lockModes = new HashMap<>();
 
 	private Integer maxResults;
@@ -162,6 +166,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		return this;
 	}
 	public FetchMode getFetchMode(String path) {
+		usedFetchModesKeys.add(path);
 		return fetchModes.get(path);
 	}
 	@Override
@@ -363,16 +368,24 @@ public class CriteriaImpl implements Criteria, Serializable {
 		this.cacheMode = cacheMode;
 		return this;
 	}
+	
 	@Override
 	public List list() throws HibernateException {
 		before();
 		try {
-			return session.list( this );
+			List result = session.list( this );
+			for ( String fetchModesKey : fetchModes.keySet() ) {
+				if ( ! usedFetchModesKeys.contains( fetchModesKey ) ) {
+					throw new HibernateException( "Invalid Fetch Mode association path found: " + fetchModesKey );
+				}
+			}
+			return result;
 		}
 		finally {
 			after();
 		}
 	}
+	
 	@Override
 	public ScrollableResults scroll() {
 		return scroll( session.getFactory().getDialect().defaultScrollMode() );
@@ -669,7 +682,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria setComment(String comment) {
 			CriteriaImpl.this.setComment(comment);
 			return this;
-		}   
+		}
 		@Override
 		public Criteria addQueryHint(String queryHint) {
 			CriteriaImpl.this.addQueryHint( queryHint );

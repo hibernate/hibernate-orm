@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -62,13 +63,13 @@ public class EntityValuedPathInterpretation<T> implements SqmPathInterpretation<
 	}
 
 	@Override
-	public SqmPath<T> getInterpretedSqmPath() {
-		return sqmPath;
+	public NavigablePath getNavigablePath() {
+		return sqmPath.getNavigablePath();
 	}
 
 	@Override
 	public ModelPart getExpressionType() {
-		return null;
+		return mapping;
 	}
 
 	@Override

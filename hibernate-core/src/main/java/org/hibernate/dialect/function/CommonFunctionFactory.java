@@ -7,7 +7,6 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.function.StandardFunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.type.StandardBasicTypes;

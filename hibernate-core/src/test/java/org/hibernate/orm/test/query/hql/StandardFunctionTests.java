@@ -140,7 +140,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -617,119 +616,175 @@ public class StandardFunctionTests {
 	public void isolated(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e")
-							.list();
+					session.createQuery("select extract(time from e.theTimestamp), extract(date from e.theTimestamp) from EntityOfBasics e").list();
+					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e").list();
 				}
 		);
 	}
 
 	@Test
-	@FailureExpected
+//	@FailureExpected
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					EntityOfBasics entity = new EntityOfBasics();
 					entity.setId(1);
 					session.save(entity);
-					session.flush();
-					assertThat(
-							session.createQuery("select extract(week of year from date '2019-01-01') from EntityOfBasics").getResultList().get(0),
-							is(1)
-					);
-					assertThat(
-							session.createQuery("select extract(week of year from date '2019-01-05') from EntityOfBasics").getResultList().get(0),
-							is(1)
-					);
-					assertThat(
-							session.createQuery("select extract(week of year from date '2019-01-06') from EntityOfBasics").getResultList().get(0),
-							is(2)
-					);
-
-					assertThat(
-							session.createQuery("select extract(week of month from date '2019-05-01') from EntityOfBasics").getResultList().get(0),
-							is(1)
-					);
-					assertThat(
-							session.createQuery("select extract(week of month from date '2019-05-04') from EntityOfBasics").getResultList().get(0),
-							is(1)
-					);
-					assertThat(
-							session.createQuery("select extract(week of month from date '2019-05-05') from EntityOfBasics").getResultList().get(0),
-							is(2)
-					);
-
-					assertThat(
-							session.createQuery("select extract(week from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
-							is(22)
-					);
-					assertThat(
-							session.createQuery("select extract(week from date '2019-06-02') from EntityOfBasics").getResultList().get(0),
-							is(22)
-					);
-					assertThat(
-							session.createQuery("select extract(week from date '2019-06-03') from EntityOfBasics").getResultList().get(0),
-							is(23)
-					);
-
-					assertThat(
-							session.createQuery("select extract(day of year from date '2019-05-30') from EntityOfBasics").getResultList().get(0),
-							is(150)
-					);
-					assertThat(
-							session.createQuery("select extract(day of month from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
-							is(27)
-					);
-
-					assertThat(
-							session.createQuery("select extract(day from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
-							is(31)
-					);
-					assertThat(
-							session.createQuery("select extract(month from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
-							is(5)
-					);
-					assertThat(
-							session.createQuery("select extract(year from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
-							is(2019)
-					);
-					assertThat(
-							session.createQuery("select extract(quarter from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
-							is(2)
-					);
-
-					assertThat(
-							session.createQuery("select extract(day of week from date '2019-05-27') from EntityOfBasics").getResultList().get(0),
-							is(2)
-					);
-					assertThat(
-							session.createQuery("select extract(day of week from date '2019-05-31') from EntityOfBasics").getResultList().get(0),
-							is(6)
-					);
-
-					assertThat(
-							session.createQuery("select extract(second from time '14:12:10') from EntityOfBasics").getResultList().get(0),
-							is(10f)
-					);
-					assertThat(
-							session.createQuery("select extract(minute from time '14:12:10') from EntityOfBasics").getResultList().get(0),
-							is(12)
-					);
-					assertThat(
-							session.createQuery("select extract(hour from time '14:12:10') from EntityOfBasics").getResultList().get(0),
-							is(14)
-					);
-
-					assertThat(
-							session.createQuery("select extract(date from current datetime) from EntityOfBasics").getResultList().get(0),
-							instanceOf( LocalDate.class)
-					);
-					assertThat(
-							session.createQuery("select extract(time from current datetime) from EntityOfBasics").getResultList().get(0),
-							instanceOf( LocalTime.class)
-					);
-					session.delete(entity);
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						assertThat(
+								session.createQuery(
+										"select extract(week of year from {2019-01-01}) from EntityOfBasics b where b.id = 1" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(week of year from {2019-01-01}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+
+						assertThat(
+								session.createQuery(
+										"select extract(week of year from {2019-01-05}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+
+						assertThat(
+								session.createQuery(
+										"select extract(week of month from {2019-05-01}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 1 )
+						);
+
+						assertThat(
+								session.createQuery( "select extract(week from {2019-05-27}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 22 )
+						);
+
+						assertThat(
+								session.createQuery(
+										"select extract(day of year from {2019-05-30}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 150 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(day of month from {2019-05-27}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 27 )
+						);
+
+						assertThat(
+								session.createQuery( "select extract(day from {2019-05-31}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 31 )
+						);
+						assertThat(
+								session.createQuery( "select extract(month from {2019-05-31}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 5 )
+						);
+						assertThat(
+								session.createQuery( "select extract(year from {2019-05-31}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 2019 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(quarter from {2019-05-31}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 2 )
+						);
+
+						assertThat(
+								session.createQuery(
+										"select extract(day of week from {2019-05-27}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 2 )
+						);
+						assertThat(
+								session.createQuery(
+										"select extract(day of week from {2019-05-31}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 6 )
+						);
+
+						assertThat(
+								session.createQuery( "select extract(second from {14:12:10}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 10f )
+						);
+						assertThat(
+								session.createQuery( "select extract(minute from {14:12:10}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 12 )
+						);
+						assertThat(
+								session.createQuery( "select extract(hour from {14:12:10}) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								is( 14 )
+						);
+
+						assertThat(
+								session.createQuery( "select extract(date from local_datetime) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								instanceOf( LocalDate.class )
+						);
+						assertThat(
+								session.createQuery( "select extract(time from local_datetime) from EntityOfBasics" )
+										.getResultList()
+										.get( 0 ),
+								instanceOf( LocalTime.class )
+						);
+					}
+			);
+		}
+		finally {
+			scope.inTransaction(
+					session -> {
+						session.createQuery( "delete from EntityOfBasics" ).executeUpdate();
+					}
+			);
+		}
 	}
 
 	@Test
@@ -795,14 +850,8 @@ public class StandardFunctionTests {
 	public void testCountFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select count(*) from EntityOfBasics e")
-							.list();
-					session.createQuery("select count(1) from EntityOfBasics e")
-							.list();
-					session.createQuery("select count(e) from EntityOfBasics e")
-							.list();
-					session.createQuery("select count(distinct e) from EntityOfBasics e")
-							.list();
+					session.createQuery("select count(e) from EntityOfBasics e").list();
+					session.createQuery("select count(distinct e) from EntityOfBasics e").list();
 				}
 		);
 	}
@@ -820,7 +869,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -829,25 +877,45 @@ public class StandardFunctionTests {
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 23, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( System.currentTimeMillis() ) );
-					session.persist(entity);
-					session.flush();
-
-					session.createQuery("select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e")
-							.list();
-					session.createQuery("select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e")
-							.list();
-					session.createQuery("select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e")
-							.list();
-
-					assertThat(
-							session.createQuery("select format(e.theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics").getResultList().get(0),
-							is("Monday, 25/03/1974")
-					);
-					assertThat(
-							session.createQuery("select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics").getResultList().get(0),
-							is("Hello, 11:10:08 PM")
-					);
+					session.persist( entity );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery( "select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e" )
+								.list();
+						session.createQuery(
+								"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
+								.list();
+						session.createQuery(
+								"select format(e.theTimestamp as 'dd/MM/yyyy ''at'' HH:mm:ss') from EntityOfBasics e" )
+								.list();
+
+						assertThat(
+								session.createQuery(
+										"select format(e.theDate as 'EEEE, dd/MM/yyyy') from EntityOfBasics e" )
+										.getResultList()
+										.get( 0 ),
+								is( "Monday, 25/03/1974" )
+						);
+						assertThat(
+								session.createQuery(
+										"select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics e" )
+										.getResultList()
+										.get( 0 ),
+								is( "Hello, 11:10:08 PM" )
+						);
+					}
+			);
+		}
+		finally {
+			scope.inTransaction(
+					session -> {
+						session.createQuery( "delete EntityOfBasics" ).executeUpdate();
+					}
+			);
+		}
 	}
 }

@@ -12,13 +12,19 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.NullPrecedence;
@@ -30,6 +36,7 @@ import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -67,6 +74,7 @@ import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -80,7 +88,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.expression.LiteralHelper;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -89,6 +96,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -97,6 +105,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPathEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSelfRenderingExpression;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
@@ -136,7 +145,9 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -150,6 +161,7 @@ import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
 import static org.hibernate.query.TemporalUnit.DAY_OF_YEAR;
 import static org.hibernate.query.TemporalUnit.OFFSET;
+import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.TIME;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.TemporalUnit.TIMEZONE_MINUTE;
@@ -171,6 +183,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing a semantic model of the
 	 * query.
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public static SqmStatement buildSemanticModel(
 			HqlParser.StatementContext hqlParseTree,
 			SqmCreationOptions creationOptions,
@@ -195,6 +208,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return processingStateStack;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
@@ -1408,7 +1422,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmFunction(
 				"mod",
 				getFunctionDescriptor( "mod" ),
-				(AllowableFunctionReturnType) dividend.getNodeType(),
+				dividend.getNodeType(),
 				asList( dividend, divisor ),
 				creationContext.getNodeBuilder()
 		);
@@ -1513,7 +1527,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmFunction(
 				"local_datetime",
 				getFunctionDescriptor( "local_datetime" ),
-				StandardBasicTypes.TIMESTAMP,
+				StandardBasicTypes.LOCAL_DATE_TIME,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1524,7 +1538,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmFunction(
 				"local_date",
 				getFunctionDescriptor( "local_date" ),
-				StandardBasicTypes.TIMESTAMP,
+				StandardBasicTypes.LOCAL_DATE,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1535,7 +1549,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmFunction(
 				"local_time",
 				getFunctionDescriptor( "local_time" ),
-				StandardBasicTypes.TIMESTAMP,
+				StandardBasicTypes.LOCAL_TIME,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -1568,7 +1582,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmFunction(
 				"least",
 				getFunctionDescriptor( "least" ),
-				(AllowableFunctionReturnType<?>) type,
+				type,
 				arguments,
 				creationContext.getNodeBuilder()
 		);
@@ -1637,22 +1651,23 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmLiteral visitLiteralExpression(HqlParser.LiteralExpressionContext ctx) {
-		if ( ctx.literal().CHARACTER_LITERAL() != null ) {
-			return characterLiteral( ctx.literal().CHARACTER_LITERAL().getText() );
-		}
-		else if ( ctx.literal().STRING_LITERAL() != null ) {
+		if ( ctx.literal().STRING_LITERAL() != null ) {
 			return stringLiteral( ctx.literal().STRING_LITERAL().getText() );
 		}
-		else if ( ctx.literal().INTEGER_LITERAL() != null ) {
+
+		if ( ctx.literal().INTEGER_LITERAL() != null ) {
 			return integerLiteral( ctx.literal().INTEGER_LITERAL().getText() );
 		}
-		else if ( ctx.literal().LONG_LITERAL() != null ) {
+
+		if ( ctx.literal().LONG_LITERAL() != null ) {
 			return longLiteral( ctx.literal().LONG_LITERAL().getText() );
 		}
-		else if ( ctx.literal().BIG_INTEGER_LITERAL() != null ) {
+
+		if ( ctx.literal().BIG_INTEGER_LITERAL() != null ) {
 			return bigIntegerLiteral( ctx.literal().BIG_INTEGER_LITERAL().getText() );
 		}
-		else if ( ctx.literal().HEX_LITERAL() != null ) {
+
+		if ( ctx.literal().HEX_LITERAL() != null ) {
 			final String text = ctx.literal().HEX_LITERAL().getText();
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
 				return longLiteral( text );
@@ -1661,7 +1676,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				return integerLiteral( text );
 			}
 		}
-		else if ( ctx.literal().OCTAL_LITERAL() != null ) {
+
+		if ( ctx.literal().OCTAL_LITERAL() != null ) {
 			final String text = ctx.literal().OCTAL_LITERAL().getText();
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
 				return longLiteral( text );
@@ -1670,54 +1686,377 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				return integerLiteral( text );
 			}
 		}
-		else if ( ctx.literal().FLOAT_LITERAL() != null ) {
+
+		if ( ctx.literal().FLOAT_LITERAL() != null ) {
 			return floatLiteral( ctx.literal().FLOAT_LITERAL().getText() );
 		}
-		else if ( ctx.literal().DOUBLE_LITERAL() != null ) {
+
+		if ( ctx.literal().DOUBLE_LITERAL() != null ) {
 			return doubleLiteral( ctx.literal().DOUBLE_LITERAL().getText() );
 		}
-		else if ( ctx.literal().BIG_DECIMAL_LITERAL() != null ) {
+
+		if ( ctx.literal().BIG_DECIMAL_LITERAL() != null ) {
 			return bigDecimalLiteral( ctx.literal().BIG_DECIMAL_LITERAL().getText() );
 		}
-		else if ( ctx.literal().FALSE() != null ) {
+
+		if ( ctx.literal().FALSE() != null ) {
 			return booleanLiteral( false );
 		}
-		else if ( ctx.literal().TRUE() != null ) {
+
+		if ( ctx.literal().TRUE() != null ) {
 			return booleanLiteral( true );
 		}
-		else if ( ctx.literal().NULL() != null ) {
+
+		if ( ctx.literal().NULL() != null ) {
 			return new SqmLiteralNull( creationContext.getQueryEngine().getCriteriaBuilder() );
 		}
-		else if ( ctx.literal().timestampLiteral() != null ) {
-			return LiteralHelper.timestampLiteralFrom( ctx.literal().timestampLiteral().dateTimeLiteralText().getText(), this );
+
+		if ( ctx.literal().temporalLiteral() != null ) {
+			return interpretTemporalLiteral( ctx.literal().temporalLiteral() );
 		}
-		else if ( ctx.literal().dateLiteral() != null ) {
-			return LiteralHelper.dateLiteralFrom( ctx.literal().dateLiteral().dateTimeLiteralText().getText(), this );
-		}
-		else if ( ctx.literal().timeLiteral() != null ) {
-			return LiteralHelper.timeLiteralFrom( ctx.literal().timeLiteral().dateTimeLiteralText().getText(), this );
+
+		if ( ctx.literal().generalizedLiteral() != null ) {
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 
 		// otherwise we have a problem
 		throw new ParsingException( "Unexpected literal expression type [" + ctx.getText() + "]" );
 	}
 
+	private SqmLiteral interpretTemporalLiteral(HqlParser.TemporalLiteralContext temporalLiteral) {
+		if ( temporalLiteral.dateTimeLiteral() != null ) {
+			return interpretDateTimeLiteral( temporalLiteral.dateTimeLiteral() );
+		}
+
+		if ( temporalLiteral.dateLiteral() != null ) {
+			return interpretDateLiteral( temporalLiteral.dateLiteral() );
+		}
+
+		if ( temporalLiteral.timeLiteral() != null ) {
+			return interpretTimeLiteral( temporalLiteral.timeLiteral() );
+		}
+
+		if ( temporalLiteral.jdbcTimestampLiteral() != null ) {
+			return interpretJdbcDateTimeLiteral( temporalLiteral.jdbcTimestampLiteral() );
+		}
+
+		if ( temporalLiteral.jdbcDateLiteral() != null ) {
+			return interpretJdbcDateLiteral( temporalLiteral.jdbcDateLiteral() );
+		}
+
+		if ( temporalLiteral.jdbcTimeLiteral() != null ) {
+			return interpretJdbcTimeLiteral( temporalLiteral.jdbcTimeLiteral() );
+		}
+
+		// otherwise we have a problem
+		throw new ParsingException( "Could not interpret temporal literal expression [" + temporalLiteral.getText() + "]" );
+	}
+
+	private SqmLiteral interpretDateTimeLiteral(HqlParser.DateTimeLiteralContext dateTimeLiteral) {
+		final HqlParser.DateTimeContext dateTimeCtx = dateTimeLiteral.dateTime();
+
+		final HqlParser.DateContext dateCtx = dateTimeCtx.date();
+		final HqlParser.TimeContext timeCtx = dateTimeCtx.time();
+
+		final LocalDate localDate = localDate( dateCtx );
+		final LocalTime localTime = localTime( timeCtx );
+
+		if ( dateTimeCtx.zoneId() == null && dateTimeCtx.offset() == null ) {
+			return new SqmLiteral<>(
+					LocalDateTime.of( localDate, localTime ),
+					basicType( LocalDateTime.class ),
+					creationContext.getNodeBuilder()
+			);
+		}
+
+		if ( dateTimeCtx.zoneId() != null ) {
+			// we have a "zone id", which could still identify an offset rather that a ZoneId
+			try {
+				//noinspection unchecked
+				return new SqmLiteral(
+						ZonedDateTime.of(
+								localDate,
+								localTime,
+								ZoneId.of( dateTimeCtx.zoneId().STRING_LITERAL().getText() )
+						),
+						basicType( OffsetDateTime.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+			catch (Exception e) {
+				//noinspection unchecked
+				return new SqmLiteral(
+						ZonedDateTime.of(
+								localDate,
+								localTime,
+								TimeZone.getTimeZone( dateTimeCtx.zoneId().STRING_LITERAL().getText() ).toZoneId()
+						),
+						basicType( ZonedDateTime.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+		}
+
+		final HqlParser.OffsetContext offsetCtx = dateTimeCtx.offset();
+		assert offsetCtx != null;
+
+		// handle the offset
+		final int hourCtx = Integer.parseInt( offsetCtx.hour().INTEGER_LITERAL().getText() );
+		final int hour = offsetCtx.MINUS() == null
+				? hourCtx
+				: 0 - hourCtx;
+		final ZoneOffset offset = ZoneOffset.ofHoursMinutes(
+				hour,
+				offsetCtx.minute() == null
+						? 0
+						: Integer.parseInt( offsetCtx.minute().INTEGER_LITERAL().getText() )
+		);
+
+		//noinspection unchecked
+		return new SqmLiteral(
+				OffsetDateTime.of( localDate, localTime, offset ),
+				basicType( OffsetDateTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral interpretJdbcDateTimeLiteral(HqlParser.JdbcTimestampLiteralContext jdbcDateTimeLiteralCtx) {
+		final Timestamp timestamp;
+
+		if ( jdbcDateTimeLiteralCtx.genericTemporalLiteralText() != null ) {
+			final TemporalAccessor parsed = DateTimeUtils.DATE_TIME.parseBest(
+					jdbcDateTimeLiteralCtx.genericTemporalLiteralText().STRING_LITERAL().getText(),
+					OffsetDateTime::from,
+					ZonedDateTime::from,
+					LocalDateTime::from
+			);
+
+			if ( parsed instanceof LocalDateTime ) {
+				final LocalDateTime localDateTime = (LocalDateTime) parsed;
+
+				//noinspection deprecation
+				timestamp = new Timestamp(
+						localDateTime.getYear(),
+						localDateTime.getMonthValue(),
+						localDateTime.getDayOfMonth(),
+						localDateTime.getHour(),
+						localDateTime.getMinute(),
+						localDateTime.getSecond(),
+						localDateTime.getNano()
+				);
+			}
+			else if ( parsed instanceof OffsetDateTime ) {
+				timestamp = new Timestamp( ( (OffsetDateTime) parsed ).toInstant().toEpochMilli() );
+			}
+			else {
+				assert parsed instanceof ZonedDateTime;
+				timestamp = new Timestamp( ( (ZonedDateTime) parsed ).toInstant().toEpochMilli() );
+			}
+		}
+		else {
+			final HqlParser.DateTimeContext dateTimeCtx = jdbcDateTimeLiteralCtx.dateTime();
+			assert dateTimeCtx != null;
+
+			final LocalDateTime localDateTime = LocalDateTime.of(
+					localDate( dateTimeCtx.date() ),
+					localTime( dateTimeCtx.time() )
+			);
+
+			if ( dateTimeCtx.zoneId() == null && dateTimeCtx.offset() == null ) {
+				// todo (6.0) : use local-tz or jdbc-tz as offset?
+				//		for now, just use UTC
+
+				timestamp = new Timestamp( localDateTime.toInstant( ZoneOffset.UTC ).toEpochMilli() );
+
+// below is another option
+//				timestamp = new Timestamp(
+//						localDateTime.getYear(),
+//						localDateTime.getMonthValue(),
+//						localDateTime.getDayOfMonth(),
+//						localDateTime.getHour(),
+//						localDateTime.getMinute(),
+//						localDateTime.getSecond(),
+//						localDateTime.getNano()
+//				);
+			}
+			else if ( dateTimeCtx.zoneId() != null ) {
+				// we have a "zone id", which could still identify an offset rather that a ZoneId
+				ZoneId zoneId;
+				try {
+					zoneId = ZoneId.of( dateTimeCtx.zoneId().STRING_LITERAL().getText() );
+				}
+				catch (Exception e) {
+					zoneId = TimeZone.getTimeZone( dateTimeCtx.zoneId().STRING_LITERAL().getText() ).toZoneId();
+					//noinspection unchecked
+					return new SqmLiteral(
+							ZonedDateTime.of( localDateTime, zoneId ),
+							basicType( OffsetDateTime.class ),
+							creationContext.getNodeBuilder()
+					);
+				}
+
+				timestamp = new Timestamp( ZonedDateTime.of( localDateTime, zoneId ).toInstant().toEpochMilli() );
+			}
+			else {
+				assert dateTimeCtx.offset() != null;
+
+				final HqlParser.OffsetContext offsetCtx = dateTimeCtx.offset();
+				assert offsetCtx != null;
+
+				// handle the offset
+				final int hourCtx = Integer.parseInt( offsetCtx.hour().INTEGER_LITERAL().getText() );
+				final int hour = offsetCtx.MINUS() == null
+						? hourCtx
+						: 0 - hourCtx;
+				final ZoneOffset offset = ZoneOffset.ofHoursMinutes(
+						hour,
+						offsetCtx.minute() == null
+								? 0
+								: Integer.parseInt( offsetCtx.minute().INTEGER_LITERAL().getText() )
+				);
+
+				timestamp = new Timestamp( OffsetDateTime.of( localDateTime, offset ).toInstant().toEpochMilli() );
+			}
+		}
+
+		//noinspection unchecked
+		return new SqmLiteral( timestamp, basicType( Timestamp.class ), creationContext.getNodeBuilder() );
+	}
+
+	private <J> BasicDomainType<J> basicType(Class<J> javaType) {
+		//noinspection unchecked
+		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+	}
+
+	private static LocalDate localDate(HqlParser.DateContext ctx) {
+		return LocalDate.of(
+				Integer.parseInt( ctx.year().getText() ),
+				Integer.parseInt( ctx.month().getText() ),
+				Integer.parseInt( ctx.day().getText() )
+		);
+	}
+
+	private static LocalTime localTime(HqlParser.TimeContext ctx) {
+		if ( ctx.second() != null ) {
+			int index = ctx.second().getText().indexOf('.');
+			if ( index < 0 ) {
+				return LocalTime.of(
+						Integer.parseInt( ctx.hour().getText() ),
+						Integer.parseInt( ctx.minute().getText() ),
+						Integer.parseInt( ctx.second().getText() )
+				);
+			}
+			else {
+				return LocalTime.of(
+						Integer.parseInt( ctx.hour().getText() ),
+						Integer.parseInt( ctx.minute().getText() ),
+						Integer.parseInt( ctx.second().getText().substring( 0, index ) ),
+						Integer.parseInt( ctx.second().getText().substring( index + 1 ) )
+				);
+			}
+		}
+		else {
+			return LocalTime.of(
+					Integer.parseInt( ctx.hour().getText() ),
+					Integer.parseInt( ctx.minute().getText() )
+			);
+		}
+	}
+
+	private SqmLiteral interpretDateLiteral(HqlParser.DateLiteralContext dateLiteral) {
+		//noinspection unchecked
+		return new SqmLiteral(
+				localDate( dateLiteral.date() ),
+				basicType( LocalDate.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral interpretJdbcDateLiteral(HqlParser.JdbcDateLiteralContext dateLiteral) {
+		if ( dateLiteral.genericTemporalLiteralText() != null ) {
+			final LocalDate parsed = DateTimeUtils.DATE.parse(
+					dateLiteral.genericTemporalLiteralText().STRING_LITERAL().getText(),
+					LocalDate::from
+			);
+
+			//noinspection unchecked,deprecation
+			return new SqmLiteral(
+					new Date( parsed.getYear(), parsed.getMonthValue(), parsed.getDayOfMonth() ),
+					basicType( Date.class ),
+					creationContext.getNodeBuilder()
+			);
+		}
+
+		final HqlParser.DateContext dateCtx = dateLiteral.date();
+
+		//noinspection unchecked,deprecation
+		return new SqmLiteral(
+				new Date(
+						Integer.parseInt( dateCtx.year().INTEGER_LITERAL().getText() ),
+						Integer.parseInt( dateCtx.month().INTEGER_LITERAL().getText() ),
+						Integer.parseInt( dateCtx.day().INTEGER_LITERAL().getText() )
+				),
+				basicType( Date.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral interpretTimeLiteral(HqlParser.TimeLiteralContext timeLiteral) {
+		//noinspection unchecked
+		return new SqmLiteral(
+				localTime( timeLiteral.time() ),
+				basicType( LocalTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral interpretJdbcTimeLiteral(HqlParser.JdbcTimeLiteralContext timeLiteral) {
+		if ( timeLiteral.genericTemporalLiteralText() != null ) {
+			final LocalTime parsed = DateTimeUtils.TIME.parse(
+					timeLiteral.genericTemporalLiteralText().STRING_LITERAL().getText(),
+					LocalTime::from
+			);
+
+			//noinspection unchecked,deprecation
+			return new SqmLiteral(
+					new Time( parsed.getHour(), parsed.getMinute(), parsed.getSecond() ),
+					basicType( Time.class ),
+					creationContext.getNodeBuilder()
+			);
+		}
+
+		final int seconds;
+
+		if ( timeLiteral.time().second().FLOAT_LITERAL() == null ) {
+			seconds = Integer.parseInt( timeLiteral.time().second().INTEGER_LITERAL().getText() );
+		}
+		else {
+			final float floatValue = Float.parseFloat( timeLiteral.time().second().FLOAT_LITERAL().getText() );
+			log.debugf( "Float-value encountered for seconds part of JDBC Date literal - ignoring fractional : " + floatValue );
+			seconds = (int) floatValue;
+		}
+
+		//noinspection unchecked,deprecation
+		return new SqmLiteral(
+				new Time(
+						Integer.parseInt( timeLiteral.time().hour().INTEGER_LITERAL().getText() ),
+						Integer.parseInt( timeLiteral.time().minute().INTEGER_LITERAL().getText() ),
+						seconds
+				),
+				basicType( Time.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmLiteral visitGeneralizedLiteral(HqlParser.GeneralizedLiteralContext ctx) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 	private SqmLiteral<Boolean> booleanLiteral(boolean value) {
 		final SqmExpressable expressionType = resolveExpressableTypeBasic( Boolean.class );
 		//noinspection unchecked
 		return new SqmLiteral<>( value, expressionType, creationContext.getQueryEngine().getCriteriaBuilder() );
-	}
-
-	private SqmLiteral<Character> characterLiteral(String text) {
-		if ( text.length() > 1 ) {
-			// todo : or just treat it as a String literal?
-			throw new ParsingException( "Value for CHARACTER_LITERAL token was more than 1 character" );
-		}
-		return new SqmLiteral<>(
-				text.charAt( 0 ),
-				resolveExpressableTypeBasic( Character.class ),
-				creationContext.getNodeBuilder()
-		);
 	}
 
 	private SqmLiteral<String> stringLiteral(String text) {
@@ -2208,29 +2547,29 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public Object visitDayField(HqlParser.DayFieldContext ctx) {
-		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.WEEK()!=null) {
-			return new SqmExtractUnit<>(DAY_OF_WEEK, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if ( ctx.WEEK() != null ) {
+			return new SqmExtractUnit<>( DAY_OF_WEEK, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
-		if (ctx.MONTH()!=null) {
-			return new SqmExtractUnit<>(DAY_OF_MONTH, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		if ( ctx.MONTH() != null ) {
+			return new SqmExtractUnit<>( DAY_OF_MONTH, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
-		if (ctx.YEAR()!=null) {
-			return new SqmExtractUnit<>(DAY_OF_YEAR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		if ( ctx.YEAR() != null ) {
+			return new SqmExtractUnit<>( DAY_OF_YEAR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
 		return super.visitDayField(ctx);
 	}
 
 	@Override
 	public Object visitWeekField(HqlParser.WeekFieldContext ctx) {
-		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.MONTH()!=null) {
+		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		if ( ctx.MONTH() != null ) {
 			//this is computed from DAY_OF_MONTH/7
-			return new SqmExtractUnit<>(WEEK_OF_MONTH, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>( WEEK_OF_MONTH, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
-		if (ctx.YEAR()!=null) {
+		if ( ctx.YEAR() != null ) {
 			//this is computed from DAY_OF_YEAR/7
-			return new SqmExtractUnit<>(WEEK_OF_YEAR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+			return new SqmExtractUnit<>( WEEK_OF_YEAR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
 		return super.visitWeekField(ctx);
 	}
@@ -2256,41 +2595,259 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
 		NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		if (ctx.HOUR()!=null) {
-			return new SqmExtractUnit<>(TIMEZONE_HOUR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		if ( ctx.HOUR() != null ) {
+			return new SqmExtractUnit<>( TIMEZONE_HOUR, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
-		else if (ctx.MINUTE()!=null) {
-			return new SqmExtractUnit<>(TIMEZONE_MINUTE, resolveExpressableTypeBasic( Integer.class ), nodeBuilder);
+		else if ( ctx.MINUTE() != null ) {
+			return new SqmExtractUnit<>( TIMEZONE_MINUTE, resolveExpressableTypeBasic( Integer.class ), nodeBuilder );
 		}
 		else {
-			return new SqmExtractUnit<>( OFFSET, resolveExpressableTypeBasic( ZoneOffset.class ), nodeBuilder);
+			return new SqmExtractUnit<>( OFFSET, resolveExpressableTypeBasic( ZoneOffset.class ), nodeBuilder );
 		}
 	}
 
 	private boolean isExtractingJdbcTemporalType;
 
 	@Override
-	public Object visitExtractFunction(HqlParser.ExtractFunctionContext ctx) {
-		final SqmExpression<?> expressionToExtract = (SqmExpression) ctx.expression().accept( this );
-		final SqmExtractUnit<?> extractFieldExpression;
+	public Object visitExtractFunction(HqlParser.ExtractFunctionContext extractFunctionCtx) {
+		final SqmExpression<?> sqmTemporalExpr = (SqmExpression) extractFunctionCtx.expression().accept( this );
+		final SqmExtractUnit<?> sqmExtractUnit;
 
-		if ( ctx.extractField() != null ) {
-			extractFieldExpression = (SqmExtractUnit) ctx.extractField().accept( this);
+		// Allow `#visitDateOrTimeField()` to know if we're extracting from a JDBC Timestamp or from a
+		// java.time LocalDateTime/OffsetDateTime
+		isExtractingJdbcTemporalType = isJdbcTemporalType( sqmTemporalExpr.getNodeType() );
+
+		if ( extractFunctionCtx.extractField() != null ) {
+			// for the case of the full ANSI syntax "extract(field from arg)"
+			sqmExtractUnit = (SqmExtractUnit) extractFunctionCtx.extractField().accept( this);
 		}
-		else if ( ctx.datetimeField() != null ) {
-			isExtractingJdbcTemporalType = isJdbcTemporalType( expressionToExtract.getNodeType() );
-			extractFieldExpression = (SqmExtractUnit) ctx.datetimeField().accept( this );
+		else if ( extractFunctionCtx.datetimeField() != null ) {
+			// for the shorter legacy Hibernate syntax "field(arg)"
+			sqmExtractUnit = (SqmExtractUnit) extractFunctionCtx.datetimeField().accept( this );
 		}
 		else {
-			return expressionToExtract;
+			return sqmTemporalExpr;
 		}
 
-		//noinspection unchecked
-		return new SqmFunction(
+		final TemporalUnit unit = sqmExtractUnit.getTemporalUnit();
+		switch ( unit ) {
+			case NANOSECOND: {
+				return extractNanoseconds( sqmTemporalExpr );
+			}
+			case OFFSET: {
+				// use formatdatetime(arg, 'xxx') to get the offset
+				return extractOffsetUsingFormat( sqmTemporalExpr );
+			}
+			case DATE:
+			case TIME: {
+				// use cast(arg as Type) to get the date or time part
+				// which might be javax.sql.Date / javax.sql.Time or
+				// java.time.LocalDate / java.time.LocalTime depending
+				// on the type of the expression we're extracting from
+				return extractDateOrTimeUsingCast(
+						sqmTemporalExpr,
+						sqmExtractUnit.getType()
+				);
+			}
+			case WEEK_OF_MONTH: {
+				// use ceiling(extract(day of month, arg)/7.0)
+				return extractWeek( sqmTemporalExpr, DAY_OF_MONTH );
+			}
+			case WEEK_OF_YEAR: {
+				// use ceiling(extract(day of year, arg)/7.0)
+				return extractWeek( sqmTemporalExpr, DAY_OF_YEAR );
+			}
+			default: {
+				// otherwise it's something we expect the SQL dialect
+				// itself to understand, either natively, or via the
+				// registered function template for extract()
+
+				//noinspection unchecked
+				return new SqmFunction(
+						"extract",
+						getFunctionDescriptor( "extract" ),
+						sqmExtractUnit.getNodeType(),
+						asList( sqmExtractUnit, sqmTemporalExpr ),
+						creationContext.getNodeBuilder()
+				);
+			}
+		}
+	}
+
+	private SqmExpression<Long> extractNanoseconds(SqmExpression<?> sqmTemporalExpr) {
+		final SqmFunctionDescriptor roundFunctionDescriptor = getFunctionDescriptor( "round" );
+		final SqmFunctionDescriptor extractFunctionDescriptor = getFunctionDescriptor( "extract" );
+
+		final SqmLiteral<Float> nanoMultiplierLiteral = floatLiteral( "1e9" );
+		final SqmLiteral<Integer> zeroLiteral = integerLiteral( "0" );
+
+		final SqmSelfRenderingExpression<Long> sqmExtractSeconds = new SqmSelfRenderingExpression<>(
+				semanticQueryWalker -> extractFunctionDescriptor.generateSqlExpression(
+						"extract",
+						asList(
+								new SqmExtractUnit<>(
+										SECOND,
+										StandardBasicTypes.INTEGER,
+										creationContext.getNodeBuilder()
+								),
+								sqmTemporalExpr
+						),
+						() -> (MappingModelExpressable) basicType( Long.class ),
+						(SqmToSqlAstConverter) semanticQueryWalker,
+						(SqlAstCreationState) semanticQueryWalker
+				),
+				basicType( Long.class ),
+				creationContext.getNodeBuilder()
+		);
+
+		return new SqmSelfRenderingExpression<>(
+				semanticQueryWalker -> roundFunctionDescriptor.generateSqlExpression(
+						"round",
+						asList(
+								new SqmBinaryArithmetic<>(
+										BinaryArithmeticOperator.MULTIPLY,
+										sqmExtractSeconds,
+										nanoMultiplierLiteral,
+										basicType( Float.class ),
+										creationContext.getNodeBuilder()
+								),
+								zeroLiteral
+						),
+						() -> (MappingModelExpressable) basicType( Float.class ),
+						(SqmToSqlAstConverter) semanticQueryWalker,
+						(SqlAstCreationState) semanticQueryWalker
+				),
+				basicType( Long.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmExpression<?> extractDateOrTimeUsingCast(
+			SqmExpression<?> expressionToExtract,
+			AllowableFunctionReturnType<?> type) {
+		return new SqmFunction<>(
+				"cast",
+				getFunctionDescriptor( "cast" ),
+				type,
+				asList(
+						expressionToExtract,
+						new SqmCastTarget<>(
+								type,
+								creationContext.getNodeBuilder()
+						)
+				),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmExpression<ZoneOffset> extractOffsetUsingFormat(SqmExpression<?> expressionToExtract) {
+		return new SqmFunction<>(
+				"formatdatetime",
+				getFunctionDescriptor( "formatdatetime" ),
+				basicType( ZoneOffset.class ),
+				asList(
+						expressionToExtract,
+						new SqmFormat(
+								"xxx", //pattern for timezone offset
+								basicType( String.class ),
+								creationContext.getNodeBuilder()
+						)
+				),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmExpression<Integer> extractWeek(
+			SqmExpression<?> expressionToExtract,
+			TemporalUnit dayOf) {
+		final BasicDomainType<Integer> intType = basicType( Integer.class );
+
+		final SqmFunctionDescriptor extractFunctionDescriptor = getFunctionDescriptor( "extract" );
+
+		final SqmFunction<Integer> extractDayOf = new SqmFunction<>(
 				"extract",
-				getFunctionDescriptor( "extract" ),
-				extractFieldExpression.getNodeType(),
-				asList( extractFieldExpression, expressionToExtract ),
+				extractFunctionDescriptor,
+				intType,
+				asList(
+						new SqmExtractUnit<>(
+								dayOf,
+								intType,
+								creationContext.getNodeBuilder()
+						),
+						expressionToExtract
+				),
+				creationContext.getNodeBuilder()
+		);
+
+		final SqmFunction<Integer> extractDayOfWeek = new SqmFunction<>(
+				"extract",
+				extractFunctionDescriptor,
+				intType,
+				asList(
+						new SqmExtractUnit<>(
+								DAY_OF_WEEK,
+								intType,
+								creationContext.getNodeBuilder()
+						),
+						expressionToExtract
+				),
+				creationContext.getNodeBuilder()
+		);
+
+		final SqmBinaryArithmetic<Integer> subtraction = new SqmBinaryArithmetic<>(
+				BinaryArithmeticOperator.SUBTRACT,
+				extractDayOf,
+				extractDayOfWeek,
+				intType,
+				creationContext.getNodeBuilder()
+		);
+
+		final SqmBinaryArithmetic<Float> division = new SqmBinaryArithmetic<>(
+				BinaryArithmeticOperator.DIVIDE,
+				subtraction,
+				floatLiteral( "7.0" ),
+				basicType( Float.class ),
+				creationContext.getNodeBuilder()
+		);
+
+		return new SqmBinaryArithmetic<>(
+				BinaryArithmeticOperator.ADD,
+				new SqmFunction<>(
+						"ceiling",
+						getFunctionDescriptor( "ceiling" ),
+						intType,
+						Collections.singletonList( division ),
+						creationContext.getNodeBuilder()
+				),
+				integerLiteral("1"),
+				intType,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmFunction visitFormatFunction(HqlParser.FormatFunctionContext ctx) {
+		final SqmExpression<?> expressionToCast = (SqmExpression) ctx.expression().accept( this );
+		final SqmFormat format = visitFormat( ctx.format() );
+
+		return new SqmFunction<>(
+				"formatdatetime",
+				getFunctionDescriptor( "formatdatetime" ),
+				basicType( String.class ),
+				asList( expressionToCast, format ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmFormat visitFormat(HqlParser.FormatContext ctx) {
+		final String formatPattern = ctx.STRING_LITERAL().getText();
+//		if (!FORMAT.matcher(format).matches()) {
+//			throw new SemanticException("illegal format pattern: '" + format + "'");
+//		}
+		return new SqmFormat(
+				formatPattern,
+				basicType( String.class ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -2633,20 +3190,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
-		// todo (6.0) : we should delay this until we are walking the SQM
-
-		if ( ctx.CHARACTER_LITERAL() != null ) {
-			final String trimCharText = ctx.CHARACTER_LITERAL().getText();
-			if ( trimCharText.length() != 1 ) {
-				throw new SemanticException( "Expecting [trim character] for TRIM function to be  single character, found : " + trimCharText );
-			}
-			return new SqmLiteral<>(
-					trimCharText.charAt( 0 ),
-					resolveExpressableTypeBasic( Character.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-
 		if ( ctx.STRING_LITERAL() != null ) {
 			final String trimCharText = ctx.STRING_LITERAL().getText();
 			if ( trimCharText.length() != 1 ) {
@@ -2971,6 +3514,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			}
 		}
 
+		//noinspection unchecked
 		SqmPath result = attribute.getElementPathSource().createSqmPath(
 				pluralAttributePath,
 				this

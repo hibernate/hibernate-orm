@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.sql;
 
 import java.io.Serializable;
 
-import org.hibernate.sql.ast.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;

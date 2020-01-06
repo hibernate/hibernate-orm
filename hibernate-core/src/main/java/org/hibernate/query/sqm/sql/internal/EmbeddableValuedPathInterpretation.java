@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -78,8 +79,8 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 	}
 
 	@Override
-	public SqmPath<T> getInterpretedSqmPath() {
-		return sqmPath;
+	public NavigablePath getNavigablePath() {
+		return sqmPath.getNavigablePath();
 	}
 
 	@Override

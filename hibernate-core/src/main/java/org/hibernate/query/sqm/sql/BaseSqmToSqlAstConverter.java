@@ -69,9 +69,11 @@ import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
@@ -125,6 +127,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -781,6 +784,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Expression visitLiteral(SqmLiteral literal) {
+		if ( literal instanceof SqmLiteralNull ) {
+			return new QueryLiteral( null, (BasicValuedMapping) inferableTypeAccessStack.getCurrent().get() );
+		}
+
 		return new QueryLiteral(
 				literal.getLiteralValue(),
 				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
@@ -939,13 +946,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Expression visitFunction(SqmFunction sqmFunction) {
-		final SqmFunctionDescriptor functionDescriptor = creationContext.getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.getFunctionDescriptor( sqmFunction.getFunctionName() );
+		final SqmFunctionDescriptor functionDescriptor = sqmFunction.getFunctionDescriptor();
 
 		shallownessStack.push( Shallowness.FUNCTION );
 		try {
+			//noinspection unchecked
 			return functionDescriptor.generateSqlExpression(
 					sqmFunction.getFunctionName(),
 					sqmFunction.getArguments(),
@@ -1007,6 +1012,14 @@ public abstract class BaseSqmToSqlAstConverter
 		finally {
 			shallownessStack.pop();
 		}
+	}
+
+	@Override
+	public Object visitFormat(SqmFormat sqmFormat) {
+		return new Format(
+				sqmFormat.getLiteralValue(),
+				(BasicValuedMapping) sqmFormat.getNodeType()
+		);
 	}
 
 	//	@Override
@@ -1425,7 +1438,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return new BinaryArithmeticExpression(
 					(Expression) expression.getLeftHandOperand().accept( this ), interpret( expression.getOperator() ),
 					(Expression) expression.getRightHandOperand().accept( this ),
-					determineValueMapping( expression )
+					(BasicValuedMapping) determineValueMapping( expression )
 			);
 		}
 		finally {

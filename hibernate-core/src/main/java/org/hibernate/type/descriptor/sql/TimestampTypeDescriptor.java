@@ -14,10 +14,15 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterTemporal;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#TIMESTAMP TIMESTAMP} handling.
@@ -38,6 +43,17 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public boolean canBeRemapped() {
 		return true;
+	}
+
+	@Override
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Timestamp.class );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		return new JdbcLiteralFormatterTemporal( javaTypeDescriptor, TemporalType.TIMESTAMP );
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.H2ExtractEmulation;
+import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -203,6 +204,19 @@ public class H2Dialect extends Dialect {
 		sqlAppender.append(", ");
 		to.render();
 		sqlAppender.append(")");
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case WEEK: return "iso_week";
+			default: return unit.toString();
+		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return new Replacer( format, "'", "''" ).replace( "e", "u").result(); //NICE!!
 	}
 
 	@Override

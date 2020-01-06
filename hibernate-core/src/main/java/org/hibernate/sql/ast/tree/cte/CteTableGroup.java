@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
@@ -50,6 +51,11 @@ public class CteTableGroup implements TableGroup {
 	@Override
 	public ModelPartContainer getModelPart() {
 		return null;
+	}
+
+	@Override
+	public ModelPart getExpressionType() {
+		return getModelPart();
 	}
 
 	@Override

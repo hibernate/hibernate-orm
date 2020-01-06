@@ -12,12 +12,14 @@ import java.util.Locale;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.function.TransactSQLTrimEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -57,6 +59,58 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory.formatdatetime_format( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case WEEK: return "isowk"; //the ISO week number (behavior of "week" depends on a system property)
+			default: return super.translateExtractField(unit);
+		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat(format).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "\"" )
+				//era
+				.replace("G", "g")
+
+				//y nothing to do
+				//M nothing to do
+
+				//w no equivalent
+				//W no equivalent
+				//Y no equivalent
+
+				//day of week
+				.replace("EEEE", "dddd")
+				.replace("EEE", "ddd")
+				//e no equivalent
+
+				//d nothing to do
+				//D no equivalent
+
+				//am pm
+				.replace("aa", "tt")
+				.replace("a", "tt")
+
+				//h nothing to do
+				//H nothing to do
+
+				//m nothing to do
+				//s nothing to do
+
+				//fractional seconds
+				.replace("S", "F")
+
+				//timezones
+				.replace("XXX", "K") //UTC represented as "Z"
+				.replace("xxx", "zzz")
+				.replace("x", "zz");
 	}
 
 	@Override

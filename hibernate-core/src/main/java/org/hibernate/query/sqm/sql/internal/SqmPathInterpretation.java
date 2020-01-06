@@ -16,16 +16,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  * for path interpretations because it can (and likely) contains multiple SqlExpressions (entity to its columns, e.g.)
  *
  * @see org.hibernate.query.sqm.sql.SqmToSqlAstConverter
- * @see #getInterpretedSqmPath
  *
  * @author Steve Ebersole
  */
 public interface SqmPathInterpretation<T> extends Expression, DomainResultProducer<T> {
-	default NavigablePath getNavigablePath() {
-		return getInterpretedSqmPath().getNavigablePath();
-	}
-
-	SqmPath<T> getInterpretedSqmPath();
+	NavigablePath getNavigablePath();
 
 	@Override
 	ModelPart getExpressionType();

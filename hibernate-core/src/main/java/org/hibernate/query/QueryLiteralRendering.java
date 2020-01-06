@@ -36,6 +36,9 @@ public enum QueryLiteralRendering {
 	/**
 	 * As a parameter when the literal occurs outside the SELECT clause,
 	 * otherwise render as a SQL literal.
+	 *
+	 * Technically this should be called something like AS_PARAM_UNLESS_SELECTED.  If the literal is used as an argument
+	 * to a function call in the select-clause, for example, we'd still want to render as a parameter.
 	 */
 	AS_PARAM_OUTSIDE_SELECT( "param-outside-select" );
 

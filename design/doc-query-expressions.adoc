@@ -1,0 +1,33 @@
+= Query
+
+== Expressions
+
+=== Paths
+
+=== Literals
+
+=== Parameters
+
+=== Unary expressions
+
+=== Arithmetic operations
+
+Numeric v. temporal
+
+=== Functions
+
+- Standard functions
+- SqmFunctionRegistry
+- Role of Dialect
+
+=== Concatenation operations
+
+=== Entity-type references
+
+=== CASE statements
+
+=== COALESCE statements
+
+=== NULLIF statements
+
+=== Sub-queries

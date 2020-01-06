@@ -9,11 +9,11 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
@@ -21,7 +21,6 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  * @author Steve Ebersole
  */
 public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
-
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
 	private final LockMode lockMode;
@@ -76,6 +75,11 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	@Override
 	public TableGroupProducer getModelPart() {
 		return producer;
+	}
+
+	@Override
+	public ModelPart getExpressionType() {
+		return getModelPart();
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.MySQLExtractEmulation;
+import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
@@ -240,6 +241,80 @@ public class MySQLDialect extends Dialect {
 		if ( unit == NANOSECOND ) {
 			sqlAppender.append("*1e3");
 		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return datetimeFormat( format ).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "" )
+				.replace("%", "%%")
+
+				//year
+				.replace("yyyy", "%Y")
+				.replace("yyy", "%Y")
+				.replace("yy", "%y")
+				.replace("y", "%Y")
+
+				//month of year
+				.replace("MMMM", "%M")
+				.replace("MMM", "%b")
+				.replace("MM", "%m")
+				.replace("M", "%c")
+
+				//week of year
+				.replace("ww", "%v")
+				.replace("w", "%v")
+				//year for week
+				.replace("YYYY", "%x")
+				.replace("YYY", "%x")
+				.replace("Y", "%x")
+
+				//week of month
+				//????
+
+				//day of week
+				.replace("EEEE", "%W")
+				.replace("EEE", "%a")
+				.replace("ee", "%w")
+				.replace("e", "%w")
+
+				//day of month
+				.replace("dd", "%d")
+				.replace("d", "%e")
+
+				//day of year
+				.replace("DDD", "%j")
+				.replace("DD", "%j")
+				.replace("D", "%j")
+
+				//am pm
+				.replace("aa", "%p")
+				.replace("a", "%p")
+
+				//hour
+				.replace("hh", "%h")
+				.replace("HH", "%H")
+				.replace("h", "%l")
+				.replace("H", "%k")
+
+				//minute
+				.replace("mm", "%i")
+				.replace("m", "%i")
+
+				//second
+				.replace("ss", "%S")
+				.replace("s", "%S")
+
+				//fractional seconds
+				.replace("SSSSSS", "%f")
+				.replace("SSSSS", "%f")
+				.replace("SSSS", "%f")
+				.replace("SSS", "%f")
+				.replace("SS", "%f")
+				.replace("S", "%f");
 	}
 
 	void upgradeTo57() {

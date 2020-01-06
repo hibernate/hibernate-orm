@@ -157,7 +157,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
-	private final Map<String, String> discriminatorValuesByTableName;
+	private final Map<String, Object> discriminatorValuesByTableName;
 	private final Map<String, String> subclassNameByTableName;
 
 	//INITIALIZATION:
@@ -532,7 +532,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 			discriminatorValuesByTableName = new LinkedHashMap<>( subclassSpan + 1 );
 			subclassNameByTableName = new HashMap<>( subclassSpan + 1);
-			discriminatorValuesByTableName.put( persistentClass.getTable().getName(),  discriminatorSQLString);
+			// We need to convert the `discriminatorSQLString` (which is a String read from boot-mapping) into
+			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
+			try {
+				final Object convertedDiscriminatorValue = discriminatorType.stringToObject( discriminatorSQLString );
+				discriminatorValuesByTableName.put( persistentClass.getTable().getName(), convertedDiscriminatorValue );
+			}
+			catch (HibernateException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new MappingException(
+						"Could not resolve specified discriminator value [" + discriminatorSQLString
+								+ "] to discriminator type [" + discriminatorType + "]"
+
+				);
+			}
 			discriminatorValues = new String[subclassSpan];
 			discriminatorValues[subclassSpan - 1] = discriminatorSQLString;
 			notNullColumnTableNumbers = new int[subclassSpan];
@@ -590,7 +605,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						// "foo.class = Bar" works in HQL
 						discriminatorValue = sc.getSubclassId();
 					}
-					discriminatorValuesByTableName.put( sc.getTable().getName(),  discriminatorValue.toString() );
+					discriminatorValuesByTableName.put( sc.getTable().getName(),  discriminatorValue );
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
 					discriminatorValues[k] = discriminatorValue.toString();
 					int id = getTableId(
@@ -1320,11 +1335,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			ColumnReference identifierColumnReference,
 			BasicType resultType) {
 		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
-		final Expression expression =
-				new QueryLiteral<>(
-						discriminatorValuesByTableName.get( table.getTableExpression() ),
-						resultType
-				);
+		final Expression expression = new QueryLiteral<>(
+				discriminatorValuesByTableName.get( table.getTableExpression() ),
+				resultType
+		);
 
 		caseSearchedExpression.when( predicate, expression );
 	}

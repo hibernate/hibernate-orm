@@ -466,7 +466,6 @@ nullIf
 
 literal
 	: STRING_LITERAL
-	| CHARACTER_LITERAL
 	| INTEGER_LITERAL
 	| LONG_LITERAL
 	| BIG_INTEGER_LITERAL
@@ -478,39 +477,78 @@ literal
 	| NULL
 	| TRUE
 	| FALSE
-	| timestampLiteral
-	| dateLiteral
-	| timeLiteral
+	| temporalLiteral
+	| generalizedLiteral
 	;
 
-// todo (6.0) : expand temporal literal support to Java 8 temporal types
-//		* Instant 			-> {instant '...'}
-//		* LocalDate 		-> {localDate '...'}
-//		* LocalDateTime 	-> {localDateTime '...'}
-//		* OffsetDateTime 	-> {offsetDateTime '...'}
-//		* OffsetTime 		-> {offsetTime '...'}
-//		* ZonedDateTime 	-> {localDate '...'}
-//		* ...
-//
-// Few things:
-//		1) the markers above are just initial thoughts.  They are obviously verbose.  Maybe acronyms or shortened forms would be better
-//		2) we may want to stay away from all of the timezone headaches by not supporting local, zoned and offset forms
+temporalLiteral
+	: dateTimeLiteral
+	| dateLiteral
+	| timeLiteral
+	| jdbcTimestampLiteral
+	| jdbcDateLiteral
+    | jdbcTimeLiteral
+	;
 
-timestampLiteral
-	: TIMESTAMP_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+dateTimeLiteral
+	: LEFT_BRACE dateTime RIGHT_BRACE
 	;
 
 dateLiteral
-	: DATE_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	: LEFT_BRACE date RIGHT_BRACE
 	;
 
 timeLiteral
-	: TIME_ESCAPE_START dateTimeLiteralText RIGHT_BRACE
+	: LEFT_BRACE time RIGHT_BRACE
 	;
 
-dateTimeLiteralText
-	: STRING_LITERAL | CHARACTER_LITERAL
+dateTime
+	: date time (zoneId | offset)?
 	;
+
+date
+	: year MINUS month MINUS day
+	;
+
+time
+	: hour COLON minute (COLON second)?
+	;
+
+offset
+	: (PLUS | MINUS) hour (COLON minute)?
+	;
+
+year: INTEGER_LITERAL;
+month: INTEGER_LITERAL;
+day: INTEGER_LITERAL;
+hour: INTEGER_LITERAL;
+minute: INTEGER_LITERAL;
+second: INTEGER_LITERAL | FLOAT_LITERAL;
+zoneId: STRING_LITERAL;
+
+jdbcTimestampLiteral
+	: TIMESTAMP_ESCAPE_START (dateTime | genericTemporalLiteralText) RIGHT_BRACE
+	;
+
+jdbcDateLiteral
+	: DATE_ESCAPE_START (date | genericTemporalLiteralText) RIGHT_BRACE
+	;
+
+jdbcTimeLiteral
+	: TIME_ESCAPE_START (time | genericTemporalLiteralText) RIGHT_BRACE
+	;
+
+genericTemporalLiteralText
+	: STRING_LITERAL
+	;
+
+generalizedLiteral
+	: LEFT_BRACE generalizedLiteralType COLON generalizedLiteralText RIGHT_BRACE
+	;
+
+generalizedLiteralType : STRING_LITERAL;
+generalizedLiteralText : STRING_LITERAL;
+
 
 parameter
 	: COLON identifier					# NamedParameter
@@ -589,6 +627,7 @@ countFunction
 standardFunction
 	:	castFunction
 	|	extractFunction
+	|	formatFunction
 	|	concatFunction
 	|	substringFunction
 	|   replaceFunction
@@ -666,7 +705,7 @@ trimSpecification
 	;
 
 trimCharacter
-	: CHARACTER_LITERAL | STRING_LITERAL
+	: STRING_LITERAL
 	;
 
 upperFunction

@@ -103,7 +103,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassFormulaTableNumberClosure;
 
 	// discriminator column
-	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<Object, String>();
+	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;

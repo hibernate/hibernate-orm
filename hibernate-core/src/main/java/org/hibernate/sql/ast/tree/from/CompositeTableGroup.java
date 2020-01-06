@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 
@@ -44,13 +45,18 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public EmbeddableValuedModelPart getExpressionType() {
+		return getModelPart();
+	}
+
+	@Override
 	public String getGroupAlias() {
 		// none, although we could also delegate to the underlyingTableGroup's group-alias
 		return null;
 	}
 
 	@Override
-	public ModelPartContainer getModelPart() {
+	public EmbeddableValuedModelPart getModelPart() {
 		return compositionMapping;
 	}
 

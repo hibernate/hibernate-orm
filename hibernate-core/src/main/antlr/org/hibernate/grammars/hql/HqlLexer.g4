@@ -11,59 +11,90 @@ lexer grammar HqlLexer;
 package org.hibernate.grammars.hql;
 }
 
-WS : ( ' ' | '\t' | '\f' | EOL ) -> skip;
+WS : WS_CHAR+ -> skip;
 
 fragment
-EOL	: [\r\n]+;
-
-INTEGER_LITERAL : INTEGER_NUMBER ;
+WS_CHAR : [ \f\t\r\n];
 
 fragment
-INTEGER_NUMBER : ('0' | '1'..'9' '0'..'9'*) ;
-
-LONG_LITERAL : INTEGER_NUMBER ('l'|'L');
-
-BIG_INTEGER_LITERAL : INTEGER_NUMBER ('bi'|'BI') ;
-
-HEX_LITERAL : '0' ('x'|'X') HEX_DIGIT+ ('l'|'L')? ;
+DIGIT : [0-9];
 
 fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+HEX_DIGIT : [0-9a-fA-F];
 
-OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')? ;
+fragment
+EXPONENT : [eE] [+-]? DIGIT+;
 
-FLOAT_LITERAL : FLOATING_POINT_NUMBER ('f'|'F')? ;
+fragment
+LONG_SUFFIX : [lL];
+
+fragment
+FLOAT_SUFFIX : [fF];
+
+fragment
+DOUBLE_SUFFIX : [dD];
+
+fragment
+BIG_DECIMAL_SUFFIX : [bB] [dD];
+
+fragment
+BIG_INTEGER_SUFFIX : [bB] [iI];
+
+fragment
+INTEGER_NUMBER
+	: DIGIT+
+	;
 
 fragment
 FLOATING_POINT_NUMBER
-	: ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-	| '.' ('0'..'9')+ EXPONENT?
-	| ('0'..'9')+ EXPONENT
-	| ('0'..'9')+
+	: DIGIT+ '.' DIGIT* EXPONENT?
+	| '.' DIGIT+ EXPONENT?
+	| DIGIT+ EXPONENT
+	| DIGIT+
 	;
 
-DOUBLE_LITERAL : FLOATING_POINT_NUMBER ('d'|'D') ;
 
-BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER ('bd'|'BD') ;
 
-fragment
-EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+fragment SINGLE_QUOTE : '\'';
+fragment DOUBLE_QUOTE : '"';
 
-CHARACTER_LITERAL
-	:	'\'' ( ESCAPE_SEQUENCE | ~('\''|'\\') ) '\'' {setText(getText().substring(1, getText().length()-1));}
-	;
-
-STRING_LITERAL
-	:	'"' ( ESCAPE_SEQUENCE | ~('\\'|'"') )* '"' {setText(getText().substring(1, getText().length()-1));}
-	|	('\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\'')+ {setText(getText().substring(1, getText().length()-1).replace("''", "'"));}
-	;
+fragment BACKSLASH : '\\';
 
 fragment
 ESCAPE_SEQUENCE
-	:	'\\' ('b'|'t'|'n'|'f'|'r'|'\\"'|'\''|'\\')
-	|	UNICODE_ESCAPE
-	|	OCTAL_ESCAPE
+	: BACKSLASH [btnfr"']
+	| BACKSLASH UNICODE_ESCAPE
+	| BACKSLASH BACKSLASH
 	;
+
+fragment
+UNICODE_ESCAPE
+	: 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+	;
+
+INTEGER_LITERAL : INTEGER_NUMBER ;
+
+LONG_LITERAL : INTEGER_NUMBER LONG_SUFFIX;
+
+FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX?;
+
+DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX;
+
+BIG_INTEGER_LITERAL : INTEGER_NUMBER BIG_INTEGER_SUFFIX;
+
+BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
+
+HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
+
+OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')? ;
+
+STRING_LITERAL
+	: DOUBLE_QUOTE ( ~[\\"] | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("\"\"", "\"")); }
+	| SINGLE_QUOTE ( ~[\\'] | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("''", "'")); }
+	;
+
 
 fragment
 OCTAL_ESCAPE
@@ -72,10 +103,6 @@ OCTAL_ESCAPE
 	|	'\\' ('0'..'7')
 	;
 
-fragment
-UNICODE_ESCAPE
-	:	'\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-	;
 
 // ESCAPE start tokens
 TIMESTAMP_ESCAPE_START : '{ts';
@@ -134,6 +161,7 @@ CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
+CURRENT_DATETIME	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
@@ -155,6 +183,7 @@ FETCH				: [fF] [eE] [tT] [cC] [hH];
 FLOOR				: [fF] [lL] [oO] [oO] [rR];
 FROM				: [fF] [rR] [oO] [mM];
 FOR					: [fF] [oO] [rR];
+FORMAT				: [fF] [oO] [rR] [mM] [aA] [tT];
 FULL				: [fF] [uU] [lL] [lL];
 FUNCTION			: [fF] [uU] [nN] [cC] [tT] [iI] [oO] [nN];
 GREATEST			: [gG] [rR] [eE] [aA] [tT] [eE] [sS] [tT];

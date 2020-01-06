@@ -13,13 +13,13 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -100,13 +100,11 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 
 		assert tableGroup != null;
 		this.tableGroup = tableGroup;
-
-
 	}
 
 	@Override
-	public SqmPath<T> getInterpretedSqmPath() {
-		return sqmPath;
+	public NavigablePath getNavigablePath() {
+		return sqmPath.getNavigablePath();
 	}
 
 	@Override

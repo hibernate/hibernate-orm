@@ -4,21 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.function;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Internal;
+
 /**
  * @author Gavin King
  */
+@Internal
 public class Replacer {
 	private String[] chunks;
 	private String quote;
 	private String delimiter;
 	private List<Replacement> replacements = new ArrayList<>();
 
-	class Replacement {
+	public static class Replacement {
 		String placeholder;
 		String replacement;
 
@@ -45,7 +48,7 @@ public class Replacer {
 		}
 	}
 
-	Replacer(String format, String quote, String delimiter) {
+	public Replacer(String format, String quote, String delimiter) {
 		this.delimiter = delimiter;
 		this.chunks = format.split( quote );
 		this.quote = quote;

@@ -12,13 +12,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.sql.ast.spi.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-
-import static org.hibernate.sql.ast.spi.JdbcLiteralFormatter.NULL;
+import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterCharacterData;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#VARCHAR VARCHAR} handling.
@@ -42,8 +42,14 @@ public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+	}
+
+	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-		return (value, dialect, session) -> value == null ? NULL : "'" + value.toString() + "'";
+		//noinspection unchecked
+		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor );
 	}
 
 	@Override

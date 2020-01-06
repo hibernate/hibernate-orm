@@ -8,6 +8,9 @@ package org.hibernate.type.descriptor.sql;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * Descriptor for {@link Types#FLOAT FLOAT} handling.
  *
@@ -17,6 +20,11 @@ public class FloatTypeDescriptor extends RealTypeDescriptor {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {
+	}
+
+	@Override
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Double.class );
 	}
 
 	@Override

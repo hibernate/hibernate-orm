@@ -65,6 +65,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.sql.ast.spi.SqlAppender.CLOSE_PARENTHESIS;
@@ -803,9 +804,11 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( "(" );
 		arithmeticExpression.getLeftHandOperand().accept( this );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		arithmeticExpression.getRightHandOperand().accept( this );
+		appendSql( ")" );
 	}
 
 	@Override

@@ -7,10 +7,16 @@
 package org.hibernate.type.descriptor;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQueries;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -60,6 +66,16 @@ public final class DateTimeUtils {
 			.optionalStart().appendLiteral( ' ' ).optionalEnd()
 			.optionalStart().appendZoneOrOffsetId().optionalEnd()
 			.toFormatter();
+
+	/**
+	 * Pattern used for parsing literal dates in HQL.
+	 */
+	public static final DateTimeFormatter DATE = ISO_LOCAL_DATE;
+
+	/**
+	 * Pattern used for parsing literal times in HQL.
+	 */
+	public static final DateTimeFormatter TIME = ISO_LOCAL_TIME;
 
 	/**
 	 * Pattern used for parsing literal offset datetimes in HQL.
@@ -170,4 +186,79 @@ public final class DateTimeUtils {
 		return formatter;
 	}
 
+	public static void main(String... args) {
+		final ZoneId localTzId = ZoneId.systemDefault();
+		System.out.printf( "Local tz : %s\n", localTzId );
+
+		final String[] values = new String[] {
+				"1999-12-31 12:59:59.3",
+				"1999-12-31 12:59:59 +02:00",
+				"1999-12-31 12:59:59 UTC",
+				"1999-12-31 12:59:59 UTC+02:00",
+				"1999-12-31 12:59:59 " + localTzId.getId()
+		};
+
+		for ( String value : values ) {
+			final TemporalAccessor parsed = DATE_TIME.parseBest(
+					value,
+					OffsetDateTime::from,
+					ZonedDateTime::from,
+					LocalDateTime::from
+			);
+
+			System.out.println( value + " -> " + parsed + " (" + parsed.getClass().getName() + ")" );
+
+			final ZonedDateTime zdt;
+
+			if ( parsed instanceof LocalDateTime ) {
+				// here, "localTzId" would come from the "jdbc timezone" setting?
+				zdt = ( (LocalDateTime) parsed ).atZone( localTzId );
+				System.out.println( "    - LocalDateTime adjusted to ZonedDateTime : " + parsed );
+			}
+			else if ( parsed instanceof OffsetDateTime ) {
+				zdt = ( (OffsetDateTime) parsed ).toZonedDateTime();
+				System.out.println( "    - OffsetDateTime adjusted to ZonedDateTime : " + parsed );
+			}
+			else {
+				zdt = (ZonedDateTime) parsed;
+			}
+
+			System.out.println( "    - ZoneId = " + zdt.getZone().getId() );
+			System.out.println( "    - offset = " + zdt.getOffset() );
+			System.out.println( "    - normalized = " + zdt.getZone().normalized() );
+
+			final ZonedDateTime adjusted = zdt.withZoneSameInstant( localTzId );
+			System.out.println( "    - adjusted = " + adjusted.toLocalDateTime() + " (zone-id:" + adjusted.getZone() + ")" );
+		}
+	}
+
+	public static TemporalAccessor transform(String text) {
+		return DATE_TIME.parse(
+				text,
+				(temporal) -> {
+					// see if there is an offset or tz
+					final ZoneId zoneOrOffset = temporal.query( TemporalQueries.zone() );
+					if ( zoneOrOffset != null ) {
+						final ZonedDateTime zdt = ZonedDateTime.from( temporal );
+						// EDIT: call normalized() to convert a ZoneId
+						// with constant offset, e.g., UTC+02:00, to ZoneOffset
+						if ( zoneOrOffset.normalized() instanceof ZoneOffset ) {
+							return zdt.toOffsetDateTime();
+						}
+						else {
+							return zdt;
+						}
+					}
+
+					// otherwise it's a LocalDateTime
+					return LocalDateTime.from( temporal );
+				}
+		);
+	}
+
+	public static OffsetDateTime usingOffset(String text) {
+		// does not work
+		final TemporalAccessor parsed = DATE_TIME.parse( text );
+		return OffsetDateTime.from( parsed );
+	}
 }

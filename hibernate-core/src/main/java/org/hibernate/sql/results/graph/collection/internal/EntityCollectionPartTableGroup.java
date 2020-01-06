@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -40,6 +41,11 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return collectionPartPath;
+	}
+
+	@Override
+	public ModelPart getExpressionType() {
+		return getModelPart();
 	}
 
 	@Override

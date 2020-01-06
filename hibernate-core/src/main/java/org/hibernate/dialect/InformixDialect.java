@@ -13,6 +13,7 @@ import java.util.Locale;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.InformixExtractEmulation;
+import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -115,6 +116,65 @@ public class InformixDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "coalesce", new InformixExtractEmulation() );
 
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		//Informix' own variation of MySQL
+		return datetimeFormat( format ).result();
+	}
+
+	public static Replacer datetimeFormat(String format) {
+		return new Replacer( format, "'", "" )
+				.replace("%", "%%")
+
+				//year
+				.replace("yyyy", "%Y")
+				.replace("yyy", "%Y")
+				.replace("yy", "%y")
+				.replace("y", "Y")
+
+				//month of year
+				.replace("MMMM", "%B")
+				.replace("MMM", "%b")
+				.replace("MM", "%m")
+				.replace("M", "%c") //????
+
+				//day of week
+				.replace("EEEE", "%A")
+				.replace("EEE", "%a")
+				.replace("ee", "%w")
+				.replace("e", "%w")
+
+				//day of month
+				.replace("dd", "%d")
+				.replace("d", "%e")
+
+				//am pm
+				.replace("aa", "%p") //?????
+				.replace("a", "%p") //?????
+
+				//hour
+				.replace("hh", "%I")
+				.replace("HH", "%H")
+				.replace("h", "%I")
+				.replace("H", "%H")
+
+				//minute
+				.replace("mm", "%M")
+				.replace("m", "%M")
+
+				//second
+				.replace("ss", "%S")
+				.replace("s", "%S")
+
+				//fractional seconds
+				.replace("SSSSSS", "%F50") //5 is the max
+				.replace("SSSSS", "%F5")
+				.replace("SSSS", "%F4")
+				.replace("SSS", "%F3")
+				.replace("SS", "%F2")
+				.replace("S", "%F1");
 	}
 
 	@Override

@@ -14,6 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -26,7 +27,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  *
  * @author Steve Ebersole
  */
-public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, DomainResultProducer {
+public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPathInterpretation, DomainResultProducer {
 	NavigablePath getNavigablePath();
 
 	/**

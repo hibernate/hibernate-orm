@@ -55,6 +55,10 @@ public class SqmFunction<T> extends AbstractSqmExpression<T> implements JpaFunct
 		this.arguments = arguments;
 	}
 
+	public SqmFunctionDescriptor getFunctionDescriptor() {
+		return functionDescriptor;
+	}
+
 	@Override
 	public String getFunctionName() {
 		return functionName;

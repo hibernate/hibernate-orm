@@ -23,6 +23,8 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 			SqmSelectableNode<T> selectableNode,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+
+		assert selectableNode != null;
 		this.selectableNode = selectableNode;
 	}
 
@@ -31,6 +33,8 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
+
+		assert selectableNode != null;
 		this.selectableNode = selectableNode;
 		selectableNode.alias( alias );
 	}

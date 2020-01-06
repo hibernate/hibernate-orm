@@ -189,6 +189,22 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	public String translateDatetimeFormat(String format) {
+		return MySQLDialect.datetimeFormat( format ).result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			case WEEK: return "iso_week";
+			default: return unit.toString();
+		}
+	}
+
+	@Override
 	public String getSelectGUIDString() {
 		return "select uuid_to_char(uuid_create())";
 	}

@@ -98,6 +98,7 @@ javadoc {
 				'http://docs.jboss.org/cdi/api/2.0/',
 				'https://javaee.github.io/javaee-spec/javadocs/'
 		]
+		tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
 		
 		if ( JavaVersion.current().isJava11Compatible() ) {
 			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11

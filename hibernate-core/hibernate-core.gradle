@@ -260,4 +260,3 @@ task testJavassist(type: Test) {
 
 check.dependsOn testJavassist
 testJavassist.mustRunAfter test
-

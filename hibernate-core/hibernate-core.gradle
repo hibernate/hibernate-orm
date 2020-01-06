@@ -226,7 +226,3 @@ test {
         //println "Starting test: " + descriptor
     }
 }
-
-javadoc {
-    options.tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
-}

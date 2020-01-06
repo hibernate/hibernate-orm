@@ -84,8 +84,7 @@ public class RevengMetadataBuilder {
 
 	public Metadata build() {
 		Metadata result = createMetadata();		
-	    DatabaseCollector collector = readFromDatabase();
-        createPersistentClasses(collector, result); //move this to a different step!
+        createPersistentClasses(readFromDatabase()); 
 		return result;
 	}
 	
@@ -113,7 +112,7 @@ public class RevengMetadataBuilder {
         continue;
         // TODO: just create one big embedded composite id instead.
     }*/
-	private void createPersistentClasses(DatabaseCollector collector, Metadata metadata) {
+	private void createPersistentClasses(DatabaseCollector collector) {
 		RootClassBinder rootClassBinder = RootClassBinder.create(binderContext);
 		for (Table table : metadataCollector.collectTableMappings()) {
 			if(table.getColumnSpan()==0) {
@@ -126,7 +125,7 @@ public class RevengMetadataBuilder {
 			}	    	
 			rootClassBinder.bind(table, collector);
 		}		
-		metadataCollector.processSecondPasses(metadataBuildingContext);		
+		metadataCollector.processSecondPasses(metadataBuildingContext);	
 	}
 	
 	

@@ -7,17 +7,19 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddedIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -51,35 +53,43 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
+ * Support for {@link javax.persistence.EmbeddedId}
+ *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl
-		implements EmbeddedIdentifierMapping, EmbeddableValuedFetchable {
+public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping, EmbeddableValuedFetchable {
+	private final EntityMappingType entityMapping;
 	private final String name;
 	private final MappingType type;
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
 	private final PropertyAccess propertyAccess;
 	private final String tableExpression;
 	private final String[] attrColumnNames;
+	private final SessionFactoryImplementor sessionFactory;
 
+	@SuppressWarnings("WeakerAccess")
 	public EmbeddedIdentifierMappingImpl(
+			EntityMappingType entityMapping,
 			String name,
 			MappingType type,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			PropertyAccess propertyAccess,
 			String tableExpression,
-			String[] attrColumnNames) {
+			String[] attrColumnNames,
+			SessionFactoryImplementor sessionFactory) {
+		this.entityMapping = entityMapping;
 		this.name = name;
 		this.type = type;
 		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.propertyAccess = propertyAccess;
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
+		this.sessionFactory = sessionFactory;
 	}
 
 	@Override
-	public MappingType getPartMappingType() {
-		return type;
+	public EmbeddableMappingType getPartMappingType() {
+		return (EmbeddableMappingType) type;
 	}
 
 	@Override
@@ -93,8 +103,18 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
+	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		return propertyAccess.getGetter().get( entity );
+	}
+
+	@Override
+	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+		propertyAccess.getSetter().set( entity, id, session.getFactory() );
+	}
+
+	@Override
+	public Object instantiate() {
+		return entityMapping.getRepresentationStrategy().getInstantiator().instantiate( sessionFactory );
 	}
 
 	@Override
@@ -270,5 +290,21 @@ public class EmbeddedIdentifierMappingImpl
 
 	public void visitColumns(ColumnConsumer consumer) {
 		getEmbeddableTypeDescriptor().visitColumns( consumer );
+	}
+
+	@Override
+	public int getAttributeCount() {
+		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public Collection<SingularAttributeMapping> getAttributes() {
+		//noinspection unchecked
+		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
+	}
+
+	@Override
+	public PropertyAccess getPropertyAccess() {
+		return propertyAccess;
 	}
 }

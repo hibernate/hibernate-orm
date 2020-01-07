@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.internal;
 
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ public class OptimizedPojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	}
 
 	@Override
-	public Object instantiate(SharedSessionContractImplementor session) {
+	public Object instantiate(SessionFactoryImplementor sessionFactory) {
 		return instantiationOptimizer.newInstance();
 	}
 }

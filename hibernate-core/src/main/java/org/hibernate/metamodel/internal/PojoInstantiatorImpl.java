@@ -10,7 +10,7 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -48,7 +48,7 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public J instantiate(SharedSessionContractImplementor session) {
+	public J instantiate(SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", getMappedPojoClass() );
 		}

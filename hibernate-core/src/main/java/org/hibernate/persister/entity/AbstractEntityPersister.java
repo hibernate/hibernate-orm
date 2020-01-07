@@ -75,6 +75,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
@@ -200,6 +201,7 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -5200,12 +5202,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return identifierMapping.getPropertyAccess().getGetter().get( entity );
+		return identifierMapping.getIdentifier( entity, session );
 	}
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		identifierMapping.getPropertyAccess().getSetter().set( entity, id, factory );
+		identifierMapping.setIdentifier( entity, id, session );
 	}
 
 	@Override
@@ -5220,9 +5222,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
-		Object instance = getRepresentationStrategy().getInstantiator().instantiate( session );
-		identifierMapping.getPropertyAccess().getSetter().set( instance, id, factory );
-
+		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
+		setIdentifier( instance, id, session );
 		return instance;
 	}
 
@@ -5701,7 +5702,7 @@ public abstract class AbstractEntityPersister
 			identifierMapping = creationProcess.processSubPart(
 					EntityIdentifierMapping.ROLE_LOCAL_NAME,
 					(role, creationProcess1) ->
-							generateIdentifierMapping( creationProcess, bootEntityDescriptor.getIdentifierProperty() )
+							generateIdentifierMapping( creationProcess, bootEntityDescriptor )
 			);
 
 			if ( getVersionType() == null ) {
@@ -5908,16 +5909,23 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, Property identifierProperty) {
+	private EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final Type idType = getIdentifierType();
 
 		if ( idType instanceof CompositeType ) {
 			final CompositeType cidType = (CompositeType) idType;
-			if ( ! cidType.isEmbedded() ) {
+
+			// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its "non-aggregated"
+			// composite-id support.  It unfortunately conflicts with the JPA usage of "embedded".  Here we normalize
+			// the legacy naming to the more descriptive encapsulated versus non-encapsulated phrasing
+
+			final boolean encapsulated = ! cidType.isEmbedded();
+			if ( encapsulated ) {
+				// we have an `@EmbeddedId`
 				return MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping(
 						this,
-						identifierProperty,
-						identifierProperty.getName(),
+						bootEntityDescriptor.getIdentifierProperty(),
+						bootEntityDescriptor.getIdentifierProperty().getName(),
 						getRootTableName(),
 						rootTableKeyColumnNames,
 						cidType,
@@ -5925,13 +5933,8 @@ public abstract class AbstractEntityPersister
 				);
 			}
 
-			return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
-					this,
-					getRootTableName(),
-					rootTableKeyColumnNames,
-					cidType,
-					creationProcess
-			);
+			// otherwise we have a non-encapsulated composite-identifier
+			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor, cidType );
 		}
 
 		return MappingModelCreationHelper.buildSimpleIdentifierMapping(
@@ -5939,6 +5942,89 @@ public abstract class AbstractEntityPersister
 				getRootTableName(),
 				rootTableKeyColumnNames[0],
 				(BasicType) idType,
+				creationProcess
+		);
+	}
+
+	private EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
+			MappingModelCreationProcess creationProcess,
+			PersistentClass bootEntityDescriptor, CompositeType cidType) {
+		// process all of the defined "id attributes" because they are declared on the entity
+		final Component bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
+		final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
+		int columnsConsumedSoFar = 0;
+
+		if ( attributeMappings == null ) {
+			attributeMappings = new ArrayList<>(
+					bootEntityDescriptor.getPropertyClosureSpan() + bootIdDescriptor.getPropertySpan()
+			);
+
+			final Iterator bootPropertyIterator = bootIdDescriptor.getPropertyIterator();
+			while ( bootPropertyIterator.hasNext() ) {
+				final Property bootIdProperty = (Property) bootPropertyIterator.next();
+				final Type idPropertyType = bootIdProperty.getType();
+
+				if ( idPropertyType instanceof AnyType ) {
+					throw new HibernateException(
+							"AnyType property `" + getEntityName() + "#" + bootIdProperty.getName() +
+									"` cannot be used as part of entity identifier "
+					);
+				}
+
+				if ( idPropertyType instanceof CollectionType ) {
+					throw new HibernateException(
+							"Plural property `" + getEntityName() + "#" + bootIdProperty.getName() +
+									"` cannot be used as part of entity identifier "
+					);
+				}
+
+				final SingularAttributeMapping idAttributeMapping;
+
+				if ( idPropertyType instanceof BasicType ) {
+					idAttributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
+							bootIdProperty.getName(),
+							attributeMappings.size(),
+							bootIdProperty,
+							this,
+							(BasicType) idPropertyType,
+							getRootTableName(),
+							rootTableKeyColumnNames[columnsConsumedSoFar],
+							getRepresentationStrategy().resolvePropertyAccess( bootIdProperty ),
+							CascadeStyles.ALL,
+							creationProcess
+					);
+					columnsConsumedSoFar++;
+				}
+				else {
+//					final String[] unconsumedColumnNames = Arrays.copyOfRange(
+//							rootTableKeyColumnNames,
+//							columnsConsumedSoFar,
+//							rootTableKeyColumnNames.length
+//					);
+
+					if ( idPropertyType instanceof CompositeType ) {
+						// nested composite
+						throw new NotYetImplementedFor6Exception( getClass() );
+					}
+					else if ( idPropertyType instanceof EntityType ) {
+						// key-many-to-one
+						throw new NotYetImplementedFor6Exception( getClass() );
+					}
+					else {
+						throw new UnsupportedOperationException();
+					}
+				}
+
+				idAttributeMappings.add( idAttributeMapping );
+			}
+		}
+		attributeMappings.addAll( idAttributeMappings );
+
+		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
+				this,
+				idAttributeMappings,
+				cidType,
+				bootEntityDescriptor,
 				creationProcess
 		);
 	}

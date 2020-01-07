@@ -8,7 +8,6 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Strategy for instantiating representation structure instances.
@@ -20,7 +19,7 @@ public interface Instantiator<J> {
 	/**
 	 * Create an instance of the managed embedded value structure.
 	 */
-	J instantiate(SharedSessionContractImplementor session);
+	J instantiate(SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Performs and "instance of" check to see if the given object is an

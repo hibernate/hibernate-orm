@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
@@ -14,7 +15,9 @@ import org.hibernate.property.access.spi.PropertyAccess;
 public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	String ROLE_LOCAL_NAME = "{id}";
 
-	PropertyAccess getPropertyAccess();
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+	Object instantiate();
 
 	@Override
 	default String getPartName() {

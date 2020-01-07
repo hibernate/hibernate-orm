@@ -16,7 +16,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddedSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
+public class EmbeddedSqmPathSource<J>
+		extends AbstractSqmPathSource<J>
+		implements CompositeSqmPathSource<J>, AllowableParameterType<J> {
+
 	public EmbeddedSqmPathSource(
 			String localPathName,
 			EmbeddableDomainType<J> domainType,

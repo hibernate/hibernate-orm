@@ -15,10 +15,11 @@ import javax.persistence.AccessType;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
-import org.hibernate.tuple.entity.EntityTuplizer;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
@@ -179,10 +180,9 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	// uses the first getter of the tupelizer for the assertions
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		final Getter idGetter = factory.getDomainModel().findEntityDescriptor( classUnderTest.getName() )
-				.getIdentifierMapping()
-				.getPropertyAccess()
-				.getGetter();
+		final EntityPersister entityDescriptor = factory.getDomainModel().findEntityDescriptor( classUnderTest.getName() );
+		final SingleAttributeIdentifierMapping identifierMapping = (SingleAttributeIdentifierMapping) entityDescriptor.getIdentifierMapping();
+		final Getter idGetter = identifierMapping.getPropertyAccess().getGetter();
 
 		if ( AccessType.FIELD.equals( accessType ) ) {
 			Assert.assertTrue(

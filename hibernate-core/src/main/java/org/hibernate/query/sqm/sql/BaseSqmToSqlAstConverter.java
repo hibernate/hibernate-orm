@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -905,7 +906,7 @@ public abstract class BaseSqmToSqlAstConverter
 			return (BasicValuedMapping) parameterSqmType;
 		}
 
-		if ( parameterSqmType instanceof EmbeddedSqmPathSource ) {
+		if ( parameterSqmType instanceof CompositeSqmPathSource ) {
 			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
 		}
 

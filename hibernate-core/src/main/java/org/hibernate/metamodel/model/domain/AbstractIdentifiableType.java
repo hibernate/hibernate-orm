@@ -14,11 +14,11 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -385,7 +385,11 @@ public abstract class AbstractIdentifiableType<J>
 		}
 		else if ( idClassAttributes != null && ! idClassAttributes.isEmpty() ) {
 			// non-aggregate composite id
-			throw new NotYetImplementedFor6Exception( getClass() );
+			return new NonAggregatedCompositeSqmPathSource(
+					EntityIdentifierMapping.ROLE_LOCAL_NAME,
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					this
+			);
 		}
 		else {
 			if ( isIdMappingRequired() ) {

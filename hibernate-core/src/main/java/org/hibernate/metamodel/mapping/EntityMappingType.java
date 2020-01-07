@@ -15,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -46,6 +47,10 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 	 * todo (6.0) : do we really need to expose?
 	 */
 	EntityPersister getEntityPersister();
+
+	default EntityRepresentationStrategy getRepresentationStrategy() {
+		return getEntityPersister().getRepresentationStrategy();
+	}
 
 	String getEntityName();
 

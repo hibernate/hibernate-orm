@@ -697,7 +697,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return (BasicType) sqmExpressable;
 		}
 
-		if ( sqmExpressable instanceof EmbeddedSqmPathSource ) {
+		if ( sqmExpressable instanceof CompositeSqmPathSource ) {
 			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
 		}
 

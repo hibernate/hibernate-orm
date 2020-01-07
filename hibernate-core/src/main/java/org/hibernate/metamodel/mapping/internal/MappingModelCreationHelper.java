@@ -53,6 +53,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -61,6 +62,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -132,6 +134,23 @@ public class MappingModelCreationHelper {
 			@Override
 			public PropertyAccess getPropertyAccess() {
 				return propertyAccess;
+			}
+
+			@Override
+			public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+				return propertyAccess.getGetter().get( entity );
+			}
+
+			@Override
+			public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+				propertyAccess.getSetter().set( entity, id, session.getFactory() );
+			}
+
+			@Override
+			public Object instantiate() {
+				return entityPersister.getRepresentationStrategy()
+						.getInstantiator()
+						.instantiate( creationProcess.getCreationContext().getSessionFactory() );
 			}
 
 			@Override
@@ -318,12 +337,14 @@ public class MappingModelCreationHelper {
 				(Component) bootProperty.getValue(),
 				cidType,
 				attributeMappingType -> new EmbeddedIdentifierMappingImpl(
+						entityPersister,
 						attributeName,
 						attributeMappingType,
 						attributeMetadataAccess,
 						propertyAccess,
 						rootTableName,
-						rootTableKeyColumnNames
+						rootTableKeyColumnNames,
+						creationProcess.getCreationContext().getSessionFactory()
 				),
 				creationProcess
 		);
@@ -332,69 +353,22 @@ public class MappingModelCreationHelper {
 		return (EmbeddedIdentifierMappingImpl) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
-	public static EntityIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
+	public static CompositeIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
 			EntityPersister entityPersister,
-			String rootTableName,
-			String[] rootTableKeyColumnNames,
+			List<SingularAttributeMapping> idAttributeMappings,
 			CompositeType cidType,
+			PersistentClass bootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
-				.getBootModel()
-				.getEntityBinding( entityPersister.getEntityName() );
 
-		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
-				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
+		final Component bootCompositeDescriptor = (Component) bootEntityDescriptor.getIdentifier();
 
-		return new EntityIdentifierMapping() {
-
-			@Override
-			public MappingType getPartMappingType() {
-				// non-encapsulated means that the id attributes are directly defined on the entity
-				//		- alternatively we could have the type here be the IdClass descriptor
-				return entityPersister;
-			}
-
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MappingType getMappedTypeDescriptor() {
-				return entityPersister;
-			}
-
-			@Override
-			public JavaTypeDescriptor getJavaTypeDescriptor() {
-				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
-			}
-
-			@Override
-			public <T> DomainResult<T> createDomainResult(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					String resultVariable,
-					DomainResultCreationState creationState) {
-				return ( (ModelPart) entityPersister.getIdentifierType() ).createDomainResult(
-						navigablePath,
-						tableGroup,
-						resultVariable,
-						creationState
-				);
-			}
-
-			@Override
-			public void applySqlSelections(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					DomainResultCreationState creationState) {
-				( (ModelPart) entityPersister.getIdentifierType() ).applySqlSelections(
-						navigablePath,
-						tableGroup,
-						creationState
-				);
-			}
-		};
+		return new NonAggregatedIdentifierMappingImpl(
+				entityPersister,
+				idAttributeMappings,
+				bootCompositeDescriptor,
+				cidType,
+				creationProcess
+		);
 	}
 
 

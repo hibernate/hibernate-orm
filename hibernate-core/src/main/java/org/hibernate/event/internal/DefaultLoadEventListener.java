@@ -28,16 +28,17 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -123,51 +124,50 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final LoadEventListener.LoadType loadType,
 			final Class idClass) {
-				// we may have the kooky jpa requirement of allowing find-by-id where
-			// "id" is the "simple pk value" of a dependent objects parent.  This
-			// is part of its generally goofy "derived identity" "feature"
-		final IdentifierProperty identifierProperty = persister.getEntityMetamodel().getIdentifierProperty();
-		if ( identifierProperty.isEmbedded() ) {
-				final EmbeddedComponentType dependentIdType =
-						(EmbeddedComponentType) identifierProperty.getType();
-				if ( dependentIdType.getSubtypes().length == 1 ) {
-					final Type singleSubType = dependentIdType.getSubtypes()[0];
-					if ( singleSubType.isEntityType() ) {
-						final EntityType dependentParentType = (EntityType) singleSubType;
-						final SessionFactoryImplementor factory = event.getSession().getFactory();
-						final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( factory );
-						if ( dependentParentIdType.getReturnedClass().isInstance( event.getEntityId() ) ) {
-							// yep that's what we have...
-							loadByDerivedIdentitySimplePkValue(
-									event,
-									loadType,
-									persister,
-									dependentIdType,
-									factory.getMetamodel().entityPersister( dependentParentType.getAssociatedEntityName() )
-							);
-							return;
-						}
+		// we may have the jpa requirement of allowing find-by-id where id is the "simple pk value" of a
+		// dependent objects parent.  This is part of its generally goofy derived identity "feature"
+		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
+		if ( idMapping instanceof CompositeIdentifierMapping ) {
+			final CompositeIdentifierMapping cidMapping = (CompositeIdentifierMapping) idMapping;
+
+			if ( cidMapping.getAttributeCount() == 1 ) {
+				final AttributeMapping singleIdAttribute = cidMapping.getAttributes().iterator().next();
+				if ( singleIdAttribute.getMappedTypeDescriptor() instanceof EntityMappingType ) {
+					final EntityMappingType dependentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedTypeDescriptor();
+					final EntityIdentifierMapping dependentIdTargetIdMapping = dependentIdTargetMapping.getIdentifierMapping();
+					final JavaTypeDescriptor dependentParentIdJtd = dependentIdTargetIdMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+					if ( dependentParentIdJtd.getJavaType().isInstance( event.getEntityId() ) ) {
+						// yep that's what we have...
+						loadByDerivedIdentitySimplePkValue(
+								event,
+								loadType,
+								persister,
+								(EntityPersister) dependentIdTargetMapping
+						);
+						return;
 					}
 				}
 			}
-			throw new TypeMismatchException(
-					"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass
-							+ ", got " + event.getEntityId().getClass()
-			);
+		}
+
+		throw new TypeMismatchException(
+				"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass
+						+ ", got " + event.getEntityId().getClass()
+		);
 	}
 
 	private void loadByDerivedIdentitySimplePkValue(
 			LoadEvent event,
 			LoadEventListener.LoadType options,
 			EntityPersister dependentPersister,
-			EmbeddedComponentType dependentIdType,
+//			EmbeddedComponentType dependentIdType,
 			EntityPersister parentPersister) {
 		final EventSource session = event.getSession();
 		final EntityKey parentEntityKey = session.generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
-		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, session );
-		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getEntityMode() );
+		final Serializable dependent = (Serializable) dependentPersister.instantiate( parent, session );
+		dependentPersister.setPropertyValues( dependent, new Object[] {parent} );
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 

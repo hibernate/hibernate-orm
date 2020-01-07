@@ -15,13 +15,13 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -119,7 +119,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		compositeInstance = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy()
 				.getInstantiator()
-				.instantiate( rowProcessingState.getSession() );
+				.instantiate( rowProcessingState.getSession().getFactory() );
 		EmbeddableLoadingLogger.INSTANCE.debugf(
 				"Created composite instance [%s] : %s",
 				navigablePath,

@@ -15,7 +15,6 @@ import java.util.Set;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.Instantiator;
@@ -58,7 +57,7 @@ public class DynamicMapInstantiator implements Instantiator<Map> {
 	}
 
 	@Override
-	public Map instantiate(SharedSessionContractImplementor session) {
+	public Map instantiate(SessionFactoryImplementor sessionFactory) {
 		Map map = generateMap();
 		if ( roleName != null ) {
 			//noinspection unchecked

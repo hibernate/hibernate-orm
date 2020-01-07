@@ -11,9 +11,9 @@ buildscript {
 }
 
 hibernate {
-	enhance {
+    enhance {
         enableLazyInitialization = true
         enableDirtyTracking = true
         enableAssociationManagement = true
-	}
+    }
 }

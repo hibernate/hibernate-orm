@@ -69,7 +69,7 @@ include::{extrasdir}/associations-one-to-many-unidirectional-example.sql[]
 
 [NOTE]
 ====
-The `@OneToMany` association is by definition a parent association, even if it's a unidirectional or a bidirectional one.
+The `@OneToMany` association is by definition a parent association, regardless of whether it's a unidirectional or a bidirectional one.
 Only the parent side of an association makes sense to cascade its entity state transitions to children.
 ====
 
@@ -147,7 +147,7 @@ include::{extrasdir}/associations-one-to-many-bidirectional-lifecycle-example.sq
 Unlike the unidirectional `@OneToMany`, the bidirectional association is much more efficient when managing the collection persistence state.
 Every element removal only requires a single update (in which the foreign key column is set to `NULL`), and,
 if the child entity lifecycle is bound to its owning parent so that the child cannot exist without its parent,
-then we can annotate the association with the `orphan-removal` attribute and dissociate the child will trigger a delete statement on the actual child table row as well.
+then we can annotate the association with the `orphanRemoval` attribute and dissociating the child will trigger a delete statement on the actual child table row as well.
 
 [[associations-one-to-one]]
 ==== `@OneToOne`
@@ -177,7 +177,7 @@ From a relational database point of view, the underlying schema is identical to 
 as the client-side controls the relationship based on the foreign key column.
 
 But then, it's unusual to consider the `Phone` as a client-side and the `PhoneDetails` as the parent-side because the details cannot exist without an actual phone.
-A much more natural mapping would be if the `Phone` were the parent-side, therefore pushing the foreign key into the `PhoneDetails` table.
+A much more natural mapping would be the `Phone` were the parent-side, therefore pushing the foreign key into the `PhoneDetails` table.
 This mapping requires a bidirectional `@OneToOne` association as you can see in the following example:
 
 [[associations-one-to-one-bidirectional]]
@@ -249,7 +249,7 @@ include::{sourcedir}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to
 ====
 
 For more about how to enable Bytecode enhancement,
-see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, BytecodeEnhancement chapter>>.
+see the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement, Bytecode Enhancement chapter>>.
 
 [[associations-many-to-many]]
 ==== `@ManyToMany`
@@ -465,7 +465,7 @@ include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-example,
 ----
 ====
 
-However, if we change the `cityName` attribute to a non-existing city:
+However, if we change the `cityName` attribute to a non-existing city's name:
 
 [[associations-not-found-non-existing-persist-example]]
 .`@NotFound` change to non-existing City example
@@ -546,7 +546,7 @@ The table resolving mapping is defined by the `metaDef` attribute which referenc
 The `package-info.java` contains the `@AnyMetaDef` mapping:
 
 [[associations-any-meta-def-example]]
-.`@Any` mapping usage
+.`@AnyMetaDef` mapping usage
 ====
 [source, JAVA, indent=0]
 ----

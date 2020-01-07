@@ -10,7 +10,7 @@ The term multitenancy, in general, is applied to software development to indicat
 This is highly common in SaaS solutions.
 Isolating information (data, customizations, etc.) pertaining to the various tenants is a particular challenge in these systems.
 This includes the data owned by each tenant stored in the database.
-It is this last piece, sometimes called multitenant data, on which we will focus.
+It is this last piece, sometimes called multitenant data, that we will focus on.
 
 [[multitenacy-approaches]]
 === Multitenant data approaches
@@ -21,7 +21,6 @@ There are three main approaches to isolating information in these multitenant sy
 ====
 Each multitenancy strategy has pros and cons as well as specific techniques and considerations.
 Such topics are beyond the scope of this documentation.
-Many resources exist which delve into these other topics, like http://msdn.microsoft.com/en-us/library/aa479086.aspx[this one] which does a great job of covering this subject.
 ====
 
 [[multitenacy-separate-database]]
@@ -116,7 +115,7 @@ It could name a `MultiTenantConnectionProvider` instance, a `MultiTenantConnecti
 Hibernate will assume it should use the specific `DataSourceBasedMultiTenantConnectionProviderImpl` implementation which works on a number of pretty reasonable assumptions when running inside of an app server and using one `javax.sql.DataSource` per tenant.
 See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[Javadocs] for more details.
 
-The following example portrays a `MultiTenantConnectionProvider` implementation that handles multiple `ConnectionProviders`.
+The following example portrays a `MultiTenantConnectionProvider` implementation that handles multiple ``ConnectionProvider``s.
 
 [[multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]]
 .A `MultiTenantConnectionProvider` implementation
@@ -130,7 +129,7 @@ include::{sourcedir}/ConfigurableMultiTenantConnectionProvider.java[tags=multite
 The `ConfigurableMultiTenantConnectionProvider` can be set up as follows:
 
 [[multitenacy-hibernate-MultiTenantConnectionProvider-example]]
-.A `MultiTenantConnectionProvider` implementation
+.A `MultiTenantConnectionProvider` usage example
 ====
 [source, JAVA, indent=0]
 ----
@@ -141,7 +140,7 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-Mu
 When using multitenancy, it's possible to save an entity with the same identifier across different tenants:
 
 [[multitenacy-hibernate-same-entity-example]]
-.A `MultiTenantConnectionProvider` implementation
+.An example of saving entities with the same identifier across different tenants
 ====
 [source, JAVA, indent=0]
 ----
@@ -150,20 +149,20 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-
 ====
 
 [[multitenacy-hibernate-CurrentTenantIdentifierResolver]]
-==== CurrentTenantIdentifierResolver
+==== `CurrentTenantIdentifierResolver`
 
 `org.hibernate.context.spi.CurrentTenantIdentifierResolver` is a contract for Hibernate to be able to resolve what the application considers the current tenant identifier.
-The implementation to use is either passed directly to `Configuration` via its `setCurrentTenantIdentifierResolver` method.
-It can also be specified via the `hibernate.tenant_identifier_resolver` setting.
+The implementation to use can be either passed directly to `Configuration` via its `setCurrentTenantIdentifierResolver` method,
+or be specified via the `hibernate.tenant_identifier_resolver` setting.
 
-There are two situations where CurrentTenantIdentifierResolver is used:
+There are two situations where `CurrentTenantIdentifierResolver` is used:
 
 * The first situation is when the application is using the `org.hibernate.context.spi.CurrentSessionContext` feature in conjunction with multitenancy.
 In the case of the current-session feature, Hibernate will need to open a session if it cannot find an existing one in scope.
 However, when a session is opened in a multitenant environment, the tenant identifier has to be specified.
 This is where the `CurrentTenantIdentifierResolver` comes into play; Hibernate will consult the implementation you provide to determine the tenant identifier to use when opening the session.
 In this case, it is required that a `CurrentTenantIdentifierResolver` is supplied.
-* The other situation is when you do not want to have to explicitly specify the tenant identifier all the time.
+* The other situation is when you do not want to explicitly specify the tenant identifier all the time.
 If a `CurrentTenantIdentifierResolver` has been specified, Hibernate will use it to determine the default tenant identifier to use when opening the session.
 
 Additionally, if the `CurrentTenantIdentifierResolver` implementation returns `true` for its `validateExistingCurrentSessions` method, Hibernate will make sure any existing sessions that are found in scope have a matching tenant identifier.
@@ -186,7 +185,7 @@ The JPA expert group is in the process of defining multitenancy support for an u
 ==== Multitenancy Hibernate Session configuration
 
 When using multitenancy, you might want to configure each tenant-specific `Session` differently.
-For instance, each tenant could take a different time zone configuration.
+For instance, each tenant could specify a different time zone configuration.
 
 [[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]]
 .Registering the tenant-specific time zone information
@@ -245,7 +244,7 @@ The following example shows you that the `Timestamp` was saved in the UTC time z
 test output.
 
 [[multitenacy-hibernate-not-applying-timezone-configuration-example]]
-.With the `useTenantTimeZone` property set to `false`, the `Timestamp` in fetched in the tenant-specific time zone
+.With the `useTenantTimeZone` property set to `false`, the `Timestamp` is fetched in the tenant-specific time zone
 ====
 [source, JAVA, indent=0]
 ----
@@ -258,5 +257,5 @@ include::{extrasdir}/multitenacy-hibernate-not-applying-timezone-configuration-e
 ----
 ====
 
-Notice that, for the `Eastern European Time` time zone, the time zone offset was 2 hours when the test was executed.
+Notice that for the `Eastern European Time` time zone, the time zone offset was 2 hours when the test was executed.
 

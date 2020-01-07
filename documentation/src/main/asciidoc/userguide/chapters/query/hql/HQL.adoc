@@ -129,10 +129,10 @@ Relying on provider specific hints limits your applications portability to some 
 `org.hibernate.comment`::
     Defines the comment to apply to the generated SQL. See `org.hibernate.query.Query#setComment`.
 `org.hibernate.fetchSize`::
-    Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`
+    Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`.
 `org.hibernate.flushMode`::
     Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
-`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`
+`org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`.
 
 The final thing that needs to happen before the query can be executed is to bind the values for any defined parameters.
 JPA defines a simplified set of parameter binding methods.
@@ -577,9 +577,9 @@ Superclass properties are not allowed and subclass properties do not make sense.
 In other words, `INSERT` statements are inherently non-polymorphic.
 
 `select_statement` can be any valid HQL select query, with the caveat that the return types must match the types expected by the insert.
-Currently, this is checked during query compilation rather than allowing the check to relegate to the database.
+Currently, this is checked during query compilation rather than allowing the check to delegate to the database.
 This may cause problems between Hibernate Types which are _equivalent_ as opposed to __equal__.
-For example, this might cause lead to issues with mismatches between an attribute mapped as a `org.hibernate.type.DateType` and an attribute defined as a `org.hibernate.type.TimestampType`,
+For example, this might lead to issues with mismatches between an attribute mapped as a `org.hibernate.type.DateType` and an attribute defined as a `org.hibernate.type.TimestampType`,
 even though the database might not make a distinction or might be able to handle the conversion.
 
 For the id attribute, the insert statement gives you two options.
@@ -622,7 +622,7 @@ In other words, JPQL says they _can be_ case-insensitive and so Hibernate must b
 === Root entity references
 
 A root entity reference, or what JPA calls a `range variable declaration`, is specifically a reference to a mapped entity type from the application.
-It cannot name component/ embeddable types.
+It cannot name component/embeddable types.
 And associations, including collections, are handled in a different manner, as later discussed.
 
 The BNF for a root entity reference is:
@@ -648,7 +648,7 @@ We see that the query is defining a root entity reference to the `org.hibernate.
 Additionally, it declares an alias of `p` to that `org.hibernate.userguide.model.Person` reference, which is the identification variable.
 
 Usually, the root entity reference represents just the `entity name` rather than the entity class FQN (fully-qualified name).
-By default, the entity name is the unqualified entity class name, here `Person`
+By default, the entity name is the unqualified entity class name, here `Person`.
 
 [[hql-root-reference-jpql-example]]
 .Simple query using entity name for root entity reference
@@ -737,7 +737,7 @@ Explicit joins may reference association or component/embedded attributes.
 In the case of component/embedded attributes, the join is simply logical and does not correlate to a physical (SQL) join.
 For further information about collection-valued association references, see <<hql-collection-valued-associations>>.
 
-An important use case for explicit joins is to define `FETCH JOINS` which override the laziness of the joined association.
+An important use case for explicit joins is to define ``FETCH JOIN``s which override the laziness of the joined association.
 As an example, given an entity named `Person` with a collection-valued association named `phones`, the `JOIN FETCH` will also load the child collection in the same SQL query:
 
 [[hql-explicit-fetch-join-example]]
@@ -864,7 +864,7 @@ include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-entity-query-exam
 ====
 
 In this case, `DISTINCT` is used because there can be multiple `Books` entities associated with a given `Person`.
-If in the database there are 3 `Persons` in the database and each person has 2 `Books`, without `DISTINCT` this query will return 6 `Persons` since
+If in the database there are 3 ``Person``s in the database and each person has 2 ``Book``s, without `DISTINCT` this query will return 6 ``Person``s since
 the SQL-level result-set size is given by the number of joined `Book` records.
 
 However, the `DISTINCT` keyword is passed to the database as well:
@@ -923,7 +923,7 @@ Which form an application chooses to use is simply a matter of taste.
 === Special case - qualified path expressions
 
 We said earlier that collection-valued associations actually refer to the _values_ of that collection.
-Based on the type of collection, there are also available a set of explicit qualification expressions.
+Based on the type of collection, there are also a set of explicit qualification expressions available.
 
 [[hql-collection-qualification-example]]
 .Qualified collection references example
@@ -974,8 +974,8 @@ and the query would return instances of all three.
 
 This behavior can be altered in two ways:
 
-- by limiting the query to select only from the subclass entity
-- by using either the `org.hibernate.annotations.Polymorphism` annotation (global, and Hibernate-specific). See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Polymorphism` section for more info about this use case>>.
+- by limiting the query to select only from the subclass entity.
+- by using either the `org.hibernate.annotations.Polymorphism` annotation (global, and Hibernate-specific). See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Polymorphism` section>> for more info about this use case.
 
 [NOTE]
 ====
@@ -1091,13 +1091,13 @@ include::{sourcedir}/HQLTest.java[tags=hql-concatenation-example]
 ----
 ====
 
-See <<hql-exp-functions>> for details on the `concat()` function
+See <<hql-exp-functions>> for details on the `concat()` function.
 
 [[hql-aggregate-functions]]
 === Aggregate functions
 
 Aggregate functions are also valid expressions in HQL and JPQL.
-The semantic is the same as their SQL counterpart.
+The semantics is the same as their SQL counterpart.
 The supported aggregate functions are:
 
 `COUNT` (including distinct/all qualifiers)::
@@ -1161,7 +1161,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-substring-function-example]
 ====
 
 UPPER::
-  	Upper cases the specified string
+  	Upper cases the specified string.
 
 ====
 [source, JAVA, indent=0]
@@ -1171,7 +1171,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-upper-function-example]
 ====
 
 LOWER::
-  	Lower cases the specified string
+  	Lower cases the specified string.
 
 ====
 [source, JAVA, indent=0]
@@ -1345,7 +1345,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
 === User-defined functions
 
 Hibernate Dialects can register additional functions known to be available for that particular database product.
-These functions are also available in HQL (and JPQL, though only when using Hibernate as the JPA provider obviously).
+These functions are also available in HQL (and JPQL, though only when using Hibernate as the JPA provider, obviously).
 However, they would only be available when using that database Dialect.
 Applications that aim for database portability should avoid using functions in this category.
 
@@ -1779,7 +1779,7 @@ The types of the `single_valued_expression` and the individual values in the `si
 JPQL limits the valid types here to string, numeric, date, time, timestamp, and enum types, and, in JPQL, `single_valued_expression` can only refer to:
 
 * "state fields", which is its term for simple attributes. Specifically, this excludes association and component/embedded attributes.
-* entity type expressions. See <<hql-entity-type-exp>>
+* entity type expressions. See <<hql-entity-type-exp>>.
 
 In HQL, `single_valued_expression` can refer to a far more broad set of expression types.
 Single-valued association are allowed, and so are component/embedded attributes, although that feature depends on the level of support for tuple or "row value constructor syntax" in the underlying database.
@@ -1985,7 +1985,7 @@ The query plan cache can be configured via the following configuration propertie
 `hibernate.query.plan_cache_max_size`::
 This setting gives the maximum number of entries of the plan cache. The default value is 2048.
 `hibernate.query.plan_parameter_metadata_max_size`::
-The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default is 128.
+The setting gives the maximum number of `ParameterMetadataImpl` instances maintained by the query plan cache. The `ParameterMetadataImpl` object encapsulates metadata about parameters encountered within a query. The default value is 128.
 
 Now, if you have many JPQL or Criteria API queries, it's a good idea to increase the query plan cache size so that the vast majority of executing entity queries can skip the compilation phase, therefore reducing execution time.
 

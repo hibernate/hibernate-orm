@@ -44,9 +44,9 @@ While having a strong background in SQL is not required to use Hibernate, it cer
 Probably even more important is an understanding of data modeling principles.
 You might want to consider these resources as a good starting point:
 
-* http://en.wikipedia.org/wiki/Data_modeling[Data Modeling Wikipedia definition]
+* http://en.wikipedia.org/wiki/Data_modeling[Data modeling Wikipedia definition]
 * http://www.agiledata.org/essays/dataModeling101.html[Data Modeling 101]
 
-Understanding the basics of transactions and design patterns such as _Unit of Work_ <<Bibliography.adoc#PoEAA,PoEAA>> or _Application Transaction_ are important as well.
+Understanding the basics of transactions and design patterns such as _Unit of Work_ (<<Bibliography.adoc#PoEAA,PoEAA>>) or _Application Transaction_ are important as well.
 These topics will be discussed in the documentation, but a prior understanding will certainly help.
 ====

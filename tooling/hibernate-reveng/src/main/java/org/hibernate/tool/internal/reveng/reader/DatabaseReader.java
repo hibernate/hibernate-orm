@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.reader;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +24,12 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.internal.reveng.BasicColumnProcessor;
+import org.hibernate.tool.internal.reveng.ForeignKeyProcessor;
+import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
+import org.hibernate.tool.internal.reveng.IndexProcessor;
+import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
+import org.hibernate.tool.internal.reveng.TableProcessor;
 
 public class DatabaseReader {
 

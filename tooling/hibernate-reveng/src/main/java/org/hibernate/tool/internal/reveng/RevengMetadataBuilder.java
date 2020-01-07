@@ -25,6 +25,7 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
+import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
 import org.jboss.logging.Logger;
 
 

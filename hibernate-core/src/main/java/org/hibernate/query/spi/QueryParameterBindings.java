@@ -21,10 +21,6 @@ import org.hibernate.type.Type;
 public interface QueryParameterBindings {
 	boolean isBound(QueryParameter parameter);
 
-	<T> T getQueryParameterValue(QueryParameter<T> parameter);
-	Object getQueryParameterValue(String name);
-	Object getQueryParameterValue(int position);
-
 	<T> QueryParameterBinding<T> getBinding(QueryParameter<T> parameter);
 	<T> QueryParameterBinding<T> getBinding(String name);
 	<T> QueryParameterBinding<T> getBinding(int position);
@@ -39,4 +35,21 @@ public interface QueryParameterBindings {
 	Type[] collectPositionalBindTypes();
 	Object[] collectPositionalBindValues();
 	Map<String,TypedValue> collectNamedParameterBindings();
+	
+	/**
+	 * The following default methods are meant for pure query purpose. Internally getBinding() has side effect to create binding if not found.
+	 * Override the following default methods to make them side effect free.
+	 * @see org.hibernate.query.internal.QueryParameterBindingsImpl#getBinding
+	 */
+	default <T> T getQueryParameterValue(QueryParameter<T> parameter) {
+		return getBinding( parameter ).getBindValue();
+	}
+	
+	default Object getQueryParameterValue(String name) {
+		return getBinding( name );
+	}
+	
+	default Object getQueryParameterValue(int position) {
+		return getBinding( position );
+	}
 }

@@ -46,10 +46,10 @@ public interface QueryParameterBindings {
 	}
 	
 	default Object getQueryParameterValue(String name) {
-		return getBinding( name );
+		return getBinding( name ).getBindValue();
 	}
 	
 	default Object getQueryParameterValue(int position) {
-		return getBinding( position );
+		return getBinding( position ).getBindValue();
 	}
 }

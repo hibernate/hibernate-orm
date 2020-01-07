@@ -3,7 +3,7 @@
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.
-At that time, Hibernate only supported proxy-based for lazy loading and always used diff-based dirty calculation.
+At that time, Hibernate only supported proxy-based alternative for lazy loading and always used diff-based dirty calculation.
 Hibernate 3.x saw the first attempts at bytecode enhancement support in Hibernate.
 We consider those initial attempts (up until 5.0) completely as an incubation.
 The support for bytecode enhancement in 5.0 onward is what we are discussing here.
@@ -145,7 +145,7 @@ enableLazyInitialization:: Whether enhancement for lazy attribute loading should
 enableDirtyTracking:: Whether enhancement for self-dirty tracking should be done.
 enableAssociationManagement:: Whether enhancement for bi-directional association management should be done.
 
-The default value for all 3 configuration settings is `false`
+The default value for all 3 configuration settings is `false`.
 
 The `enhance { }` block is required in order for enhancement to occur.
 Enhancement is disabled by default in preparation for additions capabilities (hbm2ddl, etc) in the plugin.

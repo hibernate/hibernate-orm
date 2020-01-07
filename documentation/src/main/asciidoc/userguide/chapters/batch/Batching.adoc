@@ -66,7 +66,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-session-batch-example]
 
 There are several problems associated with this example:
 
-. Hibernate caches all the newly inserted `Customer` instances in the session-level c1ache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
+. Hibernate caches all the newly inserted `Customer` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
   If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
@@ -163,7 +163,7 @@ Hibernate provides methods for bulk SQL-style DML statement execution, in the fo
 Both the Hibernate native Query Language and JPQL (Java Persistence Query Language) provide support for bulk UPDATE and DELETE.
 
 [[batch-bulk-hql-update-delete-example]]
-.Psuedo-syntax for UPDATE and DELETE statements using HQL
+.Pseudo-syntax for UPDATE and DELETE statements using HQL
 ====
 [source, JAVA, indent=0]
 ----
@@ -483,13 +483,13 @@ The underlying database must support CTE (Common Table Expressions) that can be 
 
 The underlying database must also support the VALUES list clause, like PostgreSQL or SQL Server 2008.
 
-However, this strategy requires the IN-clause row value expression for composite identifiers, so you can only use this strategy only with PostgreSQL.
+However, this strategy requires the IN-clause row value expression for composite identifiers, so you can only use this strategy with PostgreSQL.
 ====
 
 If you can use temporary tables, that's probably the best choice.
 However, if you are not allowed to create temporary tables, you must pick one of these four strategies that works with your underlying database.
-Before making your mind, you should benchmark which one works best for your current workload.
-For instance, http://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before taking a decision.
+Before making up your mind, you should benchmark which one works best for your current workload.
+For instance, http://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before making a decision.
 
 If you're using Oracle or MySQL 5.7, you can choose either `InlineIdsOrClauseBulkIdStrategy` or `InlineIdsInClauseBulkIdStrategy`.
 For older version of MySQL, then you can only use `InlineIdsOrClauseBulkIdStrategy`.

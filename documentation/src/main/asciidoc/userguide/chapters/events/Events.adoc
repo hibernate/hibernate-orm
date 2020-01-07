@@ -88,7 +88,7 @@ include::{sourcedir}/ListenerTest.java[tags=events-interceptors-load-listener-ex
 [[events-mixing-events-and-interceptors]]
 === Mixing Events and Interceptors
 
-When you want to customize the entity state transition behavior, you have to options:
+When you want to customize the entity state transition behavior, you have two options:
 
 . you provide a custom `Interceptor`, which is taken into consideration by the default Hibernate event listeners.
 For example, the `Interceptor#onSave()` method is invoked by Hibernate `AbstractSaveEventListener`.
@@ -173,7 +173,7 @@ When that is the case, the defined order of execution is well defined by the JPA
 * Any default listeners associated with the entity are invoked first, in the order they were specified in the XML. See the `javax.persistence.ExcludeDefaultListeners` annotation.
 * Next, entity listener class callbacks associated with the entity hierarchy are invoked, in the order they are defined in the `EntityListeners`.
 If multiple classes in the entity hierarchy define entity listeners, the listeners defined for a superclass are invoked before the listeners defined for its subclasses.
-See the `javax.persistence.ExcludeSuperclassListener`s annotation.
+See the ``javax.persistence.ExcludeSuperclassListener``'s annotation.
 * Lastly, callback methods defined on the entity hierarchy are invoked.
 If a callback type is annotated on both an entity and one or more of its superclasses without method overriding, both would be called, the most general superclass first.
 An entity class is also allowed to override a callback method defined in a superclass in which case the super callback would not get invoked; the overriding method would get invoked provided it is annotated.

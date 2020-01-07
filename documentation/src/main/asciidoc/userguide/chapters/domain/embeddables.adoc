@@ -116,7 +116,7 @@ include::{extrasdir}/embeddable/embeddable-type-association-mapping-example.sql[
 ----
 ====
 
-Now, if you have a `Book` entity which declares two `Publisher` embeddable types for the ebook and paperback version,
+Now, if you have a `Book` entity which declares two `Publisher` embeddable types for the ebook and paperback versions,
 you cannot use the default `Publisher` embeddable mapping since there will be a conflict between the two embeddable column mappings.
 
 Therefore, the `Book` entity needs to override the embeddable type mappings for each `Publisher` attribute:
@@ -179,7 +179,7 @@ You could even develop your own naming strategy to do other types of implicit na
 [[embeddable-collections]]
 ==== Collections of embeddable types
 
-Collections of embeddable types are specifically valued collections (as embeddable types are a value type).
+Collections of embeddable types are specifically valued collections (as embeddable types are value types).
 Value collections are covered in detail in <<chapters/domain/collections.adoc#collections-value,Collections of value types>>.
 
 [[embeddable-mapkey]]

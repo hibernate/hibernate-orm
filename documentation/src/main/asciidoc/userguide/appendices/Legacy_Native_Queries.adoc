@@ -2,7 +2,7 @@
 == Legacy Hibernate Native Queries
 
 [[legacy-sql-named-queries]]
-=== Legacy Named SQL queries
+=== Legacy named SQL queries
 
 Named SQL queries can also be defined during mapping and called in exactly the same way as a named HQL query.
 In this case, you do _not_ need to call `addEntity()` anymore.
@@ -77,7 +77,7 @@ You must declare the column alias and Hibernate type using the `<return-scalar>`
 
 You can externalize the resultset mapping information in a `<resultset>` element which will allow you to either reuse them across several named queries or through the `setResultSetMapping()` API.
 
-.<resultset> mapping used to externalize mappinginformation
+.<resultset> mapping used to externalize mapping information
 ====
 [source,xml]
 ----
@@ -110,7 +110,7 @@ You can, alternatively, use the resultset mapping information in your hbm files 
 ----
 List cats = session
     .createSQLQuery( "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id" )
-    .setResultSetMapping("catAndKitten")
+    .setResultSetMapping( "catAndKitten" )
     .list();
 ----
 ====
@@ -228,7 +228,7 @@ Native call syntax is not supported.
 For Oracle the following rules apply:
 
 * A function must return a result set.
-The first parameter of a procedure must be an `OUT` that returns a result set.
+* The first parameter of a procedure must be an `OUT` that returns a result set.
 This is done by using a `SYS_REFCURSOR` type in Oracle 9 or 10.
 In Oracle you need to define a `REF CURSOR` type.
 See Oracle literature for further information.
@@ -272,7 +272,7 @@ If you expect to call a stored procedure, be sure to set the `callable` attribut
 
 To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
 
-* none: no check is performed: the store procedure is expected to fail upon issues
+* none: no check is performed; the store procedure is expected to fail upon issues
 * count: use of rowcount to check that the update is successful
 * param: like COUNT but using an output parameter rather that the standard mechanism
 
@@ -312,7 +312,7 @@ Here is an example of a statement level override:
 [source,xml]
 ----
 <sql-query name = "person">
-    <return alias = "pers" class = "Person" lock-mod e= "upgrade"/>
+    <return alias = "pers" class = "Person" lock-mode= "upgrade"/>
     SELECT NAME AS {pers.name}, ID AS {pers.id}
     FROM PERSON
     WHERE ID=?

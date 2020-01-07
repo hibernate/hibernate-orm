@@ -93,7 +93,7 @@ See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `Att
 [[annotations-jpa-converter]]
 ==== `@Converter`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html[`@Converter`] annotation is used to specify that the current annotate https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html[`@Converter`] annotation is used to specify that the currently annotated https://javaee.github.io/javaee-spec/javadocs/javax/persistence/AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
 
 If the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the JPA provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
 
@@ -109,7 +109,7 @@ See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `Att
 [[annotations-jpa-discriminatorcolumn]]
 ==== `@DiscriminatorColumn`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html[`@DiscriminatorColumn`] annotation is used to specify the discriminator column name and the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html#discriminatorType--[discriminator type] for the `SINGLE_TABLE` and `JOINED` Inheritance strategies.
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html[`@DiscriminatorColumn`] annotation is used to specify the discriminator column name and the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/DiscriminatorColumn.html#discriminatorType--[discriminator type] for the `SINGLE_TABLE` and `JOINED` inheritance strategies.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-discriminator, Discriminator>> section for more info.
 
@@ -151,7 +151,7 @@ See the <<chapters/domain/identifiers.adoc#identifiers-composite-aggregated, Com
 [[annotations-jpa-entity]]
 ==== `@Entity`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html[`@Entity`] annotation is used to specify that the currently annotate class represents an entity type.
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html[`@Entity`] annotation is used to specify that the currently annotated class represents an entity type.
 Unlike basic and embeddable types, entity types have an identity and their state is managed by the underlying Persistence Context.
 
 See the <<chapters/domain/entity.adoc#entity, Entity>> section for more info.
@@ -254,7 +254,7 @@ See the <<chapters/domain/associations.adoc#associations-many-to-one-example,`@M
 [[annotations-jpa-joincolumns]]
 ==== `@JoinColumns`
 
-The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier
+The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/JoinColumns.html[`@JoinColumns`] annotation is used to group multiple <<annotations-jpa-joincolumn>> annotations, which are used when mapping entity association or an embeddable collection using a composite identifier.
 
 [[annotations-jpa-jointable]]
 ==== `@JoinTable`
@@ -631,7 +631,7 @@ You should use either the JPA <<annotations-jpa-access>> or the Hibernate native
 ==== `@Any`
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
-which can point to one one of several entity types.
+which can point to one of several entity types.
 
 See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
@@ -724,7 +724,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-composi
 [[annotations-hibernate-columntransformer]]
 ==== `@ColumnTransformer`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformer.html[`@ColumnTransformer`] annotation is used to customize how a given column value is read from or write into the database.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnTransformer.html[`@ColumnTransformer`] annotation is used to customize how a given column value is read from or written into the database.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-example,`@ColumnTransformer` mapping>> section for more info.
 
@@ -787,7 +787,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[annotations-hibernate-fetch]]
 ==== `@Fetch`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the currently annotated association:
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation is used to specify the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchMode.html[`FetchMode`] (e.g. `JOIN`, `SELECT`, `SUBSELECT`) used for the currently annotated association.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-fetch-annotation, `@Fetch` mapping>> section for more info.
 
@@ -974,7 +974,7 @@ See the <<chapters/domain/collections.adoc#collections-customizing-ordered-list-
 [[annotations-hibernate-loader]]
 ==== `@Loader`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Loader.html[`@Loader`] annotation is used to override the default `SELECT` query used for loading an entity loading.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Loader.html[`@Loader`] annotation is used to override the default `SELECT` query used for loading an entity.
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-example, Custom CRUD mapping>> section for more info.
 
@@ -1067,7 +1067,7 @@ See the <<chapters/domain/natural_id.adoc#naturalid-caching,`@NaturalIdCache` ma
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFound.html[`@NotFound`] annotation is used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NotFoundAction.html[`NotFoundAction`] strategy for when an element is not found in a given association.
 
-The `NotFoundAction` defines with two possibilities:
+The `NotFoundAction` defines two possibilities:
 
 `EXCEPTION`:: An exception is thrown when an element is not found (default and recommended).
 `IGNORE`:: Ignore the element when not found in the database.
@@ -1097,7 +1097,7 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic-exclude-attribute, Ex
 [[annotations-hibernate-optimisticlocking]]
 ==== `@OptimisticLocking`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation is used to specify the currently annotated an entity optimistic locking strategy.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation is used to specify the currently annotated entity's optimistic locking strategy.
 
 The four possible strategies are defined by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OptimisticLockType.html[`OptimisticLockType`] enumeration:
 
@@ -1156,7 +1156,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 There are two possible `PolymorphismType` options:
 
 EXPLICIT:: The currently annotated entity is retrieved only if explicitly asked.
-IMPLICIT:: The currently annotated entity is retrieved if any of its super entity are retrieved. This is the default option.
+IMPLICIT:: The currently annotated entity is retrieved if any of its super entities are retrieved. This is the default option.
 
 See the <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism, `@Polymorphism`>> section for more info.
 
@@ -1170,7 +1170,7 @@ See the <<chapters/domain/entity.adoc#entity-proxy, `@Proxy` mapping>> section f
 [[annotations-hibernate-rowid]]
 ==== `@RowId`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/RowId.html[`@RowId`] annotation is used to specify the database column used as a `ROWID` pseudocolumn.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/RowId.html[`@RowId`] annotation is used to specify the database column used as a `ROWID` _pseudocolumn_.
 For instance, Oracle defines the https://docs.oracle.com/cd/B19306_01/server.102/b14200/pseudocolumns008.htm[`ROWID` pseudocolumn] which provides the address of every table row.
 
 According to Oracle documentation, `ROWID` is the fastest way to access a single row from a table.

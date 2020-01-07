@@ -10,7 +10,7 @@ The documentation of such configuration settings refers here.
 The types of forms available in such cases include:
 
 short name (if defined)::
-  Certain built-in strategy implementations have a corresponding short name.
+  Certain built-in strategy implementations have a corresponding short name
 strategy instance::
   An instance of the strategy implementation to use can be specified
 strategy Class reference::
@@ -28,7 +28,7 @@ In most cases, Hibernate can choose the correct https://docs.jboss.org/hibernate
 +
 `*hibernate.current_session_context_class*` (e.g. `jta`, `thread`, `managed`, or a custom class implementing `org.hibernate.context.spi.CurrentSessionContext`)::
 +
-Supply a custom strategy for the scoping of the _current_ `Session`.
+Supplies a custom strategy for the scoping of the _current_ `Session`.
 +
 The definition of what exactly _current_ means is controlled by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentSessionContext.html[`CurrentSessionContext`] implementation in use.
 +
@@ -42,7 +42,7 @@ This setting controls if Hibernate  `Transaction` should behave as defined by th
 since it extends the JPA one.
 
 `*hibernate.jpa.compliance.query*` (e.g. `true` or `false` (default value))::
-Controls whether Hibernate's handling of `javax.persistence.Query` (JPQL, Criteria and native-query) should strictly follow the JPA spec.
+Controls whether Hibernate's handling of `javax.persistence.Query` (JPQL, Criteria and native query) should strictly follow the JPA spec.
 +
 This includes both in terms of parsing or translating a query as well as calls to the `javax.persistence.Query` methods throwing spec
 defined exceptions whereas Hibernate might not.
@@ -63,7 +63,7 @@ This setting controls whether the JPA spec-defined behavior or the Hibernate beh
 If enabled, Hibernate will operate in the JPA specified way, throwing exceptions when the spec says it should.
 
 `*hibernate.jpa.compliance.proxy*` (e.g. `true` or `false` (default value))::
-The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity Proxy
+The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity proxy
 which does not have an associated table row in the database.
 +
 Traditionally, Hibernate does not initialize an entity proxy when accessing its identifier since we already know the identifier value,
@@ -77,7 +77,7 @@ The JPA spec says that the scope of TableGenerator and SequenceGenerator names i
 Traditionally, Hibernate has considered the names locally scoped.
 +
 If enabled, the names used by `@TableGenerator` and `@SequenceGenerator` will be considered global so configuring two different generators
-with the same name will cause a `java.lang.IllegalArgumentException' to be thrown at boot time.
+with the same name will cause a `java.lang.IllegalArgumentException` to be thrown at boot time.
 
 [[configurations-database-connection]]
 === Database connection properties
@@ -106,16 +106,16 @@ See discussion of `hibernate.connection.provider_disables_autocommit` as well.
 Indicates a promise by the user that Connections that Hibernate obtains from the configured ConnectionProvider
 have auto-commit disabled when they are obtained from that provider, whether that provider is backed by
 a DataSource or some other Connection pooling mechanism.  Generally, this occurs when:
-* Hibernate is configured to get Connections from an underlying DataSource, and that DataSource is already configured to disable auto-commit on its managed Connections
+* Hibernate is configured to get Connections from an underlying DataSource, and that DataSource is already configured to disable auto-commit on its managed Connections.
 * Hibernate is configured to get Connections from a non-DataSource connection pool and that connection pool is already configured to disable auto-commit.
 For the Hibernate provided implementation this will depend on the value of `hibernate.connection.autocommit` setting.
 +
-Hibernate uses this assurance as an opportunity to opt-out of certain operations that may have a performance
+Hibernate uses this assurance as an opportunity to opt out of certain operations that may have a performance
 impact (although this impact is generally negligible).  Specifically, when a transaction is started via the
 Hibernate or JPA transaction APIs Hibernate will generally immediately acquire a Connection from the
 provider and:
 * check whether the Connection is initially in auto-commit mode via a call to `Connection#getAutocommit` to know how to clean up the Connection when released.
-* start a JDBC transaction by calling `Connection#setAutocommit(false)`
+* start a JDBC transaction by calling `Connection#setAutocommit(false)`.
 +
 We can skip both of those steps if we know that the ConnectionProvider will always return Connections with auto-commit disabled.
 That is the purpose of this setting.  By setting it to `true`, the `Connection` acquisition can be delayed until the first
@@ -147,9 +147,9 @@ For more details about the `PhysicalConnectionHandlingMode` and Hibernate connec
 ====
 This setting is deprecated. You should use the `*hibernate.connection.handling_mode*` instead.
 ====
-+
+
 Specifies how Hibernate should acquire JDBC connections. The possible values are given by `org.hibernate.ConnectionAcquisitionMode`.
-+
+
 Should generally only configure this or `hibernate.connection.release_mode`, not both.
 
 [line-through]#`*hibernate.connection.release_mode*`# (e.g. `auto` (default value))::
@@ -157,9 +157,9 @@ Should generally only configure this or `hibernate.connection.release_mode`, not
 ====
 This setting is deprecated. You should use the `*hibernate.connection.handling_mode*` instead.
 ====
-+
+
 Specifies how Hibernate should release JDBC connections. The possible values are given by the current transaction mode (`after_transaction` for JDBC transactions and `after_statement` for JTA transactions).
-+
+
 Should generally only configure this or `hibernate.connection.acquisition_mode`, not both.
 
 `*hibernate.connection.datasource*`::
@@ -175,7 +175,7 @@ Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/
 Can reference:
 +
 ** an instance of `ConnectionProvider`
-** a `Class<? extends ConnectionProvider` object reference
+** a `Class<? extends ConnectionProvider>` object reference
 ** a fully qualified name of a class implementing `ConnectionProvider`
 +
 
@@ -184,13 +184,13 @@ The term `class` appears in the setting name due to legacy reasons. However, it 
 `*hibernate.jndi.class*`::
 Names the JNDI `javax.naming.InitialContext` class.
 
-`*hibernate.jndi.url*` (e.g. java:global/jdbc/default)::
+`*hibernate.jndi.url*` (e.g. `java:global/jdbc/default`)::
 Names the JNDI provider/connection url.
 
 `*hibernate.jndi*`::
 Names a prefix used to define arbitrary JNDI `javax.naming.InitialContext` properties.
 +
-These properties are passed along to `javax.naming.InitialContext#InitialContext(java.util.Hashtable)`
+These properties are passed along to `javax.naming.InitialContext#InitialContext(java.util.Hashtable)` method.
 
 ==== Hibernate internal connection pool options
 
@@ -201,7 +201,7 @@ Minimum number of connections for the built-in Hibernate connection pool.
 Maximum number of connections for the built-in Hibernate connection pool.
 
 `*hibernate.connection.pool_validation_interval*` (e.g. 30 (default value))::
-The number of seconds between two consecutive pool validations. During validation, the pool size can increase or decreases based on the connection acquisition request count.
+The number of seconds between two consecutive pool validations. During validation, the pool size can increase or decrease based on the connection acquisition request count.
 
 [[configurations-c3p0]]
 === c3p0 properties
@@ -264,7 +264,7 @@ If true, the value specified by the `generator` attribute of the `@GeneratedValu
 The default value is `true` meaning that `@GeneratedValue.generator()` will be used as the sequence/table name by default.
 Users migrating from earlier versions using the legacy `hibernate_sequence` name should disable this setting.
 
-`*hibernate.ejb.identifier_generator_strategy_provider*` (e.g. fully-qualified class name or an actual the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/spi/IdentifierGeneratorStrategyProvider.html[`IdentifierGeneratorStrategyProvider`] instance)::
+`*hibernate.ejb.identifier_generator_strategy_provider*` (e.g. fully-qualified class name or an actual https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/spi/IdentifierGeneratorStrategyProvider.html[`IdentifierGeneratorStrategyProvider`] instance)::
 This setting allows you to provide an instance or the class implementing the `org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider` interface,
 so you can provide a set of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] strategies allowing to override the Hibernate Core default ones.
 
@@ -282,7 +282,7 @@ Should all database identifiers be quoted.
 
 `*hibernate.globally_quoted_identifiers_skip_column_definitions*` (e.g. `true` or `false` (default value))::
 Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the global quoting to skip column-definitions as defined by `javax.persistence.Column`,
-`javax.persistence.JoinColumn`, etc, and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
+`javax.persistence.JoinColumn`, etc., and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
 
 `*hibernate.auto_quote_keyword*` (e.g. `true` or `false` (default value))::
 Specifies whether to automatically quote any names that are deemed keywords.
@@ -330,7 +330,7 @@ Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/jav
 Pass an implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/spi/Scanner.html[`Scanner`].
 By default, https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/internal/StandardScanner.html[`StandardScanner`] is used.
 +
-Accepts either:
+Accepts:
 +
 ** an actual `Scanner` instance
 ** a reference to a Class that implements `Scanner`
@@ -339,7 +339,7 @@ Accepts either:
 `*hibernate.archive.interpreter*`::
 Pass https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/spi/ArchiveDescriptorFactory.html[`ArchiveDescriptorFactory`] to use in the scanning process.
 +
-Accepts either:
+Accepts:
 +
 ** an actual `ArchiveDescriptorFactory` instance
 ** a reference to a Class that implements `ArchiveDescriptorFactory`
@@ -349,7 +349,7 @@ Accepts either:
 See information on https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/archive/scan/spi/Scanner.html[`Scanner`] about expected constructor forms.
 
 `*hibernate.archive.autodetection*` (e.g. `hbm,class` (default value))::
-Identifies a comma-separate list of values indicating the mapping types we should auto-detect during scanning.
+Identifies a comma-separated list of values indicating the mapping types we should auto-detect during scanning.
 +
 Allowable values include:
 +
@@ -357,7 +357,7 @@ Allowable values include:
 `hbm`::: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
 +
 
-By default both HBM, annotations, and JPA XML mappings are scanned.
+By default HBM, annotations, and JPA XML mappings are scanned.
 +
 When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
 Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are going to be taken into consideration.
@@ -366,14 +366,14 @@ Therefore, when setting `exclude-unlisted-classes` to true, only the classes tha
 Used to specify the order in which metadata sources should be processed.
 Value is a delimited-list whose elements are defined by https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cfg/MetadataSourceType.html[`MetadataSourceType`].
 +
-The default is `hbm,class"`, therefore `hbm.xml` files are processed first, followed by annotations (combined with `orm.xml` mappings).
+The default is `hbm,class`, therefore `hbm.xml` files are processed first, followed by annotations (combined with `orm.xml` mappings).
 +
 When using JPA, the XML mapping overrides a conflicting annotation mapping that targets the same entity attribute.
 
 ==== JDBC-related options
 
 `*hibernate.use_nationalized_character_data*` (e.g. `true` or `false` (default value))::
-Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
+Enable nationalized character support on all string / clob based attribute ( string, char, clob, text, etc. ).
 
 `*hibernate.jdbc.lob.non_contextual_creation*` (e.g. `true` or `false` (default value))::
 Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
@@ -403,12 +403,12 @@ Such a need is very uncommon and not recommended.
 ==== Misc options
 
 `*hibernate.create_empty_composites.enabled*` (e.g. `true` or `false` (default value))::
- Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are `null`.
+ Enable instantiation of composite/embeddable objects when all of its attribute values are `null`. The default (and historical) behavior is that a `null` reference will be used to represent the composite when all of its attributes are ``null``s.
 +
 This is an experimental feature that has known issues. It should not be used in production until it is stabilized. See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-11936[HHH-11936] for details.
 
 `*hibernate.entity_dirtiness_strategy*` (e.g. fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance)::
-Setting to identify a `org.hibernate.CustomEntityDirtinessStrategy` to use.
+Setting to identify an `org.hibernate.CustomEntityDirtinessStrategy` to use.
 
 `*hibernate.default_entity_mode*` (e.g. `pojo` (default value) or `dynamic-map`)::
 Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
@@ -474,7 +474,7 @@ Should named queries be checked during startup?
 Global setting for whether `null` parameter bindings should be passed to database procedure/function calls as part of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/procedure/ProcedureCall.html[`ProcedureCall`] handling.
 Implicitly Hibernate will not pass the `null`, the intention being to allow any default argument values to be applied.
 +
-This defines a global setting, which can then be controlled per parameter via `org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)`
+This defines a global setting, which can then be controlled per parameter via `org.hibernate.procedure.ParameterRegistration#enablePassingNulls(boolean)`.
 +
 Values are `true` (pass the NULLs) or `false` (do not pass the NULLs).
 
@@ -491,14 +491,14 @@ Can reference a
 
 `*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
 This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via JPA
-`javax.persistence.EntityManagerFactory`
+`javax.persistence.EntityManagerFactory`.
 
 `*hibernate.criteria.literal_handling_mode*` (e.g. `AUTO` (default value), `BIND` or `INLINE`)::
-By default, Criteria queries uses bind parameters for any literal that is not a numeric value.
+By default, Criteria queries use bind parameters for any literal that is not a numeric value.
 However, to increase the likelihood of JDBC statement caching, you might want to use bind parameters for numeric values too.
 +
 The `org.hibernate.query.criteria.LiteralHandlingMode#BIND` mode will use bind variables for any literal value.
-The `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode will inline literal values as-is.
+The `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode will inline literal values as is.
 +
 To prevent SQL injection, never use `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` with String variables.
 Always use constants with the `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode.
@@ -574,15 +574,15 @@ Set this property to `true` if your JDBC driver returns correct row counts from 
 `*hibernate.batch_fetch_style*` (e.g. `LEGACY`(default value))::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] to use.
 +
-Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] name (insensitively), or a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] instance. `LEGACY}` is the default value.
+Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] name (case insensitively), or a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] instance. `LEGACY` is the default value.
 
-`*hibernate.jdbc.batch.builder*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance)::
+`*hibernate.jdbc.batch.builder*` (e.g. the fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance)::
  Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation to use.
 
 [[configurations-database-fetch]]
 ==== Fetching properties
 
-`*hibernate.max_fetch_depth*` (e.g. A value between `0` and `3`)::
+`*hibernate.max_fetch_depth*` (e.g. a value between `0` and `3`)::
 Sets a maximum depth for the outer join fetch tree for single-ended associations. A single-ended association is a one-to-one or many-to-one association. A value of `0` disables default outer join fetching.
 
 `*hibernate.default_batch_fetch_size*` (e.g. `4`,`8`, or `16`)::
@@ -645,7 +645,7 @@ Either a shortcut name (e.g. `jcache`, `ehcache`) or the fully-qualified name of
 
 `*hibernate.cache.default_cache_concurrency_strategy*`::
 Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use
-when either `@javax.persistence.Cacheable` or `@org.hibernate.annotations.Cache`. `@org.hibernate.annotations.Cache` is used to override the global setting.
+when `@javax.persistence.Cacheable`, `@org.hibernate.annotations.Cache` or `@org.hibernate.annotations.Cache` is used to override the global setting.
 
 `*hibernate.cache.use_minimal_puts*` (e.g. `true` (default value) or `false`)::
 Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
@@ -654,9 +654,9 @@ Optimizes second-level cache operation to minimize writes, at the cost of more f
 Enables the query cache. You still need to set individual queries to be cachable.
 
 `*hibernate.cache.use_second_level_cache*` (e.g. `true` (default value) or `false`)::
-Enable/disable the second level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
+Enable/disable the second-level cache, which is enabled by default, although the default `RegionFactor` is `NoCachingRegionFactory` (meaning there is no actual caching implementation).
 
-`*hibernate.cache.query_cache_factory*` (e.g. Fully-qualified class name)::
+`*hibernate.cache.query_cache_factory*` (e.g. fully-qualified class name)::
 A custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/cache/spi/QueryCacheFactory.html[`QueryCacheFactory`] interface. The default is the built-in `StandardQueryCacheFactory`.
 
 `*hibernate.cache.region_prefix*` (e.g. A string)::
@@ -669,29 +669,29 @@ Forces Hibernate to store data in the second-level cache in a more human-readabl
 Enables the automatic eviction of a bi-directional association's collection cache when an element in the `ManyToOne` collection is added/updated/removed without properly managing the change on the `OneToMany` side.
 
 `*hibernate.cache.use_reference_entries*` (e.g. `true` or `false`)::
-Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly, this case, disassembling and deep copy operations can be avoided. The default value of this property is `false`.
+Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly. In this case, disassembling and deep copy operations can be avoided. The default value of this property is `false`.
 
 `*hibernate.ejb.classcache*` (e.g. `hibernate.ejb.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
-Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname>` usage[, region] where usage is the cache strategy used and region the cache region name.
+Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
 `*hibernate.ejb.collectioncache*` (e.g. `hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
-Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role>` usage[, region] where usage is the cache strategy used and region the cache region name
+Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
 [[configurations-infinispan]]
 === Infinispan properties
 
 For more details about how to customize the Infinispan second-level cache provider, check out the
-http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide]
+http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_properties[Infinispan User Guide].
 
 [[configurations-transactions]]
 === Transactions properties
 
 `*hibernate.transaction.jta.platform*` (e.g. `JBossAS`, `BitronixJtaPlatform`)::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation to use for integrating with JTA systems.
-Can reference either a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] instance or the name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation class
+Can reference either a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] instance or the name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation class.
 
 `*hibernate.jta.prefer_user_transaction*` (e.g. `true` or `false` (default value))::
-Should we prefer using the `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction` over using `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager`
+Should we prefer using the `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction` over using `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager`?
 
 `*hibernate.transaction.jta.platform_resolver*`::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatformResolver.html[`JtaPlatformResolver`] implementation to use.
@@ -711,12 +711,12 @@ Causes the session to be closed during the after completion phase of the transac
 `*hibernate.transaction.coordinator_class*`::
 Names the implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/spi/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] to use for creating https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/spi/TransactionCoordinator.html[`TransactionCoordinator`] instances.
 +
-Can be a`TransactionCoordinatorBuilder` instance, `TransactionCoordinatorBuilder` implementation `Class` reference, a `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or a short name.
+Can be a `TransactionCoordinatorBuilder` instance, `TransactionCoordinatorBuilder` implementation `Class` reference, a `TransactionCoordinatorBuilder` implementation class name (fully-qualified name) or a short name.
 +
 The following short names are defined for this setting:
 +
-`jdbc`::: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications)
-`jta`::: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
+`jdbc`::: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications).
+`jta`::: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>.
 +
 
 If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
@@ -756,12 +756,12 @@ The multi-tenancy strategy in use.
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
 
 `*hibernate.tenant_identifier_resolver*`::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] implementation to resolve the resolve the current tenant identifier so that calling `SessionFactory#openSession()` would get a `Session` that's connected to the right tenant.
+Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] implementation to resolve the current tenant identifier so that calling `SessionFactory#openSession()` would get a `Session` that's connected to the right tenant.
 +
 Can be a `CurrentTenantIdentifierResolver` instance, `CurrentTenantIdentifierResolver` implementation `Class` object reference or a `CurrentTenantIdentifierResolver` implementation class name.
 
 `*hibernate.multi_tenant.datasource.identifier_for_any*` (e.g. `true` or `false` (default value))::
-When the `hibernate.connection.datasource` property value is resolved to a `javax.naming.Context` object, this configuration property defines the JNDI name used to locate the `DataSource` used for fetching the initial `Connection` which is used to access to the database metadata of the underlying database(s) (in situations where we do not have a tenant id, like startup processing).
+When the `hibernate.connection.datasource` property value is resolved to a `javax.naming.Context` object, this configuration property defines the JNDI name used to locate the `DataSource` used for fetching the initial `Connection` which is used to access the database metadata of the underlying database(s) (in situations where we do not have a tenant id, like startup processing).
 
 [[configurations-hbmddl]]
 === Automatic schema generation
@@ -775,8 +775,8 @@ Valid options are defined by the `externalHbm2ddlName` value of the https://docs
 `drop`::: Database dropping will be generated.
 `create`::: Database dropping will be generated followed by database creation.
 `create-drop`::: Drop the schema and recreate it on SessionFactory startup.  Additionally, drop the schema on SessionFactory shutdown.
-`validate`::: Validate the database schema
-`update`::: Update the database schema
+`validate`::: Validate the database schema.
+`update`::: Update the database schema.
 
 `*javax.persistence.schema-generation.database.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions automatically as part of the `SessionFactory` lifecycle.
@@ -797,7 +797,7 @@ Valid options are defined by the `externalJpaName` value of the https://docs.jbo
 `drop-and-create`::: Database dropping will be generated followed by database creation.
 
 `*javax.persistence.schema-generation-connection*`::
-Allows passing a specific `java.sql.Connection` instance to be used by `SchemaManagementTool`
+Allows passing a specific `java.sql.Connection` instance to be used by `SchemaManagementTool`.
 
 `*javax.persistence.database-product-name*`::
 Specifies the name of the database provider in cases where a Connection to the underlying database is not available (aka, mainly in generating scripts).
@@ -864,13 +864,13 @@ A "SQL load script" is a script that performs some database initialization (INSE
 Reference to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/ImportSqlCommandExtractor.html[`ImportSqlCommandExtractor`] implementation class to use for parsing source/import files as defined by `javax.persistence.schema-generation.create-script-source`,
 `javax.persistence.schema-generation.drop-script-source` or `hibernate.hbm2ddl.import_files`.
 +
-Reference may refer to an instance, a Class implementing `ImportSqlCommandExtractor` of the fully-qualified name of the `ImportSqlCommandExtractor` implementation.
+Reference may refer to an instance, a Class implementing `ImportSqlCommandExtractor` or the fully-qualified name of the `ImportSqlCommandExtractor` implementation.
 If the fully-qualified name is given, the implementation must provide a no-arg constructor.
 +
 The default value is https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/SingleLineSqlCommandExtractor.html[`SingleLineSqlCommandExtractor`].
 
 `*hibernate.hbm2ddl.create_namespaces*` (e.g. `true` or `false` (default value))::
-Specifies whether to automatically create also the database schema/catalog.
+Specifies whether to automatically create the database schema/catalog also.
 
 `*javax.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
 The JPA variant of `hibernate.hbm2ddl.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
@@ -886,7 +886,7 @@ Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/jav
 Setting to choose the strategy used to access the JDBC Metadata.
 Valid options are defined by the `strategy` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/JdbcMetadaAccessStrategy.html[`JdbcMetadaAccessStrategy`] enum:
 +
-`grouped`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the `javax.persistence.Entity` have a corresponding mapped database tables.This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+`grouped`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the ``javax.persistence.Entity``s have a corresponding mapped database tables. This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
 `individually`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
 
 `*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
@@ -911,7 +911,7 @@ Therefore, the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs
 `DROP_RECREATE_QUIETLY`::: Default option.
 Attempt to drop, then (re-)create each unique constraint. Ignore any exceptions being thrown.
 `RECREATE_QUIETLY`:::
-Attempts to (re-)create unique constraints, ignoring exceptions thrown if the constraint already existed
+Attempts to (re-)create unique constraints, ignoring exceptions thrown if the constraint already existed.
 `SKIP`:::
 Does not attempt to create unique constraints on a schema update.
 
@@ -924,13 +924,13 @@ Whether the schema migration tool should halt on error, therefore terminating th
 [[configurations-exception-handling]]
 === Exception handling
 
-`*hibernate.jdbc.sql_exception_converter*` (e.g. Fully-qualified name of class implementing `SQLExceptionConverter`)::
+`*hibernate.jdbc.sql_exception_converter*` (e.g. fully-qualified name of class implementing `SQLExceptionConverter`)::
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
 
 `*hibernate.native_exception_handling_51_compliance*` (e.g. `true` or `false` (default value))::
 Indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
 should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
-`HibernateException` will be not wrapped or converted according to the JPA specification. This
+`HibernateException` will not be wrapped or converted according to the JPA specification. This
 setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
 
 [[configurations-session-events]]
@@ -940,7 +940,7 @@ setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
 Fully qualified class name implementing the `SessionEventListener` interface.
 
 `*hibernate.session_factory.interceptor*` (e.g. `org.hibernate.EmptyInterceptor` (default value))::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
+Names an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`.
 +
 Can reference:
 +
@@ -953,7 +953,7 @@ Can reference:
 WARNING: Deprecated setting. Use `hibernate.session_factory.session_scoped_interceptor` instead.
 
 `*hibernate.session_factory.session_scoped_interceptor*` (e.g. fully-qualified class name or class reference)::
-Names a `org.hibernate.Interceptor` implementation to be applied to the `org.hibernate.SessionFactory` and propagated to each `Session` created from the `SessionFactory`.
+Names an `org.hibernate.Interceptor` implementation to be applied to the `org.hibernate.SessionFactory` and propagated to each `Session` created from the `SessionFactory`.
 +
 This setting identifies an `Interceptor` implementation that is to be applied to every `Session` opened from the `SessionFactory`,
 but unlike `hibernate.session_factory.interceptor`, a unique instance of the `Interceptor` is
@@ -963,7 +963,7 @@ Can reference:
 +
 * `Interceptor` instance
 * `Interceptor` implementation `Class` object reference
-* `java.util.function.Supplier` instance which is used to retrieve the `Interceptor` instance.
+* `java.util.function.Supplier` instance which is used to retrieve the `Interceptor` instance
 +
 NOTE: Specifically, this setting cannot name an `Interceptor` instance.
 
@@ -1062,7 +1062,7 @@ Used to define an instance, the class or the fully qualified class name of a htt
 === Miscellaneous properties
 
 `*hibernate.dialect_resolvers*`::
-Names any additional https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectResolver.html[`DialectResolver`] implementations to  register with the standard https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectFactory.html[`DialectFactory`]
+Names any additional https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectResolver.html[`DialectResolver`] implementations to  register with the standard https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/dialect/spi/DialectFactory.html[`DialectFactory`].
 
 `*hibernate.session_factory_name*` (e.g. A JNDI name)::
 Setting used to name the Hibernate `SessionFactory`.
@@ -1082,7 +1082,7 @@ Internally, Hibernate keeps track of all `EntityManagerFactory` instances using 
 XML configuration file to use to configure Hibernate.
 
 `*hibernate.ejb.discard_pc_on_close*` (e.g. `true` or `false` (default value))::
-If true, the persistence context will be discarded (think `clear()` when the method is called.
+If true, the persistence context will be discarded (think `clear()` when the method is called).
 Otherwise, the persistence context will stay alive till the transaction completion: all objects will remain managed, and any change will be synchronized with the database (default to false, ie wait for transaction completion).
 
 `*hibernate.ejb.metamodel.population*` (e.g. `enabled` or `disabled`, or `ignoreUnsupported` (default value))::
@@ -1090,8 +1090,8 @@ Setting that indicates whether to build the JPA types.
 +
 Accepts three values:
 +
-enabled::: Do the build
-disabled::: Do not do the build
+enabled::: Do the build.
+disabled::: Do not do the build.
 ignoreUnsupported::: Do the build, but ignore any non-JPA features that would otherwise result in a failure (e.g. `@Any` annotation).
 
 `*hibernate.jpa.static_metamodel.population*` (e.g. `enabled` or `disabled`, or `skipUnsupported` (default value))::
@@ -1099,8 +1099,8 @@ Setting that controls whether we seek out JPA _static metamodel_ classes and pop
 +
 Accepts three values:
 +
-enabled::: Do the population
-disabled::: Do not do the population
+enabled::: Do the population.
+disabled::: Do not do the population.
 skipUnsupported::: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
 
 `*hibernate.delay_cdi_access*` (e.g. `true` or `false` (default value))::
@@ -1123,29 +1123,29 @@ true::: allows to flush an update out of a transaction
 false::: does not allow
 
 `*hibernate.collection_join_subquery*` (e.g. `true` (default value) or `false`)::
-Setting which indicates whether or not the new JOINS over collection tables should be rewritten to subqueries.
+Setting which indicates whether or not the new JOINs over collection tables should be rewritten to subqueries.
 
 `*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping))::
 Setting that allows to call `javax.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
 
 `*hibernate.use_entity_where_clause_for_collections*` (e.g., `true` (default) or `false`)::
-Setting controls whether an entity's "where" clause, mapped using `@Where(clause="...")` or `<entity ... where="...">, is taken into account when loading one-to-many or many-to-many collections of that type of entity.
+Setting controls whether an entity's "where" clause, mapped using `@Where(clause = "...")` or `<entity ... where="...">` is taken into account when loading one-to-many or many-to-many collections of that type of entity.
 
 `*hibernate.event.merge.entity_copy_observer*` (e.g. `disallow` (default value), `allow`, `log` (testing purpose only) or fully-qualified class name)::
 Setting that specifies how Hibernate will respond when multiple representations of the same persistent entity ("entity copy") is detected while merging.
 +
 The possible values are:
 +
-disallow (the default)::: throws `IllegalStateException` if an entity copy is detected
+disallow::: throws `IllegalStateException` if an entity copy is detected
 allow::: performs the merge operation on each entity copy that is detected
 log::: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
 This setting requires DEBUG logging be enabled for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/event/internal/EntityCopyAllowedLoggedObserver.html[`EntityCopyAllowedLoggedObserver`].
-+
+
 In addition, the application may customize the behavior by providing an implementation of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/event/spi/EntityCopyObserver.html[`EntityCopyObserver`] and setting `hibernate.event.merge.entity_copy_observer` to the class name.
 When this property is set to `allow` or `log`, Hibernate will merge each entity copy detected while cascading the merge operation.
-In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with `cascade=CascadeType.MERGE` or `CascadeType.ALL`.
+In the process of merging each entity copy, Hibernate will cascade the merge operation from each entity copy to its associations with `cascade = CascadeType.MERGE` or `cascade = CascadeType.ALL`.
 The entity state resulting from merging an entity copy will be overwritten when another entity copy is merged.
-+
+
 For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-merge-gotchas,Merge gotchas>> section.
 
 [[configurations-envers]]
@@ -1180,8 +1180,8 @@ Enable or disable the SpecJ proprietary mapping syntax which differs from JPA sp
 `*hibernate.temp.use_jdbc_metadata_defaults*` (e.g. `true` (default value) or `false`)::
 This setting is used to control whether we should consult the JDBC metadata to determine certain Settings default values when the database may not be available (mainly in tools usage).
 
-`*hibernate.connection_provider.injection_data*` (e.g. `java.util.Map`)::
-Connection provider settings to be injected in the currently configured connection provider.
+`*hibernate.connection_provider.injection_data*`::
+Connection provider settings to be injected (a `Map` instance) in the currently configured connection provider.
 
-`*hibernate.jandex_index*` (e.g. `org.jboss.jandex.Index`)::
+`*hibernate.jandex_index*`::
 Names a Jandex `org.jboss.jandex.Index` instance to use.

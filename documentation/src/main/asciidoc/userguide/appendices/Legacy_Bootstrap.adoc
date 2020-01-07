@@ -10,7 +10,7 @@ I like to think of `Configuration` as a big pot to which we add a bunch of stuff
 There are some significant drawbacks to the legacy bootstrapping mechanism which led to its deprecation and the development of the new approach, which is discussed in  <<chapters/bootstrap/Bootstrap.adoc#bootstrap-native,Native Bootstrapping>>.
 
 `Configuration` is semi-deprecated but still available for use, in a limited form that eliminates these drawbacks.
-"Under the covers", `Configuration` uses the new bootstrapping code, so the things available there as also available here in terms of auto-discovery.
+"Under the covers", `Configuration` uses the new bootstrapping code, so the things available there are also available here in terms of auto-discovery.
 ====
 
 You can obtain the `Configuration` by instantiating it directly.
@@ -20,11 +20,11 @@ You then specify mapping metadata (XML mapping documents, annotated classes) tha
 ----
 Configuration cfg = new Configuration()
     // addResource does a classpath resource lookup
-    .addResource("Item.hbm.xml")
-    .addResource("Bid.hbm.xml")
+    .addResource( "Item.hbm.xml" )
+    .addResource( "Bid.hbm.xml" )
 
     // calls addResource using "/org/hibernate/auction/User.hbm.xml"
-    .addClass(`org.hibernate.auction.User.class`)
+    .addClass( org.hibernate.auction.User.class )
 
     // parses Address class for mapping annotations
     .addAnnotatedClass( Address.class )
@@ -32,9 +32,9 @@ Configuration cfg = new Configuration()
     // reads package-level (package-info.class) annotations in the named package
     .addPackage( "org.hibernate.auction" )
 
-    .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
-    .setProperty("hibernate.connection.datasource", "java:comp/env/jdbc/test")
-    .setProperty("hibernate.order_updates", "true");
+    .setProperty( "hibernate.dialect", "org.hibernate.dialect.H2Dialect" )
+    .setProperty( "hibernate.connection.datasource", "java:comp/env/jdbc/test" )
+    .setProperty( "hibernate.order_updates", "true" );
 ----
 
 There are other ways to specify Configuration information, including:
@@ -46,7 +46,7 @@ There are other ways to specify Configuration information, including:
 
 == Migration
 
-Mapping Configuration methods to the corresponding methods in the new APIs..
+Mapping Configuration methods to the corresponding methods in the new APIs.
 
 |===
 |`Configuration#addFile`|`Configuration#addFile`

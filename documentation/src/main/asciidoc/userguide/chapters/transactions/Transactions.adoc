@@ -5,9 +5,9 @@
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.
 
-* Might refer to the physical transaction with the database.
-* Might refer to the logical notion of a transaction as related to a persistence context.
-* Might refer to the application notion of a Unit-of-Work, as defined by the archetypal pattern.
+* It might refer to the physical transaction with the database.
+* It might refer to the logical notion of a transaction as related to a persistence context.
+* It might refer to the application notion of a Unit-of-Work, as defined by the archetypal pattern.
 
 [NOTE]
 ====
@@ -96,12 +96,12 @@ Hibernate provides many implementations of the `JtaPlatform` contract, all with 
 
 Hibernate provides an API for helping to isolate applications from the differences in the underlying physical transaction system in use.
 Based on the configured `TransactionCoordinatorBuilder`, Hibernate will simply do the right thing when this transaction API is used by the application.
-This allows your applications and components to be more portable move around into different environments.
+This allows your applications and components to be more portable to move around into different environments.
 
 To use this API, you would obtain the `org.hibernate.Transaction` from the Session. `Transaction` allows for all the normal operations you'd expect: `begin`, `commit` and `rollback`, and it even exposes some cool methods like:
 
-`markRollbackOnly`:: that works in both JTA and JDBC
-`getTimeout` and `setTimeout`:: that again work in both JTA and JDBC
+`markRollbackOnly`:: that works in both JTA and JDBC.
+`getTimeout` and `setTimeout`:: that again work in both JTA and JDBC.
 `registerSynchronization`:: that allows you to register JTA Synchronizations even in non-JTA environments.
 In fact, in both JTA and JDBC environments, these `Synchronizations` are kept locally by Hibernate.
 In JTA environments, Hibernate will only ever register one single `Synchronization` with the `TransactionManager` to avoid ordering problems.
@@ -183,7 +183,7 @@ This is also known and used as __session-per-request__.
 The beginning and end of a Hibernate session is defined by the duration of a database transaction.
 If you use programmatic transaction demarcation in plain Java SE without JTA, you are advised to use the Hibernate `Transaction` API to hide the underlying transaction system from your code.
 If you use JTA, you can utilize the JTA interfaces to demarcate transactions.
-If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. Refer to <<transactions>> for more information and code examples.
+If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. 
 
 The `hibernate.current_session_context_class` configuration parameter defines which `org.hibernate.context.spi.CurrentSessionContext` implementation should be used.
 For backward compatibility, if this configuration parameter is not set but a `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform` is configured, Hibernate will use the `org.hibernate.context.internal.JTASessionContext`.
@@ -306,7 +306,7 @@ Rolling back the database transaction does not put your business objects back in
 This means that the database state and the business objects will be out of sync. 
 Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
-For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-exception-handling, _exception handling_>> chapter.
+For more details, check out the <<chapters/pc/PersistenceContext.adoc#pc-exception-handling, _exception handling_>> section in <<chapters/pc/PersistenceContext.adoc#batch,Persistence Context chapter>>.
 
 The `Session` caches every object that is in a persistent state (watched and checked for dirty state by Hibernate).
 If you keep it open for a long time or simply load too much data, it will grow endlessly until you get an `OutOfMemoryException`.

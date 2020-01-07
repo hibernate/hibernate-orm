@@ -21,7 +21,7 @@ Users of the older Hibernate `org.hibernate.Criteria` query API will recognize t
 
 Criteria queries are essentially an object graph, where each part of the graph represents an increasing (as we navigate down this graph) more atomic part of the query.
 The first step in performing a criteria query is building this graph.
-The `javax.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted with begin using criteria queries.
+The `javax.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted with before using criteria queries.
 Its role is that of a factory for all the individual pieces of the criteria.
 You obtain a `javax.persistence.criteria.CriteriaBuilder` instance by calling the `getCriteriaBuilder()` method of either `javax.persistence.EntityManagerFactory` or `javax.persistence.EntityManager`.
 
@@ -183,10 +183,10 @@ positional::
   The simple _Object get(int position)_ form is very similar to the access illustrated in <<criteria-typedquery-multiselect-array-explicit-example>> and <<criteria-typedquery-multiselect-array-implicit-example>>.
   The _<X> X get(int position, Class<X> type_ form allows typed positional access, but based on the explicitly supplied type which the tuple value must be type-assignable to.
 aliased::
-  Allows access to the underlying tuple values based an (optionally) assigned alias.
+  Allows access to the underlying tuple values based on (optionally) assigned alias.
   The example query did not apply an alias.
   An alias would be applied via the alias method on `javax.persistence.criteria.Selection`.
-  Just like `positional` access, there is both a typed (__Object get(String alias)__) and an untyped (__<X> X get(String alias, Class<X> type__ form.
+  Just like `positional` access, there is both a typed (__Object get(String alias)__) and an untyped (__<X> X get(String alias, Class<X> type)__) form.
 
 [[criteria-from]]
 === FROM clause
@@ -207,7 +207,7 @@ All the individual parts of the FROM clause (roots, joins, paths) implement the 
 === Roots
 
 Roots define the basis from which all joins, paths and attributes are available in the query.
-A root is always an entity type. Roots are defined and added to the criteria by the overloaded from methods on `javax.persistence.criteria.CriteriaQuery`:
+A root is always an entity type. Roots are defined and added to the criteria by the overloaded __from__ methods on `javax.persistence.criteria.CriteriaQuery`:
 
 [[criteria-from-root-methods-example]]
 .Root methods
@@ -245,7 +245,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-multiple-root-example]
 === Joins
 
 Joins allow navigation from other `javax.persistence.criteria.From` to either association or embedded attributes.
-Joins are created by the numerous overloaded join methods of the `javax.persistence.criteria.From` interface.
+Joins are created by the numerous overloaded __join__ methods of the `javax.persistence.criteria.From` interface.
 
 [[criteria-from-join-example]]
 .Join example
@@ -260,7 +260,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-join-example]
 === Fetches
 
 Just like in HQL and JPQL, criteria queries can specify that associated data be fetched along with the owner.
-Fetches are created by the numerous overloaded fetch methods of the `javax.persistence.criteria.From` interface.
+Fetches are created by the numerous overloaded __fetch__ methods of the `javax.persistence.criteria.From` interface.
 
 [[criteria-from-fetch-example]]
 .Join fetch example

@@ -10,12 +10,12 @@ Persistent data has a state in relation to both a persistence context and the un
 
 `transient`:: the entity has just been instantiated and is not associated with a persistence context.
 It has no persistent representation in the database and typically no identifier value has been assigned (unless the _assigned_ generator was used).
-`managed`, or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
+`managed` or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
 It may or may not physically exist in the database yet.
 `detached`:: the entity has an associated identifier but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
 `removed`:: the entity has an associated identifier and is associated with a persistence context, however, it is scheduled for removal from the database.
 
-Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
+Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities among these states.
 
 [[pc-unwrap]]
 === Accessing Hibernate APIs from JPA
@@ -37,7 +37,7 @@ include::BytecodeEnhancement.adoc[]
 === Making entities persistent
 
 Once you've created a new entity instance (using the standard `new` operator) it is in `new` state.
-You can make it persistent by associating it to either a `org.hibernate.Session` or `javax.persistence.EntityManager`.
+You can make it persistent by associating it to either an `org.hibernate.Session` or a `javax.persistence.EntityManager`.
 
 [[pc-persist-jpa-example]]
 .Making an entity persistent with JPA
@@ -57,7 +57,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-native-example]
 ----
 ====
 
-`org.hibernate.Session` also has a method named persist which follows the exact semantic defined in the JPA specification for the persist method.
+`org.hibernate.Session` also has a method named persist which follows the exact semantics defined in the JPA specification for the persist method.
 It is this `org.hibernate.Session` method to which the Hibernate `javax.persistence.EntityManager` implementation delegates.
 
 If the `DomesticCat` entity type has a generated identifier, the value is associated with the instance when the save or persist is called.
@@ -442,7 +442,7 @@ include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-ex
 ----
 ====
 
-When fetching the `currentWeekReaders` collection, Hibernate is going to find one one entry:
+When fetching the `currentWeekReaders` collection, Hibernate is going to find only one entry:
 
 [[pc-where-join-table-fetch-example]]
 .`@WhereJoinTable` fetch example
@@ -981,7 +981,7 @@ The possible values are:
 disallow (the default):: throws `IllegalStateException` if an entity copy is detected
 allow:: performs the merge operation on each entity copy that is detected
 log:: (provided for testing only) performs the merge operation on each entity copy that is detected and logs information about the entity copies.
-This setting requires DEBUG logging be enabled for `org.hibernate.event.internal.EntityCopyAllowedLoggedObserver`.
+This setting requires DEBUG logging be enabled for `org.hibernate.event.internal.EntityCopyAllowedLoggedObserver`
 
 In addition, the application may customize the behavior by providing an implementation of `org.hibernate.event.spi.EntityCopyObserver` and setting `hibernate.event.merge.entity_copy_observer` to the class name.
 When this property is set to `allow` or `log`, Hibernate will merge each entity copy detected while cascading the merge operation.
@@ -1132,7 +1132,7 @@ include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-co
 JPA allows you to propagate the state transition from a parent entity to a child.
 For this purpose, the JPA `javax.persistence.CascadeType` defines various cascade types:
 
-`ALL`:: cascades all entity state transitions
+`ALL`:: cascades all entity state transitions.
 `PERSIST`:: cascades the entity persist operation.
 `MERGE`:: cascades the entity merge operation.
 `REMOVE`:: cascades the entity remove operation.
@@ -1401,7 +1401,7 @@ attached to the current `SessionFactory`.
 
 By default, the `SQLExceptionConverter` is defined by the configured Hibernate `Dialect` via the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
-which is overridden by several database-specific `Dialects`.
+which is overridden by several database-specific ``Dialect``s.
 
 However, it is also possible to plug in a custom implementation. See the
 <<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.jdbc.sql_exception_converter`>> configuration property for more details.

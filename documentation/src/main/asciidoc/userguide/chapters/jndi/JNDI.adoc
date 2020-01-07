@@ -10,9 +10,9 @@ Generally, it does this when the application:
 * is using JTA transactions and the `JtaPlatform` needs to do JNDI lookups for `TransactionManager`, `UserTransaction`, etc
 
 All of these JNDI calls route through a single service whose role is `org.hibernate.engine.jndi.spi.JndiService`.
-The standard `JndiService` accepts a number of configuration settings
+The standard `JndiService` accepts a number of configuration settings:
 
-`hibernate.jndi.class`:: names the javax.naming.InitialContext implementation class to use. See https://docs.oracle.com/javase/8/docs/api/javax/naming/Context.html#INITIAL_CONTEXT_FACTORY[`javax.naming.Context#INITIAL_CONTEXT_FACTORY`]
+`hibernate.jndi.class`:: names the `javax.naming.InitialContext` implementation class to use. See https://docs.oracle.com/javase/8/docs/api/javax/naming/Context.html#INITIAL_CONTEXT_FACTORY[`javax.naming.Context#INITIAL_CONTEXT_FACTORY`]
 `hibernate.jndi.url`:: names the JNDI InitialContext connection url. See https://docs.oracle.com/javase/8/docs/api/javax/naming/Context.html#PROVIDER_URL[`javax.naming.Context.PROVIDER_URL`]
 
 Any other settings prefixed with `hibernate.jndi.` will be collected and passed along to the JNDI provider.

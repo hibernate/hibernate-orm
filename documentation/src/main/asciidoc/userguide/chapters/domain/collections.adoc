@@ -102,7 +102,7 @@ Depending on the number of elements, this behavior might not be efficient, if ma
 A workaround is to use an `@OrderColumn`, which, although not as efficient as when using the actual link table primary key, might improve the efficiency of the remove operations.
 
 [[collections-value-type-collection-order-column-remove-example]]
-.Removing collection elements using the order column
+.Removing collection elements using @OrderColumn
 ====
 [source,java]
 ----

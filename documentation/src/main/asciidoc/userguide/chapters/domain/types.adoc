@@ -50,9 +50,9 @@ The persistent attributes of the `Contact` class are value types.
 
 Value types are further classified into three sub-categories:
 
-Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic Types_>>
-Embeddable types:: the name attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable Types_>>
-Collection types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
+Basic types:: in mapping the `Contact` table, all attributes except for name would be basic types. Basic types are discussed in detail in <<chapters/domain/basic_types.adoc#basic,_Basic types_>>
+Embeddable types:: the `name` attribute is an example of an embeddable type, which is discussed in details in <<chapters/domain/embeddables.adoc#embeddables,_Embeddable types_>>
+*Collection* types:: although not featured in the aforementioned example, collection types are also a distinct category among value types. Collection types are further discussed in <<chapters/domain/collections.adoc#collections,_Collections_>>
 
 [[categorization-entity]]
 ==== Entity types
@@ -62,4 +62,4 @@ Entities are domain model classes which correlate to rows in a database table, u
 Because of the requirement for a unique identifier, entities exist independently and define their own lifecycle.
 The `Contact` class itself would be an example of an entity.
 
-Mapping entities is discussed in detail in <<chapters/domain/entity.adoc#entity,_Entity_>>.
+Mapping entities is discussed in detail in <<chapters/domain/entity.adoc#entity,_Entity types_>>.

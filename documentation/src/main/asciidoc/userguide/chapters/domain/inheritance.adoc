@@ -276,7 +276,7 @@ Each table defines all persistent states of the class, including the inherited s
 
 In Hibernate, it is not necessary to explicitly map such inheritance hierarchies.
 You can map each class as a separate entity root.
-However, if you wish use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the union subclass mapping.
+However, if you wish to use polymorphic associations (e.g. an association to the superclass of your hierarchy), you need to use the union subclass mapping.
 
 [[entity-inheritance-table-per-class-example]]
 .Table per class
@@ -341,7 +341,7 @@ However, you can even query
 For instance, considering the following `DomainModelEntity` interface:
 
 [[entity-inheritance-polymorphism-interface-example]]
-.Domain Model Entity interface
+.DomainModelEntity interface
 ====
 [source,java]
 ----

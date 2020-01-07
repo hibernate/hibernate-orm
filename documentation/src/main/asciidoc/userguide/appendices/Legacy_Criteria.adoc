@@ -20,8 +20,8 @@ The `Session` is a factory for `Criteria` instances.
 
 [source,java]
 ----
-Criteria crit = sess.createCriteria(Cat.class);
-crit.setMaxResults(50);
+Criteria crit = sess.createCriteria( Cat.class );
+crit.setMaxResults( 50 );
 List cats = crit.list();
 ----
 
@@ -49,10 +49,9 @@ If you provide the JPA entity name to a legacy Criteria query:
 
 [source,java]
 ----
-List<Event> events =
-    entityManager.unwrap( Session.class )
-.createCriteria( "ApplicationEvent" )
-.list();
+List<Event> events = entityManager.unwrap( Session.class )
+    .createCriteria( "ApplicationEvent" )
+    .list();
 ----
 
 Hibernate is going to throw the following `MappingException`:
@@ -66,10 +65,9 @@ On the other hand, the Hibernate entity name (the fully qualified class name) wo
 
 [source,java]
 ----
-List<Event> events =
-    entityManager.unwrap( Session.class )
-.createCriteria( Event.class.getName() )
-.list();
+List<Event> events = entityManager.unwrap( Session.class )
+    .createCriteria( Event.class.getName() )
+    .list();
 ----
 
 For more about this topic, check out the https://hibernate.atlassian.net/browse/HHH-2597[HHH-2597] JIRA issue.
@@ -82,9 +80,9 @@ The class `org.hibernate.criterion.Restrictions` defines factory methods for obt
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "Fritz%") )
-    .add( Restrictions.between("weight", minWeight, maxWeight) )
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.like( "name", "Fritz%" ) )
+    .add( Restrictions.between( "weight", minWeight, maxWeight ) )
     .list();
 ----
 
@@ -92,18 +90,18 @@ Restrictions can be grouped logically.
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "Fritz%") )
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.like( "name", "Fritz%" ) )
     .add( Restrictions.or(
         Restrictions.eq( "age", new Integer(0) ),
-        Restrictions.isNull("age")
-    ) )
+        Restrictions.isNull( "age" ) )
+    )
     .list();
 ----
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
+List cats = sess.createCriteria( Cat.class )
     .add( Restrictions.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
     .add( Restrictions.disjunction()
         .add( Restrictions.isNull("age") )
@@ -119,8 +117,10 @@ One of the most useful `Restrictions` allows you to specify SQL directly.
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.sqlRestriction("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.sqlRestriction( 
+    		"lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING ) 
+    )
     .list();
 ----
 
@@ -132,8 +132,8 @@ You can create a `Property` by calling `Property.forName()`:
 [source,java]
 ----
 
-Property age = Property.forName("age");
-List cats = sess.createCriteria(Cat.class)
+Property age = Property.forName( "age" );
+List cats = sess.createCriteria( Cat.class )
     .add( Restrictions.disjunction()
         .add( age.isNull() )
         .add( age.eq( new Integer(0) ) )
@@ -151,35 +151,35 @@ You can order the results using `org.hibernate.criterion.Order`.
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "F%")
-    .addOrder( Order.asc("name").nulls(NullPrecedence.LAST) )
-    .addOrder( Order.desc("age") )
-    .setMaxResults(50)
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.like( "name", "F%" ) )
+    .addOrder( Order.asc( "name" ).nulls( NullPrecedence.LAST ) )
+    .addOrder( Order.desc( "age" ) )
+    .setMaxResults( 50 )
     .list();
 ----
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Property.forName("name").like("F%") )
-    .addOrder( Property.forName("name").asc() )
-    .addOrder( Property.forName("age").desc() )
-    .setMaxResults(50)
+List cats = sess.createCriteria( Cat.class )
+    .add( Property.forName( "name" ).like( "F%" ) )
+    .addOrder( Property.forName( "name" ).asc() )
+    .addOrder( Property.forName( "age" ).desc() )
+    .setMaxResults( 50 )
     .list();
 ----
 
 [[criteria-associations]]
 === Associations
 
-By navigating associations using `createCriteria()` you can specify constraints upon related entities:
+By navigating associations using `createCriteria()`, you can specify constraints upon related entities:
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "F%") )
-    .createCriteria("kittens")
-        .add( Restrictions.like("name", "F%") )
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.like( "name", "F%" ) )
+    .createCriteria( "kittens" )
+        .add( Restrictions.like( "name", "F%" ) )
     .list();
 ----
 
@@ -189,30 +189,30 @@ There is also an alternate form that is useful in certain circumstances:
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .createAlias("kittens", "kt")
-    .createAlias("mate", "mt")
-    .add( Restrictions.eqProperty("kt.name", "mt.name") )
+List cats = sess.createCriteria( Cat.class )
+    .createAlias( "kittens", "kt" )
+    .createAlias( "mate", "mt" )
+    .add( Restrictions.eqProperty( "kt.name", "mt.name" ) )
     .list();
 ----
 
-(`createAlias()` does not create a new instance of `Criteria`.)
+Note that `createAlias()` does not create a new instance of `Criteria`.
 
 The kittens collections held by the `Cat` instances returned by the previous two queries are _not_ pre-filtered by the criteria.
 If you want to retrieve just the kittens that match the criteria, you must use a `ResultTransformer`.
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .createCriteria("kittens", "kt")
-        .add( Restrictions.eq("name", "F%") )
-    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
+List cats = sess.createCriteria( Cat.class )
+    .createCriteria( "kittens", "kt" )
+        .add( Restrictions.eq( "name", "F%" ) )
+    .setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
     .list();
 Iterator iter = cats.iterator();
 while ( iter.hasNext() ) {
     Map map = (Map) iter.next();
-    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);
-    Cat kitten = (Cat) map.get("kt");
+    Cat cat = (Cat) map.get( Criteria.ROOT_ALIAS );
+    Cat kitten = (Cat) map.get( "kt" );
 }
 ----
 
@@ -221,20 +221,16 @@ Additionally, you may manipulate the result set using a left outer join:
 [source]
 ----
 List cats = session.createCriteria( Cat.class )
-   .createAlias("mate", "mt", Criteria.LEFT_JOIN, Restrictions.like("mt.name", "good%") )
-   .addOrder(Order.asc("mt.age"))
+   .createAlias( "mate", "mt", Criteria.LEFT_JOIN, Restrictions.like( "mt.name", "good%" ) )
+   .addOrder( Order.asc( "mt.age" ) )
    .list();
 ----
 
-This will return all of the `Cat`s with a mate whose name starts with "good" ordered by their mate's age, and all cats who do not have a mate.
+This will return all of the ``Cat``s with a mate whose name starts with "good" ordered by their mate's age, and all cats who do not have a mate.
 This is useful when there is a need to order or limit in the database prior to returning complex/large result sets,
 and removes many instances where multiple queries would have to be performed and the results unioned by Java in memory.
 
-Without this feature, first all of the cats without a mate would need to be loaded in one query.
-
-A second query would need to retrieve the cats with mates who's name started with "good" sorted by the mates age.
-
-Thirdly, in memory; the lists would need to be joined manually.
+Without this feature, firstly all of the cats without a mate would need to be loaded in one query. Then a second query would need to retrieve the cats with mates whose name started with "good" sorted by the mates age. Thirdly, in memory, the lists would need to be joined manually.
 
 [[criteria-dynamicfetching]]
 === Dynamic association fetching
@@ -243,10 +239,10 @@ You can specify association fetching semantics at runtime using `setFetchMode()`
 
 [source,java]
 ----
-List cats = sess.createCriteria(Cat.class)
-    .add( Restrictions.like("name", "Fritz%") )
-    .setFetchMode("mate", FetchMode.EAGER)
-    .setFetchMode("kittens", FetchMode.EAGER)
+List cats = sess.createCriteria( Cat.class )
+    .add( Restrictions.like( "name", "Fritz%" ) )
+    .setFetchMode( "mate", FetchMode.EAGER )
+    .setFetchMode( "kittens", FetchMode.EAGER )
     .list();
 ----
 
@@ -261,18 +257,18 @@ For example, suppose the `Cat` has a component property `fullName` with sub-prop
 
 [source]
 ----
-List cats = session.createCriteria(Cat.class)
-    .add(Restrictions.eq("fullName.lastName", "Cattington"))
+List cats = session.createCriteria( Cat.class )
+    .add( Restrictions.eq( "fullName.lastName", "Cattington" ) )
     .list();
 ----
 
-Note: this does not apply when querying collections of components, for that see below <<criteria-collections>>
+Note: this does not apply when querying collections of components, for that see <<criteria-collections>> below.
 
 [[criteria-collections]]
 === Collections
 
 When using criteria against collections, there are two distinct cases.
-One is if the collection contains entities (eg. `<one-to-many/>` or `<many-to-many/>`) or components (`<composite-element/>` ),
+One is if the collection contains entities (e.g. `<one-to-many/>` or `<many-to-many/>`) or components (`<composite-element/>` ),
 and the second is if the collection contains scalar values (`<element/>`).
 In the first case, the syntax is as given above in the section <<criteria-associations>> where we restrict the `kittens` collection.
 Essentially, we create a `Criteria` object against the collection property and restrict the entity or component properties using that instance.
@@ -283,9 +279,9 @@ For an indexed collection, we can also reference the index property using the sp
 
 [source]
 ----
-List cats = session.createCriteria(Cat.class)
-    .createCriteria("nickNames")
-    .add(Restrictions.eq("elements", "BadBoy"))
+List cats = session.createCriteria( Cat.class )
+    .createCriteria( "nickNames" )
+    .add( Restrictions.eq( "elements", "BadBoy" ) )
     .list();
 ----
 
@@ -297,10 +293,10 @@ The class `org.hibernate.criterion.Example` allows you to construct a query crit
 [source,java]
 ----
 Cat cat = new Cat();
-cat.setSex('F');
-cat.setColor(Color.BLACK);
-List results = session.createCriteria(Cat.class)
-    .add( Example.create(cat) )
+cat.setSex( 'F' );
+cat.setColor( Color.BLACK );
+List results = session.createCriteria( Cat.class )
+    .add( Example.create( cat ) )
     .list();
 ----
 
@@ -311,13 +307,13 @@ You can adjust how the `Example` is applied.
 
 [source,java]
 ----
-Example example = Example.create(cat)
-    .excludeZeroes()           //exclude zero valued properties
-    .excludeProperty("color")  //exclude the property named "color"
-    .ignoreCase()              //perform case insensitive string comparisons
-    .enableLike();             //use like for string comparisons
-List results = session.createCriteria(Cat.class)
-    .add(example)
+Example example = Example.create( cat )
+    .excludeZeroes()             //exclude zero valued properties
+    .excludeProperty( "color" )  //exclude the property named "color"
+    .ignoreCase()                //perform case insensitive string comparisons
+    .enableLike();               //use like for string comparisons
+List results = session.createCriteria( Cat.class )
+    .add( example )
     .list();
 ----
 
@@ -325,10 +321,11 @@ You can even use examples to place criteria upon associated objects.
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
-    .add( Example.create(cat) )
-    .createCriteria("mate")
-        .add( Example.create( cat.getMate() ) )
+List results = session.createCriteria( Cat.class )
+    .add( Example.create( cat ) )
+    .createCriteria( "mate" )
+        .add( Example.create( cat.getMate() )
+    )
     .list();
 ----
 
@@ -340,20 +337,20 @@ You can apply a projection to a query by calling `setProjection()`.
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
+List results = session.createCriteria( Cat.class )
     .setProjection( Projections.rowCount() )
-    .add( Restrictions.eq("color", Color.BLACK) )
+    .add( Restrictions.eq( "color", Color.BLACK ) )
     .list();
 ----
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
+List results = session.createCriteria( Cat.class )
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount() )
-        .add( Projections.avg("weight") )
-        .add( Projections.max("weight") )
-        .add( Projections.groupProperty("color") )
+        .add( Projections.avg( "weight" ) )
+        .add( Projections.max( "weight" ) )
+        .add( Projections.groupProperty( "color" ) )
     )
     .list();
 ----
@@ -366,17 +363,17 @@ Here are two different ways to do this:
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
-    .setProjection( Projections.alias( Projections.groupProperty("color"), "colr" ) )
-    .addOrder( Order.asc("colr") )
+List results = session.createCriteria( Cat.class )
+    .setProjection( Projections.alias( Projections.groupProperty( "color" ), "colr" ) )
+    .addOrder( Order.asc( "colr" ) )
     .list();
 ----
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
-    .setProjection( Projections.groupProperty("color").as("colr") )
-    .addOrder( Order.asc("colr") )
+List results = session.createCriteria( Cat.class )
+    .setProjection( Projections.groupProperty( "color" ).as( "colr" ) )
+    .addOrder( Order.asc( "colr" ) )
     .list();
 ----
 
@@ -385,28 +382,28 @@ As a shortcut, you can assign an alias when you add the projection to a projecti
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
+List results = session.createCriteria( Cat.class )
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount(), "catCountByColor" )
-        .add( Projections.avg("weight"), "avgWeight" )
-        .add( Projections.max("weight"), "maxWeight" )
-        .add( Projections.groupProperty("color"), "color" )
+        .add( Projections.avg( "weight" ), "avgWeight" )
+        .add( Projections.max( "weight" ), "maxWeight" )
+        .add( Projections.groupProperty( "color" ), "color" )
     )
-    .addOrder( Order.desc("catCountByColor") )
-    .addOrder( Order.desc("avgWeight") )
+    .addOrder( Order.desc( "catCountByColor" ) )
+    .addOrder( Order.desc( "avgWeight" ) )
     .list();
 ----
 
 [source,java]
 ----
-List results = session.createCriteria(Domestic.class, "cat")
-    .createAlias("kittens", "kit")
+List results = session.createCriteria( Domestic.class, "cat" )
+    .createAlias( "kittens", "kit" )
     .setProjection( Projections.projectionList()
-        .add( Projections.property("cat.name"), "catName" )
-        .add( Projections.property("kit.name"), "kitName" )
+        .add( Projections.property( "cat.name" ), "catName" )
+        .add( Projections.property( "kit.name" ), "kitName" )
     )
-    .addOrder( Order.asc("catName") )
-    .addOrder( Order.asc("kitName") )
+    .addOrder( Order.asc( "catName" ) )
+    .addOrder( Order.asc( "kitName" ) )
     .list();
 ----
 
@@ -414,23 +411,23 @@ You can also use `Property.forName()` to express projections:
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
-    .setProjection( Property.forName("name") )
-    .add( Property.forName("color").eq(Color.BLACK) )
+List results = session.createCriteria( Cat.class )
+    .setProjection( Property.forName( "name" ) )
+    .add( Property.forName( "color" ).eq( Color.BLACK ) )
     .list();
 ----
 
 [source,java]
 ----
-List results = session.createCriteria(Cat.class)
-    .setProjection( Projections.projectionList()
-        .add( Projections.rowCount().as("catCountByColor") )
-        .add( Property.forName("weight").avg().as("avgWeight") )
-        .add( Property.forName("weight").max().as("maxWeight") )
-        .add( Property.forName("color").group().as("color" )
+List results = session.createCriteria( Cat.class )
+    .setProjection(Projections.projectionList()
+        .add( Projections.rowCount().as( "catCountByColor" ) )
+        .add( Property.forName( "weight" ).avg().as( "avgWeight" ) )
+        .add( Property.forName( "weight" ).max().as( "maxWeight" ) )
+        .add( Property.forName( "color" ).group().as( "color" ) )
     )
-    .addOrder( Order.desc("catCountByColor") )
-    .addOrder( Order.desc("avgWeight") )
+    .addOrder( Order.desc( "catCountByColor" ) )
+    .addOrder( Order.desc( "avgWeight" ) )
     .list();
 ----
 
@@ -441,12 +438,12 @@ The `DetachedCriteria` class allows you to create a query outside the scope of a
 
 [source,java]
 ----
-DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
-    .add( Property.forName("sex").eq('F') );
+DetachedCriteria query = DetachedCriteria.forClass( Cat.class )
+    .add( Property.forName( "sex" ).eq( 'F' ) );
 
 Session session = ....;
 Transaction txn = session.beginTransaction();
-List results = query.getExecutableCriteria(session).setMaxResults(100).list();
+List results = query.getExecutableCriteria( session ).setMaxResults( 100 ).list();
 txn.commit();
 session.close();
 ----
@@ -456,19 +453,19 @@ A `DetachedCriteria` can also be used to express a subquery.
 
 [source,java]
 ----
-DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
-    .setProjection( Property.forName("weight").avg() );
-session.createCriteria(Cat.class)
-    .add( Property.forName("weight").gt(avgWeight) )
+DetachedCriteria avgWeight = DetachedCriteria.forClass( Cat.class )
+    .setProjection( Property.forName( "weight" ).avg() );
+session.createCriteria( Cat.class )
+    .add( Property.forName( "weight" ).gt( avgWeight ) )
     .list();
 ----
 
 [source,java]
 ----
-DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
-    .setProjection( Property.forName("weight") );
-session.createCriteria(Cat.class)
-    .add( Subqueries.geAll("weight", weights) )
+DetachedCriteria weights = DetachedCriteria.forClass( Cat.class )
+    .setProjection( Property.forName( "weight" ) );
+session.createCriteria( Cat.class )
+    .add( Subqueries.geAll( "weight", weights ) )
     .list();
 ----
 
@@ -476,11 +473,11 @@ Correlated subqueries are also possible:
 
 [source,java]
 ----
-DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
-    .setProjection( Property.forName("weight").avg() )
-    .add( Property.forName("cat2.sex").eqProperty("cat.sex") );
-session.createCriteria(Cat.class, "cat")
-    .add( Property.forName("weight").gt(avgWeightForSex) )
+DetachedCriteria avgWeightForSex = DetachedCriteria.forClass( Cat.class, "cat2" )
+    .setProjection( Property.forName( "weight" ).avg() )
+    .add( Property.forName( "cat2.sex" ).eqProperty( "cat.sex" ) );
+session.createCriteria( Cat.class, "cat" )
+    .add( Property.forName( "weight" ).gt( avgWeightForSex ) )
     .list();
 ----
 Example of multi-column restriction based on a subquery:
@@ -488,9 +485,12 @@ Example of multi-column restriction based on a subquery:
 [source,java]
 ----
 DetachedCriteria sizeQuery = DetachedCriteria.forClass( Man.class )
-    .setProjection( Projections.projectionList().add( Projections.property( "weight" ) )
-                                                .add( Projections.property( "height" ) ) )
+    .setProjection( Projections.projectionList()
+        .add( Projections.property( "weight" ) )
+        .add( Projections.property( "height" ) )
+    )
     .add( Restrictions.eq( "name", "John" ) );
+
 session.createCriteria( Woman.class )
     .add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
     .list();
@@ -527,10 +527,11 @@ Once you have enabled the Hibernate query cache, the `Restrictions.naturalId()` 
 
 [source,java]
 ----
-session.createCriteria(User.class)
+session.createCriteria( User.class )
     .add( Restrictions.naturalId()
-        .set("name", "gavin")
-        .set("org", "hb")
-    ).setCacheable(true)
+        .set( "name", "gavin" )
+        .set( "org", "hb" )
+    )
+    .setCacheable( true )
     .uniqueResult();
 ----

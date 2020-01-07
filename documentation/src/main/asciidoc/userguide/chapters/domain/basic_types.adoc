@@ -90,7 +90,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 
 [NOTE]
 ====
-To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
+To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use an `org.hibernate.spatial.SpatialDialect` implementation.
 
 See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more details.
 ====
@@ -150,18 +150,18 @@ Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract
 The `@Basic` annotation defines 2 attributes.
 
 `optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-JPA defines this as "a hint", which essentially means that it effect is specifically required.
+JPA defines this as "a hint", which essentially means that its effect is specifically required.
 As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
 JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
 
 [[basic-column-annotation]]
 ==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and columns.
-For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming>>.
+For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
 If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.
@@ -187,7 +187,7 @@ But looking at the basic type mappings from the previous examples,
 how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
 or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
-The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
+The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.
 
 We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
 But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.
@@ -985,7 +985,7 @@ Note that this can cause difficulty as the driver chooses to map many different 
 ==== UUID as identifier
 
 Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
-For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
+For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifiers_>>.
 
 [[basic-datetime]]
 ==== Mapping Date/Time Values

@@ -20,8 +20,8 @@ import org.jboss.logging.Logger;
  */
 //tag::basic-custom-type-BitSetUserType-example[]
 public class BitSetUserType implements UserType {
-
-	public static final BitSetUserType INSTANCE = new BitSetUserType();
+    
+    public static final BitSetUserType INSTANCE = new BitSetUserType();
 
     private static final Logger log = Logger.getLogger( BitSetUserType.class );
 
@@ -37,13 +37,13 @@ public class BitSetUserType implements UserType {
 
     @Override
     public boolean equals(Object x, Object y)
-			throws HibernateException {
+	        throws HibernateException {
         return Objects.equals( x, y );
     }
 
     @Override
     public int hashCode(Object x)
-			throws HibernateException {
+	        throws HibernateException {
         return Objects.hashCode( x );
     }
 
@@ -75,7 +75,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public Object deepCopy(Object value)
-			throws HibernateException {
+	        throws HibernateException {
         return value == null ? null :
             BitSet.valueOf( BitSet.class.cast( value ).toLongArray() );
     }
@@ -87,19 +87,19 @@ public class BitSetUserType implements UserType {
 
     @Override
     public Serializable disassemble(Object value)
-			throws HibernateException {
+	        throws HibernateException {
         return (BitSet) deepCopy( value );
     }
 
     @Override
     public Object assemble(Serializable cached, Object owner)
-			throws HibernateException {
+	        throws HibernateException {
         return deepCopy( cached );
     }
 
     @Override
     public Object replace(Object original, Object target, Object owner)
-			throws HibernateException {
+	        throws HibernateException {
         return deepCopy( original );
     }
 }

@@ -1,5 +1,6 @@
 var versions = {
     'current' : '/current/userguide/html_single/Hibernate_User_Guide.html',
+    '5.4' : '/5.4/userguide/html_single/Hibernate_User_Guide.html',
     '5.2' : '/5.2/userguide/html_single/Hibernate_User_Guide.html',
     '5.1' : '/5.1/userguide/html_single/Hibernate_User_Guide.html',
     '5.0' : '/5.0/userguide/html_single/Hibernate_User_Guide.html',

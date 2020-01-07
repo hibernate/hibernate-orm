@@ -56,7 +56,7 @@ public class AcmeCorpPhysicalNamingStrategy implements PhysicalNamingStrategy {
 	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
 		final LinkedList<String> parts = splitAndReplace( name.getText() );
 		// Acme Corp says all sequences should end with _seq
-		if ( !"seq".equalsIgnoreCase( parts.getLast() ) ) {
+		if ( ! parts.isEmpty() && !"seq".equalsIgnoreCase( parts.getLast() ) ) {
 			parts.add( "seq" );
 		}
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier(
@@ -84,8 +84,8 @@ public class AcmeCorpPhysicalNamingStrategy implements PhysicalNamingStrategy {
 	private LinkedList<String> splitAndReplace(String name) {
 		LinkedList<String> result = new LinkedList<>();
 		for ( String part : StringUtils.splitByCharacterTypeCamelCase( name ) ) {
-			if ( part == null || part.trim().isEmpty() ) {
-				// skip null and space
+			if ( StringUtils.isBlank( part ) ) {
+				// skip space
 				continue;
 			}
 			part = applyAbbreviationReplacement( part );
@@ -95,24 +95,10 @@ public class AcmeCorpPhysicalNamingStrategy implements PhysicalNamingStrategy {
 	}
 
 	private String applyAbbreviationReplacement(String word) {
-		if ( ABBREVIATIONS.containsKey( word ) ) {
-			return ABBREVIATIONS.get( word );
-		}
-
-		return word;
+		return ABBREVIATIONS.getOrDefault(word, word);
 	}
 
 	private String join(List<String> parts) {
-		boolean firstPass = true;
-		String separator = "";
-		StringBuilder joined = new StringBuilder();
-		for ( String part : parts ) {
-			joined.append( separator ).append( part );
-			if ( firstPass ) {
-				firstPass = false;
-				separator = "_";
-			}
-		}
-		return joined.toString();
+		return StringUtils.join(parts, '_');
 	}
 }

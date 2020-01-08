@@ -29,7 +29,6 @@ import org.hibernate.tool.internal.reveng.ForeignKeyProcessor;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.IndexProcessor;
 import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
-import org.hibernate.tool.internal.reveng.TableProcessor;
 
 public class DatabaseReader {
 
@@ -82,11 +81,11 @@ public class DatabaseReader {
 			List<SchemaSelection> schemaSelectors = revengStrategy.getSchemaSelections();
 			List<Table> foundTables = new ArrayList<Table>();
 			if(schemaSelectors==null) {
-				foundTables.addAll(TableProcessor.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, new SchemaSelection(catalog, schema), hasIndices, progress));
+				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, new SchemaSelection(catalog, schema), hasIndices, progress));
 			} else {
 				for (Iterator<SchemaSelection> iter = schemaSelectors.iterator(); iter.hasNext();) {
 					SchemaSelection selection = iter.next();
-					foundTables.addAll(TableProcessor.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, selection, hasIndices, progress));
+					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, selection, hasIndices, progress));
 				}
 			}
 			

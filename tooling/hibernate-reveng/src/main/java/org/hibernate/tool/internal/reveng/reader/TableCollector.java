@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.reader;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,9 +18,9 @@ import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.jboss.logging.Logger;
 
-public class TableProcessor {
+public class TableCollector {
 
-	private static final Logger log = Logger.getLogger(TableProcessor.class);
+	private static final Logger log = Logger.getLogger(TableCollector.class);
 
 	public static Collection<Table> processTables(
 			MetaDataDialect metaDataDialect, 

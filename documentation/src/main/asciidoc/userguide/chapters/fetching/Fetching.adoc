@@ -206,10 +206,6 @@ include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fet
 
 [NOTE]
 ====
-Although the JPA standard specifies that you can override an EAGER fetching association at runtime using the `javax.persistence.fetchgraph` hint,
-currently, Hibernate does not implement this feature, so EAGER associations cannot be fetched lazily.
-For more info, check out the https://hibernate.atlassian.net/browse/HHH-8776[HHH-8776] Jira issue.
-
 When executing a JPQL query, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly,
 which can lead to N+1 query issues.
 

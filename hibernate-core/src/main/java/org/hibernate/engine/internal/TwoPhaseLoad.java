@@ -7,6 +7,7 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -15,6 +16,7 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.EntityEntry;
@@ -33,6 +35,8 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -64,7 +68,7 @@ public final class TwoPhaseLoad {
 	 *
 	 * Add the "hydrated state" (an array) of an uninitialized entity to the session. We don't try
 	 * to resolve any associations yet, because there might be other entities waiting to be
-	 * read from the JDBC result set we are currently processing
+	 * read from the JDBC result set we are currently processing.
 	 *
 	 * @param persister The persister for the hydrated entity
 	 * @param id The entity identifier
@@ -105,7 +109,7 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * @deprecated This method will be removed. Use {@link #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable)} instead.
+	 * @deprecated This method will be removed. Use {@link #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable, FetchSource)} instead.
 	 *
 	 * @param entity The entity being loaded
 	 * @param readOnly Is the entity being loaded as read-only
@@ -129,35 +133,56 @@ public final class TwoPhaseLoad {
 			.getService( EventListenerRegistry.class )
 			.getEventListenerGroup( EventType.PRE_LOAD );
 		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
-		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, listeners );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, listeners, null );
 	}
 
 	/**
-	 * Perform the second step of 2-phase load. Fully initialize the entity
-	 * instance.
-	 * <p/>
-	 * After processing a JDBC result set, we "resolve" all the associations
-	 * between the entities which were instantiated and had their state
-	 * "hydrated" into an array
+	 * @deprecated This method will be removed. Use {@link #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable, FetchSource)} instead.
 	 *
 	 * @param entity The entity being loaded
 	 * @param readOnly Is the entity being loaded as read-only
 	 * @param session The Session
 	 * @param preLoadEvent The (re-used) pre-load event
-	 * @param preLoadEventListeners the pre-load event listeners
+	 * @param preLoadEventListeners The pre-load event listeners
 	 */
+	@Deprecated
 	public static void initializeEntity(
 		final Object entity,
 		final boolean readOnly,
 		final SharedSessionContractImplementor session,
 		final PreLoadEvent preLoadEvent,
 		final Iterable<PreLoadEventListener> preLoadEventListeners) {
+		initializeEntity( entity, readOnly, session, preLoadEvent, preLoadEventListeners, null );
+	}
+	
+	/**
+	 * Perform the second step of 2-phase load. Fully initialize the entity
+	 * instance.
+	 * <p/>
+	 * After processing a JDBC result set, we "resolve" all the associations
+	 * between the entities which were instantiated and had their state
+	 * "hydrated" into an array.
+	 *
+	 * @param entity The entity being loaded
+	 * @param readOnly Is the entity being loaded as read-only
+	 * @param session The Session
+	 * @param preLoadEvent The (re-used) pre-load event
+	 * @param preLoadEventListeners The pre-load event listeners
+	 * @param fetchSource The fetch source of entity; can be null
+	 */
+	public static void initializeEntity(
+			final Object entity,
+			final boolean readOnly,
+			final SharedSessionContractImplementor session,
+			final PreLoadEvent preLoadEvent,
+			final Iterable<PreLoadEventListener> preLoadEventListeners,
+			final FetchSource fetchSource) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
-			throw new AssertionFailure( "possible non-threadsafe access to the session" );
+			throw new AssertionFailure( "possible non-thread-safe access to the session" );
 		}
-		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners, fetchSource );
 	}
 
 	private static void doInitializeEntity(
@@ -166,7 +191,8 @@ public final class TwoPhaseLoad {
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
+			final Iterable<PreLoadEventListener> preLoadEventListeners,
+			final FetchSource fetchSource) throws HibernateException {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
@@ -184,6 +210,17 @@ public final class TwoPhaseLoad {
 		String entityName = persister.getEntityName();
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
+		
+		Map<String, Boolean> eagerLoadByPropertyName = null;
+		if ( fetchSource != null && fetchSource.getFetches() != null ) {
+			eagerLoadByPropertyName = CollectionHelper.mapOfSize( fetchSource.getFetches().length );
+			for ( org.hibernate.loader.plan.spi.Fetch fetch : fetchSource.getFetches() ) {
+				String propertyName = fetch.getPropertyPath().getProperty();
+				boolean eagerLoading = FetchTiming.IMMEDIATE.equals( fetch.getFetchStrategy().getTiming() );
+				eagerLoadByPropertyName.put( propertyName, eagerLoading );
+			}
+		}
+		
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
 			if ( debugEnabled ) {
@@ -207,8 +244,9 @@ public final class TwoPhaseLoad {
 					// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
-					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
+					// so do not assign the resolved, uninitialized PersistentCollection back to hydratedState[i].
+					Boolean defaultEager = eagerLoadByPropertyName == null ? null : eagerLoadByPropertyName.get( propertyNames[i] );
+					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], defaultEager, debugEnabled );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
 			}
@@ -222,7 +260,8 @@ public final class TwoPhaseLoad {
 				}
 
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
+				Boolean defaultEager = eagerLoadByPropertyName == null ? null : eagerLoadByPropertyName.get( propertyNames[i] );
+				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], defaultEager, debugEnabled );
 				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 			else {
@@ -367,7 +406,7 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overriden by anything.
+	 * Check if eager of the association is overridden by anything.
 	 *
 	 * @param session session
 	 * @param entityName entity name
@@ -380,6 +419,7 @@ public final class TwoPhaseLoad {
 			final String entityName,
 			final String associationName,
 			final Type type,
+			final Boolean defaultValue,
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
 		if ( type.isCollectionType() || type.isAssociationType()  ) {
@@ -396,8 +436,10 @@ public final class TwoPhaseLoad {
 					);
 				}
 			}
-
-			return overridingEager;
+			if ( overridingEager != null ) {
+				return overridingEager;
+			}
+			return defaultValue;
 		}
 		return null;
 	}

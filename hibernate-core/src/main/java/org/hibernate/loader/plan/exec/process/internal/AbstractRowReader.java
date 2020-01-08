@@ -257,7 +257,8 @@ public abstract class AbstractRowReader implements RowReader {
 					context.isReadOnly(),
 					session,
 					preLoadEvent,
-					listeners
+					listeners,
+					registration.getEntityReference()
 			);
 		}
 	}

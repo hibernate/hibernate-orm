@@ -1176,7 +1176,7 @@ public abstract class Loader {
 					.listeners();
 
 				for ( Object hydratedObject : hydratedObjects ) {
-					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners, null );
 				}
 
 			}

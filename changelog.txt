@@ -3,6 +3,21 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.15.Final (January 7th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31809/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13433] - EntityManager.find() should only check for roll-back-only condition if there is an active JTA transaction, otherwise ORM should throw convert( e, lockOptions )
+    * [HHH-13651] - NPE on flushing when ElementCollection field contains null element
+    * [HHH-13675] - Optimize PersistentBag.groupByEqualityHash()
+    * [HHH-13737] - Add debug logging and a test case for HHH-13433
+
+** Improvement
+    * [HHH-12858] - integration overrides during JPA bootstrap ought to override all logically related settings
+    * [HHH-13432] - Have EntityManagerFactory expose persistence.xml `jta-data-source` element as a `javax.persistence.nonJtaDataSource` property
+
 Changes in 5.3.14.Final (November 7th, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

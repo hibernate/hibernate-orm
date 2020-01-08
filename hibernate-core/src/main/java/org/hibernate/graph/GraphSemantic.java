@@ -16,11 +16,8 @@ public enum GraphSemantic {
 	/**
 	 * Indicates a "fetch graph" EntityGraph.  Attributes explicitly specified
 	 * as AttributeNodes are treated as FetchType.EAGER (via join fetch or
-	 * subsequent select).
-	 * <p/>
-	 * Note: Currently, attributes that are not specified are treated as
-	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
-	 * in metadata, rather than forcing FetchType.LAZY.
+	 * subsequent select). Attributes that are not specified are treated as
+	 * FetchType.LAZY invariably.
 	 */
 	FETCH( "javax.persistence.fetchgraph" ),
 
@@ -29,7 +26,7 @@ public enum GraphSemantic {
 	 * as AttributeNodes are treated as FetchType.EAGER (via join fetch or
 	 * subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
-	 * in metadata
+	 * in metadata.
 	 */
 	LOAD( "javax.persistence.loadgraph" );
 

@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.test.graphs.queryhint;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,17 +33,13 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Brett Meyer
+ * @author Nathan Xu
  */
 public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
-	
-	// TODO: Currently, "loadgraph" and "fetchgraph" operate identically in JPQL.  The spec states that "fetchgraph"
-	// shall use LAZY for non-specified attributes, ignoring their metadata.  Changes to ToOne select vs. join,
-	// allowing queries to force laziness, etc. will require changes here and impl logic.
 	
 	@Test
 	public void testLoadGraph() {
@@ -111,6 +106,72 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		assertTrue(foundManager);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-8776")
+	public void testFetchGraph() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
+		entityGraph.addAttributeNodes( "location" );
+		entityGraph.addAttributeNodes( "markets" );
+		Query query = entityManager.createQuery( "from " + Company.class.getName() );
+		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		Company company = (Company) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertFalse( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+
+		query = entityManager.createQuery( "from " + Company.class.getName() );
+		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		company = (Company) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertEquals( 12345, company.location.zip );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		boolean foundManager = false;
+		Iterator<Employee> employeeItr = company.employees.iterator();
+		while (employeeItr.hasNext()) {
+			Employee employee = employeeItr.next();
+			assertTrue( Hibernate.isInitialized( employee.managers ) );
+			assertTrue( Hibernate.isInitialized( employee.friends ) );
+			// test 1 more level
+			Iterator<Manager> managerItr =  employee.managers.iterator();
+			while (managerItr.hasNext()) {
+				foundManager = true;
+				Manager manager = managerItr.next();
+				assertTrue( Hibernate.isInitialized( manager.managers ) );
+				assertTrue( Hibernate.isInitialized( manager.friends ) );
+			}
+		}
+		assertTrue(foundManager);
+	}
+	
 	@Test
 	@TestForIssue( jiraKey = "HHH-9457")
 	public void testLoadGraphOrderByWithImplicitJoin() {

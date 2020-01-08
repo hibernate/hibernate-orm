@@ -272,7 +272,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 				&& currentGraph.findAttributeNode( attributeDefinition.getName() ) != null ) {
 			currentSource().buildCollectionAttributeFetch( attributeDefinition, fetchStrategy );
 		}
-		
+
 		super.foundCircularAssociation( attributeDefinition );
 	}
 }

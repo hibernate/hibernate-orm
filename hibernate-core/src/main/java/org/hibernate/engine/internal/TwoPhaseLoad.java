@@ -17,6 +17,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -32,6 +33,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -367,7 +369,7 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overriden by anything.
+	 * Check if eager of the association is overridden by anything.
 	 *
 	 * @param session session
 	 * @param entityName entity name
@@ -383,11 +385,11 @@ public final class TwoPhaseLoad {
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
 		if ( type.isCollectionType() || type.isAssociationType()  ) {
-			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
+			Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
 
-			//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
-			if ( isDebugEnabled ) {
-				if ( overridingEager != null ) {
+			if ( overridingEager != null ) {
+				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+				if ( isDebugEnabled ) {
 					LOG.debugf(
 							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
 							entityName,
@@ -395,9 +397,24 @@ public final class TwoPhaseLoad {
 							overridingEager
 					);
 				}
+				return overridingEager;
 			}
 
-			return overridingEager;
+			overridingEager = isEagerFetchGraph( session, entityName, associationName );
+
+			if ( overridingEager != null ) {
+				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+				if ( isDebugEnabled ) {
+					LOG.debugf(
+							"Overriding eager fetching using active fetch graph. EntityName: %s, associationName: %s, eager fetching: %s",
+							entityName,
+							associationName,
+							overridingEager
+					);
+				}
+
+				return overridingEager;
+			}
 		}
 		return null;
 	}
@@ -417,6 +434,17 @@ public final class TwoPhaseLoad {
 					return true;
 				}
 			}
+		}
+
+		return null;
+	}
+
+	private static Boolean isEagerFetchGraph(SharedSessionContractImplementor session, String entityName, String associationName) {
+		LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+
+		EffectiveEntityGraph entityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		if ( entityGraph.getGraph() != null && entityGraph.getSemantic() == GraphSemantic.FETCH  && entityGraph.getGraph().appliesTo( entityName ) ) {
+			return entityGraph.getGraph().findAttributeNode( associationName ) != null;
 		}
 
 		return null;

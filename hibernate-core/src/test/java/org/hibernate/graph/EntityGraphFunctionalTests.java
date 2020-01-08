@@ -24,14 +24,15 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -50,7 +51,7 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 					final Issue issue = session.find(
 							Issue.class,
 							1,
-							Collections.singletonMap( GraphSemantic.FETCH.getJpaHintName(), graph )
+							Collections.singletonMap( GraphSemantic.LOAD.getJpaHintName(), graph )
 					);
 
 					assertTrue( Hibernate.isInitialized( issue ) );
@@ -59,6 +60,30 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 					assertTrue( Hibernate.isInitialized( issue.getAssignee() ) );
 
 					assertFalse( Hibernate.isInitialized( issue.getAssignee().getAssignedIssues() ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8776" )
+	public void testFetchGraphSemanticDefaultLazy() {
+
+		inTransaction(
+				entityManagerFactory(),
+				session -> {
+					final RootGraph<Issue> graph = GraphParser.parse( Issue.class, "comments, reporter", session );
+
+					final Issue issue = session.find(
+							Issue.class,
+							2, // lightningSand is chosen for its reporter and assignee are different
+							Collections.singletonMap( GraphSemantic.FETCH.getJpaHintName(), graph )
+					);
+
+					assertThat( Hibernate.isInitialized( issue ), is( true ) );
+					assertThat( Hibernate.isInitialized( issue.comments ), is( true ) );
+					assertThat( Hibernate.isInitialized( issue.reporter ), is( true ) );
+					assertThat( "FETCH graph semantic dictates unspecified association ('assignee') is supposed to be loaded lazily",
+							Hibernate.isInitialized( issue.assignee ), is( false ) );
 				}
 		);
 	}

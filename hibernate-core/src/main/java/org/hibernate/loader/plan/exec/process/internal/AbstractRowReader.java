@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.internal.TwoPhaseLoad;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -58,11 +59,8 @@ public abstract class AbstractRowReader implements RowReader {
 
 	public AbstractRowReader(ReaderCollector readerCollector) {
 		if ( CollectionHelper.isNotEmpty( readerCollector.getEntityReferenceInitializers() ) ) {
-			entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>(
-					readerCollector.getEntityReferenceInitializers()
-			);
-			entityInitializerByEntityReference =
-					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
+			entityReferenceInitializers = new ArrayList<>( readerCollector.getEntityReferenceInitializers() );
+			entityInitializerByEntityReference = new HashMap<>( entityReferenceInitializers.size() );
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityInitializerByEntityReference.put(
 						entityReferenceInitializer.getEntityReference(),
@@ -71,16 +69,16 @@ public abstract class AbstractRowReader implements RowReader {
 			}
 		}
 		else {
-			entityReferenceInitializers = Collections.<EntityReferenceInitializer>emptyList();
-			entityInitializerByEntityReference = Collections.<EntityReference,EntityReferenceInitializer>emptyMap();
+			entityReferenceInitializers = Collections.emptyList();
+			entityInitializerByEntityReference = Collections.emptyMap();
 		}
 		this.arrayReferenceInitializers = CollectionHelper.isNotEmpty( readerCollector.getArrayReferenceInitializers() )
-				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getArrayReferenceInitializers() )
-				: Collections.<CollectionReferenceInitializer>emptyList();
+				? new ArrayList<>( readerCollector.getArrayReferenceInitializers() )
+				: Collections.emptyList();
 		this.collectionReferenceInitializers =
 				CollectionHelper.isNotEmpty ( readerCollector.getNonArrayCollectionReferenceInitializers() )
-				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getNonArrayCollectionReferenceInitializers() )
-				: Collections.<CollectionReferenceInitializer>emptyList();
+				? new ArrayList<>( readerCollector.getNonArrayCollectionReferenceInitializers() )
+				: Collections.emptyList();
 	}
 
 	protected abstract Object readLogicalRow(ResultSet resultSet, ResultSetProcessingContextImpl context)
@@ -112,7 +110,6 @@ public abstract class AbstractRowReader implements RowReader {
 
 
 		// 3) read the logical row
-
 		Object logicalRow = readLogicalRow( resultSet, context );
 
 
@@ -250,15 +247,21 @@ public abstract class AbstractRowReader implements RowReader {
 			.getService( EventListenerRegistry.class )
 			.getEventListenerGroup( EventType.PRE_LOAD )
 			.listeners();
-
+		
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
+			
+			final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( registration.getInstance().getClass() );
+			
+			// bytecode enhancement has special logic and its fetchSource won't apply in 'two-phase loading' (see HHH-11147)
+			FetchSource fetchSource = enhancedForLazyLoading ? null : registration.getEntityReference();
+			
 			TwoPhaseLoad.initializeEntity(
 					registration.getInstance(),
 					context.isReadOnly(),
 					session,
 					preLoadEvent,
 					listeners,
-					registration.getEntityReference()
+					fetchSource
 			);
 		}
 	}

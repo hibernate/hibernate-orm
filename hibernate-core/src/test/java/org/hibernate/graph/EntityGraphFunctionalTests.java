@@ -31,9 +31,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Steve Ebersole
@@ -79,10 +80,10 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 							Collections.singletonMap( GraphSemantic.FETCH.getJpaHintName(), graph )
 					);
 					
-					assertTrue( Hibernate.isInitialized( issue ) );
-					assertTrue( Hibernate.isInitialized( issue.comments ) );
-					assertTrue( issue.reporter instanceof HibernateProxy );
-					assertTrue( issue.assignee instanceof HibernateProxy );
+					assertThat( Hibernate.isInitialized( issue ), is( true ) );
+					assertThat( Hibernate.isInitialized( issue.comments ), is( true ) );
+					assertThat( issue.reporter, instanceOf( HibernateProxy.class ));
+					assertThat( issue.assignee, instanceOf( HibernateProxy.class ));
 				}
 		);
 	}

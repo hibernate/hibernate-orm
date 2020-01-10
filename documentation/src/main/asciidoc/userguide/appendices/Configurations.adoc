@@ -618,6 +618,13 @@ In reality, you shouldn't probably enable this setting anyway.
 `*hibernate.show_sql*` (e.g. `true` or `false` (default value))::
 Write all SQL statements to the console. This is an alternative to setting the log category `org.hibernate.SQL` to debug.
 
+`*hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS*` (e.g. `0` (default value))::
+If specified value (long type) is above `0` (default value), write all slow SQL statements
+(which take longer than the specified milliseconds to finish executing) to the console
+(an alternative to setting the log category `org.hibernate.SQL_SLOW` to info).
++
+Disabled by default. Set to positive value (in unit of milliseconds) to enable.
+
 `*hibernate.format_sql*` (e.g. `true` or `false` (default value))::
 Pretty-print the SQL in the log and console.
 

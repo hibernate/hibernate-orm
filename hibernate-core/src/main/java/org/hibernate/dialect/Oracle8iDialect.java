@@ -257,6 +257,7 @@ public class Oracle8iDialect extends Dialect {
 		registerFunction( "next_day", new StandardSQLFunction("next_day", StandardBasicTypes.DATE) );
 
 		registerFunction( "str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
+		registerFunction( "regexp_replace", new StandardSQLFunction( "regexp_replace", StandardBasicTypes.STRING ) );
 	}
 
 	protected void registerDefaultProperties() {

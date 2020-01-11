@@ -61,13 +61,13 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         registerConnectionProvider( FRONT_END_TENANT );
         registerConnectionProvider( BACK_END_TENANT );
 
-        Map<String, Object> settings = new HashMap<>(  );
+        Map<String, Object> settings = new HashMap<>();
 
         settings.put( AvailableSettings.MULTI_TENANT, multiTenancyStrategy() );
         settings.put( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
             new ConfigurableMultiTenantConnectionProvider( connectionProviderMap ) );
 
-        sessionFactory = sessionFactory(settings);
+        sessionFactory = sessionFactory( settings );
     }
     //end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
@@ -100,14 +100,14 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
 		//tag::multitenacy-multitenacy-hibernate-same-entity-example[]
         doInSession( FRONT_END_TENANT, session -> {
-            Person person = new Person(  );
+            Person person = new Person();
             person.setId( 1L );
             person.setName( "John Doe" );
             session.persist( person );
         } );
 
         doInSession( BACK_END_TENANT, session -> {
-            Person person = new Person(  );
+            Person person = new Person();
             person.setId( 1L );
             person.setName( "John Doe" );
             session.persist( person );
@@ -199,13 +199,13 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
                 .openSession();
             txn = session.getTransaction();
             txn.begin();
-            function.accept(session);
+            function.accept( session );
             txn.commit();
         } catch (Throwable e) {
             if ( txn != null ) txn.rollback();
             throw e;
         } finally {
-            if (session != null) {
+            if ( session != null ) {
                 session.close();
             }
         }

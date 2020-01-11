@@ -219,10 +219,8 @@ code{
     font-weight:400 !important;
     color:rgba(0,0,0,.9) !important
 }
-
-img[alt='Data Access Layers'] {
+.image img{
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 30%;
 }

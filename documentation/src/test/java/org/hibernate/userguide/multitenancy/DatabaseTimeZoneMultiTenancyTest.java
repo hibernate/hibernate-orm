@@ -140,12 +140,12 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
         doInSession( FRONT_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
-            .createNativeQuery(
-                "select p.created_on " +
-                "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
-            .getSingleResult();
+                .createNativeQuery(
+                    "select p.created_on " +
+                    "from Person p " +
+                    "where p.id = :personId" )
+                .setParameter( "personId", 1L )
+                .getSingleResult();
 
             assertEquals(
                 Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ),
@@ -155,12 +155,12 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
         doInSession( BACK_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
-            .createNativeQuery(
-                "select p.created_on " +
-                "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
-            .getSingleResult();
+                .createNativeQuery(
+                    "select p.created_on " +
+                    "from Person p " +
+                    "where p.id = :personId" )
+                .setParameter( "personId", 1L )
+                .getSingleResult();
 
             assertEquals(
                 Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ),
@@ -172,12 +172,12 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         //tag::multitenacy-hibernate-not-applying-timezone-configuration-example[]
         doInSession( FRONT_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
-            .createNativeQuery(
-                "select p.created_on " +
-                "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
-            .getSingleResult();
+                .createNativeQuery(
+                    "select p.created_on " +
+                    "from Person p " +
+                    "where p.id = :personId" )
+                .setParameter( "personId", 1L )
+                .getSingleResult();
 
             log.infof(
                 "The created_on timestamp value is: [%s]",

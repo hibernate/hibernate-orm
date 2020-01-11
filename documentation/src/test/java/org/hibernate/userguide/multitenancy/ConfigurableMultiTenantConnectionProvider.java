@@ -20,7 +20,7 @@ public class ConfigurableMultiTenantConnectionProvider
         extends AbstractMultiTenantConnectionProvider {
 
     private final Map<String, ConnectionProvider> connectionProviderMap =
-        new HashMap<>(  );
+        new HashMap<>();
 
     public ConfigurableMultiTenantConnectionProvider(
             Map<String, ConnectionProvider> connectionProviderMap) {

@@ -85,12 +85,12 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-hasChanged-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
-			.getResultList();
+				.get( entityManager )
+				.createQuery()
+				.forRevisionsOfEntity( Customer.class, false, true )
+				.add( AuditEntity.id().eq( 1L ) )
+				.add( AuditEntity.property( "lastName" ).hasChanged() )
+				.getResultList();
 			//end::envers-tracking-properties-changes-queries-hasChanged-example[]
 
 			assertEquals( 3, customers.size() );
@@ -99,13 +99,13 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
-			.add( AuditEntity.property( "firstName" ).hasNotChanged() )
-			.getResultList();
+				.get( entityManager )
+				.createQuery()
+				.forRevisionsOfEntity( Customer.class, false, true )
+				.add( AuditEntity.id().eq( 1L ) )
+				.add( AuditEntity.property( "lastName" ).hasChanged() )
+				.add( AuditEntity.property( "firstName" ).hasNotChanged() )
+				.getResultList();
 			//end::envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example[]
 
 			assertEquals( 1, customers.size() );
@@ -114,13 +114,13 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-at-revision-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forEntitiesModifiedAtRevision( Customer.class, 2 )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
-			.add( AuditEntity.property( "firstName" ).hasNotChanged() )
-			.getSingleResult();
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesModifiedAtRevision( Customer.class, 2 )
+				.add( AuditEntity.id().eq( 1L ) )
+				.add( AuditEntity.property( "lastName" ).hasChanged() )
+				.add( AuditEntity.property( "firstName" ).hasNotChanged() )
+				.getSingleResult();
 			//end::envers-tracking-properties-changes-queries-at-revision-example[]
 
 			assertNotNull( customer );

@@ -110,11 +110,11 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
                 assertEquals(
                     "org.hibernate.userguide.envers.EntityTypeChangeAuditTest$ApplicationCustomer",
                     AuditReaderFactory
-                    .get( entityManager )
-                    .getCrossTypeRevisionChangesReader()
-                    .findEntityTypes( 2 )
-                    .iterator().next()
-                    .getFirst()
+                        .get( entityManager )
+                        .getCrossTypeRevisionChangesReader()
+                        .findEntityTypes( 2 )
+                        .iterator().next()
+                        .getFirst()
                 );
                 //end::envers-tracking-modified-entities-queries-example2[]
             } );

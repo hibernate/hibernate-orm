@@ -46,7 +46,7 @@ There are other ways to specify Configuration information, including:
 
 == Migration
 
-Mapping Configuration methods to the corresponding methods in the new APIs..
+Mapping Configuration methods to the corresponding methods in the new APIs.
 
 |===
 |`Configuration#addFile`|`Configuration#addFile`

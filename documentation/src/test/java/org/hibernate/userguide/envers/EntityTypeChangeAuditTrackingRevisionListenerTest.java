@@ -237,16 +237,16 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 
 		@Override
 		public void entityChanged(Class entityClass,
-								  String entityName,
-								  Serializable entityId,
-								  RevisionType revisionType,
-								  Object revisionEntity ) {
+		                          String entityName,
+		                          Serializable entityId,
+		                          RevisionType revisionType, 
+		                          Object revisionEntity) {
 			String type = entityClass.getName();
 			( (CustomTrackingRevisionEntity) revisionEntity ).addModifiedEntityType( type );
 		}
 
 		@Override
-		public void newRevision( Object revisionEntity ) {
+		public void newRevision(Object revisionEntity) {
 		}
 	}
 	//end::envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example[]
@@ -266,8 +266,8 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 		private long customTimestamp;
 
 		@OneToMany(
-			mappedBy="revision",
-			cascade={
+			mappedBy = "revision",
+			cascade = {
 				CascadeType.PERSIST,
 				CascadeType.REMOVE
 			}
@@ -278,7 +278,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 			return modifiedEntityTypes;
 		}
 
-		public void addModifiedEntityType(String entityClassName ) {
+		public void addModifiedEntityType(String entityClassName) {
 			modifiedEntityTypes.add( new EntityType( this, entityClassName ) );
 		}
 	}

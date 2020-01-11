@@ -78,24 +78,24 @@ public class DefaultAuditTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-audited-rev1-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
-			.getSingleResult();
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
+				.getSingleResult();
 
-			assertEquals("Doe", customer.getLastName());
+			assertEquals( "Doe", customer.getLastName() );
 			//end::envers-audited-rev1-example[]
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-audited-rev2-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
-			.getSingleResult();
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
+				.getSingleResult();
 
-			assertEquals("Doe Jr.", customer.getLastName());
+			assertEquals( "Doe Jr.", customer.getLastName() );
 			//end::envers-audited-rev2-example[]
 		} );
 
@@ -103,12 +103,12 @@ public class DefaultAuditTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::envers-audited-rev3-example[]
 			try {
 				Customer customer = (Customer) AuditReaderFactory
-				.get( entityManager )
-				.createQuery()
-				.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
-				.getSingleResult();
+					.get( entityManager )
+					.createQuery()
+					.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
+					.getSingleResult();
 
-				fail("The Customer was deleted at this revision: " + revisions.get( 2 ));
+				fail( "The Customer was deleted at this revision: " + revisions.get( 2 ) );
 			}
 			catch (NoResultException expected) {
 			}
@@ -118,14 +118,15 @@ public class DefaultAuditTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::envers-audited-rev4-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
-			.createQuery()
-			.forEntitiesAtRevision(
-				Customer.class,
-				Customer.class.getName(),
-				revisions.get( 2 ),
-				true )
-			.getSingleResult();
+				.get( entityManager )
+				.createQuery()
+				.forEntitiesAtRevision(
+					Customer.class,
+					Customer.class.getName(),
+					revisions.get( 2 ),
+					true
+				)
+				.getSingleResult();
 
 			assertEquals( Long.valueOf( 1L ), customer.getId() );
 			assertNull( customer.getFirstName() );

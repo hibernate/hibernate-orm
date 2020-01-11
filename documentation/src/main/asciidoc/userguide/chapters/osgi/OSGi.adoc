@@ -16,9 +16,9 @@ Hibernate supports three types of configurations within OSGi.
 
 === hibernate-osgi
 
-Rather than embed OSGi capabilities into hibernate-core, and sub-modules, hibernate-osgi was created.
+Rather than embedding OSGi capabilities into hibernate-core, and sub-modules, hibernate-osgi was created.
 It's purposefully separated, isolating all OSGi dependencies.
-It provides an OSGi-specific `ClassLoader` (aggregates the container's `ClassLoader` with core and `EntityManager` `ClassLoader`s),
+It provides an OSGi-specific `ClassLoader` (aggregates the container's `ClassLoader` with core and `EntityManager` ``ClassLoader``s),
 JPA persistence provider, `SessionFactory`/`EntityManagerFactory` bootstrapping, entities/mappings scanner, and service management.
 
 === features.xml
@@ -26,14 +26,14 @@ JPA persistence provider, `SessionFactory`/`EntityManagerFactory` bootstrapping,
 Apache Karaf environments tend to make heavy use of its "features" concept, where a feature is a set of order-specific bundles focused on a concise capability.
 These features are typically defined in a `features.xml` file.
 Hibernate produces and releases its own `features.xml` that defines a core `hibernate-orm`, as well as additional features for optional functionality (caching, Envers, etc.).
-This is included in the binary distribution, as well as deployed to the JBoss Nexus repository (using the `org.hibernate` groupId and `hibernate-osgi` with the `karaf.xml` classifier).
+This is included in the binary distribution, as well as deployed to the JBoss Nexus repository (using the `org.hibernate` groupId and `hibernate-osgi` artifactId with the `karaf.xml` classifier).
 
 Note that our features are versioned using the same ORM artifact versions they wrap.
 Also, note that the features are heavily tested against Karaf 3.0.3 as a part of our PaxExam-based integration tests.
 However, they'll likely work on other versions as well.
 
 hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.
-In that case, please use `features.xm`l as a reference for necessary bundles to activate and their correct ordering.
+In that case, please use `features.xm` as a reference for necessary bundles to activate and their correct ordering.
 However, note that Karaf starts a number of bundles automatically, several of which would need to be installed manually on alternatives.
 
 === QuickStarts/Demos
@@ -90,7 +90,7 @@ That `DataSource` is then used by your `persistence.xml` persistence-unit. The f
 
 === Bundle Package Imports
 
-Your bundle's manifest will need to import, at a minimum,
+Your bundle's manifest will need to import, at a minimum:
 
 * `javax.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime).
@@ -120,9 +120,9 @@ Similar to any other JPA setup, your bundle must include a `persistence.xml` fil
 
 === Bundle Package Imports
 
-Your bundle's manifest will need to import, at a minimum,
+Your bundle's manifest will need to import, at a minimum:
 
-* javax.persistence
+* `javax.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime)
 * JDBC driver package (example: `org.h2`)
 * `org.osgi.framework`, necessary to discover the `EntityManagerFactory` (described below)
@@ -150,13 +150,13 @@ include::{sourcedir}/jpa/HibernateUtil.java[tag=osgi-discover-EntityManagerFacto
 [[osgi-unmanaged-native]]
 === Unmanaged Native
 
-Native Hibernate use is also supported. The client bundle is responsible for managing the `SessionFactory` and `Session`s.
+Native Hibernate use is also supported. The client bundle is responsible for managing the ``SessionFactory`` and ``Session``s.
 
 === Bundle Package Imports
 
-Your bundle's manifest will need to import, at a minimum,
+Your bundle's manifest will need to import, at a minimum:
 
-* javax.persistence
+* `javax.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime)
 * JDBC driver package (example: `org.h2`)
 * `org.osgi.framework`, necessary to discover the `SessionFactory` (described below)

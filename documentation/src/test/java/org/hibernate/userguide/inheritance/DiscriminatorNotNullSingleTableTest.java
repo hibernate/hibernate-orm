@@ -46,7 +46,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.unwrap( Session.class ).doWork( connection -> {
-				try(Statement statement = connection.createStatement()) {
+				try ( Statement statement = connection.createStatement() ) {
 					statement.executeUpdate( "ALTER TABLE Account ALTER COLUMN DTYPE SET NULL" );
 				}
 			} );
@@ -77,7 +77,7 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 			entityManager.persist( account );
 
 			entityManager.unwrap( Session.class ).doWork( connection -> {
-				try(Statement statement = connection.createStatement()) {
+				try ( Statement statement = connection.createStatement() ) {
 					statement.executeUpdate(
 						"insert into Account (DTYPE, active, balance, interestRate, owner, id) " +
 						"values ('Other', true, 25, 0.5, 'Vlad', 4)"
@@ -91,12 +91,12 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 			//tag::entity-inheritance-single-table-discriminator-value-persist-example[]
 
 			Map<Long, Account> accounts = entityManager.createQuery(
-				"select a from Account a", Account.class )
-			.getResultList()
-			.stream()
-			.collect( Collectors.toMap( Account::getId, Function.identity()));
+					"select a from Account a", Account.class )
+				.getResultList()
+				.stream()
+				.collect( Collectors.toMap( Account::getId, Function.identity() ) );
 
-			assertEquals(4, accounts.size());
+			assertEquals( 4, accounts.size() );
 			assertEquals( DebitAccount.class, accounts.get( 1L ).getClass() );
 			assertEquals( CreditAccount.class, accounts.get( 2L ).getClass() );
 			assertEquals( Account.class, accounts.get( 3L ).getClass() );

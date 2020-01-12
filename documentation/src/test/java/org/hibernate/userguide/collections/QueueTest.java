@@ -54,7 +54,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = entityManager.find( Person.class, 1L );
 			Queue<Phone> phones = person.getPhones();
 			Phone head = phones.peek();
-			assertSame(head, phones.poll());
+			assertSame( head, phones.poll() );
 			assertEquals( 1, phones.size() );
 			//end::collections-custom-collection-example[]
 		} );

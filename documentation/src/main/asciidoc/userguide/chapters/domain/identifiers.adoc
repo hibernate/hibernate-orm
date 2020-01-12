@@ -84,7 +84,7 @@ Identifier value generations strategies are discussed in detail in the <<identif
 ==== Composite identifiers
 
 Composite identifiers correspond to one or more persistent attributes.
-Here are the rules governing composite identifiers, as defined by the JPA specification.
+Here are the rules governing composite identifiers, as defined by the JPA specification:
 
 * The composite identifier must be represented by a "primary key class".
 The primary key class may be defined using the `javax.persistence.EmbeddedId` annotation (see <<identifiers-composite-aggregated>>),
@@ -101,7 +101,7 @@ Hibernate does allow composite identifiers to be defined without a "primary key 
 ====
 
 The attributes making up the composition can be either basic, composite, `@ManyToOne`.
-Note especially that collections and one-to-ones are never appropriate.
+Note especially that collection and one-to-one are never appropriate.
 
 [[identifiers-composite-aggregated]]
 ==== Composite identifiers with `@EmbeddedId`
@@ -301,15 +301,15 @@ The rest of the discussion here assumes this setting is enabled (`true`).
 In Hibernate 5.3, Hibernate attempts to delay the insert of entities if the flush-mode does not equal `AUTO`.
 This was slightly problematic for entities that used `IDENTITY` or `SEQUENCE` generated identifiers that were
 also involved in some form of association with another entity in the same transaction.
-+
+
 In Hibernate 5.4, Hibernate attempts to remedy the problem using an algorithm to decide if the insert should
 be delayed or if it requires immediate insertion.  We wanted to restore the behavior prior to 5.3 only for
 very specific use cases where it made sense.
-+
+
 Entity mappings can sometimes be complex and it is possible a corner case was overlooked.  Hibernate offers a
 way to completely disable the 5.3 behavior in the event problems occur with `DelayedPostInsertIdentifier`.  To
 enable the legacy behavior, set `hibernate.id.disable_delayed_identity_inserts=true`.
-+
+
 This configuration option is meant to act as a _temporary_ fix and bridge the gap between the changes in this
 behavior across Hibernate 5.x releases.  If this configuration setting is necessary for a mapping, please open
 a JIRA and report the mapping so that the algorithm can be reviewed.
@@ -507,8 +507,8 @@ include::{sourcedir}/UuidCustomGeneratedValueTest.java[tag=identifiers-generator
 Most of the Hibernate generators that separately obtain identifier values from database structures support the use of pluggable optimizers.
 Optimizers help manage the number of times Hibernate has to talk to the database in order to generate identifier values.
 For example, with no optimizer applied to a sequence-generator, every time the application asked Hibernate to generate an identifier it would need to grab the next sequence value from the database.
-But if we can minimize the number of times we need to communicate with the database here, the application will be able to perform better.
-Which is, in fact, the role of these optimizers.
+But if we can minimize the number of times we need to communicate with the database here, the application will be able to perform better,
+which is, in fact, the role of these optimizers.
 
 none:: No optimization is performed. We communicate with the database each and every time an identifier value is needed from the generator.
 

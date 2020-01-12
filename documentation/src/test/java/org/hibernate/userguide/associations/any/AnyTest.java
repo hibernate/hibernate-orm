@@ -64,8 +64,8 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
             //tag::associations-any-query-example[]
             PropertyHolder propertyHolder = session.get( PropertyHolder.class, 1L );
 
-            assertEquals("name", propertyHolder.getProperty().getName());
-            assertEquals("John Doe", propertyHolder.getProperty().getValue());
+            assertEquals( "name", propertyHolder.getProperty().getName() );
+            assertEquals( "John Doe", propertyHolder.getProperty().getValue() );
             //end::associations-any-query-example[]
         } );
     }

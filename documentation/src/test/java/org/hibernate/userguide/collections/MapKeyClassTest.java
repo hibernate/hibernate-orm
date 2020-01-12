@@ -84,7 +84,7 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyColumn( name = "call_timestamp_epoch" )
+		@MapKeyColumn(name = "call_timestamp_epoch")
 		@MapKeyClass( MobilePhone.class )
 		@Column(name = "call_register")
 		private Map<PhoneNumber, Integer> callRegister = new HashMap<>();
@@ -105,34 +105,28 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::collections-map-key-class-type-mapping-example[]
 	public interface PhoneNumber {
-
 		String get();
 	}
 
 	@Embeddable
-	public static class MobilePhone
-			implements PhoneNumber {
+	public static class MobilePhone implements PhoneNumber {
 
 		static PhoneNumber fromString(String phoneNumber) {
 			String[] tokens = phoneNumber.split( "-" );
 			if ( tokens.length != 3 ) {
 				throw new IllegalArgumentException( "invalid phone number: " + phoneNumber );
 			}
-			int i = 0;
 			return new MobilePhone(
-				tokens[i++],
-				tokens[i++],
-				tokens[i]
+				tokens[0],
+				tokens[1],
+				tokens[2]
 			);
 		}
 
 		private MobilePhone() {
 		}
 
-		public MobilePhone(
-				String countryCode,
-				String operatorCode,
-				String subscriberCode) {
+		public MobilePhone(String countryCode, String operatorCode, String subscriberCode) {
 			this.countryCode = countryCode;
 			this.operatorCode = operatorCode;
 			this.subscriberCode = subscriberCode;
@@ -149,12 +143,7 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public String get() {
-			return String.format(
-				"%s-%s-%s",
-				countryCode,
-				operatorCode,
-				subscriberCode
-			);
+			return String.format( "%s-%s-%s", countryCode, operatorCode, subscriberCode );
 		}
 
 		@Override

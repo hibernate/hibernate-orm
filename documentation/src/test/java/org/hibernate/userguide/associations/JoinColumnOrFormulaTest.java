@@ -82,10 +82,10 @@ public class JoinColumnOrFormulaTest extends BaseEntityManagerFunctionalTestCase
 			log.info( "Fetch User entities" );
 
 			User john = entityManager.find( User.class, 1L );
-			assertEquals( US, john.getCountry());
+			assertEquals( US, john.getCountry() );
 
 			User vlad = entityManager.find( User.class, 2L );
-			assertEquals( Romania, vlad.getCountry());
+			assertEquals( Romania, vlad.getCountry() );
 		} );
 		//end::associations-JoinColumnOrFormula-fetching-example[]
 	}

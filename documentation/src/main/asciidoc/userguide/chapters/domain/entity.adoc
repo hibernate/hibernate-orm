@@ -19,9 +19,9 @@ Throughout this chapter and thereafter, entity types will be simply referred to 
 ==== POJO Models
 
 Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
-Applications that wish to remain portable across JPA providers should adhere to these requirements.
+Applications that wish to remain portable across JPA providers should adhere to these requirements:
 
-* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping)
+* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping).
 * The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
 * The entity class must be a top-level class.
 * An enum or interface may not be designated as an entity.
@@ -38,7 +38,7 @@ Hibernate, however, is not as strict in its requirements. The differences from t
 * The entity class _need not_ be a top-level class.
 * Technically Hibernate can persist final classes or classes with final persistent state accessor (getter/setter) methods.
 However, it is generally not a good idea as doing so will stop Hibernate from being able to generate proxies for lazy-loading the entity.
-* Hibernate does not restrict the application developer from exposing instance variables and reference them from outside the entity class itself.
+* Hibernate does not restrict the application developer from exposing instance variables and referencing them from outside the entity class itself.
 The validity of such a paradigm, however, is debatable at best.
 
 Let's look at each requirement in detail.
@@ -56,7 +56,7 @@ For the very same reason, you should also avoid declaring persistent attribute g
 ====
 Starting with 5.0, Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
 Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
 ====
 
 [[entity-pojo-constructor]]
@@ -118,7 +118,7 @@ The main piece in mapping the entity is the https://javaee.github.io/javaee-spec
 
 The `@Entity` annotation defines just the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
 
-By default, if the name attribute the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name
+By default, if the name attribute of the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name.
 
 [IMPORTANT]
 ====
@@ -174,7 +174,7 @@ Let's assume we are using MySQL and want to map a `Book` entity to the `book` ta
 which looks as follows.
 
 [[mapping-post-table-catalog-mysql-example]]
-.The `post` table located in the `public` catalog
+.The `book` table located in the `public` catalog
 ====
 [source,sql]
 ----
@@ -204,7 +204,7 @@ Let's assume we are using PostgreSQL and want to map a `Book` entity to the `boo
 which looks as follows.
 
 [[mapping-post-table-schema-postgresql-example]]
-.The `post` table located in the `library` schema
+.The `book` table located in the `library` schema
 ====
 [source,sql]
 ----
@@ -248,7 +248,7 @@ Beyond this one very specific use case and few others we will discuss below, you
 
 So what's all the fuss? Normally, most Java objects provide a built-in `equals()` and `hashCode()` based on the object's identity, so each new object will be different from all others.
 This is generally what you want in ordinary Java programming.
-Conceptually however this starts to break down when you start to think about the possibility of multiple instances of a class representing the same data.
+Conceptually, however, this starts to break down when you start to think about the possibility of multiple instances of a class representing the same data.
 
 This is, in fact, exactly the case when dealing with data coming from a database.
 Every time we load a specific `Person` from the database we would naturally get a unique instance.
@@ -268,7 +268,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-id
 Consider we have a `Library` parent entity which contains a `java.util.Set` of `Book` entities:
 
 [[entity-pojo-set-mapping-example]]
-Library entity mapping
+.Library entity mapping
 ====
 [source,java]
 ----
@@ -454,11 +454,11 @@ Hibernate will trigger a Persistence Context flush if there are pending `Account
 [[entity-proxy]]
 ==== Define a custom entity proxy
 
-By default, when it needs to use a proxy instead of the actual Pojo, Hibernate is going to use a Bytecode manipulation library like
+By default, when it needs to use a proxy instead of the actual POJO, Hibernate is going to use a Bytecode manipulation library like
 http://jboss-javassist.github.io/javassist/[Javassist] or
 http://bytebuddy.net/[Byte Buddy].
 
-However, if the entity class is final, Javassist will not create a proxy and you will get a Pojo even when you only need a proxy reference.
+However, if the entity class is final, Javassist will not create a proxy and you will get a POJO even when you only need a proxy reference.
 In this case, you could proxy an interface that this particular entity implements, as illustrated by the following example.
 
 [[entity-proxy-interface-mapping]]
@@ -490,7 +490,7 @@ include::{extrasdir}/entity/entity-proxy-persist-mapping.sql[]
 ====
 
 As you can see in the associated SQL snippet, Hibernate issues no SQL SELECT query since the proxy can be
-constructed without needing to fetch the actual entity Pojo.
+constructed without needing to fetch the actual entity POJO.
 
 [[entity-tuplizer]]
 ==== Dynamic entity proxies using the @Tuplizer annotation
@@ -498,7 +498,7 @@ constructed without needing to fetch the actual entity Pojo.
 It is possible to map your entities as dynamic proxies using
 the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Tuplizer.html[`@Tuplizer`] annotation.
 
-In the following entity mapping, both the embeddable and the entity are mapped as interfaces, not Pojos.
+In the following entity mapping, both the embeddable and the entity are mapped as interfaces, not POJOs.
 
 [[entity-tuplizer-entity-mapping]]
 .Dynamic entity proxy mapping
@@ -549,7 +549,7 @@ include::{sourcedir-proxy}/tuplizer/DataProxyHandler.java[tag=entity-tuplizer-in
 ----
 ====
 
-With the `DynamicInstantiator` in place, we can work with the dynamic proxy entities just like with Pojo entities.
+With the `DynamicInstantiator` in place, we can work with the dynamic proxy entities just like with POJO entities.
 
 [[entity-tuplizer-dynamic-proxy-example]]
 .Persisting entities and embeddables as dynamic proxies
@@ -584,4 +584,4 @@ include::{sourcedir-persister}/Book.java[tag=entity-persister-mapping,indent=0]
 ====
 
 By providing your own `EntityPersister` and `CollectionPersister` implementations,
-you can control how entities and collections are persisted in to the database.
+you can control how entities and collections are persisted into the database.

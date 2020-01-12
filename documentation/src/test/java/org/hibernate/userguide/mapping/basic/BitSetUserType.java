@@ -27,7 +27,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public int[] sqlTypes() {
-        return new int[] {StringType.INSTANCE.sqlType()};
+        return new int[] { StringType.INSTANCE.sqlType() };
     }
 
     @Override
@@ -53,7 +53,7 @@ public class BitSetUserType implements UserType {
             throws HibernateException, SQLException {
         String columnName = names[0];
         String columnValue = (String) rs.getObject( columnName );
-        log.debugv("Result set column {0} value is {1}", columnName, columnValue);
+        log.debugv( "Result set column {0} value is {1}", columnName, columnValue );
         return columnValue == null ? null :
 				BitSetTypeDescriptor.INSTANCE.fromString( columnValue );
     }
@@ -63,12 +63,12 @@ public class BitSetUserType implements UserType {
             PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
             throws HibernateException, SQLException {
         if ( value == null ) {
-            log.debugv("Binding null to parameter {0} ",index);
+            log.debugv( "Binding null to parameter {0} ", index );
             st.setNull( index, Types.VARCHAR );
         }
         else {
             String stringValue = BitSetTypeDescriptor.INSTANCE.toString( (BitSet) value );
-            log.debugv("Binding {0} to parameter {1} ", stringValue, index);
+            log.debugv( "Binding {0} to parameter {1} ", stringValue, index );
             st.setString( index, stringValue );
         }
     }

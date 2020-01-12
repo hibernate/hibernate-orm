@@ -14,7 +14,7 @@ import javax.persistence.Table;
 //tag::associations-any-property-example[]
 
 @Entity
-@Table(name="integer_property")
+@Table(name = "integer_property")
 public class IntegerProperty implements Property<Integer> {
 
     @Id

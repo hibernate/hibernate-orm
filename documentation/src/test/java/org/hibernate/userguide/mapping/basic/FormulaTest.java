@@ -34,7 +34,7 @@ public class FormulaTest extends BaseEntityManagerFunctionalTestCase {
 		//tag::mapping-column-formula-persistence-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::basic-datetime-temporal-date-persist-example[]
-			Account account = new Account( );
+			Account account = new Account();
 			account.setId( 1L );
 			account.setCredit( 5000d );
 			account.setRate( 1.25 / 100 );
@@ -43,7 +43,7 @@ public class FormulaTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Account account = entityManager.find( Account.class, 1L );
-			assertEquals( Double.valueOf( 62.5d ), account.getInterest());
+			assertEquals( Double.valueOf( 62.5d ), account.getInterest() );
 		} );
 		//end::mapping-column-formula-persistence-example[]
 	}

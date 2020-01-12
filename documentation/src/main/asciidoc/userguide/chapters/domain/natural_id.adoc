@@ -42,7 +42,7 @@ include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-multiple-attribut
 [[naturalid-api]]
 ==== Natural Id API
 
-As stated before, Hibernate provides an API for loading entities by their associate natural id.
+As stated before, Hibernate provides an API for loading entities by their associated natural id.
 This is represented by the `org.hibernate.NaturalIdLoadAccess` contract obtained via Session#byNaturalId.
 
 [NOTE]
@@ -71,17 +71,17 @@ include::{sourcedir}/MultipleNaturalIdTest.java[tags=naturalid-load-access-examp
 
 NaturalIdLoadAccess offers 2 distinct methods for obtaining the entity:
 
-`load()`:: obtains a reference to the entity, making sure that the entity state is initialized
+`load()`:: obtains a reference to the entity, making sure that the entity state is initialized.
 `getReference()`:: obtains a reference to the entity. The state may or may not be initialized.
 If the entity is already associated with the current running Session, that reference (loaded or not) is returned.
 If the entity is not loaded in the current Session and the entity supports proxy generation, an uninitialized proxy is generated and returned, otherwise the entity is loaded from the database and returned.
 
-`NaturalIdLoadAccess` allows loading an entity by natural id and at the same time apply a pessimistic lock.
+`NaturalIdLoadAccess` allows loading an entity by natural id and at the same time applies a pessimistic lock.
 For additional details on locking, see the <<chapters/locking/Locking.adoc#locking,Locking>> chapter.
 
 We will discuss the last method available on NaturalIdLoadAccess ( `setSynchronizationEnabled()` ) in <<naturalid-mutability-caching>>.
 
-Because the `Company` and `PostalCarrier` entities define "simple" natural ids, we can load them as follows:
+Because the `Book` entities in the first two examples define "simple" natural ids, we can load them as follows:
 
 [[naturalid-simple-load-access-example]]
 .Loading by simple natural id
@@ -98,7 +98,7 @@ include::{sourcedir}/CompositeNaturalIdTest.java[tags=naturalid-simple-load-acce
 ====
 
 Here we see the use of the `org.hibernate.SimpleNaturalIdLoadAccess` contract,
-obtained via `Session#bySimpleNaturalId().
+obtained via `Session#bySimpleNaturalId()`.
 
 `SimpleNaturalIdLoadAccess` is similar to `NaturalIdLoadAccess` except that it does not define the using method.
 Instead, because these _simple_ natural ids are defined based on just one attribute we can directly pass
@@ -115,7 +115,7 @@ If the entity does not define a natural id, or if the natural id is not of a "si
 A natural id may be mutable or immutable. By default the `@NaturalId` annotation marks an immutable natural id attribute.
 An immutable natural id is expected to never change its value.
 
-If the value(s) of the natural id attribute(s) change, `@NaturalId(mutable=true)` should be used instead.
+If the value(s) of the natural id attribute(s) change, `@NaturalId(mutable = true)` should be used instead.
 
 [[naturalid-mutable-mapping-example]]
 .Mutable natural id mapping

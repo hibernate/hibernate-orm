@@ -112,7 +112,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyColumn( name = "call_timestamp_epoch" )
+		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")
 		private Map<Long, Integer> callRegister = new HashMap<>();
 
@@ -143,7 +143,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 				type = "org.hibernate.userguide.collections.type.TimestampEpochType"
 			)
 		)
-		@MapKeyColumn( name = "call_timestamp_epoch" )
+		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")
 		private Map<Date, Integer> callRegister = new HashMap<>();
 

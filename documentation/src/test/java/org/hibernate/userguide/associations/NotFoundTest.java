@@ -65,7 +65,7 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = entityManager.find( Person.class, 1L );
 
 			assertEquals( "Atlantis", person.getCityName() );
-			assertNull( null, person.getCity() );
+			assertNull( person.getCity() );
 			//end::associations-not-found-non-existing-find-example[]
 		} );
 	}

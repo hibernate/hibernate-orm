@@ -52,7 +52,7 @@ public class EntityImmutabilityTest extends BaseEntityManagerFunctionalTestCase 
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Event event = entityManager.find( Event.class, 1L );
-			assertEquals("Hibernate User Guide rocks!", event.getMessage());
+			assertEquals( "Hibernate User Guide rocks!", event.getMessage() );
 		} );
 		//end::entity-immutability-update-example[]
 	}

@@ -44,15 +44,12 @@ public class TimestampEpochType
     }
 
     @Override
-    public Date next(
-        Date current,
-        SharedSessionContractImplementor session) {
+    public Date next(Date current, SharedSessionContractImplementor session) {
         return seed( session );
     }
 
     @Override
-    public Date seed(
-        SharedSessionContractImplementor session) {
+    public Date seed(SharedSessionContractImplementor session) {
         return new Timestamp( System.currentTimeMillis() );
     }
 
@@ -62,20 +59,15 @@ public class TimestampEpochType
     }
 
     @Override
-    public String objectToSQLString(
-        Date value,
-        Dialect dialect) throws Exception {
+    public String objectToSQLString(Date value, Dialect dialect) throws Exception {
         final Timestamp ts = Timestamp.class.isInstance( value )
             ? ( Timestamp ) value
             : new Timestamp( value.getTime() );
-        return StringType.INSTANCE.objectToSQLString(
-            ts.toString(), dialect
-        );
+        return StringType.INSTANCE.objectToSQLString( ts.toString(), dialect );
     }
 
     @Override
-    public Date fromStringValue(
-        String xml) throws HibernateException {
+    public Date fromStringValue(String xml) throws HibernateException {
         return fromString( xml );
     }
 }

@@ -10,12 +10,12 @@ Persistent data has a state in relation to both a persistence context and the un
 
 `transient`:: the entity has just been instantiated and is not associated with a persistence context.
 It has no persistent representation in the database and typically no identifier value has been assigned (unless the _assigned_ generator was used).
-`managed`, or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
+`managed` or `persistent`:: the entity has an associated identifier and is associated with a persistence context.
 It may or may not physically exist in the database yet.
 `detached`:: the entity has an associated identifier but is no longer associated with a persistence context (usually because the persistence context was closed or the instance was evicted from the context)
 `removed`:: the entity has an associated identifier and is associated with a persistence context, however, it is scheduled for removal from the database.
 
-Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities between these states.
+Much of the `org.hibernate.Session` and `javax.persistence.EntityManager` methods deal with moving entities among these states.
 
 [[pc-unwrap]]
 === Accessing Hibernate APIs from JPA

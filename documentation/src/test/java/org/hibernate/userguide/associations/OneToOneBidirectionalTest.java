@@ -71,7 +71,8 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 				entityManager.flush();
 				entityManager.clear();
 
-				//throws javax.persistence.PersistenceException: org.hibernate.HibernateException: More than one row with the given identifier was found: 1
+				//throws javax.persistence.PersistenceException:
+				//org.hibernate.HibernateException: More than one row with the given identifier was found: 1
 				phone = entityManager.find( Phone.class, phone.getId() );
 				//end::associations-one-to-one-bidirectional-constraint-example[]
 				phone.getDetails().getProvider();

@@ -35,9 +35,8 @@ public class EmbeddedIdDatabaseGeneratedValueTest extends BaseEntityManagerFunct
 		final EventId eventId = doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-composite-generated-database-example[]
 			Timestamp currentTimestamp = (Timestamp) entityManager
-			.createNativeQuery(
-				"SELECT CURRENT_TIMESTAMP" )
-			.getSingleResult();
+				.createNativeQuery( "SELECT CURRENT_TIMESTAMP" )
+				.getSingleResult();
 
 			EventId id = new EventId();
 			id.setCategory( 1 );

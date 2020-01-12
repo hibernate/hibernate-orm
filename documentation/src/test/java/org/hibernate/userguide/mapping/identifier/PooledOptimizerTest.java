@@ -37,7 +37,7 @@ public class PooledOptimizerTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-generators-pooled-lo-optimizer-persist-example[]
 			for ( long i = 1; i <= 5; i++ ) {
-				if(i % 3 == 0) {
+				if ( i % 3 == 0 ) {
 					entityManager.flush();
 				}
 				Product product = new Product();

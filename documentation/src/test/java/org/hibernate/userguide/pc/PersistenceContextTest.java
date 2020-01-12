@@ -57,7 +57,8 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			Session session = entityManager.unwrap( Session.class );
 			SessionImplementor sessionImplementor = entityManager.unwrap( SessionImplementor.class );
 
-			SessionFactory sessionFactory = entityManager.getEntityManagerFactory().unwrap( SessionFactory.class );
+			SessionFactory sessionFactory = entityManager.getEntityManagerFactory()
+			                                             .unwrap( SessionFactory.class );
 			//end::pc-unwrap-example[]
 		} );
 		Long _personId = doInJPA( this::entityManagerFactory, entityManager -> {

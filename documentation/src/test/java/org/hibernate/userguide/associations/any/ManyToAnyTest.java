@@ -67,9 +67,9 @@ public class ManyToAnyTest extends BaseCoreFunctionalTestCase {
             //tag::associations-many-to-any-query-example[]
             PropertyRepository propertyRepository = session.get( PropertyRepository.class, 1L );
 
-            assertEquals(2, propertyRepository.getProperties().size());
+            assertEquals( 2, propertyRepository.getProperties().size() );
 
-            for(Property property : propertyRepository.getProperties()) {
+            for ( Property property : propertyRepository.getProperties() ) {
                 assertNotNull( property.getValue() );
             }
             //end::associations-many-to-any-query-example[]

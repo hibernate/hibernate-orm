@@ -71,6 +71,7 @@ public class BasicTypeRegistry implements Serializable {
 		register( DbTimestampType.INSTANCE );
 		register( CalendarType.INSTANCE );
 		register( CalendarDateType.INSTANCE );
+		register( CalendarTimeType.INSTANCE );
 
 		register( LocaleType.INSTANCE );
 		register( CurrencyType.INSTANCE );

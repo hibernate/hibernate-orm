@@ -51,7 +51,7 @@ public class OneToOnePrimaryKeyJoinColumnTest extends BaseEntityManagerFunctiona
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			PersonDetails personDetails = entityManager.find( PersonDetails.class, 1L );
 
-			assertEquals("John Doe", personDetails.getNickName());
+			assertEquals( "John Doe", personDetails.getNickName() );
 		} );
 		//end::identifiers-derived-primarykeyjoincolumn-persist-example[]
 	}

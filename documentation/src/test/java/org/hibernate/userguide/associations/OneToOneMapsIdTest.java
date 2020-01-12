@@ -51,7 +51,7 @@ public class OneToOneMapsIdTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			PersonDetails personDetails = entityManager.find( PersonDetails.class, 1L );
 
-			assertEquals("John Doe", personDetails.getNickName());
+			assertEquals( "John Doe", personDetails.getNickName() );
 		} );
 		//end::identifiers-derived-mapsid-persist-example[]
 	}

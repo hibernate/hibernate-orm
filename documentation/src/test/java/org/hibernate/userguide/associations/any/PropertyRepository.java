@@ -35,7 +35,7 @@ public class PropertyRepository {
         joinColumns = @JoinColumn(name = "repository_id"),
         inverseJoinColumns = @JoinColumn(name = "property_id")
     )
-    private List<Property<?>> properties = new ArrayList<>(  );
+    private List<Property<?>> properties = new ArrayList<>();
 
     //Getters and setters are omitted for brevity
 

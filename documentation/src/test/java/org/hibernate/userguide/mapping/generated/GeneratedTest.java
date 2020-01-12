@@ -51,7 +51,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist( person );
 			entityManager.flush();
 
-			assertEquals("John Flávio André Frederico Rúben Artur Doe", person.getFullName());
+			assertEquals( "John Flávio André Frederico Rúben Artur Doe", person.getFullName() );
 			//end::mapping-generated-Generated-persist-example[]
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -60,7 +60,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 			person.setLastName( "Doe Jr" );
 
 			entityManager.flush();
-			assertEquals("John Flávio André Frederico Rúben Artur Doe Jr", person.getFullName());
+			assertEquals( "John Flávio André Frederico Rúben Artur Doe Jr", person.getFullName() );
 			//end::mapping-generated-Generated-update-example[]
 		} );
 	}

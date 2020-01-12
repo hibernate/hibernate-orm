@@ -60,14 +60,14 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::naturalid-load-access-example[]
 
 			Book book = entityManager
-				.unwrap(Session.class)
+				.unwrap( Session.class )
 				.byNaturalId( Book.class )
-				.using("productNumber", "973022823X")
-				.using("publisher", publisher)
+				.using( "productNumber", "973022823X" )
+				.using( "publisher", publisher )
 				.load();
 			//end::naturalid-load-access-example[]
 
-			assertEquals("High-Performance Java Persistence", book.getTitle());
+			assertEquals( "High-Performance Java Persistence", book.getTitle() );
 		} );
 	}
 
@@ -172,13 +172,12 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 				return false;
 			}
 			Publisher publisher = (Publisher) o;
-			return Objects.equals( id, publisher.id ) &&
-					Objects.equals( name, publisher.name );
+			return Objects.equals( id, publisher.id );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( id, name );
+			return Objects.hash( id );
 		}
 	}
 	//end::naturalid-multiple-attribute-mapping-example[]

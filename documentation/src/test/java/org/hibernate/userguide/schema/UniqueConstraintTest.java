@@ -62,11 +62,11 @@ public class UniqueConstraintTest extends BaseEntityManagerFunctionalTestCase {
 
         try {
             doInJPA( this::entityManagerFactory, entityManager -> {
-				Book book = new Book();
-				book.setTitle( "High-Performance Java Persistence" );
-				book.setAuthor( _author );
-				entityManager.persist( book );
-			} );
+	            Book book = new Book();
+	            book.setTitle( "High-Performance Java Persistence" );
+	            book.setAuthor( _author );
+	            entityManager.persist( book );
+	        } ); 
         }
         catch (Exception expected) {
             assertNotNull( ExceptionUtil.findCause( expected, ConstraintViolationException.class ) );

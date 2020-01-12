@@ -56,14 +56,14 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// signal start of transaction
 			session.getTransaction().begin();
 
-			session.createQuery( "UPDATE customer set NAME = 'Sir. '||NAME" )
-					.executeUpdate();
+			session.createQuery( "UPDATE customer set NAME = 'Sir. ' || NAME" )
+			       .executeUpdate();
 
 			// calls Connection#commit(), if an error
 			// happens we attempt a rollback
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// we may need to rollback depending on
 			// where the exception happened
 			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE
@@ -83,7 +83,6 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 	public void cmt() {
 		//tag::transactions-api-cmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
 				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
 				.build();
 
@@ -106,14 +105,15 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// no-ops
 			session.getTransaction().begin();
 
-			Number customerCount = (Number) session.createQuery( "select count(c) from Customer c" ).uniqueResult();
+			Number customerCount = (Number) session.createQuery( "select count(c) from Customer c" )
+			                                       .uniqueResult();
 
 			// Since we did not start the transaction ( CMT ),
 			// we also will not end it.  This call essentially
-			// no-ops in terms of transaction handling.
+			// no-ops in terms of transaction handling.s
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// again, the rollback call here would no-op (aside from
 			// marking the underlying CMT transaction for rollback only).
 			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE
@@ -133,7 +133,6 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 	public void bmt() {
 		//tag::transactions-api-bmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				// "jdbc" is the default, but for explicitness
 				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
 				.build();
 
@@ -159,13 +158,14 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// nop-op the commit and rollback calls...
 			session.getTransaction().begin();
 
-			session.persist( new Customer(  ) );
-			Customer customer = (Customer) session.createQuery( "select c from Customer c" ).uniqueResult();
+			session.persist( new Customer() );
+			Customer customer = (Customer) session.createQuery( "select c from Customer c" )
+			                                      .uniqueResult();
 
 			// calls TM/UT commit method, assuming we are initiator.
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// we may need to rollback depending on
 			// where the exception happened
 			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE

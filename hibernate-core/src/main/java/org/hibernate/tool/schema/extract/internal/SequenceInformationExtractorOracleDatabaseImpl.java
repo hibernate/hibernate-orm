@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.extract.internal;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -13,6 +14,7 @@ import java.sql.SQLException;
  * @author Vlad Mihalcea
  */
 public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInformationExtractorLegacyImpl {
+
 	/**
 	 * Singleton access
 	 */
@@ -35,7 +37,19 @@ public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInfo
 
 	@Override
 	protected String sequenceMinValueColumn() {
-		return "min_value";
+		return null;
+	}
+
+	@Override
+	protected Long resultSetMinValue(ResultSet resultSet) throws SQLException {
+		BigDecimal asDecimal = resultSet.getBigDecimal( "min_value" );
+
+		// BigDecimal.longValue() may return a result with the opposite sign
+		if ( asDecimal.compareTo( BigDecimal.valueOf( Long.MIN_VALUE ) ) == -1 ) {
+			return Long.MIN_VALUE;
+		}
+
+		return asDecimal.longValue();
 	}
 
 	@Override

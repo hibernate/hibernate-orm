@@ -25,8 +25,6 @@ public class TableCollector {
 	public static Collection<Table> processTables(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
-			String  defaultSchema, 
-			String defaultCatalog, 
 			DatabaseCollector dbs, 
 			SchemaSelection schemaSelection, 
 			Set<Table> hasIndices, 

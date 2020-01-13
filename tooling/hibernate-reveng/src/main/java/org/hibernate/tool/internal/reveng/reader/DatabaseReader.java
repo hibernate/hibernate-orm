@@ -81,11 +81,11 @@ public class DatabaseReader {
 			List<SchemaSelection> schemaSelectors = revengStrategy.getSchemaSelections();
 			List<Table> foundTables = new ArrayList<Table>();
 			if(schemaSelectors==null) {
-				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, new SchemaSelection(catalog, schema), hasIndices, progress));
+				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, new SchemaSelection(catalog, schema), hasIndices, progress));
 			} else {
 				for (Iterator<SchemaSelection> iter = schemaSelectors.iterator(); iter.hasNext();) {
 					SchemaSelection selection = iter.next();
-					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, selection, hasIndices, progress));
+					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices, progress));
 				}
 			}
 			

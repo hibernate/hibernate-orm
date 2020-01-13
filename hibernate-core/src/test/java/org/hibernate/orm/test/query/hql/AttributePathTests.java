@@ -8,7 +8,12 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.Person;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -17,15 +22,20 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.jupiter.api.Test;
 
+import org.hamcrest.CoreMatchers;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -36,7 +46,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
+		return new Class[] { Person.class, OddOne.class };
 	}
 
 	@Test
@@ -100,8 +110,25 @@ public class AttributePathTests extends BaseSqmUnitTest {
 	@Test
 	public void testEntityIdReferences() {
 		interpretSelect( "select s.mate from Person s where s.id = ?1" );
-		interpretSelect( "select s.mate from Person s where s.{id} = ?1" );
 		interpretSelect( "select s.mate from Person s where s.pk = ?1" );
+
+		// NOTE: this next form does not (yet) work...
+		interpretSelect( "select s.mate from Person s where s.{id} = ?1" );
+
+		final EntityDomainType<OddOne> entity = sessionFactory().getRuntimeMetamodels()
+				.getJpaMetamodel()
+				.entity( OddOne.class );
+		final SingularPersistentAttribute<OddOne, ?> idAttribute = entity.findIdAttribute();
+
+		final SqmSelectStatement sqmSelectStatement = interpretSelect( "select s.id from OddOne s where s.pk = ?1" );
+
+		final SqmQuerySpec querySpec = sqmSelectStatement.getQuerySpec();
+		assertThat( querySpec.getSelectClause().getSelections().size(), is(1) );
+		final SqmSelection sqmSelection = querySpec.getSelectClause().getSelections().get( 0 );
+		assertThat( sqmSelection.getSelectableNode(), not( sameInstance( idAttribute ) ) );
+
+		final SqmExpression<?> pkRef = ( (SqmComparisonPredicate) querySpec.getRestriction() ).getLeftHandExpression();
+		assertThat( ( (SqmPath) pkRef ).getJavaType(), sameInstance( String.class ) );
 	}
 
 	@Test
@@ -114,4 +141,10 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assert Person.class.equals( selectableNode.getJavaTypeDescriptor().getJavaType() );
 	}
 
+	@Entity( name = "OddOne")
+	public static class OddOne {
+		@Id
+		private String pk;
+		private Integer id;
+	}
 }

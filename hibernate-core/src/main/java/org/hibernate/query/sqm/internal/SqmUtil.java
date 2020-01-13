@@ -25,6 +25,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -39,6 +40,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -227,6 +229,27 @@ public class SqmUtil {
 						final SqmParameter expansionSqmParam = expansions.get( expansionPosition++ );
 						final List<JdbcParameter> expansionJdbcParams = jdbcParamMap.get( expansionSqmParam );
 						createValueBindings( jdbcParameterBindings, parameterType, expansionJdbcParams, valueItr.next(), session );
+					}
+				}
+				else if ( domainParamBinding.getBindValue() == null ) {
+					assert jdbcParams != null;
+					for ( int i = 0; i < jdbcParams.size(); i++ ) {
+						final JdbcParameter jdbcParameter = jdbcParams.get( i );
+						jdbcParameterBindings.addBinding(
+								jdbcParameter,
+								new JdbcParameterBinding() {
+
+									@Override
+									public JdbcMapping getBindType() {
+										return StandardBasicTypes.SERIALIZABLE;
+									}
+
+									@Override
+									public Object getBindValue() {
+										return null;
+									}
+								}
+						);
 					}
 				}
 				else {

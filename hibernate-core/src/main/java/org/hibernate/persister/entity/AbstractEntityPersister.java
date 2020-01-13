@@ -6217,15 +6217,17 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
-			if ( hasIdentifierProperty() ) {
-				final String identifierPropertyName = getIdentifierPropertyName();
-				if ( identifierPropertyName.equals( name ) ) {
-					return true;
-				}
+			return "id".equals( name );
+		}
+
+		if ( hasIdentifierProperty() ) {
+			final String identifierPropertyName = getIdentifierPropertyName();
+			if ( identifierPropertyName.equals( name ) ) {
+				return true;
 			}
 		}
 
-		return "id".equals( name );
+		return false;
 	}
 
 	@Override

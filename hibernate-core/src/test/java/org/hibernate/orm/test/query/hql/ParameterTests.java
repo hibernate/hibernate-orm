@@ -32,6 +32,8 @@ import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.jboss.arquillian.test.spi.annotation.TestScoped;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -139,6 +141,22 @@ public class ParameterTests extends BaseSqmUnitTest {
 //			assertThat( parameter.getAnticipatedType(), instanceOf( EmbeddedSqmPathSource.class ) );
 		}
 
+	}
+
+	@Test
+	public void testNullParamValues() {
+		inTransaction(
+				session -> {
+					session.createQuery( "from Person p where p.name.first = :p" ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.name = :p" ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.pk = :p" ).setParameter( "p", null ).list();
+				}
+		);
+	}
+
+	@Override
+	protected boolean exportSchema() {
+		return true;
 	}
 
 	@Override

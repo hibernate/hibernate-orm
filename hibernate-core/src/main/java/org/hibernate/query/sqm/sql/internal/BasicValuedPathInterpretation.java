@@ -14,6 +14,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -46,6 +47,10 @@ public class BasicValuedPathInterpretation<T> implements AssignableSqmPathInterp
 				sqmPath.getReferencedPathSource().getPathName(),
 				null
 		);
+
+		if ( mapping == null ) {
+			throw new SemanticException( "`" + sqmPath.getNavigablePath().getFullPath() + "` did not reference a known model part" );
+		}
 
 		final TableReference tableReference = tableGroup.resolveTableReference( mapping.getContainingTableExpression() );
 

@@ -87,13 +87,13 @@ public class SingleTableInheritanceTests {
 								assertThat( result, instanceOf( DomesticCustomer.class ) );
 								final DomesticCustomer customer = (DomesticCustomer) result;
 								assertThat( customer.getName(), is( "domestic" ) );
-								assertThat( (customer).getTaxId(), is( "123" ) );
+								assertThat( customer.getTaxId(), is( "123" ) );
 							}
 							else {
 								assertThat( result.getId(), is( 2 ) );
 								final ForeignCustomer customer = (ForeignCustomer) result;
 								assertThat( customer.getName(), is( "foreign" ) );
-								assertThat( (customer).getVat(), is( "987" ) );
+								assertThat( customer.getVat(), is( "987" ) );
 							}
 						}
 

@@ -54,7 +54,12 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 			Collection bootValueMapping,
 			String fkTargetModelPartName,
 			MappingModelCreationProcess creationProcess) {
-		fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
+		if ( fkTargetModelPartName == null ) {
+			fkTargetModelPart = entityMappingType.getIdentifierMapping();
+		}
+		else {
+			fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
+		}
 	}
 
 

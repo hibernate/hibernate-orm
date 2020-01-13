@@ -5128,19 +5128,33 @@ public abstract class AbstractEntityPersister
 			accessOptimizer.setPropertyValues( object, values );
 		}
 		else {
-			visitFetchables(
-					fetchable -> {
-						final AttributeMapping attribute = (AttributeMapping) fetchable;
-						final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
-						final Object value = values[stateArrayPosition];
-						if ( value != UNFETCHED_PROPERTY ) {
-							final Setter setter = attribute.getPropertyAccess().getSetter();
-							setter.set( object, value, getFactory() );
+			if ( hasSubclasses() ) {
+				visitAttributeMappings(
+						attribute -> {
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
 						}
+				);
+			}
+			else {
+				visitFetchables(
+						fetchable -> {
+							final AttributeMapping attribute = (AttributeMapping) fetchable;
+							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+							final Object value = values[stateArrayPosition];
+							if ( value != UNFETCHED_PROPERTY ) {
+								final Setter setter = attribute.getPropertyAccess().getSetter();
+								setter.set( object, value, getFactory() );
+							}
 
-					},
-					null
-			);
+						},
+						null
+				);
+			}
 		}
 	}
 
@@ -5671,6 +5685,7 @@ public abstract class AbstractEntityPersister
 	private Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
 	private List<AttributeMapping> attributeMappings;
 	protected List<Fetchable> staticFetchableList;
+	protected int subtypesAttributeStateArrayStartingPosition;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -5777,6 +5792,7 @@ public abstract class AbstractEntityPersister
 				() -> {
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
+					subtypesAttributeStateArrayStartingPosition = attributeMappings.size();
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
 					return true;
 				}

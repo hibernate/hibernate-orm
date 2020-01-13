@@ -41,10 +41,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -299,42 +296,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	protected boolean isDiscriminatorFormula() {
 		return false;
-	}
-
-	@Override
-	public void setPropertyValues(Object object, Object[] values) {
-		if ( accessOptimizer != null ) {
-			accessOptimizer.setPropertyValues( object, values );
-		}
-		else {
-			if ( hasSubclasses() ) {
-				visitAttributeMappings(
-						attribute -> {
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
-							}
-						}
-				);
-			}
-			else {
-				visitFetchables(
-						fetchable -> {
-							final AttributeMapping attribute = (AttributeMapping) fetchable;
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
-							}
-
-						},
-						null
-				);
-			}
-		}
 	}
 
 	@Override

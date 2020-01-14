@@ -34,6 +34,8 @@ public class LegacyColumnNamingStrategyTest extends BaseEnversJPAFunctionalTestC
 		assertNotNull( table1.getColumn( new Column( "otherEntity_MOD" ) ) );
 		assertNotNull( table1.getColumn( new Column( "singleIdEntity_MOD" ) ) );
 		assertNotNull( table1.getColumn( new Column( "singleIdEntity2_MOD" ) ) );
+		assertNotNull( table1.getColumn( new Column( "clientOption_MOD" ) ) );
+		assertNotNull( table1.getColumn( new Column( "cop_mod" ) ) );
 
 		final Table table2 = metadata().getEntityBinding( OtherEntity.class.getName() + "_AUD" ).getTable();
 		assertNotNull( table2.getColumn( new Column( "data_MOD" ) ) );

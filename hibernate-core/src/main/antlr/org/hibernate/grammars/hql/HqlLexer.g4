@@ -141,6 +141,10 @@ ARROW :	'->';
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Keywords
 
+ID 				: [iI][dD];
+VERSION			: [vV] [eE] [rR] [sS] [iI] [oO] [nN];
+NATURALID		: [nN] [aA] [tT] [uU] [rR] [aA] [lL] [iI] [dD];
+
 ABS					: [aA] [bB] [sS];
 ALL					: [aA] [lL] [lL];
 AND					: [aA] [nN] [dD];

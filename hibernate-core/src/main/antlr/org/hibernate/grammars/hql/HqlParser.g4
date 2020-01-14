@@ -413,6 +413,9 @@ expression
 	| literal									# LiteralExpression
 	| parameter									# ParameterExpression
 	| entityTypeReference						# EntityTypeExpression
+	| entityIdReference							# EntityIdExpression
+	| entityVersionReference					# EntityVersionExpression
+	| entityNaturalIdReference					# EntityNaturalIdExpression
 	| path										# PathExpression
 	| function									# FunctionExpression
 	| LEFT_PAREN subQuery RIGHT_PAREN			# SubQueryExpression
@@ -420,6 +423,18 @@ expression
 
 entityTypeReference
 	: TYPE LEFT_PAREN (path | parameter) RIGHT_PAREN
+	;
+
+entityIdReference
+	: ID LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	;
+
+entityVersionReference
+	: VERSION LEFT_PAREN path RIGHT_PAREN
+	;
+
+entityNaturalIdReference
+	: NATURALID LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 caseStatement
@@ -987,6 +1002,7 @@ identifier
 	| GREATEST
 	| GROUP
 	| HOUR
+	| ID
 	| IFNULL
 	| IN
 	| INDEX
@@ -1020,6 +1036,7 @@ identifier
 	| MOD
 	| MONTH
 	| NANOSECOND
+	| NATURALID
 	| NEW
 	| NOT
 	| NULLIF
@@ -1056,6 +1073,7 @@ identifier
 	| UPDATE
 	| UPPER
 	| VALUE
+	| VERSION
 	| WEEK
 	| WHERE
 	| WITH

@@ -39,11 +39,13 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.PathException;
@@ -1318,6 +1320,70 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 
 		throw new ParsingException( "Could not interpret grammar context as 'entity type' expression : " + ctx.getText() );
+	}
+
+	@Override
+	public SqmPath visitEntityIdExpression(HqlParser.EntityIdExpressionContext ctx) {
+		return visitEntityIdReference( ctx.entityIdReference() );
+	}
+
+	@Override
+	public SqmPath visitEntityIdReference(HqlParser.EntityIdReferenceContext ctx) {
+		final SqmPath sqmPath = consumeDomainPath( ctx.path() );
+		final DomainType sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+
+		if ( sqmPathType instanceof IdentifiableDomainType ) {
+			//noinspection unchecked
+			final SqmPath idPath = ( (IdentifiableDomainType) sqmPathType ).getIdentifierDescriptor().createSqmPath(
+					sqmPath,
+					this
+			);
+
+			if ( ctx.pathContinuation() == null ) {
+				return idPath;
+			}
+
+			throw new NotYetImplementedFor6Exception( "Path continuation from `id()` reference not yet implemented" );
+		}
+
+		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
+	}
+
+	@Override
+	public SqmPath visitEntityVersionExpression(HqlParser.EntityVersionExpressionContext ctx) {
+		return visitEntityVersionReference( ctx.entityVersionReference() );
+	}
+
+	@Override
+	public SqmPath visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
+		final SqmPath sqmPath = consumeDomainPath( ctx.path() );
+		final DomainType sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+
+		if ( sqmPathType instanceof IdentifiableDomainType ) {
+			final IdentifiableDomainType identifiableType = (IdentifiableDomainType) sqmPathType;
+			final SingularPersistentAttribute versionAttribute = identifiableType.findVersionAttribute();
+			if ( versionAttribute == null ) {
+				throw new SemanticException(
+						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
+								identifiableType.getTypeName() + "`) which does not define a version"
+				);
+			}
+
+			//noinspection unchecked
+			return versionAttribute.createSqmPath( sqmPath, this );
+		}
+
+		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
+	}
+
+	@Override
+	public SqmPath visitEntityNaturalIdExpression(HqlParser.EntityNaturalIdExpressionContext ctx) {
+		return visitEntityNaturalIdReference( ctx.entityNaturalIdReference() );
+	}
+
+	@Override
+	public SqmPath visitEntityNaturalIdReference(HqlParser.EntityNaturalIdReferenceContext ctx) {
+		throw new NotYetImplementedFor6Exception( "Support for HQL natural-id references not yet implemented" );
 	}
 
 	@Override
@@ -3550,7 +3616,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		return result;
 	}
-
 
 	private SqmPath consumeDomainPath(HqlParser.PathContext parserPath) {
 		final SemanticPathPart consumedPart = (SemanticPathPart) parserPath.accept( this );

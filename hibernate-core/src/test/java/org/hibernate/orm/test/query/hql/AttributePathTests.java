@@ -7,18 +7,16 @@
 package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.Person;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -28,8 +26,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -112,8 +108,6 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		interpretSelect( "select s.mate from Person s where s.id = ?1" );
 		interpretSelect( "select s.mate from Person s where s.pk = ?1" );
 
-		// NOTE: this next form does not (yet) work...
-		interpretSelect( "select s.mate from Person s where s.{id} = ?1" );
 
 		final EntityDomainType<OddOne> entity = sessionFactory().getRuntimeMetamodels()
 				.getJpaMetamodel()
@@ -129,6 +123,14 @@ public class AttributePathTests extends BaseSqmUnitTest {
 
 		final SqmExpression<?> pkRef = ( (SqmComparisonPredicate) querySpec.getRestriction() ).getLeftHandExpression();
 		assertThat( ( (SqmPath) pkRef ).getJavaType(), sameInstance( String.class ) );
+	}
+
+	@Test
+	public void testCanonicalReferences() {
+		final SqmSelectStatement sqm = interpretSelect( "select s.mate from Person s where id(s) = ?1" );
+		assertThat( sqm.getQuerySpec().getRestriction(), notNullValue() );
+		final SqmComparisonPredicate restriction = (SqmComparisonPredicate) sqm.getQuerySpec().getRestriction();
+		assertThat( restriction, notNullValue() );
 	}
 
 	@Test

@@ -5685,7 +5685,6 @@ public abstract class AbstractEntityPersister
 	private Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
 	private List<AttributeMapping> attributeMappings;
 	protected List<Fetchable> staticFetchableList;
-	protected int subtypesAttributeStateArrayStartingPosition;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -5792,7 +5791,6 @@ public abstract class AbstractEntityPersister
 				() -> {
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
-					subtypesAttributeStateArrayStartingPosition = attributeMappings.size();
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( (Fetchable) attributeMapping ) );
 					return true;
 				}

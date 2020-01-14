@@ -10,14 +10,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.SortedMap;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -83,7 +83,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final SortedMap<String,AttributeMapping> attributeMappings = new TreeMap<>();
+//	private final Map<String,AttributeMapping> attributeMappings = new TreeMap<>();
+	private final Map<String,AttributeMapping> attributeMappings = new LinkedHashMap<>();
 
 	private final EmbeddableValuedModelPart valueMapping;
 

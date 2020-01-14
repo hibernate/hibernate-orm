@@ -134,7 +134,17 @@ public class CompositeTableGroup implements VirtualTableGroup {
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression) {
-		return underlyingTableGroup.resolveTableReference( tableExpression );
+		TableReference tableReference = underlyingTableGroup.getTableReference( tableExpression );
+		if ( tableReference != null ) {
+			return tableReference;
+		}
+		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
+				return primaryTableReference;
+			}
+		}
+		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 	}
 
 }

@@ -40,6 +40,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -317,6 +318,10 @@ public class SqmUtil {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 
 		// assume we have (or can create) a mapping for the parameter's Java type
-		return typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
+		BasicType basicType = typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
+		if ( basicType == null ) {
+			return StandardBasicTypes.SERIALIZABLE;
+		}
+		return basicType;
 	}
 }

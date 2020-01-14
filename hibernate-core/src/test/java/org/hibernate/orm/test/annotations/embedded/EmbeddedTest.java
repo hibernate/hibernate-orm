@@ -142,7 +142,7 @@ public class EmbeddedTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-	@FailureExpected(jiraKey = "HHH-8172")
+//	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -584,7 +584,7 @@ public class EmbeddedTest {
 					Manager manager = topManagement.iterator().next();
 					assertEquals( "Wrong element", "Bill", manager.getName() );
 					session.delete( manager );
-					session.delete( provider );
+					session.delete( internetProvider );
 				}
 		);
 	}

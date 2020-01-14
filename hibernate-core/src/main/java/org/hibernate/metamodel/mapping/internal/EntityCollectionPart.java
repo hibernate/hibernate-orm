@@ -112,7 +112,7 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		assert fetchParent.getReferencedMappingContainer() instanceof PluralAttributeMapping;
+//		assert fetchParent.getReferencedMappingContainer() instanceof PluralAttributeMapping;
 
 		// find or create the TableGroup associated with this `fetchablePath`
 		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(

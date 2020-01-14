@@ -104,7 +104,7 @@ public class UnionTableGroup implements VirtualTableGroup {
 
 	@Override
 	public TableReference getTableReference(String tableExpression) {
-		assert tableReference.getTableExpression().equals( tableExpression );
+//		assert tableReference.getTableExpression().equals( tableExpression );
 		return tableReference;
 	}
 

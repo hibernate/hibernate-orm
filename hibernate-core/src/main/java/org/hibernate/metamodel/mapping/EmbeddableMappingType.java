@@ -178,11 +178,6 @@ public class EmbeddableMappingType implements ManagedMappingType {
 					);
 				}
 				else if ( subtype instanceof EntityType ) {
-					final Dialect dialect = creationProcess.getCreationContext()
-							.getSessionFactory()
-							.getJdbcServices()
-							.getDialect();
-
 					final SingularAssociationAttributeMapping singularAssociationAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 							bootPropertyDescriptor.getName(),
 							attributeIndex,

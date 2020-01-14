@@ -76,9 +76,10 @@ class PropertyBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			tableIdentifier = RevEngUtils.createTableIdentifier(
+					table, 
+					getDefaultCatalog(), 
+					getDefaultSchema());
 			result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		}
 		return result;

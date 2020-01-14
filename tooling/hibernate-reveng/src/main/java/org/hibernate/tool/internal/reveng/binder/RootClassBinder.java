@@ -170,9 +170,10 @@ public class RootClassBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			tableIdentifier = RevEngUtils.createTableIdentifier(
+					table, 
+					getDefaultCatalog(), 
+					getDefaultSchema());
 			result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		}
 		if (result == null) {
@@ -189,9 +190,7 @@ public class RootClassBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		if (result == null) {
-			String catalog = RevEngUtils.getCatalogForModel(table.getCatalog(), getDefaultCatalog());
-			String schema = RevEngUtils.getSchemaForModel(table.getSchema(), getDefaultSchema());
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			tableIdentifier = RevEngUtils.createTableIdentifier(table, getDefaultCatalog(), getDefaultSchema());
 			result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		}
 		return result;

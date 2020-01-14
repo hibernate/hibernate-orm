@@ -52,14 +52,14 @@ public class RevEngUtils {
 	}
 
 	/** If catalog is equal to defaultCatalog then we return null so it will be null in the generated code. */
-	public static String getCatalogForModel(String catalog, String defaultCatalog) {
+	private static String getCatalogForModel(String catalog, String defaultCatalog) {
 		if(catalog==null) return null;
 		if(catalog.equals(defaultCatalog)) return null;
 		return catalog;
 	}
 
 	/** If catalog is equal to defaultSchema then we return null so it will be null in the generated code. */
-	public static String getSchemaForModel(String schema, String defaultSchema) {
+	private static String getSchemaForModel(String schema, String defaultSchema) {
 		if(schema==null) return null;
 		if(schema.equals(defaultSchema)) return null;
 		return schema;

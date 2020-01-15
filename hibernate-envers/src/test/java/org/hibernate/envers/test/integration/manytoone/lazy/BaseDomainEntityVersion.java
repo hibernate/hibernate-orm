@@ -35,18 +35,18 @@ public abstract class BaseDomainEntityVersion extends BaseDomainEntityMetadata {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if ( this == o ) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ( o == null || getClass() != o.getClass() ) {
             return false;
         }
         BaseDomainEntityVersion that = (BaseDomainEntityVersion) o;
-        return Objects.equals(getId(), that.getId()) && version == that.version;
+        return Objects.equals( getId(), that.getId() ) && version == that.version;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), version);
+        return Objects.hash( getId(), version );
     }
 }

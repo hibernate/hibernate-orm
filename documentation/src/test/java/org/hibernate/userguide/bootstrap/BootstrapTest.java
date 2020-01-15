@@ -148,14 +148,14 @@ public class BootstrapTest {
 
             // Read all mapping documents from a directory tree.
             // Assumes that any file named *.hbm.xml is a mapping document.
-            sources.addDirectory( new File( ".") );
+            sources.addDirectory( new File( "." ) );
 
             // Read mappings from a particular XML file
-            sources.addFile( new File( "./mapping.xml") );
+            sources.addFile( new File( "./mapping.xml" ) );
 
             // Read all mappings from a jar file.
             // Assumes that any file named *.hbm.xml is a mapping document.
-            sources.addJar( new File( "./entities.jar") );
+            sources.addJar( new File( "./entities.jar" ) );
 
             // Read a mapping as an application resource using the convention that a class named foo.bar.MyEntity is
             // mapped by a file named foo/bar/MyEntity.hbm.xml which can be resolved as a classpath resource.

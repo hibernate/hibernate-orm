@@ -37,12 +37,17 @@ public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInfo
 
 	@Override
 	protected String sequenceMinValueColumn() {
-		return null;
+		return "min_value";
+	}
+
+	@Override
+	protected String sequenceMaxValueColumn() {
+		return "max_value";
 	}
 
 	@Override
 	protected Long resultSetMinValue(ResultSet resultSet) throws SQLException {
-		BigDecimal asDecimal = resultSet.getBigDecimal( "min_value" );
+		BigDecimal asDecimal = resultSet.getBigDecimal( sequenceMinValueColumn() );
 
 		// BigDecimal.longValue() may return a result with the opposite sign
 		if ( asDecimal.compareTo( BigDecimal.valueOf( Long.MIN_VALUE ) ) == -1 ) {
@@ -54,7 +59,14 @@ public class SequenceInformationExtractorOracleDatabaseImpl extends SequenceInfo
 
 	@Override
 	protected Long resultSetMaxValue(ResultSet resultSet) throws SQLException {
-		return resultSet.getBigDecimal( "max_value" ).longValue();
+		BigDecimal asDecimal = resultSet.getBigDecimal( sequenceMaxValueColumn() );
+
+		// BigDecimal.longValue() may return a result with the opposite sign
+		if ( asDecimal.compareTo( BigDecimal.valueOf( Long.MAX_VALUE ) ) == 1 ) {
+			return Long.MAX_VALUE;
+		}
+
+		return asDecimal.longValue();
 	}
 
 	@Override

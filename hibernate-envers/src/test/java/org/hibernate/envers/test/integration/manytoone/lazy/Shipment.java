@@ -68,7 +68,7 @@ public class Shipment extends BaseDomainEntity {
     Shipment(Instant when, String who, Instant dueDate, String identifier, AddressVersion origin, AddressVersion dest) {
         super( when, who );
         this.dueDate = dueDate;
-        this.identifier = Objects.requireNonNull(identifier );
+        this.identifier = Objects.requireNonNull( identifier );
         this.origin = origin;
         this.destination = dest;
     }

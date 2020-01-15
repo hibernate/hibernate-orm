@@ -19,7 +19,7 @@ public class RevEngUtils {
 		if (result == null) {
 			String catalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
 			String schema = getSchemaForModel(table.getSchema(), defaultSchema);
-			tableIdentifier = new TableIdentifier(catalog, schema, table.getName());
+			tableIdentifier = TableIdentifier.create(catalog, schema, table.getName());
 			result = revengStrat.getPrimaryKeyColumnNames(tableIdentifier);
 		}
 		return result;
@@ -35,7 +35,7 @@ public class RevEngUtils {
 		if (result == null) {
 			String catalog = getCatalogForModel(tableIdentifier.getCatalog(), defaultCatalog);
 			String schema = getSchemaForModel(tableIdentifier.getSchema(), defaultSchema);
-			tableIdentifier = new TableIdentifier(catalog, schema, tableIdentifier.getName());
+			tableIdentifier = TableIdentifier.create(catalog, schema, tableIdentifier.getName());
 			result = revengStrat.getTableIdentifierStrategyName(tableIdentifier);
 		}
 		return result;	
@@ -48,7 +48,7 @@ public class RevEngUtils {
 		String tableName = table.getName();
 		String tableCatalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
 		String tableSchema = getSchemaForModel(table.getSchema(), defaultSchema);
-		return new TableIdentifier(tableCatalog, tableSchema, tableName);
+		return TableIdentifier.create(tableCatalog, tableSchema, tableName);
 	}
 
 	/** If catalog is equal to defaultCatalog then we return null so it will be null in the generated code. */

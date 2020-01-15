@@ -9,15 +9,19 @@ import org.hibernate.mapping.Table;
  */
 public class TableIdentifier {
 	
+	public static TableIdentifier create(Table table) {
+		return new TableIdentifier(table.getCatalog(), table.getSchema(), table.getName() );
+	}
+	
+	public static TableIdentifier create(String catalog, String schema, String name) {
+		return new TableIdentifier(catalog, schema, name);
+	}
+	
 	private final String catalog;
 	private final String schema;
 	private final String name;
 	
-	public TableIdentifier(String name) {
-		this(null,null,name);
-	}
-	
-	public TableIdentifier(String catalog, String schema, String name) {
+	private TableIdentifier(String catalog, String schema, String name) {
 		this.catalog = (catalog==null?null:catalog.intern() );
 		this.schema = (schema==null?null:schema.intern() );
 		this.name = (name==null?null:name.intern() );		
@@ -63,10 +67,6 @@ public class TableIdentifier {
 		if (left==right) return true;
 		if (left==null || right==null) return false;
 		return left.equals(right);
-	}
-	
-	public static TableIdentifier create(Table table) {
-		return new TableIdentifier(table.getCatalog(), table.getSchema(), table.getName() );
 	}
 	
 	public String toString() {

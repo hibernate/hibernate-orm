@@ -50,8 +50,7 @@ public class TableCollector {
 		        String tableName = (String) tableRs.get("TABLE_NAME");
 				String schemaName = (String) tableRs.get("TABLE_SCHEM");
 		        String catalogName = (String) tableRs.get("TABLE_CAT");
-		        
-		        TableIdentifier ti = new TableIdentifier(catalogName, schemaName, tableName);		        
+		        TableIdentifier ti = TableIdentifier.create(catalogName, schemaName, tableName);		        
 				if(revengStrategy.excludeTable(ti) ) {
 					log.debug("Table " + ti + " excluded by strategy");
 		        	continue;
@@ -89,7 +88,7 @@ public class TableCollector {
 			  String schemaName = (String) tableRs.get("TABLE_SCHEM");
 			  String catalogName = (String) tableRs.get("TABLE_CAT");
 			  
-			  TableIdentifier ti = new TableIdentifier(catalogName, schemaName, tableName);
+			  TableIdentifier ti = TableIdentifier.create(catalogName, schemaName, tableName);
 			   if(revengStrategy.excludeTable(ti) ) {
 			   log.debug("Table " + ti + " excluded by strategy");
 			   continue;

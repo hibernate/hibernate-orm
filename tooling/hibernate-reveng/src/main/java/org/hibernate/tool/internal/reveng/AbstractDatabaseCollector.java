@@ -29,13 +29,11 @@ public abstract class AbstractDatabaseCollector implements DatabaseCollector {
 	}
 
 	public String getSuggestedIdentifierStrategy(String catalog, String schema, String name) {
-		TableIdentifier identifier = new TableIdentifier(catalog, schema, name);
-		return (String) suggestedIdentifierStrategies.get(identifier);
+		return (String) suggestedIdentifierStrategies.get(TableIdentifier.create(catalog, schema, name));
 	}
 
 	public void addSuggestedIdentifierStrategy(String catalog, String schema, String name, String idstrategy) {
-		TableIdentifier identifier = new TableIdentifier(catalog, schema, name);
-		suggestedIdentifierStrategies.put(identifier, idstrategy);
+		suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
 	}
 	
 	protected String quote(String name) {

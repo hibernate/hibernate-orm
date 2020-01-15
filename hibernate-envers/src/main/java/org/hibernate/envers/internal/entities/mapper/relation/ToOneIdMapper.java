@@ -54,23 +54,15 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			Object oldObj) {
 		final HashMap<String, Object> newData = new HashMap<>();
 
-		Object oldObject = oldObj;
-		Object newObject = newObj;
-		if ( lazyMapping ) {
-			if ( nonInsertableFake && oldObject instanceof HibernateProxy ) {
-				oldObject = ( (HibernateProxy) oldObject ).getHibernateLazyInitializer().getImplementation();
-			}
-
-
-			if ( !nonInsertableFake && newObject instanceof HibernateProxy ) {
-				newObject = ( (HibernateProxy) newObject ).getHibernateLazyInitializer().getImplementation();
-			}
+		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
+		// bi-directional relation, we always store the "old", unchanged data, to prevent storing changes made
+		// to this field. It is the responsibility of the collection to properly update it if it really changed.
+		Object entity = nonInsertableFake ? oldObj : newObj;
+		if ( lazyMapping && entity instanceof HibernateProxy ) {
+			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
 		}
 
-		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
-		// bi-directional relation, we always store the "old", unchaged data, to prevent storing changes made
-		// to this field. It is the responsibility of the collection to properly update it if it really changed.
-		delegate.mapToMapFromEntity( newData, nonInsertableFake ? oldObject : newObject );
+		delegate.mapToMapFromEntity( newData, entity );
 
 		for ( Map.Entry<String, Object> entry : newData.entrySet() ) {
 			data.put( entry.getKey(), entry.getValue() );

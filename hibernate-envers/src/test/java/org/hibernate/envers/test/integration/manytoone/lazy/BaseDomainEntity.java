@@ -39,10 +39,10 @@ public abstract class BaseDomainEntity extends BaseDomainEntityMetadata {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if ( this == o ) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if ( o == null || getClass() != o.getClass() ) {
             return false;
         }
         BaseDomainEntity that = (BaseDomainEntity) o;
@@ -51,6 +51,6 @@ public abstract class BaseDomainEntity extends BaseDomainEntityMetadata {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash( id );
     }
 }

@@ -168,7 +168,8 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 				resultSetRef,
 				querySpacesCopy(),
 				callable,
-				queryReturns
+				queryReturns,
+				passDistinctThrough
 		);
 	}
 

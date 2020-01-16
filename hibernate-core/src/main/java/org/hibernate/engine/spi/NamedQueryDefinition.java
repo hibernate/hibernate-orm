@@ -33,6 +33,7 @@ public class NamedQueryDefinition implements Serializable {
 	private final CacheMode cacheMode;
 	private final boolean readOnly;
 	private final String comment;
+	private final Boolean passDistinctThrough;
 
 	// added for jpa 2.1
 	private final Integer firstResult;
@@ -133,7 +134,8 @@ public class NamedQueryDefinition implements Serializable {
 				comment,
 				parameterTypes,
 				null,		// firstResult
-				null		// maxResults
+				null,		// maxResults,
+				null
 		);
 	}
 
@@ -151,7 +153,8 @@ public class NamedQueryDefinition implements Serializable {
 			String comment,
 			Map parameterTypes,
 			Integer firstResult,
-			Integer maxResults) {
+			Integer maxResults,
+			Boolean passDistinctThrough) {
 		this.name = name;
 		this.query = query;
 		this.cacheable = cacheable;
@@ -167,6 +170,7 @@ public class NamedQueryDefinition implements Serializable {
 
 		this.firstResult = firstResult;
 		this.maxResults = maxResults;
+		this.passDistinctThrough = passDistinctThrough;
 	}
 
 	public String getName() {
@@ -230,6 +234,10 @@ public class NamedQueryDefinition implements Serializable {
 		return maxResults;
 	}
 
+	public Boolean isPassDistinctThrough() {
+		return passDistinctThrough;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getName() + '(' + name + " [" + query + "])";
@@ -250,7 +258,8 @@ public class NamedQueryDefinition implements Serializable {
 				getComment(),
 				getParameterTypes(),
 				getFirstResult(),
-				getMaxResults()
+				getMaxResults(),
+				isPassDistinctThrough()
 		);
 	}
 }

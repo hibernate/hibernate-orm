@@ -28,6 +28,7 @@ public class NamedQueryDefinitionBuilder {
 	protected LockOptions lockOptions;
 	protected Integer firstResult;
 	protected Integer maxResults;
+	protected Boolean passDistinctThrough;
 
 	public NamedQueryDefinitionBuilder() {
 	}
@@ -114,6 +115,11 @@ public class NamedQueryDefinitionBuilder {
 		return this;
 	}
 
+	public NamedQueryDefinitionBuilder setPassDistinctThrough(Boolean passDistinctThrough) {
+		this.passDistinctThrough = passDistinctThrough;
+		return this;
+	}
+
 	public NamedQueryDefinition createNamedQueryDefinition() {
 		return new NamedQueryDefinition(
 				name,
@@ -129,7 +135,8 @@ public class NamedQueryDefinitionBuilder {
 				comment,
 				parameterTypes,
 				firstResult,
-				maxResults
+				maxResults,
+				passDistinctThrough
 		);
 	}
 }

@@ -8,7 +8,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -24,8 +23,7 @@ public class BasicColumnProcessor {
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
 			String defaultSchema, String defaultCatalog, 
-			Table table, 
-			ProgressListener progress) {
+			Table table) {
 		
 		String qualify = TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() );
 		Iterator<?> columnIterator = null;
@@ -33,7 +31,6 @@ public class BasicColumnProcessor {
 		try {
 			Map<?, ?> columnRs = null;
 			log.debug("Finding columns for " + qualify );
-			progress.startSubTask("Finding columns for " + qualify);
 			columnIterator = metaDataDialect.getColumns(getCatalogForDBLookup(table.getCatalog(), defaultCatalog), getSchemaForDBLookup(table.getSchema(), defaultSchema), table.getName(), null);
 			//dumpHeader(columnRs);
 			while (columnIterator.hasNext() ) {

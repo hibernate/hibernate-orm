@@ -12,7 +12,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -27,8 +26,7 @@ public class TableCollector {
 			ReverseEngineeringStrategy revengStrategy, 
 			DatabaseCollector dbs, 
 			SchemaSelection schemaSelection, 
-			Set<Table> hasIndices, 
-			ProgressListener progress) {
+			Set<Table> hasIndices) {
 		Map<String,Object> tableRs = null;
 		Iterator<Map<String,Object>> tableIterator = null;
 		List<Map<String,Object>> tables = new ArrayList<Map<String,Object>>();
@@ -36,8 +34,6 @@ public class TableCollector {
 		// TODO: the code below detects if the reveng is multischema'ed, but not used for anything yet. should be used to remove schema/catalog info from output if only one schema/catalog used.
 		
 		  try {			  
-		     progress.startSubTask("Finding tables in " + schemaSelection);
-		     
 		     String matchCatalog = StringHelper.replace(schemaSelection.getMatchCatalog(),".*", "%");
 		     String matchSchema = StringHelper.replace(schemaSelection.getMatchSchema(),".*", "%");
 		     String matchTable = StringHelper.replace(schemaSelection.getMatchTable(),".*", "%");
@@ -116,7 +112,6 @@ public class TableCollector {
 						  catalogName=null;
 					  }
 					  log.debug("Adding table " + tableName + " of type " + tableType);
-					  progress.startSubTask("Found " + tableName);
 					  Table table = dbs.addTable(schemaName, catalogName, tableName);
 					  table.setComment(comment);
 					  if(tableType.equalsIgnoreCase("TABLE")) {

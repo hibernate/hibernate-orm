@@ -10,8 +10,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -21,7 +21,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.ForeignKeyProcessor;
@@ -70,7 +69,7 @@ public class DatabaseReader {
 		}
 	}
 		
-	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema, ProgressListener progress) {
+	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema) {
 		try {
 			getMetaDataDialect().configure(provider);
 			revengStrategy.configure(dbs);
@@ -80,18 +79,18 @@ public class DatabaseReader {
 			List<SchemaSelection> schemaSelectors = revengStrategy.getSchemaSelections();
 			List<Table> foundTables = new ArrayList<Table>();
 			if(schemaSelectors==null) {
-				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, new SchemaSelection(catalog, schema), hasIndices, progress));
+				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, new SchemaSelection(catalog, schema), hasIndices));
 			} else {
 				for (Iterator<SchemaSelection> iter = schemaSelectors.iterator(); iter.hasNext();) {
 					SchemaSelection selection = iter.next();
-					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices, progress));
+					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices));
 				}
 			}
 			
 			Iterator<Table> tables = foundTables.iterator(); // not dbs.iterateTables() to avoid "double-read" of columns etc.
 			while ( tables.hasNext() ) {
 				Table table = tables.next();
-				BasicColumnProcessor.processBasicColumns(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, table, progress);
+				BasicColumnProcessor.processBasicColumns(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, table);
 				PrimaryKeyProcessor.processPrimaryKey(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, table);
 				if(hasIndices.contains(table)) {
 					IndexProcessor.processIndices(getMetaDataDialect(), defaultSchema, defaultCatalog, table);
@@ -99,7 +98,7 @@ public class DatabaseReader {
 			}
 			
 			tables = foundTables.iterator(); //dbs.iterateTables();
-			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys( dbs, tables, progress );
+			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys( dbs, tables);
 			
 			dbs.setOneToManyCandidates(oneToManyCandidates);
 			
@@ -117,7 +116,7 @@ public class DatabaseReader {
 	 * @param tables
 	 * @return
 	 */
-	private Map<String, List<ForeignKey>> resolveForeignKeys(DatabaseCollector dbs, Iterator<Table> tables, ProgressListener progress) {
+	private Map<String, List<ForeignKey>> resolveForeignKeys(DatabaseCollector dbs, Iterator<Table> tables) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
 		while ( tables.hasNext() ) {
 			Table table = (Table) tables.next();
@@ -125,7 +124,7 @@ public class DatabaseReader {
 			// all referenced tables (this ensure the columns are the same instances througout the basic JDBC derived model.
 			// after this stage it should be "ok" to divert from keeping columns in sync as it can be required if the same 
 			//column is used with different aliases in the ORM mapping.
-			ForeignKeysInfo foreignKeys = ForeignKeyProcessor.processForeignKeys(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, table, progress);
+			ForeignKeysInfo foreignKeys = ForeignKeyProcessor.processForeignKeys(getMetaDataDialect(), revengStrategy, defaultSchema, defaultCatalog, dbs, table);
 			fks.add( foreignKeys );				  	   
 		}
 		
@@ -159,15 +158,6 @@ public class DatabaseReader {
 	    	
 	    }
 
-		static class NoopProgressListener implements ProgressListener {
-			public void startSubTask(String name) {	// noop };
-			}
-		}
-		
-		public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema) {
-			return readDatabaseSchema(dbs, catalog, schema, new NoopProgressListener());
-		}
-				
 		public Set<String> readSequences(String sql) {
 			Set<String> sequences = new HashSet<String>();
 			if (sql!=null) {

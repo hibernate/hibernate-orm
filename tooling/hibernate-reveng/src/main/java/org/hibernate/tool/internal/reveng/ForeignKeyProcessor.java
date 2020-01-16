@@ -13,7 +13,6 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
-import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -30,8 +29,7 @@ public class ForeignKeyProcessor {
 			String  defaultSchema, 
 			String defaultCatalog, 
 			DatabaseCollector dbs, 
-			Table referencedTable, 
-			ProgressListener progress) {
+			Table referencedTable) {
 		// foreign key name to list of columns
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
 		// foreign key name to Table
@@ -45,7 +43,6 @@ public class ForeignKeyProcessor {
 		Iterator<Map<String, Object>> exportedKeyIterator = null;
 		
         log.debug("Calling getExportedKeys on " + referencedTable);
-        progress.startSubTask("Finding exported foreignkeys on " + referencedTable.getName());
         try {
         	Map<String, Object> exportedKeyRs = null;
         	exportedKeyIterator = metaDataDialect.getExportedKeys(getCatalogForDBLookup(referencedTable.getCatalog(), defaultCatalog), getSchemaForDBLookup(referencedTable.getSchema(), defaultSchema), referencedTable.getName() );

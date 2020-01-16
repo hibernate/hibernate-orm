@@ -13,6 +13,7 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.Path;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
@@ -41,7 +42,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 	protected MetadataDescriptor createMetadataDescriptor() {
 		Properties properties = loadPropertiesFile();
 		ReverseEngineeringStrategy res = createReverseEngineeringStrategy();
-		properties.put(MetadataDescriptor.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
+		properties.put(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
 		return MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(
 						res, 

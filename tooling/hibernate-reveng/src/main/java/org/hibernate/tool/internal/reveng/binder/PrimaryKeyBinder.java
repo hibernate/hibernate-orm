@@ -25,8 +25,8 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
-import org.hibernate.tool.internal.reveng.RevEngUtils;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils.ForeignKeyForColumns;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 class PrimaryKeyBinder extends AbstractBinder {
 	
@@ -109,7 +109,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		PrimaryKeyInfo result = new PrimaryKeyInfo();
 		result.suggestedProperties = getRevengStrategy().getTableIdentifierProperties(tableIdentifier);
 		if (keyColumns.size() == 1) {
-			result.suggestedStrategy = RevEngUtils.getTableIdentifierStrategyNameInRevengStrategy(
+			result.suggestedStrategy = RevengUtils.getTableIdentifierStrategyNameInRevengStrategy(
 					getRevengStrategy(), 
 					tableIdentifier, 
 					getDefaultCatalog(), 

@@ -21,7 +21,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
-import org.hibernate.tool.internal.reveng.RevEngUtils;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 public class RootClassBinder extends AbstractBinder {
 	
@@ -170,7 +170,7 @@ public class RootClassBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().tableToMetaAttributes(tableIdentifier);
 		if (result == null) {
-			tableIdentifier = RevEngUtils.createTableIdentifier(
+			tableIdentifier = RevengUtils.createTableIdentifier(
 					table, 
 					getDefaultCatalog(), 
 					getDefaultSchema());
@@ -190,7 +190,7 @@ public class RootClassBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		if (result == null) {
-			tableIdentifier = RevEngUtils.createTableIdentifier(table, getDefaultCatalog(), getDefaultSchema());
+			tableIdentifier = RevengUtils.createTableIdentifier(table, getDefaultCatalog(), getDefaultSchema());
 			result = getRevengStrategy().columnToPropertyName(tableIdentifier, columnName);
 		}
 		return result;

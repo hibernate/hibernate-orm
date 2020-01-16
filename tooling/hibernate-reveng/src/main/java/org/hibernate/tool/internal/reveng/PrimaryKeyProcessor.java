@@ -15,6 +15,7 @@ import org.hibernate.sql.Alias;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.jboss.logging.Logger;
 
 public class PrimaryKeyProcessor {
@@ -92,7 +93,7 @@ public class PrimaryKeyProcessor {
 	      
 	      if(key==null) {
 	      	log.warn("The JDBC driver didn't report any primary key columns in " + table.getName() + ". Asking rev.eng. strategy" );
-	      	List<String> userPrimaryKey = RevEngUtils.getPrimaryKeyInfoInRevengStrategy(revengStrategy, table, defaultCatalog, defaultSchema);	      	if(userPrimaryKey!=null && !userPrimaryKey.isEmpty()) {
+	      	List<String> userPrimaryKey = RevengUtils.getPrimaryKeyInfoInRevengStrategy(revengStrategy, table, defaultCatalog, defaultSchema);	      	if(userPrimaryKey!=null && !userPrimaryKey.isEmpty()) {
 	      		key = new PrimaryKey(table);
 	      		key.setName(new Alias(15, "PK").toAliasString( table.getName()));
 	      		key.setTable(table);

@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.util;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class RevEngUtils {
+public class RevengUtils {
 
 	public static List<String> getPrimaryKeyInfoInRevengStrategy(
 			ReverseEngineeringStrategy revengStrat, 

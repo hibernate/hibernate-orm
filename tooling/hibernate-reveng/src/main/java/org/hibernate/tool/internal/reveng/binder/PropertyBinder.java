@@ -13,7 +13,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.RevEngUtils;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 class PropertyBinder extends AbstractBinder {
 
@@ -76,7 +76,7 @@ class PropertyBinder extends AbstractBinder {
 		TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		result = getRevengStrategy().columnToMetaAttributes(tableIdentifier, column);
 		if (result == null) {
-			tableIdentifier = RevEngUtils.createTableIdentifier(
+			tableIdentifier = RevengUtils.createTableIdentifier(
 					table, 
 					getDefaultCatalog(), 
 					getDefaultSchema());

@@ -16,6 +16,7 @@ import org.hibernate.tool.api.reveng.DatabaseCollector;
 import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
@@ -140,7 +141,7 @@ public class ForeignKeyProcessor {
         }
         
         List<ForeignKey> userForeignKeys = revengStrategy.getForeignKeys(
-        		RevEngUtils.createTableIdentifier(referencedTable, defaultCatalog, defaultSchema));
+        		RevengUtils.createTableIdentifier(referencedTable, defaultCatalog, defaultSchema));
         if(userForeignKeys!=null) {
         	Iterator<ForeignKey> iterator = userForeignKeys.iterator();
         	while ( iterator.hasNext() ) {

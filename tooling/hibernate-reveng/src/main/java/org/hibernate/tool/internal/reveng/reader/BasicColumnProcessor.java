@@ -11,7 +11,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ProgressListener;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.RevEngUtils;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
@@ -45,7 +45,7 @@ public class BasicColumnProcessor {
 				String columnName = (String) columnRs.get("COLUMN_NAME");
 				String comment = (String) columnRs.get("REMARKS");
 				
-				TableIdentifier ti = RevEngUtils.createTableIdentifier(table, defaultCatalog, defaultSchema);
+				TableIdentifier ti = RevengUtils.createTableIdentifier(table, defaultCatalog, defaultSchema);
 				if(revengStrategy.excludeColumn(ti, columnName)) {
 					log.debug("Column " + ti + "." + columnName + " excluded by strategy");
 					continue;

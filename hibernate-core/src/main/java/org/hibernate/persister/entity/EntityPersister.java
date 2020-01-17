@@ -34,7 +34,6 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -115,8 +114,6 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * @return The owning SessionFactory.
 	 */
 	SessionFactoryImplementor getFactory();
-
-	NavigableRole getNavigableRole();
 
 	@Override
 	default String getSqlAliasStem() {

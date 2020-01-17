@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -34,6 +34,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EntityCollectionPart implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable {
+	private final NavigableRole navigableRole;
+	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
@@ -41,14 +43,19 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 
 	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
+			CollectionPersister collectionDescriptor,
 			Nature nature,
 			Value bootModelValue,
 			EntityMappingType entityMappingType,
 			MappingModelCreationProcess creationProcess) {
+		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
+		this.collectionDescriptor = collectionDescriptor;
+
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public void finishInitialization(
 			CollectionPersister collectionDescriptor,
 			Collection bootValueMapping,
@@ -91,6 +98,11 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getEntityMappingType().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	@Override
@@ -150,6 +162,11 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Override

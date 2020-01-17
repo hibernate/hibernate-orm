@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -41,6 +42,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class BasicValuedSingularAttributeMapping extends AbstractSingularAttributeMapping implements SingularAttributeMapping, BasicValuedModelPart {
+	private final NavigableRole navigableRole;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
 
@@ -61,6 +63,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
 		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, basicType, declaringType, propertyAccess );
+		this.navigableRole = declaringType.getNavigableRole().append( attributeName );
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.valueConverter = valueConverter;
@@ -95,6 +98,11 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public BasicValueConverter getConverter() {
 		return valueConverter;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	@Override

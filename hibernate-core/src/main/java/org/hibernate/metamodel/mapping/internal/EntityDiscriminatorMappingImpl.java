@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -19,6 +22,7 @@ import org.hibernate.type.BasicType;
  * @author Steve Ebersole
  */
 public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorMapping {
+	private final NavigableRole navigableRole;
 
 	public EntityDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
@@ -26,6 +30,7 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 			String mappedColumnExpression,
 			BasicType mappingType) {
 		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
+		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 	}
 
 	@Override
@@ -51,5 +56,15 @@ public class EntityDiscriminatorMappingImpl extends AbstractEntityDiscriminatorM
 				getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return getEntityDescriptor();
 	}
 }

@@ -8,6 +8,9 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -21,19 +24,20 @@ import org.hibernate.type.BasicType;
  * @author Andrea Boriero
  */
 public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscriminatorMapping {
-
+	private final NavigableRole navigableRole;
 	private final CaseSearchedExpression caseSearchedExpression;
 	private final List<ColumnReference> columnReferences;
 
 	public JoinedSubclassDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
 			String tableExpression,
-			String mappedColumExpression,
+			String mappedColumnExpression,
 			CaseSearchedExpression caseSearchedExpression,
 			List<ColumnReference> columnReferences,
 			BasicType mappingType) {
-		super( entityDescriptor, tableExpression, mappedColumExpression, mappingType );
+		super( entityDescriptor, tableExpression, mappedColumnExpression, mappingType );
 
+		this.navigableRole = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
 		this.caseSearchedExpression = caseSearchedExpression;
 		this.columnReferences = columnReferences;
 	}
@@ -65,4 +69,13 @@ public class JoinedSubclassDiscriminatorMappingImpl extends AbstractEntityDiscri
 		);
 	}
 
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return getEntityDescriptor();
+	}
 }

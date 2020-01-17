@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -32,6 +33,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -56,12 +58,15 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class EmbeddedAttributeMapping
 		extends AbstractSingularAttributeMapping
 		implements EmbeddableValuedFetchable, Fetchable {
+	private final NavigableRole navigableRole;
+
 	private final String tableExpression;
 	private final String[] attrColumnNames;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
 			String name,
+			NavigableRole navigableRole,
 			int stateArrayPosition,
 			String tableExpression,
 			String[] attrColumnNames,
@@ -79,6 +84,7 @@ public class EmbeddedAttributeMapping
 				declaringType,
 				propertyAccess
 		);
+		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
 	}
@@ -92,7 +98,6 @@ public class EmbeddedAttributeMapping
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return getMappedTypeDescriptor();
 	}
-
 	@Override
 	public SingularAttributeMapping getParentInjectionAttributeMapping() {
 		// todo (6.0) : implement
@@ -151,6 +156,18 @@ public class EmbeddedAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+
+	@Override
+	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
+		// an embeddable can never be circular
+		return false;
 	}
 
 

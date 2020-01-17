@@ -14,9 +14,11 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -40,7 +42,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class BasicValuedCollectionPart implements CollectionPart, BasicValuedModelPart {
-
+	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
 	private final BasicType mapper;
@@ -56,6 +58,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 			BasicValueConverter valueConverter,
 			String tableExpression,
 			String columnExpression) {
+		this.navigableRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.mapper = mapper;
@@ -92,6 +95,11 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return mapper.getMappedJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	@Override
@@ -134,6 +142,11 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
 
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Override

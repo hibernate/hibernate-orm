@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
@@ -48,10 +49,13 @@ import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
  */
 public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
 		implements EntityValuedFetchable, EntityAssociationMapping, TableGroupJoinProducer {
+	private final NavigableRole navigableRole;
+	private final String subRole;
+
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final boolean referringPrimaryKey;
-	final protected boolean unwrapProxy;
+	private final boolean unwrapProxy;
 	private final String referencedPropertyName;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
@@ -80,6 +84,15 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		referencedPropertyName = value.getReferencedPropertyName();
 		referringPrimaryKey = value.isReferenceToPrimaryKey();
 		unwrapProxy = value.isUnwrapProxy();
+
+		this.navigableRole = declaringType.getNavigableRole().appendContainer( name );
+		final int containerMarkerPosition = navigableRole.getFullPath().lastIndexOf( '#' );
+		if ( containerMarkerPosition < 0 ) {
+			subRole = name;
+		}
+		else {
+			subRole = navigableRole.getFullPath().substring( containerMarkerPosition + 1 );
+		}
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
@@ -102,6 +115,61 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public EntityMappingType getEntityMappingType() {
 		return getMappedTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
+		// E.g. say we have a query like:
+		// 		select p
+		//		from Person p
+		//		join fetch p.address a
+		//		join fetch a.owner
+		//
+		// where `owner` is the "owner" (in the mapped-by sense) of the association.  In other words it is a
+		// bi-directional mapping.
+		//
+		// This call is trying to generate a fetch for the NavigablePath `Person(p).address`.
+		// What we need to determine is whether owner is the same as address's container.  This might include
+		// multiple parent-paths which we need to walk up to find the container (an entity of collection)
+
+		final NavigablePath parentNavigablePath = fetchParent.getNavigablePath();
+		NavigablePath pathToParentParent = parentNavigablePath.getParent();
+		if ( pathToParentParent == null ) {
+			return false;
+		}
+
+		for ( int i = 0; i < numberOfPathElementsToContainer; i++ ) {
+			pathToParentParent = pathToParentParent.getParent();
+		}
+
+		assert pathToParentParent != null;
+
+		final ModelPartContainer modelPart = creationState.getSqlAstCreationState()
+				.getFromClauseAccess()
+				.findTableGroup( pathToParentParent )
+				.getModelPart();
+
+
+		final ModelPart subPart = modelPart.findSubPart( parentNavigablePath.getLocalName(), null );
+		if ( subPart instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping part = (EntityAssociationMapping) subPart;
+
+			if ( parentNavigablePath.getLocalName().equals( referencedPropertyName )
+					&& part.getFetchableName().equals( referencedPropertyName ) ) {
+				return true;
+			}
+			else if ( part.getKeyTargetMatchPart() != null
+					&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override
@@ -252,43 +320,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public String getSqlAliasStem() {
 		return sqlAliasStem;
-	}
-
-	@Override
-	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
-		final NavigablePath panentNaviblePath = fetchParent.getNavigablePath();
-		final NavigablePath parentParentNavigablePath = panentNaviblePath.getParent();
-		if ( parentParentNavigablePath == null ) {
-			return false;
-		}
-		if ( getAttributeName().equals( parentParentNavigablePath.getLocalName() ) ) {
-			return true;
-		}
-		else {
-			final ModelPartContainer modelPart = creationState.getSqlAstCreationState()
-					.getFromClauseAccess()
-					.findTableGroup( parentParentNavigablePath )
-					.getModelPart();
-
-			final ModelPart subPart = modelPart.findSubPart( panentNaviblePath.getLocalName(), null );
-			if ( subPart instanceof EntityAssociationMapping ) {
-				final EntityAssociationMapping part = (EntityAssociationMapping) subPart;
-
-				if ( panentNaviblePath.getLocalName().equals( referencedPropertyName )
-						&& part.getFetchableName().equals( referencedPropertyName ) ) {
-					return true;
-				}
-				else if ( part.getKeyTargetMatchPart() != null
-						&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
-					return true;
-				}
-			}
-			else {
-				return false;
-			}
-		}
-
-		return false;
 	}
 
 	public boolean isNullable() {

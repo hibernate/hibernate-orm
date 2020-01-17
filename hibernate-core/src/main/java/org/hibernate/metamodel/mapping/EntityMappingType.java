@@ -55,6 +55,11 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 	String getEntityName();
 
 	@Override
+	default EntityMappingType findContainingEntityMapping() {
+		return this;
+	}
+
+	@Override
 	default String getPartName() {
 		return getEntityName();
 	}

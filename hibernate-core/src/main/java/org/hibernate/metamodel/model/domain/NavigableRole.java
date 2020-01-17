@@ -28,6 +28,10 @@ public class NavigableRole implements DotIdentifierSequence {
 	private final String fullPath;
 
 	public NavigableRole(NavigableRole parent, String localName) {
+		this( parent, localName, '.' );
+	}
+
+	public NavigableRole(NavigableRole parent, String localName, char separator) {
 		this.parent = parent;
 		this.localName = localName;
 
@@ -45,7 +49,7 @@ public class NavigableRole implements DotIdentifierSequence {
 					prefix = "";
 				}
 				else {
-					prefix = resolvedParent + '.';
+					prefix = resolvedParent + separator;
 				}
 			}
 			else {
@@ -64,8 +68,18 @@ public class NavigableRole implements DotIdentifierSequence {
 		this( "" );
 	}
 
-	public NavigableRole append(String property) {
-		return new NavigableRole( this, property );
+	public NavigableRole append(String name) {
+		return new NavigableRole( this, name );
+	}
+
+	/**
+	 * Uses `#` as the separator rather than `.`.  The intention being that the incoming name is a
+	 * {@link org.hibernate.metamodel.mapping.ModelPartContainer} of some sort
+	 *
+	 * todo (6.0) : better name?
+	 */
+	public NavigableRole appendContainer(String name) {
+		return new NavigableRole( this, name, '#' );
 	}
 
 	public NavigableRole getParent() {

@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -49,6 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedFetchable {
+	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
 	private final EmbeddableMappingType embeddableMappingType;
@@ -68,6 +70,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			String containingTableExpression,
 			List<String> columnExpressions,
 			String sqlAliasStem) {
+		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.embeddableMappingType = embeddableMappingType;
@@ -230,6 +233,16 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getEmbeddableTypeDescriptor().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Override

@@ -56,6 +56,7 @@ import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -66,6 +67,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
@@ -130,6 +132,8 @@ public class MappingModelCreationHelper {
 		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
+		final NavigableRole idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+
 		return new BasicEntityIdentifierMapping() {
 			@Override
 			public PropertyAccess getPropertyAccess() {
@@ -179,6 +183,11 @@ public class MappingModelCreationHelper {
 			}
 
 			@Override
+			public EntityMappingType findContainingEntityMapping() {
+				return entityPersister;
+			}
+
+			@Override
 			public void visitJdbcTypes(
 					Consumer<JdbcMapping> action,
 					Clause clause,
@@ -198,6 +207,11 @@ public class MappingModelCreationHelper {
 			@Override
 			public JavaTypeDescriptor getJavaTypeDescriptor() {
 				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+			}
+
+			@Override
+			public NavigableRole getNavigableRole() {
+				return idRole;
 			}
 
 			@Override
@@ -509,6 +523,7 @@ public class MappingModelCreationHelper {
 				attrType,
 				attributeMappingType -> new EmbeddedAttributeMapping(
 						attrName,
+						declaringType.getNavigableRole().append( attrName ),
 						stateArrayPosition,
 						tableExpression,
 						attrColumnNames,
@@ -958,7 +973,7 @@ public class MappingModelCreationHelper {
 			SingularAssociationAttributeMapping attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
-			EntityPersister declaringEntityDescriptor,
+			EntityMappingType declaringEntityDescriptor,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		if ( attributeMapping.getForeignKeyDescriptor() != null ) {
@@ -1107,6 +1122,7 @@ public class MappingModelCreationHelper {
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart indexDescriptor = new EntityCollectionPart(
+					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
 					bootMapKeyDescriptor,
 					associatedEntity,
@@ -1197,6 +1213,7 @@ public class MappingModelCreationHelper {
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart elementDescriptor = new EntityCollectionPart(
+					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
 					bootDescriptor.getElement(),
 					associatedEntity,
@@ -1259,7 +1276,7 @@ public class MappingModelCreationHelper {
 			String attrName,
 			int stateArrayPosition,
 			Property bootProperty,
-			EntityPersister declaringType,
+			ManagedMappingType declaringType,
 			EntityType attrType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
@@ -1310,7 +1327,7 @@ public class MappingModelCreationHelper {
 							attributeMapping,
 							bootProperty,
 							(ToOne) bootProperty.getValue(),
-							declaringType,
+							declaringType.findContainingEntityMapping(),
 							dialect,
 							creationProcess
 					);

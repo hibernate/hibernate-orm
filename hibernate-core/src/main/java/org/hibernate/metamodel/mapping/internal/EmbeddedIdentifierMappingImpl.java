@@ -20,12 +20,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -58,6 +60,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Andrea Boriero
  */
 public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping, EmbeddableValuedFetchable {
+	private final NavigableRole navigableRole;
 	private final EntityMappingType entityMapping;
 	private final String name;
 	private final MappingType type;
@@ -77,6 +80,7 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 			String tableExpression,
 			String[] attrColumnNames,
 			SessionFactoryImplementor sessionFactory) {
+		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		this.entityMapping = entityMapping;
 		this.name = name;
 		this.type = type;
@@ -100,6 +104,11 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
 	}
 
 	@Override
@@ -290,6 +299,11 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 
 	public void visitColumns(ColumnConsumer consumer) {
 		getEmbeddableTypeDescriptor().visitColumns( consumer );
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return entityMapping;
 	}
 
 	@Override

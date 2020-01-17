@@ -17,10 +17,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -257,6 +259,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return jdbcMapping.getJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

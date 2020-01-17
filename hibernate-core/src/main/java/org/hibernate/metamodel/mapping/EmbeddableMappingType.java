@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -26,16 +25,17 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -221,6 +221,11 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return valueMapping.getNavigableRole();
+	}
+
+	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -330,6 +335,11 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		attributeMappings.values().forEach(
 				attributeMapping -> attributeMapping.visitColumns( consumer )
 		);
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return valueMapping.findContainingEntityMapping();
 	}
 
 	@Override

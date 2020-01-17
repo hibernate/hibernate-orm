@@ -11,9 +11,11 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -36,6 +38,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierDescriptor {
+	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final String containingTableName;
 	private final String columnName;
@@ -46,6 +49,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 			String containingTableName,
 			String columnName,
 			BasicType type) {
+		this.navigableRole = collectionDescriptor.getNavigableRole().append( Nature.ID.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.containingTableName = containingTableName;
 		this.columnName = columnName;
@@ -90,6 +94,16 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
+	}
+
+	@Override
+	public NavigableRole getNavigableRole() {
+		return navigableRole;
+	}
+
+	@Override
+	public EntityMappingType findContainingEntityMapping() {
+		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Override

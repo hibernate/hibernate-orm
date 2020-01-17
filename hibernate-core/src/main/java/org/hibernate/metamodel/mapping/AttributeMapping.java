@@ -26,4 +26,9 @@ public interface AttributeMapping extends ModelPart, ValueMapping {
 	ManagedMappingType getDeclaringType();
 
 	PropertyAccess getPropertyAccess();
+
+	@Override
+	default EntityMappingType findContainingEntityMapping() {
+		return getDeclaringType().findContainingEntityMapping();
+	}
 }

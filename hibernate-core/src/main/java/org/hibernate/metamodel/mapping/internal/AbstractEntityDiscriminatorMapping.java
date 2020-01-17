@@ -48,6 +48,10 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 		this.mappingType = mappingType;
 	}
 
+	public EntityPersister getEntityDescriptor() {
+		return entityDescriptor;
+	}
+
 	@Override
 	public BasicType getBasicType() {
 		return mappingType;

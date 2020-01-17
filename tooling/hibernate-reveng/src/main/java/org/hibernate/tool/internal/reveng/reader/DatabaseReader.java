@@ -76,15 +76,10 @@ public class DatabaseReader {
 			
 			Set<Table> hasIndices = new HashSet<Table>();
 			
-			List<SchemaSelection> schemaSelectors = revengStrategy.getSchemaSelections();
 			List<Table> foundTables = new ArrayList<Table>();
-			if(schemaSelectors==null) {
-				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, new SchemaSelection(catalog, schema), hasIndices));
-			} else {
-				for (Iterator<SchemaSelection> iter = schemaSelectors.iterator(); iter.hasNext();) {
-					SchemaSelection selection = iter.next();
-					foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices));
-				}
+			for (Iterator<SchemaSelection> iter = getSchemaSelections(catalog, schema).iterator(); iter.hasNext();) {
+				SchemaSelection selection = iter.next();
+				foundTables.addAll(TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices));
 			}
 			
 			Iterator<Table> tables = foundTables.iterator(); // not dbs.iterateTables() to avoid "double-read" of columns etc.
@@ -194,5 +189,16 @@ public class DatabaseReader {
 			}
 			return sequences;
 		}
+		
+		private List<SchemaSelection> getSchemaSelections(String catalog, String schema) {
+			List<SchemaSelection> result = revengStrategy.getSchemaSelections();
+			if (result == null) {
+				result = new ArrayList<SchemaSelection>();
+				result.add(new SchemaSelection(catalog, schema));
+			}
+			return result;
+		}
+		
+		
 }		
 

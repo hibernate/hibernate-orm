@@ -23,7 +23,7 @@ import org.hibernate.type.CollectionType;
 public class FlushVisitor extends AbstractVisitor {
 	private Object owner;
 
-	FlushVisitor(EventSource session, Object owner) {
+	public FlushVisitor(EventSource session, Object owner) {
 		super(session);
 		this.owner = owner;
 	}

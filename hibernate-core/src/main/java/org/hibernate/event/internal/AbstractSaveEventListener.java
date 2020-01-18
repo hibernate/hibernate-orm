@@ -17,7 +17,6 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -48,10 +47,6 @@ public abstract class AbstractSaveEventListener
 		extends AbstractReassociateEventListener
 		implements CallbackRegistryConsumer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractSaveEventListener.class );
-
-	public enum EntityState {
-		PERSISTENT, TRANSIENT, DETACHED, DELETED
-	}
 
 	private CallbackRegistry callbackRegistry;
 
@@ -477,60 +472,4 @@ public abstract class AbstractSaveEventListener
 
 	protected abstract CascadingAction getCascadeAction();
 
-	/**
-	 * Determine whether the entity is persistent, detached, or transient
-	 *
-	 * @param entity The entity to check
-	 * @param entityName The name of the entity
-	 * @param entry The entity's entry in the persistence context
-	 * @param source The originating session.
-	 *
-	 * @return The state.
-	 */
-	protected EntityState getEntityState(
-			Object entity,
-			String entityName,
-			EntityEntry entry, //pass this as an argument only to avoid double looking
-			SessionImplementor source) {
-
-		if ( entry != null ) { // the object is persistent
-
-			//the entity is associated with the session, so check its status
-			if ( entry.getStatus() != Status.DELETED ) {
-				// do nothing for persistent instances
-				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Persistent instance of: {0}", getLoggableName( entityName, entity ) );
-				}
-				return EntityState.PERSISTENT;
-			}
-			// ie. e.status==DELETED
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Deleted instance of: {0}", getLoggableName( entityName, entity ) );
-			}
-			return EntityState.DELETED;
-		}
-		// the object is transient or detached
-
-		// the entity is not associated with the session, so
-		// try interceptor and unsaved-value
-
-		if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source ) ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Transient instance of: {0}", getLoggableName( entityName, entity ) );
-			}
-			return EntityState.TRANSIENT;
-		}
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Detached instance of: {0}", getLoggableName( entityName, entity ) );
-		}
-		return EntityState.DETACHED;
-	}
-
-	protected String getLoggableName(String entityName, Object entity) {
-		return entityName == null ? entity.getClass().getName() : entityName;
-	}
-
-	protected Boolean getAssumedUnsaved() {
-		return null;
-	}
 }

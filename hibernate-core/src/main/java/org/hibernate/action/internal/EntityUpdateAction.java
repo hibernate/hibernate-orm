@@ -37,7 +37,7 @@ import org.hibernate.type.TypeHelper;
 /**
  * The action for performing entity updates.
  */
-public final class EntityUpdateAction extends EntityAction {
+public class EntityUpdateAction extends EntityAction {
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object previousVersion;
@@ -110,6 +110,58 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 
 		return persistenceContext.getNaturalIdSnapshot( id, persister );
+	}
+
+	public Object[] getState() {
+		return state;
+	}
+
+	public Object[] getPreviousState() {
+		return previousState;
+	}
+
+	public Object getPreviousVersion() {
+		return previousVersion;
+	}
+
+	public Object getNextVersion() {
+		return nextVersion;
+	}
+
+	public void setNextVersion(Object nextVersion) {
+		this.nextVersion = nextVersion;
+	}
+
+	public int[] getDirtyFields() {
+		return dirtyFields;
+	}
+
+	public boolean hasDirtyCollection() {
+		return hasDirtyCollection;
+	}
+
+	public Object getRowId() {
+		return rowId;
+	}
+
+	public Object[] getPreviousNaturalIdValues() {
+		return previousNaturalIdValues;
+	}
+
+	protected Object getCacheEntry() {
+		return cacheEntry;
+	}
+
+	protected void setCacheEntry(Object cacheEntry) {
+		this.cacheEntry = cacheEntry;
+	}
+
+	protected SoftLock getLock() {
+		return lock;
+	}
+
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
 	}
 
 	@Override
@@ -223,7 +275,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
+	protected boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
@@ -234,7 +286,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private boolean preUpdate() {
+	protected boolean preUpdate() {
 		boolean veto = false;
 		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
@@ -254,7 +306,7 @@ public final class EntityUpdateAction extends EntityAction {
 		return veto;
 	}
 
-	private void postUpdate() {
+	protected void postUpdate() {
 		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -273,7 +325,7 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void postCommitUpdate(boolean success) {
+	protected void postCommitUpdate(boolean success) {
 		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -350,7 +402,7 @@ public final class EntityUpdateAction extends EntityAction {
 		postCommitUpdate( success );
 	}
 
-	private boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
+	protected boolean cacheAfterUpdate(EntityDataAccess cache, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {

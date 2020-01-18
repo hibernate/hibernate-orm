@@ -152,7 +152,7 @@ import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.det
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public final class SessionFactoryImpl implements SessionFactoryImplementor {
+public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
@@ -1121,7 +1121,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
+	public static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
@@ -1145,7 +1145,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		//todo : expose setting
 		private SessionOwnerBehavior sessionOwnerBehavior = SessionOwnerBehavior.LEGACY_NATIVE;
 
-		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+		public SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
 
 			// set up default builder values...

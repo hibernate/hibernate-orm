@@ -25,12 +25,12 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	private boolean dirty;
 	private boolean[] propertyVersionability;
 
-	DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {
+	public DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {
 		super( session );
 		this.propertyVersionability = propertyVersionability;
 	}
 
-	boolean wasDirtyCollectionFound() {
+	public boolean wasDirtyCollectionFound() {
 		return dirty;
 	}
 

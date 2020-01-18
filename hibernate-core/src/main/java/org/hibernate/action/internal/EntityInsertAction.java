@@ -35,7 +35,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  *
  * @see EntityIdentityInsertAction
  */
-public final class EntityInsertAction extends AbstractEntityInsertAction {
+public class EntityInsertAction extends AbstractEntityInsertAction {
 	private Object version;
 	private Object cacheEntry;
 
@@ -60,6 +60,22 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			SharedSessionContractImplementor session) {
 		super( id, state, instance, isVersionIncrementDisabled, persister, session );
 		this.version = version;
+	}
+
+	public Object getVersion() {
+		return version;
+	}
+
+	public void setVersion(Object version) {
+		this.version = version;
+	}
+
+	protected Object getCacheEntry() {
+		return cacheEntry;
+	}
+
+	protected void setCacheEntry(Object cacheEntry) {
+		this.cacheEntry = cacheEntry;
 	}
 
 	@Override
@@ -143,7 +159,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		markExecuted();
 	}
 
-	private boolean cacheInsert(EntityPersister persister, Object ck) {
+	protected boolean cacheInsert(EntityPersister persister, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		try {
 			session.getEventListenerManager().cachePutStart();
@@ -154,7 +170,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private void postInsert() {
+	protected void postInsert() {
 		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -171,7 +187,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private void postCommitInsert(boolean success) {
+	protected void postCommitInsert(boolean success) {
 		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -199,7 +215,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	private boolean preInsert() {
+	protected boolean preInsert() {
 		boolean veto = false;
 
 		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
@@ -233,7 +249,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		postCommitInsert( success );
 	}
 
-	private boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
+	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		try {
@@ -256,8 +272,8 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 		return false;
 	}
-	
-	private boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
+
+	protected boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
 		return persister.canWriteToCache()
 				&& !persister.isCacheInvalidationRequired()
 				&& session.getCacheMode().isPutEnabled();

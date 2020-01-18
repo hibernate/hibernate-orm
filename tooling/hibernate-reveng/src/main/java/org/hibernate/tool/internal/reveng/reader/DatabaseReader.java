@@ -58,7 +58,7 @@ public class DatabaseReader {
 	private final String defaultSchema;
 	private final String defaultCatalog;
 	
-	public DatabaseReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
+	private DatabaseReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog, String defaultSchema, ReverseEngineeringStrategy reveng) {
 		this.metadataDialect = dialect;
 		this.provider = provider;
 		this.revengStrategy = reveng;

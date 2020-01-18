@@ -30,7 +30,7 @@ public class EvictVisitor extends AbstractVisitor {
 	
 	private Object owner;
 
-	EvictVisitor(EventSource session, Object owner) {
+	public EvictVisitor(EventSource session, Object owner) {
 		super(session);
 		this.owner = owner;
 	}

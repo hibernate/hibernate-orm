@@ -194,7 +194,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Chris Cranford
  * @author Sanne Grinovero
  */
-public final class SessionImpl
+public class SessionImpl
 		extends AbstractSessionImpl
 		implements EventSource, SessionImplementor, HibernateEntityManagerImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );

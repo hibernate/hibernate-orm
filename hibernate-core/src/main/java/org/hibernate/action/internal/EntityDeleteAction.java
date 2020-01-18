@@ -69,6 +69,30 @@ public class EntityDeleteAction extends EntityAction {
 		);
 	}
 
+	public Object getVersion() {
+		return version;
+	}
+
+	public boolean isCascadeDeleteEnabled() {
+		return isCascadeDeleteEnabled;
+	}
+
+	public Object[] getState() {
+		return state;
+	}
+
+	protected Object[] getNaturalIdValues() {
+		return naturalIdValues;
+	}
+
+	protected SoftLock getLock() {
+		return lock;
+	}
+
+	protected void setLock(SoftLock lock) {
+		this.lock = lock;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		final Serializable id = getId();
@@ -128,7 +152,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private boolean preDelete() {
+	protected boolean preDelete() {
 		boolean veto = false;
 		final EventListenerGroup<PreDeleteEventListener> listenerGroup = listenerGroup( EventType.PRE_DELETE );
 		if ( listenerGroup.isEmpty() ) {
@@ -141,7 +165,7 @@ public class EntityDeleteAction extends EntityAction {
 		return veto;
 	}
 
-	private void postDelete() {
+	protected void postDelete() {
 		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_DELETE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -158,7 +182,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void postCommitDelete(boolean success) {
+	protected void postCommitDelete(boolean success) {
 		final EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_DELETE );
 		if ( listenerGroup.isEmpty() ) {
 			return;

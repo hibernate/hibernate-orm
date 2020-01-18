@@ -121,7 +121,7 @@ public abstract class AbstractVisitor {
 	 * @param persister
 	 * @throws HibernateException
 	 */
-	void process(Object object, EntityPersister persister)
+	public void process(Object object, EntityPersister persister)
 	throws HibernateException {
 		processEntityPropertyValues(
 			persister.getPropertyValues( object ),

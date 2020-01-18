@@ -67,10 +67,14 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			session.getActionQueue().registerProcess( verifyVersion );
 		}
 
+		invokeLoadLifecycle(event, session);
+
+	}
+
+	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
 		if ( event.getPersister().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
 			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
-
 	}
 }

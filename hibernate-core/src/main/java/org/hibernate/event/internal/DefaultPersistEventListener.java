@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -24,7 +23,6 @@ import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -45,11 +43,6 @@ public class DefaultPersistEventListener
 	@Override
 	protected CascadingAction getCascadeAction() {
 		return CascadingActions.PERSIST;
-	}
-
-	@Override
-	protected Boolean getAssumedUnsaved() {
-		return Boolean.TRUE;
 	}
 
 	/**
@@ -99,7 +92,7 @@ public class DefaultPersistEventListener
 		}
 
 		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
-		EntityState entityState = getEntityState( entity, entityName, entityEntry, source );
+		EntityState entityState = EntityState.getEntityState( entity, entityName, entityEntry, source, true );
 		if ( entityState == EntityState.DETACHED ) {
 			// JPA 2, in its version of a "foreign generated", allows the id attribute value
 			// to be manually set by the user, even though this manual value is irrelevant.
@@ -116,7 +109,7 @@ public class DefaultPersistEventListener
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}
 				persister.setIdentifier( entity, null, source );
-				entityState = getEntityState( entity, entityName, entityEntry, source );
+				entityState = EntityState.getEntityState( entity, entityName, entityEntry, source, true );
 			}
 		}
 
@@ -124,7 +117,7 @@ public class DefaultPersistEventListener
 			case DETACHED: {
 				throw new PersistentObjectException(
 						"detached entity passed to persist: " +
-								getLoggableName( event.getEntityName(), entity )
+								EventUtil.getLoggableName( event.getEntityName(), entity )
 				);
 			}
 			case PERSISTENT: {
@@ -146,7 +139,7 @@ public class DefaultPersistEventListener
 				throw new ObjectDeletedException(
 						"deleted entity passed to persist",
 						null,
-						getLoggableName( event.getEntityName(), entity )
+						EventUtil.getLoggableName( event.getEntityName(), entity )
 				);
 			}
 		}

@@ -16,13 +16,13 @@ import java.util.Map;
  */
 public class Delete {
 
-	private String tableName;
-	private String versionColumnName;
-	private String where;
+	protected String tableName;
+	protected String versionColumnName;
+	protected String where;
+	protected String comment;
 
-	private Map primaryKeyColumns = new LinkedHashMap();	
-	
-	private String comment;
+	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
+
 	public Delete setComment(String comment) {
 		this.comment = comment;
 		return this;
@@ -43,9 +43,9 @@ public class Delete {
 			buf.append( " where " );
 		}
 		boolean conditionsAppended = false;
-		Iterator iter = primaryKeyColumns.entrySet().iterator();
+		Iterator<Map.Entry<String,String>> iter = primaryKeyColumns.entrySet().iterator();
 		while ( iter.hasNext() ) {
-			Map.Entry e = (Map.Entry) iter.next();
+			Map.Entry<String,String> e = iter.next();
 			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
 			if ( iter.hasNext() ) {
 				buf.append( " and " );

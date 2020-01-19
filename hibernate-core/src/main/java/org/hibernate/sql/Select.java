@@ -17,15 +17,17 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class Select {
 
-	private String selectClause;
-	private String fromClause;
-	private String outerJoinsAfterFrom;
-	private String whereClause;
-	private String outerJoinsAfterWhere;
-	private String orderByClause;
-	private String groupByClause;
-	private String comment;
-	private LockOptions lockOptions = new LockOptions();
+	protected String selectClause;
+	protected String fromClause;
+	protected String outerJoinsAfterFrom;
+	protected String whereClause;
+	protected String outerJoinsAfterWhere;
+	protected String orderByClause;
+	protected String groupByClause;
+	protected String comment;
+
+	protected LockOptions lockOptions = new LockOptions();
+
 	public final Dialect dialect;
 
 	private int guesstimatedBufferSize = 20;

@@ -18,10 +18,13 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class InsertSelect {
-	private String tableName;
-	private String comment;
-	private List columnNames = new ArrayList();
-	private Select select;
+
+	protected String tableName;
+	protected String comment;
+
+	protected List<String> columnNames = new ArrayList<>();
+
+	protected Select select;
 
 	public InsertSelect(Dialect dialect) {
 		//This is no longer used. Deprecate & remove?
@@ -70,7 +73,7 @@ public class InsertSelect {
 		buf.append( "insert into " ).append( tableName );
 		if ( !columnNames.isEmpty() ) {
 			buf.append( " (" );
-			Iterator itr = columnNames.iterator();
+			Iterator<String> itr = columnNames.iterator();
 			while ( itr.hasNext() ) {
 				buf.append( itr.next() );
 				if ( itr.hasNext() ) {

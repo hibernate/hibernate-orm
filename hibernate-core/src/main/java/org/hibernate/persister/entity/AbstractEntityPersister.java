@@ -1894,8 +1894,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String generateVersionIncrementUpdateString() {
-		Update update = new Update( getFactory().getDialect() );
-		update.setTableName( getTableName( 0 ) );
+		Update update = createUpdate().setTableName( getTableName( 0 ) );
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			update.setComment( "forced version increment" );
 		}
@@ -2612,15 +2611,7 @@ public abstract class AbstractEntityPersister
 			final Object[] oldFields,
 			final boolean useRowId) {
 
-		Update update = new Update( getFactory().getDialect() ).setTableName( getTableName( j ) );
-
-		// select the correct row by either pk or rowid
-		if ( useRowId ) {
-			update.addPrimaryKeyColumns( new String[] {rowIdName} ); //TODO: eventually, rowIdName[j]
-		}
-		else {
-			update.addPrimaryKeyColumns( getKeyColumns( j ) );
-		}
+		Update update = createUpdate().setTableName( getTableName( j ) );
 
 		boolean hasColumns = false;
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
@@ -2647,6 +2638,14 @@ public abstract class AbstractEntityPersister
 				);
 				hasColumns = true;
 			}
+		}
+
+		// select the correct row by either pk or rowid
+		if ( useRowId ) {
+			update.addPrimaryKeyColumns( new String[] {rowIdName} ); //TODO: eventually, rowIdName[j]
+		}
+		else {
+			update.addPrimaryKeyColumns( getKeyColumns( j ) );
 		}
 
 		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
@@ -2721,8 +2720,7 @@ public abstract class AbstractEntityPersister
 		// todo : remove the identityInsert param and variations;
 		//   identity-insert strings are now generated from generateIdentityInsertString()
 
-		Insert insert = new Insert( getFactory().getDialect() )
-				.setTableName( getTableName( j ) );
+		Insert insert = createInsert().setTableName( getTableName( j ) );
 
 		// add normal properties
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
@@ -2883,8 +2881,7 @@ public abstract class AbstractEntityPersister
 	 * Generate the SQL that deletes a row by id (and version)
 	 */
 	public String generateDeleteString(int j) {
-		final Delete delete = new Delete()
-				.setTableName( getTableName( j ) )
+		final Delete delete = createDelete().setTableName( getTableName( j ) )
 				.addPrimaryKeyColumns( getKeyColumns( j ) );
 		if ( j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
@@ -3824,8 +3821,7 @@ public abstract class AbstractEntityPersister
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {
-			Delete delete = new Delete()
-					.setTableName( getTableName( j ) )
+			Delete delete = createDelete().setTableName( getTableName( j ) )
 					.addPrimaryKeyColumns( getKeyColumns( j ) );
 			if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				delete.setComment( "delete " + getEntityName() + " [" + j + "]" );
@@ -6000,5 +5996,17 @@ public abstract class AbstractEntityPersister
 		public String process() {
 			return substituteBrackets( getOriginalQueryString() );
 		}
+	}
+
+	protected Insert createInsert() {
+		return new Insert( getFactory().getJdbcServices().getDialect() );
+	}
+
+	protected Update createUpdate() {
+		return new Update( getFactory().getJdbcServices().getDialect() );
+	}
+
+	protected Delete createDelete() {
+		return new Delete();
 	}
 }

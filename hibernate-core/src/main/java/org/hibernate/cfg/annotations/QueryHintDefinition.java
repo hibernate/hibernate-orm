@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
 import javax.persistence.QueryHint;
@@ -84,21 +85,28 @@ public class QueryHintDefinition {
 		}
 	}
 
+	public Boolean getPassDistinctThrough(String query) {
+		return doGetBoolean( query, QueryHints.PASS_DISTINCT_THROUGH ).orElse( null );
+	}
+
 	public boolean getBoolean(String query, String hintName) {
-		String value =(String)  hintsMap.get( hintName );
+		return doGetBoolean( query, hintName ).orElse( false );
+	}
+
+	private Optional<Boolean> doGetBoolean(String query, String hintName) {
+		String value = (String) hintsMap.get( hintName );
 		if ( value == null ) {
-			return false;
+			return Optional.empty();
 		}
 		if ( value.equalsIgnoreCase( "true" ) ) {
-			return true;
+			return Optional.of( true );
 		}
 		else if ( value.equalsIgnoreCase( "false" ) ) {
-			return false;
+			return Optional.of( false );
 		}
 		else {
 			throw new AnnotationException( "Not a boolean in hint: " + query + ":" + hintName );
 		}
-
 	}
 
 	public String getString(String query, String hintName) {

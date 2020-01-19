@@ -14,6 +14,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.jpa.QueryHints;
@@ -34,6 +37,9 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-10965" )
 public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 
+	private static final String DISTINCT_PASSES_THROUGH_TRUE_NAMED_QUERY = "distinctPassesThroughTrue";
+	private static final String DISTINCT_PASSES_THROUGH_FALSE_NAMED_QUERY = "distinctPassesThroughFalse";
+	private static final String DISTINCT_PASSES_THROUGH_NOT_SPECIFIED_NAMED_QUERY = "distinctPassesThroughNotSpecified";
 	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
@@ -137,7 +143,65 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 		});
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13780")
+	public void testNamedQueryDistinctPassThroughTrue() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons = session.createNamedQuery( DISTINCT_PASSES_THROUGH_TRUE_NAMED_QUERY, Person.class )
+					.setMaxResults( 5 )
+					.getResultList();
+			assertEquals( 1, persons.size() );
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertTrue( sqlQuery.contains( " distinct " ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13780")
+	public void testNamedQueryDistinctPassThroughTrueWhenNotSpecified() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons =
+					session.createNamedQuery( DISTINCT_PASSES_THROUGH_NOT_SPECIFIED_NAMED_QUERY, Person.class )
+							.setMaxResults( 5 )
+							.getResultList();
+			assertEquals( 1, persons.size() );
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertTrue( sqlQuery.contains( " distinct " ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13780")
+	public void testNamedQueryDistinctPassThroughFalse() {
+		doInHibernate( this::sessionFactory, session -> {
+			sqlStatementInterceptor.getSqlQueries().clear();
+			List<Person> persons =
+					session.createNamedQuery( DISTINCT_PASSES_THROUGH_FALSE_NAMED_QUERY, Person.class )
+							.setMaxResults( 5 )
+							.getResultList();
+			assertEquals( 1, persons.size() );
+			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
+			assertFalse( sqlQuery.contains( " distinct " ) );
+		} );
+	}
+
 	@Entity(name = "Person")
+	@NamedQueries({
+			@NamedQuery(name = DISTINCT_PASSES_THROUGH_TRUE_NAMED_QUERY,
+					query = "select distinct p from Person p left join fetch p.phones",
+					hints = {
+							@QueryHint(name = QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "true")
+					}),
+			@NamedQuery(name = DISTINCT_PASSES_THROUGH_FALSE_NAMED_QUERY,
+					query = "select distinct p from Person p left join fetch p.phones",
+					hints = {
+							@QueryHint(name = QueryHints.HINT_PASS_DISTINCT_THROUGH, value = "false")
+					}),
+			@NamedQuery(name = DISTINCT_PASSES_THROUGH_NOT_SPECIFIED_NAMED_QUERY,
+					query = "select distinct p from Person p left join fetch p.phones")
+	})
 	public static class Person {
 
 		@Id

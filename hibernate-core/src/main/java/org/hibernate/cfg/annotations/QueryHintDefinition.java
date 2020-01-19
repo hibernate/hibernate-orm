@@ -84,6 +84,14 @@ public class QueryHintDefinition {
 		}
 	}
 
+	public Boolean getPassDistinctThrough(String query, String hintName) {
+		String value =(String)  hintsMap.get( hintName );
+		if ( value == null ) {
+			return null;
+		}
+		return getBoolean(query, hintName);
+	}
+
 	public boolean getBoolean(String query, String hintName) {
 		String value =(String)  hintsMap.get( hintName );
 		if ( value == null ) {

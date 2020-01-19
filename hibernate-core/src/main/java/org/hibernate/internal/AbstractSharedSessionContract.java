@@ -62,6 +62,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
@@ -694,6 +695,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 		if ( nqd.getFlushMode() != null ) {
 			query.setHibernateFlushMode( nqd.getFlushMode() );
+		}
+		if ( nqd.getPassDistinctThrough() != null ) {
+			query.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, nqd.getPassDistinctThrough() );
 		}
 	}
 

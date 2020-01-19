@@ -150,6 +150,11 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 	}
 
 	@Override
+	public NamedSQLQueryDefinitionBuilder setPassDistinctThrough(Boolean passDistinctThrough) {
+		return (NamedSQLQueryDefinitionBuilder) super.setPassDistinctThrough( passDistinctThrough );
+	}
+
+	@Override
 	public NamedSQLQueryDefinition createNamedQueryDefinition() {
 		return new NamedSQLQueryDefinition(
 				name,
@@ -168,7 +173,8 @@ public class NamedSQLQueryDefinitionBuilder extends NamedQueryDefinitionBuilder 
 				resultSetRef,
 				querySpacesCopy(),
 				callable,
-				queryReturns
+				queryReturns,
+				passDistinctThrough
 		);
 	}
 

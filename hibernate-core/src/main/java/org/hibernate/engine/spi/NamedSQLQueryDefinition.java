@@ -81,7 +81,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				null, 		// resultSetRef
 				querySpaces,
 				callable,
-				queryReturns
+				queryReturns,
+				null		// passDistinctThrough
 		);
 	}
 
@@ -140,7 +141,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				resultSetRef,
 				querySpaces,
 				callable,
-				null		// queryReturns
+				null,		// queryReturns
+				null		// passDistinctThrough
 		);
 	}
 
@@ -161,7 +163,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			String resultSetRef,
 			List<String> querySpaces,
 			boolean callable,
-			NativeSQLQueryReturn[] queryReturns) {
+			NativeSQLQueryReturn[] queryReturns,
+			Boolean passDistinctThrough) {
 		super(
 				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces before a { in a sp */
@@ -176,7 +179,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				comment,
 				parameterTypes,
 				firstResult,
-				maxResults
+				maxResults,
+				passDistinctThrough
 		);
 		this.resultSetRef = resultSetRef;
 		this.querySpaces = querySpaces;
@@ -219,7 +223,8 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				getResultSetRef(),
 				getQuerySpaces(),
 				isCallable(),
-				getQueryReturns()
+				getQueryReturns(),
+				getPassDistinctThrough()
 		);
 	}
 

@@ -19,10 +19,13 @@ import org.hibernate.type.LiteralType;
  * @author Gavin King
  */
 public class Insert {
+
+	protected String tableName;
+	protected String comment;
+
+	protected Map<String,String> columns = new LinkedHashMap<>();
+
 	private Dialect dialect;
-	private String tableName;
-	private String comment;
-	private Map columns = new LinkedHashMap();
 
 	public Insert(Dialect dialect) {
 		this.dialect = dialect;
@@ -111,7 +114,7 @@ public class Insert {
 		}
 		else {
 			buf.append(" (");
-			Iterator iter = columns.keySet().iterator();
+			Iterator<String> iter = columns.keySet().iterator();
 			while ( iter.hasNext() ) {
 				buf.append( iter.next() );
 				if ( iter.hasNext() ) {

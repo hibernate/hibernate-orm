@@ -31,15 +31,18 @@ public class SimpleSelect {
 
 	//private static final Alias DEFAULT_ALIAS = new Alias(10, null);
 
-	private String tableName;
-	private String orderBy;
-	private Dialect dialect;
-	private LockOptions lockOptions = new LockOptions( LockMode.READ );
-	private String comment;
+	protected String tableName;
+	protected String orderBy;
+	protected String comment;
 
-	private List<String> columns = new ArrayList<String>();
-	private Map<String, String> aliases = new HashMap<String, String>();
-	private List<String> whereTokens = new ArrayList<String>();
+	protected List<String> columns = new ArrayList<String>();
+	protected Map<String, String> aliases = new HashMap<String, String>();
+	protected List<String> whereTokens = new ArrayList<String>();
+
+	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
+
+	private Dialect dialect;
+
 
 	public SimpleSelect addColumns(String[] columnNames, String[] columnAliases) {
 		for ( int i = 0; i < columnNames.length; i++ ) {

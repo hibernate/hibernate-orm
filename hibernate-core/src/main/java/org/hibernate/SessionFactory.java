@@ -70,7 +70,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 * for use.
 	 * <p/>
 	 * Note that for backwards compatibility, if a {@link org.hibernate.context.spi.CurrentSessionContext}
-	 * is not configured but JTA is configured this will default to the {@link org.hibernate.context.internal.JTASessionContext}
+	 * is not configured but JTA is configured this will default to the {@code org.hibernate.context.internal.JTASessionContext}
 	 * impl.
 	 *
 	 * @return The current session.

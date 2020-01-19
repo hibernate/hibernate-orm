@@ -36,7 +36,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
  *     </li>
  *     <li>
- *         {@link TransactionCoordinatorBuilder.Options}
+ *         {@code Options} interface in {@link TransactionCoordinatorBuilder}
  *         to drive the creation of the {@link TransactionCoordinator} delegate
  *     </li>
  *     <li>
@@ -49,7 +49,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  * </ul>
  *
  * See also {@link org.hibernate.event.spi.EventSource} which extends this interface providing
- * bridge to the event generation features of {@link org.hibernate.event}
+ * bridge to the event generation features of {@code org.hibernate.event}
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -51,7 +51,7 @@ public abstract class ObjectNameNormalizer {
 
 	/**
 	 * Normalizes the quoting of identifiers.  This form returns a String rather than an Identifier
-	 * to better work with the legacy code in {@link org.hibernate.mapping}
+	 * to better work with the legacy code in {@code org.hibernate.mapping} package.
 	 *
 	 * @param identifierText The identifier to be quoting-normalized.
 	 * @return The identifier accounting for any quoting that need be applied.

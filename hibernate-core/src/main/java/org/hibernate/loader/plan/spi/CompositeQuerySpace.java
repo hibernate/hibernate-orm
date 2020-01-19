@@ -9,7 +9,7 @@ package org.hibernate.loader.plan.spi;
 /**
  * Models a QuerySpace for a composition (component/embeddable).
  * <p/>
- * It's {@link #getDisposition()} result will be {@link Disposition#COMPOSITE}
+ * It's {@link #getDisposition()} result will be {@link QuerySpace.Disposition#COMPOSITE}
  *
  * @author Steve Ebersole
  */

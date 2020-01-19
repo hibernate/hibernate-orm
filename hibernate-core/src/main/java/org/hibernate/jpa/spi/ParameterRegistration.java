@@ -16,7 +16,7 @@ import javax.persistence.TemporalType;
  * {@link javax.persistence.Query} and {@link javax.persistence.StoredProcedureQuery} implementations.  Used to track
  * information known about the parameter.
  * <p/>
- * For parameter information as known to JPA criteria queries, see {@link org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl}
+ * For parameter information as known to JPA criteria queries, see {@code org.hibernate.query.criteria.internal.expression.ParameterExpressionImpl}
  * instead.
  *
  * @author Steve Ebersole

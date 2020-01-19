@@ -26,8 +26,8 @@ public enum SourceType {
 	/**
 	 * "script" - External DDL script(s) are used as the exclusive source for generation.  The scripts for schema
 	 * creation and dropping come from different sources.  The creation DDL script is identified by the
-	 * {@value AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE} setting; the drop DDL script is identified by the
-	 * {@value AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE} setting.
+	 * {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE} setting; the drop DDL script is
+	 * identified by the {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE} setting.
 	 *
 	 * @see AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE
 	 * @see AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE

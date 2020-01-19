@@ -11,7 +11,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * Models a QuerySpace for a persistent collection.
  * <p/>
- * It's {@link #getDisposition()} result will be {@link Disposition#COLLECTION}
+ * It's {@link #getDisposition()} result will be {@link QuerySpace.Disposition#COLLECTION}
  *
  * @author Steve Ebersole
  */

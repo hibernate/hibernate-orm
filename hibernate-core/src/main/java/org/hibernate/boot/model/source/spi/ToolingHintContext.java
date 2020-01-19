@@ -55,7 +55,7 @@ public class ToolingHintContext {
 	}
 
 	/**
-	 * The {@link org.hibernate.mapping} package accepts these as a Map, so for now
+	 * The {@code org.hibernate.mapping} package accepts these as a Map, so for now
 	 * expose the underlying Map.  But we unfortunately need to collect a Map...
 	 *
 	 * @return The underlying Map

@@ -139,7 +139,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * TypeConfiguration.
 	 *
 	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
+	 * bound here.  See {@code Scope} class for more details regarding the stages
 	 * a TypeConfiguration goes through
 	 *
 	 * @return The MetadataBuildingContext
@@ -173,7 +173,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * Obtain the SessionFactory currently scoping the TypeConfiguration.
 	 *
 	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
+	 * bound here.  See {@code Scope} for more details regarding the stages
 	 * a TypeConfiguration goes through (this is "runtime stage")
 	 *
 	 * @return The SessionFactory
@@ -188,7 +188,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * Obtain the ServiceRegistry scoped to the TypeConfiguration.
 	 *
-	 * @apiNote Depending on what the {@link Scope} is currently scoped to will determine where the
+	 * @apiNote Depending on what the {@code Scope} is currently scoped to will determine where the
 	 * {@link ServiceRegistry} is obtained from.
 	 *
 	 * @return The ServiceRegistry
@@ -252,22 +252,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * regards to eventually being associated with a SessionFactory.  Goes
 	 * 3 "lifecycle" stages, pertaining to {@link #getMetadataBuildingContext()}
 	 * and {@link #getSessionFactory()}:
+	 * <ul>
 	 *
-	 * 		* "Initialization" is where the {@link TypeConfiguration} is first
-	 * 			built as the "boot model" ({@link org.hibernate.boot.model}) of
+	 * 		<li> "Initialization" is where the {@link TypeConfiguration} is first
+	 * 			built as the "boot model" (see {@code org.hibernate.boot.model} package) of
 	 * 			the user's domain model is converted into the "runtime model"
-	 * 			({@link org.hibernate.metamodel.model}).  During this phase,
+	 * 			(see {@code org.hibernate.metamodel.model} package).  During this phase,
 	 * 			{@link #getMetadataBuildingContext()} will be accessible but
 	 * 			{@link #getSessionFactory} will throw an exception.
-	 * 		* "Runtime" is where the "runtime model" is accessible while the
+	 * 		</li>	
+	 * 		<li> "Runtime" is where the "runtime model" is accessible while the
 	 * 			SessionFactory is still unclosed.  During this phase
 	 * 			{@link #getSessionFactory()} is accessible while
 	 * 			{@link #getMetadataBuildingContext()} will now throw an
 	 * 			exception
-	 * 		* "Sunset" is after the SessionFactory has been closed.  During this
+	 * 		</li>	
+	 * 		<li> "Sunset" is after the SessionFactory has been closed.  During this
 	 * 			phase both {@link #getSessionFactory()} and
 	 * 			{@link #getMetadataBuildingContext()} will now throw an exception
-	 *
+	 * 		</li>	
+	 *</ul>
 	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {

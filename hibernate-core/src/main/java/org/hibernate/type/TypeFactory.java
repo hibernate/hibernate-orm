@@ -42,7 +42,7 @@ public final class TypeFactory implements Serializable {
 	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
 
 	/**
-	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
+	 * @deprecated Use {@link TypeConfiguration} instead
 	 */
 	@Deprecated
 	public interface TypeScope extends Serializable {

@@ -66,8 +66,8 @@ public final class ProviderChecker {
 
 	/**
 	 * Extract the requested persistence provider name using the algorithm Hibernate uses.  Namely, a provider named
-	 * in the 'integration' map (under the key '{@value AvailableSettings#JPA_PERSISTENCE_PROVIDER}') is preferred, as per-spec, over
-	 * value specified in persistence unit.
+	 * in the 'integration' map (under the key '{@value org.hibernate.cfg.AvailableSettings#JPA_PERSISTENCE_PROVIDER}')
+	 * is preferred, as per-spec, over value specified in persistence unit.
 	 *
 	 * @param persistenceUnit The {@code <persistence-unit/>} descriptor.
 	 * @param integration The integration values.

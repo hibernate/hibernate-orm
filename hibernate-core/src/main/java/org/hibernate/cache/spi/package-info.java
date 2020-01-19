@@ -18,8 +18,8 @@
  *
  * Generally a provider will integrate with Hibernate by:
  *
- * 		1. implementing the contracts in {@link org.hibernate.cache.spi}
- * 		2. implementing the contracts in {@link org.hibernate.cache.spi.support}
+ * 		1. implementing the contracts in {@code org.hibernate.cache.spi}
+ * 		2. implementing the contracts in {@code org.hibernate.cache.spi.support}
  * 		3. a mix of (1) and (2)
  *
  * The first approach allows for more control of the set up, but also requires more

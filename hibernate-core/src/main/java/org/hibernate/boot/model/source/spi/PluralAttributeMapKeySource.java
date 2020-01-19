@@ -8,18 +8,14 @@ package org.hibernate.boot.model.source.spi;
 
 /**
  * Describes source information about the key of a persistent map.  At high
- * level this broken down further into 2 categories:<ul>
- *     <li>{@link PluralAttributeMapKeySourceEntityAttribute}</li>
- *     <li>
- *         <ul>
- *             <li>{@link PluralAttributeMapKeySourceBasic}</li>
- *             <li>{@link PluralAttributeMapKeySourceEmbedded}</li>
- *             <li>{@link PluralAttributeMapKeyManyToManySource}</li>
- *         </ul>
- *     </li>
+ * level this broken down further into 3 categories:<ul>
+ * <ul>
+ *  <li>{@link PluralAttributeMapKeySourceBasic}</li>
+ *  <li>{@link PluralAttributeMapKeySourceEmbedded}</li>
+ *  <li>{@link PluralAttributeMapKeyManyToManySource}</li>
  * </ul>
  * <p/>
- * {@link PluralAttributeMapKeySourceEntityAttribute} is only relevant from
+ * {@link PluralAttributeMapKeySource} is only relevant from
  * annotations when using {@link javax.persistence.MapKey}.
  *
  * @author Steve Ebersole
@@ -39,7 +35,7 @@ public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource 
 	 * (relevant only for one-to-many and many-to-many associations)?
 	 *
 	 * If this method returns {@code true}, then this object can safely
-	 * be cast to {@link PluralAttributeMapKeySourceEntityAttribute}.
+	 * be cast to {@link PluralAttributeMapKeyManyToManySource}.
 	 *
 	 * @return true, if this plural attribute index source for an attribute of the referenced
 	 * entity; false, otherwise.

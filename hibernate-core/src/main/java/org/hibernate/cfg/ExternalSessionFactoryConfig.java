@@ -17,7 +17,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * Defines support for various externally configurable SessionFactory(s), for
- * example, {@link org.hibernate.jmx.HibernateService JMX} or the JCA
+ * example, {@link org.hibernate.jmx.spi.JmxService JMX} or the JCA
  * adapter.
  *
  * @author Steve Ebersole

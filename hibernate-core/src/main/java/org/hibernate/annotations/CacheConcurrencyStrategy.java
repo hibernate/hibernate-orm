@@ -21,25 +21,25 @@ public enum CacheConcurrencyStrategy {
 	/**
 	 * Indicates that read-only strategy should be applied.
 	 *
-	 * @see AccessType#READ_ONLY
+	 * @see org.hibernate.cache.spi.access.AccessType#READ_ONLY
 	 */
 	READ_ONLY( AccessType.READ_ONLY ),
 	/**
 	 * Indicates that the non-strict read-write strategy should be applied.
 	 *
-	 * @see AccessType#NONSTRICT_READ_WRITE
+	 * @see org.hibernate.cache.spi.access.AccessType#NONSTRICT_READ_WRITE
 	 */
 	NONSTRICT_READ_WRITE( AccessType.NONSTRICT_READ_WRITE ),
 	/**
 	 * Indicates that the read-write strategy should be applied.
 	 *
-	 * @see AccessType#READ_WRITE
+	 * @see org.hibernate.cache.spi.access.AccessType#READ_WRITE
 	 */
 	READ_WRITE( AccessType.READ_WRITE ),
 	/**
 	 * Indicates that the transaction strategy should be applied.
 	 *
-	 * @see AccessType#TRANSACTIONAL
+	 * @see org.hibernate.cache.spi.access.AccessType#TRANSACTIONAL
 	 */
 	TRANSACTIONAL( AccessType.TRANSACTIONAL );
 

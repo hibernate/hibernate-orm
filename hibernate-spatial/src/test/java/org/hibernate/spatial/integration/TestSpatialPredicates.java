@@ -215,21 +215,23 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 	private void retrieveAndCompare(
 			Map<Integer, Boolean> dbexpected,
 			BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory) {
-		Transaction tx = null;
 		try (Session session = openSession()) {
-			tx = session.beginTransaction();
-			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-			CriteriaQuery<JtsGeomEntity> criteriaQuery = criteriaBuilder.createQuery( JtsGeomEntity.class );
-			Root<JtsGeomEntity> root = criteriaQuery.from( JtsGeomEntity.class );
-			criteriaQuery.select( root )
-					.where( predicateFactory.apply( criteriaBuilder, root ) );
-			List<JtsGeomEntity> list = session.createQuery( criteriaQuery )
-					.getResultList();
-			compare( dbexpected, list );
-		}
-		finally {
-			if ( tx != null ) {
-				tx.rollback();
+			Transaction tx = null;
+			try {
+				tx = session.beginTransaction();
+				CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+				CriteriaQuery<JtsGeomEntity> criteriaQuery = criteriaBuilder.createQuery( JtsGeomEntity.class );
+				Root<JtsGeomEntity> root = criteriaQuery.from( JtsGeomEntity.class );
+				criteriaQuery.select( root )
+						.where( predicateFactory.apply( criteriaBuilder, root ) );
+				List<JtsGeomEntity> list = session.createQuery( criteriaQuery )
+						.getResultList();
+				compare( dbexpected, list );
+			}
+			finally {
+				if ( tx != null ) {
+					tx.rollback();
+				}
 			}
 		}
 	}

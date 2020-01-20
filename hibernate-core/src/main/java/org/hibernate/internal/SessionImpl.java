@@ -558,13 +558,13 @@ public class SessionImpl
 		}
 	}
 
-	private void checkNoUnresolvedActionsBeforeOperation() {
+	protected void checkNoUnresolvedActionsBeforeOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 && actionQueue.hasUnresolvedEntityInsertActions() ) {
 			throw new IllegalStateException( "There are delayed insert actions before operation as cascade level 0." );
 		}
 	}
 
-	private void checkNoUnresolvedActionsAfterOperation() {
+	protected void checkNoUnresolvedActionsAfterOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 ) {
 			actionQueue.checkNoUnresolvedActionsAfterOperation();
 		}
@@ -3371,7 +3371,7 @@ public class SessionImpl
 		}
 	}
 
-	private CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
+	protected CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
 		CacheRetrieveMode retrieveMode = null;
 		CacheStoreMode storeMode = null;
 		if ( localProperties != null ) {

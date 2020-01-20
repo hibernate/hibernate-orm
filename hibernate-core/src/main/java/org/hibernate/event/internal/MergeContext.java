@@ -77,7 +77,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gail Badner
  */
-class MergeContext implements Map {
+public class MergeContext implements Map {
 	private static final Logger LOG = Logger.getLogger( MergeContext.class );
 
 	private final EventSource session;
@@ -101,7 +101,7 @@ class MergeContext implements Map {
 	    // key is a merge entity;
 	    // value is a flag indicating if the merge entity is currently in the merge process.
 
-	MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
+	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
 		this.session = session;
 		this.entityCopyObserver = entityCopyObserver;
 	}
@@ -226,7 +226,7 @@ class MergeContext implements Map {
 	 * managed entity associated with <code>mergeEntity</code>
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	/* package-private */ Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
+	public Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null || managedEntity == null ) {
 			throw new NullPointerException( "null merge and managed entities are not supported by " + getClass().getName() );
 		}
@@ -347,7 +347,7 @@ class MergeContext implements Map {
 	 * @throws NullPointerException if mergeEntity is null
 	 * @throws IllegalStateException if this MergeContext does not contain a a cross-reference for mergeEntity
 	 */
-	/* package-private */ void setOperatedOn(Object mergeEntity, boolean isOperatedOn) {
+	public void setOperatedOn(Object mergeEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}

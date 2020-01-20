@@ -86,14 +86,14 @@ public class QueryHintDefinition {
 	}
 
 	public Boolean getPassDistinctThrough(String query) {
-		return getBooleanValue( query, QueryHints.PASS_DISTINCT_THROUGH ).orElse( null );
+		return doGetBoolean( query, QueryHints.PASS_DISTINCT_THROUGH ).orElse( null );
 	}
 
 	public boolean getBoolean(String query, String hintName) {
-		return getBooleanValue( query, hintName ).orElse( false );
+		return doGetBoolean( query, hintName ).orElse( false );
 	}
 
-	private Optional<Boolean> getBooleanValue(String query, String hintName) {
+	private Optional<Boolean> doGetBoolean(String query, String hintName) {
 		String value = (String) hintsMap.get( hintName );
 		if ( value == null ) {
 			return Optional.empty();

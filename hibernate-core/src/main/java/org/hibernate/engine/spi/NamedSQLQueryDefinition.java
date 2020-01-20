@@ -82,7 +82,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				querySpaces,
 				callable,
 				queryReturns,
-				null		//passDistinctThrough
+				null		// passDistinctThrough
 		);
 	}
 
@@ -141,7 +141,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 				resultSetRef,
 				querySpaces,
 				callable,
-				null,		// queryReturns,
+				null,		// queryReturns
 				null		// passDistinctThrough
 		);
 	}

@@ -67,7 +67,7 @@ public abstract class QueryBinder {
 				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
 				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
 				.setParameterTypes( null )
-				.setPassDistinctThrough(hints.getPassDistinctThrough(queryName, QueryHints.PASS_DISTINCT_THROUGH))
+				.setPassDistinctThrough( hints.getPassDistinctThrough( queryName ) )
 				.createNamedQueryDefinition();
 
 		if ( isDefault ) {
@@ -110,7 +110,7 @@ public abstract class QueryBinder {
 				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
 				.setParameterTypes( null )
 				.setCallable( hints.getBoolean( queryName, QueryHints.CALLABLE ) )
-				.setPassDistinctThrough(hints.getPassDistinctThrough(queryName, QueryHints.PASS_DISTINCT_THROUGH));
+				.setPassDistinctThrough( hints.getPassDistinctThrough( queryName ) );
 
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage

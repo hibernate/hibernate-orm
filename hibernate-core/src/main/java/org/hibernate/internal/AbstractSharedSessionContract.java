@@ -697,7 +697,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			query.setHibernateFlushMode( nqd.getFlushMode() );
 		}
 		if ( nqd.getPassDistinctThrough() != null ) {
-			query.setHint(QueryHints.HINT_PASS_DISTINCT_THROUGH, nqd.getPassDistinctThrough());
+			query.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, nqd.getPassDistinctThrough() );
 		}
 	}
 

@@ -134,8 +134,8 @@ public class NamedQueryDefinition implements Serializable {
 				comment,
 				parameterTypes,
 				null,		// firstResult
-				null,		// maxResults,
-				null 		//passDistinctThrough
+				null,		// maxResults
+				null 		// passDistinctThrough
 		);
 	}
 

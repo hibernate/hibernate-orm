@@ -144,47 +144,47 @@ public class SelectDistinctHqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13780" )
+	@TestForIssue(jiraKey = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughTrue() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
-			List<Person> persons = session.createNamedQuery(DISTINCT_PASSES_THROUGH_TRUE_NAMED_QUERY, Person.class)
-					.setMaxResults(5)
+			List<Person> persons = session.createNamedQuery( DISTINCT_PASSES_THROUGH_TRUE_NAMED_QUERY, Person.class )
+					.setMaxResults( 5 )
 					.getResultList();
-			assertEquals(1, persons.size());
+			assertEquals( 1, persons.size() );
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertTrue(sqlQuery.contains(" distinct "));
-		});
+			assertTrue( sqlQuery.contains( " distinct " ) );
+		} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13780" )
+	@TestForIssue(jiraKey = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughTrueWhenNotSpecified() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons =
-					session.createNamedQuery(DISTINCT_PASSES_THROUGH_NOT_SPECIFIED_NAMED_QUERY, Person.class)
-							.setMaxResults(5)
+					session.createNamedQuery( DISTINCT_PASSES_THROUGH_NOT_SPECIFIED_NAMED_QUERY, Person.class )
+							.setMaxResults( 5 )
 							.getResultList();
-			assertEquals(1, persons.size());
+			assertEquals( 1, persons.size() );
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertTrue(sqlQuery.contains(" distinct "));
-		});
+			assertTrue( sqlQuery.contains( " distinct " ) );
+		} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13780" )
+	@TestForIssue(jiraKey = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughFalse() {
 		doInHibernate( this::sessionFactory, session -> {
 			sqlStatementInterceptor.getSqlQueries().clear();
 			List<Person> persons =
-					session.createNamedQuery(DISTINCT_PASSES_THROUGH_FALSE_NAMED_QUERY, Person.class)
-							.setMaxResults(5)
+					session.createNamedQuery( DISTINCT_PASSES_THROUGH_FALSE_NAMED_QUERY, Person.class )
+							.setMaxResults( 5 )
 							.getResultList();
-			assertEquals(1, persons.size());
+			assertEquals( 1, persons.size() );
 			String sqlQuery = sqlStatementInterceptor.getSqlQueries().getLast();
-			assertFalse(sqlQuery.contains(" distinct "));
-		});
+			assertFalse( sqlQuery.contains( " distinct " ) );
+		} );
 	}
 
 	@Entity(name = "Person")

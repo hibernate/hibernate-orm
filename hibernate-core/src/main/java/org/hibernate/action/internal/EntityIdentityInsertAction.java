@@ -214,6 +214,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return generatedId;
 	}
 
+	protected void setGeneratedId(Serializable generatedId) {
+		this.generatedId = generatedId;
+	}
+
 	/**
 	 * Access to the delayed entity key
 	 *
@@ -235,6 +239,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	@Override
 	protected EntityKey getEntityKey() {
 		return entityKey != null ? entityKey : delayedEntityKey;
+	}
+
+	protected void setEntityKey(EntityKey entityKey) {
+		this.entityKey = entityKey;
 	}
 
 	private static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {

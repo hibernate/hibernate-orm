@@ -220,18 +220,13 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 		return !settings.createManyToOneForForeignKey();
 	}
 
-	public boolean isForeignKeyCollectionInverse(String name, TableIdentifier foreignKeyTable, List<?> columns, TableIdentifier foreignKeyReferencedTable, List<?> referencedColumns) {
-		Table fkTable = databaseCollector.getTable(
-				foreignKeyTable.getSchema(),
-				foreignKeyTable.getCatalog(),
-				foreignKeyTable.getName());
-		if(fkTable==null) {
+	public boolean isForeignKeyCollectionInverse(String name, Table foreignKeyTable, List<?> columns, Table foreignKeyReferencedTable, List<?> referencedColumns) {
+		if(foreignKeyTable==null) {
 			return true; // we don't know better
-		}
-		
-		if(isManyToManyTable(fkTable)) {
+		}		
+		if(isManyToManyTable(foreignKeyTable)) {
 		       // if the reference column is the first one then we are inverse.
-			   Column column = fkTable.getColumn(0);
+			   Column column = foreignKeyTable.getColumn(0);
 			   Column fkColumn = (Column) referencedColumns.get(0);
 			   if(fkColumn.equals(column)) {
 				   return true;   

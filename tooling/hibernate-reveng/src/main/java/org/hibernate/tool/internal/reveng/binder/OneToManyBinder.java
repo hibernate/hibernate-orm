@@ -159,9 +159,9 @@ class OneToManyBinder extends AbstractBinder {
 	private boolean isCollectionInverse(ForeignKey foreignKey) {
 		return getRevengStrategy().isForeignKeyCollectionInverse(
 				foreignKey.getName(),
-				TableIdentifier.create( foreignKey.getTable()),
+				foreignKey.getTable(),
 				foreignKey.getColumns(),
-				TableIdentifier.create( foreignKey.getReferencedTable()),
+				foreignKey.getReferencedTable(),
 				foreignKey.getReferencedColumns());
 	}
 	

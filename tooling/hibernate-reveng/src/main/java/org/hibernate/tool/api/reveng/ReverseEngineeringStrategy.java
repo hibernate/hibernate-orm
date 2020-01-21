@@ -141,9 +141,6 @@ public interface ReverseEngineeringStrategy {
 	/** Should this foreignkey be excluded as a many-to-one */
 	public boolean excludeForeignKeyAsManytoOne(String keyname, TableIdentifier fromTable, List<?> fromColumns, TableIdentifier referencedTable, List<?> referencedColumns);
 	
-	/** is the collection inverse or not ? */
-	public boolean isForeignKeyCollectionInverse(String name, TableIdentifier foreignKeyTable, List<?> columns, TableIdentifier foreignKeyReferencedTable, List<?> referencedColumns);
-	
 	/** is the collection lazy or not ? */
 	public boolean isForeignKeyCollectionLazy(String name, TableIdentifier foreignKeyTable, List<?> columns, TableIdentifier foreignKeyReferencedTable, List<?> referencedColumns);
 	
@@ -192,6 +189,9 @@ public interface ReverseEngineeringStrategy {
     public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference);
 
 	public boolean isOneToOne(ForeignKey foreignKey);
+
+	public boolean isForeignKeyCollectionInverse(String name, Table foreignKeyTable, List<?> columns, Table foreignKeyReferencedTable, List<?> referencedColumns);
+	
 
 	public AssociationInfo foreignKeyToAssociationInfo(ForeignKey foreignKey);
 	public AssociationInfo foreignKeyToInverseAssociationInfo(ForeignKey foreignKey);

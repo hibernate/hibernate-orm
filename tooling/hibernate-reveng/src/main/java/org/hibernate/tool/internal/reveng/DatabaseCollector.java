@@ -1,4 +1,4 @@
-package org.hibernate.tool.api.reveng;
+package org.hibernate.tool.internal.reveng;
 
 import java.util.Iterator;
 import java.util.List;

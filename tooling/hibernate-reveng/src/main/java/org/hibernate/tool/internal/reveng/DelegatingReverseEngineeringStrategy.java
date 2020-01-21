@@ -70,10 +70,6 @@ public class DelegatingReverseEngineeringStrategy implements ReverseEngineeringS
 		return delegate==null?null:delegate.classNameToCompositeIdName(className);
 	}
 
-	public void configure(DatabaseCollector databaseCollector) {
-		if(delegate!=null) delegate.configure(databaseCollector);		
-	}
-
 	public void close() {
 		if(delegate!=null) delegate.close();
 	}

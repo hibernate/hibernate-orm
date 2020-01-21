@@ -62,7 +62,6 @@ public class DatabaseReader {
 	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema) {
 		try {
 			getMetaDataDialect().configure(provider);
-			revengStrategy.configure(dbs);
 
 			Set<Table> hasIndices = new HashSet<Table>();
 

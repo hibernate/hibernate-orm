@@ -19,16 +19,6 @@ public interface ReverseEngineeringStrategy {
 	public void  setSettings(ReverseEngineeringSettings settings);
 	
 	/**
-	 * Configure the reverse engineering strategy. Called before reverse engineering commences.
-	 * 
-	 * This is mainly for exotic strategies to get access to a connection.
-	 *  
-	 * @param runtimeInfo 
-	 */
-	public void configure(DatabaseCollector databaseCollector);
-
-
-	/**
 	 * Close any resources this strategy might have used. Called after reverse engineering has been completed.
 	 */
 	public void close();

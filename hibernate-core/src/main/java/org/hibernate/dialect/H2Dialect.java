@@ -424,6 +424,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "true" : "false";
+	}
+
+	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;

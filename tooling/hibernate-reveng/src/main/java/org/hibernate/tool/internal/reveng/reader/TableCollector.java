@@ -20,13 +20,41 @@ import org.jboss.logging.Logger;
 public class TableCollector {
 
 	private static final Logger log = Logger.getLogger(TableCollector.class);
-
-	public static Collection<Table> processTables(
+	
+	public static TableCollector create(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
-			DatabaseCollector dbs, 
+			DatabaseCollector databaseCollector, 
 			SchemaSelection schemaSelection, 
 			Set<Table> hasIndices) {
+		return new TableCollector(
+				metaDataDialect, 
+				revengStrategy, 
+				databaseCollector, 
+				schemaSelection, 
+				hasIndices);
+	}
+	
+	private MetaDataDialect metaDataDialect;
+	private ReverseEngineeringStrategy revengStrategy;
+	private DatabaseCollector databaseCollector;
+	private SchemaSelection schemaSelection;
+	private Set<Table> hasIndices;
+	
+	private TableCollector(
+			MetaDataDialect metaDataDialect, 
+			ReverseEngineeringStrategy revengStrategy, 
+			DatabaseCollector databaseCollector, 
+			SchemaSelection schemaSelection, 
+			Set<Table> hasIndices) {
+		this.metaDataDialect = metaDataDialect;
+		this.revengStrategy = revengStrategy;
+		this.databaseCollector = databaseCollector;
+		this.schemaSelection = schemaSelection;
+		this.hasIndices = hasIndices;
+	}
+
+	public Collection<Table> processTables() {
 		Map<String,Object> tableRs = null;
 		Iterator<Map<String,Object>> tableIterator = null;
 		List<Map<String,Object>> tables = new ArrayList<Map<String,Object>>();
@@ -93,7 +121,7 @@ public class TableCollector {
 			  String comment = (String) tableRs.get("REMARKS");
 			  String tableType = (String) tableRs.get("TABLE_TYPE");
 			  
-			  if(dbs.getTable
+			  if(databaseCollector.getTable
 					  (schemaName, 
 							  catalogName, 
 							  tableName)!=null) {
@@ -112,7 +140,7 @@ public class TableCollector {
 						  catalogName=null;
 					  }
 					  log.debug("Adding table " + tableName + " of type " + tableType);
-					  Table table = dbs.addTable(schemaName, catalogName, tableName);
+					  Table table = databaseCollector.addTable(schemaName, catalogName, tableName);
 					  table.setComment(comment);
 					  if(tableType.equalsIgnoreCase("TABLE")) {
 						  hasIndices.add(table);

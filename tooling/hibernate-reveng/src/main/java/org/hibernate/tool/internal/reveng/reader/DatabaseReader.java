@@ -70,7 +70,7 @@ public class DatabaseReader {
 			for (Iterator<SchemaSelection> iter = getSchemaSelections(catalog, schema).iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
 				foundTables.addAll(
-						TableCollector.processTables(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices));
+						TableCollector.create(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices).processTables());
 			}
 
 			Iterator<Table> tables = foundTables.iterator(); // not dbs.iterateTables() to avoid "double-read" of

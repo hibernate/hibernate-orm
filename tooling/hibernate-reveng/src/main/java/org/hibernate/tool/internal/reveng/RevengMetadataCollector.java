@@ -6,11 +6,11 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 
-public class MappingsDatabaseCollector extends AbstractDatabaseCollector {
+public class RevengMetadataCollector extends AbstractDatabaseCollector {
 
 	private final InFlightMetadataCollector metadataCollector;
 	
-	public MappingsDatabaseCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
+	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
 		super(metaDataDialect);
 		this.metadataCollector = metadataCollector;
 	}

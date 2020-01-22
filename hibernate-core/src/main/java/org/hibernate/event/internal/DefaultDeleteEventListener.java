@@ -145,13 +145,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			version = entityEntry.getVersion();
 		}
 
-		/*if ( !persister.isMutable() ) {
-			throw new HibernateException(
-					"attempted to delete an object of immutable class: " +
-					MessageHelper.infoString(persister)
-				);
-		}*/
-
+		callbackRegistry.preRemove( entity );
 		if ( invokeDeleteLifecycle( source, entity, persister ) ) {
 			return;
 		}
@@ -338,8 +332,6 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
-		callbackRegistry.preRemove( entity );
-
 		if ( persister.implementsLifecycle() ) {
 			LOG.debug( "Calling onDelete()" );
 			if ( ( (Lifecycle) entity ).onDelete( session ) ) {

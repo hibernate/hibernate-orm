@@ -80,11 +80,12 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
-		EntityState entityState = getEntityState(
+		EntityState entityState = EntityState.getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
 				event.getEntry(),
-				event.getSession()
+				event.getSession(),
+				null
 		);
 
 		switch ( entityState ) {

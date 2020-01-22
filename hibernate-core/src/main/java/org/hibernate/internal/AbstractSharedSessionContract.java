@@ -51,6 +51,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;

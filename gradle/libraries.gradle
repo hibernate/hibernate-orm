@@ -26,7 +26,7 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.24.0-GA'
-    byteBuddyVersion = '1.10.2'
+    byteBuddyVersion = '1.10.7'
 
     agroalVersion = '1.7'
 

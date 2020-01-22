@@ -28,7 +28,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 
 	private boolean isUpdate;
 
-	OnReplicateVisitor(EventSource session, Object key, Object owner, boolean isUpdate) {
+	public OnReplicateVisitor(EventSource session, Object key, Object owner, boolean isUpdate) {
 		super( session, key, owner );
 		this.isUpdate = isUpdate;
 	}

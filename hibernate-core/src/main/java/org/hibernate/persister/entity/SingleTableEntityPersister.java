@@ -465,7 +465,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	protected boolean isInverseTable(int j) {
+	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
@@ -485,11 +485,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorColumnReaderTemplate;
 	}
 
-	protected String getDiscriminatorAlias() {
+	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
-	protected String getDiscriminatorFormulaTemplate() {
+	public String getDiscriminatorFormulaTemplate() {
 		return discriminatorFormulaTemplate;
 	}
 
@@ -540,19 +540,19 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorFormula;
 	}
 
-	protected String getTableName(int j) {
+	public String getTableName(int j) {
 		return qualifiedTableNames[j];
 	}
 
-	protected String[] getKeyColumns(int j) {
+	public String[] getKeyColumns(int j) {
 		return keyColumnNames[j];
 	}
 
-	protected boolean isTableCascadeDeleteEnabled(int j) {
+	public boolean isTableCascadeDeleteEnabled(int j) {
 		return cascadeDeleteEnabled[j];
 	}
 
-	protected boolean isPropertyOfTable(int property, int j) {
+	public boolean isPropertyOfTable(int property, int j) {
 		return propertyTableNumbers[property] == j;
 	}
 
@@ -567,7 +567,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String alias) throws MappingException {
+	protected String filterFragment(String alias) throws MappingException {
 		String result = discriminatorFilterFragment( alias );
 		if ( hasWhere() ) {
 			result += " and " + getSQLWhereString( alias );
@@ -593,7 +593,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String alias, Set<String> treatAsDeclarations) {
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
 		String result = discriminatorFilterFragment( alias, treatAsDeclarations );
 		if ( hasWhere() ) {
 			result += " and " + getSQLWhereString( alias );
@@ -825,7 +825,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassTableIsLazyClosure[j];
 	}
 
-	protected boolean isNullableTable(int j) {
+	public boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
 

@@ -788,12 +788,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean isNullableTable(int j) {
+	public boolean isNullableTable(int j) {
 		return isNullableTable[j];
 	}
 
 	@Override
-	protected boolean isInverseTable(int j) {
+	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
 
@@ -851,7 +851,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return getDiscriminatorColumnName();
 	}
 
-	protected String getDiscriminatorAlias() {
+	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
 
@@ -871,19 +871,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 
-	protected String getTableName(int j) {
+	public String getTableName(int j) {
 		return naturalOrderTableNames[j];
 	}
 
-	protected String[] getKeyColumns(int j) {
+	public String[] getKeyColumns(int j) {
 		return naturalOrderTableKeyColumns[j];
 	}
 
-	protected boolean isTableCascadeDeleteEnabled(int j) {
+	public boolean isTableCascadeDeleteEnabled(int j) {
 		return naturalOrderCascadeDeleteEnabled[j];
 	}
 
-	protected boolean isPropertyOfTable(int property, int j) {
+	public boolean isPropertyOfTable(int property, int j) {
 		return naturalOrderPropertyTableNumbers[property] == j;
 	}
 
@@ -980,14 +980,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String alias) {
+	protected String filterFragment(String alias) {
 		return hasWhere()
 				? " and " + getSQLWhereString( generateFilterConditionAlias( alias ) )
 				: "";
 	}
 
 	@Override
-	public String filterFragment(String alias, Set<String> treatAsDeclarations) {
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
 		return filterFragment( alias );
 	}
 

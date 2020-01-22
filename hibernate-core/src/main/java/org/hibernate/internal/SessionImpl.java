@@ -164,7 +164,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * @author Chris Cranford
  * @author Sanne Grinovero
  */
-public final class SessionImpl
+public class SessionImpl
 		extends AbstractSessionImpl
 		implements SessionImplementor, EventSource {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
@@ -532,13 +532,13 @@ public final class SessionImpl
 		}
 	}
 
-	private void checkNoUnresolvedActionsBeforeOperation() {
+	protected void checkNoUnresolvedActionsBeforeOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 && actionQueue.hasUnresolvedEntityInsertActions() ) {
 			throw new IllegalStateException( "There are delayed insert actions before operation as cascade level 0." );
 		}
 	}
 
-	private void checkNoUnresolvedActionsAfterOperation() {
+	protected void checkNoUnresolvedActionsAfterOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 ) {
 			actionQueue.checkNoUnresolvedActionsAfterOperation();
 		}
@@ -2815,7 +2815,7 @@ public final class SessionImpl
 		}
 	}
 
-	private CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
+	protected CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
 		CacheRetrieveMode retrieveMode = null;
 		CacheStoreMode storeMode = null;
 		if ( localProperties != null ) {

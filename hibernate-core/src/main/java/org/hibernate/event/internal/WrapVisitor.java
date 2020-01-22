@@ -40,11 +40,11 @@ public class WrapVisitor extends ProxyVisitor {
 		this.id = id;
 	}
 
-	boolean isSubstitutionRequired() {
+	public boolean isSubstitutionRequired() {
 		return substitute;
 	}
 
-	WrapVisitor(EventSource session) {
+	public WrapVisitor(EventSource session) {
 		super( session );
 	}
 
@@ -150,7 +150,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	void process(Object object, EntityPersister persister) throws HibernateException {
+	public void process(Object object, EntityPersister persister) throws HibernateException {
 		final Object[] values = persister.getPropertyValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

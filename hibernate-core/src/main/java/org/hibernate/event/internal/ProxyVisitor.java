@@ -19,7 +19,6 @@ import org.hibernate.type.EntityType;
  */
 public abstract class ProxyVisitor extends AbstractVisitor {
 
-
 	public ProxyVisitor(EventSource session) {
 		super(session);
 	}

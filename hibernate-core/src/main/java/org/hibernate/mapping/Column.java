@@ -113,7 +113,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		final int lastLetter = StringHelper.lastIndexOfLetter( name );
 		final String suffix = AliasConstantsHelper.get( uniqueInteger );
 
-		String alias = name;
+		String alias = name.toLowerCase( Locale.ROOT );
 		if ( lastLetter == -1 ) {
 			alias = "column";
 		}

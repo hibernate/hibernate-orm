@@ -80,6 +80,8 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 public class OsgiIntegrationTest {
 
 	private static final boolean DEBUG = false;
+	private static final String jbossPublicRepository = "https://repository.jboss.org/nexus/content/groups/public-jboss/";
+	private static final String mavenCentralRepository = "https://repo.maven.apache.org/maven2/";
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Prepare the Karaf container
@@ -108,10 +110,15 @@ public class OsgiIntegrationTest {
 								)
 						)
 						.useDeployFolder( false ),
-				editConfigurationFileExtend(
+				editConfigurationFilePut( // Erase the defaults: Maven Central uses HTTP by default, but HTTPS is required now.
 						"etc/org.ops4j.pax.url.mvn.cfg",
 						"org.ops4j.pax.url.mvn.repositories",
-						"https://repository.jboss.org/nexus/content/groups/public/"
+						mavenCentralRepository
+								+ "@id=central"
+								+ ", "
+							+ jbossPublicRepository
+								+ "@id=jboss-public-repository"
+						+ "https://repository.jboss.org/nexus/content/groups/public/"
 				),
 				configureConsole().ignoreLocalConsole().ignoreRemoteShell(),
 				when( debug ).useOptions( keepRuntimeFolder() ),

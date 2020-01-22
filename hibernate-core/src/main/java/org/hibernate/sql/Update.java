@@ -19,15 +19,15 @@ import org.hibernate.type.LiteralType;
  */
 public class Update {
 
-	private String tableName;
-	private String versionColumnName;
-	private String where;
-	private String assignments;
-	private String comment;
+	protected String tableName;
+	protected String versionColumnName;
+	protected String where;
+	protected String assignments;
+	protected String comment;
 
-	private Map primaryKeyColumns = new LinkedHashMap();
-	private Map columns = new LinkedHashMap();
-	private Map whereColumns = new LinkedHashMap();
+	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
+	protected Map<String,String> columns = new LinkedHashMap<>();
+	protected Map<String,String> whereColumns = new LinkedHashMap<>();
 	
 	private Dialect dialect;
 	
@@ -170,9 +170,9 @@ public class Update {
 		}
 		buf.append( "update " ).append( tableName ).append( " set " );
 		boolean assignmentsAppended = false;
-		Iterator iter = columns.entrySet().iterator();
+		Iterator<Map.Entry<String,String>> iter = columns.entrySet().iterator();
 		while ( iter.hasNext() ) {
-			Map.Entry e = (Map.Entry) iter.next();
+			Map.Entry<String,String> e = iter.next();
 			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
 			if ( iter.hasNext() ) {
 				buf.append( ", " );
@@ -192,7 +192,7 @@ public class Update {
 		}
 		iter = primaryKeyColumns.entrySet().iterator();
 		while ( iter.hasNext() ) {
-			Map.Entry e = (Map.Entry) iter.next();
+			Map.Entry<String,String> e = iter.next();
 			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
 			if ( iter.hasNext() ) {
 				buf.append( " and " );
@@ -208,7 +208,7 @@ public class Update {
 		}
 		iter = whereColumns.entrySet().iterator();
 		while ( iter.hasNext() ) {
-			final Map.Entry e = (Map.Entry) iter.next();
+			final Map.Entry<String,String> e = iter.next();
 			if ( conditionsAppended ) {
 				buf.append( " and " );
 			}

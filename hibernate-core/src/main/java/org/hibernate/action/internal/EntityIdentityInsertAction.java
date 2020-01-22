@@ -27,7 +27,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  *
  * @see EntityInsertAction
  */
-public final class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
+public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
@@ -139,7 +139,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		postCommitInsert( success );
 	}
 
-	private void postInsert() {
+	protected void postInsert() {
 		final EventSource eventSource = eventSource();
 		if ( isDelayed ) {
 			eventSource.getPersistenceContextInternal().replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
@@ -161,7 +161,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		}
 	}
 
-	private void postCommitInsert(boolean success) {
+	protected void postCommitInsert(boolean success) {
 		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
@@ -189,7 +189,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		}
 	}
 
-	private boolean preInsert() {
+	protected boolean preInsert() {
 		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
@@ -210,6 +210,10 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 	 */
 	public final Object getGeneratedId() {
 		return generatedId;
+	}
+
+	protected void setGeneratedId(Serializable generatedId) {
+		this.generatedId = generatedId;
 	}
 
 	/**
@@ -235,11 +239,15 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		return entityKey != null ? entityKey : delayedEntityKey;
 	}
 
+	protected void setEntityKey(EntityKey entityKey) {
+		this.entityKey = entityKey;
+	}
+
 	private static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
 		return new DelayedPostInsertIdentifier();
 	}
 
-	private EntityKey generateDelayedEntityKey() {
+	protected EntityKey generateDelayedEntityKey() {
 		if ( !isDelayed ) {
 			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 		}

@@ -95,6 +95,9 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
+import org.hibernate.sql.Insert;
+import org.hibernate.sql.Update;
+import org.hibernate.sql.Delete;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
@@ -2428,5 +2431,17 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public CollectionSemantics getCollectionSemantics() {
 		return collectionSemantics;
+	}
+
+	protected Insert createInsert() {
+		return new Insert( getFactory().getJdbcServices().getDialect() );
+	}
+
+	protected Update createUpdate() {
+		return new Update( getFactory().getJdbcServices().getDialect() );
+	}
+
+	protected Delete createDelete() {
+		return new Delete();
 	}
 }

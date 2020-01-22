@@ -165,7 +165,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				}
 
 				if ( entityState == null ) {
-					entityState = getEntityState( entity, event.getEntityName(), entry, source );
+					entityState = EntityState.getEntityState( entity, event.getEntityName(), entry, source, false );
 				}
 
 				switch ( entityState ) {
@@ -182,7 +182,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 						throw new ObjectDeletedException(
 								"deleted instance passed to merge",
 								null,
-								getLoggableName( event.getEntityName(), entity )
+								EventUtil.getLoggableName( event.getEntityName(), entity )
 						);
 				}
 			}
@@ -535,11 +535,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	@Override
 	protected CascadingAction getCascadeAction() {
 		return CascadingActions.MERGE;
-	}
-
-	@Override
-	protected Boolean getAssumedUnsaved() {
-		return Boolean.FALSE;
 	}
 
 	/**

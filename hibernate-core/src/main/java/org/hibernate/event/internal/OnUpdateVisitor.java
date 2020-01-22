@@ -24,7 +24,7 @@ import org.hibernate.type.CollectionType;
  */
 public class OnUpdateVisitor extends ReattachVisitor {
 
-	OnUpdateVisitor(EventSource session, Object key, Object owner) {
+	public OnUpdateVisitor(EventSource session, Object key, Object owner) {
 		super( session, key, owner );
 	}
 

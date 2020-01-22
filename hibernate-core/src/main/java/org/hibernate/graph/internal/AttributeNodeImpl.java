@@ -160,7 +160,7 @@ public class AttributeNodeImpl<J>
 
 		final SubGraphImplementor<? extends J> previous = subGraphMap.put( subType, (SubGraphImplementor) subGraph );
 		if ( previous != null ) {
-			log.debugf( "Adding sub-graph [%s] over-wrote existing [%]", subGraph, previous );
+			log.debugf( "Adding sub-graph [%s] over-wrote existing [%s]", subGraph, previous );
 		}
 	}
 

@@ -72,10 +72,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
 	protected String generateDeleteString() {
-		final Update update = new Update( getDialect() )
-				.setTableName( qualifiedTableName )
-				.addColumns( keyColumnNames, "null" )
-				.addPrimaryKeyColumns( keyColumnNames );
+		final Update update = createUpdate().setTableName( qualifiedTableName )
+				.addColumns( keyColumnNames, "null" );
 
 		if ( hasIndex && !indexContainsFormula ) {
 			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
@@ -84,6 +82,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 			}
 		}
+
+		update.addPrimaryKeyColumns( keyColumnNames );
 
 		if ( hasWhere ) {
 			update.setWhere( sqlWhereString );
@@ -101,8 +101,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
 	protected String generateInsertRowString() {
-		final Update update = new Update( getDialect() )
-				.setTableName( qualifiedTableName )
+		final Update update = createUpdate().setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames );
 
 		if ( hasIndex && !indexContainsFormula ) {
@@ -128,17 +127,20 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
 	protected String generateUpdateRowString() {
-		final Update update = new Update( getDialect() ).setTableName( qualifiedTableName );
-		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
-		if ( hasIdentifier ) {
-			update.addPrimaryKeyColumns( new String[] {identifierColumnName} );
-		}
+		final Update update = createUpdate().setTableName( qualifiedTableName );
+
 		if ( hasIndex && !indexContainsFormula ) {
 			for ( int i = 0 ; i < indexColumnNames.length ; i++ ) {
 				if ( indexColumnIsSettable[i] ) {
 					update.addColumn( indexColumnNames[i] );
 				}
 			}
+		}
+
+		update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
+
+		if ( hasIdentifier ) {
+			update.addPrimaryKeyColumns( new String[] {identifierColumnName} );
 		}
 
 		return update.toStatementString();
@@ -150,8 +152,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	 */
 	@Override
 	protected String generateDeleteRowString() {
-		final Update update = new Update( getDialect() )
-				.setTableName( qualifiedTableName )
+		final Update update = createUpdate().setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" );
 
 		if ( hasIndex && !indexContainsFormula ) {

@@ -308,22 +308,22 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected String getTableName(int j) {
+	public String getTableName(int j) {
 		return tableName;
 	}
 
 	@Override
-	protected String[] getKeyColumns(int j) {
+	public String[] getKeyColumns(int j) {
 		return getIdentifierColumnNames();
 	}
 
 	@Override
-	protected boolean isTableCascadeDeleteEnabled(int j) {
+	public boolean isTableCascadeDeleteEnabled(int j) {
 		return false;
 	}
 
 	@Override
-	protected boolean isPropertyOfTable(int property, int j) {
+	public boolean isPropertyOfTable(int property, int j) {
 		return true;
 	}
 
@@ -335,7 +335,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String filterFragment(String name) {
+	protected String filterFragment(String name) {
 		return hasWhere()
 				? " and " + getSQLWhereString( name )
 				: "";

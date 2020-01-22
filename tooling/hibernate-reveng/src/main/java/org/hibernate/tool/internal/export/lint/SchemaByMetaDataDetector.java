@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
@@ -44,6 +45,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 	
 	DatabaseReader reader;
+	
+	private SequenceCollector sequenceCollector;
 
 	private TableSelectorStrategy tableSelector;
 
@@ -76,6 +79,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				mdd,
 				serviceRegistry);
 		dbc = new DefaultDatabaseCollector(mdd);
+		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
+		sequenceCollector = SequenceCollector.create(connectionProvider);
 	}
 
 	public void visit(IssueCollector collector) {
@@ -88,7 +93,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		
 		Set<?> sequences = Collections.EMPTY_SET;
 		if(dialect.supportsSequences()) {
-			sequences = reader.readSequences(dialect.getQuerySequencesString());
+			sequences = sequenceCollector.readSequences(dialect.getQuerySequencesString());
 		}
 
 		// TODO: move this check into something that could check per class or collection instead.

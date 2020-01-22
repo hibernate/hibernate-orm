@@ -212,7 +212,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return generatedId;
 	}
 
-	protected void setGeneratedId(Serializable generatedId) {
+	protected void setGeneratedId(Object generatedId) {
 		this.generatedId = generatedId;
 	}
 

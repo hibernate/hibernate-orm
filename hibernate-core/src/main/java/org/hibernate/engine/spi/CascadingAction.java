@@ -25,7 +25,7 @@ public interface CascadingAction {
 	/**
 	 * Cascade the action to the child object.
 	 *
-	 * @param session The session within which the cascade is occuring.
+	 * @param session The session within which the cascade is occurring.
 	 * @param child The child to which cascading should be performed.
 	 * @param entityName The child's entity name
 	 * @param anything Anything ;)  Typically some form of cascade-local cache
@@ -44,7 +44,7 @@ public interface CascadingAction {
 	 * Given a collection, get an iterator of the children upon which the
 	 * current cascading action should be visited.
 	 *
-	 * @param session The session within which the cascade is occuring.
+	 * @param session The session within which the cascade is occurring.
 	 * @param collectionType The mapping type of the collection.
 	 * @param collection The collection instance.
 	 * @return The children iterator.
@@ -73,7 +73,7 @@ public interface CascadingAction {
 	 * Called (in the case of {@link #requiresNoCascadeChecking} returning true) to validate
 	 * that no cascade on the given property is considered a valid semantic.
 	 *
-	 * @param session The session witin which the cascade is occurring.
+	 * @param session The session within which the cascade is occurring.
 	 * @param parent The property value owner
 	 * @param persister The entity persister for the owner
 	 * @param propertyType The property type

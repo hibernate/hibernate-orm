@@ -91,7 +91,7 @@ public class MetadataContext {
 	private List<Object> orderedMappings = new ArrayList<>();
 
 	/**
-	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
+	 * Stack of PersistentClass being processed. Last in the list is the highest in the stack.
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
 	private MappingMetamodel metamodel;
@@ -190,7 +190,7 @@ public class MetadataContext {
 
 	/**
 	 * Given a Hibernate {@link PersistentClass}, locate the corresponding JPA {@link org.hibernate.type.EntityType}
-	 * implementation.  May retur null if the given {@link PersistentClass} has not yet been processed.
+	 * implementation.  May return null if the given {@link PersistentClass} has not yet been processed.
 	 *
 	 * @param persistentClass The Hibernate (config time) metamodel instance representing an entity.
 	 *
@@ -203,7 +203,7 @@ public class MetadataContext {
 
 	/**
 	 * Given a Java {@link Class}, locate the corresponding JPA {@link org.hibernate.type.EntityType}.  May
-	 * return null which could means that no such mapping exists at least at this time.
+	 * return null which could mean that no such mapping exists at least at this time.
 	 *
 	 * @param javaType The java class.
 	 *

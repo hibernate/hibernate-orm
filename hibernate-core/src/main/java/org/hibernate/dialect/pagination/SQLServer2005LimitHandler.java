@@ -395,7 +395,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * Geneartes a list of {@code IgnoreRange} objects that represent nested sections of the
+	 * Generates a list of {@code IgnoreRange} objects that represent nested sections of the
 	 * provided SQL buffer that should be ignored when performing regular expression matches.
 	 *
 	 * @param sql The SQL buffer.

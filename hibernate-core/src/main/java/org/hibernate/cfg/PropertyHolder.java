@@ -44,7 +44,7 @@ public interface PropertyHolder {
 	boolean isOrWithinEmbeddedId();
 
 	/**
-	 * Return true if this component is withing an @ElementCollection.
+	 * Return true if this component is within an @ElementCollection.
 	 */
 	boolean isWithinElementCollection();
 
@@ -104,7 +104,7 @@ public interface PropertyHolder {
 	 * Determine the AttributeConverter to use for the given property.
 	 *
 	 * @param property
-	 * @return
+	 * @return The ConverterDescriptor
 	 */
 	ConverterDescriptor resolveAttributeConverterDescriptor(XProperty property);
 }

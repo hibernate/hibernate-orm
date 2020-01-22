@@ -250,7 +250,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private AccessibleObject mirroredAttribute;
 
 	/**
-	 * @deprecated Use {@link JPAMetadataProvider(AnnotatedElement, XMLContext, BootstrapContext)} instead.
+	 * @deprecated Use {@link #JPAOverriddenAnnotationReader(AnnotatedElement, XMLContext, BootstrapContext)} instead.
 	 */
 	public JPAOverriddenAnnotationReader(
 			AnnotatedElement el,
@@ -2998,7 +2998,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	/**
 	 * Copy a string attribute from an XML element to an annotation descriptor. The name of the annotation attribute is
-	 * explicitely given.
+	 * explicitly given.
 	 *
 	 * @param annotation annotation where to copy to the attribute.
 	 * @param element XML element from where to copy the attribute.

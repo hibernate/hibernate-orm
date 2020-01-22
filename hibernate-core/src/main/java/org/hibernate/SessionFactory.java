@@ -208,7 +208,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	}
 
 	/**
-	 * Retrieve the statistics fopr this factory.
+	 * Retrieve the statistics for this factory.
 	 *
 	 * @return The statistics.
 	 */

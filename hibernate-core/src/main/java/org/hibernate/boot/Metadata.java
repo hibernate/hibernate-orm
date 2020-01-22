@@ -39,7 +39,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
  */
 public interface Metadata extends Mapping {
 	/**
-	 * Get the builder for {@link org.hibernate.SessionFactory} instances based on this metamodel,
+	 * Get the builder for {@link org.hibernate.SessionFactory} instances based on this metamodel.
 	 *
 	 * @return The builder for {@link org.hibernate.SessionFactory} instances.
 	 */
@@ -68,7 +68,7 @@ public interface Metadata extends Mapping {
 	Database getDatabase();
 
 	/**
-	 * Retrieves the PersistentClass entity metadata representation for known all entities.
+	 * Retrieves the PersistentClass entity metadata representation for all known entities.
 	 *
 	 * Returned collection is immutable
 	 *
@@ -87,7 +87,7 @@ public interface Metadata extends Mapping {
 	PersistentClass getEntityBinding(String entityName);
 
 	/**
-	 * Retrieves the Collection metadata representation for known all collections.
+	 * Retrieves the Collection metadata representation for all known collections.
 	 *
 	 * Returned collection is immutable
 	 *

@@ -235,6 +235,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		throw new UnsupportedOperationException(
+				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
+						"we should better segment this in the API :)"
+		);
+	}
+
+	@Override
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return identifierGeneratorFactory;
 	}

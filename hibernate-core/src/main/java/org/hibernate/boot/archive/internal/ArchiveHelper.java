@@ -104,7 +104,7 @@ public class ArchiveHelper {
 	 *
 	 * @return The resolved URL reference
 	 *
-	 * @throws IllegalArgumentException is something goes wrong
+	 * @throws IllegalArgumentException if something goes wrong
 	 */
 	public static URL getURLFromPath(String jarPath) {
 		URL jarUrl;
@@ -126,7 +126,7 @@ public class ArchiveHelper {
 
 	/**
 	 * Extracts the bytes out of an InputStream.  This form is the same as {@link #getBytesFromInputStream}
-	 * except that any {@link IOException} are wrapped as (runtime) {@link ArchiveException}
+	 * except that any {@link IOException} is wrapped as (runtime) {@link ArchiveException}
 	 *
 	 * @param inputStream The stream from which to extract bytes.
 	 *

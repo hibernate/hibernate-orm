@@ -40,7 +40,7 @@ public interface EventListenerGroup<T> extends Serializable {
 	/**
 	 * @deprecated this is not the most efficient way for iterating the event listeners.
 	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and its overloaded variants for better alternatives.
-	 * @return
+	 * @return The Iterable.
 	 */
 	@Deprecated
 	public Iterable<T> listeners();

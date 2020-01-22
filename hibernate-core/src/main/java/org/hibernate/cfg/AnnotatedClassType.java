@@ -14,7 +14,7 @@ package org.hibernate.cfg;
  */
 public enum AnnotatedClassType {
 	/**
-	 * has no revelent top level annotation
+	 * has no relevant top level annotation
 	 */
 	NONE,
 	/**
@@ -22,7 +22,7 @@ public enum AnnotatedClassType {
 	 */
 	ENTITY,
 	/**
-	 * has a @Embeddable annotation
+	 * has an @Embeddable annotation
 	 */
 	EMBEDDABLE,
 	/**

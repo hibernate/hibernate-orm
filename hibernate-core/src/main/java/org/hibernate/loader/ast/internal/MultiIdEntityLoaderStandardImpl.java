@@ -15,12 +15,14 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -136,7 +138,8 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
+						(EventSource) session,
+						getReadOnlyFromLoadQueryInfluencers(session)
 				);
 
 				Object managedEntity = null;
@@ -400,7 +403,8 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 						id,
 						entityDescriptor.getMappedClass().getName(),
 						lockOptions,
-						(EventSource) session
+						(EventSource) session,
+						getReadOnlyFromLoadQueryInfluencers( session )
 				);
 
 				Object managedEntity = null;
@@ -487,5 +491,14 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 		}
 
 		return result;
+	}
+
+	private Boolean getReadOnlyFromLoadQueryInfluencers(SharedSessionContractImplementor session) {
+		Boolean readOnly = null;
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		if ( loadQueryInfluencers != null ) {
+			readOnly = loadQueryInfluencers.getReadOnly();
+		}
+		return readOnly;
 	}
 }

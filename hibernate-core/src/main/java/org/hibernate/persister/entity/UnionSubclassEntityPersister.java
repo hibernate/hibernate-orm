@@ -57,7 +57,7 @@ import org.hibernate.type.Type;
 
 /**
  * Implementation of the "table-per-concrete-class" or "roll-down" mapping
- * strategy for an entity and its inheritence hierarchy.
+ * strategy for an entity and its inheritance hierarchy.
  *
  * @author Gavin King
  */

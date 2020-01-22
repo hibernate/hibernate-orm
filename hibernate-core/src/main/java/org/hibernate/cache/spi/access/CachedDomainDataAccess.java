@@ -157,7 +157,7 @@ public interface CachedDomainDataAccess {
 	 * <p/>
 	 * The semantic here is whether the cache contains data visible for the
 	 * current call context.  This should be viewed as a "best effort", meaning
-	 * blocking should be avoid if possible.
+	 * blocking should be avoided if possible.
 	 *
 	 * @param key The cache key
 	 *

@@ -19,7 +19,7 @@ public interface LogicalConnection {
 	 * Is this (logical) JDBC Connection still open/active.  In other words, has {@link #close} not been called yet?
 	 *
 	 * @return {@code true} if still open ({@link #close} has not been called yet); {@code false} if not open
-	 * (({@link #close} has been called).
+	 * ({@link #close} has been called).
 	 */
 	boolean isOpen();
 

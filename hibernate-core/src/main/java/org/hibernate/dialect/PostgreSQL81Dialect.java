@@ -632,7 +632,7 @@ public class PostgreSQL81Dialect extends Dialect {
 
 	/**
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
-	 * Orginally contributed by Denny Bartelt.
+	 * Originally contributed by Denny Bartelt.
 	 */
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		@Override

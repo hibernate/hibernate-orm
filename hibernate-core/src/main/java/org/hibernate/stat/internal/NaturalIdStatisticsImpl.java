@@ -18,7 +18,7 @@ import org.hibernate.stat.NaturalIdStatistics;
 
 /**
  * NaturalId cache statistics of a specific entity
- * 
+ *
  * @author Eric Dalquist
  */
 public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics implements NaturalIdStatistics, Serializable {
@@ -53,7 +53,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	}
 
 	/**
-	 * average time in ms taken by the excution of this query onto the DB
+	 * average time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionAvgTime() {
@@ -74,7 +74,7 @@ public class NaturalIdStatisticsImpl extends AbstractCacheableDataStatistics imp
 	}
 
 	/**
-	 * max time in ms taken by the excution of this query onto the DB
+	 * max time in ms taken by the execution of this query onto the DB
 	 */
 	@Override
 	public long getExecutionMaxTime() {

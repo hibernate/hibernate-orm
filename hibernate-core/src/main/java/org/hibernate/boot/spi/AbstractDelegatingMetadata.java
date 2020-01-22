@@ -220,6 +220,12 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		delegate.initSessionFactory( sessionFactory );
+	}
+
+
+	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return delegate.buildNamedQueryRepository( sessionFactory );
 	}

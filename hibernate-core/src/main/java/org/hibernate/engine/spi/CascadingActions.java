@@ -464,7 +464,7 @@ public class CascadingActions {
 	 * Given a collection, get an iterator of all its children, loading them
 	 * from the database if necessary.
 	 *
-	 * @param session The session within which the cascade is occuring.
+	 * @param session The session within which the cascade is occurring.
 	 * @param collectionType The mapping type of the collection.
 	 * @param collection The collection instance.
 	 *

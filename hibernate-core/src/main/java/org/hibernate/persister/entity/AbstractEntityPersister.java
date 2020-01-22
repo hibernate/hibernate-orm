@@ -1779,7 +1779,7 @@ public abstract class AbstractEntityPersister
 
 	public String getDiscriminatorAlias(String suffix) {
 		// NOTE: this assumes something about how propertySelectFragment is implemented by the subclass!
-		// was toUnqotedAliasStrings( getdiscriminatorColumnName() ) before - now tried
+		// toUnqotedAliasStrings( getdiscriminatorColumnName() ) before - now tried
 		// to remove that unqoting and missing aliases..
 		return entityMetamodel.hasSubclasses() ?
 				new Alias( suffix ).toAliasString( getDiscriminatorAlias() ) :
@@ -2916,7 +2916,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Used to generate an insery statement against the root table in the
+	 * Used to generate an insert statement against the root table in the
 	 * case of identifier generation strategies where the insert statement
 	 * executions actually generates the identifier value.
 	 *
@@ -3094,7 +3094,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Unmarshall the fields of a persistent instance from a result set,
+	 * Unmarshal the fields of a persistent instance from a result set,
 	 * without resolving associations or collections. Question: should
 	 * this really be here, or should it be sent back to Loader?
 	 */
@@ -4428,7 +4428,16 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
+		return doLoad( id, optionalObject, lockOptions, session, null );
+	}
 
+	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+			throws HibernateException {
+		return doLoad( id, optionalObject, lockOptions, session, readOnly );
+	}
+
+	private Object doLoad(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}

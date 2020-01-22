@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
 /**
- * Parameter bind specification used for optimisitc lock version seeding (from insert statements).
+ * Parameter bind specification used for optimistic lock version seeding (from insert statements).
  *
  * @author Steve Ebersole
  */

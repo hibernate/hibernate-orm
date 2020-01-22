@@ -502,7 +502,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Performs cleanup of any held cache softlocks.
+	 * Performs cleanup of any held cache soft locks.
 	 *
 	 * @param success Was the transaction successful.
 	 */
@@ -1102,11 +1102,11 @@ public class ActionQueue {
 
 			/**
 			 * Check if the this {@link BatchIdentifier} has a parent or grand parent
-			 * matching the given {@link BatchIdentifier reference.
+			 * matching the given {@link BatchIdentifier} reference.
 			 *
 			 * @param batchIdentifier {@link BatchIdentifier} reference
 			 *
-			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier reference
+			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier} reference
 			 */
 			boolean hasParent(BatchIdentifier batchIdentifier) {
 				return (

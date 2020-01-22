@@ -8,7 +8,7 @@
 /**
  * Hibernate's (extended) support for JPA's entity graphs
  *
- * @apiNote This entire package (including sub-ppackages) is considered incubating
+ * @apiNote This entire package (including sub-packages) is considered incubating
  */
 @Incubating
 package org.hibernate.graph;

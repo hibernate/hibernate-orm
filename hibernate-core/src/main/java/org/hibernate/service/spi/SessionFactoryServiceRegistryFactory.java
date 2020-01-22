@@ -25,7 +25,6 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	 * for grabbing a reference for later use.  However, care should be taken when invoking on
 	 * the session factory until after it has been fully initialized.
 	 * @param sessionFactoryOptions The build options.
-	 * @param sessionFactoryOptions The build options.
 	 *
 	 * @return The registry
 	 */

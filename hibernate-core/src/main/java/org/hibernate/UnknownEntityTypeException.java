@@ -10,7 +10,7 @@ package org.hibernate;
  * Indicates an attempt was made to refer to an unknown entity name/class.
  * <p/>
  * NOTE : extends MappingException because that's what core used to do and that's how
- * HEM expectes it.  Longer term I think it makes more sense to have a different
+ * HEM expects it.  Longer term I think it makes more sense to have a different
  * hierarchy for runtime-"mapping" exceptions.
  *
  * @author Steve Ebersole

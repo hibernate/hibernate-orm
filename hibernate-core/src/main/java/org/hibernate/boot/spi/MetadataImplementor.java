@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.named.NamedQueryRepository;
-import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -27,6 +26,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface MetadataImplementor extends Metadata, Mapping {
 	/**
 	 * Access to the options used to build this Metadata
+	 *
+	 * @return Access to the MetadataBuildingOptions
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
@@ -42,4 +43,6 @@ public interface MetadataImplementor extends Metadata, Mapping {
 	void validate() throws MappingException;
 
 	Set<MappedSuperclass> getMappedSuperclassMappingsCopy();
+
+	void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor);
 }

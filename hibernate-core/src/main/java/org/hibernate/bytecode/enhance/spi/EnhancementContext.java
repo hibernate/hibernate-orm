@@ -31,7 +31,7 @@ public interface EnhancementContext {
 	public ClassLoader getLoadingClassLoader();
 
 	/**
-	 * Does the given class descriptor represent a entity class?
+	 * Does the given class descriptor represent an entity class?
 	 *
 	 * @param classDescriptor The descriptor of the class to check.
 	 *

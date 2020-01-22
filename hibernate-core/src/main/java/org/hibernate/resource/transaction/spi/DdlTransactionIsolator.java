@@ -38,7 +38,7 @@ public interface DdlTransactionIsolator {
 	 * Connection will be isolated (transactionally) from any
 	 * transaction in effect prior to the call to {@link #prepare}.
 	 *
-	 * @return
+	 * @return The Connection.
 	 */
 	Connection getIsolatedConnection();
 

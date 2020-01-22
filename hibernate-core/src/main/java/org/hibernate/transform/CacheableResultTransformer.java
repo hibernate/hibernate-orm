@@ -177,7 +177,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 * @param transformer - the transformer for the re-transformation
 	 * @param includeInTuple indicates the indexes of
 	 *
-	 * @return transformedResults, with each element re-transformed (if nececessary)
+	 * @return transformedResults, with each element re-transformed (if necessary)
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public List retransformResults(
@@ -230,7 +230,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 *       tuple, then, on return, elements corresponding to
 	 *       excluded tuple elements will be null.
 	 * @param results - results that were previously transformed
-	 * @return results, with each element untransformed (if nececessary)
+	 * @return results, with each element untransformed (if necessary)
 	 */
 	@SuppressWarnings( {"unchecked"})
 	public List untransformToTuples(List results) {

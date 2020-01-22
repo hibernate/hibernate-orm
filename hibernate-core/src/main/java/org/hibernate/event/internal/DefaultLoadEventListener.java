@@ -568,7 +568,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				event.getEntityId(),
 				event.getInstanceToLoad(),
 				event.getLockOptions(),
-				event.getSession()
+				event.getSession(),
+				event.getReadOnly()
 		);
 
 		final StatisticsImplementor statistics = event.getSession().getFactory().getStatistics();

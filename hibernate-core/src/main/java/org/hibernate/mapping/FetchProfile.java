@@ -65,7 +65,7 @@ public class FetchProfile {
 	 *
 	 * @param entity The entity which contains the association to be fetched
 	 * @param association The association to fetch
-	 * @param style The style of fetch t apply
+	 * @param style The style of fetch to apply
 	 */
 	public void addFetch(String entity, String association, String style) {
 		fetches.add( new Fetch( entity, association, style ) );

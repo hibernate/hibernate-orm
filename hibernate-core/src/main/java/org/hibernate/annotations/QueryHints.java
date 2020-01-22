@@ -103,11 +103,11 @@ public class QueryHints {
 	 * Accepts a {@link javax.persistence.LockModeType} or a {@link org.hibernate.LockMode}
 	 */
 	public static final String NATIVE_LOCKMODE = "org.hibernate.lockMode";
-	
+
 	/**
 	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).
-	 * 
+	 *
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
 	 *
@@ -115,7 +115,7 @@ public class QueryHints {
 	 */
 	@Deprecated
 	public static final String FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
-	
+
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
@@ -129,7 +129,7 @@ public class QueryHints {
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
 	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
-	 * If the value is {@code null}, the the {@code Dialect} strategy is going to be used instead.
+	 * If the value is {@code null}, the {@code Dialect} strategy is going to be used instead.
 	 *
 	 * @since 5.2
 	 */

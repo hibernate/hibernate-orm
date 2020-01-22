@@ -17,7 +17,7 @@ import java.lang.reflect.Field;
 
 /**
  * A specialized Setter implementation for handling setting values into
- * a into a bytecode-enhanced Class.  The reason we need specialized handling
+ * a bytecode-enhanced Class.  The reason we need specialized handling
  * is to render the fact that we need to account for certain enhancement features
  * during the setting process.
  *

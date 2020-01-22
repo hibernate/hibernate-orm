@@ -14,7 +14,7 @@ import org.dom4j.io.SAXReader;
 import org.xml.sax.EntityResolver;
 
 /**
- * Small helper class that lazy loads DOM and SAX reader and keep them for fast use afterwards.
+ * Small helper class that lazily loads DOM and SAX reader and keep them for fast use afterwards.
  *
  * @deprecated Currently only used for integration with HCANN.  The rest of Hibernate uses StAX now
  * for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}

@@ -25,7 +25,7 @@ public interface ParameterBinder {
 	 * @param position The position from which to start binding value(s).
 	 *
 	 * @return The number of sql bind positions "eaten" by this bind operation.
-	 * @throws java.sql.SQLException Indicates problems performing the JDBC biind operation.
+	 * @throws java.sql.SQLException Indicates problems performing the JDBC bind operation.
 	 */
 	int bind(PreparedStatement statement, QueryParameters qp, SharedSessionContractImplementor session, int position) throws SQLException;
 

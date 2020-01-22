@@ -32,7 +32,7 @@ public abstract class AbstractGraphNode<J> implements GraphNodeImplementor<J> {
 
 	protected void verifyMutability() {
 		if ( !isMutable() ) {
-			throw new IllegalStateException( "Cannot mutable immutable graph node" );
+			throw new IllegalStateException( "Cannot mutate immutable graph node" );
 		}
 	}
 }

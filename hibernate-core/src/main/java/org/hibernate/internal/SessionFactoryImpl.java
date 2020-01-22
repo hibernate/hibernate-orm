@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.persistence.EntityGraph;
@@ -159,7 +158,6 @@ import org.jboss.logging.Logger;
  */
 public final class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
-	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
 
 	private final String name;
 	private final String uuid;
@@ -212,7 +210,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
 
-		prepareEventListeners( bootMetamodel );
+		bootMetamodel.initSessionFactory( this );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -445,33 +443,6 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		getCache().prime( regionConfigs );
-	}
-
-	private void prepareEventListeners(MetadataImplementor metadata) {
-		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-
-		eventListenerRegistry.prepare( metadata );
-
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
-			if ( !(entry.getKey() instanceof String) ) {
-				continue;
-			}
-			final String propertyName = (String) entry.getKey();
-			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				continue;
-			}
-			final String eventTypeName = propertyName.substring(
-					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
-			);
-			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
-			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
-				//noinspection unchecked
-				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
-			}
-		}
 	}
 
 	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {

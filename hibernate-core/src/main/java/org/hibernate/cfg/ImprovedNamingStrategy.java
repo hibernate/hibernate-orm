@@ -33,7 +33,7 @@ public class ImprovedNamingStrategy implements NamingStrategy, Serializable {
 		return addUnderscores( StringHelper.unqualify(className) );
 	}
 	/**
-	 * Return the full property path with underscore seperators, mixed
+	 * Return the full property path with underscore separators, mixed
 	 * case converted to underscores
 	 */
 	public String propertyToColumnName(String propertyName) {

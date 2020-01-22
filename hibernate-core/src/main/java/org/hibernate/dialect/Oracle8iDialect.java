@@ -135,7 +135,7 @@ public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	/**
-	 * Constructs a Oracle8iDialect
+	 * Constructs an Oracle8iDialect
 	 */
 	public Oracle8iDialect() {
 		super();
@@ -480,7 +480,7 @@ public class Oracle8iDialect extends Dialect {
 	 * implementation...
 	 *
 	 * @param sqlType The {@link java.sql.Types} mapping type code
-	 * @return The appropriate select cluse fragment
+	 * @return The appropriate select clause fragment
 	 */
 	public String getBasicSelectClauseNullString(int sqlType) {
 		return super.getSelectClauseNullString( sqlType );
@@ -818,8 +818,9 @@ public class Oracle8iDialect extends Dialect {
 	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
 	 *
 	 * @param parameters
-	 * @return
-	 * @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
+	 * @return {@code true} indicates that the dialect requests that locking be applied by subsequent select;
+	 * {@code false} (the default) indicates that locking should be applied to the main SQL statement..
+	 @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
 	 */
 	@Override
 	public boolean useFollowOnLocking(QueryParameters parameters) {

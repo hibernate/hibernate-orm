@@ -222,7 +222,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	/**
 	 * Return the column which is identified by column provided as argument.
 	 *
-	 * @param column column with atleast a name.
+	 * @param column column with at least a name.
 	 * @return the underlying column or null if not inside this table. Note: the instance *can* be different than the input parameter, but the name will be the same.
 	 */
 	public Column getColumn(Column column) {

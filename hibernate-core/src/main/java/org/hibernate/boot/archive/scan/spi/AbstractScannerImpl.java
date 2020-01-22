@@ -79,7 +79,7 @@ public abstract class AbstractScannerImpl implements Scanner {
 	 *
 	 * JPA allows for  to be specific
 	 * @param url
-	 * @return
+	 * @return The resolved non-root URL
 	 */
 	protected URL resolveNonRootUrl(URL url) {
 		return null;

@@ -203,7 +203,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * entity persister (nor to the session factory, to look it up) which is really
 	 * needed to "do the right thing" here...
 	 *
-	 * @return The entiyt class.
+	 * @return The entity class.
 	 */
 	@Override
 	public final Class getReturnedClass() {
@@ -533,7 +533,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public abstract boolean isOneToOne();
 
 	/**
-	 * Is the association modeled here a 1-1 according to the logical moidel?
+	 * Is the association modeled here a 1-1 according to the logical model?
 	 *
 	 * @return True if a 1-1 in the logical model; false otherwise.
 	 */
@@ -636,7 +636,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * Resolve an identifier via a load.
 	 *
 	 * @param id The entity id to resolve
-	 * @param session The orginating session.
+	 * @param session The originating session.
 	 *
 	 * @return The resolved identifier (i.e., loaded entity).
 	 *
@@ -677,7 +677,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * Load an instance by a unique key that is not the primary key.
 	 *
 	 * @param entityName The name of the entity to load
-	 * @param uniqueKeyPropertyName The name of the property defining the uniqie key.
+	 * @param uniqueKeyPropertyName The name of the property defining the unique key.
 	 * @param key The unique key property value.
 	 * @param session The originating session.
 	 *
@@ -708,7 +708,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Object result = persistenceContext.getEntity( euk );
 		if ( result == null ) {
 			result = persister.loadByUniqueKey( uniqueKeyPropertyName, key, session );
-			
+
 			// If the entity was not in the Persistence Context, but was found now,
 			// add it to the Persistence Context
 			if (result != null) {

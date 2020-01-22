@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -483,6 +484,49 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 			em.getTransaction().commit();
 			fail("Should have raised an EntityNotFoundException");
 		} catch (PersistenceException pe) {
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-11958" )
+	public void testReadonlyHibernateQueryHint() {
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Wallet w = new Wallet();
+		w.setBrand("Lacoste");
+		w.setModel("Minimic");
+		w.setSerial("0324");
+		em.persist(w);
+		try {
+			em.getTransaction().commit();
+		} finally {
+			em.close();
+		}
+
+		em = getOrCreateEntityManager();
+		Map<String, Object> hints = new HashMap<>();
+		hints.put(QueryHints.HINT_READONLY, true);
+
+		em.getTransaction().begin();
+
+		Wallet fetchedWallet = em.find(Wallet.class, w.getSerial(), hints);
+		fetchedWallet.setBrand("Givenchy");
+
+		try {
+			em.getTransaction().commit();
+		} finally {
+			em.close();
+		}
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		fetchedWallet = em.find(Wallet.class, w.getSerial());
+		try {
+			em.getTransaction().commit();
+			assertEquals("Lacoste", fetchedWallet.getBrand());
 		} finally {
 			em.close();
 		}

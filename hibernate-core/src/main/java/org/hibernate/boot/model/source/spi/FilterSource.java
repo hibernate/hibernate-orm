@@ -9,7 +9,7 @@ package org.hibernate.boot.model.source.spi;
 import java.util.Map;
 
 /**
- * Defines the source of filter information.  May have an associated {@link FilterDefinitionSource}.
+ * Defines the source of filter information.  May have an associated {@link org.hibernate.engine.spi.FilterDefinition}.
  * Relates to both {@code <filter/>} and {@link org.hibernate.annotations.Filter @Filter}
  *
  * @author Steve Ebersole
@@ -28,12 +28,12 @@ public interface FilterSource {
 	 *
 	 * @return The condition defined on the filter.
 	 *
-	 * @see {@link FilterDefinitionSource#getCondition()}
+	 * @see org.hibernate.boot.model.source.internal.hbm.FilterSourceImpl#getCondition()
 	 */
 	public String getCondition();
 
 	/**
-	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default it to
+	 * Should Hibernate perform automatic alias injection into the supplied condition string?  The default is to
 	 * perform auto injection *unless* explicit alias(es) are supplied.
 	 *
 	 * @return {@code true} indicates auto injection should occur; {@code false} that it should not

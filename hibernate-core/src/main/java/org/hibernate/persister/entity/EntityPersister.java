@@ -433,16 +433,26 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 */
 	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
 
+	default Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session, Boolean readOnly)
+	throws HibernateException {
+		return load( id, optionalObject, lockMode, session );
+	}
+
 	/**
 	 * Load an instance of the persistent class.
 	 */
 	Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session);
 
+	default Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+			throws HibernateException {
+		return load( id, optionalObject, lockOptions, session );
+	}
+
 	/**
 	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
 	 *
 	 * @param ids The identifiers to load
-	 * @param session The originating Sesison
+	 * @param session The originating Session
 	 * @param loadOptions The options for loading
 	 *
 	 * @return The loaded, matching entities
@@ -596,7 +606,7 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	 * Does this class have a natural id cache
 	 */
 	boolean hasNaturalIdCache();
-	
+
 	/**
 	 * Get the NaturalId cache (optional operation)
 	 */

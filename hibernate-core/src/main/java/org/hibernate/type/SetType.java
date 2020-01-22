@@ -41,5 +41,5 @@ public class SetType extends CollectionType {
 				? new HashSet()
 				: new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
 	}
-	
+
 }

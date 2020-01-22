@@ -8,7 +8,7 @@ package org.hibernate.service;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that an unkown service was requested from the registry.
+ * Indicates that an unknown service was requested from the registry.
  *
  * @author Steve Ebersole
  */

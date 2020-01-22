@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -35,8 +36,12 @@ import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
@@ -51,6 +56,7 @@ import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -61,6 +67,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
+	private static final Pattern LISTENER_SEPARATION_PATTERN = Pattern.compile( " ," );
+
 	private final UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
@@ -362,6 +370,46 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return mappedSuperclassMap == null
 				? Collections.emptySet()
 				: new HashSet<>( mappedSuperclassMap.values() );
+	}
+
+	@Override
+	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
+
+		assert sessionFactoryServiceRegistry != null;
+
+		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.getService( EventListenerRegistry.class );
+		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
+
+		eventListenerRegistry.prepare( this );
+
+		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			if ( !propertyName.startsWith( org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				continue;
+			}
+			final String eventTypeName = propertyName.substring(
+					org.hibernate.jpa.AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1
+			);
+			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
+			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
+			for ( String listenerImpl : LISTENER_SEPARATION_PATTERN.split( ( (String) entry.getValue() ) ) ) {
+				eventListenerGroup.appendListener( instantiate( listenerImpl, classLoaderService ) );
+			}
+		}
+	}
+
+	private Object instantiate(String listenerImpl, ClassLoaderService classLoaderService) {
+		try {
+			return classLoaderService.classForName( listenerImpl ).newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+		}
 	}
 
 	@Override

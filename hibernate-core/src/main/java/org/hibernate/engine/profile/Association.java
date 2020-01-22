@@ -18,7 +18,7 @@ public class Association {
 	private final String role;
 
 	/**
-	 * Constructs a association defining what is to be fetched.
+	 * Constructs an association defining what is to be fetched.
 	 *
 	 * @param owner The entity owning the association
 	 * @param associationPath The path of the association, from the entity

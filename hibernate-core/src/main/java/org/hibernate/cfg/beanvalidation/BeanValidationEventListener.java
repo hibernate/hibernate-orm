@@ -57,7 +57,7 @@ public class BeanValidationEventListener
 	 * Constructor used in an environment where validator factory is injected (JPA2).
 	 *
 	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
-	 * @param settings Configued properties
+	 * @param settings Configured properties
 	 */
 	public BeanValidationEventListener(ValidatorFactory factory, Map settings, ClassLoaderService classLoaderService) {
 		init( factory, settings, classLoaderService );

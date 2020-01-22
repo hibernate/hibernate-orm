@@ -9,8 +9,8 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Called after insterting an item in the datastore
- * 
+ * Called after inserting an item in the datastore
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */

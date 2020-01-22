@@ -11,6 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.NativeQuery;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -70,7 +71,20 @@ public class FormulaNativeQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQuery() throws Exception {
+	@FailureExpected( jiraKey = "HHH-7525" )
+	public void testNativeQueryWithoutFormulaField() throws Exception {
+		doInHibernate(
+				this::sessionFactory, session -> {
+					// the native query result mapping fails if the formula field is not returned from the query
+					Query query = session.createNativeQuery( "SELECT ft.* FROM foo_table ft", Foo.class );
+					List<Foo> list = query.getResultList();
+					assertEquals( 3, list.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testNativeQueryWithAllFields() throws Exception {
 		doInHibernate(
 				this::sessionFactory, session -> {
 					Query query = session.createNativeQuery( "SELECT ft.*, abs(locationEnd - locationStart) as distance FROM foo_table ft", Foo.class );

@@ -7,7 +7,6 @@
 package org.hibernate.spatial.predicate;
 
 import java.io.Serializable;
-import java.util.regex.Pattern;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -19,6 +18,7 @@ import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.predicate.AbstractSimplePredicate;
 import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialFilter;
 import org.hibernate.spatial.jts.EnvelopeAdapter;
 
@@ -29,7 +29,6 @@ import org.locationtech.jts.geom.Geometry;
  * JPA Criteria API {@link Predicate} equivalent of {@link SpatialFilter}.
  */
 public class FilterPredicate extends AbstractSimplePredicate implements Serializable {
-	private static final Pattern REGEX_PATTERN_PARAMETER_PLACEHOLDER = Pattern.compile( "\\?" );
 
 	private final Expression<? extends Geometry> geometry;
 	private final Expression<? extends Geometry> filter;
@@ -70,10 +69,7 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 		String filterParameter = ( (Renderable) filter ).render( renderingContext );
 		Dialect dialect = renderingContext.getDialect();
 		if ( dialect instanceof SpatialDialect ) {
-			final SpatialDialect seDialect = (SpatialDialect) dialect;
-			String sql = seDialect.getSpatialFilterExpression( geometryParameter );
-			return REGEX_PATTERN_PARAMETER_PLACEHOLDER.matcher( sql )
-					.replaceFirst( filterParameter );
+			return SpatialFunction.filter.name() + "(" + geometryParameter + ", " + filterParameter + ") = true";
 		}
 		else {
 			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );

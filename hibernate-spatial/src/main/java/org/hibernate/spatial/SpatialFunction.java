@@ -164,8 +164,16 @@ public enum SpatialFunction {
 	/**
 	 * the extents function
 	 */
-	extent( "common" );
+	extent( "common" ),
 
+	/**
+	 * The filter function
+	 * <p>
+	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&&" operator of PostGIS.
+	 */
+	filter( "filter" ),
+
+	;
 
 	private final String description;
 

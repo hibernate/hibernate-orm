@@ -12,6 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.SpatialAnalysis;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
@@ -136,6 +137,12 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 		put(
 				"extent",
 				new SpatialAggregationFunction( "extent", OracleSpatialAggregate.EXTENT, sdoSupport )
+		);
+
+		// spatial filter function
+		put(
+				SpatialFunction.filter.name(),
+				new StandardSQLFunction( "SDO_FILTER" )
 		);
 
 		//other common functions

@@ -61,4 +61,19 @@ public abstract class MappingTools {
 		}
 		return false;
 	}
+	
+	
+	/**
+	 * @param prefix
+	 * @return
+	 */
+	public static String getRealToOneRelationName(String prefix) {
+		if ( prefix == null ) {
+			return "";
+		}
+		if ( prefix.endsWith( "_" ) ) {
+			return prefix.substring( 0, prefix.length() - 1 );
+		}
+		return prefix;
+	}
 }

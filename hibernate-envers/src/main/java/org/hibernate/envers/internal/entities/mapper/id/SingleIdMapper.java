@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
 	private PropertyData propertyData;
+	private String path;
 
 	public SingleIdMapper(ServiceRegistry serviceRegistry) {
 		super( serviceRegistry );
@@ -33,6 +35,12 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 	public SingleIdMapper(ServiceRegistry serviceRegistry, PropertyData propertyData) {
 		this( serviceRegistry );
 		this.propertyData = propertyData;
+	}
+	
+	public SingleIdMapper(ServiceRegistry serviceRegistry, PropertyData propertyData, String path) {
+		this( serviceRegistry );
+		this.propertyData = propertyData;
+		this.path = path;
 	}
 
 	@Override
@@ -125,22 +133,75 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier() );
 			}
 			else {
-				final Object value = AccessController.doPrivileged(
+				AccessController.doPrivileged(
 						new PrivilegedAction<Object>() {
+
 							@Override
 							public Object run() {
-								final Getter getter = ReflectionTools.getGetter(
-										obj.getClass(),
-										propertyData,
-										getServiceRegistry()
-								);
-								return getter.get( obj );
+								return updateMap( data, obj );
+
 							}
-						}
-				);
-				data.put( propertyData.getName(), value );
+						} );
+				
 			}
 		}
+	}
+
+	private boolean updateMap(Map<String, Object> data, final Object obj) {
+		if ( ReflectionTools.isEmbeddedProperty( obj.getClass(), propertyData.getName() ) ) {
+			Object value;
+			try {
+				value = getEmbeddedFieldValue( obj );
+			}
+			catch (NoSuchFieldException e) {
+				return false;
+			}
+			data.put( propertyData.getName() + "_" + propertyData.getBeanName(), value );
+			return false;
+		}
+		if ( path == null || path.isEmpty() ) {
+			final Getter getter = ReflectionTools.getGetter( obj.getClass(), propertyData, getServiceRegistry() );
+			Object value = getter.get( obj );
+			data.put( propertyData.getName(), value );
+		}
+		else {
+			Object value = getEmbeddedValue( path, obj );
+			data.put( path.replace( ".", "_" ), value );
+		}
+
+		return false;
+	}
+
+	private Object getEmbeddedFieldValue(final Object obj) throws NoSuchFieldException {
+		final Getter getter = ReflectionTools.getGetter( ReflectionTools.getFieldType( obj.getClass(), propertyData.getName() ),
+				propertyData, getServiceRegistry() );
+		return getter.get( getObject( obj.getClass(), propertyData.getName(), obj ) );
+	}
+
+	private Object getEmbeddedValue(String path, Object obj) {
+		int lastIndex = path.lastIndexOf( "." );
+		if ( lastIndex > 0 ) {
+			String root = path.substring( 0, lastIndex );
+			if ( ReflectionTools.isEmbeddedProperty( obj.getClass(), root ) ) {
+				Object value = getEmbeddedValue( root, obj );
+				return getEmbeddedValue( path.substring( lastIndex + 1 ), value );
+			}
+			int index = root.indexOf( "." );
+			if ( index > 0 ) {
+				Object value = getEmbeddedValue( root, obj );
+				return getEmbeddedValue( path.substring( lastIndex + 1 ), value );
+			}
+			else {
+				return getEmbeddedValue( path.substring( lastIndex + 1 ), obj );
+			}
+
+		}
+		else {
+			Getter getter = ReflectionTools.getGetter( obj.getClass(), path, propertyData.getAccessType(),
+					getServiceRegistry() );
+			return getter.get( obj );
+		}
+
 	}
 
 	public void mapToEntityFromEntity(final Object objTo, final Object objFrom) {
@@ -169,6 +230,18 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 					}
 				}
 		);
+	}
+	
+	private Object getObject(Class cls, String fieldName, Object obj) {
+		try {
+			Field field = cls.getDeclaredField( fieldName );
+			field.setAccessible( true );
+			return field.get( obj );
+
+		}
+		catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override

@@ -109,7 +109,7 @@ public class ArchiveHelper {
 	public static URL getURLFromPath(String jarPath) {
 		URL jarUrl;
 		try {
-			//is it an url
+			//is it a url
 			jarUrl = new URL( jarPath );
 		}
 		catch ( MalformedURLException e) {

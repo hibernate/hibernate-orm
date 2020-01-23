@@ -482,7 +482,7 @@ Values are `true` (pass the NULLs) or `false` (do not pass the NULLs).
 Enable fetching JDBC statement warning for logging. Default value is given by `org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()`.
 
 `*hibernate.session_factory.statement_inspector*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/StatementInspector.html[`StatementInspector`] implementation to be applied to every `Session` created by the current `SessionFactory`.
+Names an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/jdbc/spi/StatementInspector.html[`StatementInspector`] implementation to be applied to every `Session` created by the current `SessionFactory`.
 +
 Can reference a
 `StatementInspector` instance,
@@ -574,9 +574,9 @@ Set this property to `true` if your JDBC driver returns correct row counts from 
 `*hibernate.batch_fetch_style*` (e.g. `LEGACY`(default value))::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] to use.
 +
-Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] name (insensitively), or a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] instance. `LEGACY}` is the default value.
+Can specify either the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] name (insensitively), or an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/loader/BatchFetchStyle.html[`BatchFetchStyle`] instance. `LEGACY}` is the default value.
 
-`*hibernate.jdbc.batch.builder*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance)::
+`*hibernate.jdbc.batch.builder*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation class type or an actual object instance)::
  Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/batch/spi/BatchBuilder.html[`BatchBuilder`] implementation to use.
 
 [[configurations-database-fetch]]
@@ -629,7 +629,7 @@ If true, Hibernate generates comments inside the SQL, for easier debugging.
 `*hibernate.generate_statistics*` (e.g. `true` or `false`)::
 Causes Hibernate to collect statistics for performance tuning.
 
-`*hibernate.stats.factory*` (e.g. the fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`] implementation or an actual instance)::
+`*hibernate.stats.factory*` (e.g. the fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/spi/StatisticsFactory.html[`StatisticsFactory`] implementation or an actual instance)::
 The `StatisticsFactory` allow you to customize how the Hibernate Statistics are being collected.
 
 `*hibernate.session.events.log*` (e.g. `true` or `false`)::
@@ -688,7 +688,7 @@ http://infinispan.org/docs/stable/user_guide/user_guide.html#configuration_prope
 
 `*hibernate.transaction.jta.platform*` (e.g. `JBossAS`, `BitronixJtaPlatform`)::
 Names the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation to use for integrating with JTA systems.
-Can reference either a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] instance or the name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation class
+Can reference either an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] instance or the name of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/transaction/jta/platform/spi/JtaPlatform.html[`JtaPlatform`] implementation class
 
 `*hibernate.jta.prefer_user_transaction*` (e.g. `true` or `false` (default value))::
 Should we prefer using the `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction` over using `org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager`
@@ -725,7 +725,7 @@ automatically build the proper transaction coordinator based on the transaction 
 If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
 will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
 A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
-or provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] that builds a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinator.html[`TransactionCoordinator`] that properly coordinates with JTA-based transactions.
+or provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] that builds an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinator.html[`TransactionCoordinator`] that properly coordinates with JTA-based transactions.
 
 `*hibernate.jta.track_by_thread*` (e.g. `true` (default value) or `false`)::
 A transaction can be rolled back by another thread ("tracking by thread") and not the original application.
@@ -753,10 +753,10 @@ The default behavior is to allow access unless the `Session` is bootstrapped via
 The multi-tenancy strategy in use.
 
 `*hibernate.multi_tenant_connection_provider*` (e.g. `true` or `false` (default value))::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
+Names an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
 
 `*hibernate.tenant_identifier_resolver*`::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] implementation to resolve the resolve the current tenant identifier so that calling `SessionFactory#openSession()` would get a `Session` that's connected to the right tenant.
+Names an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] implementation to resolve the resolve the current tenant identifier so that calling `SessionFactory#openSession()` would get a `Session` that's connected to the right tenant.
 +
 Can be a `CurrentTenantIdentifierResolver` instance, `CurrentTenantIdentifierResolver` implementation `Class` object reference or a `CurrentTenantIdentifierResolver` implementation class name.
 
@@ -940,7 +940,7 @@ setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
 Fully qualified class name implementing the `SessionEventListener` interface.
 
 `*hibernate.session_factory.interceptor*` (e.g. `org.hibernate.EmptyInterceptor` (default value))::
-Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
+Names an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Interceptor[`Interceptor`] implementation to be applied to every `Session` created by the current `org.hibernate.SessionFactory`
 +
 Can reference:
 +
@@ -1046,17 +1046,17 @@ Used to define a list of https://docs.jboss.org/hibernate/orm/{majorMinorVersion
 `*hibernate.type_contributors*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/TypeContributorList.html[`TypeContributorList`])::
 Used to define a list of https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/model/TypeContributor.html[`TypeContributor`] which is used during the bootstrap process to contribute types.
 
-`*hibernate.persister.resolver*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterClassResolver.html[`PersisterClassResolver`] or a `PersisterClassResolver` instance)::
+`*hibernate.persister.resolver*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterClassResolver.html[`PersisterClassResolver`] or a `PersisterClassResolver` instance)::
 Used to define an implementation of the `PersisterClassResolver` interface which can be used to customize how an entity or a collection is being persisted.
 
-`*hibernate.persister.factory*` (e.g. The fully qualified name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterFactory.html[`PersisterFactory`] or a `PersisterFactory` instance)::
+`*hibernate.persister.factory*` (e.g. The fully qualified name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/spi/PersisterFactory.html[`PersisterFactory`] or a `PersisterFactory` instance)::
 Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize how an entity or a collection are being persisted.
 
 `*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
 
-`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
-Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
+`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
+Used to define an instance, the class or the fully qualified class name of an https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties

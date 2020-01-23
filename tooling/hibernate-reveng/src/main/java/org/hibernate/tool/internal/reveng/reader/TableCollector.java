@@ -2,7 +2,6 @@ package org.hibernate.tool.internal.reveng.reader;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,16 +54,15 @@ public class TableCollector {
 	}
 
 	public Collection<Table> processTables() {
-		Map<String,Object> tableRs = null;
-		Iterator<Map<String,Object>> tableIterator = null;
-		List<Map<String,Object>> tables = new ArrayList<Map<String,Object>>();
+		  Iterator<Map<String,Object>> tableIterator = null;
+		  List<Table> processedTables = new ArrayList<Table>();
 		  try {			  
 		     String matchCatalog = StringHelper.replace(schemaSelection.getMatchCatalog(),".*", "%");
 		     String matchSchema = StringHelper.replace(schemaSelection.getMatchSchema(),".*", "%");
 		     String matchTable = StringHelper.replace(schemaSelection.getMatchTable(),".*", "%");
 		     tableIterator = metaDataDialect.getTables(matchCatalog, matchSchema, matchTable);
 		     while (tableIterator.hasNext() ) {
-		        tableRs = tableIterator.next();
+		    	Map<String,Object> tableRs = tableIterator.next();
 		        String tableName = (String) tableRs.get("TABLE_NAME");
 				String schemaName = (String) tableRs.get("TABLE_SCHEM");
 		        String catalogName = (String) tableRs.get("TABLE_CAT");
@@ -72,9 +70,39 @@ public class TableCollector {
 				if(revengStrategy.excludeTable(ti) ) {
 					log.debug("Table " + ti + " excluded by strategy");
 		        	continue;
-		        }
-								
-				tables.add(new HashMap<String,Object>(tableRs));
+		        }								
+				String comment = (String) tableRs.get("REMARKS");
+				String tableType = (String) tableRs.get("TABLE_TYPE");
+				if(databaseCollector.getTable
+						  (schemaName, 
+								  catalogName, 
+								  tableName)!=null) {
+					  log.debug("Ignoring " + tableName + " since it has already been processed");
+					  continue;
+				  } else {
+					  if ( ("TABLE".equalsIgnoreCase(tableType) || "VIEW".equalsIgnoreCase(tableType) || "SYNONYM".equals(tableType) ) ) { //||
+						  // ("SYNONYM".equals(tableType) && isOracle() ) ) { // only on oracle ? TODO: HBX-218
+						  // it's a regular table or a synonym
+						  
+						  // ensure schema and catalogname is truly empty (especially mysql returns null schema, "" catalog)
+						  if(schemaName!=null && schemaName.trim().length()==0) {
+							  schemaName = null;
+						  }                     
+						  if(catalogName!=null && catalogName.trim().length()==0) {
+							  catalogName=null;
+						  }
+						  log.debug("Adding table " + tableName + " of type " + tableType);
+						  Table table = databaseCollector.addTable(schemaName, catalogName, tableName);
+						  table.setComment(comment);
+						  if(tableType.equalsIgnoreCase("TABLE")) {
+							  hasIndices.add(table);
+						  }
+						  processedTables.add( table );
+					  }
+					  else {
+						  log.debug("Ignoring table " + tableName + " of type " + tableType);
+					  }
+				  }
 		     }
 		  } 
 		  finally {
@@ -84,56 +112,6 @@ public class TableCollector {
 			  catch (Exception ignore) {
 			  }
 		  }
-		  
-		  List<Table> processedTables = new ArrayList<Table>();
-		  tableIterator = tables.iterator();
-		  while (tableIterator.hasNext() ) {
-			  tableRs = tableIterator.next();
-			  String tableName = (String) tableRs.get("TABLE_NAME");
-			  String schemaName = (String) tableRs.get("TABLE_SCHEM");
-			  String catalogName = (String) tableRs.get("TABLE_CAT");
-			  
-			  TableIdentifier ti = TableIdentifier.create(catalogName, schemaName, tableName);
-			   if(revengStrategy.excludeTable(ti) ) {
-			   log.debug("Table " + ti + " excluded by strategy");
-			   continue;
-			   }
-			  
-			  String comment = (String) tableRs.get("REMARKS");
-			  String tableType = (String) tableRs.get("TABLE_TYPE");
-			  
-			  if(databaseCollector.getTable
-					  (schemaName, 
-							  catalogName, 
-							  tableName)!=null) {
-				  log.debug("Ignoring " + tableName + " since it has already been processed");
-				  continue;
-			  } else {
-				  if ( ("TABLE".equalsIgnoreCase(tableType) || "VIEW".equalsIgnoreCase(tableType) || "SYNONYM".equals(tableType) ) ) { //||
-					  // ("SYNONYM".equals(tableType) && isOracle() ) ) { // only on oracle ? TODO: HBX-218
-					  // it's a regular table or a synonym
-					  
-					  // ensure schema and catalogname is truly empty (especially mysql returns null schema, "" catalog)
-					  if(schemaName!=null && schemaName.trim().length()==0) {
-						  schemaName = null;
-					  }                     
-					  if(catalogName!=null && catalogName.trim().length()==0) {
-						  catalogName=null;
-					  }
-					  log.debug("Adding table " + tableName + " of type " + tableType);
-					  Table table = databaseCollector.addTable(schemaName, catalogName, tableName);
-					  table.setComment(comment);
-					  if(tableType.equalsIgnoreCase("TABLE")) {
-						  hasIndices.add(table);
-					  }
-					  processedTables.add( table );
-				  }
-				  else {
-					  log.debug("Ignoring table " + tableName + " of type " + tableType);
-				  }
-			  }
-		  }
-		  
 		  return processedTables;
 	}
 	

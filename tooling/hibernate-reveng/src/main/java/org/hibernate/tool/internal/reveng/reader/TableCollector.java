@@ -58,17 +58,11 @@ public class TableCollector {
 		Map<String,Object> tableRs = null;
 		Iterator<Map<String,Object>> tableIterator = null;
 		List<Map<String,Object>> tables = new ArrayList<Map<String,Object>>();
-		boolean multiSchema = false; 
-		// TODO: the code below detects if the reveng is multischema'ed, but not used for anything yet. should be used to remove schema/catalog info from output if only one schema/catalog used.
-		
 		  try {			  
 		     String matchCatalog = StringHelper.replace(schemaSelection.getMatchCatalog(),".*", "%");
 		     String matchSchema = StringHelper.replace(schemaSelection.getMatchSchema(),".*", "%");
 		     String matchTable = StringHelper.replace(schemaSelection.getMatchTable(),".*", "%");
 		     tableIterator = metaDataDialect.getTables(matchCatalog, matchSchema, matchTable);
-		     String[] lastQualifier = null;
-		     String[] foundQualifier = new String[2];
-		     
 		     while (tableIterator.hasNext() ) {
 		        tableRs = tableIterator.next();
 		        String tableName = (String) tableRs.get("TABLE_NAME");
@@ -79,20 +73,7 @@ public class TableCollector {
 					log.debug("Table " + ti + " excluded by strategy");
 		        	continue;
 		        }
-				
-				if(!multiSchema) {
-					foundQualifier[0] = catalogName;
-					foundQualifier[1] = schemaName;
-					if(lastQualifier==null) {
-						lastQualifier=new String[2];
-						lastQualifier[0] = foundQualifier[0];
-						lastQualifier[1] = foundQualifier[1];					
-					}
-					if((!safeEquals(lastQualifier[0],foundQualifier[0])) || (!safeEquals(lastQualifier[1],foundQualifier[1]))) {
-						multiSchema = true;
-					}
-				}
-				
+								
 				tables.add(new HashMap<String,Object>(tableRs));
 		     }
 		  } 
@@ -156,10 +137,4 @@ public class TableCollector {
 		  return processedTables;
 	}
 	
-	private static boolean safeEquals(Object value, Object tf) {
-		if(value==tf) return true;
-		if(value==null) return false;
-		return value.equals(tf);
-	}
-
 }

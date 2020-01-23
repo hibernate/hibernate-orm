@@ -457,6 +457,7 @@ public final class TwoPhaseLoad {
 			AttributeNodeImplementor<Object> attributeNode = context.findAttributeNode( associationName );
 			if ( attributeNode != null ) {
 				if ( associationType.isCollectionType() ) {
+					// to do: deal with Map's key and value
 					session.setFetchGraphLoadContext( null );
 				}
 				else {
@@ -464,7 +465,8 @@ public final class TwoPhaseLoad {
 					GraphImplementor<?> subContext = attributeNode.getSubGraphMap().get( associationType.getReturnedClass() );
 					if ( subContext != null ) {
 						session.setFetchGraphLoadContext( subContext );
-					} else {
+					}
+					else {
 						session.setFetchGraphLoadContext( null );
 					}
 				}

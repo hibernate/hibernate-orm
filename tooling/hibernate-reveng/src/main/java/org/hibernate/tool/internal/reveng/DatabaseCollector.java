@@ -1,6 +1,5 @@
 package org.hibernate.tool.internal.reveng;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +11,6 @@ import org.hibernate.mapping.Table;
  * Only intended to be used internally in reveng. *not* public api.
  */
 public interface DatabaseCollector {
-
-	public Iterator<Table> iterateTables();
 
 	public Table addTable(String schema, String catalog, String name);
 

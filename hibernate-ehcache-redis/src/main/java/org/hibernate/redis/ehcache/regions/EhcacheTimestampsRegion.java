@@ -19,6 +19,8 @@ import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class,
 			EhcacheTimestampsRegion.class.getName());
+	
+	private static final Integer NULL_VALUE = -1; 
 
 	/**
 	 * @param accessStrategyFactory
@@ -43,6 +45,10 @@ public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements
 			} else {
 				final Object element = getDistributedNeutrinoCache().get(key);
 				if (element == null) {
+					getDistributedNeutrinoCache().put(key, NULL_VALUE);
+					LOG.errorf("Timestamp for key %s is null. Putting default value", key);
+					return null;
+				} else if (element.equals(NULL_VALUE)) {
 					LOG.debugf("Timestamp for key %s is null", key);
 					return null;
 				}

@@ -6,17 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.query.spi.QueryEngine;
-
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
  * <p/>
@@ -28,163 +17,19 @@ import org.hibernate.query.spi.QueryEngine;
  * <li>Added support for pooled sequences</li>
  * <li>Added support for SELECT queries with limit and offset</li>
  * <li>Added getIdentitySelectString</li>
- * <li>Modified concatenation operator</li>
+ * <li>Modified concatination operator</li>
  * </ul>
  *
  * @author Enrico Schenk
  * @author Raymond Fan
+ *
+ * @deprecated use {@code IngresDialect(930)}
  */
+@Deprecated
 public class Ingres9Dialect extends IngresDialect {
 
-	private static final LimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final String soff = " offset " + selection.getFirstRow();
-			final String slim = " fetch first " + getMaxOrLimit( selection ) + " rows only";
-			final StringBuilder sb = new StringBuilder( sql.length() + soff.length() + slim.length() )
-					.append( sql );
-			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( soff );
-			}
-			if (LimitHelper.hasMaxRows( selection )) {
-				sb.append( slim );
-			}
-			return sb.toString();
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
-	/**
-	 * Constructs a Ingres9Dialect
-	 */
 	public Ingres9Dialect() {
-		super();
-
-		registerColumnType( Types.DATE, "ansidate" );
-		registerColumnType( Types.TIMESTAMP, "timestamp(9) with time zone" );
+		super(930);
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		CommonFunctionFactory.concat_operator( queryEngine );
-	}
-
-
-	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return true;
-	}
-
-	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String getQuerySequencesString() {
-		return "select seq_name from iisequences";
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp";
-	}
-
-	@Override
-	public String getCurrentTimestampSQLFunctionName() {
-		return "current_timestamp";
-	}
-
-	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
-	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return true;
-	}
-
-	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public LimitHandler getDefaultLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		final StringBuilder soff = new StringBuilder( " offset " + offset );
-		final StringBuilder slim = new StringBuilder( " fetch first " + limit + " rows only" );
-		final StringBuilder sb = new StringBuilder( querySelect.length() + soff.length() + slim.length() )
-				.append( querySelect );
-		if ( offset > 0 ) {
-			sb.append( soff );
-		}
-		if ( limit > 0 ) {
-			sb.append( slim );
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new Ingres9IdentityColumnSupport();
-	}
 }

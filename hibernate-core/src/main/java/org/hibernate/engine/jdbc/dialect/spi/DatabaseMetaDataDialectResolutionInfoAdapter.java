@@ -35,6 +35,16 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	}
 
 	@Override
+	public String getDatabaseVersion() {
+		try {
+			return databaseMetaData.getDatabaseProductVersion();
+		}
+		catch (SQLException e) {
+			throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+		}
+	}
+
+	@Override
 	public int getDatabaseMajorVersion() {
 		try {
 			return interpretVersion( databaseMetaData.getDatabaseMajorVersion() );

@@ -97,7 +97,7 @@ public class ColumnReference implements Expression, Assignable {
 		// todo (6.0) : potential use for runtime database model - interpretation of table and column references
 		//		into metadata info such as java/sql type, binder, extractor
 
-		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this, jdbcMapping );
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this );
 	}
 
 	@Override

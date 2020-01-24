@@ -6,86 +6,31 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import java.sql.Types;
+
 
 /**
- * All Sybase dialects share an IN list size limit.
+ * Superclass for all Sybase dialects.
  *
  * @author Brett Meyer
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
+
+	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public SybaseDialect() {
+		super();
 
-		//this doesn't work 100% on earlier versions of Sybase
-		//which were missing the third parameter in charindex()
-		//TODO: we could emulate it with substring() like in Postgres
-		CommonFunctionFactory.locate_charindex( queryEngine );
-
-		CommonFunctionFactory.replace_strReplace( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register(
-				"trim", new TransactSQLTrimEmulation(
-						TransactSQLTrimEmulation.LTRIM,
-						TransactSQLTrimEmulation.RTRIM,
-						"str_replace"
-				)
-		);
-
-		//these functions need parens
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
-				.setInvariantType( StandardBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
-				.setInvariantType( StandardBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
-				.setInvariantType( StandardBasicTypes.DATE )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
-				.setInvariantType( StandardBasicTypes.INSTANT )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register( "current_instant" );
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
-				.setInvariantType( StandardBasicTypes.LOCAL_TIME )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register( "current time" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
-				.setInvariantType( StandardBasicTypes.LOCAL_DATE )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register( "current date" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
-				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register( "current datetime" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
-				.setInvariantType( StandardBasicTypes.INSTANT )
-				.setUseParenthesesWhenNoArgs(true)
-				.setExactArgumentCount( 0 )
-				.register( "current instant" );
+		//Sybase ASE didn't introduce bigint until version 15.0
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 	}
 
 	@Override
@@ -105,7 +50,19 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
 	}
-	
+
+	@Override
+	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		super.initializeFunctionRegistry(queryEngine);
+
+		//this doesn't work 100% on earlier versions of Sybase
+		//which were missing the third parameter in charindex()
+		//TODO: we could emulate it with substring() like in Postgres
+		CommonFunctionFactory.locate_charindex( queryEngine );
+
+		CommonFunctionFactory.replace_strReplace( queryEngine );
+	}
+
 	@Override
 	public String getNullColumnString() {
 		return " null";
@@ -115,4 +72,31 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String getCurrentSchemaCommand() {
 		return "select db_name()";
 	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case WEEK: return "calweekofyear"; //the ISO week number I think
+			default: return super.translateExtractField(unit);
+		}
+	}
+
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		//TODO!!
+		return "datepart(?1, ?2)";
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		//TODO!!
+		return "dateadd(?1, ?2, ?3)";
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		//TODO!!
+		return "datediff(?1, ?2, ?3)";
+	}
+
 }

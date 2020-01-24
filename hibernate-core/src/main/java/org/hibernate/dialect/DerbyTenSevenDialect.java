@@ -6,24 +6,17 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 /**
  * Dialect for Derby 10.7
  *
  * @author Strong Liu
+ *
+ * @deprecated use {@code DerbyDialect(1070)}
  */
-public class DerbyTenSevenDialect extends DerbyTenSixDialect {
-	/**
-	 * Constructs a DerbyTenSevenDialect
-	 */
-	public DerbyTenSevenDialect() {
-		super();
-		registerColumnType( Types.BOOLEAN, "boolean" );
-	}
+@Deprecated
+public class DerbyTenSevenDialect extends DerbyDialect {
 
-	@Override
-	public String toBooleanValueString(boolean bool) {
-		return String.valueOf( bool );
+	public DerbyTenSevenDialect() {
+		super(1070);
 	}
 }

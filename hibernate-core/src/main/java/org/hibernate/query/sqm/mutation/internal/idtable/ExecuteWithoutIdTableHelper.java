@@ -67,8 +67,7 @@ public final class ExecuteWithoutIdTableHelper {
 							// irrelevant
 							0,
 							0,
-							columnReference,
-							jdbcMapping
+							columnReference
 					);
 					matchingIdSelect.getSelectClause().addSqlSelection( sqlSelection );
 				}

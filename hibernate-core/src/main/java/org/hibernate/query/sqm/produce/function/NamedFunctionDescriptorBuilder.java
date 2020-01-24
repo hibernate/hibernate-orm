@@ -6,30 +6,31 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-
-import org.jboss.logging.Logger;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
  */
 public class NamedFunctionDescriptorBuilder {
-	private static final Logger log = Logger.getLogger( NamedFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
+	private final String registrationKey;
 
 	private final String functionName;
 
 	private ArgumentsValidator argumentsValidator;
-	private FunctionReturnTypeResolver returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
+	private FunctionReturnTypeResolver returnTypeResolver;
 
-	private boolean useParenthesesWhenNoArgs;
+	private boolean useParenthesesWhenNoArgs = true;
+	private String argumentListSignature;
 
-	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName) {
+	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
 		this.registry = registry;
+		this.registrationKey = registrationKey;
 		this.functionName = functionName;
 	}
 
@@ -46,12 +47,16 @@ public class NamedFunctionDescriptorBuilder {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
+	public NamedFunctionDescriptorBuilder setMinArgumentCount(int min) {
+		return setArgumentsValidator( StandardArgumentsValidators.min( min ) );
+	}
+
 	public NamedFunctionDescriptorBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public NamedFunctionDescriptorBuilder setInvariantType(BasicValuedMapping invariantType) {
+	public NamedFunctionDescriptorBuilder setInvariantType(BasicType invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
@@ -61,26 +66,23 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public NamedFunctionDescriptorBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
+		return this;
+	}
+
 	public SqmFunctionDescriptor register() {
-		return registry.register(
-				functionName,
-				build()
-		);
+		return registry.register( registrationKey, template() );
 	}
 
-	public SqmFunctionDescriptor register(String registrationKey) {
-		return registry.register(
-				registrationKey,
-				build()
-		);
-	}
-
-	public SqmFunctionDescriptor build() {
+	public SqmFunctionDescriptor template() {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
 				useParenthesesWhenNoArgs,
 				argumentsValidator,
-				returnTypeResolver
+				returnTypeResolver,
+				registrationKey,
+				argumentListSignature
 		);
 	}
 }

@@ -10,10 +10,9 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 
 /**
- * Provides a standard implementation that supports the majority of the HQL
- * functions that are translated to SQL. The Dialect and its sub-classes use
- * this class to provide details required for processing of the associated
- * function.
+ * Simplified API allowing users to contribute
+ * {@link org.hibernate.query.sqm.function.SqmFunctionDescriptor}s
+ * to HQL.
  *
  * @author David Channon
  */
@@ -31,10 +30,6 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	public StandardSQLFunction(String name, boolean useParentheses, AllowableFunctionReturnType type) {
 		super( name, useParentheses, null, null );
 		this.type = type;
-	}
-
-	public String getName() {
-		return getFunctionName();
 	}
 
 	public AllowableFunctionReturnType getType() {

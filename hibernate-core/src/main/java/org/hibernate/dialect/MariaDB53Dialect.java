@@ -6,20 +6,16 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.spi.QueryEngine;
-
 /**
  * @author Vlad Mihalcea
+ *
+ * @deprecated use {@code MariaDBDialect(530)}
  */
+@Deprecated
 public class MariaDB53Dialect extends MariaDBDialect {
+
 	public MariaDB53Dialect() {
-		upgradeTo57();
+		super(530);
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		upgradeTo57( queryEngine );
-	}
 }

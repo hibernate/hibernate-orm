@@ -16,6 +16,8 @@ WS : WS_CHAR+ -> skip;
 fragment
 WS_CHAR : [ \f\t\r\n];
 
+COMMENT : '/*' (~'*' | '*' ~'/' )* '*/' -> skip;
+
 fragment
 DIGIT : [0-9];
 
@@ -53,10 +55,31 @@ FLOATING_POINT_NUMBER
 	| DIGIT+
 	;
 
+INTEGER_LITERAL : INTEGER_NUMBER;
 
+LONG_LITERAL : INTEGER_NUMBER LONG_SUFFIX;
+
+FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX?;
+
+DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX;
+
+BIG_INTEGER_LITERAL : INTEGER_NUMBER BIG_INTEGER_SUFFIX;
+
+BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
+
+HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
+
+OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')?;
 
 fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
+
+STRING_LITERAL
+	: DOUBLE_QUOTE ( ~[\\"] | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("\"\"", "\"")); }
+	| SINGLE_QUOTE ( ~[\\'] | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
+	  { setText(getText().substring(1, getText().length()-1).replace("''", "'")); }
+	;
 
 fragment BACKSLASH : '\\';
 
@@ -72,35 +95,11 @@ UNICODE_ESCAPE
 	: 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	;
 
-INTEGER_LITERAL : INTEGER_NUMBER ;
-
-LONG_LITERAL : INTEGER_NUMBER LONG_SUFFIX;
-
-FLOAT_LITERAL : FLOATING_POINT_NUMBER FLOAT_SUFFIX?;
-
-DOUBLE_LITERAL : FLOATING_POINT_NUMBER DOUBLE_SUFFIX;
-
-BIG_INTEGER_LITERAL : INTEGER_NUMBER BIG_INTEGER_SUFFIX;
-
-BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
-
-HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
-
-OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')? ;
-
-STRING_LITERAL
-	: DOUBLE_QUOTE ( ~[\\"] | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
-	  { setText(getText().substring(1, getText().length()-1).replace("\"\"", "\"")); }
-	| SINGLE_QUOTE ( ~[\\'] | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
-	  { setText(getText().substring(1, getText().length()-1).replace("''", "'")); }
-	;
-
-
 fragment
 OCTAL_ESCAPE
-	:	'\\' ('0'..'3') ('0'..'7') ('0'..'7')
-	|	'\\' ('0'..'7') ('0'..'7')
-	|	'\\' ('0'..'7')
+	:	BACKSLASH ('0'..'3') ('0'..'7') ('0'..'7')
+	|	BACKSLASH ('0'..'7') ('0'..'7')
+	|	BACKSLASH ('0'..'7')
 	;
 
 
@@ -164,13 +163,14 @@ COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
+CURRENT				: [cC] [uU] [rR] [rR] [eE] [nN] [tT];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
-CURRENT_DATETIME	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
-CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT];
+CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT]; //deprecated legacy
 CURRENT_TIME		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE];
 CURRENT_TIMESTAMP	: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
-DAY					: [dD] [aA] [yY];
 DATE				: [dD] [aA] [tT] [eE];
+DATETIME			: [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
+DAY					: [dD] [aA] [yY];
 DELETE				: [dD] [eE] [lL] [eE] [tT] [eE];
 DESC				: [dD] [eE] [sS] [cC];
 DISTINCT			: [dD] [iI] [sS] [tT] [iI] [nN] [cC] [tT];
@@ -180,6 +180,7 @@ EMPTY				: [eE] [mM] [pP] [tT] [yY];
 END					: [eE] [nN] [dD];
 ENTRY				: [eE] [nN] [tT] [rR] [yY];
 ESCAPE				: [eE] [sS] [cC] [aA] [pP] [eE];
+EVERY				: [eE] [vV] [eE] [rR] [yY];
 EXISTS				: [eE] [xX] [iI] [sS] [tT] [sS];
 EXP	 				: [eE] [xX] [pP];
 EXTRACT				: [eE] [xX] [tT] [rR] [aA] [cC] [tT];
@@ -199,6 +200,7 @@ IN					: [iI] [nN];
 INDEX				: [iI] [nN] [dD] [eE] [xX];
 INNER				: [iI] [nN] [nN] [eE] [rR];
 INSERT				: [iI] [nN] [sS] [eE] [rR] [tT];
+INSTANT				: [iI] [nN] [sS] [tT] [aA] [nN] [tT];
 INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
@@ -211,10 +213,11 @@ LIKE				: [lL] [iI] [kK] [eE];
 LIMIT				: [lL] [iI] [mM] [iI] [tT];
 LIST				: [lL] [iI] [sS] [tT];
 LN  				: [lL] [nN];
-LOCATE				: [lL] [oO] [cC] [aA] [tT] [eE];
+LOCAL				: [lL] [oO] [cC] [aA] [lL];
 LOCAL_DATE			: [lL] [oO] [cC] [aA] [lL] '_' [dD] [aA] [tT] [eE];
 LOCAL_DATETIME		: [lL] [oO] [cC] [aA] [lL] '_' [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 LOCAL_TIME			: [lL] [oO] [cC] [aA] [lL] '_' [tT] [iI] [mM] [eE];
+LOCATE				: [lL] [oO] [cC] [aA] [tT] [eE];
 LOWER				: [lL] [oO] [wW] [eE] [rR];
 MAP					: [mM] [aA] [pP];
 MAX					: [mM] [aA] [xX];
@@ -229,17 +232,21 @@ MININDEX			: [mM] [iI] [nN] [iI] [nN] [dD] [eE] [xX];
 MINUTE				: [mM] [iI] [nN] [uU] [tT] [eE];
 MOD					: [mM] [oO] [dD];
 MONTH				: [mM] [oO] [nN] [tT] [hH];
-NEW					: [nN] [eE] [wW];
 NANOSECOND			: [nN] [aA] [nN] [oO] [sS] [eE] [cC] [oO] [nN] [dD];
+NEW					: [nN] [eE] [wW];
 NOT					: [nN] [oO] [tT];
 NULLIF				: [nN] [uU] [lL] [lL] [iI] [fF];
 OBJECT				: [oO] [bB] [jJ] [eE] [cC] [tT];
 OF					: [oO] [fF];
 OFFSET				: [oO] [fF] [fF] [sS] [eE] [tT];
+OFFSET_DATETIME		: [oO] [fF] [fF] [sS] [eE] [tT] '_' [dD] [aA] [tT] [eE] [tT] [iI] [mM] [eE];
 ON					: [oO] [nN];
 OR					: [oO] [rR];
 ORDER				: [oO] [rR] [dD] [eE] [rR];
 OUTER				: [oO] [uU] [tT] [eE] [rR];
+OVERLAY				: [oO] [vV] [eE] [rR] [lL] [aA] [yY];
+PAD					: [pP] [aA] [dD];
+PLACING				: [pP] [lL] [aA] [cC] [iI] [nN] [gG];
 POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
 POWER				: [pP] [oO] [wW] [eE] [rR];
 QUARTER				: [qQ] [uU] [aA] [rR] [tT] [eE] [rR];
@@ -251,12 +258,14 @@ SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];
 SET					: [sS] [eE] [tT];
 SIGN				: [sS] [iI] [gG] [nN];
 SIZE				: [sS] [iI] [zZ] [eE];
+SOME				: [sS] [oO] [mM] [eE];
 SQRT				: [sS] [qQ] [rR] [tT];
 STR					: [sS] [tT] [rR];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
 SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];
 TIME				: [tT] [iI] [mM] [eE];
+TIMESTAMP			: [tT] [iI] [mM] [eE] [sS] [tT] [aA] [mM] [pP];
 TIMEZONE_HOUR		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [hH] [oO] [uU] [rR];
 TIMEZONE_MINUTE		: [tT] [iI] [mM] [eE] [zZ] [oO] [nN] [eE] '_' [mM] [iI] [nN] [uU] [tT] [eE];
 TRAILING			: [tT] [rR] [aA] [iI] [lL] [iI] [nN] [gG];
@@ -275,7 +284,7 @@ YEAR				: [yY] [eE] [aA] [rR];
 ACOS				: [aA] [cC] [oO] [sH];
 ASIN				: [aA] [sS] [iI] [nN];
 ATAN				: [aA] [tT] [aA] [nN];
-ATAN2				: [aA] [tT] [aA] [nN] '2';
+ATAN2				: [aA] [tT] [aA] [nN] [2];
 COS					: [cC] [oO] [sH];
 SIN					: [sS] [iI] [nN];
 TAN					: [tT] [aA] [nN];
@@ -285,11 +294,18 @@ TRUE 	: [tT] [rR] [uU] [eE];
 FALSE 	: [fF] [aA] [lL] [sS] [eE];
 NULL 	: [nN] [uU] [lL] [lL];
 
+
+fragment
+LETTER : [a-zA-Z\u0080-\ufffe_$];
+
 // Identifiers
 IDENTIFIER
-	:	('a'..'z'|'A'..'Z'|'_'|'$'|'\u0080'..'\ufffe')('a'..'z'|'A'..'Z'|'_'|'$'|'0'..'9'|'\u0080'..'\ufffe')*
+	: LETTER (LETTER | DIGIT)*
 	;
 
+fragment
+BACKTICK : '`';
+
 QUOTED_IDENTIFIER
-	: '`' ( ESCAPE_SEQUENCE | ~('\\'|'`') )* '`'
+	: BACKTICK ( ~([\\`]) | ESCAPE_SEQUENCE )* BACKTICK
 	;

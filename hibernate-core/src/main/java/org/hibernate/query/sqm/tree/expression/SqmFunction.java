@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -16,22 +13,28 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.query.sqm.tree.SqmNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.sql.ast.tree.expression.Expression;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An SQM function
  *
  * @author Steve Ebersole
  */
-public class SqmFunction<T> extends AbstractSqmExpression<T> implements JpaFunction<T>, DomainResultProducer<T>, SemanticPathPart {
-	// this function-name is the one used to resolve the descriptor from the function registry (which may or may not be a db function name)
+public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
+		implements JpaFunction<T>, DomainResultProducer<T>, SemanticPathPart {
+	// this function-name is the one used to resolve the descriptor from
+	// the function registry (which may or may not be a db function name)
 	private final String functionName;
 	private final SqmFunctionDescriptor functionDescriptor;
 
-	private List<SqmVisitableNode> arguments;
+	private List<SqmTypedNode<?>> arguments;
 
 	public SqmFunction(
 			String functionName,
@@ -47,7 +50,7 @@ public class SqmFunction<T> extends AbstractSqmExpression<T> implements JpaFunct
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
 			SqmExpressable<T> type,
-			List<SqmVisitableNode> arguments,
+			List<SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.functionName = functionName;
@@ -64,11 +67,11 @@ public class SqmFunction<T> extends AbstractSqmExpression<T> implements JpaFunct
 		return functionName;
 	}
 
-	public List<SqmVisitableNode> getArguments() {
+	public List<SqmTypedNode<?>> getArguments() {
 		return arguments;
 	}
 
-	public void addArgument(SqmVisitableNode argument) {
+	public void addArgument(SqmTypedNode<?> argument) {
 		assert argument != null;
 
 		if ( arguments == null ) {
@@ -76,6 +79,8 @@ public class SqmFunction<T> extends AbstractSqmExpression<T> implements JpaFunct
 		}
 		arguments.add( argument );
 	}
+
+	public abstract Expression convertToSqlAst(SqmToSqlAstConverter walker);
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {

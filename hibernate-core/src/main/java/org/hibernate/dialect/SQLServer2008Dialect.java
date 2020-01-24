@@ -6,73 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.NullPrecedence;
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.StandardBasicTypes;
-
 /**
  * A dialect for Microsoft SQL Server 2008 with JDBC Driver 3.0 and above
  *
  * @author Gavin King
+ *
+ * @deprecated use {@code SQLServerDialect(10)}
  */
-public class SQLServer2008Dialect extends SQLServer2005Dialect {
+@Deprecated
+public class SQLServer2008Dialect extends SQLServerDialect {
 
-	private static final int NVARCHAR_MAX_LENGTH = 4000;
-	/**
-	 * Constructs a SQLServer2008Dialect
-	 */
 	public SQLServer2008Dialect() {
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "datetime2" );
-		registerColumnType( Types.NVARCHAR, NVARCHAR_MAX_LENGTH, "nvarchar($l)" );
-		registerColumnType( Types.NVARCHAR, "nvarchar(MAX)" );
+		super(10);
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
-
-		CommonFunctionFactory.locate_charindex( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "row_number" )
-				.setInvariantType( StandardBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rank" )
-				.setInvariantType( StandardBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs( true )
-				.register();
-	}
-	
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		final StringBuilder orderByElement = new StringBuilder();
-
-		if ( nulls != null && !NullPrecedence.NONE.equals( nulls ) ) {
-			// Workaround for NULLS FIRST / LAST support.
-			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
-			if ( NullPrecedence.FIRST.equals( nulls ) ) {
-				orderByElement.append( "0 else 1" );
-			}
-			else {
-				orderByElement.append( "1 else 0" );
-			}
-			orderByElement.append( " end, " );
-		}
-
-		// Nulls precedence has already been handled so passing NONE value.
-		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
-
-		return orderByElement.toString();
-	}
-
-	@Override
-	public boolean supportsValuesList() {
-		return true;
-	}
 }

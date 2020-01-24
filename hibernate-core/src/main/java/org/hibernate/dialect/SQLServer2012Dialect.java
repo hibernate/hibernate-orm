@@ -6,118 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.StandardBasicTypes;
-
 /**
- * Microsoft SQL Server 2012 Dialect
+ * A dialect for Microsoft SQL Server 2012
  *
  * @author Brett Meyer
+ *
+ * @deprecated use {@code SQLServerDialect(11)}
  */
-public class SQLServer2012Dialect extends SQLServer2008Dialect {
+@Deprecated
+public class SQLServer2012Dialect extends SQLServerDialect {
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		//actually translate() was added in 2017 but
-		//it's not worth adding a new dialect for that!
-		CommonFunctionFactory.translate( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
-				.setInvariantType( StandardBasicTypes.DATE )
-				.setExactArgumentCount( 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
-				.setInvariantType( StandardBasicTypes.TIME )
-				.setExactArgumentCount( 5 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 5 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 7 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 8 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 10 )
-				.register();
+	public SQLServer2012Dialect() {
+		super(11);
 	}
 
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		// The upper-case name should work on both case-sensitive and case-insensitive collations.
-		return "select * from INFORMATION_SCHEMA.SEQUENCES";
-	}
-
-	@Override
-	public String getQueryHintString(String sql, String hints) {
-		final StringBuilder buffer = new StringBuilder(
-				sql.length()
-						+ hints.length() + 12
-		);
-		final int pos = sql.indexOf( ';' );
-		if ( pos > -1 ) {
-			buffer.append( sql.substring( 0, pos ) );
-		}
-		else {
-			buffer.append( sql );
-		}
-		buffer.append( " OPTION (" ).append( hints ).append( ")" );
-		if ( pos > -1 ) {
-			buffer.append( ";" );
-		}
-		sql = buffer.toString();
-
-		return sql;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	protected LimitHandler getDefaultLimitHandler() {
-		return new SQLServer2012LimitHandler();
-	}
 }

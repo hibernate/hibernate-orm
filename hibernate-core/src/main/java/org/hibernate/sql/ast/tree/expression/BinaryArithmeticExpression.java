@@ -77,8 +77,7 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				resultType.getJdbcMapping()
+				this
 		);
 	}
 

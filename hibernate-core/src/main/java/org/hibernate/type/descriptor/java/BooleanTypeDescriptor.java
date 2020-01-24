@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -140,5 +141,20 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> imple
 	@Override
 	public Boolean getDefaultValue() {
 		return FALSE;
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
 	}
 }

@@ -91,8 +91,7 @@ public abstract class AbstractLiteral<T>
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				type.getJdbcMapping()
+				this
 		);
 	}
 

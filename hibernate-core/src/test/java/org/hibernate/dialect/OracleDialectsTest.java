@@ -52,9 +52,6 @@ public class OracleDialectsTest {
 		Oracle9iDialect oracle9iDialect = new Oracle9iDialect();
 		assertEquals( "false", oracle9iDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 
-		Oracle9Dialect oracle9Dialect = new Oracle9Dialect();
-		assertEquals( "false", oracle9Dialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
-
 		Oracle12cDialect oracle12cDialect = new Oracle12cDialect();
 		assertEquals( "true", oracle12cDialect.getDefaultProperties().getProperty( Environment.BATCH_VERSIONED_DATA ) );
 	}

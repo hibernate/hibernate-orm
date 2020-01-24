@@ -12,23 +12,29 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
- * Contract defining dialect-specific LIMIT clause handling. Typically implementers might consider extending
- * {@link AbstractLimitHandler} class.
+ * Contract defining dialect-specific limit and offset handling.
+ * Most implementations extends {@link AbstractLimitHandler}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public interface LimitHandler {
 	/**
-	 * Does this handler support some form of limiting query results
-	 * via a SQL clause?
+	 * Does this handler support limiting query results?
 	 *
-	 * @return True if this handler supports some form of LIMIT.
+	 * @return True if this handler supports limit alone.
 	 */
 	boolean supportsLimit();
 
 	/**
-	 * Does this handler's LIMIT support (if any) additionally
-	 * support specifying an offset?
+	 * Does this handler support offsetting query results without
+	 * also specifying a limit?
+	 *
+	 * @return True if this handler supports offset alone.
+	 */
+	boolean supportsOffset();
+
+	/**
+	 * Does this handler support combinations of limit and offset?
 	 *
 	 * @return True if the handler supports an offset within the limit support.
 	 */
@@ -45,7 +51,9 @@ public interface LimitHandler {
 	String processSql(String sql, RowSelection selection);
 
 	/**
-	 * Bind parameter values needed by the LIMIT clause before original SELECT statement.
+	 * Bind parameter values needed by the limit and offset clauses
+	 * right at the start of the original query statement, before all
+	 * the other query parameters.
 	 *
      * @param selection the selection criteria for rows.
 	 * @param statement Statement to which to bind limit parameter values.
@@ -53,10 +61,13 @@ public interface LimitHandler {
 	 * @return The number of parameter values bound.
 	 * @throws SQLException Indicates problems binding parameter values.
 	 */
-	int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException;
+	int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
+			throws SQLException;
 
 	/**
-	 * Bind parameter values needed by the LIMIT clause after original SELECT statement.
+	 * Bind parameter values needed by the limit and offset clauses
+	 * right at the end of the original query statement, after all
+	 * the other query parameters.
 	 *
      * @param selection the selection criteria for rows.
 	 * @param statement Statement to which to bind limit parameter values.
@@ -64,11 +75,13 @@ public interface LimitHandler {
 	 * @return The number of parameter values bound.
 	 * @throws SQLException Indicates problems binding parameter values.
 	 */
-	int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index) throws SQLException;
+	int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
+			throws SQLException;
 
 	/**
-	 * Use JDBC API to limit the number of rows returned by the SQL query. Typically handlers that do not
-	 * support LIMIT clause should implement this method.
+	 * Use JDBC APIs to limit the number of rows returned by the SQL query.
+	 * Handlers that do not support a SQL limit clause should implement this
+	 * method.
 	 *
      * @param selection the selection criteria for rows.
 	 * @param statement Statement which number of returned rows shall be limited.

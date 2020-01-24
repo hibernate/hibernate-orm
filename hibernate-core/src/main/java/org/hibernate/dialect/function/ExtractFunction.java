@@ -1,0 +1,262 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.dialect.function;
+
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.*;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import java.time.ZoneOffset;
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static org.hibernate.query.BinaryArithmeticOperator.*;
+import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+
+/**
+ * @author Gavin King
+ */
+public class ExtractFunction
+		extends AbstractSqmFunctionDescriptor {
+
+	private Dialect dialect;
+
+	public ExtractFunction(Dialect dialect) {
+		super(
+				"extract",
+				StandardArgumentsValidators.exactly( 2 ),
+				StandardFunctionReturnTypeResolvers.useArgType( 1 )
+		);
+		this.dialect = dialect;
+	}
+
+	@Override
+	protected <T> SelfRenderingSqlFunctionExpression generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
+		SqmExpression<?> expression = (SqmExpression<?>) arguments.get(1);
+
+		TemporalUnit unit = field.getUnit();
+		switch ( unit ) {
+			case NANOSECOND:
+				return extractNanoseconds( expression, queryEngine, typeConfiguration );
+			case NATIVE:
+				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
+			case OFFSET:
+				// use format(arg, 'xxx') to get the offset
+				return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
+			case DATE:
+			case TIME:
+				// use cast(arg as Type) to get the date or time part
+				// which might be javax.sql.Date / javax.sql.Time or
+				// java.time.LocalDate / java.time.LocalTime depending
+				// on the type of the expression we're extracting from
+				return extractDateOrTimeUsingCast( expression, field.getType(), queryEngine, typeConfiguration );
+			case WEEK_OF_MONTH:
+				// use ceiling(extract(day of month, arg)/7.0)
+				return extractWeek( expression, field, DAY_OF_MONTH, queryEngine, typeConfiguration);
+			case WEEK_OF_YEAR:
+				// use ceiling(extract(day of year, arg)/7.0)
+				return extractWeek( expression, field, DAY_OF_YEAR, queryEngine, typeConfiguration);
+			default:
+				// otherwise it's something we expect the SQL dialect
+				// itself to understand, either natively, or via the
+				// method Dialect.extract()
+				String pattern = dialect.extractPattern( unit );
+				return queryEngine.getSqmFunctionRegistry()
+						.patternDescriptorBuilder( "extract", pattern )
+						.setExactArgumentCount( 2 )
+						.setReturnTypeResolver( useArgType( 1 ) )
+						.descriptor()
+						.generateSqmExpression(
+								arguments,
+								impliedResultType,
+								queryEngine,
+								typeConfiguration
+						);
+		}
+	}
+
+	private SelfRenderingSqlFunctionExpression<Integer> extractWeek(
+			SqmExpression<?> expressionToExtract,
+			SqmExtractUnit<?> field,
+			TemporalUnit dayOf,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		NodeBuilder builder = field.nodeBuilder();
+
+		BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
+		BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType( Float.class );
+
+		SqmExtractUnit<Integer> dayOfUnit = new SqmExtractUnit<>( dayOf, intType, builder );
+		SqmExpression<Integer> extractDayOf
+				= queryEngine.getSqmFunctionRegistry()
+						.findFunctionDescriptor("extract")
+						.generateSqmExpression(
+								asList( dayOfUnit, expressionToExtract ),
+								intType,
+								queryEngine,
+								typeConfiguration
+						);
+
+		SqmExtractUnit<Integer> dayOfWeekUnit = new SqmExtractUnit<>( DAY_OF_WEEK, intType, builder );
+		SqmExpression<Integer> extractDayOfWeek
+				= queryEngine.getSqmFunctionRegistry()
+						.findFunctionDescriptor("extract")
+						.generateSqmExpression(
+								asList( dayOfWeekUnit, expressionToExtract ),
+								intType,
+								queryEngine,
+								typeConfiguration
+						);
+
+		SqmLiteral<Float> seven = new SqmLiteral<>( 7.0f, floatType, builder );
+		SqmLiteral<Integer> one = new SqmLiteral<>( 1, intType, builder );
+
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor("ceiling")
+				.generateSqmExpression(
+						new SqmBinaryArithmetic<>(
+								ADD,
+								new SqmBinaryArithmetic<>(
+										DIVIDE,
+										new SqmBinaryArithmetic<>(
+												SUBTRACT,
+												extractDayOf,
+												extractDayOfWeek,
+												intType,
+												builder
+										),
+										seven,
+										floatType,
+										builder
+								),
+								one,
+								intType,
+								builder
+						),
+						intType,
+						queryEngine,
+						typeConfiguration
+				);
+	}
+
+	private SelfRenderingSqlFunctionExpression<Long> toLong(
+			SqmExpression<?> arg,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		//Not every database supports round() (looking at you Derby)
+		//so use floor() instead, which is perfectly fine for this
+//		return getFunctionTemplate("round").makeSqmFunctionExpression(
+//				asList( arg, integerLiteral("0") ),
+//				basicType( Long.class ),
+//				creationContext.getQueryEngine(),
+//				creationContext.getDomainModel().getTypeConfiguration()
+//		);
+		BasicType<Long> longType = typeConfiguration.getBasicTypeForJavaType(Long.class);
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor("floor")
+				.generateSqmExpression(
+						arg,
+						longType,
+						queryEngine,
+						typeConfiguration
+				);
+	}
+
+	private SelfRenderingSqlFunctionExpression<Long> extractNanoseconds(
+			SqmExpression<?> expressionToExtract,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		NodeBuilder builder = expressionToExtract.nodeBuilder();
+
+		BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType(Float.class);
+
+		SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
+		SqmLiteral<Float> billion = new SqmLiteral<>( 1e9f, floatType, builder );
+		return toLong(
+				new SqmBinaryArithmetic<>(
+						MULTIPLY,
+						generateSqmExpression(
+								asList( extractSeconds, expressionToExtract ),
+								floatType,
+								queryEngine,
+								typeConfiguration
+						),
+						billion,
+						floatType,
+						builder
+				),
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
+	private SelfRenderingSqlFunctionExpression<ZoneOffset> extractOffsetUsingFormat(
+			SqmExpression<?> expressionToExtract,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		NodeBuilder builder = expressionToExtract.nodeBuilder();
+
+		BasicType<ZoneOffset> offsetType = typeConfiguration.getBasicTypeForJavaType(ZoneOffset.class);
+		BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType(String.class);
+
+		SqmFormat offsetFormat = new SqmFormat(
+				"xxx", //pattern for timezone offset
+				stringType,
+				builder
+		);
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor("format")
+				.generateSqmExpression(
+						asList( expressionToExtract, offsetFormat ),
+						offsetType,
+						queryEngine,
+						typeConfiguration
+				);
+	}
+
+	private SelfRenderingSqlFunctionExpression<?> extractDateOrTimeUsingCast(
+			SqmExpression<?> expressionToExtract,
+			AllowableFunctionReturnType<?> type,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		NodeBuilder builder = expressionToExtract.nodeBuilder();
+
+		SqmCastTarget<?> target = new SqmCastTarget<>( type, builder );
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor("cast")
+				.generateSqmExpression(
+						asList( expressionToExtract, target ),
+						type,
+						queryEngine,
+						typeConfiguration
+				);
+	}
+
+
+	@Override
+	public String getArgumentListSignature() {
+		return "(field from arg)";
+	}
+
+}

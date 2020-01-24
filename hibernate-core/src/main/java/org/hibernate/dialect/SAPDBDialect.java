@@ -6,24 +6,24 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.Types;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
+import org.hibernate.dialect.sequence.SAPDBSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
-import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.DatabaseMetaData;
+import java.sql.Types;
 
 /**
  * An SQL dialect compatible with SAP DB.
@@ -36,20 +36,20 @@ public class SAPDBDialect extends Dialect {
 	 */
 	public SAPDBDialect() {
 		super();
-		registerColumnType( Types.BIT, "boolean" );
+		registerColumnType( Types.BIT, 1, "boolean" ); //no BIT type
+		registerColumnType( Types.TINYINT, "smallint" );
+
 		registerColumnType( Types.BIGINT, "fixed(19,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "fixed(3,0)" );
-		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "long byte" );
+
 		registerColumnType( Types.NUMERIC, "fixed($p,$s)" );
+		registerColumnType( Types.DECIMAL, "fixed($p,$s)" );
+
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
+
+		registerColumnType( Types.VARBINARY, "long byte" );
+
 		registerColumnType( Types.CLOB, "long varchar" );
 		registerColumnType( Types.BLOB, "long byte" );
 
@@ -71,6 +71,7 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
@@ -82,7 +83,7 @@ public class SAPDBDialect extends Dialect {
 		CommonFunctionFactory.dateTimeTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.week_weekofyear( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.coalesce_value( queryEngine );
 		//since lpad/rpad are not actually useful padding
 		//functions, map them to lfill/rfill
@@ -93,19 +94,24 @@ public class SAPDBDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "case ?1 when ?2 then null else ?1 end" )
-				.setExactArgumentCount( 2 )
-				.register( "nullif" );
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
+				.setExactArgumentCount(2)
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "index" )
 				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
-
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim(specification, character);
 	}
 
 	@Override
@@ -159,23 +165,8 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dual";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return SAPDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -189,19 +180,16 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
+	public String getFromDual() {
+		return "from dual";
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}
 
-	@Override
-	public CaseExpressionWalker getCaseExpressionWalker() {
-		return DecodeCaseExpressionWalker.INSTANCE;
-	}
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(

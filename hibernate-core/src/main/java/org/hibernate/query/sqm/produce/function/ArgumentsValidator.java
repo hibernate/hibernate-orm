@@ -6,18 +6,21 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import java.util.List;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-@FunctionalInterface
 public interface ArgumentsValidator {
 	/**
-	 * Validate the arguments
+	 * The main (functional) operation defining validation
 	 */
-	void validate(List<? extends SqmVisitableNode> arguments);
+	void validate(List<SqmTypedNode<?>> arguments);
+
+	default String getSignature() {
+		return "( ... )";
+	}
 
 }

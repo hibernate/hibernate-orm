@@ -6,70 +6,50 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-import java.util.Locale;
-
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.dialect.pagination.RowsLimitHandler;
+import org.hibernate.dialect.sequence.InterbaseSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
+import java.sql.Types;
 
 /**
  * An SQL dialect for Interbase.
  *
  * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class InterbaseDialect extends Dialect {
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-	};
-
-	/**
-	 * Constructs a InterbaseDialect
-	 */
 	public InterbaseDialect() {
 		super();
+
+		registerColumnType( Types.BIT, 1, "boolean" );
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.BIGINT, "numeric(18,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
+
 		registerColumnType( Types.TINYINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+
+		registerColumnType( Types.REAL, "float");
+		registerColumnType( Types.FLOAT, "double precision");
+
 		registerColumnType( Types.VARBINARY, "blob" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "blob sub_type 1" );
-		registerColumnType( Types.BOOLEAN, "smallint" );
+
+		//no precision
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
+	public int getDefaultDecimalPrecision() {
+		//the extremely low maximum
+		return 18;
 	}
 
 	@Override
@@ -78,28 +58,13 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from RDB$DATABASE";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "gen_id( " + sequenceName + ", 1 )";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create generator " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "delete from RDB$GENERATORS where RDB$GENERATOR_NAME = '" + sequenceName.toUpperCase(Locale.ROOT) + "'";
+	public SequenceSupport getSequenceSupport() {
+		return InterbaseSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select RDB$GENERATOR_NAME from RDB$GENERATORS";
+		return "select rdb$generator_name from rdb$generators";
 	}
 
 	@Override
@@ -113,51 +78,23 @@ public class InterbaseDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString(String aliases) {
-		return " for update of " + aliases + " with lock";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return hasOffset ? sql + " rows ? to ?" : sql + " rows ?";
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
+		return RowsLimitHandler.INSTANCE;
 	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		// TODO : not sure which (either?) is correct, could not find docs on how to do this.
-		// did find various blogs and forums mentioning that select CURRENT_TIMESTAMP
-		// does not work...
-		return "{?= call CURRENT_TIMESTAMP }";
-//		return "select CURRENT_TIMESTAMP from RDB$DATABASE";
+		return "select current_timestamp " + getFromDual();
 	}
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		return true;
+		return false;
 	}
+
+	@Override
+	public String getFromDual() {
+		return "from rdb$database";
+	}
+
 }

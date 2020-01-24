@@ -6,16 +6,14 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.type.StandardBasicTypes;
-
-public class MariaDB10Dialect extends MariaDB53Dialect {
+/**
+ * @deprecated use {@code MariaDBDialect(1000)}
+ */
+@Deprecated
+public class MariaDB10Dialect extends MariaDBDialect {
 
 	public MariaDB10Dialect() {
-		super();
+		super(1000);
 	}
 
-	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
-	}
 }

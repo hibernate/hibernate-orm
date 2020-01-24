@@ -6,25 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.lock.*;
+import org.hibernate.dialect.sequence.MckoiSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
-import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.MckoiCaseExpressionWalker;
+
+import java.sql.Types;
 
 /**
  * An SQL dialect compatible with McKoi SQL
@@ -38,22 +31,16 @@ public class MckoiDialect extends Dialect {
 	 */
 	public MckoiDialect() {
 		super();
-		registerColumnType( Types.BIT, "bit" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "varbinary" );
-		registerColumnType( Types.NUMERIC, "numeric" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+
+		//Note: there is no single-precision type
+		//'float' and 'double' are the exact same
+		//double precision type.
+		registerColumnType( Types.FLOAT, "float" ); //precision argument not supported
+		registerColumnType( Types.DOUBLE, "double" ); //'double precision' not supported
+
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
@@ -63,35 +50,16 @@ public class MckoiDialect extends Dialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "if(?1=?2, null, ?1)" )
-				.setExactArgumentCount( 2 )
-				.register( "nullif" );
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "if(?1=?2, null, ?1)" )
+				.setExactArgumentCount(2)
+				.register();
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "nextval('" + sequenceName + "')";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return MckoiSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -100,39 +68,27 @@ public class MckoiDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new MckoiCaseFragment();
 	}
 
 	@Override
-	public CaseExpressionWalker getCaseExpressionWalker() {
-		return MckoiCaseExpressionWalker.INSTANCE;
-	}
-
-	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Mckoi has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_WRITE:
+				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_READ:
+				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
-			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
-			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC) {
-			return new OptimisticLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {

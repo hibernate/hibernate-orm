@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
@@ -166,5 +167,10 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return dialect.getDefaultLobLength();
 	}
 }

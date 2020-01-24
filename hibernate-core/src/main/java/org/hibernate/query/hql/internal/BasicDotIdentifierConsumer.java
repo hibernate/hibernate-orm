@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -166,16 +165,16 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				return this;
 			}
 
-			final SqmFunctionDescriptor functionDescriptor = creationState.getCreationContext()
-					.getQueryEngine()
+			final SqmCreationContext creationContext = creationState.getCreationContext();
+
+			final SqmFunctionDescriptor functionDescriptor = creationContext.getQueryEngine()
 					.getSqmFunctionRegistry()
 					.findFunctionDescriptor( pathSoFar );
 			if ( functionDescriptor != null ) {
-				return new SqmFunction(
-						pathSoFar,
-						functionDescriptor,
+				return functionDescriptor.generateSqmExpression(
 						null,
-						creationState.getCreationContext().getNodeBuilder()
+						creationContext.getQueryEngine(),
+						creationContext.getNodeBuilder().getTypeConfiguration()
 				);
 			}
 
@@ -199,7 +198,6 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				final String terminal = pathSoFar.substring( splitPosition + 1 );
 
 				try {
-					final SqmCreationContext creationContext = creationState.getCreationContext();
 					final Class<?> namedClass = creationContext
 							.getServiceRegistry()
 							.getService( ClassLoaderService.class )

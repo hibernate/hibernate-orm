@@ -6,65 +6,98 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static org.hibernate.type.spi.TypeConfiguration.isSqlTimestampType;
 
 /**
  * @author Gavin King
  */
-public class TimestampdiffFunction implements SqmFunctionDescriptor {
-	private final Dialect dialect;
+public class TimestampdiffFunction
+		extends AbstractSqmFunctionDescriptor {
+
+	private Dialect dialect;
 
 	public TimestampdiffFunction(Dialect dialect) {
+		super(
+				"timestampdiff",
+				StandardArgumentsValidators.exactly( 3 ),
+				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.LONG )
+		);
 		this.dialect = dialect;
 	}
 
 	@Override
-	public Expression generateSqlExpression(
-			String functionName,
-			List<? extends SqmVisitableNode> arguments,
-			Supplier<MappingModelExpressable> inferableTypeAccess,
-			SqmToSqlAstConverter converter,
-			SqlAstCreationState creationState) {
-		StandardArgumentsValidators.exactly( 3 ).validate( arguments );
-
-		final ExtractUnit field = (ExtractUnit) arguments.get(0);
-		final Expression from = (Expression) arguments.get( 1);
-		final Expression to = (Expression) arguments.get( 2);
-		final TemporalUnit unit = field.getUnit();
-
-		final AbstractSqmFunctionDescriptor functionDescriptor = new AbstractSqmFunctionDescriptor(
-				StandardArgumentsValidators.exactly( 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.LONG ) ) {
-			@Override
-			public FunctionRenderingSupport getRenderingSupport() {
-				return (sqlAppender, fn, sqlAstArguments, walker, sessionFactory) -> dialect.timestampdiff(
-						unit,
-						() -> from.accept( walker ),
-						() -> to.accept( walker ),
-						sqlAppender::appendSql,
-						TypeConfiguration.isSqlTimestampType( from.getExpressionType() ),
-						TypeConfiguration.isSqlTimestampType( to.getExpressionType() )
+	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
+		SqmExpression<?> from = (SqmExpression<?>) arguments.get(1);
+		SqmExpression<?> to = (SqmExpression<?>) arguments.get(2);
+		return queryEngine.getSqmFunctionRegistry()
+				.patternDescriptorBuilder(
+						"timestampdiff",
+						dialect.timestampdiffPattern(
+								field.getUnit(),
+								typeConfiguration.isTimestampType( from.getNodeType() ),
+								typeConfiguration.isTimestampType( to.getNodeType() )
+						)
+				)
+				.setInvariantType( StandardBasicTypes.LONG )
+				.setExactArgumentCount( 3 )
+				.descriptor()
+				.generateSqmExpression(
+						arguments,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
 				);
-			}
-		};
-
-		return functionDescriptor.generateSqlExpression( functionName, arguments, inferableTypeAccess, converter, creationState );
 	}
+
+	public SelfRenderingFunctionSqlAstExpression expression(
+			AllowableFunctionReturnType<?> impliedResultType,
+			SqlAstNode... sqlAstArguments) {
+		DurationUnit field = (DurationUnit) sqlAstArguments[0];
+		Expression from = (Expression) sqlAstArguments[1];
+		Expression to = (Expression) sqlAstArguments[2];
+		return new SelfRenderingFunctionSqlAstExpression(
+				new PatternRenderer(
+						dialect.timestampdiffPattern(
+								field.getUnit(),
+								isSqlTimestampType( from.getExpressionType() ),
+								isSqlTimestampType( to.getExpressionType() )
+						)
+				)::render,
+				asList( sqlAstArguments ),
+				impliedResultType,
+				field.getExpressionType()
+		);
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return "(field, start, end)";
+	}
+
 }

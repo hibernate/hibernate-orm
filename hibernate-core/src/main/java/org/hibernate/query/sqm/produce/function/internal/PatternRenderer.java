@@ -6,17 +6,16 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
  * Delegate for handling function "templates".
@@ -26,27 +25,25 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 public class PatternRenderer {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PatternRenderer.class );
 
-	private final String pattern;
-	private final boolean useParenthesisIfNoArgs;
 	private final String[] chunks;
 	private final int[] paramIndexes;
-	private final int paramCount;
+	private final int varargParam;
+	private final int maxParamIndex;
 
 	/**
 	 * Constructs a template renderer
 	 *
 	 * @param pattern The template
-	 * @param useParenthesisIfNoArgs
 	 */
-	public PatternRenderer(String pattern, boolean useParenthesisIfNoArgs) {
-		this.pattern = pattern;
-		this.useParenthesisIfNoArgs = useParenthesisIfNoArgs;
-
+	public PatternRenderer(String pattern) {
 		final Set<Integer> paramNumbers = new HashSet<>();
 		final List<String> chunkList = new ArrayList<>();
 		final List<Integer> paramList = new ArrayList<>();
 		final StringBuilder chunk = new StringBuilder( 10 );
 		final StringBuilder index = new StringBuilder( 2 );
+
+		int vararg = -1;
+		int max = 0;
 
 		int i = 0;
 		final int len = pattern.length();
@@ -61,6 +58,9 @@ public class PatternRenderer {
 					if ( Character.isDigit( c ) ) {
 						index.append( c );
 					}
+					else if ( c == '.' ) {
+						index.append( c );
+					}
 					else if ( c  == '?' ) {
 						i--;
 						break;
@@ -71,10 +71,18 @@ public class PatternRenderer {
 					}
 				}
 
-				Integer paramNumber = Integer.valueOf( index.toString() );
-				paramNumbers.add( paramNumber );
-				paramList.add( paramNumber );
-				index.setLength(0);
+				if ( index.toString().endsWith("...") ) {
+					vararg = paramList.size();
+				}
+				else {
+					int paramNumber = Integer.valueOf( index.toString() );
+					paramNumbers.add( paramNumber );
+					paramList.add( paramNumber );
+					index.setLength(0);
+					if ( paramNumber > max ) {
+						max = paramNumber;
+					}
+				}
 			}
 			else {
 				chunk.append( c );
@@ -86,24 +94,22 @@ public class PatternRenderer {
 			chunkList.add( chunk.toString() );
 		}
 
+		varargParam = vararg;
+		maxParamIndex = max;
+
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
-		paramCount = paramNumbers.size();
 		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );
 		}
 	}
 
-	public String getPattern() {
-		return pattern;
-	}
-
-	public int getAnticipatedNumberOfArguments() {
-		return paramIndexes.length;
+	public boolean hasVarargs() {
+		return varargParam >= 0;
 	}
 
 	public int getParamCount() {
-		return paramCount;
+		return maxParamIndex;
 	}
 
 	/**
@@ -111,26 +117,35 @@ public class PatternRenderer {
 	 *
 	 * @param args The arguments to inject into the template
 	 * @param sqlAppender
-	 * @param factory The SessionFactory
 	 * @return The rendered template with replacements
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> args,
-			SqlAstWalker walker,
-			SessionFactoryImplementor factory) {
+			SqlAstWalker walker) {
 		final int numberOfArguments = args.size();
-		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
-			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
+		if ( numberOfArguments < maxParamIndex ) {
+			LOG.missingArguments( maxParamIndex, numberOfArguments );
 		}
 
-		for ( int i = 0; i < chunks.length; ++i ) {
-			if ( i < paramIndexes.length ) {
+		for ( int i = 0; i < chunks.length; i++ ) {
+			if ( i==varargParam ) {
+				for ( int j = i; j < numberOfArguments; j++ ) {
+					final SqlAstNode arg = args.get( j );
+					if ( arg != null ) {
+						sqlAppender.appendSql( chunks[i] );
+						arg.accept( walker );
+					}
+				}
+			}
+			else if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;
 				final SqlAstNode arg = index < numberOfArguments ? args.get( index ) : null;
-				if ( arg != null ) {
+				if ( arg != null || i == 0 ) {
 					sqlAppender.appendSql( chunks[i] );
+				}
+				if ( arg != null ) {
 					arg.accept( walker );
 				}
 			}

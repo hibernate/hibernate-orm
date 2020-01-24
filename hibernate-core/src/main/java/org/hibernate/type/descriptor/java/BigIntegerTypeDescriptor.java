@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -91,5 +92,20 @@ public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger>
 			return BigInteger.valueOf( ( (Number) value ).longValue() );
 		}
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return getDefaultSqlPrecision(dialect)+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultDecimalPrecision();
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
 	}
 }

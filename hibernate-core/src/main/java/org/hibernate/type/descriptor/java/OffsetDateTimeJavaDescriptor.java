@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -143,5 +144,10 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

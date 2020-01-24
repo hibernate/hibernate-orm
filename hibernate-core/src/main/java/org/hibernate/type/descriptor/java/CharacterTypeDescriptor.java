@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -75,6 +76,21 @@ public class CharacterTypeDescriptor extends AbstractTypeDescriptor<Character> i
 
 	@Override
 	public Character getDefaultValue() {
+		return 0;
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return 1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 3;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
 		return 0;
 	}
 }

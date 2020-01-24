@@ -169,8 +169,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				jdbcMapping
+				this
 		);
 	}
 }

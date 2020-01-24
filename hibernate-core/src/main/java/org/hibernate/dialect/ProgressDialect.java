@@ -30,30 +30,32 @@ public class ProgressDialect extends Dialect {
 	 */
 	public ProgressDialect() {
 		super();
-		registerColumnType( Types.BIT, "bit" );
-		registerColumnType( Types.BIGINT, "numeric" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "character(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "real" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
+
+		registerColumnType( Types.BOOLEAN, "bit" );
+
+		//'float' is a synonym for 'double precision'
+		//TODO: return single-precision 'real' when
+		//      precision <= 24
+		//note: unnecessary in Progress 10
+		registerColumnType( Types.FLOAT, "float" );
+		registerColumnType( Types.DOUBLE, "float" );
+
+		//note: unnecessary in Progress 10
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+
+		//no precision
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
 	}
 
 	@Override
 	public boolean hasAlterTable(){
 		return false;
-	}
-
-	@Override
-	public String getAddColumnString() {
-		return "add column";
 	}
 
 	@Override

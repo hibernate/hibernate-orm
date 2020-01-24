@@ -104,8 +104,7 @@ public final class ExecuteWithIdTableHelper {
 													jdbcMapping,
 													factory
 											)
-									),
-									jdbcMapping
+									)
 							)
 					);
 				}
@@ -120,8 +119,7 @@ public final class ExecuteWithIdTableHelper {
 							new QueryLiteral(
 									sessionUidAccess.apply( executionContext.getSession() ),
 									StandardBasicTypes.STRING
-							),
-							idTable.getSessionUidColumn().getJdbcMapping()
+							)
 					)
 			);
 		}
@@ -194,8 +192,7 @@ public final class ExecuteWithIdTableHelper {
 										idTableColumn.getColumnName(),
 										idTableColumn.getJdbcMapping(),
 										executionContext.getSession().getFactory()
-								),
-								idTableColumn.getJdbcMapping()
+								)
 						)
 				);
 			}

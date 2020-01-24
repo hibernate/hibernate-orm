@@ -13,6 +13,12 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
+ * A {@link TemporalUnit} passed as an argument to the
+ * {@link org.hibernate.dialect.function.ExtractFunction}.
+ * These are different to {@link DurationUnit}s because of
+ * how the {@link TemporalUnit#WEEK} field is handled on
+ * some platforms.
+ *
  * @author Gavin King
  */
 public class ExtractUnit implements Expression, SqlAstNode {
@@ -29,7 +35,7 @@ public class ExtractUnit implements Expression, SqlAstNode {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public BasicValuedMapping getExpressionType() {
 		return type;
 	}
 

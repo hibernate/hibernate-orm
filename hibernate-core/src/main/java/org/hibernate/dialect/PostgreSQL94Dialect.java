@@ -6,45 +6,17 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.StandardBasicTypes;
-
 /**
- * An SQL dialect for Postgres 9.4 and later. Adds support for various date and time functions
+ * An SQL dialect for Postgres 9.4 and later.
+ * Adds support for various date and time functions
+ *
+ * @deprecated use {@code PostgreSQLDialect(940)}
  */
-public class PostgreSQL94Dialect extends PostgreSQL93Dialect {
+@Deprecated
+public class PostgreSQL94Dialect extends PostgreSQLDialect {
 
-	/**
-	 * Constructs a PostgreSQL94Dialect
-	 */
-	@SuppressWarnings("WeakerAccess")
 	public PostgreSQL94Dialect() {
-		super();
+		super(940);
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_interval" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setArgumentCountBetween( 1, 7 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_timestamp" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setExactArgumentCount( 6 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_timestamptz" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.setArgumentCountBetween( 6, 7 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_date" )
-				.setInvariantType( StandardBasicTypes.DATE )
-				.setExactArgumentCount( 3 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "make_time" )
-				.setInvariantType( StandardBasicTypes.TIME )
-				.setExactArgumentCount( 3 )
-				.register();
-	}
 }

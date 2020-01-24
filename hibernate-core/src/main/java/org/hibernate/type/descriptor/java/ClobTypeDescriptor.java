@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ClobProxy;
@@ -131,5 +132,10 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return dialect.getDefaultLobLength();
 	}
 }

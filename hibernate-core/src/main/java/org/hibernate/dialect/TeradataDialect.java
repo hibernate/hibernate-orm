@@ -6,20 +6,31 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.type.StandardBasicTypes;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -29,35 +40,42 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  */
 public class TeradataDialect extends Dialect {
 
+	private int version;
+
+	int getVersion() {
+		return version;
+	}
+	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
-	/**
-	 * Constructor
-	 */
-	public TeradataDialect() {
-		super();
+	public TeradataDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
+	}
 
-		//registerColumnType data types
-		registerColumnType( Types.NUMERIC, "NUMERIC($p,$s)" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.BIGINT, "NUMERIC(18,0)" );
-		registerColumnType( Types.BIT, "BYTEINT" );
-		registerColumnType( Types.TINYINT, "BYTEINT" );
-		registerColumnType( Types.VARBINARY, "VARBYTE($l)" );
-		registerColumnType( Types.BINARY, "BYTEINT" );
-		registerColumnType( Types.LONGVARCHAR, "LONG VARCHAR" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
-		registerColumnType( Types.DECIMAL, "DECIMAL" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.VARCHAR, "VARCHAR($l)" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.BOOLEAN, "BYTEINT" );  // hibernate seems to ignore this type...
-		registerColumnType( Types.BLOB, "BLOB" );
-		registerColumnType( Types.CLOB, "CLOB" );
+	public TeradataDialect() {
+		this(12);
+	}
+
+	public TeradataDialect(int version) {
+		super();
+		this.version = version;
+
+		registerColumnType( Types.BOOLEAN, "byteint" );
+		registerColumnType( Types.BIT, 1, "byteint" );
+		registerColumnType( Types.BIT, "byteint" );
+
+		registerColumnType( Types.TINYINT, "byteint" );
+
+		registerColumnType( Types.BINARY, "byte($l)" );
+		registerColumnType( Types.VARBINARY, "varbyte($l)" );
+
+		if ( getVersion() < 13 ) {
+			registerColumnType( Types.BIGINT, "numeric(19,0)" );
+		}
+		else {
+			//'bigint' has been there since at least version 13
+			registerColumnType( Types.BIGINT, "bigint" );
+		}
 
 		registerKeyword( "password" );
 		registerKeyword( "type" );
@@ -72,129 +90,122 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "account" );
 		registerKeyword( "class" );
 
-		// Tell hibernate to use getBytes instead of getBinaryStream
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
+		if ( getVersion() < 14 ) {
+			// use getBytes instead of getBinaryStream
+			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
+			// no batch statements
+			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+		}
+		else {
+			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
+			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		}
 
-		// No batch statements
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
+	public int getDefaultDecimalPrecision() {
+		return getVersion() < 14 ? 18 : 38;
+	}
+
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+	 	// Do duration arithmetic in a seconds, but
+		// with the fractional part
+		return 1_000_000_000; //seconds!!
+	}
+
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
+		//TODO: TOTALLY UNTESTED CODE!
+		pattern.append("cast((?3 - ?2) ");
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				//default fractional precision is 6, the maximum
+				pattern.append("second");
+				break;
+			case WEEK:
+				pattern.append("day");
+				break;
+			case QUARTER:
+				pattern.append("month");
+				break;
+			default:
+				pattern.append( "?1" );
+		}
+		pattern.append("(4) as bigint)");
+		switch (unit) {
+			case WEEK:
+				pattern.append("/7");
+				break;
+			case QUARTER:
+				pattern.append("/3");
+				break;
+			case NANOSECOND:
+				pattern.append("*1e9");
+				break;
+		}
+		return pattern.toString();
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		//TODO: TOTALLY UNTESTED CODE!
+		switch ( unit ) {
+			case NANOSECOND:
+				return "(?3 + (?2)/1e9 * interval '1' second)";
+			case NATIVE:
+				return "(?3 + (?2) * interval '1' second)";
+			case QUARTER:
+				return "(?3 + (?2) * interval '3' month)";
+			case WEEK:
+				return "(?3 + (?2) * interval '7' day)";
+			default:
+				return "(?3 + (?2) * interval '1' ?1)";
+		}
 	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.concat_operator( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.moreHyperbolic( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.position( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern(
-				"substring",
-				"substring(?1 from ?2 for ?3)",
-				StandardBasicTypes.STRING
-		);
-		queryEngine.getSqmFunctionRegistry().registerPattern( "mod", "(?1 mod ?2)", StandardBasicTypes.STRING );
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.register();
 
-	}
+		if ( getVersion() >= 14 ) {
 
-	@Override
-	public void timestampdiff(
-			TemporalUnit unit,
-			Renderer from,
-			Renderer to,
-			Appender sqlAppender,
-			boolean fromTimestamp,
-			boolean toTimestamp) {
-		//TODO: TOTALLY UNTESTED CODE!
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append( "1e9*" );
-
+			//list actually taken from Teradata 15 docs
+			CommonFunctionFactory.lastDay( queryEngine );
+			CommonFunctionFactory.initcap( queryEngine );
+			CommonFunctionFactory.trim2( queryEngine );
+			CommonFunctionFactory.soundex( queryEngine );
+			CommonFunctionFactory.ascii( queryEngine );
+			CommonFunctionFactory.char_chr( queryEngine );
+			CommonFunctionFactory.trunc( queryEngine );
+			CommonFunctionFactory.moreHyperbolic( queryEngine );
+			CommonFunctionFactory.monthsBetween( queryEngine );
+			CommonFunctionFactory.addMonths( queryEngine );
+			CommonFunctionFactory.stddevPopSamp( queryEngine );
+			CommonFunctionFactory.varPopSamp( queryEngine );
 		}
-		sqlAppender.append( "((" );
-		to.render();
-		sqlAppender.append( " - " );
-		from.render();
-		sqlAppender.append( ") " );
-		switch ( unit ) {
-			case NANOSECOND: {
-				sqlAppender.append( "second(19,9)" );
-				break;
-			}
-			case WEEK: {
-				sqlAppender.append( "day(19,0)" );
-				break;
-			}
-			case QUARTER: {
-				sqlAppender.append( "month(19,0)" );
-				break;
-			}
-			default: {
-				sqlAppender.append( unit.toString() );
-				sqlAppender.append( "(19,0)" );
-			}
-		}
-		sqlAppender.append( ")" );
-		switch ( unit ) {
-			case WEEK: {
-				sqlAppender.append( "/7" );
-				break;
-			}
-			case QUARTER: {
-				sqlAppender.append( "/3" );
-				break;
-			}
-		}
-	}
 
-	@Override
-	public void timestampadd(
-			TemporalUnit unit,
-			Renderer magnitude,
-			Renderer to,
-			Appender sqlAppender,
-			boolean timestamp) {
-		//TODO: TOTALLY UNTESTED CODE!
-		sqlAppender.append( "(" );
-		to.render();
-		boolean subtract = false;
-//		if ( magnitude.startsWith("-") ) {
-//			subtract = true;
-//			magnitude = magnitude.substring(1);
-//		}
-		sqlAppender.append( subtract ? " - " : " + " );
-		switch ( unit ) {
-			case NANOSECOND: {
-				sqlAppender.append( "(" );
-				magnitude.render();
-				sqlAppender.append( ")/1e9 * interval '1' second" );
-				break;
-			}
-			case QUARTER: {
-				sqlAppender.append( "(" );
-				magnitude.render();
-				sqlAppender.append( ") * interval '3' month" );
-				break;
-			}
-			case WEEK: {
-				sqlAppender.append( "(" );
-				magnitude.render();
-				sqlAppender.append( ") * interval '7' day" );
-				break;
-			}
-			default: {
-//				if ( magnitude.matches("\\d+") ) {
-//					sqlAppender.append("interval '");
-//					sqlAppender.append( magnitude );
-//					sqlAppender.append("'");
-//				}
-//				else {
-				sqlAppender.append( "(" );
-				magnitude.render();
-				sqlAppender.append( ") * interval '1'" );
-//				}
-				sqlAppender.append( " " );
-				sqlAppender.append( unit.toString() );
-			}
-		}
-		sqlAppender.append( ")" );
 	}
 
 	/**
@@ -208,13 +219,8 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return false;
-	}
-
-	@Override
 	public String getAddColumnString() {
-		return "Add Column";
+		return getVersion() < 14 ? super.getAddColumnString() : "add";
 	}
 
 	@Override
@@ -250,29 +256,6 @@ public class TeradataDialect extends Dialect {
 //		return "delete from";
 //	}
 
-	/**
-	 * Get the name of the database type associated with the given
-	 * <tt>java.sql.Types</tt> typecode.
-	 *
-	 * @param code <tt>java.sql.Types</tt> typecode
-	 * @param length the length or precision of the column
-	 * @param precision the precision of the column
-	 * @param scale the scale of the column
-	 * @return the database type name
-	 * @throws HibernateException
-	 */
-	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
-		/*
-		 * We might want a special case for 19,2. This is very common for money types
-		 * and here it is converted to 18,1
-		 */
-		float f = precision > 0 ? (float) scale / (float) precision : 0;
-		int p = ( precision > 18 ? 18 : precision );
-		int s = ( precision > 18 ? (int) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
-
-		return super.getTypeName( code, length, p, s );
-	}
-
 	@Override
 	public boolean supportsCascadeDelete() {
 		return false;
@@ -284,8 +267,18 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsExistsInSelect() {
+		return false;
+	}
+
+	@Override
 	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
+		return getVersion() < 14;
 	}
 
 	@Override
@@ -318,6 +311,7 @@ public class TeradataDialect extends Dialect {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
 				v = "cast(null as timestamp)";
 				break;
 			case Types.BINARY:
@@ -337,6 +331,11 @@ public class TeradataDialect extends Dialect {
 				break;
 		}
 		return v;
+	}
+
+	@Override
+	public boolean supportsUnboundedLobLocatorMaterialization() {
+		return false;
 	}
 
 	@Override
@@ -367,5 +366,169 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
+	}
+
+	@Override
+	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
+		statement.registerOutParameter( col, Types.REF );
+		col++;
+		return col;
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement cs) throws SQLException {
+		boolean isResultSet = cs.execute();
+		while ( !isResultSet && cs.getUpdateCount() != -1 ) {
+			isResultSet = cs.getMoreResults();
+		}
+		return cs.getResultSet();
+	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return getVersion() < 14 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;
+	}
+
+	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+		/**
+		 * Extract the name of the violated constraint from the given SQLException.
+		 *
+		 * @param sqle The exception that was the result of the constraint violation.
+		 * @return The extracted constraint name.
+		 */
+		@Override
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
+			String constraintName = null;
+
+			int errorCode = sqle.getErrorCode();
+			switch (errorCode) {
+				case 27003:
+					constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
+					break;
+				case 2700:
+					constraintName = extractUsingTemplate( "Referential constraint", "violation:", sqle.getMessage() );
+					break;
+				case 5317:
+					constraintName = extractUsingTemplate( "Check constraint (", ") violated.", sqle.getMessage() );
+					break;
+			}
+
+			if ( constraintName != null ) {
+				int i = constraintName.indexOf( '.' );
+				if ( i != -1 ) {
+					constraintName = constraintName.substring( i + 1 );
+				}
+			}
+			return constraintName;
+		}
+	};
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
+
+	@Override
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+		return getVersion() >= 14;
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		if ( getVersion() < 14 ) {
+			return super.getWriteLockString( timeout );
+		}
+		String sMsg = " Locking row for write ";
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return sMsg + " nowait ";
+		}
+		return sMsg;
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		if ( getVersion() < 14 ) {
+			return super.getReadLockString( timeout );
+		}
+		String sMsg = " Locking row for read  ";
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return sMsg + " nowait ";
+		}
+		return sMsg;
+	}
+
+//	@Override
+//	public Exporter<Index> getIndexExporter() {
+//		return new TeradataIndexExporter(this);
+//	}
+//
+//	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+//
+//		private TeradataIndexExporter(Dialect dialect) {
+//			super(dialect);
+//		}
+//
+//		@Override
+//		public String[] getSqlCreateStrings(Index index, JdbcServices jdbcServices) {
+//			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+//			QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
+//			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+//					qualifiedTableName,
+//					jdbcEnvironment.getDialect()
+//			);
+//
+//			final String indexNameForCreation;
+//			if ( getDialect().qualifyIndexName() ) {
+//				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+//						new QualifiedNameImpl(
+//								qualifiedTableName.getCatalogName(),
+//								qualifiedTableName.getSchemaName(),
+//								index.getName()
+//						),
+//						jdbcEnvironment.getDialect()
+//				);
+//			}
+//			else {
+//				indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
+//			}
+//
+//			StringBuilder columnList = new StringBuilder();
+//			boolean first = true;
+//			for ( PhysicalColumn column : index.getColumns() ) {
+//				if ( first ) {
+//					first = false;
+//				}
+//				else {
+//					columnList.append( ", " );
+//				}
+//				columnList.append( column.getName().render( jdbcEnvironment.getDialect() ) );
+//			}
+//
+//			return new String[] {
+//					"create index " + indexNameForCreation
+//							+ "(" + columnList + ") on " + tableName
+//			};
+//		}
+//	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return getVersion() < 14
+				? super.getIdentityColumnSupport()
+				: new Teradata14IdentityColumnSupport();
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
+		return getVersion() < 14
+				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
+				: new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString() + " " + sql;
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		//TODO: is this right?!
+		return TopLimitHandler.INSTANCE;
 	}
 }

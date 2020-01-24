@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.domain.gambit;
 
 import java.net.URL;
 import java.sql.Clob;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public class EntityOfBasics {
 	}
 
 	private Integer id;
+	private Boolean theBoolean;
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
@@ -47,14 +49,16 @@ public class EntityOfBasics {
 	private Date theTime;
 	private Date theTimestamp;
 	private Instant theInstant;
-	private LocalDateTime theLocalDateTime;
-	private LocalDate theLocalDate;
-	private LocalTime theLocalTime;
-	private OffsetDateTime theOffsetDateTime;
-	private ZonedDateTime theZonedDateTime;
 	private Gender gender;
 	private Gender convertedGender;
 	private Gender ordinalGender;
+	private Duration theDuration;
+
+	private LocalDateTime theLocalDateTime;
+	private LocalDate theLocalDate;
+	private LocalTime theLocalTime;
+	private ZonedDateTime theZonedDateTime;
+	private OffsetDateTime theOffsetDateTime;
 
 	@Id
 	public Integer getId() {
@@ -215,6 +219,22 @@ public class EntityOfBasics {
 
 	public void setTheZonedDateTime(ZonedDateTime theZonedDateTime) {
 		this.theZonedDateTime = theZonedDateTime;
+	}
+
+	public Duration getTheDuration() {
+		return theDuration;
+	}
+
+	public void setTheDuration(Duration theDuration) {
+		this.theDuration = theDuration;
+	}
+
+	public Boolean isTheBoolean() {
+		return theBoolean;
+	}
+
+	public void setTheBoolean(Boolean theBoolean) {
+		this.theBoolean = theBoolean;
 	}
 
 	public static class GenderConverter implements AttributeConverter<Gender,Character> {

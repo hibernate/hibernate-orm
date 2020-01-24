@@ -1363,6 +1363,20 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DDL_DB_NAME = "javax.persistence.database-product-name";
 
 	/**
+	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
+	 * not available (aka, mainly in generating scripts).  This value is used to help more precisely determine
+	 * how to perform schema generation tasks for the underlying database in cases where
+	 * {@value #HBM2DDL_DB_NAME} does not provide enough distinction.
+	 * <p/>
+	 * The value of this setting is expected to match the value returned by
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
+	 *
+	 * @see #HBM2DDL_DB_NAME
+	 */
+	@SuppressWarnings("JavaDoc")
+	String HBM2DDL_DB_VERSION = "javax.persistence.database-product-version";
+
+	/**
 	 * Specifies the major version of the underlying database, as would be returned by
 	 * {@link java.sql.DatabaseMetaData#getDatabaseMajorVersion} for the target database.  This value is used to
 	 * help more precisely determine how to perform schema generation tasks for the underlying database in cases

@@ -656,8 +656,7 @@ public class LoaderSelectBuilder {
 							new SqlSelectionImpl(
 									valuesPosition + 1,
 									valuesPosition,
-									expression,
-									jdbcMapping
+									expression
 							)
 					);
 				}

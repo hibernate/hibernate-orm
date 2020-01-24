@@ -6,23 +6,22 @@
  */
 package org.hibernate.query.sqm.function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 import java.util.List;
 
 /**
- * Support for SqmFunctionDescriptors that ultimately want to perform SQL rendering themselves
+ * Support for SqmFunctionTemplates that ultimately want to
+ * perform SQL rendering themselves
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface FunctionRenderingSupport {
 	void render(
 			SqlAppender sqlAppender,
-			String functionName,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstWalker walker,
-			SessionFactoryImplementor sessionFactory);
+			SqlAstWalker walker);
 }

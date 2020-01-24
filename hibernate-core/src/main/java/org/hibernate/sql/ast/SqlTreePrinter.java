@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
+import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
@@ -20,6 +21,8 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
@@ -600,7 +603,22 @@ public class SqlTreePrinter implements SqlAstWalker {
 
 	}
 
-//	@Override
+	@Override
+	public void visitDurationUnit(DurationUnit durationUnit) {
+
+	}
+
+	@Override
+	public void visitDuration(Duration duration) {
+
+	}
+
+	@Override
+	public void visitConversion(Conversion conversion) {
+
+	}
+
+	//	@Override
 //	public void visitNonStandardFunctionExpression(NonStandardFunction function) {
 //
 //	}

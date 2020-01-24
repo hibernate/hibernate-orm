@@ -86,8 +86,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				type.getJdbcMapping()
+				this
 		);
 	}
 

@@ -6,179 +6,115 @@
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+
 /**
- * Support for SQM function descriptors which ultimately render themselves
- *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmFunctionDescriptor implements SqmSelfRenderingFunctionDescriptor {
+public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
+	private final String name;
 
-	public AbstractSqmFunctionDescriptor(ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
+	protected FunctionReturnTypeResolver getReturnTypeResolver() {
+		return returnTypeResolver;
+	}
+
+	public AbstractSqmFunctionDescriptor(String name) {
+		this( name, null, null );
+	}
+
+	public AbstractSqmFunctionDescriptor(String name, ArgumentsValidator argumentsValidator) {
+		this( name, argumentsValidator, null );
+	}
+
+	public AbstractSqmFunctionDescriptor(
+			String name,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		this.name = name;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
 				: argumentsValidator;
 		this.returnTypeResolver = returnTypeResolver == null
-				? (impliedTypeAccess, arguments) -> impliedTypeAccess.get()
+				? StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				: returnTypeResolver;
 	}
 
-	@Override
-	public Expression generateSqlExpression(
-			String functionName,
-			List<? extends SqmVisitableNode> sqmArguments,
-			Supplier<MappingModelExpressable> inferableTypeAccess,
-			SqmToSqlAstConverter converter,
-			SqlAstCreationState creationState) {
-		argumentsValidator.validate( sqmArguments );
+	public String getName() {
+		return name;
+	}
 
-		// todo (6.0) : work out the specifics of the type resolution
+	public String getSignature(String name) {
+		return getReturnSignature() + name + getArgumentListSignature();
+	}
 
-		final List<SqlAstNode> sqlAstArgs;
+	public String getReturnSignature() {
+		String result = returnTypeResolver.getReturnType();
+		return result.isEmpty() ? "" : result + " ";
+	}
+
+	public String getArgumentListSignature() {
+		String args = argumentsValidator.getSignature();
+		return alwaysIncludesParentheses() ? args : "()".equals(args) ? "" : "[" + args + "]";
+	}
+
+	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
+//		if (arg instanceof SqmExpressionInterpretation) {
+//			return ( (SqmExpressionInterpretation) arg ).toSqlExpression( walker );
+//		}
+		return (SqlAstNode) arg;
+	}
+
+
+	public static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
 		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
-			sqlAstArgs = Collections.emptyList();
-		}
-		else if ( sqmArguments.size() == 1 ) {
-			sqlAstArgs = Collections.singletonList(
-					(SqlAstNode) sqmArguments.get( 0 ).accept( converter )
-			);
-		}
-		else {
-			sqlAstArgs = new ArrayList<>( sqmArguments.size() );
-			for ( int i = 0; i < sqmArguments.size(); i++ ) {
-				final SqmVisitableNode sqmVisitableNode = sqmArguments.get( i );
-				sqlAstArgs.add( (SqlAstNode) sqmVisitableNode.accept( converter ) );
-			}
+			return emptyList();
 		}
 
-		final BasicValuedMapping returnType = returnTypeResolver.resolveFunctionReturnType(
-				() -> (BasicValuedMapping) inferableTypeAccess.get(),
-				sqlAstArgs
-		);
+		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
+		for ( SqmTypedNode sqmArgument : sqmArguments ) {
+			sqlAstArguments.add( toSqlAstNode( ((SqmVisitableNode) sqmArgument).accept( walker ), walker ) );
+		}
+		return sqlAstArguments;
+	}
 
+	@Override
+	public final <T> SelfRenderingSqlFunctionExpression<T> generateSqmExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		argumentsValidator.validate( arguments );
 
-		return new SelfRenderingSqlFunctionExpression(
-				resolveFunctionName( functionName ),
-				returnType,
-				sqlAstArgs,
-				getRenderingSupport()
+		return generateSqmFunctionExpression(
+				arguments,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
 		);
 	}
 
-	protected String resolveFunctionName(String functionName) {
-		return functionName;
-	}
+	protected abstract <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine, TypeConfiguration typeConfiguration);
 
 
-	private static class SelfRenderingSqlFunctionExpression implements SelfRenderingExpression, DomainResultProducer {
-		private final String name;
-		private final BasicValuedMapping type;
-		private final List<SqlAstNode> arguments;
-
-		private final FunctionRenderingSupport renderingSupport;
-
-		public SelfRenderingSqlFunctionExpression(
-				String name,
-				BasicValuedMapping type,
-				List<SqlAstNode> arguments,
-				FunctionRenderingSupport renderingSupport) {
-			this.name = name;
-			this.type = type;
-			this.arguments = arguments;
-			this.renderingSupport = renderingSupport;
-		}
-
-		@Override
-		public void renderToSql(
-				SqlAppender sqlAppender,
-				SqlAstWalker walker,
-				SessionFactoryImplementor sessionFactory) {
-			renderingSupport.render( sqlAppender, name, arguments, walker, sessionFactory );
-		}
-
-		@Override
-		public BasicValuedMapping getExpressionType() {
-			return type;
-		}
-
-		@Override
-		public void visitJdbcTypes(
-				Consumer action,
-				TypeConfiguration typeConfiguration) {
-			getExpressionType().visitJdbcTypes( action, Clause.IRRELEVANT, typeConfiguration );
-		}
-
-		@Override
-		public DomainResult createDomainResult(
-				String resultVariable,
-				DomainResultCreationState creationState) {
-			final SqlSelection sqlSelection = resolveSqlSelection( creationState );
-			return new BasicResult(
-					sqlSelection.getValuesArrayPosition(),
-					resultVariable,
-					type.getMappedTypeDescriptor().getMappedJavaTypeDescriptor()
-			);
-		}
-
-		private SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
-			return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-					this,
-					type.getJdbcMapping().getJavaTypeDescriptor(),
-					creationState.getSqlAstCreationState()
-							.getCreationContext()
-							.getSessionFactory()
-							.getTypeConfiguration()
-			);
-		}
-
-		@Override
-		public void applySqlSelections(DomainResultCreationState creationState) {
-			resolveSqlSelection( creationState );
-		}
-
-		@Override
-		public SqlSelection createSqlSelection(
-				int jdbcPosition,
-				int valuesArrayPosition,
-				JavaTypeDescriptor javaTypeDescriptor,
-				TypeConfiguration typeConfiguration) {
-			return new SqlSelectionImpl(
-					jdbcPosition,
-					valuesArrayPosition,
-					this,
-					getExpressionType().getJdbcMapping()
-			);
-		}
-	}
 }
+

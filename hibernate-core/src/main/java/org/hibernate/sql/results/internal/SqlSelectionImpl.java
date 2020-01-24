@@ -6,14 +6,13 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.Objects;
-
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
+
+import java.util.Objects;
 
 /**
  * @asciidoc
@@ -38,13 +37,11 @@ public class SqlSelectionImpl implements SqlSelection {
 	private final int jdbcPosition;
 	private final int valuesArrayPosition;
 	private final Expression sqlExpression;
-	private final JdbcMapping jdbcMapping;
 
-	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression, JdbcMapping jdbcMapping) {
+	public SqlSelectionImpl(int jdbcPosition, int valuesArrayPosition, Expression sqlExpression) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.sqlExpression = sqlExpression;
-		this.jdbcMapping = jdbcMapping;
 	}
 
 	public Expression getWrappedSqlExpression() {

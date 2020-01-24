@@ -6,34 +6,71 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionAsExpressionDescriptor;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
 
+import java.util.List;
+
 /**
- * A specialized concat() function definition in which:<ol>
- * <li>we translate to use the concat operator ('||')</li>
- * <li>wrap dynamic parameters in CASTs to VARCHAR</li>
- * </ol>
- * <p/>
- * This last spec is to deal with a limitation on DB2 and variants (e.g. Derby)
- * where dynamic parameters cannot be used in concatenation unless they are being
- * concatenated with at least one non-dynamic operand.  And even then, the rules
- * are so convoluted as to what is allowed and when the CAST is needed and when
- * it is not that we just go ahead and do the CASTing.
+ * Casts query parameters using the Derby varchar() function
+ * before concatenating them using the || operator.
  *
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DerbyConcatEmulation extends SqmFunctionAsExpressionDescriptor {
+public class DerbyConcatEmulation
+		extends AbstractSqmSelfRenderingFunctionDescriptor
+		implements FunctionRenderingSupport {
+
 	public DerbyConcatEmulation() {
 		super(
-				"(",
-				"||",
-				")",
-				StandardArgumentsValidators.min( 2 ),
+				"concat",
+				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
+	}
+
+	@Override
+	public FunctionRenderingSupport getRenderingSupport() {
+		return this;
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> arguments,
+			SqlAstWalker walker) {
+		int numberOfArguments = arguments.size();
+		if ( numberOfArguments > 1 ) {
+			sqlAppender.appendSql("(");
+		}
+		for ( int i = 0; i < numberOfArguments; i++ ) {
+			SqlAstNode argument = arguments.get( i );
+			if ( i > 0 ) {
+				sqlAppender.appendSql("||");
+			}
+			boolean param = false; //TODO: argument instanceof GenericParameter;
+			if ( param ) {
+				sqlAppender.appendSql("cast(");
+			}
+			argument.accept(walker);
+			if ( param ) {
+				sqlAppender.appendSql(" as long varchar)");
+			}
+		}
+		if ( numberOfArguments > 1 ) {
+			sqlAppender.appendSql(")");
+		}
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return "(string0[, string1[, ...]])";
 	}
 }

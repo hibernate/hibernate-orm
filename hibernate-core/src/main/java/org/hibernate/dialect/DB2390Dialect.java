@@ -8,10 +8,12 @@ package org.hibernate.dialect;
 
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.dialect.sequence.DB2390SequenceSupport;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 
 /**
@@ -22,108 +24,40 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class DB2390Dialect extends DB2Dialect {
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			if (LimitHelper.hasFirstRow( selection )) {
-				throw new UnsupportedOperationException( "query result offset is not supported" );
-			}
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
-		}
+	private final int version;
 
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
+	int get390Version() {
+		return version;
+	}
 
-		@Override
-		public boolean useMaxForLimit() {
-			return true;
-		}
+	public DB2390Dialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
+	}
 
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
+	public DB2390Dialect() {
+		this(7);
+	}
 
-	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean useMaxForLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
+	public DB2390Dialect(int version) {
+		super();
+		this.version = version;
+	}
 
 	@Override
-	public boolean supportsSequences() {
-		return false;
+	public SequenceSupport getSequenceSupport() {
+		return get390Version() < 8
+				? NoSequenceSupport.INSTANCE
+				: DB2390SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return null;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		if ( limit == 0 ) {
-			return sql;
-		}
-		return sql + " fetch first " + limit + " rows only ";
+		return get390Version() < 8 ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LEGACY_LIMIT_HANDLER;
-		}
-		else {
-			return LIMIT_HANDLER;
-		}
+		return FetchLimitHandler.INSTANCE;
 	}
 
 	@Override

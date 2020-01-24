@@ -62,8 +62,7 @@ public abstract class AbstractJdbcParameter
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				jdbcMapping
+				this
 		);
 	}
 

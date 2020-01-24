@@ -50,6 +50,7 @@ public class TimestampdiffFunction implements SqmFunctionDescriptor {
 		final TemporalUnit unit = field.getUnit();
 
 		final AbstractSqmFunctionDescriptor functionDescriptor = new AbstractSqmFunctionDescriptor(
+				functionName,
 				StandardArgumentsValidators.exactly( 3 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.LONG ) ) {
 			@Override

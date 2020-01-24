@@ -82,9 +82,9 @@ public class NamedFunctionDescriptorBuilder {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
 				useParenthesesWhenNoArgs,
-				argumentListSignature,
 				argumentsValidator,
-				returnTypeResolver
+				returnTypeResolver,
+				argumentListSignature
 		);
 	}
 }

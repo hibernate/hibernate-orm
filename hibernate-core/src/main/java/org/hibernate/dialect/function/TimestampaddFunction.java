@@ -49,6 +49,7 @@ public class TimestampaddFunction implements SqmFunctionDescriptor {
 		final TemporalUnit unit = field.getUnit();
 
 		final AbstractSqmFunctionDescriptor functionDescriptor = new AbstractSqmFunctionDescriptor(
+				functionName,
 				StandardArgumentsValidators.exactly( 3 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 3 ) ) {
 			@Override

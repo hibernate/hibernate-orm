@@ -6,9 +6,15 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import java.util.List;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects where that
@@ -22,24 +28,37 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class PatternBasedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
+public class PatternBasedSqmFunctionDescriptor
+		extends AbstractSqmFunctionDescriptor
+		implements FunctionRenderingSupport {
 	private final PatternRenderer renderer;
+	private final String argumentListSignature;
 
-		/**
+	/**
 	 * Constructs a pattern-based function template
 	 */
 	public PatternBasedSqmFunctionDescriptor(
-			PatternRenderer renderer,
+			String functionName, PatternRenderer renderer,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
-		super( argumentsValidator, returnTypeResolver );
+			FunctionReturnTypeResolver returnTypeResolver,
+			String argumentListSignature) {
+		super(functionName, argumentsValidator, returnTypeResolver );
 		this.renderer = renderer;
+		this.argumentListSignature = argumentListSignature;
 	}
 
 	@Override
 	public FunctionRenderingSupport getRenderingSupport() {
-		return (sqlAppender, functionName, sqlAstArguments, walker, sessionFactory) -> {
-			renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
-		};
+		return this;
+	}
+
+	@Override
+	public void render(SqlAppender sqlAppender, String functionName, List<SqlAstNode> sqlAstArguments, SqlAstWalker walker, SessionFactoryImplementor sessionFactory) {
+		renderer.render( sqlAppender, sqlAstArguments, walker, sessionFactory );
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
 	}
 }

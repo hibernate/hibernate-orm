@@ -44,8 +44,13 @@ import org.hibernate.type.spi.TypeConfiguration;
 public abstract class AbstractSqmFunctionDescriptor implements SqmSelfRenderingFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
+	private final String functionName;
 
-	public AbstractSqmFunctionDescriptor(ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
+	public AbstractSqmFunctionDescriptor(
+			String functionName,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		this.functionName = functionName;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
 				: argumentsValidator;
@@ -89,15 +94,11 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmSelfRenderingF
 
 
 		return new SelfRenderingSqlFunctionExpression(
-				resolveFunctionName( functionName ),
+				this.functionName,
 				returnType,
 				sqlAstArgs,
 				getRenderingSupport()
 		);
-	}
-
-	protected String resolveFunctionName(String functionName) {
-		return functionName;
 	}
 
 	public String getSignature(String name) {

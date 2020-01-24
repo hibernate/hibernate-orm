@@ -17,15 +17,16 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
  */
 public class PatternFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
+	private final String functionName;
 	private final String pattern;
+	private String argumentListSignature;
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
 
-	private boolean useParenthesesWhenNoArgs;
-
-	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String pattern) {
+	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName, String pattern) {
 		this.registry = registry;
+		this.functionName = functionName;
 		this.pattern = pattern;
 	}
 
@@ -52,8 +53,8 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+	public PatternFunctionDescriptorBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
 		return this;
 	}
 
@@ -63,9 +64,11 @@ public class PatternFunctionDescriptorBuilder {
 
 	public SqmFunctionDescriptor build() {
 		return new PatternBasedSqmFunctionDescriptor(
-				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
+				functionName,
+				new PatternRenderer( pattern ),
 				argumentsValidator,
-				returnTypeResolver
+				returnTypeResolver,
+				argumentListSignature
 		);
 	}
 }

@@ -85,7 +85,7 @@ public class CUBRIDExtractEmulation implements SqmFunctionDescriptor {
 				.getSessionFactory()
 				.getQueryEngine()
 				.getSqmFunctionRegistry()
-				.patternDescriptorBuilder( pattern )
+				.patternDescriptorBuilder( functionName, pattern )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
 				.build();

@@ -80,7 +80,7 @@ public class InformixExtractEmulation implements SqmFunctionDescriptor {
 		final SqmFunctionDescriptor sqmPattern = converter.getCreationContext().getSessionFactory()
 				.getQueryEngine()
 				.getSqmFunctionRegistry()
-				.patternDescriptorBuilder( pattern )
+				.patternDescriptorBuilder( functionName, pattern )
 				.build();
 
 		return sqmPattern.generateSqlExpression( functionName, arguments, inferableTypeAccess, converter, creationState );

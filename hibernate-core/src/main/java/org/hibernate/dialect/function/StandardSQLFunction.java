@@ -29,7 +29,7 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	}
 
 	public StandardSQLFunction(String name, boolean useParentheses, AllowableFunctionReturnType type) {
-		super( name, useParentheses, null, null, null );
+		super( name, useParentheses, null, null, null);
 		this.type = type;
 	}
 

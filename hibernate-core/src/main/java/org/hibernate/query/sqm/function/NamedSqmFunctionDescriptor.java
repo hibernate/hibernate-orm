@@ -25,7 +25,9 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author David Channon
  * @author Steve Ebersole
  */
-public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
+public class NamedSqmFunctionDescriptor
+		extends AbstractSqmFunctionDescriptor
+		implements FunctionRenderingSupport {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
 	private final String argumentListSignature;
@@ -33,10 +35,10 @@ public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor im
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
-			String argumentListSignature,
 			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver) {
-		super( argumentsValidator, returnTypeResolver );
+			FunctionReturnTypeResolver returnTypeResolver,
+			String argumentListSignature) {
+		super( functionName, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
@@ -45,11 +47,6 @@ public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor im
 
 	public String getFunctionName() {
 		return functionName;
-	}
-
-	@Override
-	protected String resolveFunctionName(String functionName) {
-		return this.functionName;
 	}
 
 	@Override

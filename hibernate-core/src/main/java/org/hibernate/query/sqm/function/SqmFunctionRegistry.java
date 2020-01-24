@@ -83,7 +83,7 @@ public class SqmFunctionRegistry {
 	 * {@link #patternDescriptorBuilder} accepting its defaults.
 	 */
 	public SqmFunctionDescriptor registerPattern(String name, String pattern) {
-		return patternDescriptorBuilder( pattern ).register( name );
+		return patternDescriptorBuilder( name, pattern ).register( name );
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class SqmFunctionRegistry {
 	 * via {@link #patternDescriptorBuilder} accepting its defaults.
 	 */
 	public SqmFunctionDescriptor registerPattern(String name, String pattern, BasicValuedMapping returnType) {
-		return patternDescriptorBuilder( pattern )
+		return patternDescriptorBuilder( name, pattern )
 				.setInvariantType( returnType )
 				.register( name );
 	}
@@ -102,8 +102,8 @@ public class SqmFunctionRegistry {
 	 *
 	 * @return The builder
 	 */
-	public PatternFunctionDescriptorBuilder patternDescriptorBuilder(String pattern) {
-		return new PatternFunctionDescriptorBuilder( this, pattern );
+	public PatternFunctionDescriptorBuilder patternDescriptorBuilder(String name, String pattern) {
+		return new PatternFunctionDescriptorBuilder( this, name, pattern );
 	}
 
 	/**
@@ -209,7 +209,7 @@ public class SqmFunctionRegistry {
 		for ( int i = 0; i < patterns.length; i++ ) {
 			final String pattern = patterns[i];
 			if ( pattern != null ) {
-				templates[i] = patternDescriptorBuilder( pattern )
+				templates[i] = patternDescriptorBuilder( name, pattern )
 						.setExactArgumentCount( i )
 						.setInvariantType( type )
 						.build();

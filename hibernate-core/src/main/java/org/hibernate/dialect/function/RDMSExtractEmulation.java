@@ -78,7 +78,7 @@ public class RDMSExtractEmulation implements SqmFunctionDescriptor {
 		final SqmFunctionDescriptor sqmPattern = converter.getCreationContext().getSessionFactory()
 				.getQueryEngine()
 				.getSqmFunctionRegistry()
-				.patternDescriptorBuilder( pattern )
+				.patternDescriptorBuilder( functionName, pattern )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.build();
 

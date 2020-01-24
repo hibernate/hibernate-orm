@@ -21,6 +21,7 @@ public class NamedFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
 
 	private final String functionName;
+	private String sqlFunctionName;
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
@@ -28,9 +29,10 @@ public class NamedFunctionDescriptorBuilder {
 	private boolean requiresArgumentList = true;
 	private String argumentListSignature;
 
-	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName) {
+	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName, String sqlFunctionName) {
 		this.registry = registry;
 		this.functionName = functionName;
+		this.sqlFunctionName = sqlFunctionName;
 	}
 
 	public NamedFunctionDescriptorBuilder setArgumentsValidator(ArgumentsValidator argumentsValidator) {
@@ -73,6 +75,7 @@ public class NamedFunctionDescriptorBuilder {
 		);
 	}
 
+	@Deprecated
 	public SqmFunctionDescriptor register(String registrationKey) {
 		return registry.register(
 				registrationKey,
@@ -83,6 +86,7 @@ public class NamedFunctionDescriptorBuilder {
 	public SqmFunctionDescriptor build() {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
+				sqlFunctionName,
 				requiresArgumentList,
 				argumentsValidator,
 				returnTypeResolver,

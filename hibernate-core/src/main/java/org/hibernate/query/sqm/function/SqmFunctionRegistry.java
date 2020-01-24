@@ -83,7 +83,7 @@ public class SqmFunctionRegistry {
 	 * {@link #patternDescriptorBuilder} accepting its defaults.
 	 */
 	public SqmFunctionDescriptor registerPattern(String name, String pattern) {
-		return patternDescriptorBuilder( name, pattern ).register( name );
+		return patternDescriptorBuilder( name, pattern ).register();
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class SqmFunctionRegistry {
 	public SqmFunctionDescriptor registerPattern(String name, String pattern, BasicValuedMapping returnType) {
 		return patternDescriptorBuilder( name, pattern )
 				.setInvariantType( returnType )
-				.register( name );
+				.register();
 	}
 
 	/**
@@ -112,8 +112,9 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
+	@Deprecated
 	public SqmFunctionDescriptor registerNamed(String name) {
-		return namedDescriptorBuilder( name ).build();
+		return namedDescriptorBuilder( name, name ).build();
 	}
 
 	/**
@@ -123,8 +124,9 @@ public class SqmFunctionRegistry {
 	 *
 	 * @param name The function name (and registration key)
 	 */
+	@Deprecated
 	public SqmFunctionDescriptor registerNamed(String name, BasicValuedMapping returnType) {
-		return namedDescriptorBuilder( name ).setInvariantType( returnType ).build();
+		return namedDescriptorBuilder( name, name ).setInvariantType( returnType ).build();
 	}
 
 	/**
@@ -135,17 +137,22 @@ public class SqmFunctionRegistry {
 	 *
 	 * @return The builder
 	 */
-	public NamedFunctionDescriptorBuilder namedDescriptorBuilder(String name) {
-		return new NamedFunctionDescriptorBuilder( this, name );
+	public NamedFunctionDescriptorBuilder namedDescriptorBuilder(String name, String sqlFunctionName) {
+		return new NamedFunctionDescriptorBuilder( this, name, sqlFunctionName );
 	}
 
+	public NamedFunctionDescriptorBuilder namedDescriptorBuilder(String name) {
+		return new NamedFunctionDescriptorBuilder( this, name, name );
+	}
+
+	@Deprecated
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {
-		return namedDescriptorBuilder( name )
+		return namedDescriptorBuilder( name, name )
 				.setExactArgumentCount( 0 );
 	}
 
-	public VarArgsFunctionDescriptorBuilder varArgsBuilder(String begin, String sep, String end) {
-		return new VarArgsFunctionDescriptorBuilder( this, begin, sep, end );
+	public VarArgsFunctionDescriptorBuilder varArgsBuilder(String name, String begin, String sep, String end) {
+		return new VarArgsFunctionDescriptorBuilder( this, name, begin, sep, end );
 	}
 
 	/**
@@ -167,14 +174,14 @@ public class SqmFunctionRegistry {
 	}
 
 	public SqmFunctionDescriptor registerVarArgs(
-			String registrationKey,
+			String name,
 			BasicValuedMapping returnType,
 			String begin,
 			String sep,
 			String end) {
-		return varArgsBuilder( begin, sep, end )
+		return varArgsBuilder( name, begin, sep, end )
 				.setInvariantType( returnType )
-				.register( registrationKey );
+				.register( name );
 	}
 
 	public SqmFunctionDescriptor wrapInJdbcEscape(String registrationKey, SqmFunctionDescriptor wrapped) {

@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.PatternBasedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -61,8 +60,8 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public SqmFunctionDescriptor register(String registrationKey) {
-		return registry.register( registrationKey, build() );
+	public SqmFunctionDescriptor register() {
+		return registry.register( functionName, build() );
 	}
 
 	public SqmFunctionDescriptor build() {

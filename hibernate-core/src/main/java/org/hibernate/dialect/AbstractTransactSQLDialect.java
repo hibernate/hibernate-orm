@@ -86,10 +86,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "(?1 % ?2)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 % ?2)" )
 				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
-				.register( "mod" );
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "atn2" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )

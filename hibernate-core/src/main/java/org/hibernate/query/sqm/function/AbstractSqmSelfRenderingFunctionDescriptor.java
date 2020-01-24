@@ -37,8 +37,11 @@ import java.util.function.Consumer;
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		extends AbstractSqmFunctionDescriptor {
 
-	public AbstractSqmSelfRenderingFunctionDescriptor(String name, ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
-		super( name, argumentsValidator, returnTypeResolver );
+	public AbstractSqmSelfRenderingFunctionDescriptor(
+			String functionName,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		super( functionName, argumentsValidator, returnTypeResolver );
 	}
 
 	/**
@@ -46,7 +49,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	 */
 	protected Expression generateFunctionExpression(List<SqlAstNode> sqlAstArgs, BasicValuedMapping returnType) {
 		return new SelfRenderingSqlFunctionExpression(
-				this.functionName,
+				getFunctionName(),
 				returnType,
 				sqlAstArgs,
 				getRenderingSupport()

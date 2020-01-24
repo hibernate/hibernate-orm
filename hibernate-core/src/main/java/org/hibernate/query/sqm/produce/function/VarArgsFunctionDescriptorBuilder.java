@@ -19,6 +19,8 @@ public class VarArgsFunctionDescriptorBuilder {
 
 	private final SqmFunctionRegistry registry;
 
+	private final String functionName;
+
 	private final String begin;
 	private final String sep;
 	private final String end;
@@ -26,8 +28,12 @@ public class VarArgsFunctionDescriptorBuilder {
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
 
-	public VarArgsFunctionDescriptorBuilder(SqmFunctionRegistry registry, String begin, String sep, String end) {
+	public VarArgsFunctionDescriptorBuilder(
+			SqmFunctionRegistry registry,
+			String functionName,
+			String begin, String sep, String end) {
 		this.registry = registry;
+		this.functionName = functionName;
 		this.begin = begin;
 		this.sep = sep;
 		this.end = end;
@@ -64,6 +70,7 @@ public class VarArgsFunctionDescriptorBuilder {
 		return registry.register(
 				registrationKey,
 				new VarArgsFunctionDescriptor(
+						functionName,
 						begin,
 						sep,
 						end,

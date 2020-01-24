@@ -352,10 +352,10 @@ public class MySQLDialect extends Dialect {
 		// The following are synonyms for now(fsp), where fsp defaults to 0 on MySQL 5.7:
 		// current_timestamp([fsp]), localtime(fsp), localtimestamp(fsp).
 		// Register the same StaticPrecisionFspTimestampFunction for all 4 functions.
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "now(6)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current_timestamp", "now(6)" )
 				.setExactArgumentCount(0)
 				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.register( "current_timestamp" );
+				.register();
 
 //		queryEngine.getSqmFunctionRegistry().patternTemplateBuilder( "now", "now(6)" )
 //				.setExactArgumentCount(0)
@@ -367,10 +367,10 @@ public class MySQLDialect extends Dialect {
 		// indicates the time at which the statement began to execute.
 		// (Within a stored function or trigger, NOW() returns the time at
 		// which the function or triggering statement began to execute.)
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "sysdate(6)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "sysdate", "sysdate(6)" )
 				.setExactArgumentCount(0)
 				.setInvariantType( StandardBasicTypes.TIMESTAMP )
-				.register( "sysdate" );
+				.register();
 
 		// from_unixtime(), timestamp() are functions that return TIMESTAMP that do not support a
 		// fractional seconds precision argument (so there's no need to override them here):

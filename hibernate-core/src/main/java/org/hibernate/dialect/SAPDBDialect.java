@@ -93,9 +93,9 @@ public class SAPDBDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardBasicTypes.INTEGER );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "case ?1 when ?2 then null else ?1 end" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
 				.setExactArgumentCount( 2 )
-				.register( "nullif" );
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "index" )
 				.setInvariantType( StandardBasicTypes.INTEGER )

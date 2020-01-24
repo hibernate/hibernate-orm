@@ -27,11 +27,13 @@ public class NamedSqmFunctionDescriptor
 		extends AbstractSqmSelfRenderingFunctionDescriptor
 		implements FunctionRenderingSupport {
 	private final String functionName;
+	private String sqlFunctionName;
 	private final boolean requiresArguments;
 	private final String argumentListSignature;
 
 	public NamedSqmFunctionDescriptor(
 			String functionName,
+			String sqlFunctionName,
 			boolean requiresArguments,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
@@ -39,6 +41,7 @@ public class NamedSqmFunctionDescriptor
 		super( functionName, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
+		this.sqlFunctionName = sqlFunctionName;
 		this.requiresArguments = requiresArguments;
 		this.argumentListSignature = argumentListSignature;
 	}
@@ -61,7 +64,7 @@ public class NamedSqmFunctionDescriptor
 			SessionFactoryImplementor sessionFactory) {
 		final boolean useParens = requiresArguments || !sqlAstArguments.isEmpty();
 
-		sqlAppender.appendSql( functionName );
+		sqlAppender.appendSql( sqlFunctionName );
 		if ( useParens ) {
 			sqlAppender.appendSql( "(" );
 		}

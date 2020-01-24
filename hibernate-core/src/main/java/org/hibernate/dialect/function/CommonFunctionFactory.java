@@ -675,11 +675,11 @@ public class CommonFunctionFactory {
 	}
 
 	public static void extract(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "extract(?1 from ?2)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "extract", "extract(?1 from ?2)" )
 //				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setExactArgumentCount( 2 )
 				.setReturnTypeResolver( useArgType( 1 ) )
-				.register( "extract" );
+				.register();
 	}
 
 	public static void extract_datepart(QueryEngine queryEngine) {
@@ -696,17 +696,17 @@ public class CommonFunctionFactory {
 	}
 
 	public static void cast(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "cast(?1 as ?2)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "cast", "cast(?1 as ?2)" )
 				.setExactArgumentCount( 2 )
 				.setReturnTypeResolver( useArgType( 2 ) )
-				.register( "cast" );
+				.register();
 	}
 
 	public static void trim(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "trim(?1 ?2 from ?3)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "trim", "trim(?1 ?2 from ?3)" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 3 )
-				.register( "trim" );
+				.register();
 	}
 
 	public static void currentDateTimeTimestamp(QueryEngine queryEngine) {
@@ -747,18 +747,18 @@ public class CommonFunctionFactory {
 	 * For databases like MySQL which default to truncating the the fractional seconds.
 	 */
 	public static void currentTimestampExplicitMicros(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current_timestamp(6)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current_timestamp", "current_timestamp(6)" )
 				.setInvariantType( StandardBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 0 )
-				.register( "current_timestamp" );
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current_timestamp(6)" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current datetime", "current_timestamp(6)" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
 				.setExactArgumentCount( 0 )
-				.register( "current datetime" );
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current_timestamp(6)" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "current instant", "current_timestamp(6)" )
 				.setInvariantType( StandardBasicTypes.INSTANT )
 				.setExactArgumentCount( 0 )
-				.register( "current instant" );
+				.register();
 	}
 
 	public static void leastGreatest(QueryEngine queryEngine) {
@@ -998,47 +998,47 @@ public class CommonFunctionFactory {
 	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
 	 */
 	public static void formatdatetime_toChar(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_char" )
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "formatdatetime", "to_char" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
-				.register( "formatdatetime" );
+				.register();
 	}
 
 	/**
 	 * MySQL-style (also Ingres)
 	 */
 	public static void formatdatetime_dateFormat(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_format" )
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "formatdatetime", "date_format" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
-				.register( "formatdatetime" );
+				.register();
 	}
 
 	/**
 	 * SQL Server-style
 	 */
 	public static void formatdatetime_format(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format" )
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "formatdatetime", "format" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
-				.register( "formatdatetime" );
+				.register();
 	}
 
 	/**
 	 * HANA's name for to_char() is still Oracle-style
 	 */
 	public static void formatdatetime_toVarchar(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_varchar" )
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "formatdatetime", "to_varchar" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount( 2 )
-				.register( "formatdatetime" );
+				.register();
 	}
 
 	public static void dateTrunc(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "date_trunc('?1',?2)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
 				.setInvariantType( StandardBasicTypes.TIMESTAMP )
 				.setExactArgumentCount( 2 )
-				.register( "date_trunc" );
+				.register();
 	}
 
 }

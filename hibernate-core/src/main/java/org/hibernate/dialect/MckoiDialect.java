@@ -64,9 +64,9 @@ public class MckoiDialect extends Dialect {
 
 		CommonFunctionFactory.characterLength_length( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "if(?1=?2, null, ?1)" )
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "if(?1=?2, null, ?1)" )
 				.setExactArgumentCount( 2 )
-				.register( "nullif" );
+				.register();
 	}
 
 	@Override

@@ -32,6 +32,12 @@ public class DB2400Dialect extends DB2Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
+	public boolean supportsLimitOffset() {
+		return false;
+	}
+
+	@Override
 	public String getLimitString(String sql, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );

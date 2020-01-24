@@ -17,9 +17,9 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * Extension for supplying support for non-standard (ANSI SQL) functions in HQL and Criteria queries.
- *
- * Ultimately acts as a factory for SQM function expressions.
+ * Support for functions in HQL and Criteria queries. Each instance represents
+ * a particular function, determining the type and signature of the function,
+ * and acting as a factory for SQM function {@link Expression}s.
  *
  * @author David Channon
  * @author Steve Ebersole
@@ -27,7 +27,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 @Incubating
 public interface SqmFunctionDescriptor {
 	/**
-	 * Generate a representation of the described function as a SQL AST node
+	 * Generate a representation of the described function as a SQL AST node.
 	 */
 	Expression generateSqlExpression(
 			String functionName,
@@ -36,11 +36,24 @@ public interface SqmFunctionDescriptor {
 			SqmToSqlAstConverter converter,
 			SqlAstCreationState creationState);
 
-	default String getSignature(String name) {
-		return name;
+	/**
+	 * A representatiom of the function signature suitable for display to
+	 * the user.
+	 *
+	 * @param functionName the functionName of the function
+	 */
+	default String getSignature(String functionName) {
+		return functionName;
 	}
 
-	default boolean alwaysIncludesParentheses() {
+	/**
+	 * Determines if invocations of this function require an argument
+	 * list. (Some SQL functions, for example {@code current_date}, do
+	 * not require an argument list.
+	 *
+	 * @return false if the function can be called without parentheses
+	 */
+	default boolean requiresArgumentList() {
 		return true;
 	}
 }

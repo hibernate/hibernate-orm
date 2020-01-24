@@ -11,7 +11,7 @@ import org.jboss.logging.Logger;
 import java.util.List;
 
 public class VarArgsFunctionDescriptor
-			extends AbstractSqmFunctionDescriptor
+			extends AbstractSqmSelfRenderingFunctionDescriptor
 			implements FunctionRenderingSupport {
 	private static final Logger log = Logger.getLogger( VarArgsFunctionDescriptor.class );
 
@@ -20,12 +20,13 @@ public class VarArgsFunctionDescriptor
 		private final String expressionEnd;
 
 		public VarArgsFunctionDescriptor(
+				String name,
 				String expressionStart,
 				String argumentSeparator,
 				String expressionEnd,
 				ArgumentsValidator argumentsValidator,
 				FunctionReturnTypeResolver returnTypeResolver) {
-			super( argumentsValidator, returnTypeResolver );
+			super( name, argumentsValidator, returnTypeResolver );
 			this.expressionStart = expressionStart;
 			this.argumentSeparator = argumentSeparator;
 			this.expressionEnd = expressionEnd;

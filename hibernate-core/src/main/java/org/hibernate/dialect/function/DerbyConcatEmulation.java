@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.sqm.produce.function.SqmFunctionAsExpressionDescriptor;
+import org.hibernate.query.sqm.function.VarArgsFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.type.StandardBasicTypes;
@@ -26,9 +26,10 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class DerbyConcatEmulation extends SqmFunctionAsExpressionDescriptor {
+public class DerbyConcatEmulation extends VarArgsFunctionDescriptor {
 	public DerbyConcatEmulation() {
 		super(
+				"concat",
 				"(",
 				"||",
 				")",

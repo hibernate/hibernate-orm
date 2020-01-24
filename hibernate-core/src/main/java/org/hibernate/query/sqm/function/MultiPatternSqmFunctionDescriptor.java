@@ -18,8 +18,9 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * Support for overloaded functions defined in terms of a
- * list of patterns, one for each possible function arity.
+ * A {@link SqmFunctionDescriptor function descriptor} defined in
+ * terms of a list of {@link PatternBasedSqmFunctionDescriptor patterns},
+ * one for each possible function arity.
  *
  * @see PatternBasedSqmFunctionDescriptor
  *

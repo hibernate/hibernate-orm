@@ -13,6 +13,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -48,7 +49,7 @@ public class TimestampaddFunction implements SqmFunctionDescriptor {
 		final Expression to = (Expression) arguments.get( 2 );
 		final TemporalUnit unit = field.getUnit();
 
-		final AbstractSqmFunctionDescriptor functionDescriptor = new AbstractSqmFunctionDescriptor(
+		final AbstractSqmFunctionDescriptor functionDescriptor = new AbstractSqmSelfRenderingFunctionDescriptor(
 				functionName,
 				StandardArgumentsValidators.exactly( 3 ),
 				StandardFunctionReturnTypeResolvers.useArgType( 3 ) ) {

@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -23,9 +24,10 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Gavin King
  */
-public class DB2FormatEmulation extends AbstractSqmFunctionDescriptor {
+public class DB2FormatEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
 	public DB2FormatEmulation() {
 		super(
+				"format",
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);

@@ -7,12 +7,15 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.PatternBasedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 
 /**
+ * Builder for {@link PatternBasedSqmFunctionDescriptor}s.
+ *
  * @author Steve Ebersole
  */
 public class PatternFunctionDescriptorBuilder {

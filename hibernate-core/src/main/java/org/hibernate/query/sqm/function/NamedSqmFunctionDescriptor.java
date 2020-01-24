@@ -17,31 +17,29 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
- * Provides a standard implementation that supports the majority of the HQL
- * functions that are translated to SQL. The Dialect and its sub-classes use
- * this class to provide details required for processing of the associated
- * function.
+ * A {@link SqmFunctionDescriptor function descriptor} for functions
+ * which produce SQL in the standard form {@code f(x, y, z)}.
  *
  * @author David Channon
  * @author Steve Ebersole
  */
 public class NamedSqmFunctionDescriptor
-		extends AbstractSqmFunctionDescriptor
+		extends AbstractSqmSelfRenderingFunctionDescriptor
 		implements FunctionRenderingSupport {
 	private final String functionName;
-	private final boolean useParenthesesWhenNoArgs;
+	private final boolean requiresArguments;
 	private final String argumentListSignature;
 
 	public NamedSqmFunctionDescriptor(
 			String functionName,
-			boolean useParenthesesWhenNoArgs,
+			boolean requiresArguments,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String argumentListSignature) {
 		super( functionName, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+		this.requiresArguments = requiresArguments;
 		this.argumentListSignature = argumentListSignature;
 	}
 
@@ -61,7 +59,7 @@ public class NamedSqmFunctionDescriptor
 			List<SqlAstNode> sqlAstArguments,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
-		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
+		final boolean useParens = requiresArguments || !sqlAstArguments.isEmpty();
 
 		sqlAppender.appendSql( functionName );
 		if ( useParens ) {
@@ -88,8 +86,8 @@ public class NamedSqmFunctionDescriptor
 	}
 
 	@Override
-	public boolean alwaysIncludesParentheses() {
-		return useParenthesesWhenNoArgs;
+	public boolean requiresArgumentList() {
+		return requiresArguments;
 	}
 
 	@Override

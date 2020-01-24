@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 /**
+ * Builder for {@link NamedSqmFunctionDescriptor}s.
+ *
  * @author Steve Ebersole
  */
 public class NamedFunctionDescriptorBuilder {
@@ -23,7 +25,7 @@ public class NamedFunctionDescriptorBuilder {
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
 
-	private boolean useParenthesesWhenNoArgs = true;
+	private boolean requiresArgumentList = true;
 	private String argumentListSignature;
 
 	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName) {
@@ -54,8 +56,8 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public NamedFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+	public NamedFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean requiresArgumentList) {
+		this.requiresArgumentList = requiresArgumentList;
 		return this;
 	}
 
@@ -81,7 +83,7 @@ public class NamedFunctionDescriptorBuilder {
 	public SqmFunctionDescriptor build() {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
-				useParenthesesWhenNoArgs,
+				requiresArgumentList,
 				argumentsValidator,
 				returnTypeResolver,
 				argumentListSignature

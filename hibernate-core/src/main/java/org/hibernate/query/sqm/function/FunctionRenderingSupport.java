@@ -14,10 +14,11 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import java.util.List;
 
 /**
- * Support for SqmFunctionDescriptors that ultimately want to perform SQL rendering themselves
+ * Support for {@link SqmFunctionDescriptor}s that ultimately want to perform SQL rendering themselves
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface FunctionRenderingSupport {
 	void render(
 			SqlAppender sqlAppender,

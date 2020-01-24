@@ -60,32 +60,32 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_instant", "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.INSTANT )
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
-				.register( "current_instant" );
+				.register();
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current time", "current_time" )
 				.setInvariantType( StandardBasicTypes.LOCAL_TIME )
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
-				.register( "current time" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current date", "current_date" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE )
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
-				.register( "current date" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current datetime", "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
-				.register( "current datetime" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current instant", "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.INSTANT )
 				.setUseParenthesesWhenNoArgs(true)
 				.setExactArgumentCount( 0 )
-				.register( "current instant" );
+				.register();
 	}
 
 	@Override

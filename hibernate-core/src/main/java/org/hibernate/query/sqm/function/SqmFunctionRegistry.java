@@ -147,15 +147,20 @@ public class SqmFunctionRegistry {
 		return new NamedFunctionDescriptorBuilder( this, name, name );
 	}
 
-	/**
-	 * @deprecated will be removed
-	 */
-	@Deprecated
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {
 		return namedDescriptorBuilder( name, name )
 				.setExactArgumentCount( 0 );
 	}
 
+	public NamedFunctionDescriptorBuilder noArgsBuilder(String name, String sqlFunctionName) {
+		return namedDescriptorBuilder( name, sqlFunctionName )
+				.setExactArgumentCount( 0 );
+	}
+
+	/**
+	 * @deprecated will be removed
+	 */
+	@Deprecated
 	public VarArgsFunctionDescriptorBuilder varArgsBuilder(String name, String begin, String sep, String end) {
 		return new VarArgsFunctionDescriptorBuilder( this, name, begin, sep, end );
 	}
@@ -178,6 +183,10 @@ public class SqmFunctionRegistry {
 				.build();
 	}
 
+	/**
+	 * @deprecated will be removed
+	 */
+	@Deprecated
 	public SqmFunctionDescriptor registerVarArgs(
 			String name,
 			BasicValuedMapping returnType,

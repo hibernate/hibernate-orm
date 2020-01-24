@@ -724,18 +724,18 @@ public class CommonFunctionFactory {
 		// "JDK 8" temporal-type functions.
 		// 		- These are essentially aliases for the `current_XYZ` forms
 		//		but defining JDK 8 temporal type return values
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_time" )
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "local_time", "current_time" )
 				.setInvariantType( StandardBasicTypes.LOCAL_TIME )
-				.register( "local_time" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_date" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "local_date", "current_date" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE )
-				.register( "local_date" );
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "local_datetime", "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.LOCAL_DATE_TIME )
-				.register( "local_datetime");
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_timestamp" )
+				.register();
+		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "current_instant", "current_timestamp" )
 				.setInvariantType( StandardBasicTypes.INSTANT )
-				.register( "current_instant" );
+				.register();
 
 		//these are synonyms on many databases, so for convenience register them here
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "now", "current_timestamp" );

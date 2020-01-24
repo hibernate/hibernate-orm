@@ -66,24 +66,24 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	public void testGetParent() {
 		inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 1 );
-			Child child = parent.getChild();
+			Child child = parent.getOwnedBidirectionalChild();
 			assertThat( child, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child ),
 					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParent(), notNullValue() );
-			assertThat( child.getParent(), notNullValue() );
+			assertThat( child.getParentMappedByChild(), notNullValue() );
+			assertThat( child.getParentMappedByChild(), notNullValue() );
 
-			Child2 child2 = parent.getChild2();
+			Child2 child2 = parent.getChildMappedByParent1();
 			assertThat( child2, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child2 ),
 					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab" ) );
-			assertThat( child2.getParent1(), notNullValue() );
+			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
 
 		} );
 	}
@@ -98,7 +98,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			Child2 child2 = new Child2( 6, parent );
 			child2.setName( "Fab2" );
 
-			child2.setParent2( parent );
+			child2.setUnidirectionalParent( parent );
 
 			session.save( parent );
 			session.save( child );
@@ -107,29 +107,29 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 
 		inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 4 );
-			Child child = parent.getChild();
+			Child child = parent.getOwnedBidirectionalChild();
 			assertThat( child, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child ),
 					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParent(), notNullValue() );
+			assertThat( child.getParentMappedByChild(), notNullValue() );
 
-			Child2 child2 = parent.getChild2();
+			Child2 child2 = parent.getChildMappedByParent1();
 			assertThat( child2, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child2 ),
 					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab2" ) );
-			assertThat( child2.getParent1(), notNullValue() );
-			assertThat( child2.getParent1().getDescription(), equalTo( "Hibernate OGM" ) );
+			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
+			assertThat( child2.getOwnedBidirectionalParent().getDescription(), equalTo( "Hibernate OGM" ) );
 
-			Parent parent2 = child2.getParent2();
+			Parent parent2 = child2.getUnidirectionalParent();
 			assertThat( parent2, notNullValue() );
 			assertThat( parent2.getDescription(), equalTo( "Hibernate OGM" ) );
-			assertThat( parent2.getChild(), notNullValue() );
+			assertThat( parent2.getOwnedBidirectionalChild(), notNullValue() );
 
 		} );
 	}
@@ -145,7 +145,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			child2.setName( "Fab2" );
 
 			Parent parent2 = new Parent( 6, "Hibernate OGM" );
-			child2.setParent2( parent2 );
+			child2.setUnidirectionalParent( parent2 );
 
 			Child child1 = new Child( 8, parent2 );
 
@@ -160,29 +160,29 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			final Parent parent = session.get( Parent.class, 4 );
 			assertThat( parent.getDescription(), equalTo( "Hibernate Search" ) );
 
-			Child child = parent.getChild();
+			Child child = parent.getOwnedBidirectionalChild();
 			assertThat( child, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child ),
 					"The child eager OneToOne association is not initialized"
 			);
 			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParent(), notNullValue() );
+			assertThat( child.getParentMappedByChild(), notNullValue() );
 
-			Child2 child2 = parent.getChild2();
+			Child2 child2 = parent.getChildMappedByParent1();
 			assertThat( child2, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child2 ),
 					"The child2 eager OneToOne association is not initialized"
 			);
 			assertThat( child2.getName(), equalTo( "Fab2" ) );
-			assertThat( child2.getParent1(), notNullValue() );
-			assertThat( child2.getParent1().getDescription(), equalTo( "Hibernate Search" ) );
+			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
+			assertThat( child2.getOwnedBidirectionalParent().getDescription(), equalTo( "Hibernate Search" ) );
 
-			Parent parent2 = child2.getParent2();
+			Parent parent2 = child2.getUnidirectionalParent();
 			assertThat( parent2, notNullValue() );
 			assertThat( parent2.getDescription(), equalTo( "Hibernate OGM" ) );
-			assertThat( parent2.getChild(), notNullValue() );
+			assertThat( parent2.getOwnedBidirectionalChild(), notNullValue() );
 
 		} );
 	}
@@ -191,27 +191,27 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	public void testGetChild() {
 		inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
-			Parent parent = child.getParent();
+			Parent parent = child.getParentMappedByChild();
 			assertTrue(
 					Hibernate.isInitialized( parent ),
 					"The parent eager OneToOne association is not initialized"
 			);
 			assertThat( parent, notNullValue() );
 			assertThat( parent.getDescription(), notNullValue() );
-			Child child1 = parent.getChild();
+			Child child1 = parent.getOwnedBidirectionalChild();
 			assertThat( child1, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child1 ),
 					"The child eager OneToOne association is not initialized"
 			);
-			Child2 child2 = parent.getChild2();
+			Child2 child2 = parent.getChildMappedByParent1();
 			assertThat( child2, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child2 ),
 					"The child2 eager OneToOne association is not initialized"
 			);
-			assertThat( child2.getParent1(), notNullValue() );
-			assertThat( child2.getParent2(), nullValue() );
+			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
+			assertThat( child2.getUnidirectionalParent(), nullValue() );
 		} );
 	}
 
@@ -220,14 +220,14 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 		inTransaction(
 				session -> {
 					final Parent parent = session.createQuery(
-							"SELECT p FROM Parent p JOIN p.child WHERE p.id = :id",
+							"SELECT p FROM Parent p JOIN p.ownedBidirectionalChild WHERE p.id = :id",
 							Parent.class
 					)
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					assertThat( parent.getChild(), notNullValue() );
-					String name = parent.getChild().getName();
+					assertThat( parent.getOwnedBidirectionalChild(), notNullValue() );
+					String name = parent.getOwnedBidirectionalChild().getName();
 					assertThat( name, notNullValue() );
 				}
 		);
@@ -238,14 +238,14 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	public void testHqlSelectChild() {
 		inTransaction(
 				session -> {
-					final String queryString = "SELECT c FROM Child c JOIN c.parent d WHERE d.id = :id";
+					final String queryString = "SELECT c FROM Child c JOIN c.parentMappedByChild d WHERE d.id = :id";
 					final Child child = session.createQuery( queryString, Child.class )
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					assertThat( child.getParent(), notNullValue() );
+					assertThat( child.getParentMappedByChild(), notNullValue() );
 
-					String description = child.getParent().getDescription();
+					String description = child.getParentMappedByChild().getDescription();
 					assertThat( description, notNullValue() );
 				}
 		);
@@ -256,10 +256,12 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 		@Id
 		private Integer id;
 		private String description;
+
 		@OneToOne
-		private Child child;
-		@OneToOne(mappedBy = "parent1")
-		private Child2 child2;
+		private Child ownedBidirectionalChild;
+
+		@OneToOne(mappedBy = "ownedBidirectionalParent")
+		private Child2 childMappedByParent1;
 
 		Parent() {
 		}
@@ -289,20 +291,20 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			this.description = description;
 		}
 
-		public Child getChild() {
-			return child;
+		public Child getOwnedBidirectionalChild() {
+			return ownedBidirectionalChild;
 		}
 
-		public void setChild(Child child) {
-			this.child = child;
+		public void setOwnedBidirectionalChild(Child ownedBidirectionalChild) {
+			this.ownedBidirectionalChild = ownedBidirectionalChild;
 		}
 
-		public Child2 getChild2() {
-			return child2;
+		public Child2 getChildMappedByParent1() {
+			return childMappedByParent1;
 		}
 
-		public void setChild2(Child2 child2) {
-			this.child2 = child2;
+		public void setChildMappedByParent1(Child2 childMappedByParent1) {
+			this.childMappedByParent1 = childMappedByParent1;
 		}
 
 	}
@@ -313,17 +315,17 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 		private Integer id;
 		private String name;
 
-		@OneToOne(mappedBy = "child")
-		private Parent parent;
+		@OneToOne(mappedBy = "ownedBidirectionalChild")
+		private Parent parentMappedByChild;
 
 		Child() {
 
 		}
 
-		Child(Integer id, Parent parent) {
+		Child(Integer id, Parent parentMappedByChild) {
 			this.id = id;
-			this.parent = parent;
-			this.parent.setChild( this );
+			this.parentMappedByChild = parentMappedByChild;
+			this.parentMappedByChild.setOwnedBidirectionalChild( this );
 		}
 
 		public Integer getId() {
@@ -342,12 +344,12 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			this.name = name;
 		}
 
-		public Parent getParent() {
-			return parent;
+		public Parent getParentMappedByChild() {
+			return parentMappedByChild;
 		}
 
-		public void setParent(Parent parent) {
-			this.parent = parent;
+		public void setParentMappedByChild(Parent parentMappedByChild) {
+			this.parentMappedByChild = parentMappedByChild;
 		}
 	}
 
@@ -360,18 +362,18 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 		private String name;
 
 		@OneToOne
-		private Parent parent1;
+		private Parent ownedBidirectionalParent;
 
 		@OneToOne
-		private Parent parent2;
+		private Parent unidirectionalParent;
 
 		Child2() {
 		}
 
-		Child2(Integer id, Parent parent1) {
+		Child2(Integer id, Parent ownedBidirectionalParent) {
 			this.id = id;
-			this.parent1 = parent1;
-			this.parent1.setChild2( this );
+			this.ownedBidirectionalParent = ownedBidirectionalParent;
+			this.ownedBidirectionalParent.setChildMappedByParent1( this );
 		}
 
 
@@ -391,20 +393,20 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			this.name = name;
 		}
 
-		public Parent getParent1() {
-			return parent1;
+		public Parent getOwnedBidirectionalParent() {
+			return ownedBidirectionalParent;
 		}
 
-		public void setParent1(Parent parent1) {
-			this.parent1 = parent1;
+		public void setOwnedBidirectionalParent(Parent ownedBidirectionalParent) {
+			this.ownedBidirectionalParent = ownedBidirectionalParent;
 		}
 
-		public Parent getParent2() {
-			return parent2;
+		public Parent getUnidirectionalParent() {
+			return unidirectionalParent;
 		}
 
-		public void setParent2(Parent parent) {
-			this.parent2 = parent;
+		public void setUnidirectionalParent(Parent parent) {
+			this.unidirectionalParent = parent;
 		}
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import java.util.Collection;
+
 /**
  * @author Steve Ebersole
  */
@@ -36,12 +38,19 @@ public class PropertySetterAccessException extends PropertyAccessException {
 						propertyName,
 						expectedType.getName(),
 						target,
-						value
+						loggablePropertyValueString( value )
 				),
 				true,
 				persistentClass,
 				propertyName
 		);
+	}
+
+	public static String loggablePropertyValueString(Object value) {
+		if ( value instanceof Collection ) {
+			return value.getClass().getSimpleName();
+		}
+		return value.toString();
 	}
 
 	@Override

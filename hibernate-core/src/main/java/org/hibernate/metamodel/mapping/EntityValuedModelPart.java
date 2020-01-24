@@ -37,6 +37,8 @@ public interface EntityValuedModelPart extends FetchableContainer {
 		getEntityMappingType().visitSubParts( consumer, targetType );
 	}
 
+	String[] getIdentifyingColumnExpressions();
+
 	@Override
 	default <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,

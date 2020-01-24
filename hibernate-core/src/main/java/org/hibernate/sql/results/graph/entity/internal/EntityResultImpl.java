@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
@@ -58,6 +59,11 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 	}
 
 	@Override
+	public EntityValuedModelPart getReferencedModePart() {
+		return getEntityValuedModelPart();
+	}
+
+	@Override
 	public String getResultVariable() {
 		return resultVariable;
 	}
@@ -82,4 +88,8 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
 	}
 
+	@Override
+	public String toString() {
+		return "EntityResultImpl {" + getNavigablePath() + "}";
+	}
 }

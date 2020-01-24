@@ -68,7 +68,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
-import org.hibernate.sql.results.spi.CircularFetchDetector;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -82,7 +81,6 @@ public class StandardSqmSelectTranslator
 		extends BaseSqmToSqlAstConverter
 		implements DomainResultCreationState, SqmSelectTranslator {
 	private final LoadQueryInfluencers fetchInfluencers;
-	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 
 	// prepare for 10 root selections to avoid list growth in most cases
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
@@ -233,9 +231,11 @@ public class StandardSqmSelectTranslator
 		final Consumer<Fetchable> fetchableConsumer = new Consumer<Fetchable>() {
 			@Override
 			public void accept(Fetchable fetchable) {
-				final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
+				final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+
+				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+						fetchablePath,
 						fetchParent,
-						fetchable,
 						getSqlAstCreationState().getCurrentProcessingState()
 				);
 
@@ -246,7 +246,7 @@ public class StandardSqmSelectTranslator
 
 				try {
 					fetchDepth++;
-					final Fetch fetch = buildFetch( fetchParent, fetchable );
+					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable );
 
 					if ( fetch != null ) {
 						fetches.add( fetch );
@@ -267,14 +267,12 @@ public class StandardSqmSelectTranslator
 		return fetches;
 	}
 
-	private Fetch buildFetch(FetchParent fetchParent, Fetchable fetchable) {
+	private Fetch buildFetch(NavigablePath fetchablePath, FetchParent fetchParent, Fetchable fetchable) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
 		// we could sever the parent -> fetch link ... it would not be "seen" while walking
 		// but it would still have access to its parent info - and be able to access its
 		// "initializing" state as part of AfterLoadAction
-
-		final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
 
 		final GraphImplementor<?> previousGraphNode = currentJpaGraphNode;
 

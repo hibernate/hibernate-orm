@@ -20,9 +20,11 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -116,6 +118,14 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	}
 
 	@Override
+	public Fetch resolveCircularFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			SqlAstProcessingState creationState) {
+		return null;
+	}
+
+	@Override
 	public EntityFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -172,5 +182,14 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	@Override
 	public int getNumberOfFetchables() {
 		return entityMappingType.getNumberOfFetchables();
+	}
+
+	public String getMappedBy() {
+		return collectionDescriptor.getMappedByProperty();
+	}
+
+	@Override
+	public String toString() {
+		return "EntityCollectionPart {" + navigableRole + "}";
 	}
 }

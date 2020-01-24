@@ -55,7 +55,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.spi.CircularFetchDetector;
 
 import org.jboss.logging.Logger;
 
@@ -376,7 +375,6 @@ public class LoaderSelectBuilder {
 		orderByFragments.put( orderByFragment, tableGroup );
 	}
 
-	private final CircularFetchDetector circularFetchDetector = new CircularFetchDetector();
 	private int fetchDepth = 0;
 
 	private List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
@@ -387,9 +385,9 @@ public class LoaderSelectBuilder {
 		final Consumer<Fetchable> processor = fetchable -> {
 			final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
 
-			final Fetch biDirectionalFetch = circularFetchDetector.findBiDirectionalFetch(
+			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+					fetchablePath,
 					fetchParent,
-					fetchable,
 					creationState
 			);
 
@@ -426,7 +424,7 @@ public class LoaderSelectBuilder {
 
 			try {
 				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
-					fetchDepth--;
+					fetchDepth++;
 				}
 				Fetch fetch = fetchable.generateFetch(
 						fetchParent,

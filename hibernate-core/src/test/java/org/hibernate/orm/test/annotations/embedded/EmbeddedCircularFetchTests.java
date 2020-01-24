@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.annotations.embedded;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -28,11 +27,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.CoreMatchers;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -50,6 +46,12 @@ import static org.junit.Assert.assertTrue;
 		@ServiceRegistry.Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true")
 })
 public class EmbeddedCircularFetchTests {
+	// todo (6.0 : this (along with the `org.hibernate.orm.test.sql.exec.onetoone.bidirectional` package)
+	//  	probably makes better sense in a dedicated `org.hibernate.orm.test.fetch.circular` package:
+	//		- `org.hibernate.orm.test.fetch.circular.embedded`
+	//		- `org.hibernate.orm.test.fetch.circular.onetoone`
+	//		- `org.hibernate.orm.test.fetch.circular.manytoone`
+
 //	@Test
 //	@TestForIssue(jiraKey = "HHH-9642")
 //	public void testEmbeddedAndOneToManyHql(SessionFactoryScope scope) {
@@ -156,9 +158,9 @@ public class EmbeddedCircularFetchTests {
 							RootEntity.class
 					).uniqueResult();
 					assertTrue( Hibernate.isInitialized( result.getIntermediateComponent().getLeaves() ) );
-					assertThat( result.getIntermediateComponent().getLeaves().size(), is( 1 ) );
+					assertThat( result.getIntermediateComponent().getLeaves().size(), is( 2 ) );
 
-					assertThat( session.getSessionFactory().getStatistics().getPrepareStatementCount(), is( 1 ) );
+					assertThat( session.getSessionFactory().getStatistics().getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 

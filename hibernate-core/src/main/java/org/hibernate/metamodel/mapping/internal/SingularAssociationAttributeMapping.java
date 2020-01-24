@@ -7,11 +7,16 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.JoinHelper;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -37,26 +42,37 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
+import org.hibernate.sql.results.internal.domain.BiDirectionalFetchImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
 		implements EntityValuedFetchable, EntityAssociationMapping, TableGroupJoinProducer {
+
+	public enum Cardinality {
+		ONE_TO_ONE,
+		MANY_TO_ONE,
+		LOGICAL_ONE_TO_ONE
+	}
+
 	private final NavigableRole navigableRole;
-	private final String subRole;
 
 	private final String sqlAliasStem;
 	private final boolean isNullable;
-	private final boolean referringPrimaryKey;
 	private final boolean unwrapProxy;
+
 	private final String referencedPropertyName;
+	private final boolean referringPrimaryKey;
+
+	private final Cardinality cardinality;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 
@@ -64,7 +80,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	public SingularAssociationAttributeMapping(
 			String name,
 			int stateArrayPosition,
-			ToOne value,
+			ToOne bootValue,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
 			EntityMappingType type,
@@ -80,19 +96,33 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				propertyAccess
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
-		this.isNullable = value.isNullable();
-		referencedPropertyName = value.getReferencedPropertyName();
-		referringPrimaryKey = value.isReferenceToPrimaryKey();
-		unwrapProxy = value.isUnwrapProxy();
+		this.isNullable = bootValue.isNullable();
+		this.referencedPropertyName = bootValue.getReferencedPropertyName();
+		this.referringPrimaryKey = bootValue.isReferenceToPrimaryKey();
+		this.unwrapProxy = bootValue.isUnwrapProxy();
 
-		this.navigableRole = declaringType.getNavigableRole().appendContainer( name );
-		final int containerMarkerPosition = navigableRole.getFullPath().lastIndexOf( '#' );
-		if ( containerMarkerPosition < 0 ) {
-			subRole = name;
+		if ( referringPrimaryKey ) {
+			assert referencedPropertyName == null;
 		}
 		else {
-			subRole = navigableRole.getFullPath().substring( containerMarkerPosition + 1 );
+			assert referencedPropertyName != null;
 		}
+
+		if ( bootValue instanceof ManyToOne ) {
+			final ManyToOne manyToOne = (ManyToOne) bootValue;
+			if ( manyToOne.isLogicalOneToOne() ) {
+				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
+			}
+			else {
+				cardinality = Cardinality.MANY_TO_ONE;
+			}
+		}
+		else {
+			assert bootValue instanceof OneToOne;
+			cardinality = Cardinality.ONE_TO_ONE;
+		}
+
+		this.navigableRole = declaringType.getNavigableRole().appendContainer( name );
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
@@ -123,12 +153,33 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
-	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
-		// E.g. say we have a query like:
-		// 		select p
-		//		from Person p
-		//		join fetch p.address a
-		//		join fetch a.owner
+	public Fetch resolveCircularFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			SqlAstProcessingState creationState) {
+		// given a typical Order/LineItem model and a query like:
+		// 		select o
+		//		from Order o
+		//		join fetch o.lineItems l
+		//		join fetch l.order
+		//
+		//   - note : Order has a collection of LineItems which is "mapped by" LineItem#order
+		//
+		// the join-fetch for `l.order` ought point back to `o`.
+		//
+		// `o` -> Order(o)
+		// `l` -> Order(o).lineItems(l).{element}
+		// `l.order` -> Order(o).lineItems(l).{element}.order
+		//
+		// both `Order(o)` and `Order(o).lineItems(l).order` have the same identifying columns, so we know
+		// they are circular.  So how do we resolve the columns? ...
+		//
+		// see `org.hibernate.loader.JoinWalker.isDuplicateAssociation(java.lang.String, java.lang.String[], org.hibernate.type.AssociationType)` in
+		// previous versions of Hibernate
+		//
+		// For `l.order` we are in SingularAssociationAttributeMapping as the Fetchable, so we have access to the FK descriptor.
+		// For `o` (the potential circular target reference) we need to locate the
+		//
 		//
 		// where `owner` is the "owner" (in the mapped-by sense) of the association.  In other words it is a
 		// bi-directional mapping.
@@ -137,39 +188,90 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		// What we need to determine is whether owner is the same as address's container.  This might include
 		// multiple parent-paths which we need to walk up to find the container (an entity of collection)
 
-		final NavigablePath parentNavigablePath = fetchParent.getNavigablePath();
-		NavigablePath pathToParentParent = parentNavigablePath.getParent();
+
+		final NavigablePath pathToParent = fetchParent.getNavigablePath();
+		final NavigablePath pathToParentParent = pathToParent.getParent();
+
+		// pathToParent : org.hibernate.orm.test.annotations.embedded.EmbeddedCircularFetchTests$RootEntity(r).intermediateComponent.leaves.{element}
+		// pathToParentParent : org.hibernate.orm.test.annotations.embedded.EmbeddedCircularFetchTests$RootEntity(r).intermediateComponent.leaves
+
+		// attributeName : rootEntity
+		// referencedPropertyName : null
+
 		if ( pathToParentParent == null ) {
-			return false;
+			return null;
 		}
 
-		for ( int i = 0; i < numberOfPathElementsToContainer; i++ ) {
-			pathToParentParent = pathToParentParent.getParent();
-		}
-
-		assert pathToParentParent != null;
-
-		final ModelPartContainer modelPart = creationState.getSqlAstCreationState()
+		final TableGroup parentParentTableGroup = creationState.getSqlAstCreationState()
 				.getFromClauseAccess()
-				.findTableGroup( pathToParentParent )
-				.getModelPart();
+				.findTableGroup( pathToParentParent );
+
+		parentParentTableGroup.getModelPart().findContainingEntityMapping()
+
+		final ModelPartContainer parentParentPart = parentParentTableGroup.getModelPart();
+		final ModelPart parentPart = parentParentPart.findSubPart( pathToParent.getLocalName(), null );
+
+		if ( ! parentPart.equals( fetchParent.getReferencedModePart() ) ) {
+			throw new AssertionError(  );
+		}
 
 
-		final ModelPart subPart = modelPart.findSubPart( parentNavigablePath.getLocalName(), null );
-		if ( subPart instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping part = (EntityAssociationMapping) subPart;
 
-			if ( parentNavigablePath.getLocalName().equals( referencedPropertyName )
-					&& part.getFetchableName().equals( referencedPropertyName ) ) {
-				return true;
+		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+
+		// find the key-columns for the `parentParentTableGroup` and see if they match the fk-target
+		switch ( cardinality ) {
+			case ONE_TO_ONE:
+			case LOGICAL_ONE_TO_ONE: {
+				if ( ! EntityValuedModelPart.class.isInstance( parentPart ) ) {
+					throw new IllegalStateException(
+							"Parent part [" + pathToParent + "] did not refer to a `EntityValuedModelPart` - " + parentPart
+					);
+				}
+				final EntityValuedModelPart entityValuedParentPart = (EntityValuedModelPart) parentPart;
+
+				throw new NotYetImplementedFor6Exception( getClass() );
 			}
-			else if ( part.getKeyTargetMatchPart() != null
-					&& part.getKeyTargetMatchPart().getPartName().equals( getAttributeName() ) ) {
-				return true;
+			case MANY_TO_ONE: {
+
+			}
+			default: {
+				throw new UnsupportedOperationException( "Unknown to-one singular attribute cardinality - " + cardinality.name() );
+			}
+		}
+		if ( parentPart instanceof EntityCollectionPart ) {
+			final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) parentPart;
+			final String mappedBy = entityCollectionPart.getMappedBy();
+			if ( mappedBy.equals( getAttributeName() ) ) {
+				return new BiDirectionalFetchImpl(
+						FetchTiming.IMMEDIATE,
+						fetchablePath,
+						fetchParent,
+						this,
+						fetchParent.getNavigablePath().getParent()
+				);
+			}
+		}
+		else if ( parentPart instanceof EntityAssociationMapping ) {
+			final EntityAssociationMapping entitySubPart = (EntityAssociationMapping) parentPart;
+
+			final boolean condition1 = pathToParent.getLocalName().equals( referencedPropertyName )
+					&& entitySubPart.getFetchableName().equals( referencedPropertyName );
+			final boolean condition2 = entitySubPart.getKeyTargetMatchPart() != null
+					&& entitySubPart.getKeyTargetMatchPart().getPartName().equals( getAttributeName() );
+
+			if ( condition1 || condition2 ) {
+				return new BiDirectionalFetchImpl(
+						FetchTiming.IMMEDIATE,
+						fetchablePath,
+						fetchParent,
+						this,
+						fetchParent.getNavigablePath().getParent()
+				);
 			}
 		}
 
-		return false;
+		return null;
 	}
 
 	@Override
@@ -338,5 +440,10 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
 		return foreignKeyDescriptor;
+	}
+
+	@Override
+	public String toString() {
+		return "SingularAssociationAttributeMapping {" + navigableRole + "}";
 	}
 }

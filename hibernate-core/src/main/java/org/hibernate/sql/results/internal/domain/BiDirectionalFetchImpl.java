@@ -14,6 +14,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -25,6 +27,9 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -164,13 +169,31 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
+			final EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
 			if ( initializer.getInitializedInstance() == null ) {
 				initializer.resolveKey( rowProcessingState );
 				initializer.resolveInstance( rowProcessingState );
 				initializer.initializeInstance( rowProcessingState );
 			}
 			return initializer.getInitializedInstance();
+		}
+
+		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
+			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
+			final ModelPart initializedPart = initializer.getInitializedPart();
+
+			if ( initializedPart instanceof EntityInitializer ) {
+				return (EntityInitializer) initializedPart;
+			}
+
+			NavigablePath path = circularPath.getParent();
+			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
+			while ( ! ( parentInitializer instanceof EntityInitializer ) ) {
+				path = path.getParent();
+				parentInitializer = rowProcessingState.resolveInitializer( path );
+			}
+
+			return (EntityInitializer) parentInitializer;
 		}
 
 		@Override

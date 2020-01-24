@@ -1,0 +1,134 @@
+= Circular fetching
+
+[IMPORTANT]
+====
+We need to make sure that any association is only join-fetched once.  E.g.
+
+```
+from LineItem l
+    join fetch l.order o
+    join fetch l.order o2
+```
+
+This should be illegal.  It is possible to handle it specially, but that would be very complicated.
+
+`FromClauseIndex#findJoinFetch(NavigablePath parentPath, String fetchableName)` - if this does not return null we
+know that the association is already join fetched and we should throw and exception
+====
+
+== one-to-one
+
+```
+@Entity
+class Root {
+    ...
+
+    @OneToOne(mappedBy="root1")
+    Leaf leaf1;
+
+    @OneToOne(mappedBy="root2")
+    Leaf leaf2;
+}
+
+@Entity
+class Leaf {
+    ...
+
+    @OneToOne
+    @JoinColumn(name="root_id_1")
+    Root root1;
+
+    @OneToOne
+    @JoinColumn(name="root_id_2")
+    Root root2;
+}
+```
+
+
+Given this model, we have the following mappings from modelPart to "identifying columns":
+
+* `Root#leaf1` -> `leaf.root_id_1`
+* `Root#leaf2` -> `leaf.root_id_2`
+* `Leaf#root1` -> `leaf.root_id_1`
+* `Leaf#root2` -> `leaf.root_id_2`
+
+So given a query like:
+
+```
+from Root r
+    join fetch r.leaf1 l
+    join fetch l.root1
+    join fetch l.root2
+```
+
+`l.root1` is circular whereas `l.root2` is not.  We'd know this by looking at the "identifying columns".
+
+Specifically, `l.root1` is considered circular **not** because it refers back to `Root(r)` but because it maps to the
+same column(s) as its parent: `leaf.root_id_1`
+
+
+// we need to be able to ultimately be able to resolve the "identifying columns" for a given path.  E.g.
+
+```
+interface DomainResultCreationState {
+    ...
+
+    Fetchable resolveFetchable(NavigablePath navigablePath) {
+        // the path passed in here would be `pathToParent` (i.e. `Root(r).leaf1(l)`)
+        // we'd used that to determine the lhs's identifying columns via
+        // `Fetchable#getIdentifyingColumnExpressions` and check them against the
+        // identifying columns for the Fetchable we are processing
+    }
+}
+```
+
+
+
+== many-to-one
+
+```
+@Entity
+@Table(name="orders")
+class Order {
+    ...
+
+    @OneToMany(mappedBy="order")
+    List<LineItem> lineItems;
+}
+
+@Entity
+@Table(name="lines")
+class LineItem {
+    ...
+
+    @ManyToOne
+    @JoinColumn(name="order_id")
+    Order order;
+}
+```
+
+Given this model, we have the following mappings from modelPart to "identifying columns":
+
+* `LineItem#order` -> `lines.order_id`
+* `Order#lineItems#{element}` -> `lines.order_id`
+
+
+
+
+
+
+Hibernate needs to handle circularity in a fetch-graph.  E.g.:
+
+```
+select o
+from Order o
+    join fetch o.lineItems l
+    join fetch l.order
+```
+
+Here, the join fetch of `l.order` is circular, meaning we do not want to render a join in the SQL for it
+because it is already part of the from-clause via `Order o`.
+
+Recognizing circularity needs to happen in a number of mapping scenarios and I believe the conditions vary
+depending on the type of mapping involved (one-to-one, many-to-one, many-to-many).  Ideally we can find commonality
+and handle these conditions uniformly.

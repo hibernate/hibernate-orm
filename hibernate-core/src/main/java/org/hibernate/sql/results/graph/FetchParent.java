@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -16,12 +17,28 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public interface FetchParent extends DomainResultGraphNode {
+	/**
+	 * This parent's mapping type
+	 */
 	FetchableContainer getReferencedMappingContainer();
 
 	/**
-	 * This parent's type
+	 * This parent's mapping type
 	 */
 	FetchableContainer getReferencedMappingType();
+
+	/**
+	 * Whereas {@link #getReferencedMappingContainer} and {@link #getReferencedMappingType} return the
+	 * referenced container type, this method returns the referenced part.
+	 *
+	 * E.g. for a many-to-one this methods returns the
+	 * {@link org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping} while
+	 * {@link #getReferencedMappingContainer} and {@link #getReferencedMappingType} return the referenced
+	 * {@link org.hibernate.metamodel.mapping.EntityMappingType}.
+	 */
+	default ModelPart getReferencedModePart() {
+		return getReferencedMappingContainer();
+	}
 
 	/**
 	 * Get the property path to this parent

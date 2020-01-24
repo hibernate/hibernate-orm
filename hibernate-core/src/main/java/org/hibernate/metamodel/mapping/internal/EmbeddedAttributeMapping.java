@@ -163,13 +163,14 @@ public class EmbeddedAttributeMapping
 		return navigableRole;
 	}
 
-
 	@Override
-	public boolean isCircular(FetchParent fetchParent, SqlAstProcessingState creationState) {
+	public Fetch resolveCircularFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			SqlAstProcessingState creationState) {
 		// an embeddable can never be circular
-		return false;
+		return null;
 	}
-
 
 	@Override
 	public Fetch generateFetch(
@@ -278,5 +279,10 @@ public class EmbeddedAttributeMapping
 	@Override
 	public int getNumberOfFetchables() {
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
+	}
+
+	@Override
+	public String toString() {
+		return "EmbeddedAttributeMapping {" + navigableRole + "}";
 	}
 }

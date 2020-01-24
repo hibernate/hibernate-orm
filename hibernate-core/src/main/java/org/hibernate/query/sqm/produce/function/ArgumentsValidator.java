@@ -19,6 +19,9 @@ public interface ArgumentsValidator {
 	 */
 	void validate(List<? extends SqmVisitableNode> arguments);
 
+	/**
+	 * The argument list in a format suitable for display to the user.
+	 */
 	default String getSignature() {
 		return "( ... )";
 	}

@@ -51,11 +51,19 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		return getReturnSignature() + functionName + getArgumentListSignature();
 	}
 
+	/**
+	 * The return type of the function in a format suitable
+	 * for display to the user.
+	 */
 	public String getReturnSignature() {
-		String result = returnTypeResolver.getResult();
+		String result = returnTypeResolver.getReturnType();
 		return result.isEmpty() ? "" : result + " ";
 	}
 
+	/**
+	 * The argument list of the function in a format suitable
+	 * for display to the user.
+	 */
 	public String getArgumentListSignature() {
 		String args = argumentsValidator.getSignature();
 		return requiresArgumentList() ? args : "()".equals(args) ? "" : "[" + args + "]";

@@ -40,7 +40,7 @@ public interface SqmFunctionDescriptor {
 	 * A representatiom of the function signature suitable for display to
 	 * the user.
 	 *
-	 * @param functionName the functionName of the function
+	 * @param functionName the name of the function
 	 */
 	default String getSignature(String functionName) {
 		return functionName;

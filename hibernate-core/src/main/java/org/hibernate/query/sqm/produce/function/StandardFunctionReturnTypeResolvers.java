@@ -45,7 +45,7 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public String getResult() {
+			public String getReturnType() {
 				return invariantType.getBasicType().getJavaType().getSimpleName();
 			}
 		};

@@ -16,15 +16,10 @@ import javax.persistence.Query;
 import javax.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.graphs.Company;
-import org.hibernate.jpa.test.graphs.Course;
-import org.hibernate.jpa.test.graphs.Employee;
-import org.hibernate.jpa.test.graphs.Location;
-import org.hibernate.jpa.test.graphs.Manager;
-import org.hibernate.jpa.test.graphs.Market;
-import org.hibernate.jpa.test.graphs.Student;
+import org.hibernate.jpa.test.graphs.*;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
@@ -149,6 +144,72 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		assertTrue( Hibernate.isInitialized( company.employees ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertEquals( 12345, company.location.zip );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		boolean foundManager = false;
+		Iterator<Employee> employeeItr = company.employees.iterator();
+		while (employeeItr.hasNext()) {
+			Employee employee = employeeItr.next();
+			assertTrue( Hibernate.isInitialized( employee.managers ) );
+			assertTrue( Hibernate.isInitialized( employee.friends ) );
+			// test 1 more level
+			Iterator<Manager> managerItr =  employee.managers.iterator();
+			while (managerItr.hasNext()) {
+				foundManager = true;
+				Manager manager = managerItr.next();
+				assertTrue( Hibernate.isInitialized( manager.managers ) );
+				assertTrue( Hibernate.isInitialized( manager.friends ) );
+			}
+		}
+		assertTrue(foundManager);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8776")
+	public void testFetchGraphTakingPrecedenceOverFetchProfile() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		entityManager.unwrap( Session.class ).enableFetchProfile( "company.location" );
+		
+		EntityGraph<CompanyWithFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyWithFetchProfile.class );
+		entityGraph.addAttributeNodes( "markets" );
+		Query query = entityManager.createQuery( "from " + CompanyWithFetchProfile.class.getName() );
+		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		CompanyWithFetchProfile company = (CompanyWithFetchProfile) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertFalse( Hibernate.isInitialized( company.employees ) );
+		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+
+		query = entityManager.createQuery( "from " + CompanyWithFetchProfile.class.getName() );
+		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		company = (CompanyWithFetchProfile) query.getSingleResult();
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
 		assertTrue( Hibernate.isInitialized( company.markets ) );
 		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
 		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
@@ -446,6 +507,17 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		company.phoneNumbers.add( "012-345-6789" );
 		company.phoneNumbers.add( "987-654-3210" );
 		entityManager.persist( company );
+
+		CompanyWithFetchProfile companyWithFetchProfile = new CompanyWithFetchProfile();
+		companyWithFetchProfile.employees.add( employee );
+		companyWithFetchProfile.employees.add( manager1 );
+		companyWithFetchProfile.employees.add( manager2 );
+		companyWithFetchProfile.location = location;
+		companyWithFetchProfile.markets.add( Market.SERVICES );
+		companyWithFetchProfile.markets.add( Market.TECHNOLOGY );
+		companyWithFetchProfile.phoneNumbers.add( "012-345-6789" );
+		companyWithFetchProfile.phoneNumbers.add( "987-654-3210" );
+		entityManager.persist( companyWithFetchProfile );
 		
 		entityManager.getTransaction().commit();
 		entityManager.close();
@@ -453,6 +525,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
+		return new Class<?>[] { Company.class, CompanyWithFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
 }

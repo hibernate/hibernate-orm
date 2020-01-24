@@ -1,6 +1,7 @@
 package org.hibernate.jpa.test.graphs.mapped_by_id;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.graphs.*;
 import org.hibernate.testing.TestForIssue;
@@ -22,6 +23,8 @@ import static org.junit.Assert.*;
 public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	private long companyId;
+	
+	private long companyWithFetchProfileId;
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-8776")
@@ -88,6 +91,71 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		assertTrue(foundManager);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-8776")
+	public void testFetchGraphByFindTakingPrecedenceOverFetchProfile() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
+		
+		EntityGraph<CompanyWithFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyWithFetchProfile.class );
+		entityGraph.addAttributeNodes( "markets" );
+
+		Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
+
+		CompanyWithFetchProfile company = entityManager.find( CompanyWithFetchProfile.class, companyWithFetchProfileId, properties );
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertFalse( Hibernate.isInitialized( company.employees ) );
+		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+
+		company = entityManager.find( CompanyWithFetchProfile.class, companyWithFetchProfileId, properties );
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertFalse( Hibernate.isInitialized( company.location ) ); // should be initialized if 'company.location' fetch profile takes effect
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+		// With "fetchgraph", non-specified attributes effect 'lazy' mode.  So, here,
+		// @ElementCollection(fetch = FetchType.EAGER) should not be initialized.
+		assertFalse( Hibernate.isInitialized( company.phoneNumbers ) );
+
+		boolean foundManager = false;
+		Iterator<Employee> employeeItr = company.employees.iterator();
+		while (employeeItr.hasNext()) {
+			Employee employee = employeeItr.next();
+			assertTrue( Hibernate.isInitialized( employee.managers ) );
+			assertTrue( Hibernate.isInitialized( employee.friends ) );
+			// test 1 more level
+			Iterator<Manager> managerItr =  employee.managers.iterator();
+			while (managerItr.hasNext()) {
+				foundManager = true;
+				Manager manager = managerItr.next();
+				assertTrue( Hibernate.isInitialized( manager.managers ) );
+				assertTrue( Hibernate.isInitialized( manager.friends ) );
+			}
+		}
+		assertTrue(foundManager);
+	}
+
 	@Before
 	public void createData() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -121,13 +189,25 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		entityManager.persist( company );
 		companyId = company.id;
 
+		CompanyWithFetchProfile companyWithFetchProfile = new CompanyWithFetchProfile();
+		companyWithFetchProfile.employees.add( employee );
+		companyWithFetchProfile.employees.add( manager1 );
+		companyWithFetchProfile.employees.add( manager2 );
+		companyWithFetchProfile.location = location;
+		companyWithFetchProfile.markets.add( Market.SERVICES );
+		companyWithFetchProfile.markets.add( Market.TECHNOLOGY );
+		companyWithFetchProfile.phoneNumbers.add( "012-345-6789" );
+		companyWithFetchProfile.phoneNumbers.add( "987-654-3210" );
+		entityManager.persist( companyWithFetchProfile );
+		companyWithFetchProfileId = companyWithFetchProfile.id;
+		
 		entityManager.getTransaction().commit();
 		entityManager.close();
 	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
+		return new Class<?>[] { Company.class, CompanyWithFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
 	
 }

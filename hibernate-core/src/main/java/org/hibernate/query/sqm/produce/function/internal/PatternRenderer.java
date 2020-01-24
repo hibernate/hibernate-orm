@@ -28,7 +28,6 @@ public class PatternRenderer {
 
 	private final String[] chunks;
 	private final int[] paramIndexes;
-	private final int paramCount;
 	private final int varargParam;
 	private final int maxParamIndex;
 
@@ -101,7 +100,6 @@ public class PatternRenderer {
 
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
-		paramCount = paramNumbers.size();
 		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );
 		}
@@ -112,7 +110,7 @@ public class PatternRenderer {
 	}
 
 	public int getParamCount() {
-		return paramCount;
+		return maxParamIndex;
 	}
 
 	/**
@@ -131,7 +129,7 @@ public class PatternRenderer {
 			SessionFactoryImplementor factory) {
 		final int numberOfArguments = args.size();
 		if ( numberOfArguments < maxParamIndex ) {
-			LOG.missingArguments( paramCount, numberOfArguments );
+			LOG.missingArguments( maxParamIndex, numberOfArguments );
 		}
 
 		for ( int i = 0; i < chunks.length; i++ ) {

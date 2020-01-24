@@ -31,8 +31,8 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.DatabaseCollector;
-import org.hibernate.tool.internal.reveng.DefaultDatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
@@ -78,7 +78,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				tableSelector, 
 				mdd,
 				serviceRegistry);
-		dbc = new DefaultDatabaseCollector(mdd);
+		dbc = new RevengMetadataCollector(mdd);
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
 		sequenceCollector = SequenceCollector.create(connectionProvider);
 	}

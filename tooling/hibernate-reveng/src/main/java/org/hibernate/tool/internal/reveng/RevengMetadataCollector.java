@@ -12,12 +12,16 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
 
 public class RevengMetadataCollector extends AbstractDatabaseCollector {
 
-	private final InFlightMetadataCollector metadataCollector;
+	private InFlightMetadataCollector metadataCollector = null;
 	private final Map<TableIdentifier, Table> tables;
 	
 	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
-		super(metaDataDialect);
+		this(metaDataDialect);
 		this.metadataCollector = metadataCollector;
+	}
+	
+	public RevengMetadataCollector(MetaDataDialect metaDataDialect) {
+		super(metaDataDialect);
 		this.tables = new HashMap<TableIdentifier, Table>();
 	}
 

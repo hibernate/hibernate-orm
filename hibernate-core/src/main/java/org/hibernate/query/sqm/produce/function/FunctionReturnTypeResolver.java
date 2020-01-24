@@ -33,4 +33,8 @@ public interface FunctionReturnTypeResolver {
 	BasicValuedMapping resolveFunctionReturnType(
 			Supplier<BasicValuedMapping> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments);
+
+	default String getResult() {
+		return "";
+	}
 }

@@ -11,13 +11,10 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 public class NamedFunctionDescriptorBuilder {
-	private static final Logger log = Logger.getLogger( NamedFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
 
@@ -26,7 +23,8 @@ public class NamedFunctionDescriptorBuilder {
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
 
-	private boolean useParenthesesWhenNoArgs;
+	private boolean useParenthesesWhenNoArgs = true;
+	private String argumentListSignature;
 
 	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String functionName) {
 		this.registry = registry;
@@ -61,6 +59,11 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public NamedFunctionDescriptorBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
+		return this;
+	}
+
 	public SqmFunctionDescriptor register() {
 		return registry.register(
 				functionName,
@@ -79,6 +82,7 @@ public class NamedFunctionDescriptorBuilder {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
 				useParenthesesWhenNoArgs,
+				argumentListSignature,
 				argumentsValidator,
 				returnTypeResolver
 		);

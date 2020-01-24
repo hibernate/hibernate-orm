@@ -9,11 +9,11 @@ package org.hibernate.query.sqm.produce.function;
 import java.sql.Types;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
@@ -38,7 +38,17 @@ public class StandardFunctionReturnTypeResolvers {
 			throw new IllegalArgumentException( "Passed `invariantType` for function return cannot be null" );
 		}
 
-		return (impliedTypeAccess, arguments) -> useImpliedTypeIfPossible( invariantType, impliedTypeAccess.get() );
+		return new FunctionReturnTypeResolver() {
+			@Override
+			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+				return useImpliedTypeIfPossible(invariantType, impliedTypeAccess.get());
+			}
+
+			@Override
+			public String getResult() {
+				return invariantType.getBasicType().getJavaType().getSimpleName();
+			}
+		};
 	}
 
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {

@@ -2296,7 +2296,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		SqmFunctionDescriptor functionDescriptor = getFunctionDescriptor( functionName );
 		if (functionDescriptor == null) {
-			functionDescriptor = new NamedSqmFunctionDescriptor( functionName, true, null, null );
+			functionDescriptor = new NamedSqmFunctionDescriptor( functionName, true, null, null, null );
 		}
 
 		//noinspection unchecked
@@ -2324,7 +2324,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 		SqmFunctionDescriptor functionDescriptor = getFunctionDescriptor( functionName);
 		if ( functionDescriptor == null ) {
-			functionDescriptor = new NamedSqmFunctionDescriptor( functionName, true, null, null );
+			functionDescriptor = new NamedSqmFunctionDescriptor( functionName, true, null, null, null );
 		}
 
 		//noinspection unchecked

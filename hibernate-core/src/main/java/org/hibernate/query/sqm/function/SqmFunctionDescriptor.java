@@ -36,4 +36,11 @@ public interface SqmFunctionDescriptor {
 			SqmToSqlAstConverter converter,
 			SqlAstCreationState creationState);
 
+	default String getSignature(String name) {
+		return name;
+	}
+
+	default boolean alwaysIncludesParentheses() {
+		return true;
+	}
 }

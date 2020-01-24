@@ -100,6 +100,19 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmSelfRenderingF
 		return functionName;
 	}
 
+	public String getSignature(String name) {
+		return getReturnSignature() + name + getArgumentListSignature();
+	}
+
+	public String getReturnSignature() {
+		String result = returnTypeResolver.getResult();
+		return result.isEmpty() ? "" : result + " ";
+	}
+
+	public String getArgumentListSignature() {
+		String args = argumentsValidator.getSignature();
+		return alwaysIncludesParentheses() ? args : "()".equals(args) ? "" : "[" + args + "]";
+	}
 
 	private static class SelfRenderingSqlFunctionExpression implements SelfRenderingExpression, DomainResultProducer {
 		private final String name;

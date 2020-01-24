@@ -28,16 +28,19 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
+	private final String argumentListSignature;
 
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
+			String argumentListSignature,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
 		super( argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+		this.argumentListSignature = argumentListSignature;
 	}
 
 	public String getFunctionName() {
@@ -80,6 +83,16 @@ public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor im
 		if ( useParens ) {
 			sqlAppender.appendSql( ")" );
 		}
+	}
+
+	@Override
+	public String getArgumentListSignature() {
+		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+	}
+
+	@Override
+	public boolean alwaysIncludesParentheses() {
+		return useParenthesesWhenNoArgs;
 	}
 
 	@Override

@@ -13,11 +13,13 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
 /**
  * @author Steve Ebersole
  */
-@FunctionalInterface
 public interface ArgumentsValidator {
 	/**
 	 * Validate the arguments
 	 */
 	void validate(List<? extends SqmVisitableNode> arguments);
 
+	default String getSignature() {
+		return "( ... )";
+	}
 }

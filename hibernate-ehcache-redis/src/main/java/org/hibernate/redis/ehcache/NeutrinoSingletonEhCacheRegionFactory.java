@@ -113,7 +113,7 @@ public class NeutrinoSingletonEhCacheRegionFactory extends AbstractEhcacheRegion
 				configurationResourceName = (String) properties.get(NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME);
 				redisConfigurationResourceName = (String) properties
 						.get(HIBERNATE_CACHE_REDIS_CONFIGURATION_RESOURCE_NAME);
-				if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() > 0) {
+				if (redisConfigurationResourceName == null || redisConfigurationResourceName.length() <= 0) {
 					redisConfigurationResourceName = HIBERNATE_CACHE_DEFAULT_REDIS_CONFIGURATION_FILE;
 				}
 			} else {

@@ -7,17 +7,15 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.sqm.function.FunctionAsExpressionTemplate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
-import org.jboss.logging.Logger;
+import org.hibernate.query.sqm.function.VarArgsFunctionDescriptor;
 
 /**
  * @author Christian Beikov
  */
 public class VarArgsFunctionDescriptorBuilder {
-	private static final Logger log = Logger.getLogger( VarArgsFunctionDescriptorBuilder.class );
 
 	private final SqmFunctionRegistry registry;
 
@@ -65,7 +63,7 @@ public class VarArgsFunctionDescriptorBuilder {
 	public SqmFunctionDescriptor register(String registrationKey) {
 		return registry.register(
 				registrationKey,
-				new FunctionAsExpressionTemplate(
+				new VarArgsFunctionDescriptor(
 						begin,
 						sep,
 						end,

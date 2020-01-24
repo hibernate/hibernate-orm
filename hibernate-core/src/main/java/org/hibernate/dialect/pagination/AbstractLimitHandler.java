@@ -8,8 +8,13 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.engine.spi.RowSelection;
+
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.compile;
 
 /**
  * Default implementation of {@link LimitHandler} interface. 
@@ -18,12 +23,28 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 
-	protected AbstractLimitHandler() {
-		// NOP
-	}
+	public static LimitHandler NO_LIMIT = new AbstractLimitHandler(){};
+
+	private static final Pattern SELECT_PATTERN =
+			compile( "^\\s*select\\b", CASE_INSENSITIVE );
+
+	private static final Pattern SELECT_DISTINCT_PATTERN =
+			compile( "^\\s*select(\\s+(distinct|all))?\\b", CASE_INSENSITIVE );
+
+	private static final Pattern END_PATTERN =
+			compile("\\s*(;|$)", CASE_INSENSITIVE);
+
+	private static final Pattern FOR_UPDATE_PATTERN =
+			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
+
 
 	@Override
 	public boolean supportsLimit() {
+		return false;
+	}
+
+//	@Override
+	public boolean supportsOffset() {
 		return false;
 	}
 
@@ -33,79 +54,80 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	}
 
 	/**
-	 * Does this handler support bind variables (i.e., prepared statement
+	 * Does this handler support bind variables (JDBC prepared statement
 	 * parameters) for its limit/offset?
 	 *
-	 * @return True if bind variables can be used; false otherwise.
+	 * @return true if bind variables can be used
 	 */
 	public boolean supportsVariableLimit() {
 		return supportsLimit();
 	}
 
 	/**
-	 * ANSI SQL defines the LIMIT clause to be in the form LIMIT offset, limit.
-	 * Does this dialect require us to bind the parameters in reverse order?
+	 * Usually, the offset comes before the limit, but occasionally the
+	 * offset is specified after the limit. Does this dialect require us
+	 * to bind the parameters in reverse order?
 	 *
-	 * @return true if the correct order is limit, offset
+	 * @return true if the correct order is limit then offset
 	 */
 	public boolean bindLimitParametersInReverseOrder() {
 		return false;
 	}
 
 	/**
-	 * Does the <tt>LIMIT</tt> clause come at the start of the
-	 * <tt>SELECT</tt> statement, rather than at the end?
+	 * Does the offset/limit clause come at the start of the
+	 * <tt>SELECT</tt> statement, or at the end of the query?
 	 *
-	 * @return true if limit parameters should come before other parameters
+	 * @return true if limit parameters come before other parameters
 	 */
 	public boolean bindLimitParametersFirst() {
 		return false;
 	}
 
 	/**
-	 * Does the <tt>LIMIT</tt> clause take a "maximum" row number instead
-	 * of a total number of returned rows?
-	 * <p/>
-	 * This is easiest understood via an example.  Consider you have a table
-	 * with 20 rows, but you only want to retrieve rows number 11 through 20.
-	 * Generally, a limit with offset would say that the offset = 11 and the
-	 * limit = 10 (we only want 10 rows at a time); this is specifying the
-	 * total number of returned rows.  Some dialects require that we instead
-	 * specify offset = 11 and limit = 20, where 20 is the "last" row we want
-	 * relative to offset (i.e. total number of rows = 20 - 11 = 9)
-	 * <p/>
-	 * So essentially, is limit relative from offset?  Or is limit absolute?
+	 * Does the limit clause expect the number of the last row, or the
+	 * "page size", the maximum number of rows we want to receive?
+	 * Hibernate's {@link org.hibernate.query.Query#setMaxResults(int)}
+	 * accepts the page size, so the number of the last row is obtained
+	 * by adding the number of the first row, which is one greater than
+	 * {@link org.hibernate.query.Query#setFirstResult(int)}.
 	 *
-	 * @return True if limit is relative from offset; false otherwise.
+	 * @return true if the limit clause expects the number of
+	 *         the last row, false if it expects the page size
 	 */
 	public boolean useMaxForLimit() {
-		return false;
+		//if this limit handler doesn't support
+		//an offset, we definitely need to set
+		//the limit to the last row
+		return !supportsLimitOffset();
 	}
 
 	/**
-	 * Generally, if there is no limit applied to a Hibernate query we do not apply any limits
-	 * to the SQL query.  This option forces that the limit be written to the SQL query.
+	 * Generally, if there is no limit applied to a Hibernate query we do not
+	 * apply any limits to the SQL query. This option forces that the limit
+	 * be written to the SQL query.
 	 *
-	 * @return True to force limit into SQL query even if none specified in Hibernate query; false otherwise.
+	 * @return true to force limit into SQL query even if none specified in
+	 *         Hibernate query; false otherwise.
 	 */
 	public boolean forceLimitUsage() {
 		return false;
 	}
 
 	/**
-	 * Hibernate APIs explicitly state that setFirstResult() should be a zero-based offset. Here we allow the
-	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
+	 * Hibernate {@link org.hibernate.query.Query#setFirstResult(int)} accepts
+	 * a zero-based offset. Does this dialect require a one-based offset to be
+	 * specified in the offset clause?
 	 * <p/>
-	 * NOTE: what gets passed into {@link AbstractLimitHandler#processSql(String, org.hibernate.engine.spi.RowSelection)}
-     * is the zero-based offset. Dialects which do not {@link #supportsVariableLimit} should take care to perform
-     * any needed first-row-conversion calls prior to injecting the limit values into the SQL string.
+	 * NOTE: what gets passed into
+	 * {@link AbstractLimitHandler#processSql(String, org.hibernate.engine.spi.RowSelection)}
+     * is the zero-based offset. Handlers which do not {@link #supportsVariableLimit}
+	 * should take care to perform any needed first-row-conversion calls prior
+	 * to injecting the limit values into the SQL string.
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 *
-	 * @return The corresponding db/dialect specific offset.
-	 *
-	 * @see org.hibernate.Query#setFirstResult
-	 * @see org.hibernate.Criteria#setFirstResult
+	 * @return The resulting offset, adjusted to one-based if necessary.
 	 */
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult;
@@ -119,13 +141,17 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	@Override
 	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
+		return bindLimitParametersFirst()
+				? bindLimitParameters( selection, statement, index )
+				: 0;
 	}
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		return !bindLimitParametersFirst() ? bindLimitParameters( selection, statement, index ) : 0;
+		return !bindLimitParametersFirst()
+				? bindLimitParameters( selection, statement, index )
+				: 0;
 	}
 
 	@Override
@@ -143,18 +169,69 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 */
 	protected final int bindLimitParameters(RowSelection selection, PreparedStatement statement, int index)
 			throws SQLException {
-		if ( !supportsVariableLimit() || !LimitHelper.hasMaxRows( selection ) ) {
+
+		if ( !supportsVariableLimit() ) {
+			//never any parameters to bind
 			return 0;
 		}
-		final int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
-		final int lastRow = getMaxOrLimit( selection );
-		final boolean hasFirstRow = supportsLimitOffset() && ( firstRow > 0 || forceLimitUsage() );
-		final boolean reverse = bindLimitParametersInReverseOrder();
-		if ( hasFirstRow ) {
-			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );
+
+		final boolean hasMaxRows = hasMaxRows( selection );
+		final boolean hasFirstRow = hasFirstRow( selection );
+
+		final boolean bindLimit
+				= hasMaxRows && supportsLimit()
+				|| forceLimitUsage();
+		final boolean bindOffset
+				= hasFirstRow && supportsOffset()
+				|| hasFirstRow && hasMaxRows && supportsLimitOffset();
+
+		if ( !bindLimit && !bindOffset ) {
+			//no parameters to bind this time
+			return 0;
 		}
-		statement.setInt( index + ( reverse || !hasFirstRow ? 0 : 1 ), lastRow );
-		return hasFirstRow ? 2 : 1;
+
+		final boolean reverse = bindLimitParametersInReverseOrder();
+
+		if ( bindOffset ) {
+			statement.setInt(
+					index + ( reverse || !bindLimit ? 1 : 0 ),
+					getFirstRow( selection )
+			);
+		}
+		if ( bindLimit ) {
+			statement.setInt(
+					index + ( reverse || !bindOffset ? 0 : 1 ),
+					getMaxOrLimit( selection )
+			);
+		}
+
+		return bindOffset && bindLimit ? 2 : 1;
+	}
+
+	/**
+	 * Is a max row limit indicated?
+	 *
+	 * @param selection The row selection options
+	 *
+	 * @return Whether a max row limit was indicated
+	 */
+	public static boolean hasMaxRows(RowSelection selection) {
+		return selection != null
+				&& selection.getMaxRows() != null
+				&& selection.getMaxRows() > 0;
+	}
+
+	/**
+	 * Is a first row limit indicated?
+	 *
+	 * @param selection The row selection options
+	 *
+	 * @return Whether a first row limit in indicated
+	 */
+	public static boolean hasFirstRow(RowSelection selection) {
+		return selection != null
+				&& selection.getFirstRow() == null
+				&& selection.getFirstRow() > 0;
 	}
 
 	/**
@@ -167,15 +244,107 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * @return The appropriate value to bind into the limit clause.
 	 */
 	protected final int getMaxOrLimit(RowSelection selection) {
-		final int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
-		final int lastRow = selection.getMaxRows();
-		final int maxRows = useMaxForLimit() ? lastRow + firstRow : lastRow;
-		// Use Integer.MAX_VALUE on overflow
-		if ( maxRows < 0 ) {
+		if ( selection==null || selection.getMaxRows()==null ) {
 			return Integer.MAX_VALUE;
 		}
+		final int firstRow = getFirstRow( selection );
+		final int maxRows = selection.getMaxRows();
+		final int maxOrLimit = useMaxForLimit()
+				? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
+				: maxRows;
+		// Use Integer.MAX_VALUE on overflow
+		return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
+	}
+
+	/**
+	 * Retrieve the indicated first row for pagination
+	 *
+	 * @param selection The row selection options
+	 *
+	 * @return The first row
+	 */
+	protected final int getFirstRow(RowSelection selection) {
+		if ( selection == null || selection.getFirstRow() == null ) {
+			return 0;
+		}
+		return convertToFirstRowValue( selection.getFirstRow() );
+	}
+
+	/**
+	 * Insert a fragment of SQL right after
+	 * {@code SELECT}, but before {@code DISTINCT}
+	 * or {@code ALL}.
+	 */
+	protected static String insertAfterSelect(String limitOffsetClause, String sqlStatement) {
+		Matcher selectMatcher = SELECT_PATTERN.matcher( sqlStatement );
+		if ( selectMatcher.find() ) {
+			return new StringBuilder( sqlStatement )
+					.insert( selectMatcher.end(), limitOffsetClause )
+					.toString();
+		}
 		else {
-			return maxRows;
+			return sqlStatement;
 		}
 	}
+
+	/**
+	 * Insert a fragment of SQL right after
+	 * {@code SELECT}, {@code SELECT DISTINCT},
+	 * or {@code SELECT ALL}.
+	 */
+	protected static String insertAfterDistinct(String limitOffsetClause, String sqlStatement) {
+		Matcher selectDistinctMatcher = SELECT_DISTINCT_PATTERN.matcher( sqlStatement );
+		if ( selectDistinctMatcher.find() ) {
+			return new StringBuilder( sqlStatement )
+					.insert( selectDistinctMatcher.end(), limitOffsetClause )
+					.toString();
+		}
+		else {
+			return sqlStatement;
+		}
+	}
+
+	/**
+	 * Insert a fragment of SQL right at the very
+	 * end of the query.
+	 */
+	protected String insertAtEnd(String limitOffsetClause, String sqlStatement) {
+		Matcher endMatcher = END_PATTERN.matcher( sqlStatement );
+		if ( endMatcher.find() ) {
+			return new StringBuilder( sqlStatement )
+					.insert( endMatcher.start(), limitOffsetClause )
+					.toString();
+		}
+		else {
+			return sqlStatement;
+		}
+	}
+
+	/**
+	 * The offset/limit clauses typically must come
+	 * before the {@code FOR UPDATE}ish clauses, so
+	 * we need a way to identify these clauses in
+	 * the text of the whole query.
+	 */
+	protected Pattern getForUpdatePattern() {
+		return FOR_UPDATE_PATTERN;
+	}
+
+	/**
+	 * Insert a fragment of SQL right before the
+	 * {@code FOR UPDATE}ish clauses at the end
+	 * of the query.
+	 */
+	protected String insertBeforeForUpdate(String limitOffsetClause, String sqlStatement) {
+		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
+		if ( forUpdateMatcher.find() ) {
+			return new StringBuilder( sqlStatement )
+					.insert( forUpdateMatcher.start(), limitOffsetClause )
+					.toString();
+		}
+		else {
+			return sqlStatement;
+		}
+	}
+
 }

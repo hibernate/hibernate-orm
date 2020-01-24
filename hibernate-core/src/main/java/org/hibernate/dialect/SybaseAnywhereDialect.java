@@ -7,16 +7,17 @@
 package org.hibernate.dialect;
 
 
-import java.sql.Types;
-
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
+import java.sql.Types;
+
 /**
  * SQL Dialect for Sybase Anywhere
- * extending Sybase (Enterprise) Dialect
  * (Tested on ASA 8.x)
  */
 public class SybaseAnywhereDialect extends SybaseDialect {
@@ -24,7 +25,48 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	public SybaseAnywhereDialect() {
 		super();
 
-		registerColumnType( Types.BOOLEAN, "bit" );
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.DATE, "date" );
+		registerColumnType( Types.TIME, "time" );
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+
+		final int maxStringLength = 32_767;
+
+		registerColumnType( Types.CHAR, maxStringLength, "char($l)" );
+		registerColumnType( Types.VARCHAR, maxStringLength, "varchar($l)" );
+		registerColumnType( Types.VARCHAR, "long varchar)" );
+
+		registerColumnType( Types.NCHAR, maxStringLength, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, maxStringLength, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "long nvarchar)" );
+
+		//note: 'binary' is actually a synonym for 'varbinary'
+		registerColumnType( Types.BINARY, maxStringLength, "binary($l)" );
+		registerColumnType( Types.VARBINARY, maxStringLength, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, "long binary)" );
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.BOOLEAN
+				? BitTypeDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride( sqlCode );
+	}
+
+	@Override
+	public String currentDate() {
+		return "current date";
+	}
+
+	@Override
+	public String currentTime() {
+		return "current time";
+	}
+
+	@Override
+	public String currentTimestamp() {
+		return "current timestamp";
 	}
 
 	/**
@@ -52,12 +94,21 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sys.dummy";
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SybaseAnywhereIdentityColumnSupport();
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN ? BitTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+	public LimitHandler getLimitHandler() {
+		//TODO: support 'TOP ? START AT ?'
+		//Note: Sybase Anywhere also supports LIMIT OFFSET,
+		//      but it looks like this syntax is not enabled
+		//      by default
+		return TopLimitHandler.INSTANCE;
 	}
 }

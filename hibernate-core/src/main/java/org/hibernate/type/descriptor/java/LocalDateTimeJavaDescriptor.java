@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LocalDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -131,5 +132,10 @@ public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDat
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultTimestampPrecision();
 	}
 }

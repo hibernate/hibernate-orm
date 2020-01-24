@@ -6,23 +6,20 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.H2ExtractEmulation;
-import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.H2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -30,7 +27,6 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
@@ -40,11 +36,12 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
+
+import java.sql.SQLException;
+
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * A dialect compatible with the H2 database.
@@ -57,88 +54,61 @@ public class H2Dialect extends Dialect {
 			H2Dialect.class.getName()
 	);
 
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-		}
+	private final LimitHandler limitHandler;
 
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
+	private final boolean dropConstraints;
 
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-	};
+//	private final String querySequenceString;
+//	private final SequenceInformationExtractor sequenceInformationExtractor;
 
-	private final String querySequenceString;
-	private final SequenceInformationExtractor sequenceInformationExtractor;
-
-	/**
-	 * Constructs a H2Dialect
-	 */
 	public H2Dialect() {
+		this(0, 0);
+	}
+
+	public H2Dialect(int version, int buildId) {
 		super();
 
-		int buildId = Integer.MIN_VALUE;
+		limitHandler = !( version > 140 || buildId >= 199 )
+				? LimitOffsetLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 
-		try {
-			// HHH-2300
-			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
-			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
-			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
-			buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
+//		if ( buildId >= 32 ) {
+//			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+//			this.querySequenceString = "select * from information_schema.sequences";
+//		}
+//		else {
+//			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
+//			this.querySequenceString = null;
+//		}
 
-			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
-			}
-		}
-		catch ( Exception e ) {
-			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
-			// not using the correct classloader
-			LOG.undeterminedH2Version();
-		}
+		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
+//		registerColumnType( Types.BIT, "bit" );
 
-		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
-		}
-		else {
-			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
-			this.querySequenceString = null;
+		if ( !( version > 120 || buildId >= 139 ) ) {
+			LOG.unsupportedMultiTableBulkHqlJpaql( version / 100, version % 100 / 10, buildId );
 		}
 
-		registerColumnType( Types.BOOLEAN, "boolean" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BINARY, "binary" );
-		registerColumnType( Types.BIT, "boolean" );
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-		registerColumnType( Types.DOUBLE, "double" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
-		// H2 does define "longvarchar", but it is a simple alias to "varchar"
-		registerColumnType( Types.LONGVARCHAR, String.format( "varchar(%d)", Integer.MAX_VALUE ) );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.VARBINARY, "binary($l)" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+		// Prior to 1.4.200 we didn't need to drop constraints before
+		// dropping tables, that just lead to error messages about
+		// missing tables when we don't have a schema in the database
+		dropConstraints = version > 140 && buildId >= 200;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	private static int parseBuildId(DialectResolutionInfo info) {
+		String[] bits = info.getDatabaseVersion().split("[. ]");
+		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
+	public H2Dialect(DialectResolutionInfo info) {
+		this(
+				info.getDatabaseMajorVersion()*100
+						+ info.getDatabaseMinorVersion()*10,
+				parseBuildId( info )
+		);
 	}
 
 	@Override
@@ -157,12 +127,12 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.bitor( queryEngine );
 		CommonFunctionFactory.bitxor( queryEngine );
+		CommonFunctionFactory.bitAndOr( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
@@ -171,87 +141,51 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		//also natively supports ANSI-style substring()
+		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.formatdatetime( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+		CommonFunctionFactory.nowCurdateCurtime( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
+//		CommonFunctionFactory.everyAny( queryEngine ); //this would work too
+		CommonFunctionFactory.everyAny_boolAndOr( queryEngine );
+		CommonFunctionFactory.median( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.format_formatdatetime( queryEngine );
+		CommonFunctionFactory.rownum( queryEngine );
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "extract", new H2ExtractEmulation() );
+	/**
+	 * In H2, the extract() function does not return
+	 * fractional seconds for the the field
+	 * {@link TemporalUnit#SECOND}. We work around
+	 * this here with two calls to extract().
+	 */
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		return unit == SECOND
+				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
+				: super.extractPattern(unit);
+	}
 
-		queryEngine.getSqmFunctionRegistry().noArgsBuilder( "rownum" )
-				.setInvariantType( StandardBasicTypes.LONG )
-				.setUseParenthesesWhenNoArgs(true)
-				.register();
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		return "dateadd(?1, ?2, ?3)";
 
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-	}
-
-	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-	}
-
-	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case WEEK: return "iso_week";
-			default: return unit.toString();
-		}
-	}
-
-	@Override
-	public String translateDatetimeFormat(String format) {
-		return new Replacer( format, "'", "''" ).replace( "e", "u").result(); //NICE!!
-	}
-
-	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return "datediff(?1, ?2, ?3)";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
-	}
-
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return false;
+		return limitHandler;
 	}
 
 	@Override
@@ -260,48 +194,46 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return dropConstraints;
+	}
+
+	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence if exists " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "call next value for " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return H2SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return querySequenceString;
+		return "select * from information_schema.sequences";
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return sequenceInformationExtractor;
+		return SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+	}
+
+	@Override
+	public String getFromDual() {
+		return "from dual";
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
+				this::getTypeName,
+				AfterUseAction.CLEAN,
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 	@Override
@@ -341,20 +273,17 @@ public class H2Dialect extends Dialect {
 				public JDBCException convert(SQLException sqlException, String message, String sql) {
 					final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-					if (40001 == errorCode) {
-						// DEADLOCK DETECTED
-						return new LockAcquisitionException(message, sqlException, sql);
-					}
-
-					if (50200 == errorCode) {
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException(message, sqlException, sql);
-					}
-
-					if ( 90006 == errorCode ) {
-						// NULL not allowed for column [90006-145]
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					switch (errorCode) {
+						case 40001:
+							// DEADLOCK DETECTED
+							return new LockAcquisitionException(message, sqlException, sql);
+						case 50200:
+							// LOCK NOT AVAILABLE
+							return new PessimisticLockException(message, sqlException, sql);
+						case 90006:
+							// NULL not allowed for column [90006-145]
+							final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+							return new ConstraintViolationException(message, sqlException, sql, constraintName);
 					}
 
 					return null;
@@ -362,19 +291,6 @@ public class H2Dialect extends Dialect {
 			};
 		}
 		return delegate;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "HT_" + basename ),
-				this::getTypeName,
-				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE,
-				runtimeModelCreationContext.getSessionFactory()
-		);
 	}
 
 	@Override
@@ -423,9 +339,7 @@ public class H2Dialect extends Dialect {
 	
 	@Override
 	public boolean dropConstraints() {
-		// We don't need to drop constraints before dropping tables, that just leads to error
-		// messages about missing tables when we don't have a schema in the database
-		return false;
+		return dropConstraints;
 	}
 
 	@Override
@@ -439,8 +353,16 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSelectAliasInGroupByClause() {
-		return true;
+	public String translateDatetimeFormat(String format) {
+		return new Replacer( format, "'", "''" ).replace("e", "u").result(); //NICE!!
+	}
+
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case WEEK: return "iso_week";
+			default: return unit.toString();
+		}
 	}
 
 }

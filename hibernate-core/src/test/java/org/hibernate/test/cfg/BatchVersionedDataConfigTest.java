@@ -30,7 +30,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.OracleDialect;
 
@@ -97,13 +96,6 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.DIALECT, Oracle9iDialect.class.getName() );
 		sessionFactory = cfg.buildSessionFactory();
 
-		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
-	}
-
-	@Test
-	public void testBatchVersionedDataForOracle9Dialect() {
-		cfg.setProperty( AvailableSettings.DIALECT, Oracle9Dialect.class.getName() );
-		sessionFactory = cfg.buildSessionFactory();
 		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( false ) );
 	}
 

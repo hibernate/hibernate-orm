@@ -14,24 +14,73 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
+
 /**
  * @author Gavin King
  */
 public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 	private AllowableFunctionReturnType<T> type;
+	private Long length;
+	private Integer precision;
+	private Integer scale;
 
-	public SqmCastTarget(AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
-		this.type = type;
+	public Long getLength() {
+		return length;
 	}
 
-	@Override
-	public SqmExpressable<T> getNodeType() {
+	public Integer getPrecision() {
+		return precision;
+	}
+
+	public Integer getScale() {
+		return scale;
+	}
+
+	public SqmCastTarget(
+			AllowableFunctionReturnType<T> type,
+			NodeBuilder nodeBuilder) {
+		this( type, null, nodeBuilder );
+	}
+
+	public SqmCastTarget(
+			AllowableFunctionReturnType<T> type,
+			Long length,
+			NodeBuilder nodeBuilder) {
+		this( type, length, null, null, nodeBuilder );
+	}
+
+	public SqmCastTarget(
+			AllowableFunctionReturnType<T> type,
+			Integer precision,
+			Integer scale,
+			NodeBuilder nodeBuilder) {
+		this( type, null, precision, scale, nodeBuilder );
+	}
+
+	public SqmCastTarget(
+			AllowableFunctionReturnType<T> type,
+			Long length,
+			Integer precision,
+			Integer scale,
+			NodeBuilder nodeBuilder) {
+		super( nodeBuilder );
+		this.type = type;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
+	}
+
+	public AllowableFunctionReturnType<T> getType() {
 		return type;
 	}
 
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCastTarget( this );
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitCastTarget(this);
+	}
+
+	@Override
+	public SqmExpressable getNodeType() {
+		return type;
 	}
 }

@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.time.Duration;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -81,5 +82,20 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		// 19+9 = 28 digits is the maximum possible Duration
+		// precision, but is an unnecessarily large default,
+		// except for cosmological applications. Thirty
+		// millenia in both timelike directions should be
+		// sufficient time for most businesses!
+		return Math.min( 21, dialect.getDefaultDecimalPrecision() );
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
+		return 0;
 	}
 }

@@ -6,65 +6,26 @@
  */
 package org.hibernate.dialect;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.HANAExtractEmulation;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.sequence.HANASequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.ConfigurationService.Converter;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.BlobImplementer;
-import org.hibernate.engine.jdbc.CharacterStream;
-import org.hibernate.engine.jdbc.ClobImplementer;
-import org.hibernate.engine.jdbc.NClobImplementer;
+import org.hibernate.engine.jdbc.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.engine.jdbc.env.spi.*;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -76,6 +37,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
@@ -88,21 +50,16 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicBinder;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
-import org.hibernate.type.descriptor.sql.DoubleTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NCharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.NVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.*;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.sql.*;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -121,26 +78,6 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 public abstract class AbstractHANADialect extends Dialect {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			return sql + ( hasOffset ? " limit ? offset ?" : " limit ?" );
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean bindLimitParametersInReverseOrder() {
-			return true;
-		}
-
-	};
 
 	private static class CloseSuppressingReader extends FilterReader {
 
@@ -764,37 +701,36 @@ public abstract class AbstractHANADialect extends Dialect {
 	public AbstractHANADialect() {
 		super();
 
-		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
+		//there is no 'numeric' type in HANA
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
+
+		//'double precision' syntax not supported
 		registerColumnType( Types.DOUBLE, "double" );
+
+		//no explicit precision
+		registerColumnType(Types.TIMESTAMP, "timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp");
 
 		// varbinary max length 5000
 		registerColumnType( Types.BINARY, 5000, "varbinary($l)" );
 		registerColumnType( Types.VARBINARY, 5000, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, 5000, "varbinary($l)" );
 
 		// for longer values, map to blob
 		registerColumnType( Types.BINARY, "blob" );
 		registerColumnType( Types.VARBINARY, "blob" );
-		registerColumnType( Types.LONGVARBINARY, "blob" );
 
-		registerColumnType( Types.CHAR, "varchar(1)" );
-		registerColumnType( Types.NCHAR, "nvarchar(1)" );
+		//there is no 'char' or 'nchar' type in HANA
+		registerColumnType( Types.CHAR, "varchar($l)" );
+		registerColumnType( Types.NCHAR, "nvarchar($l)" );
+
 		registerColumnType( Types.VARCHAR, 5000, "varchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, 5000, "varchar($l)" );
 		registerColumnType( Types.NVARCHAR, 5000, "nvarchar($l)" );
-		registerColumnType( Types.LONGNVARCHAR, 5000, "nvarchar($l)" );
 
 		// for longer values map to clob/nclob
-		registerColumnType( Types.LONGVARCHAR, "clob" );
 		registerColumnType( Types.VARCHAR, "clob" );
-		registerColumnType( Types.LONGNVARCHAR, "nclob" );
 		registerColumnType( Types.NVARCHAR, "nclob" );
-		registerColumnType( Types.CLOB, "clob" );
-		registerColumnType( Types.NCLOB, "nclob" );
 
-		registerColumnType( Types.BOOLEAN, "boolean" );
-
+		registerColumnType( Types.BIT, 1, "boolean" );
 		// map bit/tinyint to smallint since tinyint is unsigned on HANA
 		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.TINYINT, "smallint" );
@@ -814,16 +750,24 @@ public abstract class AbstractHANADialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
+	public int getDefaultDecimalPrecision() {
+		//the maximum on HANA
+		return 34;
+	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "locate(?2, ?1)", "locate(?2, ?1, ?3)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER,
+				"locate(?2, ?1)",
+				"locate(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
@@ -836,28 +780,52 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.daysBetween( queryEngine );
 		CommonFunctionFactory.secondsBetween( queryEngine );
-		CommonFunctionFactory.formatdatetime_toVarchar( queryEngine );
+		CommonFunctionFactory.format_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register( "extract", new HANAExtractEmulation() );
 	}
 
+	/**
+	 * HANA has no extract() function, but we can emulate
+	 * it using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * The supported fields are
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#MONTH}
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND}
+	 * {@link TemporalUnit#WEEK},
+	 * {@link TemporalUnit#DAY_OF_WEEK},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 */
 	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return true;
+	public String extractPattern(TemporalUnit unit) {
+		switch (unit) {
+			case DAY_OF_WEEK:
+				return "(mod(weekday(?2)+1,7)+1)";
+			case DAY:
+			case DAY_OF_MONTH:
+				return "dayofmonth(?2)";
+			case DAY_OF_YEAR:
+				return "dayofyear(?2)";
+			default:
+				//I think week() returns the ISO week number
+				return "?1(?2)";
+		}
 	}
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return new SQLExceptionConversionDelegate() {
-
 			@Override
 			public JDBCException convert(final SQLException sqlException, final String message, final String sql) {
 
@@ -895,8 +863,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				// 257 - Cannot insert NULL or update to NULL
 				// 301 - Unique constraint violated
 				// 461 - foreign key constraint violation
-				// 462 - failed on update or delete by foreign key constraint
-				// violation
+				// 462 - failed on update or delete by foreign key constraint violation
 				if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
 					final String constraintName = getViolatedConstraintNameExtracter()
 							.extractConstraintName( sqlException );
@@ -930,40 +897,8 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString(final String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		if ( incrementSize == 0 ) {
-			throw new MappingException( "Unable to create the sequence [" + sequenceName + "]: the increment size must not be 0" );
-		}
-
-		String createSequenceString = getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
-		if ( incrementSize > 0 ) {
-			if ( initialValue < 1 ) {
-				// default minvalue for an ascending sequence is 1
-				createSequenceString += " minvalue " + initialValue;
-			}
-		}
-		else {
-			if ( initialValue > -1 ) {
-				// default maxvalue for a descending sequence is -1
-				createSequenceString += " maxvalue " + initialValue;
-			}
-		}
-		return createSequenceString;
-	}
-
-	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select current_timestamp from sys.dummy";
-	}
-
-	@Override
-	public String getDropSequenceString(final String sequenceName) {
-		return "drop sequence " + sequenceName;
 	}
 
 	@Override
@@ -1010,12 +945,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getLimitString(final String sql, final boolean hasOffset) {
-		return new StringBuilder( sql.length() + 20 ).append( sql ).append( hasOffset ? " limit ? offset ?" : " limit ?" )
-				.toString();
-	}
-
-	@Override
 	public String getNotExpression(final String expression) {
 		return "not (" + expression + ")";
 	}
@@ -1028,16 +957,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(final String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getSequenceNextValString(final String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from sys.dummy";
 	}
 
 	@Override
@@ -1198,18 +1117,8 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
+	public SequenceSupport getSequenceSupport() {
+		return HANASequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -1249,7 +1158,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LIMIT_HANDLER;
+		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -1400,6 +1309,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from sys.dummy";
+	}
+
+	@Override
 	public String getQueryHintString(String query, List<String> hints) {
 		return query + " with hint (" + String.join( ",", hints ) + ")";
 	}
@@ -1488,12 +1402,10 @@ public abstract class AbstractHANADialect extends Dialect {
 				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
 
 		if ( this.useUnicodeStringTypes ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
+			registerColumnType( Types.CHAR, "nvarchar($l)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
 
 			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
 			registerColumnType( Types.VARCHAR, "nclob" );
 			registerColumnType( Types.CLOB, "nclob" );
 		}
@@ -1524,10 +1436,9 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
-		if ( this.useLegacyBooleanType ) {
-			return bool ? "1" : "0";
-		}
-		return bool ? "true" : "false";
+		return this.useLegacyBooleanType
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
 	}
 
 	@Override
@@ -1579,6 +1490,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		//I don't think HANA needs FM
-		return Oracle8iDialect.datetimeFormat( format, false ).result();
+		return OracleDialect.datetimeFormat( format, false ).result();
 	}
 }

@@ -6,28 +6,14 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.type.StandardBasicTypes;
-
-public class MariaDB102Dialect extends MariaDB10Dialect {
+/**
+ * @deprecated use {@code MariaDBDialect(1020)}
+ */
+@Deprecated
+public class MariaDB102Dialect extends MariaDBDialect {
 
 	public MariaDB102Dialect() {
-		super();
-
-		this.registerColumnType( Types.JAVA_OBJECT, "json" );
+		super(1020);
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "json_valid", StandardBasicTypes.NUMERIC_BOOLEAN );
-	}
-
-	@Override
-	public boolean supportsColumnCheck() {
-		return true;
-	}
 }

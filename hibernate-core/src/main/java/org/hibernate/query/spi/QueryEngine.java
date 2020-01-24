@@ -6,9 +6,6 @@
  */
 package org.hibernate.query.spi;
 
-import java.util.Map;
-import java.util.function.Supplier;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -36,6 +33,9 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses

@@ -6,25 +6,28 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Method;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
-import org.hibernate.MappingException;
+import org.hibernate.JDBCException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
+import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
+import org.hibernate.dialect.sequence.DB2SequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.CastType;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
@@ -33,163 +36,299 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
-import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.DerbyCaseExpressionWalker;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.DecimalTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import org.jboss.logging.Logger;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+
+import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
- * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
- * override for the identity column generator as well as for the case statement
- * issue documented at:
- * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
+ * Hibernate Dialect for Apache Derby / Cloudscape 10
  *
  * @author Simon Johnston
+ * @author Gavin King
  *
- * @deprecated HHH-6073
  */
-@Deprecated
-public class DerbyDialect extends DB2Dialect {
-	@SuppressWarnings("deprecation")
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			DerbyDialect.class.getName()
-	);
+public class DerbyDialect extends Dialect {
 
-	private int driverVersionMajor;
-	private int driverVersionMinor;
+	// KNOWN LIMITATIONS:
+
+	// * limited set of fields for extract()
+	//   (no 'day of xxxx', nor 'week of xxxx')
+	// * no support for format()
+	// * pad() can only pad with blanks
+	// * can't cast String to Binary
+	// * can't select a parameter unless wrapped
+	//   in a cast or function call
+
+	private final int version;
+
+	int getVersion() {
+		return version;
+	}
+
 	private final LimitHandler limitHandler;
 
-	/**
-	 * Constructs a DerbyDialect
-	 */
-	@SuppressWarnings("deprecation")
+	public DerbyDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
 	public DerbyDialect() {
+		this(1000);
+	}
+
+	public DerbyDialect(int version) {
 		super();
-		if ( this.getClass() == DerbyDialect.class ) {
-			LOG.deprecatedDerbyDialect();
-		}
+		this.version = version;
 
-		registerColumnType( Types.BLOB, "blob" );
+		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
+		registerColumnType( Types.BIT, "smallint" ); //no bit
+		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
+
+		//HHH-12827: map them both to the same type to
+		//           avoid problems with schema update
+//		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
+		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+
+		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
+		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
+		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" );
+
+		registerColumnType( Types.BLOB, "blob($l)" );
+		registerColumnType( Types.CLOB, "clob($l)" );
+
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
+
 		registerDerbyKeywords();
-		determineDriverVersion();
 
-		if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
-			registerColumnType( Types.BOOLEAN, "boolean" );
-		}
+		limitHandler = getVersion() < 1050
+				? AbstractLimitHandler.NO_LIMIT
+				: new DerbyLimitHandler( getVersion() >= 1060 );
+	}
 
-		this.limitHandler = new DerbyLimitHandler();
+	public int getDefaultDecimalPrecision() {
+		//this is the maximum allowed in Derby
+		return 31;
+	}
+
+	@Override
+	public int getFloatPrecision() {
+		return 23;
+	}
+
+	@Override
+	public int getDoublePrecision() {
+		return 52;
 	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+
+		CommonFunctionFactory.cot( queryEngine );
+		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.degrees( queryEngine );
+		CommonFunctionFactory.radians( queryEngine );
+		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.sinh( queryEngine );
+		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.pi( queryEngine );
+		CommonFunctionFactory.rand( queryEngine );
+		CommonFunctionFactory.trim1( queryEngine );
+		CommonFunctionFactory.hourMinuteSecond( queryEngine );
+		CommonFunctionFactory.yearMonthDay( queryEngine );
+		CommonFunctionFactory.varPopSamp( queryEngine );
+		CommonFunctionFactory.stddevPopSamp( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight_substrLength( queryEngine );
+		CommonFunctionFactory.characterLength_length( queryEngine );
+		CommonFunctionFactory.power_expLn( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
+				.setExactArgumentCount( 2 )
+				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.register();
+
 		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
+
+		//no way I can see to pad with anything other than spaces
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "lpad", "case when length(?1)<?2 then substr(char('',?2)||?1,length(?1)) else ?1 end" )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
+				.register();
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "rpad", "case when length(?1)<?2 then substr(?1||char('',?2),1,?2) else ?1 end" )
+				.setInvariantType( StandardBasicTypes.STRING )
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string, length)")
+				.register();
 	}
 
-	private void determineDriverVersion() {
-		try {
-			// locate the derby sysinfo class and query its version info
-			final Class sysinfoClass = ReflectHelper.classForName( "org.apache.derby.tools.sysinfo", this.getClass() );
-			final Method majorVersionGetter = sysinfoClass.getMethod( "getMajorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
-			final Method minorVersionGetter = sysinfoClass.getMethod( "getMinorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
-			driverVersionMajor = (Integer) majorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS );
-			driverVersionMinor = (Integer) minorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS );
-		}
-		catch ( Exception e ) {
-			LOG.unableToLoadDerbyDriver( e.getMessage() );
-			driverVersionMajor = -1;
-			driverVersionMinor = -1;
+	/**
+	 * Derby doesn't have an extract() function, and has
+	 * no functions at all for calendaring, but we can
+	 * emulate the most basic functionality of extract()
+	 * using the functions it does have.
+	 *
+	 * The only supported {@link TemporalUnit}s are:
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#MONTH}
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND} (along with
+	 * {@link TemporalUnit#NANOSECOND},
+	 * {@link TemporalUnit#DATE}, and
+	 * {@link TemporalUnit#TIME}, which are desugared
+	 * by the parser).
+	 */
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		switch (unit) {
+			case DAY_OF_MONTH:
+				return "day(?2)";
+			case DAY_OF_YEAR:
+				return "({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),?2)}+1)";
+			case DAY_OF_WEEK:
+				return "(mod({fn timestampdiff(sql_tsi_day, {d '2000-01-01'}, ?2)},7)+1)";
+			default:
+				return "?1(?2)";
 		}
 	}
 
-	private boolean isTenPointFiveReleaseOrNewer() {
-		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch (unit) {
+			case WEEK:
+			case DAY_OF_YEAR:
+			case DAY_OF_WEEK:
+				throw new NotYetImplementedFor6Exception("field type not supported on Derby: " + unit);
+			case DAY_OF_MONTH:
+				return "day";
+			default:
+				return super.translateExtractField(unit);
+		}
+	}
+
+	/**
+	 * Derby does have a real {@link java.sql.Types#BOOLEAN}
+	 * type, but it doesn't know how to cast to it. Worse,
+	 * Derby makes us use the {@code double()} function to
+	 * cast things to its floating point types.
+	 */
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		switch (to) {
+			case FLOAT:
+				return "cast(double(?1) as real)";
+			case DOUBLE:
+				return "double(?1)";
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
+						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
+					case LONG:
+					case INTEGER:
+						return "(?1<>0)";
+				}
+				break;
+			case INTEGER:
+			case LONG:
+				if ( from == BOOLEAN && getVersion() >= 1070 ) {
+					return "case ?1 when false then 0 when true then 1 end";
+				}
+				break;
+		}
+		return super.castPattern(from, to);
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "{fn timestampadd(sql_tsi_frac_second, mod(bigint(?2),1000000000), {fn timestampadd(sql_tsi_second, bigint((?2)/1000000000), ?3)})}";
+			default:
+				return "{fn timestampadd(sql_tsi_?1, bigint(?2), ?3)}";
+		}
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "{fn timestampdiff(sql_tsi_frac_second, ?2, ?3)}";
+			default:
+				return "{fn timestampdiff(sql_tsi_?1, ?2, ?3)}";
+		}
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return getVersion() < 1070
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
 	}
 
 	@Override
 	public String getCrossJoinSeparator() {
-		return ", ";
+		//Derby 10.5 doesn't support 'cross join' syntax
+		//Derby 10.6 and later support "cross join"
+		return getVersion() < 1060 ? ", " : super.getCrossJoinSeparator();
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DerbyCaseFragment();
 	}
 
 	@Override
-	public CaseExpressionWalker getCaseExpressionWalker() {
-		return DerbyCaseExpressionWalker.INSTANCE;
-	}
-
-	@Override
-	public boolean dropConstraints() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		// technically sequence support was added in 10.6.1.0...
-		//
-		// The problem though is that I am not exactly sure how to differentiate 10.6.1.0 from any other 10.6.x release.
-		//
-		// http://db.apache.org/derby/docs/10.0/publishedapi/org/apache/derby/tools/sysinfo.html seems incorrect.  It
-		// states that derby's versioning scheme is major.minor.maintenance, but obviously 10.6.1.0 has 4 components
-		// to it, not 3.
-		//
-		// Let alone the fact that it states that versions with the matching major.minor are 'feature
-		// compatible' which is clearly not the case here (sequence support is a new feature...)
-		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 6 );
+	public SequenceSupport getSequenceSupport() {
+		return getVersion() < 1060
+				? super.getSequenceSupport()
+				: DB2SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		if ( supportsSequences() ) {
-			return "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
-		}
-		else {
-			return null;
-		}
+		return getVersion() < 1060
+				? "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid"
+				: null;
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		if ( getQuerySequencesString() == null ) {
-			return SequenceInformationExtractorNoOpImpl.INSTANCE;
-		}
-		else {
-			return SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
-		}
+		return getVersion() < 1060
+				? SequenceInformationExtractorNoOpImpl.INSTANCE
+				: SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		if ( supportsSequences() ) {
-			return "values next value for " + sequenceName;
-		}
-		else {
-			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
-		}
+	public String getSelectClauseNullString(int sqlType) {
+		return DB2Dialect.selectNullString( sqlType );
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return isTenPointFiveReleaseOrNewer();
+	public String getFromDual() {
+		return "from (values 0) as dual";
 	}
 
 	@Override
 	public boolean supportsCommentOn() {
 		//HHH-4531
 		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsLimitOffset() {
-		return isTenPointFiveReleaseOrNewer();
 	}
 
 	@Override
@@ -207,6 +346,48 @@ public class DerbyDialect extends DB2Dialect {
 		return " for read only with rs";
 	}
 
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return " for update of " + aliases + " with rs";
+	}
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		//TODO: check this!
+		return false;
+	}
+
+	@Override
+	public boolean supportsExistsInSelect() {
+		//TODO: check this!
+		return false;
+	}
+
+	@Override
+	public boolean supportsLockTimeouts() {
+		//as far as I know, Derby doesn't support this
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsCurrentTimestampSelection() {
+		return true;
+	}
+
+	@Override
+	public String getCurrentTimestampSelectString() {
+		return "values current timestamp";
+	}
+
+	@Override
+	public boolean isCurrentTimestampSelectStringCallable() {
+		return false;
+	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
@@ -214,80 +395,56 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new DB2IdentityColumnSupport();
+	}
+
+	@Override
 	public boolean supportsTuplesInSubqueries() {
+		//checked on Derby 10.14
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * From Derby 10.5 Docs:
-	 * <pre>
-	 * Query
-	 * [ORDER BY clause]
-	 * [result offset clause]
-	 * [fetch first clause]
-	 * [FOR UPDATE clause]
-	 * [WITH {RR|RS|CS|UR}]
-	 * </pre>
-	 */
 	@Override
-	public String getLimitString(String query, final int offset, final int limit) {
-		final StringBuilder sb = new StringBuilder(query.length() + 50);
-		final String normalizedSelect = query.toLowerCase(Locale.ROOT).trim();
-		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( query.substring( 0, forUpdateIndex-1 ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( query.substring( 0, getWithIndex( query ) - 1 ) );
-		}
-		else {
-			sb.append( query );
-		}
-
-		if ( offset == 0 ) {
-			sb.append( " fetch first " );
-		}
-		else {
-			sb.append( " offset " ).append( offset ).append( " rows fetch next " );
-		}
-
-		sb.append( limit ).append( " rows only" );
-
-		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append( ' ' );
-			sb.append( query.substring( forUpdateIndex ) );
-		}
-		else if ( hasWithClause( normalizedSelect ) ) {
-			sb.append( ' ' ).append( query.substring( getWithIndex( query ) ) );
-		}
-		return sb.toString();
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		//TODO: check this
+		return true;
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		// we bind the limit and offset values directly into the sql...
+	public boolean supportsParametersInInsertSelect() {
+		//TODO: check this
+		return true;
+	}
+
+	@Override
+	public boolean requiresCastingOfParametersInSelectClause() {
+		//checked on Derby 10.14
+		return true;
+	}
+
+	@Override
+	public boolean supportsEmptyInList() {
+		//checked on Derby 10.14
 		return false;
 	}
 
-	private boolean hasForUpdateClause(int forUpdateIndex) {
-		return forUpdateIndex >= 0;
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		//checked on Derby 10.14
+		return false;
 	}
 
-	private boolean hasWithClause(String normalizedSelect){
-		return normalizedSelect.startsWith( "with ", normalizedSelect.length() - 7 );
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.NUMERIC
+				? DecimalTypeDescriptor.INSTANCE
+				: super.getSqlTypeDescriptorOverride(sqlCode);
 	}
 
-	private int getWithIndex(String querySelect) {
-		int i = querySelect.lastIndexOf( "with " );
-		if ( i < 0 ) {
-			i = querySelect.lastIndexOf( "WITH " );
-		}
-		return i;
+	@Override
+	public String getNotExpression( String expression ) {
+		return "not (" + expression + ")";
 	}
-
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -299,72 +456,6 @@ public class DerbyDialect extends DB2Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
-	}
-
-	private final class DerbyLimitHandler extends AbstractLimitHandler {
-		/**
-		 * {@inheritDoc}
-		 * <p/>
-		 * From Derby 10.5 Docs:
-		 * <pre>
-		 * Query
-		 * [ORDER BY clause]
-		 * [result offset clause]
-		 * [fetch first clause]
-		 * [FOR UPDATE clause]
-		 * [WITH {RR|RS|CS|UR}]
-		 * </pre>
-		 */
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final StringBuilder sb = new StringBuilder( sql.length() + 50 );
-			final String normalizedSelect = sql.toLowerCase(Locale.ROOT).trim();
-			final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update" );
-
-			if (hasForUpdateClause( forUpdateIndex )) {
-				sb.append( sql.substring( 0, forUpdateIndex - 1 ) );
-			}
-			else if (hasWithClause( normalizedSelect )) {
-				sb.append( sql.substring( 0, getWithIndex( sql ) - 1 ) );
-			}
-			else {
-				sb.append( sql );
-			}
-
-			if (LimitHelper.hasFirstRow( selection )) {
-				sb.append( " offset " ).append( selection.getFirstRow() ).append( " rows fetch next " );
-			}
-			else {
-				sb.append( " fetch first " );
-			}
-
-			sb.append( getMaxOrLimit( selection ) ).append(" rows only" );
-
-			if (hasForUpdateClause( forUpdateIndex )) {
-				sb.append( ' ' );
-				sb.append( sql.substring( forUpdateIndex ) );
-			}
-			else if (hasWithClause( normalizedSelect )) {
-				sb.append( ' ' ).append( sql.substring( getWithIndex( sql ) ) );
-			}
-			return sb.toString();
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return isTenPointFiveReleaseOrNewer();
-		}
-
-		@Override
-		@SuppressWarnings("deprecation")
-		public boolean supportsLimitOffset() {
-			return isTenPointFiveReleaseOrNewer();
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
 	}
 
 	@Override
@@ -381,7 +472,28 @@ public class DerbyDialect extends DB2Dialect {
 		return builder.build();
 	}
 
-	protected void registerDerbyKeywords() {
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return new SQLExceptionConversionDelegate() {
+			@Override
+			public JDBCException convert(SQLException sqlException, String message, String sql) {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+//				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+
+				if( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState ) ) {
+					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				return null;
+			}
+		};
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception("format() function not supported on Derby");
+	}
+
+	private void registerDerbyKeywords() {
 		registerKeyword( "ADD" );
 		registerKeyword( "ALL" );
 		registerKeyword( "ALLOCATE" );

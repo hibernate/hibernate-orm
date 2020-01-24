@@ -91,8 +91,7 @@ public class MatchingIdSelectionHelper {
 							new SqlSelectionImpl(
 									position,
 									position + 1,
-									expression,
-									jdbcMapping
+									expression
 							)
 					);
 
@@ -149,8 +148,7 @@ public class MatchingIdSelectionHelper {
 							new SqlSelectionImpl(
 									position,
 									position + 1,
-									expression,
-									jdbcMapping
+									expression
 							)
 					);
 				}

@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -14,6 +15,8 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
@@ -133,17 +136,9 @@ public interface SqlAstWalker {
 
 	void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate);
 
+	void visitDurationUnit(DurationUnit durationUnit);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// functions
+	void visitDuration(Duration duration);
 
-//	void visitExtractUnit(ExtractUnit unit);
-//
-//	void visitCastTarget(CastTarget castTarget);
-//
-//	void visitTrimSpecification(TrimSpecification trimSpecification);
-//
-//	void visitStar(Star star);
-//
-//	void visitDistinct(Distinct distinct);
+	void visitConversion(Conversion conversion);
 }

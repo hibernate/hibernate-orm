@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -92,5 +93,20 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> implement
 	@Override
 	public Float getDefaultValue() {
 		return 0F;
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		//this is the number of decimal digits
+		// + sign + decimal point
+		// + space for "E+nn"
+		return 1+8+1+4;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		//this is the number of *binary* digits
+		//in a single-precision FP number
+		return dialect.getFloatPrecision();
 	}
 }

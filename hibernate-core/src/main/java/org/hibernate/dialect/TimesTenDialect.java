@@ -6,33 +6,26 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.TimesTenLimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.TimesTenSequenceSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.Types;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -47,91 +40,106 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  * No Calendar support
  * No support for updating primary keys.
  *
- * @author Sherry Listgarten and Max Andersen
+ * @author Sherry Listgarten, Max Andersen, Chris Jenkins
  */
 @SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
-	/**
-	 * Constructs a TimesTenDialect
-	 */
+
 	public TimesTenDialect() {
 		super();
-		registerColumnType( Types.BIT, "TINYINT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "CHAR(1)" );
-		registerColumnType( Types.VARCHAR, "VARCHAR($l)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, "VARBINARY($l)" );
-		registerColumnType( Types.NUMERIC, "DECIMAL($p, $s)" );
-		// TimesTen has no BLOB/CLOB support, but these types may be suitable 
-		// for some applications. The length is limited to 4 million bytes.
-		registerColumnType( Types.BLOB, "VARBINARY(4000000)" );
-		registerColumnType( Types.CLOB, "VARCHAR(4000000)" );
+
+		//Note: these are the correct type mappings
+		//      for the default Oracle type mode
+		//      TypeMode=0
+		registerColumnType( Types.BIT, 1, "tt_tinyint" );
+		registerColumnType( Types.BIT, "tt_tinyint" );
+		registerColumnType( Types.BOOLEAN, "tt_tinyint" );
+
+		registerColumnType(Types.TINYINT, "tt_tinyint");
+		registerColumnType(Types.SMALLINT, "tt_smallint");
+		registerColumnType(Types.INTEGER, "tt_integer");
+		registerColumnType(Types.BIGINT, "tt_bigint");
+
+		//note that 'binary_float'/'binary_double' might
+		//be better mappings for Java Float/Double
+
+		//'numeric'/'decimal' are synonyms for 'number'
+		registerColumnType(Types.NUMERIC, "number($p,$s)");
+		registerColumnType(Types.DECIMAL, "number($p,$s)" );
+
+		registerColumnType( Types.VARCHAR, "varchar2($l)" );
+		registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
+
+		//do not use 'date' because it's a datetime
+		registerColumnType(Types.DATE, "tt_date");
+		//'time' and 'tt_time' are synonyms
+		registerColumnType(Types.TIME, "tt_time");
+		//`timestamp` has more precision than `tt_timestamp`
+//		registerColumnType(Types.TIMESTAMP, "tt_timestamp");
+		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 40;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.toCharNumberDateTimestamp( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
+		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.leftRight_substr( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
+		CommonFunctionFactory.rownumRowid( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER,
+				"instr(?2, ?1)",
+				"instr(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("timestampadd(sql_tsi_");
-		if (unit == TemporalUnit.NANOSECOND) {
-			sqlAppender.append("frac_second");
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampadd(sql_tsi_frac_second, ?2, ?3)";
+			default:
+				return "timestampadd(sql_tsi_?1, ?2, ?3)";
 		}
-		else {
-			sqlAppender.append(unit.toString());
-		}
-		//TODO: millisecond, microsecond
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
 	}
 
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("timestampdiff(sql_tsi_");
-		if (unit == TemporalUnit.NANOSECOND) {
-			sqlAppender.append("frac_second");
-
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				return "timestampdiff(sql_tsi_frac_second, ?2, ?3)";
+			default:
+				return "timestampdiff(sql_tsi_?1, ?2, ?3)";
 		}
-		else {
-			sqlAppender.append(unit.toString());
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-	}
-
-	@Override
-	public boolean dropConstraints() {
-		return true;
 	}
 
 	@Override
@@ -145,33 +153,13 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select first 1 " + sequenceName + ".nextval from sys.tables";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
+	public SequenceSupport getSequenceSupport() {
+		return TimesTenSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from sys.sequences";
+		return "select name from sys.sequences";
 	}
 
 	@Override
@@ -180,18 +168,18 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public JoinFragment createOuterJoinFragment() {
-		return new OracleJoinFragment();
-	}
-
-	@Override
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return "";
+	public boolean supportsNoWait() {
+		return true;
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return " for update nowait";
 	}
 
 	@Override
@@ -206,41 +194,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
-		}
-		return FirstLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( 6, " first " + limit )
-				.toString();
+		return TimesTenLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -250,7 +204,7 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select first 1 sysdate from sys.tables";
+		return "select sysdate from sys.dual";
 	}
 
 	@Override
@@ -289,22 +243,19 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+		switch ( lockMode ) {
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy( lockable, lockMode );
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
+			case PESSIMISTIC_READ:
+				return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
+			case PESSIMISTIC_WRITE:
+				return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
 		}
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE ) {
-			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_READ ) {
-			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC ) {
-			return new OptimisticLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT ) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {
@@ -312,10 +263,37 @@ public class TimesTenDialect extends Dialect {
 		}
 	}
 
-	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
 
 	@Override
-	public boolean supportsEmptyInList() {
+	public boolean supportsCircularCascadeDeleteConstraints() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsUniqueConstraintInCreateAlterTable() {
+		return false;
+	}
+
+	@Override
+	public String getSelectClauseNullString(int sqlType) {
+		switch (sqlType) {
+			case Types.VARCHAR:
+			case Types.CHAR:
+				return "to_char(null)";
+
+			case Types.DATE:
+			case Types.TIME:
+			case Types.TIMESTAMP:
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return "to_date(null)";
+
+			default:
+				return "to_number(null)";
+		}
+	}
+
 }

@@ -6,12 +6,11 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.internal.util.StringHelper;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.hibernate.MappingException;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * This class maps a type to names.  Associations may be marked with a capacity. Calling the get()
@@ -60,17 +59,11 @@ public final class TypeNames {
 	 *
 	 * @param typeCode the type key
 	 *
-	 * @return the default type name associated with specified key
-	 *
-	 * @throws MappingException Indicates that no registrations were made for that typeCode
+	 * @return the default type name associated with specified key, or
+	 *         null if there was no type name associated with the key
 	 */
-	public String get(final int typeCode) throws MappingException {
-		final Integer integer = Integer.valueOf( typeCode );
-		final String result = defaults.get( integer );
-		if ( result == null ) {
-			throw new MappingException( "No Dialect mapping for JDBC type: " + typeCode );
-		}
-		return result;
+	public String get(final int typeCode) {
+		return defaults.get( typeCode );
 	}
 
 	/**
@@ -82,12 +75,9 @@ public final class TypeNames {
 	 * @param precision the SQL precision
 	 *
 	 * @return the associated name with smallest capacity >= size, if available and the default type name otherwise
-	 *
-	 * @throws MappingException Indicates that no registrations were made for that typeCode
 	 */
-	public String get(int typeCode, long size, int precision, int scale) throws MappingException {
-		final Integer integer = Integer.valueOf( typeCode );
-		final Map<Long, String> map = weighted.get( integer );
+	public String get(int typeCode, Long size, Integer precision, Integer scale) {
+		final Map<Long, String> map = weighted.get( typeCode );
 		if ( map != null && map.size() > 0 ) {
 			// iterate entries ordered by capacity to find first fit
 			for ( Map.Entry<Long, String> entry: map.entrySet() ) {
@@ -103,10 +93,17 @@ public final class TypeNames {
 		return replace( get( typeCode ), size, precision, scale );
 	}
 
-	private static String replace(String type, long size, int precision, int scale) {
-		type = StringHelper.replaceOnce( type, "$s", Integer.toString( scale ) );
-		type = StringHelper.replaceOnce( type, "$l", Long.toString( size ) );
-		return StringHelper.replaceOnce( type, "$p", Integer.toString( precision ) );
+	private static String replace(String type, Long size, Integer precision, Integer scale) {
+		if ( scale != null ) {
+			type = StringHelper.replaceOnce( type, "$s", Integer.toString( scale ) );
+		}
+		if ( size != null ) {
+			type = StringHelper.replaceOnce( type, "$l", Long.toString( size ) );
+		}
+		if ( precision != null ) {
+			type = StringHelper.replaceOnce( type, "$p", Integer.toString( precision ) );
+		}
+		return type;
 	}
 
 	/**
@@ -117,14 +114,8 @@ public final class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, long capacity, String value) {
-		final Integer integer = Integer.valueOf( typeCode );
-		Map<Long, String> map = weighted.get( integer );
-		if ( map == null ) {
-			// add new ordered map
-			map = new TreeMap<Long, String>();
-			weighted.put( integer, map );
-		}
-		map.put( capacity, value );
+		weighted.computeIfAbsent( typeCode, k -> new TreeMap<>() )
+				.put( capacity, value );
 	}
 
 	/**
@@ -134,8 +125,7 @@ public final class TypeNames {
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, String value) {
-		final Integer integer = Integer.valueOf( typeCode );
-		defaults.put( integer, value );
+		defaults.put( typeCode, value );
 	}
 
 	/**

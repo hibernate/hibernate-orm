@@ -6,10 +6,14 @@
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.Locale;
-
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Provides a standard implementation that supports the majority of the HQL
@@ -20,45 +24,83 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
  * @author David Channon
  * @author Steve Ebersole
  */
-public class NamedSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
+public class NamedSqmFunctionDescriptor
+		extends AbstractSqmSelfRenderingFunctionDescriptor
+		implements FunctionRenderingSupport {
 	private final String functionName;
-	private final FunctionRenderingSupport renderingSupport;
-
-	public NamedSqmFunctionDescriptor(
-			String functionName,
-			boolean useParenthesesWhenNoArgs,
-			ArgumentsValidator argumentsValidator) {
-		this(
-				functionName,
-				useParenthesesWhenNoArgs,
-				argumentsValidator,
-				(impliedTypeAccess, arguments) -> impliedTypeAccess.get()
-		);
-	}
+	private final boolean useParenthesesWhenNoArgs;
+	private final String argumentListSignature;
 
 	public NamedSqmFunctionDescriptor(
 			String functionName,
 			boolean useParenthesesWhenNoArgs,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver) {
-		super( argumentsValidator, returnTypeResolver );
-
-		this.functionName = functionName;
-		this.renderingSupport = new StandardFunctionRenderingSupport( useParenthesesWhenNoArgs );
+		this( functionName, useParenthesesWhenNoArgs, argumentsValidator, returnTypeResolver, functionName, null );
 	}
 
-	public String getFunctionName() {
+	public NamedSqmFunctionDescriptor(
+			String functionName,
+			boolean useParenthesesWhenNoArgs,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			String name,
+			String argumentListSignature) {
+		super( name, argumentsValidator, returnTypeResolver );
+
+		this.functionName = functionName;
+		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+		this.argumentListSignature = argumentListSignature;
+	}
+
+	/**
+	 * Function name accessor
+	 *
+	 * @return The function name.
+	 */
+	public String getName() {
 		return functionName;
 	}
 
 	@Override
-	protected String resolveFunctionName(String functionName) {
-		return this.functionName;
+	public String getArgumentListSignature() {
+		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+	}
+
+	@Override
+	public boolean alwaysIncludesParentheses() {
+		return useParenthesesWhenNoArgs;
 	}
 
 	@Override
 	public FunctionRenderingSupport getRenderingSupport() {
-		return renderingSupport;
+		return this;
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> sqlAstArguments,
+			SqlAstWalker walker) {
+		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
+
+		sqlAppender.appendSql( functionName );
+		if ( useParens ) {
+			sqlAppender.appendSql( "(" );
+		}
+
+		boolean firstPass = true;
+		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
+			if ( !firstPass ) {
+				sqlAppender.appendSql( ", " );
+			}
+			sqlAstArgument.accept(walker);
+			firstPass = false;
+		}
+
+		if ( useParens ) {
+			sqlAppender.appendSql( ")" );
+		}
 	}
 
 	@Override

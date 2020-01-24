@@ -19,6 +19,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -27,6 +28,8 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Duration;
+import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
@@ -68,6 +71,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.spi.SqlAppender.CLOSE_PARENTHESIS;
 import static org.hibernate.sql.ast.spi.SqlAppender.COMA_SEPARATOR;
 import static org.hibernate.sql.ast.spi.SqlAppender.EMPTY_STRING;
@@ -95,6 +99,10 @@ public abstract class AbstractSqlAstWalker
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 
 	private final Dialect dialect;
+
+	public Dialect getDialect() {
+		return dialect;
+	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqlAstWalker(SessionFactoryImplementor sessionFactory) {
@@ -159,7 +167,18 @@ public abstract class AbstractSqlAstWalker
 		}
 
 		visitSelectClause( querySpec.getSelectClause() );
-		visitFromClause( querySpec.getFromClause() );
+
+		FromClause fromClause = querySpec.getFromClause();
+		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
+			String fromDual = getDialect().getFromDual();
+			if ( !fromDual.isEmpty() ) {
+				appendSql(" ");
+				appendSql( fromDual );
+			}
+		}
+		else {
+			visitFromClause( fromClause );
+		}
 
 		if ( querySpec.getWhereClauseRestrictions() != null && !querySpec.getWhereClauseRestrictions().isEmpty() ) {
 			appendSql( " where " );
@@ -437,6 +456,11 @@ public abstract class AbstractSqlAstWalker
 	}
 
 	@Override
+	public void visitDurationUnit(DurationUnit unit) {
+		appendSql( getDialect().translateDurationField( unit.getUnit() ) );
+	}
+
+	@Override
 	public void visitFormat(Format format) {
 		final String dialectFormat = sessionFactory.getJdbcServices().getDialect().translateDatetimeFormat( format.getFormat() );
 		appendSql( "'" );
@@ -458,9 +482,14 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		final int jdbcTypeCode = castTarget.getExpressionType().getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode();
-		final String sqlTypeName = sessionFactory.getJdbcServices().getDialect().getCastTypeName( jdbcTypeCode );
-		appendSql( sqlTypeName );
+		appendSql(
+				getDialect().getCastTypeName(
+						castTarget.getExpressionType(),
+						castTarget.getLength(),
+						castTarget.getPrecision(),
+						castTarget.getScale()
+				)
+		);;
 	}
 
 	@Override
@@ -809,6 +838,24 @@ public abstract class AbstractSqlAstWalker
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		arithmeticExpression.getRightHandOperand().accept( this );
 		appendSql( ")" );
+	}
+
+	@Override
+	public void visitDuration(Duration duration) {
+		duration.getMagnitude().accept( this );
+		sqlAppender.appendSql(
+				duration.getUnit().conversionFactor( NANOSECOND, getDialect() )
+		);
+	}
+
+	@Override
+	public void visitConversion(Conversion conversion) {
+		conversion.getDuration().getMagnitude().accept( this );
+		sqlAppender.appendSql(
+				conversion.getDuration().getUnit().conversionFactor(
+						conversion.getUnit(), getDialect()
+				)
+		);
 	}
 
 	@Override

@@ -57,6 +57,11 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	}
 
 	@Override
+	public String getDatabaseVersion() {
+		return databaseMajorVersion + "." + databaseMinorVersion;
+	}
+
+	@Override
 	public int getDatabaseMajorVersion() {
 		return databaseMajorVersion;
 	}

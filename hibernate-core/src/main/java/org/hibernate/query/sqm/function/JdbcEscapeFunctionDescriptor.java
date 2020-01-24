@@ -6,18 +6,13 @@
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.List;
-import java.util.function.Supplier;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmJdbcFunctionEscapeWrapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import java.util.List;
 
 /**
  * Acts as a wrapper to another SqmFunctionTemplate - upon rendering uses the
@@ -25,52 +20,30 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
  *
  * @author Steve Ebersole
  */
-public class JdbcEscapeFunctionDescriptor implements SqmFunctionDescriptor {
+public class JdbcEscapeFunctionDescriptor
+		extends AbstractSqmFunctionDescriptor {
 	private final SqmFunctionDescriptor wrapped;
 
-	@SuppressWarnings("WeakerAccess")
-	public JdbcEscapeFunctionDescriptor(SqmFunctionDescriptor wrapped) {
+	public JdbcEscapeFunctionDescriptor(String name, SqmFunctionDescriptor wrapped) {
+		super(name);
 		this.wrapped = wrapped;
 	}
 
 	@Override
-	public Expression generateSqlExpression(
-			String functionName,
-			List<? extends SqmVisitableNode> sqmArguments,
-			Supplier<MappingModelExpressable> inferableTypeAccess,
-			SqmToSqlAstConverter converter,
-			SqlAstCreationState creationState) {
-		final Expression wrappedExpression = wrapped.generateSqlExpression(
-				functionName,
-				sqmArguments,
-				inferableTypeAccess,
-				converter,
-				creationState
+	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return new SqmJdbcFunctionEscapeWrapper<>(
+				this,
+				wrapped.generateSqmExpression(
+						arguments,
+						impliedResultType,
+						queryEngine,
+						typeConfiguration
+				),
+				queryEngine.getCriteriaBuilder()
 		);
-
-		return new EscapeExpression( wrappedExpression );
-	}
-
-	private static class EscapeExpression implements SelfRenderingExpression {
-		private final Expression wrappedExpression;
-
-		EscapeExpression(Expression wrappedExpression) {
-			this.wrappedExpression = wrappedExpression;
-		}
-
-		@Override
-		public void renderToSql(
-				SqlAppender sqlAppender,
-				SqlAstWalker walker,
-				SessionFactoryImplementor sessionFactory) {
-			sqlAppender.appendSql( "{fn " );
-			wrappedExpression.accept( walker );
-			sqlAppender.appendSql( "}" );
-		}
-
-		@Override
-		public MappingModelExpressable getExpressionType() {
-			return wrappedExpression.getExpressionType();
-		}
 	}
 }

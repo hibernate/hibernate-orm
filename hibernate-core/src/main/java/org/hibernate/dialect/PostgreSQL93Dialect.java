@@ -6,18 +6,19 @@
  */
 package org.hibernate.dialect;
 
-import java.util.List;
-
 /**
- * An SQL Dialect for PostgreSQL 9.3 and later. Adds support for Materialized view.
+ * An SQL Dialect for PostgreSQL 9.3 and later.
+ * Adds support for Materialized view.
  *
  * @author Dionis Argiri
+ *
+ * @deprecated use {@code PostgreSQLDialect(810)}
  */
-public class PostgreSQL93Dialect extends PostgreSQL92Dialect {
+@Deprecated
+public class PostgreSQL93Dialect extends PostgreSQLDialect {
 
-	@Override
-	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
-		super.augmentRecognizedTableTypes( tableTypesList );
-		tableTypesList.add( "MATERIALIZED VIEW" );
+	public PostgreSQL93Dialect() {
+		super(930);
 	}
+
 }

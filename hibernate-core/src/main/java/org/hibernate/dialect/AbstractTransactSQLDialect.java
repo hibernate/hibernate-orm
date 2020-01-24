@@ -6,13 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -22,13 +15,19 @@ import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
@@ -38,25 +37,37 @@ import org.hibernate.type.StandardBasicTypes;
 abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.BIGINT, "numeric(19,0)" );
-		registerColumnType( Types.SMALLINT, "smallint" );
+
+		registerColumnType( Types.BOOLEAN, "bit" );
+
+		//SQL Server/Sybase 'bit' type is always exactly one bit
+		registerColumnType( Types.BIT, "smallint" );
+
+		//'tinyint' is an unsigned type in Sybase and
+		//SQL Server, holding values in the range 0-255
+		//see HHH-6779
 		registerColumnType( Types.TINYINT, "smallint" );
+
+		//it's called 'int' not 'integer'
 		registerColumnType( Types.INTEGER, "int" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
+
+		//note that 'real' is double precision on SQL Server, single precision on Sybase
+		//but 'float' is single precision on Sybase, double precision on SQL Server
+
 		registerColumnType( Types.DATE, "datetime" );
 		registerColumnType( Types.TIME, "datetime" );
 		registerColumnType( Types.TIMESTAMP, "datetime" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime" );
+
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
 	}
 
 	@Override
@@ -65,75 +76,59 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.ln_log( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
+		CommonFunctionFactory.atan2_atn2( queryEngine );
+		CommonFunctionFactory.mod_operator( queryEngine );
+		CommonFunctionFactory.square( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
+		CommonFunctionFactory.pad_replicate( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.ascii(queryEngine);
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.concat_plusOperator( queryEngine );
 		CommonFunctionFactory.trim1( queryEngine );
 		CommonFunctionFactory.repeat_replicate( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
 		CommonFunctionFactory.characterLength_len( queryEngine );
-		CommonFunctionFactory.extract_datepart( queryEngine );
+		CommonFunctionFactory.substring_substringLen( queryEngine );
+		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "square" )
-				.setExactArgumentCount( 1 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "(?1 % ?2)" )
-				.setInvariantType( StandardBasicTypes.INTEGER )
-				.setExactArgumentCount( 2 )
-				.register( "mod" );
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "atn2" )
-				.setInvariantType( StandardBasicTypes.DOUBLE )
-				.setExactArgumentCount( 2 )
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "concat", StandardBasicTypes.STRING, "(", "+", ")" );
-
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "ln", "log" );
-
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("dateadd(");
-		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public String trimPattern(TrimSpec specification, char character) {
+		return replaceLtrimRtrim(specification, character);
 	}
 
-	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("datediff(");
-		//TODO: SQL Server supports nanosecond, but what about Sybase?
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	static String replaceLtrimRtrim(TrimSpec specification, char character) {
+		boolean blank = character == ' ';
+		switch ( specification ) {
+			case LEADING:
+				return blank
+						? "ltrim(?1)"
+						: "replace(replace(ltrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+			case TRAILING:
+				return blank
+						? "rtrim(?1)"
+						: "replace(replace(rtrim(replace(replace(?1,' ','#%#%'),'@',' ')),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+			default:
+				return blank
+						? "ltrim(rtrim(?1))"
+						: "replace(replace(ltrim(rtrim(replace(replace(?1,' ','#%#%'),'@',' '))),' ','@'),'#%#%',' ')"
+								.replace('@', character);
+		}
 	}
 
 	@Override
 	public String getAddColumnString() {
 		return "add";
-	}
-
-	@Override
-	public String getNullColumnString() {
-		return "";
 	}
 
 	@Override

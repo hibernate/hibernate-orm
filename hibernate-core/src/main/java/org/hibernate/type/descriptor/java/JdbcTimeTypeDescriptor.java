@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -165,5 +166,10 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
 	}
 }

@@ -12,11 +12,14 @@ import java.util.Locale;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
+import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
@@ -31,9 +34,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 	public static final int DEFAULT_PRECISION = 19;
 	public static final int DEFAULT_SCALE = 2;
 
-	private int length = DEFAULT_LENGTH;
-	private int precision = DEFAULT_PRECISION;
-	private int scale = DEFAULT_SCALE;
+	private int length;
+	private int precision;
+	private int scale;
 	private Value value;
 	private int typeIndex;
 	private String name;
@@ -235,7 +238,18 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getSqlType(Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
-			sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), getLength(), getPrecision(), getScale() );
+			Size size = new Size( getPrecision(), getScale(), getLength(), null );
+			Type type = getValue().getType();
+			if ( size.getLength() == null
+					&& size.getScale() == null && size.getPrecision() == null
+					&& type instanceof JdbcMapping) {
+				size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
+						((JdbcMapping) type).getSqlTypeDescriptor(),
+						((JdbcMapping) type).getJavaTypeDescriptor()
+				);
+			}
+
+			sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), size );
 		}
 		return sqlType;
 	}

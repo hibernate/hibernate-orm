@@ -6,16 +6,15 @@
  */
 package org.hibernate.test.id.sequence;
 
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.RequiresDialect;
+import org.junit.Test;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
-import org.hibernate.dialect.PostgreSQL10Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Vlad Mhalcea
  */
-@RequiresDialect(jiraKey = "HHH-13202", value = PostgreSQL10Dialect.class)
+@RequiresDialect(jiraKey = "HHH-13202", value = PostgreSQLDialect.class)
 public class PostgreSQLIdentitySupportTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -22,9 +22,8 @@ public final class StandardDialectResolver implements DialectResolver {
 	public Dialect resolveDialect(DialectResolutionInfo info) {
 
 		for ( Database database : Database.values() ) {
-			Dialect dialect = database.resolveDialect( info );
-			if ( dialect != null ) {
-				return dialect;
+			if ( database.matchesResolutionInfo( info ) ) {
+				return database.createDialect( info );
 			}
 		}
 

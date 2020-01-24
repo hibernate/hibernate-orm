@@ -10,19 +10,18 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.RowSelection;
 
 /**
- * Limit handler that delegates all operations to the underlying dialect.
+ * Stub {@link LimitHandler} that delegates all operations
+ * to the deprecated methods of the {@link Dialect}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ *
+ * @deprecated this class exists only as an adaptor supporting
+ *             legacy user-written {@link Dialect}s.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class LegacyLimitHandler extends AbstractLimitHandler {
 	private final Dialect dialect;
 
-	/**
-	 * Constructs a LegacyLimitHandler
-	 *
-	 * @param dialect The dialect
-	 */
 	public LegacyLimitHandler(Dialect dialect) {
 		this.dialect = dialect;
 	}
@@ -69,13 +68,16 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, RowSelection selection) {
-		final boolean useLimitOffset = supportsLimit()
-				&& supportsLimitOffset()
-				&& LimitHelper.hasFirstRow( selection )
-				&& LimitHelper.hasMaxRows( selection );
+		final boolean useLimitOffset
+				= supportsOffset()
+						&& hasFirstRow( selection )
+				|| supportsLimit()
+						&& supportsLimitOffset()
+						&& hasFirstRow( selection )
+						&& hasMaxRows( selection );
 		return dialect.getLimitString(
 				sql,
-				useLimitOffset ? LimitHelper.getFirstRow( selection ) : 0,
+				useLimitOffset ? getFirstRow( selection ) : 0,
 				getMaxOrLimit( selection )
 		);
 	}

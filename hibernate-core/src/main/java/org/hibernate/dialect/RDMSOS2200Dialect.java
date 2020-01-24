@@ -6,36 +6,23 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.RDMSExtractEmulation;
-import org.hibernate.dialect.function.TransactSQLTrimEmulation;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.lock.*;
+import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.dialect.sequence.RDMSSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
-import org.hibernate.sql.ast.spi.CaseExpressionWalker;
-import org.hibernate.sql.ast.spi.DecodeCaseExpressionWalker;
-
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import java.sql.Types;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -49,60 +36,11 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
  *
  * @author Ploski and Hanson
  */
-@SuppressWarnings("deprecation")
 public class RDMSOS2200Dialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			RDMSOS2200Dialect.class.getName()
 	);
-
-	private static final AbstractLimitHandler LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-			if (hasOffset) {
-				throw new UnsupportedOperationException( "query result offset is not supported" );
-			}
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
-
-	private static final AbstractLimitHandler LEGACY_LIMIT_HANDLER = new AbstractLimitHandler() {
-		@Override
-		public String processSql(String sql, RowSelection selection) {
-			return sql + " fetch first " + getMaxOrLimit( selection ) + " rows only ";
-		}
-
-		@Override
-		public boolean supportsLimit() {
-			return true;
-		}
-
-		@Override
-		public boolean supportsLimitOffset() {
-			return false;
-		}
-
-		@Override
-		public boolean supportsVariableLimit() {
-			return false;
-		}
-	};
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -135,32 +73,38 @@ public class RDMSOS2200Dialect extends Dialect {
 		 * The TIMESTAMP literal format is: YYYY-MM-DD HH:MM:SS[.[FFFFFF]]
 		 *
 		 * Note that $l (dollar-L) will use the length value if provided.
-		 * Also new for Hibernate3 is the $p precision and $s (scale) parameters
+		 * Also new for Hibernate3 is the $p percision and $s (scale) parameters
 		 */
-		registerColumnType( Types.BIT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "SMALLINT" );
-		registerColumnType( Types.BIGINT, "NUMERIC(21,0)" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.CHAR, "CHARACTER(1)" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.REAL, "REAL" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.NUMERIC, "NUMERIC(21,$l)" );
-		registerColumnType( Types.DECIMAL, "NUMERIC(21,$l)" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARCHAR, "CHARACTER($l)" );
-		registerColumnType( Types.BLOB, "BLOB($l)" );
-		/*
-         * The following types are not supported in RDMS/JDBC and therefore commented out.
-         * However, in some cases, mapping them to CHARACTER columns works
-         * for many applications, but does not work for all cases.
-         */
-		// registerColumnType(Types.VARBINARY, "CHARACTER($l)");
-		// registerColumnType(Types.BLOB, "CHARACTER($l)" );  // For use prior to CP 11.0
-		// registerColumnType(Types.CLOB, "CHARACTER($l)" );
+		registerColumnType( Types.BIT, 1, "smallint" );
+		registerColumnType( Types.BIT, "smallint" );
+		registerColumnType( Types.BOOLEAN, "smallint" );
+		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+		registerColumnType( Types.BLOB, "blob($l)" );
+
+		//no 'binary' nor 'varbinary' so use 'blob'
+		registerColumnType( Types.BINARY, "blob($l)");
+		registerColumnType( Types.VARBINARY, "blob($l)");
+
+		//'varchar' is not supported in RDMS for OS 2200
+		//(but it is for other flavors of RDMS)
+		//'character' means ASCII by default, 'unicode(n)'
+		//means 'character(n) character set "UCS-2"'
+		registerColumnType( Types.CHAR, "unicode($l)");
+		registerColumnType( Types.VARCHAR, "unicode($l)");
+
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
+	}
+
+	@Override
+	public int getDefaultDecimalPrecision() {
+		//the (really low) maximum
+		return 21;
 	}
 
 	@Override
@@ -176,14 +120,15 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.rand( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
+//		CommonFunctionFactory.replicate( queryEngine ); //synonym for more common repeat()
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
@@ -192,81 +137,77 @@ public class RDMSOS2200Dialect extends Dialect {
 		CommonFunctionFactory.daynameMonthname( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
+		CommonFunctionFactory.insert( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-
-		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TransactSQLTrimEmulation() );
-
-		queryEngine.getSqmFunctionRegistry().register( "extract", new RDMSExtractEmulation() );
-
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampadd('SQL_TSI_FRAC_SECOND'"); //micros
-		}
-		else {
-			sqlAppender.append("dateadd('");
-			sqlAppender.append( unit.toString() );
-			sqlAppender.append("'");
-		}
-		sqlAppender.append(", ");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("(");
-		}
-		magnitude.render();
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append(")/1e3");
-		}
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000; //microseconds
 	}
 
+	/**
+	 * RDMS supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 *
+	 * In addition, the field {@link TemporalUnit#SECOND} is
+	 * redefined to include microseconds.
+	 */
 	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("timestampdiff('SQL_TSI_FRAC_SECOND'"); //micros
-		}
-		else {
-			sqlAppender.append("datediff('");
-			sqlAppender.append( unit.toString() );
-			sqlAppender.append("'");
-		}
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-		if ( unit == NANOSECOND ) {
-			sqlAppender.append("*1e3");
+	public String extractPattern(TemporalUnit unit) {
+		switch (unit) {
+			case SECOND:
+				return "(second(?2)+microsecond(?2)/1e6)";
+			case DAY_OF_WEEK:
+				return "dayofweek(?2)";
+			case DAY_OF_MONTH:
+				return "dayofmonth(?2)";
+			case DAY_OF_YEAR:
+				return "dayofyear(?2)";
+			default:
+				return "?1(?2)";
 		}
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return Oracle8iDialect.datetimeFormat( format, true ) //Does it really support FM?
-				.replace("SSSSSS", "MLS")
-				.replace("SSSSS", "MLS")
-				.replace("SSSS", "MLS")
-				.replace("SSS", "MLS")
-				.replace("SS", "MLS")
-				.replace("S", "MLS")
-				.result();
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		switch (unit) {
+			case NANOSECOND:
+				return "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)";
+			case NATIVE:
+				return "timestampadd('SQL_TSI_FRAC_SECOND', ?2, ?3)";
+			default:
+				return "dateadd('?1', ?2, ?3)";
+		}
 	}
 
-
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		switch (unit) {
+			case NANOSECOND:
+				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)*1e3";
+			case NATIVE:
+				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)";
+			default:
+				return "dateadd('?1', ?2, ?3)";
+		}
+	}
 
 	// Dialect method overrides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * RDMS does not support qualifying index names with the schema name.
+	 * RDMS does not support qualifing index names with the schema name.
 	 * <p/>
 	 * {@inheritDoc}
 	 */
@@ -338,28 +279,8 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		// The where clause was added to eliminate this statement from Brute Force Searches.
-		return "select permuted_id('NEXT',31) from rdms.rdms_dummy where key_col = 1 ";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		// We must return a valid RDMS/RSA command from this method to
-		// prevent RDMS/RSA from issuing *ERROR 400
-		return "";
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		// We must return a valid RDMS/RSA command from this method to
-		// prevent RDMS/RSA from issuing *ERROR 400
-		return "";
+	public SequenceSupport getSequenceSupport() {
+		return RDMSSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -369,44 +290,14 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}
 
 	@Override
-	public CaseExpressionWalker getCaseExpressionWalker() {
-		return DecodeCaseExpressionWalker.INSTANCE;
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LEGACY_LIMIT_HANDLER;
-		}
-		return LIMIT_HANDLER;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String sql, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return sql + " fetch first " + limit + " rows only ";
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
+		return FetchLimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -416,28 +307,47 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public String getFromDual() {
+		return "from rdms.rdms_dummy where key_col = 1";
+	}
+
+	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// RDMS has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+		switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_WRITE:
+				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_READ:
+				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE ) {
-			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_READ ) {
-			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC ) {
-			return new OptimisticLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT ) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return OracleDialect.datetimeFormat( format, true ) //Does it really support FM?
+				.replace("SSSSSS", "MLS")
+				.replace("SSSSS", "MLS")
+				.replace("SSSS", "MLS")
+				.replace("SSS", "MLS")
+				.replace("SS", "MLS")
+				.replace("S", "MLS")
+				.result();
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim(specification, character);
 	}
 }

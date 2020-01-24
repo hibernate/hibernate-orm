@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -46,6 +48,50 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * @return The recommended SQL type descriptor
 	 */
 	SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context);
+
+	/**
+	 * The default column length when this Java type is mapped
+	 * to a SQL data type which is parametrized by length, for
+	 * example {@link java.sql.Types#VARCHAR}.
+	 *
+	 * @return {@link Size#DEFAULT_LENGTH} unless overridden
+	 */
+	default long getDefaultSqlLength(Dialect dialect) {
+		return Size.DEFAULT_LENGTH;
+	}
+
+	/**
+	 * The default column length when this Java type is mapped
+	 * to a column of type {@link java.sql.Types#LONGVARCHAR}
+	 * or {@link java.sql.Types#LONGVARBINARY}.
+	 *
+	 * @return {@link Size#LONG_LENGTH} unless overridden
+	 */
+	default long getLongSqlLength() {
+		return Size.LONG_LENGTH;
+	}
+
+	/**
+	 * The default column precision when this Java type is mapped
+	 * to a SQL data type which is parametrized by precision, for
+	 * example {@link java.sql.Types#DECIMAL}.
+	 *
+	 * @return {@link Size#DEFAULT_PRECISION} unless overridden
+	 */
+	default int getDefaultSqlPrecision(Dialect dialect) {
+		return Size.DEFAULT_PRECISION;
+	}
+
+	/**
+	 * The default column scale when this Java type is mapped to a
+	 * SQL data type which is parametrized by scale, for example
+	 * {@link java.sql.Types#DECIMAL}.
+	 *
+	 * @return {@link Size#DEFAULT_SCALE} unless overridden
+	 */
+	default int getDefaultSqlScale() {
+		return Size.DEFAULT_SCALE;
+	}
 
 	/**
 	 * Retrieve the natural comparator for this type.

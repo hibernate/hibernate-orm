@@ -6,26 +6,27 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.function.PatternBasedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
  */
 public class PatternFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
+	private final String registrationKey;
 	private final String pattern;
+	private String argumentListSignature;
 
 	private ArgumentsValidator argumentsValidator;
 	private FunctionReturnTypeResolver returnTypeResolver;
 
-	private boolean useParenthesesWhenNoArgs;
-
-	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String pattern) {
+	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
 		this.registry = registry;
+		this.registrationKey = registrationKey;
 		this.pattern = pattern;
 	}
 
@@ -38,34 +39,32 @@ public class PatternFunctionDescriptorBuilder {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}
 
-	public PatternFunctionDescriptorBuilder setArgumentCountBetween(int min, int max) {
-		return setArgumentsValidator( StandardArgumentsValidators.between( min, max ) );
-	}
-
 	public PatternFunctionDescriptorBuilder setReturnTypeResolver(FunctionReturnTypeResolver returnTypeResolver) {
 		this.returnTypeResolver = returnTypeResolver;
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setInvariantType(BasicValuedMapping invariantType) {
+	public PatternFunctionDescriptorBuilder setInvariantType(BasicType invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setUseParenthesesWhenNoArgs(boolean useParenthesesWhenNoArgs) {
-		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
+	public PatternFunctionDescriptorBuilder setArgumentListSignature(String argumentListSignature) {
+		this.argumentListSignature = argumentListSignature;
 		return this;
 	}
 
-	public SqmFunctionDescriptor register(String registrationKey) {
-		return registry.register( registrationKey, build() );
+	public SqmFunctionDescriptor register() {
+		return registry.register( registrationKey, descriptor() );
 	}
 
-	public SqmFunctionDescriptor build() {
+	public SqmFunctionDescriptor descriptor() {
 		return new PatternBasedSqmFunctionDescriptor(
-				new PatternRenderer( pattern, useParenthesesWhenNoArgs ),
+				new PatternRenderer( pattern ),
 				argumentsValidator,
-				returnTypeResolver
+				returnTypeResolver,
+				registrationKey,
+				argumentListSignature
 		);
 	}
 }

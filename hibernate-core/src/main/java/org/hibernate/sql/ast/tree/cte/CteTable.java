@@ -185,8 +185,7 @@ public class CteTable {
 									cteColumn.getColumnExpression(),
 									cteColumn.getJdbcMapping(),
 									sessionFactory
-							),
-							cteColumn.getJdbcMapping()
+							)
 					)
 			);
 		}

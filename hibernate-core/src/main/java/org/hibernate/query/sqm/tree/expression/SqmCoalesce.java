@@ -6,17 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.criteria.Expression;
-
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+
+import javax.persistence.criteria.Expression;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Steve Ebersole

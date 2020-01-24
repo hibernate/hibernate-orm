@@ -109,6 +109,11 @@ public class StandardFunctionTests {
 
 					session.createQuery( "select e from EntityOfBasics e where local_date() between e.theTimestamp and e.theTimestamp" ).list();
 					session.createQuery( "select e from EntityOfBasics e where local_date()() between e.theTimestamp and e.theTimestamp" ).list();
+
+					assertThat(
+							session.createQuery( "select local_date" ).getSingleResult(),
+							instanceOf( LocalDate.class )
+					);
 				}
 		);
 	}
@@ -125,6 +130,11 @@ public class StandardFunctionTests {
 
 					session.createQuery( "select e from EntityOfBasics e where local_time() between e.theTimestamp and e.theTimestamp" ).list();
 					session.createQuery( "select e from EntityOfBasics e where local_time()() between e.theTimestamp and e.theTimestamp" ).list();
+
+					assertThat(
+							session.createQuery( "select local_time" ).getSingleResult(),
+							instanceOf( LocalTime.class )
+					);
 				}
 		);
 	}
@@ -204,18 +214,17 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testTimestampAddDiffFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery("select function('timestampadd',month,2,current date) from EntityOfBasics e")
 							.list();
-					session.createQuery("select function('timestampdiff',hour,e.theTimestamp,current datetime) from EntityOfBasics e")
+					session.createQuery("select function('timestampdiff',hour,e.theTimestamp,current timestamp) from EntityOfBasics e")
 							.list();
 
-					session.createQuery("select timestampadd(month,2,current date) from EntityOfBasics e")
+					session.createQuery("select timestampadd(month,2,local date) from EntityOfBasics e")
 							.list();
-					session.createQuery("select timestampdiff(hour,e.theTimestamp,current datetime) from EntityOfBasics e")
+					session.createQuery("select timestampdiff(hour,e.theTimestamp,local datetime) from EntityOfBasics e")
 							.list();
 				}
 		);

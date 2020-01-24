@@ -6,117 +6,224 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
+import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.MimerSQLIdentityColumnSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.MimerSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.query.CastType;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.Types;
+
+import static org.hibernate.query.CastType.BOOLEAN;
 
 /**
- * An Hibernate 3 SQL dialect for Mimer SQL. This dialect requires Mimer SQL 9.2.1 or later
- * because of the mappings to NCLOB, BINARY, and BINARY VARYING.
+ * A dialect for Mimer SQL 11.
  *
  * @author Fredrik lund <fredrik.alund@mimer.se>
+ * @author Gavin King
  */
-@SuppressWarnings("deprecation")
 public class MimerSQLDialect extends Dialect {
 
-	private static final int NATIONAL_CHAR_LENGTH = 2000;
-	private static final int BINARY_MAX_LENGTH = 2000;
+	// KNOWN LIMITATIONS:
 
-	/**
-	 * Even though Mimer SQL supports character and binary columns up to 15 000 in length,
-	 * this is also the maximum width of the table (excluding LOBs). To avoid breaking the limit all the
-	 * time we limit the length of the character columns to CHAR_MAX_LENTH, NATIONAL_CHAR_LENGTH for national
-	 * characters, and BINARY_MAX_LENGTH for binary types.
-	 */
+	// * no support for format()
+	// * can't cast non-literal String to Binary
+	// * no power(), exp(), ln(), sqrt() functions
+	// * no trig functions, not even sin()
+	// * can't select a parameter unless wrapped
+	//   in a cast or function call
+
 	public MimerSQLDialect() {
 		super();
-		registerColumnType( Types.BIT, "ODBC.BIT" );
-		registerColumnType( Types.BIGINT, "BIGINT" );
-		registerColumnType( Types.SMALLINT, "SMALLINT" );
-		registerColumnType( Types.TINYINT, "ODBC.TINYINT" );
-		registerColumnType( Types.INTEGER, "INTEGER" );
-		registerColumnType( Types.CHAR, "NCHAR(1)" );
-		registerColumnType( Types.VARCHAR, NATIONAL_CHAR_LENGTH, "NATIONAL CHARACTER VARYING($l)" );
-		registerColumnType( Types.VARCHAR, "NCLOB($l)" );
-		registerColumnType( Types.LONGVARCHAR, "CLOB($1)" );
-		registerColumnType( Types.FLOAT, "FLOAT" );
-		registerColumnType( Types.DOUBLE, "DOUBLE PRECISION" );
-		registerColumnType( Types.DATE, "DATE" );
-		registerColumnType( Types.TIME, "TIME" );
-		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.VARBINARY, BINARY_MAX_LENGTH, "BINARY VARYING($l)" );
-		registerColumnType( Types.VARBINARY, "BLOB($1)" );
-		registerColumnType( Types.LONGVARBINARY, "BLOB($1)" );
-		registerColumnType( Types.BINARY, BINARY_MAX_LENGTH, "BINARY" );
-		registerColumnType( Types.BINARY, "BLOB($1)" );
-		registerColumnType( Types.NUMERIC, "NUMERIC(19, $l)" );
-		registerColumnType( Types.BLOB, "BLOB($l)" );
-		registerColumnType( Types.CLOB, "NCLOB($l)" );
+		//no 'bit' type
+		registerColumnType( Types.BIT, 1, "boolean" );
+		//no 'tinyint', so use integer with 3 decimal digits
+		registerColumnType( Types.BIT, "integer(3)" );
+		registerColumnType( Types.TINYINT, "integer(3)" );
+
+		//Mimer CHARs are ASCII!!
+		registerColumnType( Types.CHAR, "nchar($l)" );
+		registerColumnType( Types.VARCHAR, 5_000, "nvarchar($l)" );
+		registerColumnType( Types.VARCHAR, "nclob($l)" );
+		registerColumnType( Types.NVARCHAR, 5_000, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, "nclob($l)" );
+
+		registerColumnType( Types.VARBINARY, 15_000, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, "blob($l)" );
+
+		//default length is 1M, which is quite low
+		registerColumnType( Types.BLOB, "blob($l)" );
+		registerColumnType( Types.CLOB, "nclob($l)" );
+		registerColumnType( Types.NCLOB, "nclob($l)" );
+
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
 	}
 
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		//precision of a Mimer 'float(p)' represents
+		//decimal digits instead of binary digits
+		return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
+	}
 
+//	@Override
+//	public int getDefaultDecimalPrecision() {
+//		//the maximum, but I guess it's too high
+//		return 45;
+//	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "round" );
+		CommonFunctionFactory.soundex( queryEngine );
+		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.truncate( queryEngine );
+		CommonFunctionFactory.repeat( queryEngine );
+		CommonFunctionFactory.pad_repeat( queryEngine );
+		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
+		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+	}
 
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dacos", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dasin", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "datan", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "datan2", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dcos", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dcot", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "cot", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ddegrees", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "degrees", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dexp", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "log", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dlog10", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "log10", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dradian", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "radian", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dsin", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "soundex", StandardBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dsqrt", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dtan", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dpower" );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "date", StandardBasicTypes.DATE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofweek", StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "dayofyear", StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "time", StandardBasicTypes.TIME );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "timestamp", StandardBasicTypes.TIMESTAMP );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "week", StandardBasicTypes.INTEGER );
-
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "varchar", StandardBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "real", StandardBasicTypes.FLOAT );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "bigint", StandardBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "char", StandardBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "integer", StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "smallint", StandardBasicTypes.SHORT );
-
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_char", StandardBasicTypes.CHARACTER );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "ascii_code", StandardBasicTypes.STRING );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_char", StandardBasicTypes.LONG );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "unicode_code", StandardBasicTypes.STRING );
+	/**
+	 * Mimer does have a real {@link java.sql.Types#BOOLEAN}
+	 * type, but it doesn't know how to cast to it.
+	 */
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		switch (to) {
+			case BOOLEAN:
+				switch (from) {
+					case STRING:
+//						return "case when regexp_match(lower(?1), '^(t|f|true|false)$') then lower(?1) like 't%' end";
+//						return "case when lower(?1)in('t','true') then true when lower(?1)in('f','false') then false end";
+						return "case when ?1 in('t','true','T','TRUE') then true when ?1 in('f','false','F','FALSE') then false end";
+					case LONG:
+					case INTEGER:
+						return "(?1<>0)";
+				}
+				break;
+			case INTEGER:
+			case LONG:
+				if (from == BOOLEAN) {
+					return "case ?1 when false then 0 when true then 1 end";
+				}
+				break;
+		}
+		return super.castPattern(from, to);
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
+	public String currentTimestamp() {
+		return "localtimestamp";
+	}
+
+	@Override
+	public String currentTime() {
+		return "localtime";
+	}
+
+	/**
+	 * Mimer supports a limited list of temporal fields in the
+	 * extract() function, but we can emulate some of them by
+	 * using the appropriate named functions instead of
+	 * extract().
+	 *
+	 * Thus, the additional supported fields are
+	 * {@link TemporalUnit#WEEK},
+	 * {@link TemporalUnit#DAY_OF_YEAR},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_YEAR}.
+	 */
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		switch (unit) {
+			case WEEK:
+				return "week(?2)";
+			case DAY_OF_WEEK:
+				return "dayofweek(?2)";
+			case DAY_OF_YEAR:
+				return "dayofyear(?2)";
+			case DAY_OF_MONTH:
+				return "day(?2)";
+			default:
+				return super.extractPattern(unit);
+		}
+	}
+
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		StringBuilder pattern = new StringBuilder();
+		pattern.append("cast((?3 - ?2) ");
+		switch (unit) {
+			case NATIVE:
+			case NANOSECOND:
+			case SECOND:
+				pattern.append("second(12,9)");
+				break;
+			case MINUTE:
+				pattern.append("minute(10)");
+				break;
+			case HOUR:
+				pattern.append("hour(8)");
+				break;
+			case DAY:
+			case WEEK:
+				pattern.append("day(7)");
+				break;
+			case MONTH:
+			case QUARTER:
+				pattern.append("month(7)");
+				break;
+			case YEAR:
+				pattern.append("year(7)");
+				break;
+			default:
+				throw new SemanticException("unsupported duration unit: " + unit);
+		}
+		pattern.append(" as bigint)");
+		switch (unit) {
+			case WEEK:
+				pattern.append("/7");
+				break;
+			case QUARTER:
+				pattern.append("/3");
+				break;
+			case NATIVE:
+			case NANOSECOND:
+				pattern.append("*1e9");
+				break;
+		}
+		return pattern.toString();
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		switch ( unit ) {
+			case NATIVE:
+			case NANOSECOND:
+				return "(?3 + (?2)/1e9 * interval '1' second)";
+			case QUARTER:
+				return "(?3 + (?2) * interval '3' month)";
+			case WEEK:
+				return "(?3 + (?2) * interval '7' day)";
+			default:
+				return "(?3 + (?2) * interval '1' ?1)";
+		}
 	}
 
 	@Override
@@ -125,33 +232,13 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select next_value of " + sequenceName + " from system.onerow";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create unique sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName + " restrict";
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return false;
-	}
-
-	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return MimerSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -165,8 +252,13 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean forUpdateOfColumns() {
-		return false;
+	public LimitHandler getLimitHandler() {
+		return OffsetFetchLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public String getFromDual() {
+		return "from (values(0))";
 	}
 
 	@Override
@@ -175,7 +267,12 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new MimerSQLIdentityColumnSupport();
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception("format() function not supported on Mimer SQL");
+	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
+		return false;
 	}
 }

@@ -11,12 +11,17 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -27,19 +32,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -54,6 +54,9 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.internal.TypeConfigurationRegistry;
+
+import java.sql.Time;
+import java.sql.Timestamp;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
@@ -243,6 +246,52 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
+	 * Understands the following target type names for the cast() function:
+	 *
+	 * - String
+	 * - Character
+	 * - Byte, Integer, Long
+	 * - Float, Double
+	 * - Time, Date, Timestamp
+	 * - LocalDate, LocalTime, LocalDateTime
+	 * - BigInteger
+	 * - BigDecimal
+	 * - Binary
+	 * - Boolean (fragile)
+	 *
+	 * (The type names are not case-sensitive.)
+	 */
+	public BasicValuedMapping resolveCastTargetType(String name) {
+		switch ( name.toLowerCase() ) {
+			case "string": return getBasicTypeForJavaType( String.class );
+			case "character": return getBasicTypeForJavaType( Character.class );
+			case "byte": return getBasicTypeForJavaType( Byte.class );
+			case "integer": return getBasicTypeForJavaType( Integer.class );
+			case "long": return getBasicTypeForJavaType( Long.class );
+			case "float": return getBasicTypeForJavaType( Float.class );
+			case "double": return getBasicTypeForJavaType( Double.class );
+			case "time": return getBasicTypeForJavaType( Time.class );
+			case "date": return getBasicTypeForJavaType( java.sql.Date.class );
+			case "timestamp": return getBasicTypeForJavaType( Timestamp.class );
+			case "localtime": return getBasicTypeForJavaType( LocalTime.class );
+			case "localdate": return getBasicTypeForJavaType( LocalDate.class );
+			case "localdatetime": return getBasicTypeForJavaType( LocalDateTime.class );
+			case "offsetdatetime": return getBasicTypeForJavaType( OffsetDateTime.class );
+			case "zoneddatetime": return getBasicTypeForJavaType( ZonedDateTime.class );
+			case "biginteger": return getBasicTypeForJavaType( BigInteger.class );
+			case "bigdecimal": return getBasicTypeForJavaType( BigDecimal.class );
+			case "binary":
+				//TODO: why does this not work:
+//				standardExpressableTypeForJavaType( byte[].class );
+				return StandardBasicTypes.BINARY;
+			//this one is very fragile ... works well for BIT or BOOLEAN columns only
+			//works OK, I suppose, for integer columns, but not at all for char columns
+			case "boolean": return getBasicTypeForJavaType( Boolean.class );
+			default: throw new HibernateException( "unrecognized cast target type: " + name );
+		}
+	}
+
+	/**
 	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in
 	 * regards to eventually being associated with a SessionFactory.  Goes
 	 * 3 "lifecycle" stages, pertaining to {@link #getMetadataBuildingContext()}
@@ -424,6 +473,29 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			SqmExpressable<?> secondType,
 			boolean isDivision) {
 
+		if ( isTemporalType( firstType ) ) {
+			if ( secondType==null || isTemporalType( secondType ) ) {
+				// special case for subtraction of two dates
+				// or timestamps resulting in a duration
+				return getBasicTypeRegistry().getRegisteredType( Duration.class );
+			}
+			else {
+				// must be postfix addition/subtraction of
+				// a duration to/from a date or timestamp
+				return firstType;
+			}
+		}
+		else if ( isDuration( secondType ) ) {
+			// it's either addition/subtraction of durations
+			// or prefix scalar multiplication of a duration
+			return secondType;
+		}
+		else if ( firstType==null && isTemporalType( secondType ) ) {
+			// subtraction of a date or timestamp from a
+			// parameter (which doesn't have a type yet)
+			return getBasicTypeRegistry().getRegisteredType( Duration.class );
+		}
+
 		if ( isDivision ) {
 			// covered under the note in 6.5.7.1 discussing the unportable
 			// "semantics of the SQL division operation"..
@@ -541,6 +613,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
+	public boolean isTimestampType(SqmExpressable type) {
+		return type != null
+				&& isTimestampType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	public static boolean isTimestampType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+	}
+
 	public static boolean isSqlTimestampType(MappingModelExpressable type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return isSqlTimestampType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
@@ -555,7 +638,26 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
 	}
 
+	public static boolean isTemporalType(SqlTypeDescriptor descriptor) {
+		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return jdbcTypeCode == Types.TIMESTAMP
+				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
+				|| jdbcTypeCode == Types.TIME
+				|| jdbcTypeCode == Types.TIME_WITH_TIMEZONE
+				|| jdbcTypeCode == Types.DATE;
+	}
+
+	public boolean isTemporalType(SqmExpressable<?> type) {
+		return type != null
+				&& isTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
 	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
 		return matchesJavaType( type, Date.class );
 	}
+
+	public static boolean isDuration(SqmExpressable<?> type) {
+		return matchesJavaType( type, Duration.class );
+	}
+
 }

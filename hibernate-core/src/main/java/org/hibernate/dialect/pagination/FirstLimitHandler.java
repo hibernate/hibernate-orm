@@ -6,26 +6,34 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
-
-
 /**
- * @author Brett Meyer
+ * A {@link LimitHandler} for older versions of Informix, Ingres,
+ * and TimesTen, which supported the syntax {@code SELECT FIRST n}.
+ * Note that this syntax does not allow specification of an offset.
+ *
+ * @author Chris Cranford
  */
-public class FirstLimitHandler extends LegacyFirstLimitHandler {
+public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 
-	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler();
+	public static final FirstLimitHandler INSTANCE = new FirstLimitHandler(false);
 
-	private FirstLimitHandler() {
-		// NOP
+	public FirstLimitHandler(boolean variableLimit) {
+		super(variableLimit);
 	}
-	
+
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		final boolean hasOffset = LimitHelper.hasFirstRow( selection );
-		if ( hasOffset ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return super.processSql( sql, selection );
+	protected String limitClause() {
+		return " first ?";
 	}
+
+	@Override
+	protected String insert(String first, String sql) {
+		return insertAfterSelect( first, sql );
+	}
+
+	@Override
+	public boolean bindLimitParametersFirst() {
+		return true;
+	}
+
 }

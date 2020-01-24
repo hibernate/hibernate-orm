@@ -6,42 +6,64 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.List;
-import java.util.function.Supplier;
-
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 /**
- * Emulation `coalesce` using `nvl` on Oracle 8 and earlier which do not define `coalesce`
+ * Oracle 8i had no {@code coalesce()} function,
+ * so we emulate it using chained {@code nvl()}s.
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class NvlCoalesceEmulation implements SqmFunctionDescriptor {
-	private static final ArgumentsValidator ARGUMENTS_VALIDATOR = StandardArgumentsValidators.min( 2 );
+public class NvlCoalesceEmulation
+		extends AbstractSqmFunctionDescriptor {
+
+	public NvlCoalesceEmulation() {
+		super(
+				"coalesce",
+				StandardArgumentsValidators.min( 2 ),
+				StandardFunctionReturnTypeResolvers.useFirstNonNull()
+		);
+	}
 
 	@Override
-	public Expression generateSqlExpression(
-			String functionName,
-			List<? extends SqmVisitableNode> arguments,
-			Supplier<MappingModelExpressable> inferableTypeAccess,
-			SqmToSqlAstConverter converter,
-			SqlAstCreationState creationState) {
-		ARGUMENTS_VALIDATOR.validate( arguments );
+	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
 
-		// we assume these is a function named `nvl` registered
-		final SqmFunctionDescriptor nvlDescriptor = creationState.getCreationContext().getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.getFunctionDescriptor( functionName );
+		SqmFunctionDescriptor nvl = queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("nvl").setExactArgumentCount(2).template();
 
-		return nvlDescriptor.generateSqlExpression( functionName, arguments, inferableTypeAccess, converter, creationState );
+		int pos = arguments.size();
+		SqmExpression<?> result = (SqmExpression<?>) arguments.get( --pos );
+		AllowableFunctionReturnType<?> type = (AllowableFunctionReturnType<?>) result.getNodeType();
+
+		while (pos>0) {
+			SqmExpression<?> next = (SqmExpression<?>) arguments.get( --pos );
+			result = nvl.generateSqmExpression(
+					asList( next, result ),
+					type,
+					queryEngine,
+					typeConfiguration
+			);
+		}
+
+		//noinspection unchecked
+		return (SelfRenderingSqlFunctionExpression<T>) result;
 	}
+
 }

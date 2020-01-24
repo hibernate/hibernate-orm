@@ -6,14 +6,18 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.Ingres10IdentityColumnSupport;
+import org.hibernate.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
+import org.hibernate.dialect.pagination.IngresLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
@@ -22,6 +26,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.Types;
 
 /**
  * An SQL dialect for Ingres 9.2.
@@ -41,45 +47,77 @@ import org.hibernate.type.StandardBasicTypes;
  *         Perform string casts to varchar; removes space padding.
  *     </li>
  * </ul>
- *
+ * 
  * @author Ian Booth
  * @author Bruce Lunsford
  * @author Max Rydahl Andersen
  * @author Raymond Fan
  */
-@SuppressWarnings("deprecation")
 public class IngresDialect extends Dialect {
+
+	private final LimitHandler limitHandler;
+
+	private final int version;
+
+	private final SequenceSupport sequenceSupport;
+
+	int getVersion() {
+		return version;
+	}
+
+	public IngresDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
+	public IngresDialect() {
+		this(920);
+	}
 
 	/**
 	 * Constructs a IngresDialect
 	 */
-	public IngresDialect() {
+	public IngresDialect(int version) {
 		super();
+		this.version = version;
 
+		if ( getVersion() < 1000 ) {
+			registerColumnType( Types.BIT, 1, "tinyint" );
+			registerColumnType( Types.BOOLEAN, "tinyint" );
+		}
+		else {
+			registerColumnType( Types.BIT, 1, "boolean" );
+			registerColumnType( Types.BOOLEAN, "boolean" );
+		}
 		registerColumnType( Types.BIT, "tinyint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "float" );
-		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
-		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
-		registerColumnType( Types.BINARY, 32000, "byte($l)" );
-		registerColumnType( Types.BINARY, "long byte" );
-		registerColumnType( Types.VARBINARY, 32000, "varbyte($l)" );
-		registerColumnType( Types.VARBINARY, "long byte" );
-		registerColumnType( Types.LONGVARBINARY, "long byte" );
-		registerColumnType( Types.CHAR, 32000, "char($l)" );
-		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, "long varchar" );
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time with time zone" );
-		registerColumnType( Types.TIMESTAMP, "timestamp with time zone" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+
+		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
+
+		final int maxStringLength = 32_000;
+
+		registerColumnType( Types.BINARY, maxStringLength, "byte($l)" );
+		registerColumnType( Types.VARBINARY, maxStringLength, "varbyte($l)" );
+		//note: 'long byte' is a  synonym for 'blob'
+		registerColumnType( Types.VARBINARY, "long byte($l)" );
+
+		//TODO: should we be using nchar/nvarchar/long nvarchar
+		//      here? I think Ingres char/varchar types don't
+		//      support Unicode. Copy what AbstractHANADialect
+		//      does with a Hibernate property to config this.
+		registerColumnType( Types.CHAR, maxStringLength, "char($l)" );
+		registerColumnType( Types.VARCHAR, maxStringLength, "varchar($l)" );
+		//note: 'long varchar' is a synonym for 'clob'
+		registerColumnType( Types.VARCHAR, "long varchar($l)" );
+
+		registerColumnType( Types.NCHAR, maxStringLength, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, maxStringLength, "nvarchar($l)" );
+		//note: 'long nvarchar' is a synonym for 'nclob'
+		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
+
+		if ( getVersion() >= 930 ) {
+			// Not completely necessary, given that Ingres
+			// can be configured to set DATE = ANSIDATE
+			registerColumnType( Types.DATE, "ansidate" );
+		}
 
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
@@ -93,10 +131,40 @@ public class IngresDialect extends Dialect {
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
 
-		// There is no support for a native boolean type that accepts values
-		// of true, false or unknown. Using the tinyint type requires
-		// substitions of true and false.
-		getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+		if ( getVersion() < 1000 ) {
+			// There is no support for a native boolean type that accepts values
+			// of true, false or unknown. Using the tinyint type requires
+			// substitutions of true and false.
+			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+		}
+
+		limitHandler = getVersion() < 930 ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
+
+		sequenceSupport = new ANSISequenceSupport() {
+			@Override
+			public boolean supportsPooledSequences() {
+				return getVersion() >= 930;
+			}
+		};
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return getVersion() < 1000 ? Types.BIT : Types.BOOLEAN;
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return getVersion() < 1000
+				? super.toBooleanValueString( bool )
+				: String.valueOf( bool );
+	}
+
+
+	@Override
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 39;
 	}
 
 	@Override
@@ -111,31 +179,37 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
-		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.dayofweekmonthyear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.lastDay( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
-		CommonFunctionFactory.formatdatetime_dateFormat( queryEngine );
+		CommonFunctionFactory.sysdate( queryEngine );
+		CommonFunctionFactory.position( queryEngine );
+		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern("locate", StandardBasicTypes.INTEGER, "position(?1 in ?2)", "(position(?1 in substring(?2 from ?3)) + (?3) - 1)");
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER,
+				"position(?1 in ?2)",
+				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardBasicTypes.INTEGER );
 
-		bitwiseFunctions(queryEngine);
+		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "squeeze" )
 				.setExactArgumentCount( 1 )
@@ -144,64 +218,15 @@ public class IngresDialect extends Dialect {
 
 	}
 
-	static void bitwiseFunctions(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_and" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitand", "bit_and");
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, boolean timestamp) {
+		return "timestampadd(?1, ?2, ?3)";
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_or" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitor", "bit_xor");
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_xor" )
-				.setExactArgumentCount( 2 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitxor", "bit_xor");
-
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_not" )
-				.setExactArgumentCount( 1 )
-				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "bitnot", "bit_not");
 	}
 
 	@Override
-	public void timestampadd(TemporalUnit unit, Renderer magnitude, Renderer to, Appender sqlAppender, boolean timestamp) {
-		sqlAppender.append("timestampadd(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		magnitude.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-	}
-
-	@Override
-	public void timestampdiff(TemporalUnit unit, Renderer from, Renderer to, Appender sqlAppender, boolean fromTimestamp, boolean toTimestamp) {
-		sqlAppender.append("timestampdiff(");
-		sqlAppender.append( unit.toString() );
-		sqlAppender.append(", ");
-		from.render();
-		sqlAppender.append(", ");
-		to.render();
-		sqlAppender.append(")");
-	}
-
-	@Override
-	public String translateDatetimeFormat(String format) {
-		return MySQLDialect.datetimeFormat( format ).result();
-	}
-
-	@Override
-	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case DAY_OF_MONTH: return "day";
-			case DAY_OF_YEAR: return "doy";
-			case DAY_OF_WEEK: return "dow";
-			case WEEK: return "iso_week";
-			default: return unit.toString();
-		}
+	public String timestampdiffPattern(TemporalUnit unit, boolean fromTimestamp, boolean toTimestamp) {
+		return "timestampdiff(?1, ?2, ?3)";
 	}
 
 	@Override
@@ -215,43 +240,23 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
-	}
-
-	@Override
 	public String getNullColumnString() {
 		return " with null";
 	}
 
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
+	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select nextval for " + sequenceName;
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName + " restrict";
+	public SequenceSupport getSequenceSupport() {
+		return sequenceSupport;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select seq_name from iisequence";
+		return getVersion() < 930
+				? "select seq_name from iisequence"
+				: "select seq_name from iisequences";
 	}
 
 	@Override
@@ -266,45 +271,44 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
+		return limitHandler;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		if ( getVersion() >= 1000 ) {
+			return new Ingres10IdentityColumnSupport();
 		}
-		return getDefaultLimitHandler();
+		else if (getVersion() >= 930) {
+			return new Ingres9IdentityColumnSupport();
+		}
+		else {
+			return super.getIdentityColumnSupport();
+		}
 	}
 
-	protected LimitHandler getDefaultLimitHandler() {
-		return FirstLimitHandler.INSTANCE;
+	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		return getVersion() >= 930;
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
+	public boolean forUpdateOfColumns() {
+		return getVersion() >= 930;
 	}
 
+	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	@Override
-	public boolean supportsLimitOffset() {
+	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
 
 	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 16 )
-				.append( querySelect )
-				.insert( 6, " first " + limit )
-				.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
+	public boolean supportsCurrentTimestampSelection() {
+		return getVersion() >= 930;
 	}
 
 	@Override
@@ -334,10 +338,37 @@ public class IngresDialect extends Dialect {
 //		);
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
+	public String getCurrentTimestampSQLFunctionName() {
+		return getVersion() >= 930 ? "current_timestamp" : "date(now)";
+	}
+
+	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getCurrentTimestampSQLFunctionName() {
-		return "date(now)";
+	public boolean supportsUnionAll() {
+		return getVersion() >= 930;
+	}
+
+	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return getVersion() >= 930;
+	}
+
+	@Override
+	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
+		return getVersion() >= 930;
+	}
+
+	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public String getFromDual() {
+		//this is only necessary if the query has a where clause
+		return "from (select 0) as dual";
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -361,4 +392,21 @@ public class IngresDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		return MySQLDialect.datetimeFormat( format ).result();
+	}
+
+	@Override
+	public String translateExtractField(TemporalUnit unit) {
+		switch ( unit ) {
+			case DAY_OF_MONTH: return "day";
+			case DAY_OF_YEAR: return "doy";
+			case DAY_OF_WEEK: return "dow";
+			case WEEK: return "iso_week";
+			default: return super.translateExtractField( unit );
+		}
+	}
+
 }

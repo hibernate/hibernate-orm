@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -67,6 +68,7 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> imple
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Integer wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -91,6 +93,21 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> imple
 
 	@Override
 	public Integer getDefaultValue() {
+		return 0;
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect) {
+		return getDefaultSqlPrecision(dialect)+1;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 10;
+	}
+
+	@Override
+	public int getDefaultSqlScale() {
 		return 0;
 	}
 }

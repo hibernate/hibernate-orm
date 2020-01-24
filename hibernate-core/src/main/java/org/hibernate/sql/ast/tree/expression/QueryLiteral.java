@@ -93,8 +93,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		return new SqlSelectionImpl(
 				jdbcPosition,
 				valuesArrayPosition,
-				this,
-				type.getJdbcMapping()
+				this
 		);
 	}
 

@@ -6,26 +6,24 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.InformixExtractEmulation;
-import org.hibernate.dialect.function.Replacer;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
-import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.SkipFirstLimitHandler;
+import org.hibernate.dialect.sequence.InformixSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
@@ -34,63 +32,99 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
+
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
- * Informix dialect.<br>
- * <br>
- * Seems to work with Informix Dynamic Server Version 7.31.UD3,  Informix JDBC driver version 2.21JC3.
+ * Dialect for Informix 7.31.UD3 with Informix
+ * JDBC driver 2.21JC3 and above.
  *
  * @author Steve Molitor
  */
 public class InformixDialect extends Dialect {
-	
+
+	private final int version;
+
+	int getVersion() {
+		return version;
+	}
+
+	public InformixDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() );
+	}
+
 	private final UniqueDelegate uniqueDelegate;
+	private final LimitHandler limitHandler;
+
+	public InformixDialect() {
+		this(7);
+	}
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
 	 * Informix type mappings.
 	 */
-	public InformixDialect() {
+	public InformixDialect(int version) {
 		super();
+		this.version = version;
 
-		registerColumnType( Types.BIGINT, "int8" );
-		registerColumnType( Types.BINARY, "byte" );
 		// Informix doesn't have a bit type
+		registerColumnType( Types.BIT, 1, "boolean" );
 		registerColumnType( Types.BIT, "smallint" );
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.DECIMAL, "decimal" );
-		registerColumnType( Types.DOUBLE, "float" );
-		registerColumnType( Types.FLOAT, "smallfloat" );
-		registerColumnType( Types.INTEGER, "integer" );
-		// or BYTE
-		registerColumnType( Types.LONGVARBINARY, "blob" );
-		// or TEXT?
-		registerColumnType( Types.LONGVARCHAR, "clob" );
-		// or MONEY
-		registerColumnType( Types.NUMERIC, "decimal" );
-		registerColumnType( Types.REAL, "smallfloat" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TIMESTAMP, "datetime year to fraction(5)" );
-		registerColumnType( Types.TIME, "datetime hour to second" );
+
 		registerColumnType( Types.TINYINT, "smallint" );
+		registerColumnType( Types.BIGINT, "int8" );
+
+		//Ingres ignores the precision argument in
+		//float(n) and just always defaults to
+		//double precision.
+		//TODO: return 'smallfloat' when n <= 24
+
+		registerColumnType( Types.TIME, "datetime hour to second" );
+		registerColumnType( Types.TIMESTAMP, "datetime year to fraction($p)" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime year to fraction($p)" );
+
+		//these types have no defined length
+		registerColumnType( Types.BINARY, "byte" );
 		registerColumnType( Types.VARBINARY, "byte" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
+
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, 32739, "lvarchar($l)" );
+		registerColumnType( Types.VARCHAR, 32_739, "lvarchar($l)" );
+		registerColumnType( Types.VARCHAR, "text" );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
+
+		limitHandler = getVersion() < 10
+				? FirstLimitHandler.INSTANCE
+				//according to the Informix documentation for
+				//version 11 and above, parameters are supported
+				//but I have not tested this at all!
+				: new SkipFirstLimitHandler( getVersion() >= 11 );
+	}
+
+	public int getDefaultDecimalPrecision() {
+		//the maximum
+		return 32;
+	}
+
+	@Override
+	public int getDefaultTimestampPrecision() {
+		//the maximum
+		return 5;
 	}
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
-		CommonFunctionFactory.substring_substr( queryEngine );
 		CommonFunctionFactory.instr( queryEngine );
+		CommonFunctionFactory.substr( queryEngine );
+		CommonFunctionFactory.substring_substr( queryEngine );
+		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
-		CommonFunctionFactory.pad( queryEngine );
 		CommonFunctionFactory.space( queryEngine );
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
@@ -99,23 +133,241 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
+		CommonFunctionFactory.moreHyperbolic( queryEngine );
 		CommonFunctionFactory.log10( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
-		CommonFunctionFactory.concat_operator( queryEngine );
-		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.stddev( queryEngine );
+		CommonFunctionFactory.variance( queryEngine );
+
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				StandardBasicTypes.INTEGER,
+				"instr(?2, ?1)",
+				"instr(?2, ?1, ?3)"
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12
+	}
 
-//		queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
+	/**
+	 * Informix has no extract() function, but we can
+	 * partially emulate it by using the appropriate
+	 * named functions, and by using to_char() with
+	 * a format string.
+	 *
+	 * The supported fields are
+	 * {@link TemporalUnit#HOUR},
+	 * {@link TemporalUnit#MINUTE},
+	 * {@link TemporalUnit#SECOND},
+	 * {@link TemporalUnit#DAY},
+	 * {@link TemporalUnit#MONTH},
+	 * {@link TemporalUnit#YEAR},
+	 * {@link TemporalUnit#QUARTER},
+	 * {@link TemporalUnit#DAY_OF_MONTH},
+	 * {@link TemporalUnit#DAY_OF_WEEK}.
+	 */
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		switch (unit) {
+			case SECOND:
+				return "to_number(to_char(?2,'%S'))";
+			case MINUTE:
+				return "to_number(to_char(?2,'%M'))";
+			case HOUR:
+				return "to_number(to_char(?2,'%H'))";
+			case DAY_OF_WEEK:
+				return "(weekday(?2)+1)";
+			case DAY_OF_MONTH:
+				return "day(?2)";
+			default:
+				//I think week() returns the ISO week number
+				return "?1(?2)";
+		}
+	}
 
-		queryEngine.getSqmFunctionRegistry().register( "coalesce", new InformixExtractEmulation() );
+	@Override
+	public String getAddColumnString() {
+		return "add";
+	}
 
+	/**
+	 * Informix constraint name must be at the end.
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String[] foreignKey,
+			String referencedTable,
+			String[] primaryKey,
+			boolean referencesPrimaryKey) {
+		final StringBuilder result = new StringBuilder( 30 )
+				.append( " add constraint " )
+				.append( " foreign key (" )
+				.append( String.join( ", ", foreignKey ) )
+				.append( ") references " )
+				.append( referencedTable );
+
+		if ( !referencesPrimaryKey ) {
+			result.append( " (" )
+					.append( String.join( ", ", primaryKey ) )
+					.append( ')' );
+		}
+
+		result.append( " constraint " ).append( constraintName );
+
+		return result.toString();
+	}
+
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String foreignKeyDefinition) {
+		return " add constraint " + foreignKeyDefinition
+				+ " constraint " + constraintName;
+	}
+
+	/**
+	 * Informix constraint name must be at the end.
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getAddPrimaryKeyConstraintString(String constraintName) {
+		return " add constraint primary key constraint " + constraintName + " ";
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return InformixSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public String getQuerySequencesString() {
+		return "select systables.tabname as sequence_name, syssequences.* from syssequences join systables on syssequences.tabid = systables.tabid where tabtype = 'Q'";
+	}
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SequenceInformationExtractorInformixDatabaseImpl.INSTANCE;
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limitHandler;
+	}
+
+	@Override
+	public String getFromDual() {
+		return "from (select 0 from systables where tabid = 1) as dual";
+	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
+	}
+
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+		@Override
+		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
+			String constraintName = null;
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+
+			switch (errorCode) {
+				case -268:
+					constraintName = extractUsingTemplate(
+							"Unique constraint (",
+							") violated.",
+							sqle.getMessage()
+					);
+					break;
+				case -691:
+					constraintName = extractUsingTemplate(
+							"Missing key in referenced table for referential constraint (",
+							").",
+							sqle.getMessage()
+					);
+					break;
+				case -692:
+					constraintName = extractUsingTemplate(
+							"Key value for constraint (",
+							") is still being referenced.",
+							sqle.getMessage()
+					);
+					break;
+			}
+
+			if ( constraintName != null ) {
+				// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
+				final int i = constraintName.indexOf( '.' );
+				if ( i != -1 ) {
+					constraintName = constraintName.substring( i + 1 );
+				}
+			}
+
+			return constraintName;
+		}
+
+	};
+
+	@Override
+	public boolean supportsCurrentTimestampSelection() {
+		return true;
+	}
+
+	@Override
+	public boolean isCurrentTimestampSelectStringCallable() {
+		return false;
+	}
+
+	@Override
+	public String getCurrentTimestampSelectString() {
+		return "select distinct current timestamp from informix.systables";
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
+					@Override
+					protected String getCreateCommand() {
+						return "create temp table";
+					}
+
+					@Override
+					protected String getCreateOptions() {
+						return "with no log";
+					}
+				},
+				AfterUseAction.NONE,
+				TempTableDdlTransactionHandling.NONE,
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new InformixIdentityColumnSupport();
+	}
+
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "'t'" : "'f'";
 	}
 
 	@Override
@@ -177,233 +429,4 @@ public class InformixDialect extends Dialect {
 				.replace("S", "%F1");
 	}
 
-	@Override
-	public String getAddColumnString() {
-		return "add";
-	}
-
-	/**
-	 * Informix constraint name must be at the end.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		final StringBuilder result = new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( " foreign key (" )
-				.append( String.join( ", ", foreignKey ) )
-				.append( ") references " )
-				.append( referencedTable );
-
-		if ( !referencesPrimaryKey ) {
-			result.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
-					.append( ')' );
-		}
-
-		result.append( " constraint " ).append( constraintName );
-
-		return result.toString();
-	}
-
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String foreignKeyDefinition) {
-		return new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( foreignKeyDefinition )
-				.append( " constraint " )
-				.append( constraintName )
-				.toString();
-	}
-
-	/**
-	 * Informix constraint name must be at the end.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getAddPrimaryKeyConstraintString(String constraintName) {
-		return " add constraint primary key constraint " + constraintName + " ";
-	}
-
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
-
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
-
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from informix.systables where tabid=1";
-	}
-
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + ".nextval";
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		return "select systables.tabname as sequence_name, syssequences.* from syssequences join systables on syssequences.tabid = systables.tabid where tabtype = 'Q'";
-	}
-
-	@Override
-	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorInformixDatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	public LimitHandler getLimitHandler() {
-		if ( isLegacyLimitHandlerBehaviorEnabled() ) {
-			return LegacyFirstLimitHandler.INSTANCE;
-		}
-		return FirstLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return false;
-	}
-
-	@Override
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
-		}
-		return new StringBuilder( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( querySelect.toLowerCase(Locale.ROOT).indexOf( "select" ) + 6, " first " + limit )
-				.toString();
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return false;
-	}
-
-	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
-	}
-
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
-
-			if ( errorCode == -268 ) {
-				constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
-			}
-			else if ( errorCode == -691 ) {
-				constraintName = extractUsingTemplate(
-						"Missing key in referenced table for referential constraint (",
-						").",
-						sqle.getMessage()
-				);
-			}
-			else if ( errorCode == -692 ) {
-				constraintName = extractUsingTemplate(
-						"Key value for constraint (",
-						") is still being referenced.",
-						sqle.getMessage()
-				);
-			}
-
-			if ( constraintName != null ) {
-				// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
-				final int i = constraintName.indexOf( '.' );
-				if ( i != -1 ) {
-					constraintName = constraintName.substring( i + 1 );
-				}
-			}
-
-			return constraintName;
-		}
-
-	};
-
-	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select distinct current timestamp from informix.systables";
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
-				() -> new TempIdTableExporter( true, this::getTypeName ) {
-					@Override
-					protected String getCreateCommand() {
-						return "create temp table";
-					}
-
-					@Override
-					protected String getCreateOptions() {
-						return "with no log";
-					}
-				},
-				AfterUseAction.NONE,
-				TempTableDdlTransactionHandling.NONE,
-				runtimeModelCreationContext.getSessionFactory()
-		);
-	}
-	
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return uniqueDelegate;
-	}
-
-	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new InformixIdentityColumnSupport();
-	}
-
-	@Override
-	public String toBooleanValueString(boolean bool) {
-		return bool ? "'t'" : "'f'";
-	}
 }

@@ -5,18 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.dialect;
-import java.sql.Types;
 
 import org.hibernate.LockMode;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.persister.entity.Lockable;
+
+import java.sql.Types;
 
 /**
  * An SQL Dialect for Frontbase.  Assumes you're using the latest version
@@ -42,27 +36,21 @@ public class FrontBaseDialect extends Dialect {
 	public FrontBaseDialect() {
 		super();
 
-		registerColumnType( Types.BIT, "bit" );
+		registerColumnType( Types.BOOLEAN, "bit" );
 		registerColumnType( Types.BIGINT, "longint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.CHAR, "char(1)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
-		registerColumnType( Types.FLOAT, "float" );
-		registerColumnType( Types.DOUBLE, "double precision" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
+
+		//FrontBase has no 'binary' nor 'varbinary'
+		registerColumnType( Types.BINARY, "bit($l)");
+		registerColumnType( Types.VARBINARY, "bit varying($l)");
+
+		//no precision
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.VARBINARY, "bit varying($l)" );
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		registerColumnType( Types.BLOB, "blob" );
-		registerColumnType( Types.CLOB, "clob" );
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return "add column";
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.BIT;
 	}
 
 	@Override
@@ -99,22 +87,19 @@ public class FrontBaseDialect extends Dialect {
 	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Frontbase has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		switch (lockMode) {
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_WRITE:
+				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
+			case PESSIMISTIC_READ:
+				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC:
+				return new OptimisticLockingStrategy(lockable, lockMode);
+			case OPTIMISTIC_FORCE_INCREMENT:
+				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
-			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
-			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC) {
-			return new OptimisticLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {

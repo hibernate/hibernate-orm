@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -325,7 +326,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					table,
 					segmentColumnName,
 					StringType.INSTANCE,
-					database.getDialect().getTypeName( Types.VARCHAR, keySize, 0, 0 )
+					database.getDialect().getTypeName( Types.VARCHAR, Size.length(keySize) )
 			);
 			pkColumn.setNullable( false );
 			table.addColumn( pkColumn );
@@ -379,7 +380,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		return new String[] {
 				dialect.getCreateTableString()
 						+ ' ' + tableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
+						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, Size.length(keySize) ) + ",  "
 						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
 						+ " )" + dialect.getTableTypeString()
 		};

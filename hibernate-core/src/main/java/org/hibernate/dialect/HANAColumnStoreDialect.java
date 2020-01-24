@@ -32,6 +32,10 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 
+	public HANAColumnStoreDialect() {
+		super();
+	}
+
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
@@ -40,9 +44,9 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
-		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardBasicTypes.BOOLEAN );
-		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
+//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
+//		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
+//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -103,5 +104,10 @@ public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 		Calendar cal = new GregorianCalendar();
 		cal.setTime( (Date) value );
 		return cal;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
 	}
 }

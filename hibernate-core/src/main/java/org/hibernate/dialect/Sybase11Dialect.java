@@ -6,29 +6,16 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.Sybase11JoinFragment;
-
 /**
- * A SQL dialect suitable for use with Sybase 11.9.2 (specifically: avoids ANSI JOIN syntax)
+ * A SQL dialect suitable for use with Sybase 11.9.2
+ * (specifically: avoids ANSI JOIN syntax)
  *
  * @author Colm O' Flaherty
+ * @deprecated use {@link SybaseASEDialect} instead
  */
-public class Sybase11Dialect extends SybaseDialect  {
-	/**
-	 * Constructs a Sybase11Dialect
-	 */
+@Deprecated
+public class Sybase11Dialect extends SybaseASEDialect {
 	public Sybase11Dialect() {
 		super();
-	}
-
-	@Override
-	public JoinFragment createOuterJoinFragment() {
-		return new Sybase11JoinFragment();
-	}
-
-	@Override
-	public String getCrossJoinSeparator() {
-		return ", ";
 	}
 }

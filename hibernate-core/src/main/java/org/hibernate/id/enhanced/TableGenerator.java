@@ -29,6 +29,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -712,7 +713,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
 				dialect.getCreateTableString() + ' ' + renderedTableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
+						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, Size.length(segmentValueLength) ) + " not null "
 						+ ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
 						+ ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
 		};
@@ -742,7 +743,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					table,
 					segmentColumnName,
 					StringType.INSTANCE,
-					dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 )
+					dialect.getTypeName( Types.VARCHAR, Size.length(segmentValueLength) )
 			);
 			segmentColumn.setNullable( false );
 			table.addColumn( segmentColumn );

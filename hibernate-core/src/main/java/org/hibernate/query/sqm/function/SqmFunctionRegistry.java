@@ -111,6 +111,7 @@ public class SqmFunctionRegistry {
 	 * passed name as both the registration key and underlying SQL function name and accepting the builder's defaults.
 	 *
 	 * @param name The function name (and registration key)
+	 * @deprecated will be removed
 	 */
 	@Deprecated
 	public SqmFunctionDescriptor registerNamed(String name) {
@@ -123,6 +124,7 @@ public class SqmFunctionRegistry {
 	 * registration key and underlying SQL function name and accepting the builder's defaults.
 	 *
 	 * @param name The function name (and registration key)
+	 * @deprecated will be removed
 	 */
 	@Deprecated
 	public SqmFunctionDescriptor registerNamed(String name, BasicValuedMapping returnType) {
@@ -145,6 +147,9 @@ public class SqmFunctionRegistry {
 		return new NamedFunctionDescriptorBuilder( this, name, name );
 	}
 
+	/**
+	 * @deprecated will be removed
+	 */
 	@Deprecated
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {
 		return namedDescriptorBuilder( name, name )

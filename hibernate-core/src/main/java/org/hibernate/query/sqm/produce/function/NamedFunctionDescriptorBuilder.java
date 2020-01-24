@@ -75,6 +75,9 @@ public class NamedFunctionDescriptorBuilder {
 		);
 	}
 
+	/**
+	 * @deprecated use the form with no argument
+	 */
 	@Deprecated
 	public SqmFunctionDescriptor register(String registrationKey) {
 		return registry.register(

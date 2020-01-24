@@ -14,7 +14,9 @@ import org.hibernate.query.sqm.function.VarArgsFunctionDescriptor;
 
 /**
  * @author Christian Beikov
+ * @deprecated will be removed
  */
+@Deprecated
 public class VarArgsFunctionDescriptorBuilder {
 
 	private final SqmFunctionRegistry registry;

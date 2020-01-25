@@ -2,18 +2,23 @@ package org.hibernate.tool.internal.reveng;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 
-public class RevengMetadataCollector extends AbstractDatabaseCollector {
+public class RevengMetadataCollector implements DatabaseCollector {
 
 	private InFlightMetadataCollector metadataCollector = null;
 	private final Map<TableIdentifier, Table> tables;
+	private Map<String, List<ForeignKey>> oneToManyCandidates;
+	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
+	private final  MetaDataDialect metaDataDialect;
 	
 	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
 		this(metaDataDialect);
@@ -21,8 +26,9 @@ public class RevengMetadataCollector extends AbstractDatabaseCollector {
 	}
 	
 	public RevengMetadataCollector(MetaDataDialect metaDataDialect) {
-		super(metaDataDialect);
+		this.metaDataDialect = metaDataDialect;
 		this.tables = new HashMap<TableIdentifier, Table>();
+		this.suggestedIdentifierStrategies = new HashMap<TableIdentifier, String>();
 	}
 
 	public Iterator<Table> iterateTables() {
@@ -50,6 +56,22 @@ public class RevengMetadataCollector extends AbstractDatabaseCollector {
 		return tables.get(createIdentifier(catalog, schema, name));
 	}
 	
+	public void setOneToManyCandidates(Map<String, List<ForeignKey>> oneToManyCandidates) {
+		this.oneToManyCandidates = oneToManyCandidates;
+	}
+
+	public Map<String, List<ForeignKey>> getOneToManyCandidates() {
+		return oneToManyCandidates;
+	}
+
+	public String getSuggestedIdentifierStrategy(String catalog, String schema, String name) {
+		return (String) suggestedIdentifierStrategies.get(TableIdentifier.create(catalog, schema, name));
+	}
+
+	public void addSuggestedIdentifierStrategy(String catalog, String schema, String name, String idstrategy) {
+		suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
+	}
+	
 	private TableIdentifier createIdentifier(String catalog, String schema, String table) {
 		return TableIdentifier.create(quote(catalog), quote(schema), quote(table));
 	}
@@ -63,4 +85,18 @@ public class RevengMetadataCollector extends AbstractDatabaseCollector {
 		return table;
 	}
 	
+	private String quote(String name) {
+		if (name == null)
+			return name;
+		if (metaDataDialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name; // avoid double quoting
+			}
+			return "`" + name + "`";
+		} else {
+			return name;
+		}
+	}
+
 }

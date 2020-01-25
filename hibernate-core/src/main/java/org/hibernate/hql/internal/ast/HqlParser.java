@@ -18,7 +18,6 @@ import java.util.Set;
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlBaseParser;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.CoreLogging;
@@ -116,7 +115,7 @@ public final class HqlParser extends HqlBaseParser {
 	 * @param token The token.
 	 * @param ex The recognition exception.
 	 *
-	 * @return AST - The new AST.
+	 * @return The new AST.
 	 *
 	 * @throws antlr.RecognitionException if the substitution was not possible.
 	 * @throws antlr.TokenStreamException if the substitution was not possible.
@@ -159,7 +158,7 @@ public final class HqlParser extends HqlBaseParser {
 	 *
 	 * @param x The sub tree to transform, the parent is assumed to be NOT.
 	 *
-	 * @return AST - The equivalent sub-tree.
+	 * @return The equivalent sub-tree.
 	 */
 	@Override
 	public AST negateNode(AST x) {
@@ -286,7 +285,7 @@ public final class HqlParser extends HqlBaseParser {
 	 *
 	 * @param x The equality expression.
 	 *
-	 * @return AST - The clean sub-tree.
+	 * @return The clean sub-tree.
 	 */
 	@Override
 	public AST processEqualityExpression(AST x) {
@@ -348,6 +347,10 @@ public final class HqlParser extends HqlBaseParser {
 	private AST createSubquery(AST node) {
 		AST ast = ASTUtil.createParent( astFactory, RANGE, "RANGE", node );
 		ast = ASTUtil.createParent( astFactory, FROM, "from", ast );
+
+		AST alias = ASTUtil.createSibling( astFactory, ALIAS, "_", node );
+		ASTUtil.insertChild( ASTUtil.createSibling( astFactory, SELECT, "select", ast ), astFactory.create(IDENT, alias.getText() ) );
+		
 		ast = ASTUtil.createParent( astFactory, SELECT_FROM, "SELECT_FROM", ast );
 		ast = ASTUtil.createParent( astFactory, QUERY, "QUERY", ast );
 		return ast;
@@ -489,12 +492,12 @@ public final class HqlParser extends HqlBaseParser {
 		LOG.debugf( "Registering discovered request to treat(%s as %s)", path, subclassName );
 
 		if ( treatMap == null ) {
-			treatMap = new HashMap<String, Set<String>>();
+			treatMap = new HashMap<>();
 		}
 
 		Set<String> subclassNames = treatMap.get( path );
 		if ( subclassNames == null ) {
-			subclassNames = new HashSet<String>();
+			subclassNames = new HashSet<>();
 			treatMap.put( path, subclassNames );
 		}
 		subclassNames.add( subclassName );
@@ -512,11 +515,11 @@ public final class HqlParser extends HqlBaseParser {
 	}
 
 	public Map<String, Set<String>> getTreatMap() {
-		return treatMap == null ? Collections.<String, Set<String>>emptyMap() : treatMap;
+		return treatMap == null ? Collections.emptyMap() : treatMap;
 	}
 
 	public static void panic() {
-		//overriden to avoid System.exit
+		//overridden to avoid System.exit
 		throw new QueryException( "Parser: panic" );
 	}
 }

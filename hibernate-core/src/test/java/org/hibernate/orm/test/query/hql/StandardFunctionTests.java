@@ -855,7 +855,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testCountFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

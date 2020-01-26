@@ -78,19 +78,6 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
-	}
-
-	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitCaseSearchedExpression( this );
 	}

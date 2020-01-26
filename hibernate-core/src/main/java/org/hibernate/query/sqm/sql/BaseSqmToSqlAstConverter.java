@@ -1487,9 +1487,8 @@ public abstract class BaseSqmToSqlAstConverter
 		try {
 			return new UnaryOperation(
 					interpret( expression.getOperation() ),
-					(Expression) expression.getOperand().accept( this ),
-					determineValueMapping( expression )
-
+					toSqlExpression( expression.getOperand().accept(this) ),
+					(BasicValuedMapping) determineValueMapping( expression.getOperand() )
 			);
 		}
 		finally {
@@ -1796,7 +1795,7 @@ public abstract class BaseSqmToSqlAstConverter
 			magnitude = new UnaryOperation(
 					UNARY_MINUS,
 					magnitude,
-					magnitude.getExpressionType()
+					(BasicValuedMapping) magnitude.getExpressionType()
 			);
 		}
 

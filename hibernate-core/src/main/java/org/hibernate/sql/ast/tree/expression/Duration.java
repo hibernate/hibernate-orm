@@ -57,19 +57,6 @@ public class Duration implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
-	}
-
-	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {

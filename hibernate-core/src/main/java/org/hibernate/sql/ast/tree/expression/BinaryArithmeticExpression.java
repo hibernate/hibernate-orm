@@ -68,19 +68,6 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 		);
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
-	}
-
 	/**
 	 * Get the left-hand operand.
 	 *

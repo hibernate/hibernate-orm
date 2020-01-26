@@ -88,19 +88,6 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-
-		// todo (6.0) : potential use for runtime database model - interpretation of table and column references
-		//		into metadata info such as java/sql type, binder, extractor
-
-		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, this );
-	}
-
-	@Override
 	public String toString() {
 		return String.format(
 				Locale.ROOT,

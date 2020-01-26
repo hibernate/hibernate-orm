@@ -135,9 +135,11 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testMathFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					session.createQuery("select +e.theInt, -e.theInt from EntityOfBasics e")
+							.list();
 					session.createQuery("select abs(e.theInt), sign(e.theInt), mod(e.theInt, 2) from EntityOfBasics e")
 							.list();
-					session.createQuery("select +e.theInt, -e.theInt, e.theInt % 2 from EntityOfBasics e")
+					session.createQuery("select e.theInt % 2 from EntityOfBasics e")
 							.list();
 					session.createQuery("select abs(e.theDouble), sign(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
 							.list();

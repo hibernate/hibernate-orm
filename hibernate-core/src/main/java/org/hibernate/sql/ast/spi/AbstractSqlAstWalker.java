@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -418,6 +419,10 @@ public abstract class AbstractSqlAstWalker
 		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
 
 		// todo (6.0) : what is the correct behavior here?
+		appendSql( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
+		appendSql( '.' );
+		//TODO: pretty sure the typecast to Loadable is quite wrong here
+		appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
 	}
 
 	@Override
@@ -425,6 +430,10 @@ public abstract class AbstractSqlAstWalker
 		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
 
 		// todo (6.0) : what is the correct behavior here?
+		appendSql( tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getIdentificationVariable() );
+		appendSql( '.' );
+		//TODO: pretty sure the typecast to Loadable is quite wrong here
+		appendSql( ( (Loadable) tableGroupJoin.getJoinedGroup().getModelPart() ).getIdentifierColumnNames()[0] );
 	}
 
 	@Override

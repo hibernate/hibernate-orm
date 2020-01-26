@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlSelectionProducer;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -31,6 +31,10 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 			int valuesArrayPosition,
 			JavaTypeDescriptor javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return new SqlSelectionImpl(
+				jdbcPosition,
+				valuesArrayPosition,
+				this
+		);
 	}
 }

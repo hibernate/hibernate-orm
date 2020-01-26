@@ -160,16 +160,4 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 		);
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
-	}
 }

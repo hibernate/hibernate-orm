@@ -85,19 +85,6 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	}
 
 	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this
-		);
-	}
-
-	@Override
 	public void visitJdbcTypes(
 			Consumer<JdbcMapping> action,
 			TypeConfiguration typeConfiguration) {

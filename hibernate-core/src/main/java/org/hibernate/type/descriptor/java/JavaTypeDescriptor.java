@@ -186,4 +186,17 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 */
 	@Deprecated
 	Class<T> getJavaTypeClass();
+
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param sqlType the {@link SqlTypeDescriptor} of the mapped column
+	 * @param dialect the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 */
+	default String getCheckCondition(String columnName, SqlTypeDescriptor sqlType, Dialect dialect) {
+		return null;
+	}
 }

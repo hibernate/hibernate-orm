@@ -60,7 +60,7 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.INTEGER;
+		return Types.TINYINT;
 	}
 
 	@Override

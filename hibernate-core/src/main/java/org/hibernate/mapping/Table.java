@@ -494,10 +494,9 @@ public class Table implements RelationalModel, Serializable, Exportable {
 							.getColumnDefinitionUniquenessFragment( column ) );
 				}
 
-				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
-					alter.append( " check(" )
-							.append( column.getCheckConstraint() )
-							.append( ")" );
+				String checkConstraint = column.checkConstraint();
+				if ( checkConstraint !=null && dialect.supportsColumnCheck() ) {
+					alter.append( checkConstraint );
 				}
 
 				String columnComment = column.getComment();
@@ -578,10 +577,9 @@ public class Table implements RelationalModel, Serializable, Exportable {
 						.getColumnDefinitionUniquenessFragment( col ) );
 			}
 
-			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
-				buf.append( " check (" )
-						.append( col.getCheckConstraint() )
-						.append( ")" );
+			String checkConstraint = col.checkConstraint();
+			if ( checkConstraint!=null && dialect.supportsColumnCheck() ) {
+				buf.append( checkConstraint );
 			}
 
 			String columnComment = col.getComment();

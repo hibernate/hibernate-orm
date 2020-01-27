@@ -292,6 +292,13 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return checkConstraint != null;
 	}
 
+	public String checkConstraint() {
+		if (checkConstraint==null) {
+			return null;
+		}
+		return " check (" + checkConstraint + ")";
+	}
+
 	@Override
 	public String getTemplate(Dialect dialect, SqmFunctionRegistry functionRegistry) {
 		return safeInterning(

@@ -26,7 +26,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	protected String referencedPropertyName;
 	private String referencedEntityName;
 	private String propertyName;
-	private boolean embedded;
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
 	protected boolean referenceToPrimaryKey = true;
@@ -106,8 +105,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public boolean isSame(ToOne other) {
 		return super.isSame( other )
 				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
-				&& Objects.equals( referencedEntityName, other.referencedEntityName )
-				&& embedded == other.embedded;
+				&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {

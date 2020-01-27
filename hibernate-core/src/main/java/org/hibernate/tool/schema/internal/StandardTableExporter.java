@@ -119,10 +119,9 @@ public class StandardTableExporter implements Exporter<Table> {
 				);
 			}
 
-			if ( col.getCheckConstraint() != null && dialect.supportsColumnCheck() ) {
-				buf.append( " check (" )
-						.append( col.getCheckConstraint() )
-						.append( ")" );
+			String checkConstraint = col.checkConstraint();
+			if ( checkConstraint != null && dialect.supportsColumnCheck() ) {
+				buf.append( checkConstraint );
 			}
 
 			String columnComment = col.getComment();

@@ -227,7 +227,7 @@ public class EnumType<T extends Enum>
 				return new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
 						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
-						(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 				);
 			}
 		}
@@ -238,7 +238,7 @@ public class EnumType<T extends Enum>
 				return new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
 						integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
-						(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 				);
 			}
 			else if ( isCharacterType( type ) ) {
@@ -263,7 +263,7 @@ public class EnumType<T extends Enum>
 		return new OrdinalEnumValueConverter(
 				enumJavaDescriptor,
 				integerJavaDescriptor.getJdbcRecommendedSqlType( localIndicators ),
-				(BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
+				typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class )
 		);
 	}
 

@@ -9,6 +9,8 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
+import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -156,5 +158,12 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> imple
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+		return sqlTypeDescriptor instanceof BitTypeDescriptor && !dialect.supportsBitType()
+				? columnName + " in (0,1)"
+				: null;
 	}
 }

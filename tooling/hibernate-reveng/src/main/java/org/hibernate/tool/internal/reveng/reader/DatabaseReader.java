@@ -23,6 +23,7 @@ import org.hibernate.tool.internal.reveng.ForeignKeyProcessor;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.IndexProcessor;
 import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {
 
@@ -55,7 +56,7 @@ public class DatabaseReader {
 		}
 	}
 
-	public List<Table> readDatabaseSchema(DatabaseCollector dbs, String catalog, String schema) {
+	public List<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector, String catalog, String schema) {
 		try {
 			getMetaDataDialect().configure(provider);
 
@@ -65,7 +66,7 @@ public class DatabaseReader {
 			for (Iterator<SchemaSelection> iter = getSchemaSelections(catalog, schema).iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
 				foundTables.addAll(
-						TableCollector.create(getMetaDataDialect(), revengStrategy, dbs, selection, hasIndices).processTables());
+						TableCollector.create(getMetaDataDialect(), revengStrategy, revengMetadataCollector, selection, hasIndices).processTables());
 			}
 
 			Iterator<Table> tables = foundTables.iterator(); // not dbs.iterateTables() to avoid "double-read" of
@@ -75,16 +76,16 @@ public class DatabaseReader {
 				BasicColumnProcessor.processBasicColumns(getMetaDataDialect(), revengStrategy, defaultSchema,
 						defaultCatalog, table);
 				PrimaryKeyProcessor.processPrimaryKey(getMetaDataDialect(), revengStrategy, defaultSchema,
-						defaultCatalog, dbs, table);
+						defaultCatalog, revengMetadataCollector, table);
 				if (hasIndices.contains(table)) {
 					IndexProcessor.processIndices(getMetaDataDialect(), defaultSchema, defaultCatalog, table);
 				}
 			}
 
 			tables = foundTables.iterator(); // dbs.iterateTables();
-			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(dbs, tables);
+			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector, tables);
 
-			dbs.setOneToManyCandidates(oneToManyCandidates);
+			revengMetadataCollector.setOneToManyCandidates(oneToManyCandidates);
 
 			return foundTables;
 		} finally {

@@ -34,8 +34,6 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 
 	private ReverseEngineeringSettings settings = new ReverseEngineeringSettings(this);
 
-	private DatabaseCollector databaseCollector = null;
-	
 	static {
 		AUTO_OPTIMISTICLOCK_COLUMNS = new HashSet<String>();
 		AUTO_OPTIMISTICLOCK_COLUMNS.add("version");
@@ -174,10 +172,6 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 
 	public String classNameToCompositeIdName(String className) {
 		return className + "Id"; 
-	}
-
-	public void configure(DatabaseCollector databaseCollector) {
-		this.databaseCollector = databaseCollector;		
 	}
 
 	public void close() {

@@ -53,11 +53,10 @@ public class Ejb3Column {
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
 	private boolean isImplicit;
-	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
-	private int length = DEFAULT_COLUMN_LENGTH;
-	private int precision;
-	private int scale;
+	private Long length;
+	private Integer precision;
+	private Integer scale;
 	private String logicalColumnName;
 	private String propertyName;
 	private boolean unique;
@@ -82,15 +81,15 @@ public class Ejb3Column {
 		return sqlType;
 	}
 
-	public int getLength() {
+	public Long getLength() {
 		return length;
 	}
 
-	public int getPrecision() {
+	public Integer getPrecision() {
 		return precision;
 	}
 
-	public int getScale() {
+	public Integer getScale() {
 		return scale;
 	}
 
@@ -153,15 +152,15 @@ public class Ejb3Column {
 		this.sqlType = sqlType;
 	}
 
-	public void setLength(int length) {
+	public void setLength(Long length) {
 		this.length = length;
 	}
 
-	public void setPrecision(int precision) {
+	public void setPrecision(Integer precision) {
 		this.precision = precision;
 	}
 
-	public void setScale(int scale) {
+	public void setScale(Integer scale) {
 		this.scale = scale;
 	}
 
@@ -182,7 +181,7 @@ public class Ejb3Column {
 	}
 
 	public boolean isNullable() {
-		return isFormula() ? true : mappingColumn.isNullable();
+		return isFormula() || mappingColumn.isNullable();
 	}
 
 	public String getDefaultValue() {
@@ -218,9 +217,9 @@ public class Ejb3Column {
 	protected void initMappingColumn(
 			String columnName,
 			String propertyName,
-			int length,
-			int precision,
-			int scale,
+			Long length,
+			Integer precision,
+			Integer scale,
 			boolean nullable,
 			String sqlType,
 			boolean unique,
@@ -233,7 +232,7 @@ public class Ejb3Column {
 			this.mappingColumn = new Column();
 			redefineColumnName( columnName, propertyName, applyNamingStrategy );
 			this.mappingColumn.setLength( length );
-			if ( precision > 0 ) {  //revelent precision
+			if ( precision!=null ) {  //relevant precision
 				this.mappingColumn.setPrecision( precision );
 				this.mappingColumn.setScale( scale );
 			}
@@ -536,8 +535,6 @@ public class Ejb3Column {
 
 					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
 					final Database database = context.getMetadataCollector().getDatabase();
-					final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-					final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 
 					javax.persistence.Column col = actualCols[index];
 
@@ -585,7 +582,7 @@ public class Ejb3Column {
 
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
-					column.setLength( col.length() );
+					column.setLength( (long) col.length() );
 					column.setPrecision( col.precision() );
 					column.setScale( col.scale() );
 					if ( StringHelper.isEmpty( columnName ) && ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
@@ -688,7 +685,6 @@ public class Ejb3Column {
 				&& !inferredData.getProperty().isArray() ) {
 			column.setNullable( false );
 		}
-		column.setLength( DEFAULT_COLUMN_LENGTH );
 		final String propertyName = inferredData.getPropertyName();
 		column.setPropertyName(
 				BinderHelper.getRelativePath( propertyHolder, propertyName )

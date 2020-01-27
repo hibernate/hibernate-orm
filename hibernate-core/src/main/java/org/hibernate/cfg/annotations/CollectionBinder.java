@@ -1620,7 +1620,6 @@ public abstract class CollectionBinder {
 					column.setImplicit( false );
 					//not following the spec but more clean
 					column.setNullable( true );
-					column.setLength( Ejb3Column.DEFAULT_COLUMN_LENGTH );
 					column.setLogicalColumnName( Collection.DEFAULT_ELEMENT_COLUMN_NAME );
 					//TODO create an EMPTY_JOINS collection
 					column.setJoins( new HashMap<>() );

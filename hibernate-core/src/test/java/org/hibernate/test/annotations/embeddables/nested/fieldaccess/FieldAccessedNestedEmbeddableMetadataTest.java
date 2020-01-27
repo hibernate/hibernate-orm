@@ -49,7 +49,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest extends BaseUnitTestCase 
 			Value descriptionValue = investmentMetadata.getProperty( "description" ).getValue();
 			assertEquals( 1, descriptionValue.getColumnSpan() );
 			Column selectable = (Column) descriptionValue.getColumnIterator().next();
-			assertEquals( 500, selectable.getLength() );
+			assertEquals( (Long) 500L, selectable.getLength() );
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
 			CustomType currencyType = (CustomType) currencyMetadata.getType();

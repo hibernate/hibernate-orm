@@ -143,22 +143,13 @@ public class RelationalObjectBinder {
 			if ( columnSource.getSizeSource().getLength() != null ) {
 				column.setLength( columnSource.getSizeSource().getLength() );
 			}
-			else {
-				column.setLength( Column.DEFAULT_LENGTH );
-			}
 
 			if ( columnSource.getSizeSource().getScale() != null ) {
 				column.setScale( columnSource.getSizeSource().getScale() );
 			}
-			else {
-				column.setScale( Column.DEFAULT_SCALE );
-			}
 
 			if ( columnSource.getSizeSource().getPrecision() != null ) {
 				column.setPrecision( columnSource.getSizeSource().getPrecision() );
-			}
-			else {
-				column.setPrecision( Column.DEFAULT_PRECISION );
 			}
 		}
 

@@ -18,7 +18,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.DatabaseCollector;
 import org.hibernate.tool.internal.reveng.ForeignKeyProcessor;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.IndexProcessor;
@@ -98,12 +97,12 @@ public class DatabaseReader {
 	 * Iterates the tables and find all the foreignkeys that refers to something
 	 * that is available inside the DatabaseCollector.
 	 * 
-	 * @param dbs
+	 * @param revengMetadataCollector
 	 * @param progress
 	 * @param tables
 	 * @return
 	 */
-	private Map<String, List<ForeignKey>> resolveForeignKeys(DatabaseCollector dbs, Iterator<Table> tables) {
+	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector, Iterator<Table> tables) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
 		while (tables.hasNext()) {
 			Table table = (Table) tables.next();
@@ -114,7 +113,7 @@ public class DatabaseReader {
 			// it can be required if the same
 			// column is used with different aliases in the ORM mapping.
 			ForeignKeysInfo foreignKeys = ForeignKeyProcessor.processForeignKeys(getMetaDataDialect(), revengStrategy,
-					defaultSchema, defaultCatalog, dbs, table);
+					defaultSchema, defaultCatalog, revengMetadataCollector, table);
 			fks.add(foreignKeys);
 		}
 

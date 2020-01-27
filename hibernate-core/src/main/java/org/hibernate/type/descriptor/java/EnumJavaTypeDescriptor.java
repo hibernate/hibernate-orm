@@ -9,9 +9,13 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Types;
 import javax.persistence.EnumType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * Describes a Java Enum type.
@@ -32,7 +36,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 					: context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.INTEGER );
+			return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
 		}
 	}
 
@@ -56,7 +60,9 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 		else if ( Integer.class.equals( type ) ) {
 			return (X) toOrdinal( value );
 		}
-
+		else if ( Byte.class.equals( type ) ) {
+			return (X) toByte( value );
+		}
 		return (X) value;
 	}
 
@@ -72,10 +78,22 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 		else if ( value instanceof Integer ) {
 			return fromOrdinal( (Integer) value );
 		}
+		else if ( value instanceof Byte ) {
+			return fromByte( (Byte) value );
+		}
 
 		return (T) value;
 	}
 
+	/**
+	 * Convert a value of the enum type to its ordinal value
+	 */
+	public <E extends Enum> Byte toByte(E domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+		return (byte) domainForm.ordinal();
+	}
 
 	/**
 	 * Convert a value of the enum type to its ordinal value
@@ -85,6 +103,17 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 			return null;
 		}
 		return domainForm.ordinal();
+	}
+
+	/**
+	 * Interpret a numeric value as the ordinal of the enum type
+	 */
+	@SuppressWarnings("unchecked")
+	public <E extends Enum> E fromByte(Byte relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return (E) getJavaType().getEnumConstants()[ relationalForm ];
 	}
 
 	/**
@@ -117,5 +146,25 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 			return null;
 		}
 		return (T) Enum.valueOf( getJavaType(), relationalForm.trim() );
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, SqlTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+		if (sqlTypeDescriptor instanceof TinyIntTypeDescriptor
+				|| sqlTypeDescriptor instanceof IntegerTypeDescriptor) {
+			int last = getJavaType().getEnumConstants().length - 1;
+			return columnName + " between 0 and " + last;
+		}
+		else if (sqlTypeDescriptor instanceof VarcharTypeDescriptor) {
+			StringBuilder types = new StringBuilder();
+			for ( Enum value : getJavaType().getEnumConstants() ) {
+				if (types.length() != 0) {
+					types.append(", ");
+				}
+				types.append("'").append( value.name() ).append("'");
+			}
+			return columnName + " in (" + types + ")";
+		}
+		return null;
 	}
 }

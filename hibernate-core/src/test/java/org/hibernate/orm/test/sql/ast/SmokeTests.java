@@ -180,7 +180,7 @@ public class SmokeTests {
 					final CustomType basicType = (CustomType) selectedExpressable;
 					final EnumType enumType = (EnumType) basicType.getUserType();
 					assertThat( enumType.getEnumValueConverter().getRelationalJavaDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat( enumType.sqlTypes()[0], is( Types.INTEGER ) );
+					assertThat( enumType.sqlTypes()[0], is( Types.TINYINT ) );
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );

@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.persistence.EnumType;
-import javax.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -26,6 +25,8 @@ import org.hibernate.boot.model.process.internal.NamedConverterResolution;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
@@ -72,7 +73,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 	private boolean isNationalized;
 	private boolean isLob;
 	private EnumType enumerationStyle;
-	private TemporalType temporalPrecision;
 
 	private ConverterDescriptor attributeConverterDescriptor;
 
@@ -191,9 +191,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					() -> {
 						if ( resolvedJavaClass != null ) {
 							//noinspection unchecked
-							return getBuildingContext().getBootstrapContext()
-									.getTypeConfiguration()
-									.getJavaTypeDescriptorRegistry()
+							return typeConfiguration.getJavaTypeDescriptorRegistry()
 									.resolveDescriptor( resolvedJavaClass );
 						}
 						else if ( ownerName != null && propertyName != null ) {
@@ -205,8 +203,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 
 							// First resolve from the BasicTypeRegistry.
 							// If it does resolve, we can use the JTD instead of delegating to the JTD Regsitry.
-							final BasicType basicType = getBuildingContext().getBootstrapContext()
-									.getTypeConfiguration()
+							final BasicType basicType = typeConfiguration
 									.getBasicTypeRegistry()
 									.getRegisteredType( reflectedJavaType.getName() );
 							if ( basicType != null ) {
@@ -214,8 +211,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 							}
 
 							//noinspection unchecked
-							return getBuildingContext().getBootstrapContext()
-									.getTypeConfiguration()
+							return typeConfiguration
 									.getJavaTypeDescriptorRegistry()
 									.resolveDescriptor( reflectedJavaType );
 						}
@@ -232,6 +228,30 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					isVersion(),
 					typeConfiguration
 			);
+		}
+
+		if ( resolution != null
+				//TODO: pass in resolution.getValueConverter()
+				//and use it to determine the range of values!
+				&& attributeConverterDescriptor == null
+				&& getColumnSpan() == 1) {
+			Selectable selectable = getColumnIterator().next();
+			if (selectable instanceof Column) {
+				BasicType<?> basicType = resolution.getResolvedBasicType();
+				Column col = (Column) selectable;
+				Dialect dialect = getServiceRegistry().getService(JdbcServices.class).getDialect();
+				String checkConstraint = col.getCheckConstraint();
+				if ( checkConstraint == null && dialect.supportsColumnCheck() ) {
+					col.setCheckConstraint(
+							basicType.getJavaTypeDescriptor()
+									.getCheckCondition(
+											col.getQuotedName( dialect ),
+											basicType.getSqlTypeDescriptor(),
+											dialect
+									)
+					);
+				}
+			}
 		}
 
 		return resolution;

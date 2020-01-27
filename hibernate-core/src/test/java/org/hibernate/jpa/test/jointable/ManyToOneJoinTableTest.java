@@ -6,21 +6,12 @@
  */
 package org.hibernate.jpa.test.jointable;
 
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.DiscriminatorColumn;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Objects;
 import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -28,10 +19,13 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Objects;
+
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.hql.spi.QueryTranslator;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -53,11 +47,11 @@ public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected void configure(Configuration configuration) {
-		super.configure(configuration);
+		super.configure( configuration );
 //		configuration.setProperty(AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES, Boolean.FALSE.toString());
 	}
 
-		@Test
+	@Test
 	public void testAvoidJoin() {
 		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
 				"SELECT e.id FROM Person e",
@@ -75,13 +69,14 @@ public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testRegression() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createNamedQuery(IssuerImpl.SELECT_RESOURCES_BY_ISSUER)
-					.setParameter("issuer", session.getReference(IssuerImpl.class, new Identifier(1l,  "ABC")))
+			session.createNamedQuery( IssuerImpl.SELECT_RESOURCES_BY_ISSUER )
+					.setParameter( "issuer", session.getReference( IssuerImpl.class, new Identifier( 1l, "ABC" ) ) )
 					.getResultList();
 		} );
 	}
 
-	public interface Issuer extends Resource {}
+	public interface Issuer extends Resource {
+	}
 
 	@Entity(name = IssuerImpl.ENTITY_NAME)
 	@SecondaryTable(name = IssuerImpl.TABLE_NAME)
@@ -150,16 +145,20 @@ public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
 			Identifier that = (Identifier) o;
-			return Objects.equals(issuer, that.issuer) &&
-					Objects.equals(identifier, that.identifier);
+			return Objects.equals( issuer, that.issuer ) &&
+					Objects.equals( identifier, that.identifier );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(issuer, identifier);
+			return Objects.hash( issuer, identifier );
 		}
 	}
 

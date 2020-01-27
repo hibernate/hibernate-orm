@@ -111,6 +111,17 @@ public class QueryEngine {
 		if ( userDefinedRegistry != null ) {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
 		}
+
+		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(
+				AvailableSettings.SHOW_HQL_FUNCTIONS,
+				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				false
+		);
+		if ( showSQLFunctions ) {
+			sqmFunctionRegistry.getFunctionsByName().forEach(
+					entry -> System.out.println( entry.getValue().getSignature( entry.getKey() ) )
+			);
+		}
 	}
 
 	/**

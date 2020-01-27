@@ -26,7 +26,7 @@ public class PrimaryKeyProcessor {
 			ReverseEngineeringStrategy revengStrategy, 
 			String defaultSchema, 
 			String defaultCatalog, 
-			DatabaseCollector dbs, 
+			RevengMetadataCollector revengMetadataCollector, 
 			Table table) {
 				
 		List<Object[]> columns = new ArrayList<Object[]>();
@@ -112,7 +112,7 @@ public class PrimaryKeyProcessor {
 		    	  Map<String, Object> m = suggestedPrimaryKeyStrategyName.next();
 		    	  String suggestion = (String) m.get( "HIBERNATE_STRATEGY" );
 		    	  if(suggestion!=null) {
-		    		  dbs.addSuggestedIdentifierStrategy( 
+		    		  revengMetadataCollector.addSuggestedIdentifierStrategy( 
 		    				  transformForModelLookup(table.getCatalog(), defaultCatalog), 
 		    				  transformForModelLookup(table.getSchema(), defaultSchema), 
 		    				  table.getName(), 

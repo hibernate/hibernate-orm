@@ -27,7 +27,7 @@ public class ForeignKeyProcessor {
 			ReverseEngineeringStrategy revengStrategy, 
 			String  defaultSchema, 
 			String defaultCatalog, 
-			DatabaseCollector dbs, 
+			RevengMetadataCollector revengMetadataCollector, 
 			Table referencedTable) {
 		// foreign key name to list of columns
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
@@ -56,10 +56,10 @@ public class ForeignKeyProcessor {
 				String fkName = (String) exportedKeyRs.get("FK_NAME");
 				short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
 								
-				Table fkTable = dbs.getTable((String) exportedKeyRs.get("FKTABLE_SCHEM"), (String) exportedKeyRs.get("FKTABLE_CAT"), fkTableName);
+				Table fkTable = revengMetadataCollector.getTable((String) exportedKeyRs.get("FKTABLE_SCHEM"), (String) exportedKeyRs.get("FKTABLE_CAT"), fkTableName);
 				
 				if (fkTable == null) {
-					fkTable = dbs.getTable(
+					fkTable = revengMetadataCollector.getTable(
 							getSchemaForModel(fkSchema, defaultSchema), 
 							getCatalogForModel(fkCatalog, defaultCatalog), 
 							fkTableName);
@@ -159,7 +159,7 @@ public class ForeignKeyProcessor {
         			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
         		}
         		
-        		deptable = dbs.getTable(
+        		deptable = revengMetadataCollector.getTable(
         				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
         				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
         				userfkTable.getName());

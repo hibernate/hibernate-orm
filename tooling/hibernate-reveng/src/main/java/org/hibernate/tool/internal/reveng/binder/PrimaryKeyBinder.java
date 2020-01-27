@@ -22,9 +22,9 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.DatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils.ForeignKeyForColumns;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
@@ -54,11 +54,11 @@ class PrimaryKeyBinder extends AbstractBinder {
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 
-			DatabaseCollector collector) {
+			RevengMetadataCollector revengMetadataCollector) {
 		List<Column> keyColumns = getKeyColumns(table);
 		final TableIdentifier tableIdentifier = TableIdentifier.create(table);
 		PrimaryKeyInfo pki = createPrimaryKeyInfo(tableIdentifier, keyColumns);
-		SimpleValue id = createKeyValue(rc, keyColumns, pki.suggestedStrategy, table, collector, processed);		
+		SimpleValue id = createKeyValue(rc, keyColumns, pki.suggestedStrategy, table, revengMetadataCollector, processed);		
 		id.setIdentifierGeneratorProperties(pki.suggestedProperties);
 		Property property = propertyBinder.bind(
 				table, 
@@ -90,7 +90,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 			List<Column> keyColumns, 
 			String suggestedStrategyName,
 			Table table, 
-			DatabaseCollector collector, 
+			RevengMetadataCollector revengMetadataCollector, 
 			Set<Column> processed) {
 		if (keyColumns.size()>1) {
 			LOGGER.log(Level.INFO, "id strategy for " + rc.getEntityName() + " since it has a multiple column primary key");
@@ -98,7 +98,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 		}
 		else {
 			String tableIdentifierStrategyName = 
-					getTableIdentifierStrategyName(suggestedStrategyName, collector, table);
+					getTableIdentifierStrategyName(suggestedStrategyName, revengMetadataCollector, table);
 			return handleColumnKey(table, tableIdentifierStrategyName, processed, keyColumns);
 		}
 	}
@@ -120,10 +120,10 @@ class PrimaryKeyBinder extends AbstractBinder {
 	
 	private String getTableIdentifierStrategyName(
 			String suggestedStrategy, 
-			DatabaseCollector collector, 
+			RevengMetadataCollector revengMetadataCollector, 
 			Table table) {
 		if(suggestedStrategy==null) {
-			suggestedStrategy = collector.getSuggestedIdentifierStrategy(
+			suggestedStrategy = revengMetadataCollector.getSuggestedIdentifierStrategy(
 					table.getCatalog(), 
 					table.getSchema(), 
 					table.getName() );

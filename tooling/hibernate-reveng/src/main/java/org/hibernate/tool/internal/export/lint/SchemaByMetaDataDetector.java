@@ -30,7 +30,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.DatabaseCollector;
 import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
@@ -50,7 +49,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	private TableSelectorStrategy tableSelector;
 
-	private DatabaseCollector dbc;
+	private RevengMetadataCollector revengMetadataCollector;
 
 	private Dialect dialect;
 
@@ -78,7 +77,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				tableSelector, 
 				mdd,
 				serviceRegistry);
-		dbc = new RevengMetadataCollector(mdd);
+		revengMetadataCollector = new RevengMetadataCollector(mdd);
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
 		sequenceCollector = SequenceCollector.create(connectionProvider);
 	}
@@ -131,17 +130,17 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			if(strings.length==1) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,null, strings[0]) );
-				List<?> list = reader.readDatabaseSchema( dbc, null, null );
+				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
 				return !list.isEmpty();
 			} else if(strings.length==3) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(strings[0],strings[1], strings[2]) );
-				List<?> list = reader.readDatabaseSchema( dbc, null, null );
+				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
 				return !list.isEmpty();
 			} else if (strings.length==2) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,strings[0], strings[1]) );
-				List<?> list = reader.readDatabaseSchema( dbc, null, null );
+				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
 				return !list.isEmpty();
 			}
 		}
@@ -153,7 +152,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		if ( table.isPhysicalTable() ) {
 			setSchemaSelection( table );
 
-			List<?> list = reader.readDatabaseSchema( dbc, null, null );
+			List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
 
 			if ( list.isEmpty() ) {
 				pc.reportIssue( new Issue( "SCHEMA_TABLE_MISSING",

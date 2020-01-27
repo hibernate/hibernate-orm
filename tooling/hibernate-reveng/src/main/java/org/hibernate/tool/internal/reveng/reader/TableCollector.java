@@ -13,7 +13,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.DatabaseCollector;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.jboss.logging.Logger;
 
 public class TableCollector {
@@ -23,32 +23,32 @@ public class TableCollector {
 	public static TableCollector create(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
-			DatabaseCollector databaseCollector, 
+			RevengMetadataCollector revengMetadataCollector, 
 			SchemaSelection schemaSelection, 
 			Set<Table> hasIndices) {
 		return new TableCollector(
 				metaDataDialect, 
 				revengStrategy, 
-				databaseCollector, 
+				revengMetadataCollector, 
 				schemaSelection, 
 				hasIndices);
 	}
 	
 	private MetaDataDialect metaDataDialect;
 	private ReverseEngineeringStrategy revengStrategy;
-	private DatabaseCollector databaseCollector;
+	private RevengMetadataCollector revengMetadataCollector;
 	private SchemaSelection schemaSelection;
 	private Set<Table> hasIndices;
 	
 	private TableCollector(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
-			DatabaseCollector databaseCollector, 
+			RevengMetadataCollector revengMetadataCollector, 
 			SchemaSelection schemaSelection, 
 			Set<Table> hasIndices) {
 		this.metaDataDialect = metaDataDialect;
 		this.revengStrategy = revengStrategy;
-		this.databaseCollector = databaseCollector;
+		this.revengMetadataCollector = revengMetadataCollector;
 		this.schemaSelection = schemaSelection;
 		this.hasIndices = hasIndices;
 	}
@@ -73,7 +73,7 @@ public class TableCollector {
 		        }								
 				String comment = (String) tableRs.get("REMARKS");
 				String tableType = (String) tableRs.get("TABLE_TYPE");
-				if(databaseCollector.getTable
+				if(revengMetadataCollector.getTable
 						  (schemaName, 
 								  catalogName, 
 								  tableName)!=null) {
@@ -92,7 +92,7 @@ public class TableCollector {
 							  catalogName=null;
 						  }
 						  log.debug("Adding table " + tableName + " of type " + tableType);
-						  Table table = databaseCollector.addTable(schemaName, catalogName, tableName);
+						  Table table = revengMetadataCollector.addTable(schemaName, catalogName, tableName);
 						  table.setComment(comment);
 						  if(tableType.equalsIgnoreCase("TABLE")) {
 							  hasIndices.add(table);

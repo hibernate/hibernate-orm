@@ -23,7 +23,7 @@ public class IndexColumn extends Ejb3Column {
 	public IndexColumn(
 			boolean isImplicit,
 			String sqlType,
-			int length,
+			long length,
 			int precision,
 			int scale,
 			String name,

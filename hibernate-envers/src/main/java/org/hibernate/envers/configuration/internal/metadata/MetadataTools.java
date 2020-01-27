@@ -154,7 +154,7 @@ public final class MetadataTools {
 	public static Element addColumn(
 			Element parent,
 			String name,
-			Integer length,
+			Long length,
 			Integer scale,
 			Integer precision,
 			String sqlType,
@@ -166,7 +166,7 @@ public final class MetadataTools {
 	public static Element addColumn(
 			Element parent,
 			String name,
-			Integer length,
+			Long length,
 			Integer scale,
 			Integer precision,
 			String sqlType,

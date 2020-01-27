@@ -46,7 +46,6 @@ import org.hibernate.mapping.Value;
  *
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 public class Ejb3JoinColumn extends Ejb3Column {
 	/**
 	 * property name related to this column
@@ -474,9 +473,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				null, referencedColumn.getLength(),
 				referencedColumn.getPrecision(),
 				referencedColumn.getScale(),
-				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
+				getMappingColumn() != null && getMappingColumn().isNullable(),
 				referencedColumn.getSqlType(),
-				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
+				getMappingColumn() != null && getMappingColumn().isUnique(),
 				false
 		);
 		linkWithValue( value );

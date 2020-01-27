@@ -23,7 +23,7 @@ public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> im
 	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
-		super( org.hibernate.type.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.sql.FloatTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {

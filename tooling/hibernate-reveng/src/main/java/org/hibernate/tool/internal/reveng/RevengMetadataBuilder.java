@@ -94,15 +94,15 @@ public class RevengMetadataBuilder {
 		return result;
 	}
 	
-	private DatabaseCollector readFromDatabase() {
+	private RevengMetadataCollector readFromDatabase() {
 		MetaDataDialect mdd = MetaDataDialectFactory
 				.createMetaDataDialect(
 						serviceRegistry.getService(JdbcServices.class).getDialect(), 
 						properties );
 	    DatabaseReader reader = DatabaseReader.create(properties,revengStrategy,mdd, serviceRegistry);
-	    RevengMetadataCollector collector = new RevengMetadataCollector(metadataCollector, mdd);
-        reader.readDatabaseSchema(collector, defaultCatalog, defaultSchema);
-        return collector;
+	    RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector(metadataCollector, mdd);
+        reader.readDatabaseSchema(revengMetadataCollector, defaultCatalog, defaultSchema);
+        return revengMetadataCollector;
 	}
 	
 	// TODO: this naively just create an entity per table
@@ -112,7 +112,7 @@ public class RevengMetadataBuilder {
         continue;
         // TODO: just create one big embedded composite id instead.
     }*/
-	private void createPersistentClasses(DatabaseCollector collector) {
+	private void createPersistentClasses(RevengMetadataCollector revengMetadataCollector) {
 		RootClassBinder rootClassBinder = RootClassBinder.create(binderContext);
 		for (Table table : metadataCollector.collectTableMappings()) {
 			if(table.getColumnSpan()==0) {
@@ -123,7 +123,7 @@ public class RevengMetadataBuilder {
 				LOGGER.debug( "Ignoring " + table + " as class since rev.eng. says it is a many-to-many" );
 				continue;
 			}	    	
-			rootClassBinder.bind(table, collector);
+			rootClassBinder.bind(table, revengMetadataCollector);
 		}		
 		metadataCollector.processSecondPasses(metadataBuildingContext);	
 	}

@@ -12,6 +12,7 @@ import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -86,6 +87,14 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list();
 					assertThat( session.createQuery("select concat('hello',' ','world')").getSingleResult(), is("hello world") );
 					assertThat( session.createQuery("select 'hello'||' '||'world'").getSingleResult(), is("hello world") );
+				}
+		);
+	}
+
+	@Test
+	public void testConcatFunctionParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					assertThat( session.createQuery("select :hello||:world").setParameter("hello","hello").setParameter("world","world").getSingleResult(), is("helloworld") );
 					assertThat( session.createQuery("select ?1||?2").setParameter(1,"hello").setParameter(2,"world").getSingleResult(), is("helloworld") );
 					assertThat( session.createQuery("select ?1||?1").setParameter(1,"hello").getSingleResult(), is("hellohello") );
@@ -250,7 +259,15 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							.list().get(0), is("xxyyxx") );
 					assertThat( session.createQuery("select overlay('xxxxxx' placing ' yy ' from 3 for 2) from EntityOfBasics")
 							.list().get(0), is("xx yy xx") );
+				}
+		);
+	}
 
+	@Test
+	@FailureExpected(reason = "needs indirection in positional parameter bindings")
+	public void testOverlayFunctionParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select overlay(?2 placing ?1 from 3) from EntityOfBasics")
 							.setParameter(1, "yy")
 							.setParameter(2, "xxxxxx")
@@ -305,7 +322,14 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 							is(".....hello"));
 					assertThat(session.createQuery("select pad('hello' with 10 trailing '.')").getSingleResult(),
 							is("hello....."));
+				}
+		);
+	}
 
+	@Test
+	public void testPadFunctionParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select pad(?1 with ?2 leading)")
 							.setParameter(1, "hello")
 							.setParameter(2, 10)

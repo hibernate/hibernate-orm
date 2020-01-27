@@ -49,8 +49,8 @@ public class NullablePrimaryKeyTest extends BaseUnitTest {
 
 			final Metadata metadata = ms.buildMetadata();
 			final List<String> commands = new SchemaCreatorImpl( serviceRegistry ).generateCreationCommands( metadata, false );
-			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0), " +
-					"person_id numeric(19,0) not null, primary key (person_id))";
+			String expectedMappingTableSql = "create table personAddress (address_id bigint, " +
+					"person_id bigint not null, primary key (person_id))";
 
             Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );
 		}

@@ -15,7 +15,6 @@ import java.time.LocalTime;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -358,7 +357,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "temporal stuff not yet integrated" )
 	public void testIntervalAddExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -395,7 +393,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testIntervalSubExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -434,7 +431,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "temporal stuff not yet integrated" )
 	public void testIntervalAddSubExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -453,7 +449,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testIntervalScaleExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -485,7 +480,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@FailureExpected
 	public void testIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

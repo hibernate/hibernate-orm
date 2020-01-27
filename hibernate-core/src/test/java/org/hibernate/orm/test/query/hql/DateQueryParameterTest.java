@@ -13,7 +13,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,69 +46,61 @@ public class DateQueryParameterTest extends SessionFactoryBasedFunctionalTest {
 		}
 	}
 
-	private long timestamp1;
-	private long timestamp2;
-	private long timestamp3;
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { DateEntity.class };
 	}
 
 	@Test
-	public void testDateEntityQuery() throws Exception {
-		try {
-			timestamp1 = System.currentTimeMillis();
+	public void testDateEntityQuery() {
 
-			inTransaction(
-					session -> {
-						final DateEntity entity = new DateEntity();
-						entity.setTimestamp( new Date() );
-						session.save( entity );
-					}
-			);
+		long current = System.currentTimeMillis();
+		long timestamp1 = current - 2222;
+		long timestamp2 = current - 1111;
+		long timestamp3 = current;
+		long timestamp4 = current + 1111;
+		long timestamp5 = current + 2222;
 
-			timestamp2 = System.currentTimeMillis();
-			Thread.sleep( 1100 );
+		inTransaction(
+				session -> {
+					final DateEntity entity = new DateEntity();
+					entity.setTimestamp( new Date(timestamp2) );
+					session.save( entity );
+				}
+		);
 
-			inTransaction(
-					session -> {
-						final DateEntity entity = new DateEntity();
-						entity.setTimestamp( new Date() );
-						session.save( entity );
-					}
-			);
+		inTransaction(
+				session -> {
+					final DateEntity entity = new DateEntity();
+					entity.setTimestamp( new Date(timestamp4) );
+					session.save( entity );
+				}
+		);
 
-			timestamp3 = System.currentTimeMillis();
+		inTransaction(
+				session -> {
+					// Test nothing before timestamp1
+					List<DateEntity> results = session
+							.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < :value", DateEntity.class )
+							.setParameter( "value", new Date( timestamp1 ) )
+							.getResultList();
+					assertEquals( 0, results.size() );
 
-			inTransaction(
-					session -> {
-						// Test nothing before timestamp1
-						List<DateEntity> results = session
-								.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < :value", DateEntity.class )
-								.setParameter( "value", new Date( timestamp1 ) )
-								.getResultList();
-						assertEquals( results.size(), 0 );
+					// Test only one entry before timestamp2
+					results = session
+							.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < : value", DateEntity.class )
+							.setParameter( "value", new Date( timestamp3 ) )
+							.getResultList();
+					assertEquals( 1, results.size() );
 
-						// Test only one entry before timestamp2
-						results = session
-								.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < : value", DateEntity.class )
-								.setParameter( "value", new Date( timestamp2 ) )
-								.getResultList();
-						assertEquals( results.size(), 1 );
-
-						// Test two entries before timestamp3
-						results = session
-								.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < : value", DateEntity.class )
-								.setParameter( "value", new Date( timestamp3 ) )
-								.getResultList();
-						assertEquals( results.size(), 2 );
-					}
-			);
-		}
-		catch ( InterruptedException e ) {
-			throw new RuntimeException( "Failed to thread sleep properly", e );
-		}
+					// Test two entries before timestamp3
+					results = session
+							.createQuery( "SELECT e FROM DateEntity e WHERE e.timestamp < : value", DateEntity.class )
+							.setParameter( "value", new Date( timestamp5 ) )
+							.getResultList();
+					assertEquals( 2, results.size() );
+				}
+		);
 	}
 
 	@AfterEach

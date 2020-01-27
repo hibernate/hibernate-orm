@@ -19,8 +19,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.DatabaseCollector;
 import org.hibernate.tool.internal.reveng.PrimaryKeyInfo;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 public class RootClassBinder extends AbstractBinder {
@@ -45,16 +45,16 @@ public class RootClassBinder extends AbstractBinder {
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
 	}
 
-	public void bind(Table table, DatabaseCollector collector) {
+	public void bind(Table table, RevengMetadataCollector revengMetadataCollector) {
 		Set<Column> processed = new HashSet<Column>();
 		nullifyDefaultCatalogAndSchema(table);
 		RootClass rc = createRootClass(table);
 		addToMetadataCollector(rc, table);
-		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, collector);		
+		PrimaryKeyInfo pki = bindPrimaryKey(table, rc, processed, revengMetadataCollector);		
 		bindVersionProperty(table, rc, processed);
 		bindOutgoingForeignKeys(table, rc, processed);
 		bindColumnsToProperties(table, rc, processed);
-		bindIncomingForeignKeys(rc, processed, collector);
+		bindIncomingForeignKeys(rc, processed, revengMetadataCollector);
 		updatePrimaryKey(rc, pki);	
 	}
 	
@@ -62,8 +62,8 @@ public class RootClassBinder extends AbstractBinder {
 			Table table, 
 			RootClass rc, 
 			Set<Column> processed, 
-			DatabaseCollector collector) {
-		return primaryKeyBinder.bind(table, rc, processed, collector);	
+			RevengMetadataCollector revengMetadataCollector) {
+		return primaryKeyBinder.bind(table, rc, processed, revengMetadataCollector);	
 	}
 	
 	private void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
@@ -117,8 +117,8 @@ public class RootClassBinder extends AbstractBinder {
 	private void bindIncomingForeignKeys(
 			PersistentClass rc, 
 			Set<Column> processed, 
-			DatabaseCollector collector) {
-		List<ForeignKey> foreignKeys = collector.getOneToManyCandidates().get(rc.getEntityName());
+			RevengMetadataCollector revengMetadataCollector) {
+		List<ForeignKey> foreignKeys = revengMetadataCollector.getOneToManyCandidates().get(rc.getEntityName());
 		if(foreignKeys!=null) {
 			for (Iterator<ForeignKey> iter = foreignKeys.iterator(); iter.hasNext();) {
 				foreignKeyBinder.bindIncoming(iter.next(), rc, processed);

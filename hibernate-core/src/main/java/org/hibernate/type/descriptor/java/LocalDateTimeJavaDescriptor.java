@@ -10,12 +10,12 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LocalDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -36,12 +36,12 @@ public class LocalDateTimeJavaDescriptor extends AbstractTypeDescriptor<LocalDat
 
 	@Override
 	public String toString(LocalDateTime value) {
-		return LocalDateTimeType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_DATE_TIME.format( value );
 	}
 
 	@Override
 	public LocalDateTime fromString(String string) {
-		return LocalDateTime.from( LocalDateTimeType.FORMATTER.parse( string ) );
+		return LocalDateTime.from( DateTimeFormatter.ISO_DATE_TIME.parse( string ) );
 	}
 
 	@Override

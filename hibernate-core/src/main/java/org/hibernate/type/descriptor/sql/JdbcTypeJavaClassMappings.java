@@ -18,6 +18,11 @@ import java.sql.Struct;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -112,6 +117,11 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( java.sql.Date.class, Types.DATE );
 		workMap.put( Time.class, Types.TIME );
 		workMap.put( Timestamp.class, Types.TIMESTAMP );
+		workMap.put( LocalTime.class, Types.TIME );
+		workMap.put( LocalDate.class, Types.DATE );
+		workMap.put( LocalDateTime.class, Types.TIMESTAMP );
+		workMap.put( OffsetDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE );
+		workMap.put( ZonedDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE );
 		workMap.put( Blob.class, Types.BLOB );
 		workMap.put( Clob.class, Types.CLOB );
 		workMap.put( Array.class, Types.ARRAY );

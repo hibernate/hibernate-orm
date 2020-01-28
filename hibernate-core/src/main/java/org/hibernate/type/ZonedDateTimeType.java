@@ -20,6 +20,7 @@ import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -34,15 +35,8 @@ public class ZonedDateTimeType
 	 */
 	public static final ZonedDateTimeType INSTANCE = new ZonedDateTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S VV", Locale.ENGLISH );
-
 	public ZonedDateTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, ZonedDateTimeJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public String objectToSQLString(ZonedDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
+		super( TimestampWithTimeZoneDescriptor.INSTANCE, ZonedDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

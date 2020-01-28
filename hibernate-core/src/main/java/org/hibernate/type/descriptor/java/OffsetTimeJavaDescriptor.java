@@ -14,12 +14,12 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.OffsetTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -40,12 +40,12 @@ public class OffsetTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetTime>
 
 	@Override
 	public String toString(OffsetTime value) {
-		return OffsetTimeType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_OFFSET_TIME.format( value );
 	}
 
 	@Override
 	public OffsetTime fromString(String string) {
-		return OffsetTime.from( OffsetTimeType.FORMATTER.parse( string ) );
+		return OffsetTime.from( DateTimeFormatter.ISO_OFFSET_TIME.parse( string ) );
 	}
 
 	@Override

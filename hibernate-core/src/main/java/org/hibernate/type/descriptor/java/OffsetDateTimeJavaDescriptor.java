@@ -10,16 +10,17 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the {@link OffsetDateTime} type.
  *
  * @author Steve Ebersole
  */
@@ -36,12 +37,12 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 	@Override
 	public String toString(OffsetDateTime value) {
-		return OffsetDateTimeType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( value );
 	}
 
 	@Override
 	public OffsetDateTime fromString(String string) {
-		return OffsetDateTime.from( OffsetDateTimeType.FORMATTER.parse( string ) );
+		return OffsetDateTime.from( DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse( string ) );
 	}
 
 	@Override
@@ -53,6 +54,10 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
 			return (X) offsetDateTime;
+		}
+
+		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
+			return (X) offsetDateTime.toZonedDateTime();
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
@@ -107,6 +112,11 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 
 		if ( OffsetDateTime.class.isInstance( value ) ) {
 			return (OffsetDateTime) value;
+		}
+
+		if ( ZonedDateTime.class.isInstance( value ) ) {
+			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
+			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
 		if ( Timestamp.class.isInstance( value ) ) {

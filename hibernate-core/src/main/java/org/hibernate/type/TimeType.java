@@ -50,14 +50,6 @@ public class TimeType
 //		return true;
 //	}
 
-	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
-		Time jdbcTime = Time.class.isInstance( value )
-				? ( Time ) value
-				: new Time( value.getTime() );
-		// TODO : use JDBC time literal escape syntax? -> {t 'time-string'} in hh:mm:ss format
-		return StringType.INSTANCE.objectToSQLString( jdbcTime.toString(), dialect );
-	}
-
 	@Override
 	public AllowableTemporalParameterType resolveTemporalPrecision(
 			TemporalType temporalPrecision,

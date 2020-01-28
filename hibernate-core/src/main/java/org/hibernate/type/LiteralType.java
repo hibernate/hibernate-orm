@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -29,6 +30,8 @@ public interface LiteralType<T> {
 	 * 
 	 * @throws Exception Indicates an issue converting the value to literal string.
 	 */
-	public String objectToSQLString(T value, Dialect dialect) throws Exception;
+	default String objectToSQLString(T value, Dialect dialect) throws Exception {
+		throw new AssertionFailure("not a discriminator type");
+	}
 
 }

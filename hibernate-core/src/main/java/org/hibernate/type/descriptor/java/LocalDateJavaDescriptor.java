@@ -12,11 +12,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import org.hibernate.type.LocalDateType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -37,12 +37,12 @@ public class LocalDateJavaDescriptor extends AbstractTypeDescriptor<LocalDate> {
 
 	@Override
 	public String toString(LocalDate value) {
-		return LocalDateType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_LOCAL_DATE.format( value );
 	}
 
 	@Override
 	public LocalDate fromString(String string) {
-		return LocalDate.from( LocalDateType.FORMATTER.parse( string ) );
+		return LocalDate.from( DateTimeFormatter.ISO_LOCAL_DATE.parse( string ) );
 	}
 
 	@Override

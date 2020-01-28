@@ -8,18 +8,19 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.ZonedDateTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * Java type descriptor for the LocalDateTime type.
+ * Java type descriptor for the {@link ZonedDateTime} type.
  *
  * @author Steve Ebersole
  */
@@ -36,12 +37,12 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptor<ZonedDat
 
 	@Override
 	public String toString(ZonedDateTime value) {
-		return ZonedDateTimeType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_ZONED_DATE_TIME.format( value );
 	}
 
 	@Override
 	public ZonedDateTime fromString(String string) {
-		return ZonedDateTime.from( ZonedDateTimeType.FORMATTER.parse( string ) );
+		return ZonedDateTime.from( DateTimeFormatter.ISO_ZONED_DATE_TIME.parse( string ) );
 	}
 
 	@Override
@@ -53,6 +54,10 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptor<ZonedDat
 
 		if ( ZonedDateTime.class.isAssignableFrom( type ) ) {
 			return (X) zonedDateTime;
+		}
+
+		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
+			return (X) OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
@@ -107,6 +112,11 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTypeDescriptor<ZonedDat
 
 		if ( ZonedDateTime.class.isInstance( value ) ) {
 			return (ZonedDateTime) value;
+		}
+
+		if ( OffsetDateTime.class.isInstance( value ) ) {
+			OffsetDateTime offsetDateTime = (OffsetDateTime) value;
+			return offsetDateTime.toZonedDateTime();
 		}
 
 		if ( java.sql.Timestamp.class.isInstance( value ) ) {

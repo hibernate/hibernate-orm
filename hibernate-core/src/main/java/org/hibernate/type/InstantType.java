@@ -44,11 +44,6 @@ public class InstantType
 	}
 
 	@Override
-	public String objectToSQLString(Instant value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( ZonedDateTime.ofInstant( value, ZoneId.of( "UTC" ) ) ) + "'}";
-	}
-
-	@Override
 	public Instant seed(SharedSessionContractImplementor session) {
 		return Instant.now();
 	}

@@ -344,6 +344,7 @@ public class MetadataContext {
 				}
 
 				( ( AttributeContainer) embeddable ).getInFlightAccess().finishUp();
+				embeddables.put( embeddable.getJavaType(), embeddable );
 
 				if ( staticMetamodelScanEnabled ) {
 					populateStaticMetamodel( embeddable );

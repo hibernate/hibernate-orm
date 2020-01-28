@@ -36,6 +36,10 @@ public class SqmFunctionRegistry {
 		log.tracef( "SqmFunctionRegistry created" );
 	}
 
+	public Map<String, SqmFunctionDescriptor> getFunctions() {
+		return functionMap;
+	}
+
 	/**
 	 * Find a SqmFunctionTemplate by name.  Returns {@code null} if
 	 * no such function is found.

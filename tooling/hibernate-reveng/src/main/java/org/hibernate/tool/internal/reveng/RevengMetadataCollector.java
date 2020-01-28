@@ -12,7 +12,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 
-public class RevengMetadataCollector implements DatabaseCollector {
+public class RevengMetadataCollector {
 
 	private InFlightMetadataCollector metadataCollector = null;
 	private final Map<TableIdentifier, Table> tables;

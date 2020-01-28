@@ -362,7 +362,7 @@ public abstract class AbstractSqlAstWalker
 
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
-			sqlAppender.appendSql( " as " );
+			sqlAppender.appendSql( getDialect().getTableAliasSeparator() );
 			sqlAppender.appendSql( identificationVariable );
 		}
 	}

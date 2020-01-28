@@ -271,8 +271,9 @@ public class SequenceStyleGenerator
 		final String optimizationStrategy = determineOptimizationStrategy( params, incrementSize );
 		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
 
-		if ( dialect.supportsSequences() && !forceTableUse ) {
-			if ( !dialect.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
+		if ( dialect.getSequenceSupport().supportsSequences() && !forceTableUse ) {
+			if ( !dialect.getSequenceSupport().supportsPooledSequences()
+					&& OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
 				forceTableUse = true;
 				LOG.forcingTableUse();
 			}
@@ -486,7 +487,8 @@ public class SequenceStyleGenerator
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
-		return jdbcEnvironment.getDialect().supportsSequences() && !forceTableUse;
+		return jdbcEnvironment.getDialect().getSequenceSupport().supportsSequences()
+				&& !forceTableUse;
 	}
 
 	protected DatabaseStructure buildSequenceStructure(

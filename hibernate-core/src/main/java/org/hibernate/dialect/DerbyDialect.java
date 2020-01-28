@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -112,6 +113,8 @@ public class DerbyDialect extends Dialect {
 		limitHandler = getVersion() < 1050
 				? AbstractLimitHandler.NO_LIMIT
 				: new DerbyLimitHandler( getVersion() >= 1060 );
+
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	public int getDefaultDecimalPrecision() {

@@ -8,7 +8,6 @@ package org.hibernate.test.idgen.enhanced.sequence;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -47,14 +46,13 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class };
+		return new Class[]{ TestEntity.class };
 	}
 
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
-				SequenceMismatchStrategy.EXCEPTION.toString()
-		);
+				SequenceMismatchStrategy.EXCEPTION.toString() );
 	}
 
 	@Override
@@ -65,16 +63,18 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 		String[] dropSequenceStatements = getDialect().getDropSequenceStrings( sequenceName );
 		String[] createSequenceStatements = getDialect().getCreateSequenceStrings( sequenceName, 1, 1 );
 
-		try (Connection connection = connectionProvider.getConnection();
-			 Statement statement = connection.createStatement()) {
-			try {
-				for ( String dropSequenceStatement : dropSequenceStatements ) {
+		try ( Connection connection = connectionProvider.getConnection();
+				Statement statement = connection.createStatement() ) {
+
+			for ( String dropSequenceStatement : dropSequenceStatements ) {
+				try {
 					statement.execute( dropSequenceStatement );
 				}
+				catch (SQLException e) {
+					// ignore
+				}
 			}
-			catch (SQLSyntaxErrorException e) {
-				//ignore
-			}
+
 			for ( String createSequenceStatement : createSequenceStatements ) {
 				statement.execute( createSequenceStatement );
 			}
@@ -83,7 +83,6 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 			fail( e.getMessage() );
 		}
 	}
-
 
 	@Test
 	public void testSequenceMismatchStrategyNotApplied() {
@@ -102,17 +101,15 @@ public class HiLoSequenceMismatchStrategyTest extends BaseCoreFunctionalTestCase
 
 	@Entity(name = "TestEntity")
 	public static class TestEntity {
+
 		@Id
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hilo_sequence_generator")
-		@GenericGenerator(
-				name = "hilo_sequence_generator",
-				strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
-				parameters = {
-						@Parameter(name = "sequence_name", value = sequenceName),
-						@Parameter(name = "initial_value", value = "1"),
-						@Parameter(name = "increment_size", value = "10"),
-						@Parameter(name = "optimizer", value = "hilo")
-				})
+		@GenericGenerator(name = "hilo_sequence_generator", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+				@Parameter(name = "sequence_name", value = sequenceName),
+				@Parameter(name = "initial_value", value = "1"),
+				@Parameter(name = "increment_size", value = "10"),
+				@Parameter(name = "optimizer", value = "hilo")
+		})
 		private Long id;
 
 		private String aString;

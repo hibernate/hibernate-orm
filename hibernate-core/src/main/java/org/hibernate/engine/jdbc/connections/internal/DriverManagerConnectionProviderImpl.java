@@ -8,7 +8,9 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -22,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -101,10 +104,51 @@ public class DriverManagerConnectionProviderImpl
 	private static ConnectionCreator buildCreator(Map configurationValues, ServiceRegistryImplementor serviceRegistry) {
 		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder( serviceRegistry );
 
-		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
-
 		final String url = (String) configurationValues.get( AvailableSettings.URL );
+
+		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		boolean success = false;
+		if ( driverClassName != null ) {
+			connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName, serviceRegistry ) );
+			success = true;
+		}
+		else if ( url != null ) {
+			//try to guess the driver class from the JDBC URL
+			for ( Database database: Database.values() ) {
+				if ( database.matchesUrl( url ) ) {
+					driverClassName = database.getDriverClassName( url );
+					if ( driverClassName != null ) {
+						try {
+							connectionCreatorBuilder.setDriver( loadDriverIfPossible(driverClassName, serviceRegistry) );
+							success = true;
+						}
+						catch (Exception e) {
+							//swallow it, since this was not
+							//an explicit setting by the user
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		if ( success ) {
+			log.loadedDriver( driverClassName );
+		}
+		else {
+			//we're hoping that the driver is already loaded
+			log.noDriver( AvailableSettings.DRIVER );
+			StringBuilder list = new StringBuilder();
+			Enumeration<Driver> drivers = DriverManager.getDrivers();
+			while ( drivers.hasMoreElements() ) {
+				if ( list.length() != 0) {
+					list.append(", ");
+				}
+				list.append( drivers.nextElement().getClass().getName() );
+			}
+			log.loadedDrivers( list.toString() );
+		}
+
 		if ( url == null ) {
 			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
 			log.error( msg );
@@ -112,7 +156,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 		connectionCreatorBuilder.setUrl( url );
 
-		log.usingDriver( driverClassName, url );
+		log.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
@@ -217,7 +261,6 @@ public class DriverManagerConnectionProviderImpl
 
 	/**
 	 * Exposed to facilitate testing only.
-	 * @return
 	 */
 	public Properties getConnectionProperties() {
 		BasicConnectionCreator connectionCreator = (BasicConnectionCreator) this.state.pool.connectionCreator;

@@ -6,10 +6,12 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -48,7 +50,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
 		if ( !isEmpty( dialectReference ) ) {
-			return constructDialect( dialectReference );
+			return constructDialect( dialectReference, resolutionInfoSource );
 		}
 		else {
 			return determineDialect( resolutionInfoSource );
@@ -68,10 +70,32 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		return true;
 	}
 
-	private Dialect constructDialect(Object dialectReference) {
-		final Dialect dialect;
+	private Dialect constructDialect(Object dialectReference, DialectResolutionInfoSource resolutionInfoSource) {
 		try {
-			dialect = strategySelector.resolveStrategy( Dialect.class, dialectReference );
+			Dialect dialect = strategySelector.resolveStrategy(
+					Dialect.class,
+					dialectReference,
+					(Dialect) null,
+					(dialectClass) -> {
+						try {
+							try {
+								if (resolutionInfoSource != null) {
+									return dialectClass.getConstructor(DialectResolutionInfo.class).newInstance(
+											resolutionInfoSource.getDialectResolutionInfo()
+									);
+								}
+							}
+							catch (NoSuchMethodException nsme) {}
+							return dialectClass.newInstance();
+						}
+						catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+							throw new StrategySelectionException(
+									String.format( "Could not instantiate named dialect class [%s]", dialectClass.getName() ),
+									e
+							);
+						}
+					}
+			);
 			if ( dialect == null ) {
 				throw new HibernateException( "Unable to construct requested dialect [" + dialectReference + "]" );
 			}
@@ -100,7 +124,6 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			throw new HibernateException(
 					"Unable to determine Dialect without JDBC metadata "
 					+ "(please set 'javax.persistence.jdbc.url', 'hibernate.connection.url', or 'hibernate.dialect')"
-
 			);
 		}
 
@@ -109,9 +132,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 
 		if ( dialect == null ) {
 			throw new HibernateException(
-					"Unable to determine Dialect to use [name=" + info.getDatabaseName() +
-							", majorVersion=" + info.getDatabaseMajorVersion() +
-							"]; user must register resolver or explicitly set 'hibernate.dialect'"
+					"Unable to determine Dialect for " + info.getDatabaseName() + " "
+					+ info.getDatabaseMajorVersion() + "." + info.getDatabaseMinorVersion()
+					+ " (please set 'hibernate.dialect' or register a Dialect resolver)"
 			);
 		}
 

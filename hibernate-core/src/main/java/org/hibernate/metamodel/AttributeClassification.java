@@ -13,9 +13,9 @@ public enum AttributeClassification {
 	EMBEDDED( PersistentAttributeType.EMBEDDED ),
 	ANY( null ),
 	ONE_TO_ONE( PersistentAttributeType.ONE_TO_ONE ),
-	MANY_TO_ONE( PersistentAttributeType.EMBEDDED ),
+	MANY_TO_ONE( PersistentAttributeType.MANY_TO_ONE ),
 	ELEMENT_COLLECTION( PersistentAttributeType.ELEMENT_COLLECTION ),
-	ONE_TO_MANY( PersistentAttributeType.MANY_TO_ONE ),
+	ONE_TO_MANY( PersistentAttributeType.ONE_TO_MANY ),
 	MANY_TO_MANY( PersistentAttributeType.MANY_TO_MANY );
 
 	private final PersistentAttributeType jpaClassification;

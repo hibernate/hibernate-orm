@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
@@ -31,8 +27,8 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -61,8 +57,11 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-
 import org.jboss.logging.Logger;
+
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author Steve Ebersole
@@ -714,6 +713,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			return identifierDescriptor;
 		}
 
+		if ( elementDescriptor instanceof EntityCollectionPart ) {
+			return ( (EntityCollectionPart) elementDescriptor ).findSubPart(name);
+		}
 		return null;
 	}
 

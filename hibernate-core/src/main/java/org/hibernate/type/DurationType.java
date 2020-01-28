@@ -28,11 +28,6 @@ public class DurationType
 	}
 
 	@Override
-	public String objectToSQLString(Duration value, Dialect dialect) throws Exception {
-		return String.valueOf( value.toNanos() );
-	}
-
-	@Override
 	public String getName() {
 		return Duration.class.getSimpleName();
 	}

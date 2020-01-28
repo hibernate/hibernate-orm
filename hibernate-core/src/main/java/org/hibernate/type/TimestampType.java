@@ -63,15 +63,6 @@ public class TimestampType
 	}
 
 	@Override
-	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
-		final Timestamp ts = Timestamp.class.isInstance( value )
-				? ( Timestamp ) value
-				: new Timestamp( value.getTime() );
-		// TODO : use JDBC date literal escape syntax? -> {d 'date-string'} in yyyy-mm-dd hh:mm:ss[.f...] format
-		return StringType.INSTANCE.objectToSQLString( ts.toString(), dialect );
-	}
-
-	@Override
 	public Date fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
 	}

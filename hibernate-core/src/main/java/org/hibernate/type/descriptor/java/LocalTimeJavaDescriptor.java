@@ -14,12 +14,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LocalTimeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -40,12 +40,12 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 
 	@Override
 	public String toString(LocalTime value) {
-		return LocalTimeType.FORMATTER.format( value );
+		return DateTimeFormatter.ISO_LOCAL_TIME.format( value );
 	}
 
 	@Override
 	public LocalTime fromString(String string) {
-		return LocalTime.from( LocalTimeType.FORMATTER.parse( string ) );
+		return LocalTime.from( DateTimeFormatter.ISO_LOCAL_TIME.parse( string ) );
 	}
 
 	@Override

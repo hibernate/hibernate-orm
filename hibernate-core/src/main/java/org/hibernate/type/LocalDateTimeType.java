@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Locale;
 
 import javax.persistence.TemporalType;
 
@@ -35,8 +34,6 @@ public class LocalDateTimeType
 	 */
 	public static final LocalDateTimeType INSTANCE = new LocalDateTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S", Locale.ENGLISH );
-
 	public LocalDateTimeType() {
 		super( TimestampTypeDescriptor.INSTANCE, LocalDateTimeJavaDescriptor.INSTANCE );
 	}
@@ -49,11 +46,6 @@ public class LocalDateTimeType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public String objectToSQLString(LocalDateTime value, Dialect dialect) throws Exception {
-		return "{ts '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override

@@ -7,6 +7,8 @@
 package org.hibernate.type;
 
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Additional contract for a {@link Type} may be used for a discriminator.
  * 
@@ -14,4 +16,15 @@ package org.hibernate.type;
  * @author Steve Ebersole
  */
 public interface DiscriminatorType<T> extends IdentifierType<T>, LiteralType<T> {
+	/**
+	 * Render the given discriminator value to a literal format
+	 * for embedding in the generated SQL.
+	 *
+	 * @param value The value to convert
+	 * @param dialect The SQL dialect
+	 *
+	 * @return The value's SQL literal representation
+	 */
+	@Override
+	String objectToSQLString(T value, Dialect dialect) throws Exception;
 }

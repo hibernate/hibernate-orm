@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Currency;
@@ -462,6 +463,13 @@ public final class StandardBasicTypes {
 	 * @see CurrencyType
 	 */
 	public static final CurrencyType CURRENCY = CurrencyType.INSTANCE;
+
+	/**
+	 * The standard Hibernate type for mapping {@link java.time.ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 *
+	 * @see ZoneOffsetType
+	 */
+	public static final ZoneOffsetType ZONE_OFFSET = ZoneOffsetType.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.util.TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
@@ -925,6 +933,13 @@ public final class StandardBasicTypes {
 				"org.hibernate.type.TimeZoneType",
 				basicTypeRegistry,
 				"timezone", TimeZone.class.getName()
+		);
+
+		handle(
+				ZONE_OFFSET,
+				"org.hibernate.type.ZoneOffsetType",
+				basicTypeRegistry,
+				ZoneOffset.class.getSimpleName(), ZoneOffset.class.getName()
 		);
 
 		handle(

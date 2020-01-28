@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import javax.persistence.TemporalType;
 
 import org.hibernate.QueryException;
@@ -30,8 +29,6 @@ public class LocalDateType
 	 */
 	public static final LocalDateType INSTANCE = new LocalDateType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd", Locale.ENGLISH );
-
 	public LocalDateType() {
 		super( DateTypeDescriptor.INSTANCE, LocalDateJavaDescriptor.INSTANCE );
 	}
@@ -44,11 +41,6 @@ public class LocalDateType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public String objectToSQLString(LocalDate value, Dialect dialect) throws Exception {
-		return "{d '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override

@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.time.OffsetTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import javax.persistence.TemporalType;
 
@@ -31,15 +30,8 @@ public class OffsetTimeType
 	 */
 	public static final OffsetTimeType INSTANCE = new OffsetTimeType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "HH:mm:ss.S xxxxx", Locale.ENGLISH );
-
 	public OffsetTimeType() {
 		super( TimeTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public String objectToSQLString(OffsetTime value, Dialect dialect) throws Exception {
-		return "{t '" + FORMATTER.format( value ) + "'}";
 	}
 
 	@Override

@@ -55,6 +55,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	private Mapping mapping;
 	
+	private Properties properties;
+	
 	/** current table as read from the database */
 	Table currentDbTable = null;
 
@@ -63,7 +65,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 		ServiceRegistry serviceRegistry = builder.build();
 		
-		Properties properties = Environment.getProperties();
+		properties = Environment.getProperties();
 		dialect = serviceRegistry.getService(JdbcServices.class).getDialect();
 
 		tableSelector = new TableSelectorStrategy(
@@ -233,8 +235,6 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		TreeMap<Object, IdentifierGenerator> generators = 
 				new TreeMap<Object, IdentifierGenerator>();
-		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-		Properties properties = (Properties)builder.getSettings();
 		String defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		String defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 

@@ -94,7 +94,9 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.BINARY, "bytea" );
 
-		registerColumnType( Types.BLOB, "bytea" );
+		//use oid as the blob type on Postgres because
+		//the JDBC driver is rubbish
+		registerColumnType( Types.BLOB, "oid" );
 		registerColumnType( Types.CLOB, "text" );
 
 		//there are no nchar/nvarchar types in Postgres

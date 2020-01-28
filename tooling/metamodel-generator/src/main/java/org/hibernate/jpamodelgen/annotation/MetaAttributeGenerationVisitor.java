@@ -305,12 +305,17 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ) {
 				return Boolean.TRUE;
 			}
-			for ( TypeMirror mirror : typeElement.getInterfaces() ) {
-				TypeElement interfaceElement = (TypeElement) context.getTypeUtils().asElement( mirror );
-				if ( "java.io.Serializable".equals( interfaceElement.getQualifiedName().toString() ) ) {
-					return Boolean.TRUE;
+			
+			do {
+				for ( TypeMirror mirror : typeElement.getInterfaces() ) {
+					TypeElement interfaceElement = (TypeElement) context.getTypeUtils().asElement( mirror );
+					if ( "java.io.Serializable".equals( interfaceElement.getQualifiedName().toString() ) ) {
+						return Boolean.TRUE;
+					}
 				}
-			}
+				typeElement = TypeUtils.getSuperclassTypeElement( typeElement );
+			} 
+			while ( typeElement != null );
 		}
 		return Boolean.FALSE;
 	}

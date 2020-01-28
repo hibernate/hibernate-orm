@@ -8,16 +8,13 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -26,14 +23,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
-import static org.hibernate.type.spi.TypeConfiguration.isSqlTimestampType;
 
 /**
  * @author Gavin King
  */
 public class TimestampaddFunction
-		extends AbstractSqmFunctionDescriptor {
+		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private Dialect dialect;
 
@@ -47,44 +42,56 @@ public class TimestampaddFunction
 	}
 
 	@Override
-	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
-		SqmExpression<?> to = (SqmExpression<?>) arguments.get(2);
-		return queryEngine.getSqmFunctionRegistry()
-				.patternDescriptorBuilder(
-						"timestampadd",
-						dialect.timestampaddPattern(
-								field.getUnit(),
-								typeConfiguration.isTimestampType( to.getNodeType() )
-						)
-				)
-				.setExactArgumentCount( 3 )
-				.setReturnTypeResolver( useArgType( 3 ) )
-				.descriptor()
-				.generateSqmExpression(
-						arguments,
-						impliedResultType,
-						queryEngine,
-						typeConfiguration
-				);
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> arguments,
+			SqlAstWalker walker) {
+
+		DurationUnit field = (DurationUnit) arguments.get(0);
+		Expression to = (Expression) arguments.get(2);
+
+		String pattern = dialect.timestampaddPattern(
+				field.getUnit(),
+				TypeConfiguration.isSqlTimestampType( to.getExpressionType() )
+		);
+
+		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );
 	}
+
+//	@Override
+//	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+//			List<SqmTypedNode<?>> arguments,
+//			AllowableFunctionReturnType<T> impliedResultType,
+//			QueryEngine queryEngine,
+//			TypeConfiguration typeConfiguration) {
+//		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
+//		SqmExpression<?> to = (SqmExpression<?>) arguments.get(2);
+//		return queryEngine.getSqmFunctionRegistry()
+//				.patternDescriptorBuilder(
+//						"timestampadd",
+//						dialect.timestampaddPattern(
+//								field.getUnit(),
+//								typeConfiguration.isSqlTimestampType( to.getNodeType() )
+//						)
+//				)
+//				.setExactArgumentCount( 3 )
+//				.setReturnTypeResolver( useArgType( 3 ) )
+//				.descriptor()
+//				.generateSqmExpression(
+//						arguments,
+//						impliedResultType,
+//						queryEngine,
+//						typeConfiguration
+//				);
+//	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(
 			AllowableFunctionReturnType<?> impliedResultType,
 			SqlAstNode... sqlAstArguments) {
-		DurationUnit field = (DurationUnit) sqlAstArguments[0];
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
-				new PatternRenderer(
-						dialect.timestampaddPattern(
-								field.getUnit(),
-								isSqlTimestampType( to.getExpressionType() )
-						)
-				)::render,
+				(sqlAppender, sqlAstArguments1, walker)
+						-> render(sqlAppender, sqlAstArguments1, walker),
 				asList( sqlAstArguments ),
 				impliedResultType,
 				to.getExpressionType()

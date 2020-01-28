@@ -858,10 +858,10 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public Expression visitLiteral(SqmLiteral literal) {
 		if ( literal instanceof SqmLiteralNull ) {
-			return new QueryLiteral( null, (BasicValuedMapping) inferableTypeAccessStack.getCurrent().get() );
+			return new QueryLiteral<>( null, (BasicValuedMapping) inferableTypeAccessStack.getCurrent().get() );
 		}
 
-		return new QueryLiteral(
+		return new QueryLiteral<>(
 				literal.getLiteralValue(),
 				(BasicValuedMapping) SqmMappingModelHelper.resolveMappingModelExpressable(
 						literal,
@@ -1510,8 +1510,8 @@ public abstract class BaseSqmToSqlAstConverter
 
 			boolean durationToRight = TypeConfiguration.isDuration( rightOperand.getNodeType() );
 			TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-			boolean temporalTypeToLeft = typeConfiguration.isTemporalType( leftOperand.getNodeType() );
-			boolean temporalTypeToRight = typeConfiguration.isTemporalType( rightOperand.getNodeType() );
+			boolean temporalTypeToLeft = typeConfiguration.isSqlTemporalType( leftOperand.getNodeType() );
+			boolean temporalTypeToRight = typeConfiguration.isSqlTemporalType( rightOperand.getNodeType() );
 			boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft;
 
 			if (temporalTypeToLeft && durationToRight) {
@@ -1667,8 +1667,8 @@ public abstract class BaseSqmToSqlAstConverter
 		Expression right = cleanly(() -> toSqlExpression( expression.getRightHandOperand().accept(this) ));
 
 		TypeConfiguration typeConfiguration = getCreationContext().getDomainModel().getTypeConfiguration();
-		boolean leftTimestamp = typeConfiguration.isTimestampType( expression.getLeftHandOperand().getNodeType() ) ;
-		boolean rightTimestamp = typeConfiguration.isTimestampType( expression.getRightHandOperand().getNodeType() );
+		boolean leftTimestamp = typeConfiguration.isSqlTimestampType( expression.getLeftHandOperand().getNodeType() ) ;
+		boolean rightTimestamp = typeConfiguration.isSqlTimestampType( expression.getRightHandOperand().getNodeType() );
 
 		// when we're dealing with Dates, we use
 		// DAY as the smallest unit, otherwise we
@@ -1802,9 +1802,10 @@ public abstract class BaseSqmToSqlAstConverter
 		return magnitude;
 	}
 
+	@SuppressWarnings("unchecked")
 	static boolean isOne(Expression scale) {
 		return scale instanceof QueryLiteral
-				&& ((QueryLiteral) scale).getLiteralValue().toString().equals("1");
+				&& ((QueryLiteral<Number>) scale).getLiteralValue().longValue() == 1L;
 	}
 
 	@Override
@@ -1915,7 +1916,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
-		return new QueryLiteral(
+		return new QueryLiteral<>(
 				sqmEnumLiteral.getEnumValue(),
 				(BasicValuedMapping) determineValueMapping( sqmEnumLiteral )
 		);
@@ -1923,7 +1924,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
-		return new QueryLiteral(
+		return new QueryLiteral<>(
 				sqmFieldLiteral.getValue(),
 				(BasicValuedMapping) determineValueMapping( sqmFieldLiteral )
 		);

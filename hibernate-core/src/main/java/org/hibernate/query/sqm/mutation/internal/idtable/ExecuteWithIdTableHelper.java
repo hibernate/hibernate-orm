@@ -116,7 +116,7 @@ public final class ExecuteWithIdTableHelper {
 					new SqlSelectionImpl(
 							jdbcPosition,
 							jdbcPosition + 1,
-							new QueryLiteral(
+							new QueryLiteral<>(
 									sessionUidAccess.apply( executionContext.getSession() ),
 									StandardBasicTypes.STRING
 							)
@@ -215,7 +215,7 @@ public final class ExecuteWithIdTableHelper {
 									executionContext.getSession().getFactory()
 							),
 							ComparisonOperator.EQUAL,
-							new QueryLiteral(
+							new QueryLiteral<>(
 									sessionUidAccess.apply( executionContext.getSession() ),
 									UUIDCharType.INSTANCE
 							)

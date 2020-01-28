@@ -35,8 +35,7 @@ import java.util.List;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
 public class PatternBasedSqmFunctionDescriptor
-		extends AbstractSqmSelfRenderingFunctionDescriptor
-		implements FunctionRenderingSupport {
+		extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final PatternRenderer renderer;
 	private final String argumentListSignature;
 
@@ -64,11 +63,6 @@ public class PatternBasedSqmFunctionDescriptor
 		);
 		this.renderer = renderer;
 		this.argumentListSignature = argumentListSignature;
-	}
-
-	@Override
-	public FunctionRenderingSupport getRenderingSupport() {
-		return this;
 	}
 
 	@Override

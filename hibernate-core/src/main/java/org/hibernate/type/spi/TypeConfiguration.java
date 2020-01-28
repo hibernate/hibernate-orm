@@ -46,6 +46,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -473,8 +474,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			SqmExpressable<?> secondType,
 			boolean isDivision) {
 
-		if ( isTemporalType( firstType ) ) {
-			if ( secondType==null || isTemporalType( secondType ) ) {
+		if ( isSqlTemporalType( firstType ) ) {
+			if ( secondType==null || isSqlTemporalType( secondType ) ) {
 				// special case for subtraction of two dates
 				// or timestamps resulting in a duration
 				return getBasicTypeRegistry().getRegisteredType( Duration.class );
@@ -490,7 +491,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			// or prefix scalar multiplication of a duration
 			return secondType;
 		}
-		else if ( firstType==null && isTemporalType( secondType ) ) {
+		else if ( firstType==null && isSqlTemporalType( secondType ) ) {
 			// subtraction of a date or timestamp from a
 			// parameter (which doesn't have a type yet)
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
@@ -613,33 +614,40 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
-	public boolean isTimestampType(SqmExpressable type) {
+	public boolean isSqlTimestampType(SqmExpressable type) {
 		return type != null
-				&& isTimestampType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
-	}
-
-	public static boolean isTimestampType(SqlTypeDescriptor descriptor) {
-		int jdbcTypeCode = descriptor.getJdbcTypeCode();
-		return jdbcTypeCode == Types.TIMESTAMP
-				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
+				&& isSqlTimestampType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static boolean isSqlTimestampType(MappingModelExpressable type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return isSqlTimestampType( ( (BasicValuedMapping) type ).getJdbcMapping().getSqlTypeDescriptor() );
 		}
-
+		else if (type instanceof SingleColumnType) {
+			return isSqlTimestampType( ((SingleColumnType) type).sqlType() );
+		}
 		return false;
 	}
 
 	public static boolean isSqlTimestampType(SqlTypeDescriptor descriptor) {
-		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+		return isSqlTimestampType( descriptor.getJdbcTypeCode() );
+	}
+
+	protected static boolean isSqlTimestampType(int jdbcTypeCode) {
 		return jdbcTypeCode == Types.TIMESTAMP
 				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE;
 	}
 
-	public static boolean isTemporalType(SqlTypeDescriptor descriptor) {
-		int jdbcTypeCode = descriptor.getJdbcTypeCode();
+	public static boolean isSqlTemporalType(SqlTypeDescriptor descriptor) {
+		return isSqlTemporalType( descriptor.getJdbcTypeCode() );
+	}
+
+	public boolean isSqlTemporalType(SqmExpressable<?> type) {
+		return type != null
+				&& isSqlTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
+	}
+
+	private static boolean isSqlTemporalType(int jdbcTypeCode) {
 		return jdbcTypeCode == Types.TIMESTAMP
 				|| jdbcTypeCode == Types.TIMESTAMP_WITH_TIMEZONE
 				|| jdbcTypeCode == Types.TIME
@@ -647,10 +655,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				|| jdbcTypeCode == Types.DATE;
 	}
 
-	public boolean isTemporalType(SqmExpressable<?> type) {
-		return type != null
-				&& isTemporalType( type.getExpressableJavaTypeDescriptor().getJdbcRecommendedSqlType( getCurrentBaseSqlTypeIndicators() ) );
-	}
 
 	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
 		return matchesJavaType( type, Date.class );

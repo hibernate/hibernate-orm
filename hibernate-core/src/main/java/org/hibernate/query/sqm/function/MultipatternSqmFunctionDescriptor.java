@@ -56,7 +56,8 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	public MultipatternSqmFunctionDescriptor(
 			String name, SqmFunctionDescriptor[] functions,
 			FunctionReturnTypeResolver type) {
-		super("",
+		super(
+				name,
 				StandardArgumentsValidators.between(
 					first(functions),
 					last(functions)
@@ -67,7 +68,7 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	}
 
 	@Override
-	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,

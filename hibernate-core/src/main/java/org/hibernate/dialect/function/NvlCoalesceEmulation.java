@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -40,17 +40,22 @@ public class NvlCoalesceEmulation
 	}
 
 	@Override
-	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 
-		SqmFunctionDescriptor nvl = queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("nvl").setExactArgumentCount(2).template();
+		SqmFunctionDescriptor nvl =
+				queryEngine.getSqmFunctionRegistry()
+						.namedDescriptorBuilder("nvl")
+						.setExactArgumentCount(2)
+						.descriptor();
 
 		int pos = arguments.size();
 		SqmExpression<?> result = (SqmExpression<?>) arguments.get( --pos );
-		AllowableFunctionReturnType<?> type = (AllowableFunctionReturnType<?>) result.getNodeType();
+		AllowableFunctionReturnType<?> type =
+				(AllowableFunctionReturnType<?>) result.getNodeType();
 
 		while (pos>0) {
 			SqmExpression<?> next = (SqmExpression<?>) arguments.get( --pos );
@@ -63,7 +68,7 @@ public class NvlCoalesceEmulation
 		}
 
 		//noinspection unchecked
-		return (SelfRenderingSqlFunctionExpression<T>) result;
+		return (SelfRenderingSqmFunction<T>) result;
 	}
 
 }

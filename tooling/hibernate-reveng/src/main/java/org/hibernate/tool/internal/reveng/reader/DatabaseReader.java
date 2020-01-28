@@ -3,13 +3,11 @@ package org.hibernate.tool.internal.reveng.reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -60,16 +58,19 @@ public class DatabaseReader {
 		try {
 			getMetaDataDialect().configure(provider);
 
-			Set<Table> hasIndices = new HashSet<Table>();
+			HashMap<Table, Boolean> foundTables = new HashMap<Table, Boolean>();
 
-			List<Table> foundTables = new ArrayList<Table>();
 			for (Iterator<SchemaSelection> iter = getSchemaSelections(catalog, schema).iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
-				foundTables.addAll(
-						TableCollector.create(getMetaDataDialect(), revengStrategy, revengMetadataCollector, selection, hasIndices).processTables());
+				TableCollector tableCollector = TableCollector.create(
+						getMetaDataDialect(), 
+						revengStrategy, 
+						revengMetadataCollector, 
+						selection);
+				foundTables.putAll(tableCollector.processTables());
 			}
 
-			Iterator<Table> tables = foundTables.iterator(); // not dbs.iterateTables() to avoid "double-read" of
+			Iterator<Table> tables = foundTables.keySet().iterator(); // not dbs.iterateTables() to avoid "double-read" of
 																// columns etc.
 			while (tables.hasNext()) {
 				Table table = tables.next();
@@ -77,17 +78,17 @@ public class DatabaseReader {
 						defaultCatalog, table);
 				PrimaryKeyProcessor.processPrimaryKey(getMetaDataDialect(), revengStrategy, defaultSchema,
 						defaultCatalog, revengMetadataCollector, table);
-				if (hasIndices.contains(table)) {
+				if (foundTables.get(table)) {
 					IndexProcessor.processIndices(getMetaDataDialect(), defaultSchema, defaultCatalog, table);
 				}
 			}
 
-			tables = foundTables.iterator(); // dbs.iterateTables();
+			tables = foundTables.keySet().iterator(); // dbs.iterateTables();
 			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector, tables);
 
 			revengMetadataCollector.setOneToManyCandidates(oneToManyCandidates);
 
-			return foundTables;
+			return foundTables.keySet();
 		} finally {
 			getMetaDataDialect().close();
 			revengStrategy.close();

@@ -1,11 +1,8 @@
 package org.hibernate.tool.internal.reveng.reader;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
@@ -24,38 +21,33 @@ public class TableCollector {
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
-			SchemaSelection schemaSelection, 
-			Set<Table> hasIndices) {
+			SchemaSelection schemaSelection) {
 		return new TableCollector(
 				metaDataDialect, 
 				revengStrategy, 
 				revengMetadataCollector, 
-				schemaSelection, 
-				hasIndices);
+				schemaSelection);
 	}
 	
 	private MetaDataDialect metaDataDialect;
 	private ReverseEngineeringStrategy revengStrategy;
 	private RevengMetadataCollector revengMetadataCollector;
 	private SchemaSelection schemaSelection;
-	private Set<Table> hasIndices;
 	
 	private TableCollector(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
-			SchemaSelection schemaSelection, 
-			Set<Table> hasIndices) {
+			SchemaSelection schemaSelection) {
 		this.metaDataDialect = metaDataDialect;
 		this.revengStrategy = revengStrategy;
 		this.revengMetadataCollector = revengMetadataCollector;
 		this.schemaSelection = schemaSelection;
-		this.hasIndices = hasIndices;
 	}
 
-	public Collection<Table> processTables() {
+	public Map<Table, Boolean> processTables() {
 		  Iterator<Map<String,Object>> tableIterator = null;
-		  List<Table> processedTables = new ArrayList<Table>();
+		  HashMap<Table, Boolean> processedTables = new HashMap<Table, Boolean>();
 		  try {			  
 		     String matchCatalog = StringHelper.replace(schemaSelection.getMatchCatalog(),".*", "%");
 		     String matchSchema = StringHelper.replace(schemaSelection.getMatchSchema(),".*", "%");
@@ -95,9 +87,9 @@ public class TableCollector {
 						  Table table = revengMetadataCollector.addTable(schemaName, catalogName, tableName);
 						  table.setComment(comment);
 						  if(tableType.equalsIgnoreCase("TABLE")) {
-							  hasIndices.add(table);
-						  }
-						  processedTables.add( table );
+							  processedTables.put(table, true);
+						  } else 
+							  processedTables.put(table, false );
 					  }
 					  else {
 						  log.debug("Ignoring table " + tableName + " of type " + tableType);

@@ -102,6 +102,16 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 					return (X) new CharacterStreamImpl( DataHelper.extractString( value.getCharacterStream() ) );
 				}
 			}
+			else if ( String.class.isAssignableFrom( type ) ) {
+				if ( ClobImplementer.class.isInstance( value ) ) {
+					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
+					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
+				}
+				else {
+					// otherwise extract the bytes from the stream manually
+					return (X) LobStreamDataHelper.extractString( value.getCharacterStream() );
+				}
+			}
 			else if (Clob.class.isAssignableFrom( type )) {
 				final Clob clob =  WrappedClob.class.isInstance( value )
 						? ( (WrappedClob) value ).getWrappedClob()
@@ -125,6 +135,9 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 		// org.hibernate.type.descriptor.sql.ClobTypeDescriptor
 		if ( Clob.class.isAssignableFrom( value.getClass() ) ) {
 			return options.getLobCreator().wrap( (Clob) value );
+		}
+		else if ( String.class.isAssignableFrom( value.getClass() ) ) {
+			return options.getLobCreator().createClob( ( String ) value);
 		}
 		else if ( Reader.class.isAssignableFrom( value.getClass() ) ) {
 			Reader reader = (Reader) value;

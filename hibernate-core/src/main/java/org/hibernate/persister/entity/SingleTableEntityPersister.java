@@ -927,7 +927,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				ComparisonOperator.EQUAL,
 				new QueryLiteral<>(
 						getDiscriminatorValue(),
-						( (BasicType) getDiscriminatorType() )
+						( (BasicType<?>) getDiscriminatorType() )
 				)
 		);
 	}

@@ -121,7 +121,7 @@ public class SelfRenderingFunctionSqlAstExpression
 			SqlAppender sqlAppender,
 			SqlAstWalker walker,
 			SessionFactoryImplementor sessionFactory) {
-		renderer.render( sqlAppender, sqlAstArguments, walker);
+		renderer.render( sqlAppender, sqlAstArguments, walker );
 	}
 
 	@Override

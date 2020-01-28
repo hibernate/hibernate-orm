@@ -5,6 +5,9 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -13,22 +16,22 @@ import java.util.List;
  * @author Gavin King
  */
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
-		extends AbstractSqmFunctionDescriptor
-		implements SqmSelfRenderingFunctionDescriptor {
+		extends AbstractSqmFunctionDescriptor {
 
 	public AbstractSqmSelfRenderingFunctionDescriptor(String name, ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver );
 	}
 
 	@Override
-	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return new SelfRenderingSqlFunctionExpression<T>(
+		return new SelfRenderingSqmFunction<T>(
 				this,
-				getRenderingSupport(),
+				(sqlAppender, sqlAstArguments, walker)
+						-> render(sqlAppender, sqlAstArguments, walker),
 				arguments,
 				impliedResultType,
 				getReturnTypeResolver(),
@@ -36,5 +39,13 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 				getName()
 		);
 	}
+
+	/**
+	 * Must be overridden by subclasses
+	 */
+	public abstract void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> sqlAstArguments,
+			SqlAstWalker walker);
 
 }

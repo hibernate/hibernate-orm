@@ -34,16 +34,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
-	private final Object value;
+	private final T value;
 	private final BasicValuedMapping type;
 
-	public QueryLiteral(Object value, BasicValuedMapping type) {
+	public QueryLiteral(T value, BasicValuedMapping type) {
 		this.value = value;
 		this.type = type;
 	}
 
 	@Override
-	public Object getLiteralValue() {
+	public T getLiteralValue() {
 		return value;
 	}
 
@@ -98,7 +98,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		//noinspection unchecked
-		( (BasicType) getExpressionType() ).getJdbcValueBinder().bind(
+		( (BasicType<?>) getExpressionType() ).getJdbcValueBinder().bind(
 				statement,
 				getLiteralValue(),
 				startPosition,

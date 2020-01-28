@@ -13,7 +13,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingSqlFunctionExpression;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -47,7 +47,7 @@ public class ExtractFunction
 	}
 
 	@Override
-	protected <T> SelfRenderingSqlFunctionExpression generateSqmFunctionExpression(
+	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -96,7 +96,7 @@ public class ExtractFunction
 		}
 	}
 
-	private SelfRenderingSqlFunctionExpression<Integer> extractWeek(
+	private SelfRenderingSqmFunction<Integer> extractWeek(
 			SqmExpression<?> expressionToExtract,
 			SqmExtractUnit<?> field,
 			TemporalUnit dayOf,
@@ -160,7 +160,7 @@ public class ExtractFunction
 				);
 	}
 
-	private SelfRenderingSqlFunctionExpression<Long> toLong(
+	private SelfRenderingSqmFunction<Long> toLong(
 			SqmExpression<?> arg,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -183,7 +183,7 @@ public class ExtractFunction
 				);
 	}
 
-	private SelfRenderingSqlFunctionExpression<Long> extractNanoseconds(
+	private SelfRenderingSqmFunction<Long> extractNanoseconds(
 			SqmExpression<?> expressionToExtract,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -211,7 +211,7 @@ public class ExtractFunction
 		);
 	}
 
-	private SelfRenderingSqlFunctionExpression<ZoneOffset> extractOffsetUsingFormat(
+	private SelfRenderingSqmFunction<ZoneOffset> extractOffsetUsingFormat(
 			SqmExpression<?> expressionToExtract,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -235,7 +235,7 @@ public class ExtractFunction
 				);
 	}
 
-	private SelfRenderingSqlFunctionExpression<?> extractDateOrTimeUsingCast(
+	private SelfRenderingSqmFunction<?> extractDateOrTimeUsingCast(
 			SqmExpression<?> expressionToExtract,
 			AllowableFunctionReturnType<?> type,
 			QueryEngine queryEngine,

@@ -13,8 +13,12 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import java.util.List;
 
 /**
- * Support for SqmFunctionTemplates that ultimately want to
- * perform SQL rendering themselves
+ * Support for {@link SqmFunctionDescriptor}s that ultimately want
+ * to perform SQL rendering themselves. This is a protocol passed
+ * from the {@link AbstractSqmSelfRenderingFunctionDescriptor}
+ * along to its {@link SelfRenderingSqmFunction} and ultimately to
+ * the {@link SelfRenderingFunctionSqlAstExpression} which calls it
+ * to finally render SQL.
  *
  * @author Steve Ebersole
  */

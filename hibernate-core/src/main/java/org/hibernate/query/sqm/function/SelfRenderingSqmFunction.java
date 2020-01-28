@@ -26,14 +26,14 @@ import static java.util.Collections.emptyList;
 /**
  * @author Steve Ebersole
  */
-public class SelfRenderingSqlFunctionExpression<T> extends SqmFunction<T> {
+public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final AllowableFunctionReturnType<T> impliedResultType;
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final String name;
 	private final FunctionRenderingSupport renderingSupport;
 	private final List<SqmTypedNode<?>> arguments;
 
-	public SelfRenderingSqlFunctionExpression(
+	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
 			List<SqmTypedNode<?>> arguments,

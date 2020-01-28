@@ -2243,7 +2243,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>();
 
 		if ( ctx.datetimeField() != null ) {
-			arguments.add( (SqmTypedNode<?>) ctx.datetimeField().accept( this ) );
+			arguments.add( toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ) );
 		}
 
 		for ( int i=0, size=ctx.expression().size(); i<size; i++ ) {

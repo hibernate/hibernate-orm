@@ -75,9 +75,6 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	}
 
 	private static SqlAstNode toSqlAstNode(Object arg, SqmToSqlAstConverter walker) {
-//		if (arg instanceof SqmExpressionInterpretation) {
-//			return ( (SqmExpressionInterpretation) arg ).toSqlExpression( walker );
-//		}
 		return (SqlAstNode) arg;
 	}
 
@@ -95,7 +92,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	}
 
 	@Override
-	public final <T> SelfRenderingSqlFunctionExpression<T> generateSqmExpression(
+	public final <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -110,11 +107,18 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		);
 	}
 
-	protected abstract <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
+	/**
+	 * Return an SQM node or subtree representing an invocation of this function
+	 * with the given arguments. This method may be overridden in the case of
+	 * function descriptors that wish to customize creation of the node.
+	 *
+	 * @param arguments the arguments of the function invocation
+	 * @param impliedResultType the function return type as inferred from its usage
+	 */
+	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
-			QueryEngine queryEngine, TypeConfiguration typeConfiguration);
-
-
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration);
 }
 

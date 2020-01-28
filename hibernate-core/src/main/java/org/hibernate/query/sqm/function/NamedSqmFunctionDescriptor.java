@@ -25,8 +25,7 @@ import java.util.Locale;
  * @author Steve Ebersole
  */
 public class NamedSqmFunctionDescriptor
-		extends AbstractSqmSelfRenderingFunctionDescriptor
-		implements FunctionRenderingSupport {
+		extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final String functionName;
 	private final boolean useParenthesesWhenNoArgs;
 	private final String argumentListSignature;
@@ -70,11 +69,6 @@ public class NamedSqmFunctionDescriptor
 	@Override
 	public boolean alwaysIncludesParentheses() {
 		return useParenthesesWhenNoArgs;
-	}
-
-	@Override
-	public FunctionRenderingSupport getRenderingSupport() {
-		return this;
 	}
 
 	@Override

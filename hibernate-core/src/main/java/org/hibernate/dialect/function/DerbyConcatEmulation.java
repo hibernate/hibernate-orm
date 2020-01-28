@@ -7,12 +7,12 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.util.List;
@@ -25,8 +25,7 @@ import java.util.List;
  * @author Christian Beikov
  */
 public class DerbyConcatEmulation
-		extends AbstractSqmSelfRenderingFunctionDescriptor
-		implements FunctionRenderingSupport {
+		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public DerbyConcatEmulation() {
 		super(
@@ -34,11 +33,6 @@ public class DerbyConcatEmulation
 				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
-	}
-
-	@Override
-	public FunctionRenderingSupport getRenderingSupport() {
-		return this;
 	}
 
 	@Override
@@ -55,7 +49,7 @@ public class DerbyConcatEmulation
 			if ( i > 0 ) {
 				sqlAppender.appendSql("||");
 			}
-			boolean param = false; //TODO: argument instanceof GenericParameter;
+			boolean param = argument instanceof JdbcParameter;
 			if ( param ) {
 				sqlAppender.appendSql("cast(");
 			}

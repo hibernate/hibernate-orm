@@ -10,7 +10,6 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -72,10 +71,10 @@ public class NamedFunctionDescriptorBuilder {
 	}
 
 	public SqmFunctionDescriptor register() {
-		return registry.register( registrationKey, template() );
+		return registry.register( registrationKey, descriptor() );
 	}
 
-	public SqmFunctionDescriptor template() {
+	public SqmFunctionDescriptor descriptor() {
 		return new NamedSqmFunctionDescriptor(
 				functionName,
 				useParenthesesWhenNoArgs,

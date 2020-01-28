@@ -39,7 +39,7 @@ public interface SqmFunctionDescriptor {
 	 * simplifying the task of writing HQL functions which are
 	 * portable between databases.
 	 */
-	<T> SelfRenderingSqlFunctionExpression<T> generateSqmExpression(
+	<T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -48,7 +48,7 @@ public interface SqmFunctionDescriptor {
 	/**
 	 * Convenience for single argument
 	 */
-	default <T> SelfRenderingSqlFunctionExpression<T> generateSqmExpression(
+	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			SqmTypedNode<?> argument,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -64,7 +64,7 @@ public interface SqmFunctionDescriptor {
 	/**
 	 * Convenience for no arguments
 	 */
-	default <T> SelfRenderingSqlFunctionExpression<T> generateSqmExpression(
+	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {

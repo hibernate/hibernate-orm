@@ -9,7 +9,6 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -22,7 +21,6 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
@@ -201,8 +199,13 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
 			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
-			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
-			typeInfoSet = new LinkedHashSet<TypeInfo>();
+			try {
+				lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
+			}
+			catch (SQLException sql) {
+				//ignore, the database might not support this at all
+			}
+			typeInfoSet = new LinkedHashSet<>();
 			typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 			return this;
 		}

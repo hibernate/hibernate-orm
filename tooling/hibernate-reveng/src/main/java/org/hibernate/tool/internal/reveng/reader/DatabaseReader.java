@@ -1,6 +1,7 @@
 package org.hibernate.tool.internal.reveng.reader;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,7 +56,7 @@ public class DatabaseReader {
 		}
 	}
 
-	public List<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector, String catalog, String schema) {
+	public Collection<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector, String catalog, String schema) {
 		try {
 			getMetaDataDialect().configure(provider);
 

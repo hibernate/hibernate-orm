@@ -1,8 +1,8 @@
 package org.hibernate.tool.internal.export.lint;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -20,7 +20,6 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
@@ -132,18 +131,18 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			if(strings.length==1) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,null, strings[0]) );
-				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
-				return !list.isEmpty();
+				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				return !collection.isEmpty();
 			} else if(strings.length==3) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(strings[0],strings[1], strings[2]) );
-				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
-				return !list.isEmpty();
+				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				return !collection.isEmpty();
 			} else if (strings.length==2) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,strings[0], strings[1]) );
-				List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
-				return !list.isEmpty();
+				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				return !collection.isEmpty();
 			}
 		}
 		return false;
@@ -154,26 +153,26 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		if ( table.isPhysicalTable() ) {
 			setSchemaSelection( table );
 
-			List<?> list = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+			Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
 
-			if ( list.isEmpty() ) {
+			if ( collection.isEmpty() ) {
 				pc.reportIssue( new Issue( "SCHEMA_TABLE_MISSING",
 						Issue.HIGH_PRIORITY, "Missing table "
 								+ TableNameQualifier.qualify( table.getCatalog(), table
 										.getSchema(), table.getName() ) ) );
 				return;
 			}
-			else if ( list.size() > 1 ) {
+			else if ( collection.size() > 1 ) {
 				pc.reportIssue( new Issue( "SCHEMA_TABLE_MISSING",
 						Issue.NORMAL_PRIORITY, "Found "
-								+ list.size()
+								+ collection.size()
 								+ " tables for "
 								+ TableNameQualifier.qualify( table.getCatalog(), table
 										.getSchema(), table.getName() ) ) );
 				return;
 			}
 			else {
-				currentDbTable = (Table) list.get( 0 );
+				currentDbTable = collection.iterator().next();
 				visitColumns(table,pc);				
 			}
 		}
@@ -262,7 +261,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		Iterator<?> collectionIterator = getMetadata().getCollectionBindings().iterator();
 		while ( collectionIterator.hasNext() ) {
-			Collection collection = (Collection) collectionIterator.next();
+			org.hibernate.mapping.Collection collection = (org.hibernate.mapping.Collection) collectionIterator.next();
 
 			if ( collection.isIdentified() ) {
 

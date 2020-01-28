@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -40,6 +41,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * Specialized BaseSqmToSqlAstConverter implementation used during conversion
@@ -209,6 +212,11 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 	@Override
 	public SqlAstCreationState getSqlAstCreationState() {
 		return this;
+	}
+
+	@Override
+	public List<Fetch> visitFetches(FetchParent fetchParent) {
+		return Collections.emptyList();
 	}
 
 	public void visitSelectClause(

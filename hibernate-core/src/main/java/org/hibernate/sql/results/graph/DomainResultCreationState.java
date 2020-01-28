@@ -9,6 +9,9 @@ package org.hibernate.sql.results.graph;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -24,8 +27,21 @@ public interface DomainResultCreationState {
 	}
 
 	/**
+	 * Resolve the ModelPart associated with a given NavigablePath.  More specific ModelParts should be preferred - e.g.
+	 * the SingularAssociationAttributeMapping rather than just the EntityTypeMapping for the associated type
+	 */
+	default ModelPart resolveModelPart(NavigablePath navigablePath) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	/**
+	 * Visit fetches for the given parent.
+	 *
+	 * We walk fetches via the SqlAstCreationContext because each "context"
+	 * will define differently what should be fetched (HQL versus load)
+	 *
 	 * todo (6.0) : centralize the implementation of this
-	 * 		most of the logic in the impls of this is identical.  variations (arguments) include:
+	 * 		most of the logic in the impls of this is identical.  variations include:
 	 * 				1) given a Fetchable, determine the FetchTiming and `selected`[1].  Tricky as functional
 	 * 					interface because of the "composite return".
 	 * 				2) given a Fetchable, determine the LockMode - currently not handled very well here; should consult `#getLockOptions`
@@ -47,8 +63,6 @@ public interface DomainResultCreationState {
 	 * todo (6.0) : wrt the "trickiness" of `selected[1]`, that may no longer be an issue given how TableGroups
 	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
 	 * 		along FetchStyle?
-	 *
-	 *
 	 */
 	List<Fetch> visitFetches(FetchParent fetchParent);
 }

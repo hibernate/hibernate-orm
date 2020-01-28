@@ -113,6 +113,8 @@ Given this model, we have the following mappings from modelPart to "identifying 
 * `Order#lineItems#{element}` -> `lines.order_id`
 
 
+Once we find a circularity we should build the `BiDirectionalFetch` reference pointing to the
+Initializer for the "parent parent path".  See `RowProcessingState#.resolveInitializer`
 
 
 
@@ -123,7 +125,8 @@ Hibernate needs to handle circularity in a fetch-graph.  E.g.:
 select o
 from Order o
     join fetch o.lineItems l
-    join fetch l.order
+    join fetch l.order o2
+    join fetch o2.lineItems
 ```
 
 Here, the join fetch of `l.order` is circular, meaning we do not want to render a join in the SQL for it
@@ -132,3 +135,74 @@ because it is already part of the from-clause via `Order o`.
 Recognizing circularity needs to happen in a number of mapping scenarios and I believe the conditions vary
 depending on the type of mapping involved (one-to-one, many-to-one, many-to-many).  Ideally we can find commonality
 and handle these conditions uniformly.
+
+
+== with embeddables
+
+```
+@Entity
+@Table(name="root")
+class RootEntity {
+    ...
+
+    @Embedded
+    IntermediateComponent intermediateComponent;
+}
+
+@Embeddable
+class IntermediateComponent {
+    ...
+
+	@OneToMany( mappedBy = "rootEntity" )
+	Set<LeafEntity> leaves
+}
+
+@Entity
+@Table(name="leaf")
+class LeafEntity {
+    ...
+
+	@ManyToOne
+	@JoinColumn(name="root_id)
+    RootEntity rootEntity;
+}
+```
+
+Given this model, we have the following mappings from modelPart to "identifying columns":
+
+* `RootEntity#intermediateComponent#leaves -> `leaf.root_id`
+* `RootEntity#intermediateComponent#leaves -> `leaf.root_id`
+*
+
+* `RootEntity#intermediateComponent#leaves#{element}
+* `Order#lineItems#{element}` -> `lines.order_id`
+
+
+class Order {
+    @OneToMany(mappedBy="order")
+    List<LineItem> lineItems;
+}
+
+
+
+
+```
+------------
+"orders"
+------------
+id INTEGER
+name VARCHAR
+
+------------
+"order_items"
+------------
+orders_id
+items_id
+
+------------
+"items"
+------------
+id
+qty
+
+```

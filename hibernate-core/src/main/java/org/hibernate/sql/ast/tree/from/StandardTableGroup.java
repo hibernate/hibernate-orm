@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  */
 public class StandardTableGroup extends AbstractTableGroup {
 	private final TableReference primaryTableReference;
+	private final Predicate<String> tableReferenceJoinNameChecker;
 	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
 
 	private List<TableReferenceJoin> tableJoins;
@@ -38,6 +40,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = tableJoins;
 		this.tableReferenceJoinCreator = null;
+		this.tableReferenceJoinNameChecker = s -> {
+			for ( int i = 0; i < tableJoins.size(); i++ ) {
+				if ( tableJoins.get( i ).getJoinedTableReference().getTableExpression().equals( s ) ) {
+					return true;
+				}
+			}
+			return false;
+		};
 	}
 
 	public StandardTableGroup(
@@ -46,11 +56,13 @@ public class StandardTableGroup extends AbstractTableGroup {
 			LockMode lockMode,
 			TableReference primaryTableReference,
 			SqlAliasBase sqlAliasBase,
+			Predicate<String> tableReferenceJoinNameChecker,
 			BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.tableJoins = null;
+		this.tableReferenceJoinNameChecker = tableReferenceJoinNameChecker;
 		this.tableReferenceJoinCreator = tableReferenceJoinCreator;
 	}
 
@@ -88,24 +100,28 @@ public class StandardTableGroup extends AbstractTableGroup {
 			return tableReference;
 		}
 
-		if ( tableJoins != null ) {
-			for ( int i = 0; i < tableJoins.size(); i++ ) {
-				final TableReferenceJoin join = tableJoins.get( i );
-				assert join != null;
-				if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
-					return join.getJoinedTableReference();
+		if ( tableReferenceJoinNameChecker.test( tableExpression ) ) {
+			if ( tableJoins != null ) {
+				for ( int i = 0; i < tableJoins.size(); i++ ) {
+					final TableReferenceJoin join = tableJoins.get( i );
+					assert join != null;
+					if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
+						return join.getJoinedTableReference();
+					}
 				}
 			}
+
+			return potentiallyCreateTableReference( tableExpression );
 		}
 
-		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
-			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
-				return primaryTableReference;
-			}
-		}
+//		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+//			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+//			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
+//				return primaryTableReference;
+//			}
+//		}
 
-		return potentiallyCreateTableReference( tableExpression );
+		return null;
 	}
 
 	@SuppressWarnings("WeakerAccess")

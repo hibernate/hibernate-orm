@@ -6,12 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import java.util.List;
-
 import org.hibernate.LockMode;
-import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * Access to stuff used while creating a SQL AST
@@ -30,12 +25,4 @@ public interface SqlAstCreationState {
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
 
 	LockMode determineLockMode(String identificationVariable);
-
-	/**
-	 * Visit fetches for the given parent.
-	 *
-	 * We walk fetches via the SqlAstCreationContext because each "context"
-	 * will define differently what should be fetched (HQL versus load)
-	 */
-	List<Fetch> visitFetches(FetchParent fetchParent);
 }

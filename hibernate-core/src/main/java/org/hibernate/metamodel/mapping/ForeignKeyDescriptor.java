@@ -15,12 +15,15 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.type.ForeignKeyDirection;
 
 /**
  * @author Steve Ebersole
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String PART_NAME = "{fk}";
+
+	ForeignKeyDirection getDirection();
 
 	DomainResult createDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState);
 

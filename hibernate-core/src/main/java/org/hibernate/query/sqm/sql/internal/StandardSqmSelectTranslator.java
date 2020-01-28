@@ -26,6 +26,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -221,6 +222,12 @@ public class StandardSqmSelectTranslator
 		return (DomainResultProducer) sqmSelection.getSelectableNode().accept( this );
 	}
 
+	@Override
+	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+		// again, assume that the path refers to a TableGroup
+		return getFromClauseIndex().findTableGroup( navigablePath ).getModelPart();
+	}
+
 	private int fetchDepth = 0;
 
 	@Override
@@ -236,7 +243,7 @@ public class StandardSqmSelectTranslator
 				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 						fetchablePath,
 						fetchParent,
-						getSqlAstCreationState().getCurrentProcessingState()
+						StandardSqmSelectTranslator.this
 				);
 
 				if ( biDirectionalFetch != null ) {

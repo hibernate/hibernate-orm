@@ -12,10 +12,11 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -27,8 +28,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -37,7 +36,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Andrea Boriero
  */
-public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
+public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
 	private final Fetchable fetchable;
@@ -142,6 +141,18 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Fetchable {
 	@Override
 	public FetchStrategy getMappedFetchStrategy() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ForeignKeyDescriptor getForeignKeyDescriptor() {
+		return ( (Association) fetchParent ).getForeignKeyDescriptor();
+	}
+
+	@Override
+	public String[] getIdentifyingColumnExpressions() {
+		// fetch parent really always needs to be an Association, so we simply cast here
+		//		should maybe verify this in ctor
+		return ( (Association) fetchParent ).getIdentifyingColumnExpressions();
 	}
 
 	@Override

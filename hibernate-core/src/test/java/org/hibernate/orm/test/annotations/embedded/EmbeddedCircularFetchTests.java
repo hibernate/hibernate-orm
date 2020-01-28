@@ -154,7 +154,10 @@ public class EmbeddedCircularFetchTests {
 				session -> {
 					session.getSessionFactory().getStatistics().clear();
 					final RootEntity result = session.createQuery(
-							"from RootEntity r join fetch r.intermediateComponent.leaves",
+//							"from RootEntity r join fetch r.intermediateComponent.leaves",
+							"from RootEntity r " +
+									"join fetch r.intermediateComponent.leaves l " +
+									"join fetch l.rootEntity",
 							RootEntity.class
 					).uniqueResult();
 					assertTrue( Hibernate.isInitialized( result.getIntermediateComponent().getLeaves() ) );

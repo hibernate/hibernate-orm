@@ -26,4 +26,8 @@ public interface TableGroupProducer extends ModelPartContainer {
 	 * @see SqlAliasBaseManager#createSqlAliasBase
 	 */
 	String getSqlAliasStem();
+
+	default boolean containsTableReference(String tableExpression) {
+		return false;
+	}
 }

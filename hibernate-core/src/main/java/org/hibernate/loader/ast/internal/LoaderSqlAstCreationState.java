@@ -8,8 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 
@@ -18,6 +16,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
@@ -134,6 +133,12 @@ public class LoaderSqlAstCreationState
 	@Override
 	public SqlAstCreationState getSqlAstCreationState() {
 		return this;
+	}
+
+	@Override
+	public ModelPart resolveModelPart(NavigablePath navigablePath) {
+		// for now, let's assume that the navigable-path refers to TableGroup
+		return fromClauseAccess.findTableGroup( navigablePath ).getModelPart();
 	}
 
 	@Override

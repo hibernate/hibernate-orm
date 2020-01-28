@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -383,9 +384,20 @@ public class LoaderSelectBuilder {
 		final List<Fetch> fetches = new ArrayList<>();
 
 		final Consumer<Fetchable> processor = fetchable -> {
-			final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+			final NavigablePath fetchablePath;
+			final Fetchable fetchedFetchable;
+			if ( fetchable instanceof PluralAttributeMapping ) {
+				fetchablePath = fetchParent.getNavigablePath()
+						.append( fetchable.getFetchableName() )
+						.append( CollectionPart.Nature.ELEMENT.getName() );
+				fetchedFetchable = ( (PluralAttributeMapping) fetchable ).getElementDescriptor();
+			}
+			else {
+				fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+				fetchedFetchable = fetchable;
+			}
 
-			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+			final Fetch biDirectionalFetch = fetchedFetchable.resolveCircularFetch(
 					fetchablePath,
 					fetchParent,
 					creationState
@@ -426,7 +438,7 @@ public class LoaderSelectBuilder {
 				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
 					fetchDepth++;
 				}
-				Fetch fetch = fetchable.generateFetch(
+				Fetch fetch = fetchedFetchable.generateFetch(
 						fetchParent,
 						fetchablePath,
 						fetchTiming,

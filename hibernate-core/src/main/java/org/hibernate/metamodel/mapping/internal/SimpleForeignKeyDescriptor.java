@@ -37,11 +37,11 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -71,6 +71,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpression = targetColumnExpression;
 		this.jdbcMapping = jdbcMapping;
+	}
+
+	@Override
+	public ForeignKeyDirection getDirection() {
+		return fKeyDirection;
 	}
 
 	@Override

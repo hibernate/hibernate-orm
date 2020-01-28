@@ -6,21 +6,25 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -35,13 +39,15 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class EntityCollectionPart implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable {
+public class EntityCollectionPart
+		implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable, Association {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
 	private final EntityMappingType entityMappingType;
 
 	private ModelPart fkTargetModelPart;
+	private String[] identifyingColumns;
 
 	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
@@ -69,6 +75,14 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 		else {
 			fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
 		}
+
+		final List<String> identifyingColumnsList = new ArrayList<>();
+		collectionDescriptor.getAttributeMapping().getKeyDescriptor().visitReferringColumns(
+				(containingTableExpression, columnExpression, jdbcMapping) -> {
+					identifyingColumnsList.add( containingTableExpression + "." + columnExpression );
+				}
+		);
+		this.identifyingColumns = identifyingColumnsList.toArray( new String[0] );
 	}
 
 
@@ -121,7 +135,7 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
-			SqlAstProcessingState creationState) {
+			DomainResultCreationState creationState) {
 		return null;
 	}
 
@@ -191,5 +205,16 @@ public class EntityCollectionPart implements CollectionPart, EntityAssociationMa
 	@Override
 	public String toString() {
 		return "EntityCollectionPart {" + navigableRole + "}";
+	}
+
+	@Override
+	public ForeignKeyDescriptor getForeignKeyDescriptor() {
+		// todo (6.0) : this will not strictly work - we'd want a new ForeignKeyDescriptor that points the other direction
+		return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
+	}
+
+	@Override
+	public String[] getIdentifyingColumnExpressions() {
+		return identifyingColumns;
 	}
 }

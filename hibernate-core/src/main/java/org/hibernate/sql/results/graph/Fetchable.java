@@ -9,10 +9,8 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 
 /**
  * @author Steve Ebersole
@@ -27,16 +25,10 @@ public interface Fetchable extends ModelPart {
 	// 		per Fetch generation is performance drain.  Would be better to
 	// 		simply pass these 2 pieces of information
 
-	/**
-	 * For an association, this would return the foreign-key's "referring columns".  Would target
-	 * the columns defined by {@link EntityValuedModelPart#getIdentifyingColumnExpressions}
-	 */
-	String[] getIdentifyingColumnExpressions();
-
 	default Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
-			SqlAstProcessingState creationState) {
+			DomainResultCreationState creationState) {
 		return null;
 	}
 

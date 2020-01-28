@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.sql;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,25 +14,29 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.QueryLogger;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
@@ -139,6 +142,7 @@ import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
@@ -162,10 +166,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameters;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
 
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
@@ -280,11 +281,6 @@ public abstract class BaseSqmToSqlAstConverter
 	@Override
 	public LockMode determineLockMode(String identificationVariable) {
 		return queryOptions.getLockOptions().getEffectiveLockMode( identificationVariable );
-	}
-
-	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		return Collections.emptyList();
 	}
 
 	public QueryOptions getQueryOptions() {
@@ -579,34 +575,131 @@ public abstract class BaseSqmToSqlAstConverter
 
 		final SqmPathSource<?> pathSource = sqmJoin.getReferencedPathSource();
 
-		final AttributeMapping attributeMapping = (AttributeMapping) lhsTableGroup.getModelPart().findSubPart(
-				pathSource.getPathName(),
-				SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
-		);
+		final TableGroupJoin joinedTableGroupJoin;
+		final TableGroup joinedTableGroup;
 
-		assert attributeMapping instanceof TableGroupJoinProducer;
-		final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) attributeMapping ).createTableGroupJoin(
-				sqmJoin.getNavigablePath(),
-				lhsTableGroup,
-				sqmJoin.getExplicitAlias(),
-				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
-				determineLockMode( sqmJoin.getExplicitAlias() ),
-				sqlAliasBaseManager, getSqlExpressionResolver(),
-				creationContext
-		);
+		if ( pathSource instanceof PluralPersistentAttribute ) {
+			final ModelPart pluralPart = lhsTableGroup.getModelPart().findSubPart(
+					sqmJoin.getReferencedPathSource().getPathName(),
+					SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+			);
 
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-		fromClauseIndex.register( sqmJoin, tableGroupJoin.getJoinedGroup() );
+			assert pluralPart instanceof PluralAttributeMapping;
+
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) pluralPart;
+
+			final NavigablePath elementPath = sqmJoin.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() );
+
+			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
+					elementPath,
+					lhsTableGroup,
+					sqmJoin.getExplicitAlias(),
+					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					determineLockMode( sqmJoin.getExplicitAlias() ),
+					sqlAliasBaseManager, getSqlExpressionResolver(),
+					creationContext
+			);
+			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
+			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+
+			fromClauseIndex.register( sqmJoin, joinedTableGroup );
+			fromClauseIndex.registerTableGroup( elementPath, joinedTableGroup );
+		}
+		else if ( pathSource instanceof EmbeddedSqmPathSource ) {
+			final ModelPart joinedPart = lhsTableGroup.getModelPart().findSubPart(
+					pathSource.getPathName(),
+					SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+			);
+
+			assert joinedPart instanceof TableGroupJoinProducer;
+
+			final NavigablePath joinedPath;
+			final String explicitAlias = sqmJoin.getExplicitAlias();
+			if ( explicitAlias == null ) {
+				joinedPath = sqmJoin.getNavigablePath();
+			}
+			else {
+				joinedPath = sqmJoin.getNavigablePath().getParent().append( sqmJoin.getAttribute().getName() );
+			}
+			joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
+					joinedPath,
+					lhsTableGroup,
+					sqmJoin.getExplicitAlias(),
+					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					determineLockMode( sqmJoin.getExplicitAlias() ),
+					sqlAliasBaseManager, getSqlExpressionResolver(),
+					creationContext
+			);
+
+			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
+			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+
+			fromClauseIndex.register( sqmJoin, joinedTableGroup );
+		}
+		else {
+			if ( lhsTableGroup.getModelPart() instanceof PluralAttributeMapping ) {
+				fromClauseIndex.register( sqmJoin, lhsTableGroup );
+
+				joinedTableGroupJoin = null;
+				joinedTableGroup = lhsTableGroup;
+			}
+			else {
+				final ModelPart joinedPart = lhsTableGroup.getModelPart().findSubPart(
+						pathSource.getPathName(),
+						SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
+				);
+
+				if ( ! TableGroupJoinProducer.class.isInstance( joinedPart ) ) {
+					throw new HibernateException( "Expecting joined model part to implement TableGroupJoinProducer - " + joinedPart );
+				}
+
+				final NavigablePath joinedPath;
+				final String explicitAlias = sqmJoin.getExplicitAlias();
+				if ( explicitAlias == null ) {
+					joinedPath = sqmJoin.getNavigablePath();
+				}
+				else {
+					joinedPath = sqmJoin.getNavigablePath().getParent().append( sqmJoin.getAttribute().getName() );
+				}
+
+				joinedTableGroupJoin = ( (TableGroupJoinProducer) joinedPart ).createTableGroupJoin(
+						joinedPath,
+						lhsTableGroup,
+						sqmJoin.getExplicitAlias(),
+						sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+						determineLockMode( sqmJoin.getExplicitAlias() ),
+						sqlAliasBaseManager,
+						getSqlExpressionResolver(),
+						creationContext
+				);
+
+				joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
+				lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+
+				fromClauseIndex.register( sqmJoin, joinedTableGroup );
+			}
+		}
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
-			tableGroupJoin.applyPredicate(
+			if ( sqmJoin.isFetched() ) {
+				QueryLogger.QUERY_LOGGER.debugf( "Join fetch [" + sqmJoin.getNavigablePath() + "] is restricted" );
+			}
+
+			if ( joinedTableGroupJoin == null ) {
+				throw new IllegalStateException(  );
+			}
+
+			joinedTableGroupJoin.applyPredicate(
 					(Predicate) sqmJoin.getJoinPredicate().accept( this )
 			);
 		}
 
-		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
-		consumeImplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		consumeExplicitJoins( sqmJoin, joinedTableGroup );
+		consumeImplicitJoins( sqmJoin, joinedTableGroup );
 	}
 
 	private void consumeCrossJoin(SqmCrossJoin sqmJoin, TableGroup lhsTableGroup) {

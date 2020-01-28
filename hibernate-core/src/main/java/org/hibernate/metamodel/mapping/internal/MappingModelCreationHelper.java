@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Consumer;
@@ -221,7 +222,22 @@ public class MappingModelCreationHelper {
 					String resultVariable,
 					DomainResultCreationState creationState) {
 				final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-				final TableReference rootTableReference = tableGroup.resolveTableReference( rootTable );
+				final TableReference rootTableReference;
+				try {
+					rootTableReference = tableGroup.resolveTableReference( rootTable );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							String.format(
+									Locale.ROOT,
+									"Could not resolve table reference `%s` relative to TableGroup `%s` related with NavigablePath `%s`",
+									rootTable,
+									tableGroup,
+									navigablePath
+							),
+							e
+					);
+				}
 
 				final Expression expression = expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
@@ -1282,8 +1298,7 @@ public class MappingModelCreationHelper {
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
 		ToOne value = (ToOne) bootProperty.getValue();
-		final EntityPersister entityPersister = creationProcess.getEntityPersister(
-				value.getReferencedEntityName() );
+		final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
 
 		final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess = getStateArrayContributorMetadataAccess(
 				bootProperty,

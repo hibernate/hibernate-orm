@@ -170,7 +170,7 @@ public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class ResourceImpl implements Resource {
 
-		private static final String ENTITY_NAME = "Resource";
+		private static final String ENTITY_NAME = "TestResource";
 
 		@EmbeddedId
 		Identifier identifier;

@@ -54,7 +54,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			TypePool typePool,
 			int writerFlags,
 			int readerFlags) {
-		return new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+		return new MethodVisitor( Opcodes.ASM7, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( opcode != Opcodes.GETFIELD && opcode != Opcodes.PUTFIELD ) {

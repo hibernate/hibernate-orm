@@ -139,20 +139,22 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 		if ( listeners == null ) {
 			//noinspection unchecked
-			listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
-			listeners[0] = listener;
+			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			this.listeners[0] = listener;
 		}
 		else {
-			final int size = listeners.length;
+			final int size = this.listeners.length;
 
 			//noinspection unchecked
 			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
 
-			// put the new one first
-			newCopy[0] = listener;
+			// first copy the existing listeners
+			System.arraycopy( this.listeners, 0, newCopy, 0, size );
 
-			// and copy the rest after it
-			System.arraycopy( listeners, 0, newCopy, 1, size );
+			// and then put the new one after them
+			newCopy[size] = listener;
+
+			this.listeners = newCopy;
 		}
 
 	}
@@ -174,22 +176,24 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private void internalPrepend(T listener) {
 		prepareListener( listener );
 
-		if ( listeners == null ) {
+		if ( this.listeners == null ) {
 			//noinspection unchecked
-			listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
-			listeners[0] = listener;
+			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			this.listeners[0] = listener;
 		}
 		else {
-			final int size = listeners.length;
+			final int size = this.listeners.length;
 
 			//noinspection unchecked
 			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
 
-			// first copy the existing listeners
-			System.arraycopy( listeners, 0, newCopy, 0, size );
+			// put the new one first
+			newCopy[0] = listener;
 
-			// and then put the new one after them
-			newCopy[size] = listener;
+			// and copy the rest after it
+			System.arraycopy( this.listeners, 0, newCopy, 1, size );
+
+			this.listeners = newCopy;
 		}
 	}
 

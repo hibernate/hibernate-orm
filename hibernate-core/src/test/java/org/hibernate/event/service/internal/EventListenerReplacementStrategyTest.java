@@ -1,5 +1,7 @@
 package org.hibernate.event.service.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
@@ -32,15 +34,13 @@ public class EventListenerReplacementStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( OriginalListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
-		tracker = new Tracker(); // Reset tracker
+		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( ExpectedListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
 
 	@Test
@@ -53,15 +53,13 @@ public class EventListenerReplacementStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( OriginalListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
-		tracker = new Tracker(); // Reset tracker
+		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( ExpectedListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
 
 	@Test
@@ -74,27 +72,27 @@ public class EventListenerReplacementStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( OriginalListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
-		tracker = new Tracker(); // Reset tracker
+		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
-		assertThat( tracker.listenerClass ).as( "Unexpected listener called" ).isEqualTo( ExpectedListener.class );
-		assertThat( tracker.calls ).as( "It should have been called only once" ).hasValue( 1 );
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
 
 	/**
 	 * Keep track of which listener is called and how many listeners are called.
 	 */
 	private class Tracker {
-		private final AtomicInteger calls = new AtomicInteger( 0 );
-		private Class<?> listenerClass = null;
+		private List<Class<?>> callers = new ArrayList<>();
 
 		public void calledBy(Class<?> caller) {
-			listenerClass = caller;
-			calls.incrementAndGet();
+			callers.add( caller );
+		}
+
+		public void reset() {
+			callers.clear();
 		}
 	}
 

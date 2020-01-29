@@ -256,7 +256,14 @@ public class SessionImpl
 		// NOTE : pulse() already handles auto-join-ability correctly
 		getTransactionCoordinator().pulse();
 
-		getSession().setHibernateFlushMode( ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO ) );
+		final FlushMode initialMode;
+		if ( this.properties == null ) {
+			initialMode = fastSessionServices.initialSessionFlushMode;
+		}
+		else {
+			initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
+		}
+		getSession().setHibernateFlushMode( initialMode );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );

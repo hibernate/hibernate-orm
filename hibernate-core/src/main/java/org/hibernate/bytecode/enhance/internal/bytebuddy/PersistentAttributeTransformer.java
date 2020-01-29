@@ -134,7 +134,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypePool typePool,
 			int writerFlags,
 			int readerFlags) {
-		return new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+		return new MethodVisitor( Opcodes.ASM7, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( isEnhanced( owner, name, desc ) ) {

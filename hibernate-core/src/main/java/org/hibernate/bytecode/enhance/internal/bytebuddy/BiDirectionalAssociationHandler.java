@@ -296,7 +296,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		@Override
 		public Size apply(
 				MethodVisitor methodVisitor, Context implementationContext, MethodDescription instrumentedMethod) {
-			return delegate.apply( new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+			return delegate.apply( new MethodVisitor( Opcodes.ASM7, methodVisitor ) {
 
 				@Override
 				public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {

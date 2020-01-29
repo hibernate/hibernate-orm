@@ -39,6 +39,7 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
+import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -117,6 +118,7 @@ final class FastSessionServices {
 	final JdbcServices jdbcServices;
 	final boolean isJtaTransactionAccessible;
 	final CacheMode initialSessionCacheMode;
+	final FlushMode initialSessionFlushMode;
 	final boolean discardOnClose;
 	final BaselineSessionEventsListenerBuilder defaultSessionEventListeners;
 	final LockOptions defaultLockOptions;
@@ -177,6 +179,12 @@ final class FastSessionServices {
 		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sf );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
+		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
+	}
+
+	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
+		Object setMode = defaultSessionProperties.get( AvailableSettings.FLUSH_MODE );
+		return ConfigurationHelper.getFlushMode( setMode, FlushMode.AUTO );
 	}
 
 	private static LockOptions initializeDefaultLockOptions(final Map<String, Object> defaultSessionProperties) {

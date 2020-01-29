@@ -32,6 +32,13 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 		this.fixture = fixture;
 	}
 
+	public CaseSimpleExpression(MappingModelExpressable type, Expression fixture, List<WhenFragment> whenFragments, Expression otherwise) {
+		this.type = type;
+		this.fixture = fixture;
+		this.whenFragments = whenFragments;
+		this.otherwise = otherwise;
+	}
+
 	public Expression getFixture() {
 		return fixture;
 	}

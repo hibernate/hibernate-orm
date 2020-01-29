@@ -36,6 +36,12 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		this.type = (BasicType) type;
 	}
 
+	public CaseSearchedExpression(MappingModelExpressable type, List<WhenFragment> whenFragments, Expression otherwise) {
+		this.type = (BasicType) type;
+		this.whenFragments = whenFragments;
+		this.otherwise = otherwise;
+	}
+
 	public List<WhenFragment> getWhenFragments() {
 		return whenFragments;
 	}

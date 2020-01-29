@@ -818,7 +818,7 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		appendSql( " case" );
+		appendSql( "case " );
 		caseSimpleExpression.getFixture().accept( this );
 		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
 			appendSql( " when " );

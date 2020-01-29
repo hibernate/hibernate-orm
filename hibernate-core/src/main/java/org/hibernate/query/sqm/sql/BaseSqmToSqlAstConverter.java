@@ -31,6 +31,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -838,6 +839,23 @@ public abstract class BaseSqmToSqlAstConverter
 		);
 	}
 
+	protected MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> nodeType) {
+		final MappingModelExpressable valueMapping = getCreationContext().getDomainModel().resolveMappingExpressable( nodeType );
+
+		if ( valueMapping == null ) {
+			final Supplier<MappingModelExpressable> currentExpressableSupplier = inferableTypeAccessStack.getCurrent();
+			if ( currentExpressableSupplier != null ) {
+				return currentExpressableSupplier.get();
+			}
+		}
+
+		if ( valueMapping == null ) {
+			throw new ConversionException( "Could not determine ValueMapping for SqmExpressable: " + nodeType );
+		}
+
+		return valueMapping;
+	}
+
 	protected MappingModelExpressable<?> determineValueMapping(SqmExpression<?> sqmExpression) {
 		if ( sqmExpression instanceof SqmParameter ) {
 			return determineValueMapping( (SqmParameter) sqmExpression );
@@ -870,7 +888,6 @@ public abstract class BaseSqmToSqlAstConverter
 
 		return valueMapping;
 	}
-
 
 	@SuppressWarnings("WeakerAccess")
 	protected MappingModelExpressable<?> determineValueMapping(SqmParameter<?> sqmParameter) {
@@ -1486,37 +1503,59 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public CaseSimpleExpression visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
-		final CaseSimpleExpression result = new CaseSimpleExpression(
-				determineValueMapping( expression ),
-				(Expression) expression.getFixture().accept( this )
-		);
-
-		for ( SqmCaseSimple.WhenFragment whenFragment : expression.getWhenFragments() ) {
-			result.when(
-					(Expression) whenFragment.getCheckValue().accept( this ),
-					(Expression) whenFragment.getResult().accept( this )
+		SqmExpressable<?> resultType = expression.getNodeType();
+		List<CaseSimpleExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
+		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+			resultType = QueryHelper.highestPrecedenceType2( resultType, whenFragment.getResult().getNodeType() );
+			whenFragments.add(
+				new CaseSimpleExpression.WhenFragment(
+					(Expression) whenFragment.getCheckValue().accept(this),
+					(Expression) whenFragment.getResult().accept(this)
+				)
 			);
 		}
 
-		result.otherwise( (Expression) expression.getOtherwise().accept( this ) );
+		Expression otherwise = null;
+		if ( expression.getOtherwise() != null ) {
+			resultType = QueryHelper.highestPrecedenceType2( resultType, expression.getOtherwise().getNodeType() );
+			otherwise = (Expression) expression.getOtherwise().accept(this );
+		}
+
+		final CaseSimpleExpression result = new CaseSimpleExpression(
+				resolveMappingExpressable( resultType ),
+				(Expression) expression.getFixture().accept( this ),
+				whenFragments,
+				otherwise
+		);
 
 		return result;
 	}
 
 	@Override
 	public CaseSearchedExpression visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		final CaseSearchedExpression result = new CaseSearchedExpression(
-				determineValueMapping( expression )
-		);
-
-		for ( SqmCaseSearched.WhenFragment whenFragment : expression.getWhenFragments() ) {
-			result.when(
-					(Predicate) whenFragment.getPredicate().accept( this ),
-					(Expression) whenFragment.getResult().accept( this )
+		SqmExpressable<?> resultType = expression.getNodeType();
+		List<CaseSearchedExpression.WhenFragment> whenFragments = new ArrayList<>( expression.getWhenFragments().size() );
+		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
+			resultType = QueryHelper.highestPrecedenceType2( resultType, whenFragment.getResult().getNodeType() );
+			whenFragments.add(
+				new CaseSearchedExpression.WhenFragment(
+					(Predicate) whenFragment.getPredicate().accept(this),
+					(Expression) whenFragment.getResult().accept(this)
+				)
 			);
 		}
 
-		result.otherwise( (Expression) expression.getOtherwise().accept( this ) );
+		Expression otherwise = null;
+		if ( expression.getOtherwise() != null ) {
+			resultType = QueryHelper.highestPrecedenceType2( resultType, expression.getOtherwise().getNodeType() );
+			otherwise = (Expression) expression.getOtherwise().accept(this );
+		}
+
+		final CaseSearchedExpression result = new CaseSearchedExpression(
+				resolveMappingExpressable( resultType ),
+				whenFragments,
+				otherwise
+		);
 
 		return result;
 	}

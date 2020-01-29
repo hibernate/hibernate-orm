@@ -53,14 +53,14 @@ public class DatabaseReader {
 			throw new IllegalStateException("Strategy cannot be null");
 		}
 	}
-
-	public Collection<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector, String catalog, String schema) {
+	
+	public Collection<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
 		try {
 			getMetaDataDialect().configure(provider);
 
 			HashMap<Table, Boolean> foundTables = new HashMap<Table, Boolean>();
 
-			for (Iterator<SchemaSelection> iter = getSchemaSelections(catalog, schema).iterator(); iter.hasNext();) {
+			for (Iterator<SchemaSelection> iter = getSchemaSelections(defaultCatalog, defaultSchema).iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
 				TableCollector tableCollector = TableCollector.create(
 						getMetaDataDialect(), 

@@ -131,17 +131,17 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			if(strings.length==1) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,null, strings[0]) );
-				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				Collection<Table> collection = reader.readDatabaseSchema(revengMetadataCollector);
 				return !collection.isEmpty();
 			} else if(strings.length==3) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(strings[0],strings[1], strings[2]) );
-				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector);
 				return !collection.isEmpty();
 			} else if (strings.length==2) {
 				tableSelector.clearSchemaSelections();
 				tableSelector.addSchemaSelection( new SchemaSelection(null,strings[0], strings[1]) );
-				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+				Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector);
 				return !collection.isEmpty();
 			}
 		}
@@ -153,7 +153,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		if ( table.isPhysicalTable() ) {
 			setSchemaSelection( table );
 
-			Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector, null, null );
+			Collection<Table> collection = reader.readDatabaseSchema( revengMetadataCollector);
 
 			if ( collection.isEmpty() ) {
 				pc.reportIssue( new Issue( "SCHEMA_TABLE_MISSING",

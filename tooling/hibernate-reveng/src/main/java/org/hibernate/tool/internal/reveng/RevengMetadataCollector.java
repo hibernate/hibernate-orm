@@ -1,5 +1,6 @@
 package org.hibernate.tool.internal.reveng;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +55,10 @@ public class RevengMetadataCollector {
 
 	public Table getTable(String schema, String catalog, String name) {
 		return tables.get(createIdentifier(catalog, schema, name));
+	}
+	
+	public Collection<Table> getTables() {
+		return tables.values();
 	}
 	
 	public void setOneToManyCandidates(Map<String, List<ForeignKey>> oneToManyCandidates) {

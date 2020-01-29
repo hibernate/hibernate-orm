@@ -137,7 +137,7 @@ public class EventListenerReplacementStrategyTest {
 
 		@Override
 		public boolean areMatch(Object listener, Object original) {
-			return original instanceof ClearEvent && listener instanceof ClearEvent;
+			return original instanceof ClearEventListener && listener instanceof ClearEventListener;
 		}
 
 		@Override

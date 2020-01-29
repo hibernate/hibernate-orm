@@ -222,6 +222,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							checkAgainstBaseInterface( listener );
 							performInjections( listener );
 							itr.set( listener );
+							listeners = null; //Marks it for refreshing
 							doAdd = false;
 							break strategy_loop;
 						}

@@ -809,6 +809,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassTableNameClosure[j];
 	}
 
+	@Override
+	protected String[] getSubclassTableNames() {
+		return subclassTableNameClosure;
+	}
+
 	public int getSubclassTableSpan() {
 		return subclassTableNameClosure.length;
 	}

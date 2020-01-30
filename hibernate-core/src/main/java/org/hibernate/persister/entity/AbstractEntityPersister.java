@@ -387,6 +387,8 @@ public abstract class AbstractEntityPersister
 
 	public abstract String getSubclassTableName(int j);
 
+	protected abstract String[] getSubclassTableNames();
+
 	protected abstract String[] getSubclassTableKeyColumns(int j);
 
 	protected abstract boolean isClassOrSuperclassTable(int j);
@@ -1267,7 +1269,7 @@ public abstract class AbstractEntityPersister
 				lockMode,
 				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression) -> ArrayHelper.contains( rootTableKeyColumnNames, tableExpression ),
+				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
 				(tableExpression, tableGroup) -> {
 					for ( int i = 0; i < getSubclassTableSpan(); i++ ) {
 						final String subclassTableName = getSubclassTableName( i );

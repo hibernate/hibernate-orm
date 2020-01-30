@@ -67,7 +67,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String subquery;
 	private final String tableName;
 	//private final String rootTableName;
-	private final String[] subclassClosure;
+	private final String[] subclassTableNames;
 	private final String[] spaces;
 	private final String[] subclassSpaces;
 	private final Object discriminatorValue;
@@ -101,7 +101,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		// TABLE
 
 		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
-
+		subclassTableNames = new String[]{tableName};
 		//Custom SQL
 
 		String sql;
@@ -146,8 +146,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		// PROPERTIES
 
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
-		subclassClosure = new String[subclassSpan];
-		subclassClosure[0] = getEntityName();
 
 		// SUBCLASSES
 		subclassByDiscriminatorValue.put(
@@ -159,7 +157,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			int k = 1;
 			while ( iter.hasNext() ) {
 				Subclass sc = (Subclass) iter.next();
-				subclassClosure[k++] = sc.getEntityName();
 				subclassByDiscriminatorValue.put( sc.getSubclassId(), sc.getEntityName() );
 			}
 		}
@@ -278,10 +275,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
-	}
-
-	public String[] getSubclassClosure() {
-		return subclassClosure;
 	}
 
 	@Override
@@ -517,6 +510,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			throw new AssertionFailure( "only one table" );
 		}
 		return tableName;
+	}
+
+	@Override
+	protected String[] getSubclassTableNames(){
+		return subclassTableNames;
 	}
 
 	@Override

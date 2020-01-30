@@ -58,7 +58,7 @@ public class TableCollector {
 		        String tableName = (String) tableRs.get("TABLE_NAME");
 				String schemaName = (String) tableRs.get("TABLE_SCHEM");
 		        String catalogName = (String) tableRs.get("TABLE_CAT");
-		        TableIdentifier ti = TableIdentifier.create(catalogName, schemaName, tableName);		        
+		        TableIdentifier ti = TableIdentifier.create(quote(catalogName), quote(schemaName), quote(tableName));		        
 				if(revengStrategy.excludeTable(ti) ) {
 					log.debug("Table " + ti + " excluded by strategy");
 		        	continue;
@@ -107,4 +107,17 @@ public class TableCollector {
 		  return processedTables;
 	}
 	
+	private String quote(String name) {
+		if (name == null)
+			return name;
+		if (metaDataDialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name; // avoid double quoting
+			}
+			return "`" + name + "`";
+		} else {
+			return name;
+		}
+	}
 }

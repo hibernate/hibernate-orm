@@ -73,6 +73,69 @@ public class EventListenerReplacementStrategyTest {
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
 
+	@Test
+	public void testListenersIteratorWithMultipleListenersAndNoStrategy() {
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireLazyEventOnEachListenerWithMultipleListenersAndNoStrategy() {
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireEventOnEachListenerWithMultipleListenersAndNoStrategy() {
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExpectedListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testListenersIteratorWithMultipleListenersAndReplacementStrategy() {
+		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireLazyEventOnEachListenerWithMultipleListenersAndReplacementStrategy() {
+		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireEventOnEachListenerWithMultipleListenersAndReplacementStrategy() {
+		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
+	}
+
 	/**
 	 * Keep track of which listener is called and how many listeners are called.
 	 */
@@ -121,13 +184,30 @@ public class EventListenerReplacementStrategyTest {
 		}
 	}
 
+	/**
+	 * An additional listener to test the case of multiple listeners registered for the same event
+	 */
+	private static class ExtraListener implements ClearEventListener {
+		private final Tracker tracker;
+
+		public ExtraListener(Tracker tracker) {
+			this.tracker = tracker;
+		}
+
+		@Override
+		public void onClear(ClearEvent event) {
+			tracker.calledBy( this.getClass() );
+		}
+	}
+
 	private static class ReplaceOriginalStrategy implements DuplicationStrategy {
 
 		static final ReplaceOriginalStrategy INSTANCE = new ReplaceOriginalStrategy();
 
 		@Override
 		public boolean areMatch(Object listener, Object original) {
-			return original instanceof ClearEventListener && listener instanceof ClearEventListener;
+			// We just want to replace the original listener with the extra so that we can test with multiple listeners
+			return original instanceof OriginalListener && listener instanceof ExpectedListener;
 		}
 
 		@Override

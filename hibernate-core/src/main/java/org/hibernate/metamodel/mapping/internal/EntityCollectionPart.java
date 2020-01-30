@@ -27,7 +27,12 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -164,7 +169,29 @@ public class EntityCollectionPart
 							.getTableGroup( fetchParent.getNavigablePath() );
 
 					assert collectionTableGroup != null;
-
+					NavigablePath navigablePath = new NavigablePath( entityMappingType.getRootPathName() );
+					TableGroup rhsTableGroup = creationState.getSqlAstCreationState()
+							.getFromClauseAccess()
+							.resolveTableGroup( navigablePath,
+												npa-> {
+													final QuerySpec rootQuerySpec = new QuerySpec( true );
+													return entityMappingType.createRootTableGroup(
+															npa,
+															null,
+															true,
+															LockMode.NONE,
+															new SqlAliasBaseManager(),
+															creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+															() -> rootQuerySpec::applyPredicate,
+															creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+													);
+												});
+					TableGroupJoin tableGroupJoin = new TableGroupJoin(
+							navigablePath,
+							SqlAstJoinType.LEFT,
+							rhsTableGroup
+					);
+					collectionTableGroup.addTableGroupJoin( tableGroupJoin );
 					// create a "wrapper" around the collection TableGroup adding in the entity's table references
 					return new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, this );
 				}

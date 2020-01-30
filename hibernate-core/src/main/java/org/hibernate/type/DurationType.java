@@ -8,9 +8,8 @@ package org.hibernate.type;
 
 import java.time.Duration;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
-import org.hibernate.type.descriptor.sql.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -24,7 +23,7 @@ public class DurationType
 	public static final DurationType INSTANCE = new DurationType();
 
 	public DurationType() {
-		super( BigIntTypeDescriptor.INSTANCE, DurationJavaDescriptor.INSTANCE );
+		super( NumericTypeDescriptor.INSTANCE, DurationJavaDescriptor.INSTANCE );
 	}
 
 	@Override

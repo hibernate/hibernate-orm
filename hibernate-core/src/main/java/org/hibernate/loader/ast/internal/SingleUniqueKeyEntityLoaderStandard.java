@@ -131,7 +131,8 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 						};
 					}
 				},
-				row -> row[0]
+				row -> row[0],
+				true
 		);
 
 		assert list.size() == 1;
@@ -215,7 +216,8 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 						};
 					}
 				},
-				row -> row[0]
+				row -> row[0],
+				true
 		);
 
 		assert list.size() == 1;

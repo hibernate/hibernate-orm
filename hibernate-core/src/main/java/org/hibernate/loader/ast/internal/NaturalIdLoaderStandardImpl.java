@@ -139,7 +139,8 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						};
 					}
 				},
-				row -> (T) row[0]
+				row -> (T) row[0],
+				true
 		);
 
 		if ( results.size() > 1 ) {
@@ -230,7 +231,8 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						};
 					}
 				},
-				row -> row
+				row -> row,
+				true
 		);
 
 		if ( results.size() > 1 ) {
@@ -326,7 +328,8 @@ public class NaturalIdLoaderStandardImpl<T> implements NaturalIdLoader<T> {
 						};
 					}
 				},
-				row -> row
+				row -> row,
+				true
 		);
 
 		if ( results.size() > 1 ) {

@@ -24,10 +24,11 @@ public interface JdbcSelectExecutor {
 	// todo (6.0) : Ideally we'd have a singular place (JdbcServices? ServiceRegistry?) to obtain these executors
 
 	<R> List<R> list(
-			JdbcSelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer);
+		JdbcSelect jdbcSelect,
+		JdbcParameterBindings jdbcParameterBindings,
+		ExecutionContext executionContext,
+		RowTransformer<R> rowTransformer,
+		boolean uniqueFilter);
 
 	<R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,

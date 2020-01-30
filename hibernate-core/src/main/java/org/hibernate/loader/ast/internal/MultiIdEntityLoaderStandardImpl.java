@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -339,7 +338,8 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 						}
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 	}
 

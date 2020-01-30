@@ -150,7 +150,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 						};
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 
 		if ( list.isEmpty() ) {

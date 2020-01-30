@@ -165,7 +165,8 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 						return null;
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 
 		//noinspection ForLoopReplaceableByForEach

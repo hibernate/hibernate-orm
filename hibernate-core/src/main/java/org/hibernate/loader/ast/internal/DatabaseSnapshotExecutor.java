@@ -251,7 +251,8 @@ class DatabaseSnapshotExecutor {
 						return null;
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 
 		if ( list.isEmpty() ) {

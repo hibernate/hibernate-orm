@@ -214,7 +214,8 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 								return null;
 							}
 						},
-						RowTransformerPassThruImpl.instance()
+						RowTransformerPassThruImpl.instance(),
+						true
 				);
 			}
 

@@ -94,7 +94,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 						return null;
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );

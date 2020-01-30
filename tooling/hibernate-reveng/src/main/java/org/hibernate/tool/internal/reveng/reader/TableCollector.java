@@ -84,7 +84,11 @@ public class TableCollector {
 							  catalogName=null;
 						  }
 						  log.debug("Adding table " + tableName + " of type " + tableType);
-						  Table table = revengMetadataCollector.addTable(schemaName, catalogName, tableName);
+						  TableIdentifier tableIdentifier = TableIdentifier.create(
+								  quote(catalogName), 
+								  quote(schemaName), 
+								  quote(tableName));
+						  Table table = revengMetadataCollector.addTable(tableIdentifier);
 						  table.setComment(comment);
 						  if(tableType.equalsIgnoreCase("TABLE")) {
 							  processedTables.put(table, true);

@@ -35,21 +35,24 @@ public class RevengMetadataCollector {
 	public Iterator<Table> iterateTables() {
 		return tables.values().iterator();
 	}
-
-	public Table addTable(String schema, String catalog, String name) {
+	
+	// TableIdentifier's catalog, schema and name should be quoted
+	public Table addTable(TableIdentifier tableIdentifier) {
 		Table result = null;
-		TableIdentifier identifier = createIdentifier(catalog, schema, name);
+		String catalog = tableIdentifier.getCatalog();
+		String schema = tableIdentifier.getSchema();
+		String name = tableIdentifier.getName();
 		if (metadataCollector != null) {
-			result = metadataCollector.addTable(quote(schema), quote(catalog), quote(name), null, false);
+			result = metadataCollector.addTable(schema, catalog, name, null, false);
 		} else {
-			result = createTable(quote(catalog), quote(schema), quote(name));			
+			result = createTable(catalog, schema, name);			
 		}
-		if (tables.containsKey(identifier)) {
+		if (tables.containsKey(tableIdentifier)) {
 			throw new RuntimeException(
 					"Attempt to add a double entry for table: " + 
-					TableNameQualifier.qualify(quote(catalog), quote(schema), quote(name)));
+					TableNameQualifier.qualify(catalog, schema, name));
 		}
-		tables.put(identifier, result);
+		tables.put(tableIdentifier, result);
 		return result;
 	}
 

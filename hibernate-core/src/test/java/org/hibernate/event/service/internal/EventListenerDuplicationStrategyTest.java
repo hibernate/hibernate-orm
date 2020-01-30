@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </p>
  */
 @TestForIssue(jiraKey = "HHH-13831")
-public class EventListenerReplacementStrategyTest {
+public class EventListenerDuplicationStrategyTest {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();

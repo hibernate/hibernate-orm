@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Integer>, Serializable {
+public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,Integer>, Serializable {
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
@@ -60,6 +60,9 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 	@Override
 	public int getJdbcTypeCode() {
+		// note, even though we convert the enum to
+		// an Integer here, we actually map it to a
+		// database column of type TINYINT by default
 		return Types.TINYINT;
 	}
 
@@ -74,9 +77,9 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
-		return Integer.toString( ( (E) value ).ordinal() );
+		//noinspection rawtypes
+		return Integer.toString( ( (Enum) value ).ordinal() );
 	}
 
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
@@ -88,9 +91,8 @@ public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConve
 
 	@Override
 	public void writeValue(
-			PreparedStatement statement, Enum value, int position, SharedSessionContractImplementor session)
+			PreparedStatement statement, E value, int position, SharedSessionContractImplementor session)
 			throws SQLException {
-		final Integer jdbcValue = value == null ? null : value.ordinal();
-		valueBinder.bind( statement, jdbcValue, position, session );
+		valueBinder.bind( statement, toRelationalValue( value ), position, session );
 	}
 }

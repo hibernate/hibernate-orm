@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface EnumValueConverter<O extends Enum, R> extends BasicValueConverter<O,R> {
+public interface EnumValueConverter<O extends Enum<O>, R> extends BasicValueConverter<O,R> {
 	@Override
 	EnumJavaTypeDescriptor<O> getDomainJavaDescriptor();
 
@@ -38,7 +38,7 @@ public interface EnumValueConverter<O extends Enum, R> extends BasicValueConvert
 	@Deprecated
 	void writeValue(
 			PreparedStatement statement,
-			Enum value,
+			O value,
 			int position,
 			SharedSessionContractImplementor session) throws SQLException;
 }

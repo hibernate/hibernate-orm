@@ -9,13 +9,10 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.function.Consumer;
 
 import org.hibernate.FetchMode;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.internal.StandardArraySemantics;
@@ -31,7 +28,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -47,28 +43,22 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
@@ -76,21 +66,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
@@ -101,7 +77,6 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -113,236 +88,7 @@ public class MappingModelCreationHelper {
 	private MappingModelCreationHelper() {
 	}
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// EntityIdentifier
-
-	public static BasicEntityIdentifierMapping buildSimpleIdentifierMapping(
-			EntityPersister entityPersister,
-			String rootTable,
-			String pkColumnName,
-			BasicType idType,
-			MappingModelCreationProcess creationProcess) {
-		assert entityPersister.hasIdentifierProperty();
-		assert entityPersister.getIdentifierPropertyName() != null;
-
-		final PersistentClass bootEntityDescriptor = creationProcess.getCreationContext()
-				.getBootModel()
-				.getEntityBinding( entityPersister.getEntityName() );
-
-		final PropertyAccess propertyAccess = entityPersister.getRepresentationStrategy()
-				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
-
-		final NavigableRole idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-
-		return new BasicEntityIdentifierMapping() {
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-				return propertyAccess.getGetter().get( entity );
-			}
-
-			@Override
-			public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-				propertyAccess.getSetter().set( entity, id, session.getFactory() );
-			}
-
-			@Override
-			public Object instantiate() {
-				return entityPersister.getRepresentationStrategy()
-						.getInstantiator()
-						.instantiate( creationProcess.getCreationContext().getSessionFactory() );
-			}
-
-			@Override
-			public MappingType getPartMappingType() {
-				return getBasicType();
-			}
-
-			@Override
-			public MappingType getMappedTypeDescriptor() {
-				return getBasicType();
-			}
-
-			@Override
-			public BasicType getBasicType() {
-				return (BasicType) entityPersister.getIdentifierType();
-			}
-
-			@Override
-			public int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-				return 1;
-			}
-
-			@Override
-			public void visitColumns(ColumnConsumer consumer) {
-				consumer.accept( getMappedColumnExpression(), getContainingTableExpression(), getJdbcMapping() );
-			}
-
-			@Override
-			public EntityMappingType findContainingEntityMapping() {
-				return entityPersister;
-			}
-
-			@Override
-			public void visitJdbcTypes(
-					Consumer<JdbcMapping> action,
-					Clause clause,
-					TypeConfiguration typeConfiguration) {
-				action.accept( idType );
-			}
-
-			@Override
-			public void visitJdbcValues(
-					Object value,
-					Clause clause,
-					JdbcValuesConsumer valuesConsumer,
-					SharedSessionContractImplementor session) {
-				valuesConsumer.consume( value, idType );
-			}
-
-			@Override
-			public JavaTypeDescriptor getJavaTypeDescriptor() {
-				return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
-			}
-
-			@Override
-			public NavigableRole getNavigableRole() {
-				return idRole;
-			}
-
-			@Override
-			public <T> DomainResult<T> createDomainResult(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					String resultVariable,
-					DomainResultCreationState creationState) {
-				final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-				final TableReference rootTableReference;
-				try {
-					rootTableReference = tableGroup.resolveTableReference( rootTable );
-				}
-				catch (Exception e) {
-					throw new IllegalStateException(
-							String.format(
-									Locale.ROOT,
-									"Could not resolve table reference `%s` relative to TableGroup `%s` related with NavigablePath `%s`",
-									rootTable,
-									tableGroup,
-									navigablePath
-							),
-							e
-					);
-				}
-
-				final Expression expression = expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
-						sqlAstProcessingState -> new ColumnReference(
-								rootTableReference.getIdentificationVariable(),
-								pkColumnName,
-								( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
-								creationProcess.getCreationContext().getSessionFactory()
-						)
-				);
-
-				final SqlSelection sqlSelection = expressionResolver.resolveSqlSelection(
-						expression,
-						idType.getExpressableJavaTypeDescriptor(),
-						creationProcess.getCreationContext().getSessionFactory().getTypeConfiguration()
-				);
-
-				//noinspection unchecked
-				return new BasicResult(
-						sqlSelection.getValuesArrayPosition(),
-						resultVariable,
-						entityPersister.getIdentifierMapping().getMappedTypeDescriptor().getMappedJavaTypeDescriptor(),
-						navigablePath
-				);
-			}
-
-			@Override
-			public void applySqlSelections(
-					NavigablePath navigablePath,
-					TableGroup tableGroup,
-					DomainResultCreationState creationState) {
-				final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-				final TableReference rootTableReference = tableGroup.resolveTableReference( rootTable );
-
-				final Expression expression = expressionResolver.resolveSqlExpression(
-						SqlExpressionResolver.createColumnReferenceKey( rootTableReference, pkColumnName ),
-						sqlAstProcessingState -> new ColumnReference(
-								rootTable,
-								pkColumnName,
-								( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
-								creationProcess.getCreationContext().getSessionFactory()
-						)
-				);
-
-				// the act of resolving the expression -> selection applies it
-				expressionResolver.resolveSqlSelection(
-						expression,
-						idType.getExpressableJavaTypeDescriptor(),
-						creationProcess.getCreationContext().getSessionFactory().getTypeConfiguration()
-				);
-			}
-
-			@Override
-			public String getContainingTableExpression() {
-				return rootTable;
-			}
-
-			@Override
-			public BasicValueConverter getConverter() {
-				return null;
-			}
-
-			@Override
-			public String getMappedColumnExpression() {
-				return pkColumnName;
-			}
-
-			@Override
-			public JdbcMapping getJdbcMapping() {
-				return idType;
-			}
-
-			@Override
-			public String getFetchableName() {
-				return entityPersister.getIdentifierPropertyName();
-			}
-
-			@Override
-			public FetchStrategy getMappedFetchStrategy() {
-				return FetchStrategy.IMMEDIATE_JOIN;
-			}
-
-			@Override
-			public Fetch generateFetch(
-					FetchParent fetchParent,
-					NavigablePath fetchablePath,
-					FetchTiming fetchTiming,
-					boolean selected,
-					LockMode lockMode,
-					String resultVariable,
-					DomainResultCreationState creationState) {
-				return new BasicFetch<>(
-						0,
-						fetchParent,
-						fetchablePath,
-						this,
-						false,
-						null,
-						FetchTiming.IMMEDIATE,
-						creationState
-				);
-			}
-		};
-
-	}
 
 	public static EntityIdentifierMapping buildEncapsulatedCompositeIdentifierMapping(
 			EntityPersister entityPersister,

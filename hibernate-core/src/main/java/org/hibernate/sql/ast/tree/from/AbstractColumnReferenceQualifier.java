@@ -26,7 +26,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		final TableReference existing = resolveTableReference( tableExpression );
+		final TableReference existing = resolveTableReferenceInternal( tableExpression );
 		if ( existing != null ) {
 			return existing;
 		}

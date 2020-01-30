@@ -141,6 +141,7 @@ import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -5984,7 +5985,7 @@ public abstract class AbstractEntityPersister
 			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor, cidType );
 		}
 
-		return MappingModelCreationHelper.buildSimpleIdentifierMapping(
+		return new BasicEntityIdentifierMappingImpl(
 				this,
 				getRootTableName(),
 				rootTableKeyColumnNames[0],

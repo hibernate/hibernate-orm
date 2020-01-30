@@ -383,93 +383,100 @@ public class LoaderSelectBuilder {
 
 		final List<Fetch> fetches = new ArrayList<>();
 
-		final Consumer<Fetchable> processor = fetchable -> {
-			final NavigablePath fetchablePath;
-			final Fetchable fetchedFetchable;
-			if ( fetchable instanceof PluralAttributeMapping ) {
-				fetchablePath = fetchParent.getNavigablePath()
-						.append( fetchable.getFetchableName() )
-						.append( CollectionPart.Nature.ELEMENT.getName() );
-				fetchedFetchable = ( (PluralAttributeMapping) fetchable ).getElementDescriptor();
-			}
-			else {
-				fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
-				fetchedFetchable = fetchable;
-			}
-
-			final Fetch biDirectionalFetch = fetchedFetchable.resolveCircularFetch(
-					fetchablePath,
-					fetchParent,
-					creationState
-			);
-
-			if ( biDirectionalFetch != null ) {
-				fetches.add( biDirectionalFetch );
-				return;
-			}
-
-			LockMode lockMode = LockMode.READ;
-			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
-			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
-
-//			if ( loadable instanceof PluralValuedNavigable ) {
-//				// processing a collection-loader
-//
-//				// if the `fetchable` is the "collection owner" and the collection owner is available in Session - don't join
-//				final String collectionMappedByProperty = ( (PluralValuedNavigable) rootContainer ).getCollectionDescriptor()
-//						.getMappedByProperty();
-//				if ( collectionMappedByProperty != null && collectionMappedByProperty.equals( fetchable.getNavigableName() ) ) {
-//					joined = false;
-//				}
-//			}
-
-			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
-
-			if ( maximumFetchDepth != null ) {
-				if ( fetchDepth == maximumFetchDepth ) {
-					joined = false;
-				}
-				else if ( fetchDepth > maximumFetchDepth ) {
-					return;
-				}
-			}
-
-			try {
-				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
-					fetchDepth++;
-				}
-				Fetch fetch = fetchedFetchable.generateFetch(
-						fetchParent,
-						fetchablePath,
-						fetchTiming,
-						joined,
-						lockMode,
-						null,
-						creationState
-				);
-				fetches.add( fetch );
-
-				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE ) {
-					applyOrdering(
-							querySpec,
-							fetchablePath,
-							( (PluralAttributeMapping) fetchable ),
-							creationState
-					);
-				}
-			}
-			finally {
-				if ( ! (fetchable instanceof BasicValuedModelPart) ) {
-					fetchDepth--;
-				}
-			}
-		};
+		final Consumer<Fetchable> processor = createFetchableConsumer( fetchParent, querySpec, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		referencedMappingContainer.visitKeyFetchables( processor, null );
 		referencedMappingContainer.visitFetchables( processor, null );
 
 		return fetches;
+	}
+
+	private Consumer<Fetchable> createFetchableConsumer(
+			FetchParent fetchParent,
+			QuerySpec querySpec,
+			LoaderSqlAstCreationState creationState, List<Fetch> fetches) {
+		return fetchable -> {
+				final NavigablePath fetchablePath;
+				final Fetchable fetchedFetchable;
+				if ( fetchable instanceof PluralAttributeMapping ) {
+					fetchablePath = fetchParent.getNavigablePath()
+							.append( fetchable.getFetchableName() )
+							.append( CollectionPart.Nature.ELEMENT.getName() );
+					fetchedFetchable = ( (PluralAttributeMapping) fetchable ).getElementDescriptor();
+				}
+				else {
+					fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+					fetchedFetchable = fetchable;
+				}
+
+				final Fetch biDirectionalFetch = fetchedFetchable.resolveCircularFetch(
+						fetchablePath,
+						fetchParent,
+						creationState
+				);
+
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
+					return;
+				}
+
+				LockMode lockMode = LockMode.READ;
+				FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
+				boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+
+	//			if ( loadable instanceof PluralValuedNavigable ) {
+	//				// processing a collection-loader
+	//
+	//				// if the `fetchable` is the "collection owner" and the collection owner is available in Session - don't join
+	//				final String collectionMappedByProperty = ( (PluralValuedNavigable) rootContainer ).getCollectionDescriptor()
+	//						.getMappedByProperty();
+	//				if ( collectionMappedByProperty != null && collectionMappedByProperty.equals( fetchable.getNavigableName() ) ) {
+	//					joined = false;
+	//				}
+	//			}
+
+				final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+
+				if ( maximumFetchDepth != null ) {
+					if ( fetchDepth == maximumFetchDepth ) {
+						joined = false;
+					}
+					else if ( fetchDepth > maximumFetchDepth ) {
+						return;
+					}
+				}
+
+				try {
+					if ( ! (fetchable instanceof BasicValuedModelPart ) ) {
+						fetchDepth++;
+					}
+					Fetch fetch = fetchedFetchable.generateFetch(
+							fetchParent,
+							fetchablePath,
+							fetchTiming,
+							joined,
+							lockMode,
+							null,
+							creationState
+					);
+					fetches.add( fetch );
+
+					if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE ) {
+						applyOrdering(
+								querySpec,
+								fetchablePath,
+								( (PluralAttributeMapping) fetchable ),
+								creationState
+						);
+					}
+				}
+				finally {
+					if ( ! (fetchable instanceof BasicValuedModelPart) ) {
+						fetchDepth--;
+					}
+				}
+			};
 	}
 
 	private void applyOrdering(

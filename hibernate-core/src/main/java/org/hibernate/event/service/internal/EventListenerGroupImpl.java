@@ -232,7 +232,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							return;
 						}
 						case REPLACE_ORIGINAL: {
-							log.debugf( "Replacing listener registration (%s) : `%s` -> ", strategy.getAction(), existingListener, listener );
+							log.debugf( "Replacing listener registration (%s) : `%s` -> %s", strategy.getAction(), existingListener, listener );
 							prepareListener( listener );
 
 							listeners[i] = listener;

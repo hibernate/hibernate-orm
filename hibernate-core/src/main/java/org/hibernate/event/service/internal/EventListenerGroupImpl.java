@@ -204,6 +204,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		}
 
 		final T[] localListenersRef = this.listeners;
+		final boolean debugEnabled = log.isDebugEnabled();
 
 		for ( DuplicationStrategy strategy : duplicationStrategies ) {
 
@@ -214,25 +215,33 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 			for ( int i = 0; i < localListenersRef.length; i++ ) {
 				final T existingListener = localListenersRef[i];
-				log.debugf(
-						"Checking incoming listener [`%s`] for match against existing listener [`%s`]",
-						listener,
-						existingListener
-				);
+				if ( debugEnabled ) {
+					log.debugf(
+							"Checking incoming listener [`%s`] for match against existing listener [`%s`]",
+							listener,
+							existingListener
+					);
+				}
 
 				if ( strategy.areMatch( listener,  existingListener ) ) {
-					log.debugf( "Found listener match between `%s` and `%s`", listener, existingListener );
+					if ( debugEnabled ) {
+						log.debugf( "Found listener match between `%s` and `%s`", listener, existingListener );
+					}
 
 					switch ( strategy.getAction() ) {
 						case ERROR: {
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
 						}
 						case KEEP_ORIGINAL: {
-							log.debugf( "Skipping listener registration (%s) : `%s`", strategy.getAction(), listener );
+							if ( debugEnabled ) {
+								log.debugf( "Skipping listener registration (%s) : `%s`", strategy.getAction(), listener );
+							}
 							return;
 						}
 						case REPLACE_ORIGINAL: {
-							log.debugf( "Replacing listener registration (%s) : `%s` -> %s", strategy.getAction(), existingListener, listener );
+							if ( debugEnabled ) {
+								log.debugf( "Replacing listener registration (%s) : `%s` -> %s", strategy.getAction(), existingListener, listener );
+							}
 							prepareListener( listener );
 
 							listeners[i] = listener;

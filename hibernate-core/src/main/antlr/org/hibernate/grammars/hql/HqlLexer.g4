@@ -69,8 +69,6 @@ BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER BIG_DECIMAL_SUFFIX;
 
 HEX_LITERAL : '0' [xX] HEX_DIGIT+ LONG_SUFFIX?;
 
-OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')?;
-
 fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
 
@@ -94,14 +92,6 @@ fragment
 UNICODE_ESCAPE
 	: 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
 	;
-
-fragment
-OCTAL_ESCAPE
-	:	BACKSLASH ('0'..'3') ('0'..'7') ('0'..'7')
-	|	BACKSLASH ('0'..'7') ('0'..'7')
-	|	BACKSLASH ('0'..'7')
-	;
-
 
 // ESCAPE start tokens
 TIMESTAMP_ESCAPE_START : '{ts';

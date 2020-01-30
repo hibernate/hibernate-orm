@@ -31,17 +31,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>, SemanticPathPart {
-	private final Enum enumValue;
-	private final EnumJavaTypeDescriptor<Enum> referencedEnumTypeDescriptor;
+public class SqmEnumLiteral<E extends Enum<E>> implements SqmExpression<E>, SqmExpressable<E>, SemanticPathPart {
+	private final E enumValue;
+	private final EnumJavaTypeDescriptor<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
 	private final NodeBuilder nodeBuilder;
 
-	private SqmExpressable<Enum> expressable;
+	private SqmExpressable<E> expressable;
 
 	public SqmEnumLiteral(
-			Enum enumValue,
-			EnumJavaTypeDescriptor<Enum> referencedEnumTypeDescriptor,
+			E enumValue,
+			EnumJavaTypeDescriptor<E> referencedEnumTypeDescriptor,
 			String enumValueName,
 			NodeBuilder nodeBuilder) {
 		this.enumValue = enumValue;
@@ -61,7 +61,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	}
 
 	@Override
-	public EnumJavaTypeDescriptor<Enum> getExpressableJavaTypeDescriptor() {
+	public EnumJavaTypeDescriptor<E> getExpressableJavaTypeDescriptor() {
 		return referencedEnumTypeDescriptor;
 	}
 
@@ -100,7 +100,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	}
 
 	@Override
-	public SqmExpressable<Enum> getNodeType() {
+	public SqmExpressable<E> getNodeType() {
 		return expressable;
 	}
 
@@ -186,7 +186,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	}
 
 	@Override
-	public JavaTypeDescriptor<Enum> getJavaTypeDescriptor() {
+	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
 		return getExpressableJavaTypeDescriptor();
 	}
 
@@ -207,7 +207,7 @@ public class SqmEnumLiteral implements SqmExpression<Enum>, SqmExpressable<Enum>
 	}
 
 	@Override
-	public JpaSelection<Enum> alias(String name) {
+	public JpaSelection<E> alias(String name) {
 		return null;
 	}
 

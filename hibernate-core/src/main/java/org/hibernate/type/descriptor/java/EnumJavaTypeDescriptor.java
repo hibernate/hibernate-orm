@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescriptor<T> {
+public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
 	public EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );
@@ -46,7 +46,6 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T fromString(String string) {
 		return string == null ? null : (T) Enum.valueOf( getJavaType(), string );
 	}
@@ -58,7 +57,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 			return (X) toName( value );
 		}
 		else if ( Integer.class.equals( type ) ) {
-			return (X) toOrdinal( value );
+			return (X) toInteger( value );
 		}
 		else if ( Byte.class.equals( type ) ) {
 			return (X) toByte( value );
@@ -76,7 +75,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 			return fromName( (String) value );
 		}
 		else if ( value instanceof Integer ) {
-			return fromOrdinal( (Integer) value );
+			return fromInteger( (Integer) value );
 		}
 		else if ( value instanceof Byte ) {
 			return fromByte( (Byte) value );
@@ -88,7 +87,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	/**
 	 * Convert a value of the enum type to its ordinal value
 	 */
-	public <E extends Enum> Byte toByte(E domainForm) {
+	public Byte toByte(T domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
@@ -98,7 +97,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	/**
 	 * Convert a value of the enum type to its ordinal value
 	 */
-	public <E extends Enum> Integer toOrdinal(E domainForm) {
+	public Integer toInteger(T domainForm) {
 		if ( domainForm == null ) {
 			return null;
 		}
@@ -106,25 +105,37 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	}
 
 	/**
-	 * Interpret a numeric value as the ordinal of the enum type
+	 * Convert a value of the enum type to its ordinal value
 	 */
-	@SuppressWarnings("unchecked")
-	public <E extends Enum> E fromByte(Byte relationalForm) {
-		if ( relationalForm == null ) {
-			return null;
-		}
-		return (E) getJavaType().getEnumConstants()[ relationalForm ];
+	public Integer toOrdinal(T domainForm) {
+		return toInteger( domainForm );
 	}
 
 	/**
 	 * Interpret a numeric value as the ordinal of the enum type
 	 */
-	@SuppressWarnings("unchecked")
-	public <E extends Enum> E fromOrdinal(Integer relationalForm) {
+	public T fromByte(Byte relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return (E) getJavaType().getEnumConstants()[ relationalForm ];
+		return getJavaType().getEnumConstants()[ relationalForm ];
+	}
+
+	/**
+	 * Interpret a numeric value as the ordinal of the enum type
+	 */
+	public T fromInteger(Integer relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+		return getJavaType().getEnumConstants()[ relationalForm ];
+	}
+
+	/**
+	 * Interpret a numeric value as the ordinal of the enum type
+	 */
+	public T fromOrdinal(Integer relationalForm) {
+		return fromInteger( relationalForm );
 	}
 
 	/**
@@ -140,12 +151,11 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 	/**
 	 * Interpret a String value as the named value of the enum type
 	 */
-	@SuppressWarnings("unchecked")
 	public T fromName(String relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
-		return (T) Enum.valueOf( getJavaType(), relationalForm.trim() );
+		return Enum.valueOf( getJavaType(), relationalForm.trim() );
 	}
 
 	@Override
@@ -157,7 +167,7 @@ public class EnumJavaTypeDescriptor<T extends Enum> extends AbstractTypeDescript
 		}
 		else if (sqlTypeDescriptor instanceof VarcharTypeDescriptor) {
 			StringBuilder types = new StringBuilder();
-			for ( Enum value : getJavaType().getEnumConstants() ) {
+			for ( Enum<T> value : getJavaType().getEnumConstants() ) {
 				if (types.length() != 0) {
 					types.append(", ");
 				}

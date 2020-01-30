@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class NamedEnumValueConverter<E extends Enum> implements EnumValueConverter<E,String>, Serializable {
+public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
 	private final EnumJavaTypeDescriptor<E> domainTypeDescriptor;
 	private final SqlTypeDescriptor sqlTypeDescriptor;
 	private final JavaTypeDescriptor<String> relationalTypeDescriptor;
@@ -74,9 +74,9 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public String toSqlLiteral(Object value) {
-		return String.format( Locale.ROOT, "'%s'", ( (E) value ).name() );
+		//noinspection rawtypes
+		return String.format( Locale.ROOT, "'%s'", ( (Enum) value ).name() );
 	}
 
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
@@ -89,7 +89,7 @@ public class NamedEnumValueConverter<E extends Enum> implements EnumValueConvert
 	@Override
 	public void writeValue(
 			PreparedStatement statement,
-			Enum value,
+			E value,
 			int position,
 			SharedSessionContractImplementor session) throws SQLException {
 		final String jdbcValue = value == null ? null : value.name();

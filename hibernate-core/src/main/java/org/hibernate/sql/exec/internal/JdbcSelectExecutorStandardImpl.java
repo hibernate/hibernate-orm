@@ -64,10 +64,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@Override
 	public <R> List<R> list(
-			JdbcSelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer) {
+		JdbcSelect jdbcSelect,
+		JdbcParameterBindings jdbcParameterBindings,
+		ExecutionContext executionContext,
+		RowTransformer<R> rowTransformer,
+		boolean uniqueFilter) {
 		return executeQuery(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -77,7 +78,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),
-				ListResultsConsumer.instance()
+				ListResultsConsumer.instance(uniqueFilter)
 		);
 	}
 

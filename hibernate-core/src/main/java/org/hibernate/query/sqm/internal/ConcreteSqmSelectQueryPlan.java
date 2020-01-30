@@ -166,7 +166,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					sqmInterpretation.getJdbcSelect(),
 					jdbcParameterBindings,
 					executionContext,
-					rowTransformer
+					rowTransformer,
+					true
 			);
 		}
 		finally {

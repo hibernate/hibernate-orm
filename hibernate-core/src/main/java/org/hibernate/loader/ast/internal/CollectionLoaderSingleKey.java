@@ -156,7 +156,8 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 						return null;
 					}
 				},
-				RowTransformerPassThruImpl.instance()
+				RowTransformerPassThruImpl.instance(),
+				true
 		);
 
 		return session.getPersistenceContext().getCollection( collectionKey );

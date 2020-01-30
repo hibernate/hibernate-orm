@@ -226,7 +226,8 @@ public class MatchingIdSelectionHelper {
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
 				executionContext,
-				row -> row
+				row -> row,
+				true
 		);
 	}
 }

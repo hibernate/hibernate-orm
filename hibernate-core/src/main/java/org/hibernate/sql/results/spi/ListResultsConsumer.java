@@ -24,11 +24,18 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	/**
 	 * Singleton access
 	 */
-	public static final ListResultsConsumer INSTANCE = new ListResultsConsumer();
+	private static final ListResultsConsumer UNIQUE_FILTER_INSTANCE = new ListResultsConsumer(true);
+	private static final ListResultsConsumer NORMAL_INSTANCE = new ListResultsConsumer(false);
 
 	@SuppressWarnings("unchecked")
-	public static <R> ListResultsConsumer<R> instance() {
-		return INSTANCE;
+	public static <R> ListResultsConsumer<R> instance(boolean uniqueFilter) {
+		return uniqueFilter ? UNIQUE_FILTER_INSTANCE : NORMAL_INSTANCE;
+	}
+
+	private final boolean uniqueFilter;
+
+	public ListResultsConsumer(boolean uniqueFilter) {
+		this.uniqueFilter = uniqueFilter;
 	}
 
 	@Override
@@ -44,7 +51,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			boolean uniqueRows = false;
 			final Class<R> resultJavaType = rowReader.getResultJavaType();
-			if ( resultJavaType != null && ! resultJavaType.isArray() ) {
+			if ( uniqueFilter && resultJavaType != null && ! resultJavaType.isArray() ) {
 				final EntityPersister entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor( resultJavaType );
 				if ( entityDescriptor != null ) {
 					uniqueRows = true;

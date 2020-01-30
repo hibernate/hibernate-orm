@@ -6,12 +6,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.EventType;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,6 +26,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-13831")
 public class EventListenerReplacementStrategyTest {
+
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	Tracker tracker = new Tracker();
 	ClearEvent event = new ClearEvent( null );
@@ -169,6 +175,16 @@ public class EventListenerReplacementStrategyTest {
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
 	}
 
+	@Test
+	public void testErrorStrategyOnAppend() {
+		thrown.expect( EventListenerRegistrationException.class );
+		thrown.expectMessage( "Duplicate event listener found" );
+
+		listenerGroup.addDuplicationStrategy( ErrorStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+	}
+
 	/**
 	 * Keep track of which listener is called and how many listeners are called.
 	 */
@@ -261,6 +277,22 @@ public class EventListenerReplacementStrategyTest {
 		@Override
 		public Action getAction() {
 			return Action.KEEP_ORIGINAL;
+		}
+	}
+
+	private static class ErrorStrategy implements DuplicationStrategy {
+
+		static final ErrorStrategy INSTANCE = new ErrorStrategy();
+
+		@Override
+		public boolean areMatch(Object listener, Object original) {
+			// We just want this to work for original and expected listener
+			return original instanceof OriginalListener && listener instanceof ExpectedListener;
+		}
+
+		@Override
+		public Action getAction() {
+			return Action.ERROR;
 		}
 	}
 }

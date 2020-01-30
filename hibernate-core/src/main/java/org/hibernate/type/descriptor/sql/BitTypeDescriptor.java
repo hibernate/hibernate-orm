@@ -12,11 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -45,6 +48,23 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	@Override
 	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Boolean.class );
+	}
+
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		if ( javaTypeDescriptor.getJavaType().equals(Boolean.class) ) {
+			//this is to allow literals to be formatted correctly when
+			//we are in the legacy Boolean-to-BIT JDBC type mapping mode
+			return new BasicJdbcLiteralFormatter( javaTypeDescriptor ) {
+				@Override
+				public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
+					Boolean bool = unwrap( value, Boolean.class, session );
+					return bool ? "1" : "0";
+				}
+			};
+		}
+		else {
+			return (value, dialect, session) -> value.toString();
+		}
 	}
 
 	@Override

@@ -136,6 +136,39 @@ public class EventListenerReplacementStrategyTest {
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
 	}
 
+	@Test
+	public void testListenersIteratorWithMultipleListenersAndKeepOriginalStrategy() {
+		listenerGroup.addDuplicationStrategy( KeepOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireLazyEventOnEachListenerWithMultipleListenersAndKeepOriginalStrategy() {
+		listenerGroup.addDuplicationStrategy( KeepOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
+	}
+
+	@Test
+	public void testFireEventOnEachListenerWithMultipleListenersAndKeepOriginalStrategy() {
+		listenerGroup.addDuplicationStrategy( KeepOriginalStrategy.INSTANCE );
+		listenerGroup.appendListener( new OriginalListener( tracker ) );
+		listenerGroup.appendListener( new ExpectedListener( tracker ) );
+		listenerGroup.appendListener( new ExtraListener( tracker ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
+
+		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
+	}
+
 	/**
 	 * Keep track of which listener is called and how many listeners are called.
 	 */
@@ -166,7 +199,6 @@ public class EventListenerReplacementStrategyTest {
 			tracker.calledBy( this.getClass() );
 		}
 	}
-
 
 	/**
 	 * The expected listener to be called if everything goes well
@@ -213,6 +245,22 @@ public class EventListenerReplacementStrategyTest {
 		@Override
 		public Action getAction() {
 			return Action.REPLACE_ORIGINAL;
+		}
+	}
+
+	private static class KeepOriginalStrategy implements DuplicationStrategy {
+
+		static final KeepOriginalStrategy INSTANCE = new KeepOriginalStrategy();
+
+		@Override
+		public boolean areMatch(Object listener, Object original) {
+			// We just want this to work for original and expected listener
+			return original instanceof OriginalListener && listener instanceof ExpectedListener;
+		}
+
+		@Override
+		public Action getAction() {
+			return Action.KEEP_ORIGINAL;
 		}
 	}
 }

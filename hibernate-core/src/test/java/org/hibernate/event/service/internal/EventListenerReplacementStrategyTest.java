@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestForIssue(jiraKey = "HHH-13831")
 public class EventListenerReplacementStrategyTest {
 
+	Tracker tracker = new Tracker();
+	ClearEvent event = new ClearEvent( null );
+	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null );
+
 	@Test
 	public void testListenersIterator() {
-		Tracker tracker = new Tracker();
-		ClearEvent event = new ClearEvent( null );
-		EventListenerRegistryImpl listenerRegistry = null;
-		EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, listenerRegistry );
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
@@ -45,10 +45,6 @@ public class EventListenerReplacementStrategyTest {
 
 	@Test
 	public void testFireLazyEventOnEachListener() {
-		Tracker tracker = new Tracker();
-		ClearEvent event = new ClearEvent( null );
-		EventListenerRegistryImpl listenerRegistry = null;
-		EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, listenerRegistry );
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.fireLazyEventOnEachListener( () -> event, ClearEventListener::onClear );
@@ -64,10 +60,6 @@ public class EventListenerReplacementStrategyTest {
 
 	@Test
 	public void testFireEventOnEachListener() {
-		Tracker tracker = new Tracker();
-		ClearEvent event = new ClearEvent( null );
-		EventListenerRegistryImpl listenerRegistry = null;
-		EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, listenerRegistry );
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );

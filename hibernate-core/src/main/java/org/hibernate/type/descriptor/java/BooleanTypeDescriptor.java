@@ -12,9 +12,6 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-
 /**
  * Descriptor for {@link Boolean} handling.
  *
@@ -93,13 +90,13 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> imple
 		}
 		if ( Number.class.isInstance( value ) ) {
 			final int intValue = ( (Number) value ).intValue();
-			return intValue == 0 ? FALSE : TRUE;
+			return intValue != 0;
 		}
 		if ( Character.class.isInstance( value ) ) {
-			return isTrue( (Character) value ) ? TRUE : FALSE;
+			return isTrue( (Character) value );
 		}
 		if ( String.class.isInstance( value ) ) {
-			return isTrue((String) value) ? TRUE : FALSE;
+			return isTrue((String) value);
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -142,7 +139,7 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> imple
 
 	@Override
 	public Boolean getDefaultValue() {
-		return FALSE;
+		return false;
 	}
 
 	@Override

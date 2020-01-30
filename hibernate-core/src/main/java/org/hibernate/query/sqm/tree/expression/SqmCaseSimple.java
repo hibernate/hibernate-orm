@@ -13,6 +13,7 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -52,13 +53,26 @@ public class SqmCaseSimple<T,R>
 	public void otherwise(SqmExpression<R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 
-		applyInferableType( otherwiseExpression.getNodeType() );
+		applyInferableResultType( otherwiseExpression.getNodeType() );
 	}
 
 	public void when(SqmExpression<T> test, SqmExpression<R> result) {
 		whenFragments.add( new WhenFragment<>( test, result ) );
 
-		applyInferableType( result.getNodeType() );
+		applyInferableResultType( result.getNodeType() );
+	}
+
+	private void applyInferableResultType(SqmExpressable<?> type) {
+		if ( type == null ) {
+			return;
+		}
+
+		final SqmExpressable<?> oldType = getNodeType();
+
+		final SqmExpressable<?> newType = QueryHelper.highestPrecedenceType2(oldType, type );
+		if ( newType != null && newType != oldType ) {
+			internalApplyInferableType( newType );
+		}
 	}
 
 	@Override

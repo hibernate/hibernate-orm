@@ -284,7 +284,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 	
 	private Collection<Table> readFromDatabase() {
-		return reader.readDatabaseSchema(new RevengMetadataCollector(metadataDialect));
+		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector(metadataDialect);
+		reader.readDatabaseSchema(revengMetadataCollector);
+		return revengMetadataCollector.getTables();
 	}
 
 }

@@ -1,7 +1,6 @@
 package org.hibernate.tool.internal.reveng.reader;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,7 +53,7 @@ public class DatabaseReader {
 		}
 	}
 	
-	public Collection<Table> readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
+	public void readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
 		try {
 			getMetaDataDialect().configure(provider);
 
@@ -70,10 +69,8 @@ public class DatabaseReader {
 				foundTables.putAll(tableCollector.processTables());
 			}
 
-			Iterator<Table> tables = foundTables.keySet().iterator(); // not dbs.iterateTables() to avoid "double-read" of
-																// columns etc.
-			while (tables.hasNext()) {
-				Table table = tables.next();
+		
+			for (Table table : foundTables.keySet()) {
 				BasicColumnProcessor.processBasicColumns(getMetaDataDialect(), revengStrategy, defaultSchema,
 						defaultCatalog, table);
 				PrimaryKeyProcessor.processPrimaryKey(getMetaDataDialect(), revengStrategy, defaultSchema,
@@ -83,12 +80,10 @@ public class DatabaseReader {
 				}
 			}
 
-			tables = foundTables.keySet().iterator(); // dbs.iterateTables();
-			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector, tables);
+			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector);
 
 			revengMetadataCollector.setOneToManyCandidates(oneToManyCandidates);
 
-			return foundTables.keySet();
 		} finally {
 			getMetaDataDialect().close();
 			revengStrategy.close();
@@ -104,10 +99,9 @@ public class DatabaseReader {
 	 * @param tables
 	 * @return
 	 */
-	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector, Iterator<Table> tables) {
+	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
-		while (tables.hasNext()) {
-			Table table = (Table) tables.next();
+		for (Table table : revengMetadataCollector.getTables()) {
 			// Done here after the basic process of collections as we might not have touched
 			// all referenced tables (this ensure the columns are the same instances
 			// througout the basic JDBC derived model.

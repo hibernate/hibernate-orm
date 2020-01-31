@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.ManyToOne;
@@ -26,6 +27,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -208,34 +210,77 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			return null;
 		}
 
-		final FetchParent associationParent = fetchParent.resolveContainingAssociationParent();
-		assert associationParent.getReferencedModePart() instanceof Association;
+		final FetchParent associationFetchParent = fetchParent.resolveContainingAssociationParent();
+		assert associationFetchParent.getReferencedModePart() instanceof Association;
 
-		final Association association = (Association) associationParent.getReferencedModePart();
+		final Association associationParent = (Association) associationFetchParent.getReferencedModePart();
 
-		if ( Arrays.equals( association.getIdentifyingColumnExpressions(), this.getIdentifyingColumnExpressions() ) ) {
+		if ( Arrays.equals( associationParent.getIdentifyingColumnExpressions(), this.getIdentifyingColumnExpressions() ) ) {
 			// we need to determine the NavigablePath referring to the entity that the bi-dir
 			// fetch will "return" for its Assembler.  so we walk "up" the FetchParent graph
 			// to find the "referenced entity" reference
 
-			final EntityResultGraphNode referencedEntityReference = resolveEntityGraphNode( fetchParent );
+			return createBiDirectionalFetch( fetchablePath, fetchParent );
+		}
 
-			if ( referencedEntityReference == null ) {
-				throw new HibernateException(
-						"Could not locate entity-valued reference for circular path `" + fetchablePath + "`"
-				);
+		// this is the case of a JoinTable
+		// 	PARENT(id)
+		// 	PARENT_CHILD(parent_id, child_id)
+		// 	CHILD(id)
+		// 	the FKDescriptor for the association `Parent.child` will be
+		//		PARENT_CHILD.child.id -> CHILD.id
+		// and the FKDescriptor for the association `Child.parent` will be
+		//		PARENT_CHILD.parent.id -> PARENT.id
+		// in such a case the associationParent.getIdentifyingColumnExpressions() is PARENT_CHILD.parent_id
+		// while the getIdentifyingColumnExpressions for this association is PARENT_CHILD.child_id
+		// so we will check if the parentAssociation ForeignKey Target match with the association entity identifier table and columns
+		final ForeignKeyDescriptor associationParentForeignKeyDescriptor = associationParent.getForeignKeyDescriptor();
+		if ( this.foreignKeyDescriptor.getReferringTableExpression().equals( associationParentForeignKeyDescriptor
+																				.getReferringTableExpression() ) ) {
+			final SingleTableEntityPersister entityPersister = (SingleTableEntityPersister) getDeclaringType();
+			if ( associationParentForeignKeyDescriptor.getTargetTableExpression()
+					.equals( entityPersister.getTableName() ) ) {
+				final String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
+				return associationParentForeignKeyDescriptor.visitColumnMapping( (referringTable, referringColumns, targetTable, targetColumns, jdbcMapping) -> {
+//					if ( identifierColumnNames.length == targetColumns.size() ) {
+//						for ( int i = 0; i < identifierColumnNames.length; i++ ) {
+//							if ( !targetColumns.contains( identifierColumnNames[i] ) ) {
+//								return null;
+//							}
+//						}
+					if ( identifierColumnNames.length > 1 ) {
+						throw new NotYetImplementedFor6Exception(
+								"Support for composite foreign -keys not yet 	implemented" );
+					}
+					if ( targetColumns.equals( identifierColumnNames[0] ) ) {
+						return createBiDirectionalFetch( fetchablePath, fetchParent );
+					}
+//					}
+					return null;
+				} );
 			}
 
-			return new BiDirectionalFetchImpl(
-					FetchTiming.IMMEDIATE,
-					fetchablePath,
-					fetchParent,
-					this,
-					referencedEntityReference.getNavigablePath()
-			);
 		}
 
 		return null;
+	}
+
+	private Fetch createBiDirectionalFetch(NavigablePath fetchablePath, FetchParent fetchParent) {
+		final EntityResultGraphNode referencedEntityReference = resolveEntityGraphNode( fetchParent );
+
+		if ( referencedEntityReference == null ) {
+			throw new HibernateException(
+					"Could not locate entity-valued reference for circular path `" + fetchablePath + "`"
+			);
+		}
+
+		return new BiDirectionalFetchImpl(
+				FetchTiming.IMMEDIATE,
+				fetchablePath,
+				fetchParent,
+				this,
+				referencedEntityReference.getNavigablePath()
+		);
 	}
 
 	protected EntityResultGraphNode resolveEntityGraphNode(FetchParent fetchParent) {

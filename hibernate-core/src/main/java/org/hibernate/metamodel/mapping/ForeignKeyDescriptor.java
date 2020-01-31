@@ -64,6 +64,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	void visitColumnMappings(FkColumnMappingConsumer consumer);
 
+	<T> T visitColumnMapping(FkColumnMappingFunction<T> function);
+
+	// todo (6.0): the 2 interfaces does not take into account composite keys, referringColumn
+	// 	and targetColumn should be collections
 	interface FkColumnMappingConsumer {
 		void consume(
 				String referringTable,
@@ -72,4 +76,14 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 				String targetColumn,
 				JdbcMapping jdbcMapping);
 	}
+
+	interface FkColumnMappingFunction<T> {
+		T apply(
+				String referringTable,
+				String referringColumn,
+				String targetTable,
+				String targetColumn,
+				JdbcMapping jdbcMapping);
+	}
+
 }

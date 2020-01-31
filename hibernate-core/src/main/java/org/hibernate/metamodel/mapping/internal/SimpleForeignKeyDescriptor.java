@@ -297,6 +297,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public <T> T visitColumnMapping(FkColumnMappingFunction<T> function) {
+		return function.apply(
+				keyColumnContainingTable,
+				keyColumnExpression ,
+				targetColumnContainingTable,
+				targetColumnExpression ,
+				jdbcMapping
+		);
+	}
+
+	@Override
 	public void visitColumnMappings(FkColumnMappingConsumer consumer) {
 		consumer.consume(
 				keyColumnContainingTable,

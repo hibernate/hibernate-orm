@@ -119,16 +119,6 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.url jdbc:sybase:Tds:co3061835-a:5000/tempdb
 
 
-## Mckoi SQL
-
-#hibernate.dialect org.hibernate.dialect.MckoiDialect
-#hibernate.connection.driver_class com.mckoi.JDBCDriver
-#hibernate.connection.url jdbc:mckoi:///
-#hibernate.connection.url jdbc:mckoi:local://C:/mckoi1.00/db.conf
-#hibernate.connection.username admin
-#hibernate.connection.password nimda
-
-
 ## SAP DB
 
 #hibernate.dialect org.hibernate.dialect.SAPDBDialect

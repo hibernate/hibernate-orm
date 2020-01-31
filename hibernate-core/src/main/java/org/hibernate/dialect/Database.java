@@ -296,21 +296,6 @@ public enum Database {
 		}
 	},
 
-	MCKOI {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MckoiDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("mckoi");
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.mckoi.JDBCDriver";
-		}
-	},
-
 	MIMER {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

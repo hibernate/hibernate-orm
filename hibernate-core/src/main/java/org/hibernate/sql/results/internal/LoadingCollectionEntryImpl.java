@@ -7,7 +7,11 @@
 package org.hibernate.sql.results.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
+import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -28,6 +32,8 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	private final CollectionInitializer initializer;
 	private final Object key;
 	private final PersistentCollection collectionInstance;
+
+	private List loadingState;
 
 	public LoadingCollectionEntryImpl(
 			CollectionPersister collectionDescriptor,
@@ -64,12 +70,21 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	}
 
 	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "(" + getCollectionDescriptor().getNavigableRole().getFullPath() + "#" + getKey() + ")";
+	public void load(Consumer<List> loadingEntryConsumer) {
+		if ( loadingState == null ) {
+			loadingState = new ArrayList();
+		}
+		loadingEntryConsumer.accept( loadingState );
 	}
 
 	@Override public void finishLoading(ExecutionContext executionContext) {
+		collectionInstance.injectLoadedState(
+				getCollectionDescriptor().getAttributeMapping(),
+				loadingState
+		);
+
 		collectionInstance.endRead();
+
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -96,5 +111,10 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + getCollectionDescriptor().getNavigableRole().getFullPath() + "#" + getKey() + ")";
 	}
 }

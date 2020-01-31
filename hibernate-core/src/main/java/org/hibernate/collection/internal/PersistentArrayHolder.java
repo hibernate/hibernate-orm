@@ -12,14 +12,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -41,7 +41,6 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;
-	private transient java.util.List tempList;
 
 	/**
 	 * Constructs a PersistentCollection instance for holding an array.
@@ -130,6 +129,15 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return result;
 	}
 
+	@Override
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+		assert isInitializing();
+		array = Array.newInstance( elementClass, loadingState.size() );
+		for ( int i = 0; i < loadingState.size(); i++ ) {
+			Array.set( array, i, loadingState.get( i ) );
+		}
+	}
+
 	@SuppressWarnings("UnusedDeclaration")
 	public Object getArray() {
 		return array;
@@ -177,32 +185,6 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert elementAssembler != null;
-		assert indexAssembler != null;
-		assert identifierAssembler == null;
-
-		final Object element = elementAssembler.assemble( rowProcessingState );
-		final int index = (int) indexAssembler.assemble( rowProcessingState );
-
-		for ( int i = tempList.size(); i<=index; i++) {
-			//noinspection unchecked
-			tempList.add( i, null );
-		}
-
-		//noinspection unchecked
-		tempList.set( index, element );
-
-		return element;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator entries(CollectionPersister persister) {
 		return elements();
 	}
@@ -210,17 +192,11 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	public void beginRead() {
 		super.beginRead();
-		tempList = new ArrayList();
 	}
 
 	@Override
 	public boolean endRead() {
 		setInitialized();
-		array = Array.newInstance( elementClass, tempList.size() );
-		for ( int i=0; i<tempList.size(); i++ ) {
-			Array.set( array, i, tempList.get( i ) );
-		}
-		tempList = null;
 		return true;
 	}
 
@@ -319,15 +295,5 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	public boolean entryExists(Object entry, int i) {
 		return entry != null;
-	}
-
-	public void load(int index, Object element) {
-		assert isInitializing();
-
-		for ( int i = tempList.size(); i <= index; ++i ) {
-			tempList.add( i, null );
-		}
-
-		tempList.set( index, element );
 	}
 }

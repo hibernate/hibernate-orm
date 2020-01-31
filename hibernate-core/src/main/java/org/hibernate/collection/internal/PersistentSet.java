@@ -17,6 +17,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -32,7 +33,6 @@ import org.hibernate.type.Type;
  */
 public class PersistentSet extends AbstractPersistentCollection implements java.util.Set {
 	protected Set set;
-	protected transient List tempList;
 
 	/**
 	 * Empty constructor.
@@ -139,12 +139,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
 		this.set = (Set) persister.getCollectionType().instantiate( anticipatedSize );
-	}
-
-	@SuppressWarnings("unchecked")
-	public void load(Object element) {
-		assert isInitializing();
-		tempList.add( element );
 	}
 
 	@Override
@@ -312,7 +306,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void clear() {
 		if ( isClearQueueEnabled() ) {
 			queueOperation( new Clear() );
@@ -327,51 +320,25 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public String toString() {
 		read();
 		return set.toString();
 	}
 
-	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert elementAssembler != null;
-		assert indexAssembler == null;
-		assert identifierAssembler == null;
+	public void injectLoadedState(
+			PluralAttributeMapping attributeMapping,
+			List loadingStateList) {
+		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
+				loadingStateList.size(),
+				collectionDescriptor
+		);
 
-		final Object element = elementAssembler.assemble( rowProcessingState );
-
-		if ( element != null ) {
-			//noinspection unchecked
-			tempList.add( element );
-		}
-
-		return element;
+		//noinspection unchecked
+		this.set.addAll( loadingStateList );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void beginRead() {
-		super.beginRead();
-		tempList = new ArrayList();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public boolean endRead() {
-		set.addAll( tempList );
-		tempList = null;
-		// ensure that operationQueue is considered
-		return super.endRead();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator entries(CollectionPersister persister) {
 		return set.iterator();
 	}

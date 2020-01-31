@@ -6,9 +6,12 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.internal.PersistentBag;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -42,16 +45,21 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void readCollectionRow(RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(
+			CollectionKey collectionKey,
+			List loadingState,
+			RowProcessingState rowProcessingState) {
 		if ( collectionIdAssembler != null ) {
-			( (PersistentIdentifierBag) getCollectionInstance() ).load(
-					collectionIdAssembler.assemble( rowProcessingState ),
-					elementAssembler.assemble( rowProcessingState )
-			);
+			final Object[] row = new Object[2];
+			row[0] = collectionIdAssembler.assemble( rowProcessingState );
+			row[1] = elementAssembler.assemble( rowProcessingState );
+
+			//noinspection unchecked
+			loadingState.add( row );
 		}
 		else {
-			( (PersistentBag) getCollectionInstance() ).load( elementAssembler.assemble( rowProcessingState ) );
+			//noinspection unchecked
+			loadingState.add( elementAssembler.assemble( rowProcessingState ) );
 		}
 	}
 

@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -49,13 +52,23 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void readCollectionRow(RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(
+			CollectionKey collectionKey,
+			List loadingState,
+			RowProcessingState rowProcessingState) {
 		int index = (int) listIndexAssembler.assemble( rowProcessingState );
-		getCollectionAttributeMapping().getIndexMetadata().getIndexDescriptor();
+
 		if ( listIndexBase != 0 ) {
 			index -= listIndexBase;
 		}
-		getCollectionInstance().load( index, elementAssembler.assemble( rowProcessingState ) );
+
+		for ( int i = loadingState.size(); i <= index; ++i ) {
+			//noinspection unchecked
+			loadingState.add( i, null );
+		}
+
+		//noinspection unchecked
+		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
 	}
 
 	@Override

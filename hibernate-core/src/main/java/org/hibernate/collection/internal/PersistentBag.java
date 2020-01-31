@@ -19,6 +19,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -36,7 +37,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	protected List bag;
 
-	// The Collection provided to a PersistentBag constructor,
+	/**
+	 * The Collection provided to a PersistentBag constructor
+	 */
 	private Collection providedCollection;
 
 	/**
@@ -121,22 +124,15 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return bag.iterator();
 	}
 
-	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert indexAssembler == null;
-		assert identifierAssembler == null;
+	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingState) {
+		assert isInitializing();
+		assert bag != null;
+		assert bag.isEmpty();
 
-		final Object element = elementAssembler.assemble( rowProcessingState );
-		if ( element != null ) {
-			//noinspection unchecked
-			bag.add( element );
+		for ( int i = 0; i < loadingState.size(); i++ ) {
+			//noinspection unchecked,UseBulkOperation
+			bag.add( loadingState.get( i ) );
 		}
-		return element;
 	}
 
 	@Override
@@ -643,11 +639,6 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	@Override
 	public int hashCode() {
 		return super.hashCode();
-	}
-
-	public void load(Object element) {
-		assert isInitializing();
-		bag.add( element );
 	}
 
 	final class Clear implements DelayedOperation {

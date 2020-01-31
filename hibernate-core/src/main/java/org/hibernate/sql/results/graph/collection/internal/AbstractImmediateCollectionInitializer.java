@@ -6,24 +6,24 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -41,8 +41,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 	// per-row state
 	private PersistentCollection collectionInstance;
+	private LoadingCollectionEntryImpl responsibility;
 	private boolean responsible;
-	private boolean collectionEmpty = true;
 
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
@@ -110,7 +110,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 			if ( existingLoadingEntry.getInitializer() == this ) {
 				// we are responsible for loading the collection values
-				responsible = true;
+				responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
 			}
 			else {
 				// the entity is already being loaded elsewhere
@@ -215,7 +215,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			takeResponsibility( rowProcessingState, collectionKey );
 		}
 
-		if ( responsible ) {
+		if ( responsibility != null ) {
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Responsible for loading collection [%s] : %s",
@@ -238,32 +238,31 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	}
 
 	protected void takeResponsibility(RowProcessingState rowProcessingState, CollectionKey collectionKey) {
+		responsibility = new LoadingCollectionEntryImpl(
+				getCollectionAttributeMapping().getCollectionDescriptor(),
+				this,
+				collectionKey.getKey(),
+				collectionInstance
+		);
 		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingCollection(
 				collectionKey,
-				new LoadingCollectionEntryImpl(
-						getCollectionAttributeMapping().getCollectionDescriptor(),
-						this,
-						collectionKey.getKey(),
-						collectionInstance
-				)
+				responsibility
 		);
-		responsible = true;
 	}
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( !responsible ) {
+		if ( responsibility == null ) {
 			return;
 		}
 
-		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
-
 		// the LHS key value of the association
 		final CollectionKey collectionKey = resolveCollectionKey( rowProcessingState );
-		// the RHS key value of the association
-		final Object keyCollectionValue = getKeyCollectionValue();
 
-		if ( keyCollectionValue != null ) {
+		// the RHS key value of the association - determines if the row contains an element of the initializing collection
+		final Object collectionValueKey = getKeyCollectionValue();
+
+		if ( collectionValueKey != null ) {
 			// the row contains an element in the collection...
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
@@ -274,45 +273,20 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 
-			readCollectionRow( rowProcessingState );
-			collectionEmpty = false;
+			responsibility.load(
+					loadingState -> readCollectionRow( collectionKey, loadingState, rowProcessingState )
+			);
 		}
 	}
 
-	protected abstract void readCollectionRow(RowProcessingState rowProcessingState);
+	protected abstract void readCollectionRow(CollectionKey collectionKey, List loadingState, RowProcessingState rowProcessingState);
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		super.finishUpRow( rowProcessingState );
 
 		collectionInstance = null;
-		responsible = false;
-		collectionEmpty = true;
+		responsibility = null;
 	}
 
-	@Override
-	public void endLoading(ExecutionContext context) {
-		if ( getParentAccess() == null && collectionEmpty ) {
-			// collection is empty; handle special logic here.
-			final CollectionKey collectionKey = context.getCollectionKey();
-			if ( collectionKey != null ) {
-				// We expected to load a collection with this collection key but we found the collection
-				// contained no results, therefore we need to do the collection init phase here because
-				// the LoadingCollectionEntry won't finalize this for us without at least one row.
-				final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
-				final PersistentCollection collection = persistenceContext.getCollection( collectionKey );
-
-				if ( ! collection.isInitializing() ) {
-					collection.beforeInitialize( getCollectionAttributeMapping().getCollectionDescriptor(), 0 );
-					collection.beginRead();
-					collection.endRead();
-
-					final CollectionEntry entry = persistenceContext.getCollectionEntry( collection );
-					if ( entry != null ) {
-						entry.postInitialize( collection );
-					}
-				}
-			}
-		}
-	}
 }

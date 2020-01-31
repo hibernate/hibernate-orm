@@ -6,13 +6,28 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
+ * Descriptor for {@link Duration}, which is represented internally
+ * as ({@code long seconds}, {@code int nanoseconds}), approximately
+ * 28 decimal digits of precision. This quantity must be stored in
+ * the database as a single integer with units of nanoseconds, since
+ * the ANSI SQL {@code interval} type is not well-supported.
+ *
+ * In practice, the 19 decimal digits of a SQL {@code bigint} are
+ * capable of representing six centuries in nanoseconds and are
+ * sufficient for many applications. However, by default, we map
+ * Java {@link Duration} to SQL {@code numeric(21)} here, which
+ * can comfortably represent 60 millenia of nanos.
+ *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 	/**
@@ -30,7 +45,10 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 		if ( value == null ) {
 			return null;
 		}
-		return String.valueOf( value.toNanos() );
+		String seconds = String.valueOf( value.getSeconds() );
+		String nanos = String.valueOf( value.getNano() );
+		String zeros = StringHelper.repeat( '0', 9-nanos.length() );
+		return seconds + zeros + nanos;
 	}
 
 	@Override
@@ -38,7 +56,11 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 		if ( string == null ) {
 			return null;
 		}
-		return Duration.ofNanos( Long.parseLong( string ) );
+		int cutoff = string.length() - 9;
+		return Duration.ofSeconds(
+				Long.parseLong( string.substring( 0, cutoff ) ),
+				Long.parseLong( string.substring( cutoff ) )
+		);
 	}
 
 	@Override
@@ -50,6 +72,11 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 
 		if ( Duration.class.isAssignableFrom( type ) ) {
 			return (X) duration;
+		}
+
+		if ( BigDecimal.class.isAssignableFrom( type ) ) {
+			return (X) new BigDecimal( duration.getSeconds() ).movePointRight(9)
+					.add( new BigDecimal( duration.getNano() ) );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -71,6 +98,19 @@ public class DurationJavaDescriptor extends AbstractTypeDescriptor<Duration> {
 
 		if ( Duration.class.isInstance( value ) ) {
 			return (Duration) value;
+		}
+
+		if ( BigDecimal.class.isInstance( value ) ) {
+			BigDecimal[] secondsAndNanos =
+					((BigDecimal) value).divideAndRemainder( BigDecimal.ONE.movePointRight(9) );
+			return Duration.ofSeconds(
+					secondsAndNanos[0].longValueExact(),
+					// use intValue() not intValueExact() here, because
+					// the database will sometimes produce garbage digits
+					// in a floating point multiplication, and we would
+					// get an unwanted ArithmeticException
+					secondsAndNanos[1].intValue()
+			);
 		}
 
 		if ( Long.class.isInstance( value ) ) {

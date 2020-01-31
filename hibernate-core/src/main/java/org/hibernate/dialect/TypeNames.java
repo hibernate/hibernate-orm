@@ -13,51 +13,72 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * This class maps a type to names.  Associations may be marked with a capacity. Calling the get()
- * method with a type and actual size n will return  the associated name with smallest capacity >= n,
- * if available and an unmarked default type otherwise.
- * Eg, setting
+ * This class maps {@link java.sql.Types JDBC type codes} to SQL type names for
+ * a {@link Dialect dialect} of SQL. An association between a type code and a
+ * SQL type name may be {@link #put(int, long, String) registered} with a capacity,
+ * that is, with the maximum size that the given SQL type can accommodate.
+ *
+ * When a type association is {@link #get(int, Long, Integer, Integer)} retrieved}
+ * for a given type code and actual size n, {@code get()} will return the associated
+ * type name with smallest capacity greater than or equal to n, if available, or an
+ * unmarked default type otherwise.
+ *
+ * For example, setting
+ *
  * <pre>
  *	names.put( type,        "TEXT" );
  *	names.put( type,   255, "VARCHAR($l)" );
  *	names.put( type, 65534, "LONGVARCHAR($l)" );
  * </pre>
+ *
  * will give you back the following:
+ *
  * <pre>
  *  names.get( type )         // --> "TEXT" (default)
  *  names.get( type,    100 ) // --> "VARCHAR(100)" (100 is in [0:255])
  *  names.get( type,   1000 ) // --> "LONGVARCHAR(1000)" (1000 is in [256:65534])
  *  names.get( type, 100000 ) // --> "TEXT" (default)
  * </pre>
+ *
  * On the other hand, simply putting
+ *
  * <pre>
  *	names.put( type, "VARCHAR($l)" );
  * </pre>
+ *
  * would result in
+ *
  * <pre>
  *  names.get( type )        // --> "VARCHAR($l)" (will cause trouble)
  *  names.get( type, 100 )   // --> "VARCHAR(100)"
  *  names.get( type, 10000 ) // --> "VARCHAR(10000)"
  * </pre>
  *
+ * Registered type names may contain the placemarkers {@code $l}, {@code $p},
+ * and {@code $s}, which will be replaced by the length, precision, and size
+ * passed to {@link #get(int, Long, Integer, Integer)}.
+ *
  * @author Christoph Beck
  */
 public final class TypeNames {
 	/**
-	 * Holds default type mappings for a typeCode.  This is the non-sized mapping
+	 * Holds default type mappings for a JDBC type code. These are the mappings
+	 * with no specified maximum size.
 	 */
 	private final Map<Integer, String> defaults = new HashMap<Integer, String>();
 
 	/**
-	 * Holds the weighted mappings for a typeCode.  The nested map is a TreeMap to sort its contents
-	 * based on the key (the weighting) to ensure proper iteration ordering during {@link #get(int, long, int, int)}
+	 * Holds mappings which are limited by a maximum size. The nested map is a
+	 * {@link TreeMap} with its mappings sorted by maximum size, ensuring proper
+	 * iteration ordering in {@link #get(int, Long, Integer, Integer)}
 	 */
 	private final Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
 
 	/**
-	 * get default type name for specified type
+	 * Get default type name for specified {@link java.sql.Types JDBC type code}.
+	 * Does not fill in any placemarkers.
 	 *
-	 * @param typeCode the type key
+	 * @param typeCode the JDBC type code
 	 *
 	 * @return the default type name associated with specified key, or
 	 *         null if there was no type name associated with the key
@@ -67,14 +88,17 @@ public final class TypeNames {
 	}
 
 	/**
-	 * get type name for specified type and size
+	 * Get the SQL type name for the specified {@link java.sql.Types JDBC type code}
+	 * and size, filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
+	 * with the given length, precision, and scale.
 	 *
-	 * @param typeCode the type key
-	 * @param size the SQL length
-	 * @param scale the SQL scale
-	 * @param precision the SQL precision
+	 * @param typeCode the JDBC type code
+	 * @param size the SQL length, if any
+	 * @param precision the SQL precision, if any
+	 * @param scale the SQL scale, if any
 	 *
-	 * @return the associated name with smallest capacity >= size, if available and the default type name otherwise
+	 * @return the associated name with smallest capacity >= size, if available and
+	 *         the default type name otherwise
 	 */
 	public String get(int typeCode, Long size, Integer precision, Integer scale) {
 		final Map<Long, String> map = weighted.get( typeCode );
@@ -93,21 +117,25 @@ public final class TypeNames {
 		return replace( get( typeCode ), size, precision, scale );
 	}
 
+	/**
+	 * Fill in the placemarkers with the given length, precision, and scale.
+	 */
 	private static String replace(String type, Long size, Integer precision, Integer scale) {
 		if ( scale != null ) {
-			type = StringHelper.replaceOnce( type, "$s", Integer.toString( scale ) );
+			type = StringHelper.replaceOnce( type, "$s", scale.toString() );
 		}
 		if ( size != null ) {
-			type = StringHelper.replaceOnce( type, "$l", Long.toString( size ) );
+			type = StringHelper.replaceOnce( type, "$l", size.toString() );
 		}
 		if ( precision != null ) {
-			type = StringHelper.replaceOnce( type, "$p", Integer.toString( precision ) );
+			type = StringHelper.replaceOnce( type, "$p", precision.toString() );
 		}
 		return type;
 	}
 
 	/**
-	 * Register a weighted typeCode mapping
+	 * Register a mapping from the given JDBC type code to the given SQL type name,
+	 * with a specified maximum size.
 	 *
 	 * @param typeCode the JDBC type code
 	 * @param capacity The capacity for this weighting
@@ -119,9 +147,10 @@ public final class TypeNames {
 	}
 
 	/**
-	 * Register a default (non-weighted) typeCode mapping
+	 * Register a mapping from the given JDBC type code to the given SQL type name,
+	 * with no specified maximum size.
 	 *
-	 * @param typeCode the type key
+	 * @param typeCode the JDBC type code
 	 * @param value The mapping (type name)
 	 */
 	public void put(int typeCode, String value) {

@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -17,6 +18,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +34,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final String name;
 	private final FunctionRenderingSupport renderingSupport;
 	private final List<SqmTypedNode<?>> arguments;
+	private AllowableFunctionReturnType<?> resultType;
 
 	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
@@ -71,12 +74,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-		AllowableFunctionReturnType<?> resultType =
-				returnTypeResolver.resolveFunctionReturnType(
-						impliedResultType,
-						getArguments(),
-						walker.getCreationContext().getDomainModel().getTypeConfiguration()
-				);
+		resolveResultType( walker.getCreationContext().getDomainModel().getTypeConfiguration() );
 
 		return new SelfRenderingFunctionSqlAstExpression(
 				getRenderingSupport(),
@@ -84,6 +82,26 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				resultType,
 				getMappingModelExpressable( walker, resultType )
 		);
+	}
+
+	public SqmExpressable<T> getNodeType() {
+		SqmExpressable<T> nodeType = super.getNodeType();
+		if ( nodeType == null ) {
+			resolveResultType( nodeBuilder().getTypeConfiguration() );
+		}
+
+		return nodeType;
+	}
+
+	private void resolveResultType(TypeConfiguration typeConfiguration) {
+		if ( resultType == null ) {
+			resultType = returnTypeResolver.resolveFunctionReturnType(
+				impliedResultType,
+				getArguments(),
+				typeConfiguration
+			);
+			setExpressableType( resultType );
+		}
 	}
 
 	private MappingModelExpressable<?> getMappingModelExpressable(

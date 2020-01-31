@@ -60,10 +60,6 @@ public class RevengMetadataCollector {
 		return tables.get(tableIdentifier);
 	}
 
-	public Table getTable(String schema, String catalog, String name) {
-		return tables.get(createIdentifier(catalog, schema, name));
-	}
-	
 	public Collection<Table> getTables() {
 		return tables.values();
 	}
@@ -84,10 +80,6 @@ public class RevengMetadataCollector {
 		suggestedIdentifierStrategies.put(TableIdentifier.create(catalog, schema, name), idstrategy);
 	}
 	
-	private TableIdentifier createIdentifier(String catalog, String schema, String table) {
-		return TableIdentifier.create(quote(catalog), quote(schema), quote(table));
-	}
-	
 	private Table createTable(String catalog, String schema, String name) {
 		Table table = new Table();
 		table.setAbstract(false);
@@ -97,18 +89,4 @@ public class RevengMetadataCollector {
 		return table;
 	}
 	
-	private String quote(String name) {
-		if (name == null)
-			return name;
-		if (metaDataDialect.needQuote(name)) {
-			if (name.length() > 1 && name.charAt(0) == '`'
-					&& name.charAt(name.length() - 1) == '`') {
-				return name; // avoid double quoting
-			}
-			return "`" + name + "`";
-		} else {
-			return name;
-		}
-	}
-
 }

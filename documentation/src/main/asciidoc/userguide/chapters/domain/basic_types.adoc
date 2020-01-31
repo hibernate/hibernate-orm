@@ -28,7 +28,7 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |TrueFalseType |CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |true_false
 |ByteType |TINYINT |byte, java.lang.Byte |byte, java.lang.Byte
 |ShortType |SMALLINT |short, java.lang.Short |short, java.lang.Short
-|IntegerTypes |INTEGER |int, java.lang.Integer |integer, int, java.lang.Integer
+|IntegerType |INTEGER |int, java.lang.Integer |integer, int, java.lang.Integer
 |LongType |BIGINT |long, java.lang.Long |long, java.lang.Long
 |FloatType |FLOAT |float, java.lang.Float |float, java.lang.Float
 |DoubleType |DOUBLE |double, java.lang.Double |double, java.lang.Double

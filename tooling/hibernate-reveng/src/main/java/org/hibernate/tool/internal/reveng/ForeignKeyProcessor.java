@@ -21,14 +21,41 @@ import org.jboss.logging.Logger;
 public class ForeignKeyProcessor {
 
 	private static final Logger log = Logger.getLogger(ForeignKeyProcessor.class);
-
-	public static ForeignKeysInfo processForeignKeys(
+	
+	public static ForeignKeyProcessor create(
 			MetaDataDialect metaDataDialect,
-			ReverseEngineeringStrategy revengStrategy, 
-			String  defaultSchema, 
-			String defaultCatalog, 
-			RevengMetadataCollector revengMetadataCollector, 
-			Table referencedTable) {
+			ReverseEngineeringStrategy revengStrategy,
+			String defaultCatalog,
+			String defaultSchema,
+			RevengMetadataCollector revengMetadataCollector) {
+		return new ForeignKeyProcessor(
+				metaDataDialect,
+				revengStrategy,
+				defaultCatalog,
+				defaultSchema,
+				revengMetadataCollector);
+	}
+	
+	private final MetaDataDialect metaDataDialect;
+	private final ReverseEngineeringStrategy revengStrategy;
+	private final String defaultSchema;
+	private final String defaultCatalog;
+	private final RevengMetadataCollector revengMetadataCollector;
+	
+	private ForeignKeyProcessor(
+			MetaDataDialect metaDataDialect,
+			ReverseEngineeringStrategy revengStrategy,
+			String defaultCatalog,
+			String defaultSchema,
+			RevengMetadataCollector revengMetadataCollector) {
+		this.metaDataDialect = metaDataDialect;
+		this.revengStrategy = revengStrategy;
+		this.defaultCatalog = defaultCatalog;
+		this.defaultSchema = defaultSchema;
+		this.revengMetadataCollector = revengMetadataCollector;
+	}
+
+	public ForeignKeysInfo processForeignKeys(Table referencedTable) {
 		// foreign key name to list of columns
 		Map<String, List<Column>> dependentColumns = new HashMap<String, List<Column>>();
 		// foreign key name to Table

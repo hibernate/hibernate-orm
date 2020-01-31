@@ -101,6 +101,12 @@ public class DatabaseReader {
 	 */
 	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
+		ForeignKeyProcessor foreignKeyProcessor = ForeignKeyProcessor.create(
+				getMetaDataDialect(), 
+				revengStrategy, 
+				defaultCatalog, 
+				defaultSchema, 
+				revengMetadataCollector);
 		for (Table table : revengMetadataCollector.getTables()) {
 			// Done here after the basic process of collections as we might not have touched
 			// all referenced tables (this ensure the columns are the same instances
@@ -108,8 +114,7 @@ public class DatabaseReader {
 			// after this stage it should be "ok" to divert from keeping columns in sync as
 			// it can be required if the same
 			// column is used with different aliases in the ORM mapping.
-			ForeignKeysInfo foreignKeys = ForeignKeyProcessor.processForeignKeys(getMetaDataDialect(), revengStrategy,
-					defaultSchema, defaultCatalog, revengMetadataCollector, table);
+			ForeignKeysInfo foreignKeys = foreignKeyProcessor.processForeignKeys(table);
 			fks.add(foreignKeys);
 		}
 

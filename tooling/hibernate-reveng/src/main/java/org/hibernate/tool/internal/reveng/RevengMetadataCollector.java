@@ -19,15 +19,13 @@ public class RevengMetadataCollector {
 	private final Map<TableIdentifier, Table> tables;
 	private Map<String, List<ForeignKey>> oneToManyCandidates;
 	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
-	private final  MetaDataDialect metaDataDialect;
-	
+
 	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
 		this(metaDataDialect);
 		this.metadataCollector = metadataCollector;
 	}
 	
 	public RevengMetadataCollector(MetaDataDialect metaDataDialect) {
-		this.metaDataDialect = metaDataDialect;
 		this.tables = new HashMap<TableIdentifier, Table>();
 		this.suggestedIdentifierStrategies = new HashMap<TableIdentifier, String>();
 	}

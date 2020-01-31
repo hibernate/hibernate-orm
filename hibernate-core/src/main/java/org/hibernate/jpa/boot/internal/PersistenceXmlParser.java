@@ -50,6 +50,7 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
  * @author Steve Ebersole
  */
 public class PersistenceXmlParser {
+
 	private static final EntityManagerMessageLogger LOG = messageLogger( PersistenceXmlParser.class );
 
 	/**
@@ -214,10 +215,14 @@ public class PersistenceXmlParser {
 	private final PersistenceUnitTransactionType defaultTransactionType;
 	private final Map<String, ParsedPersistenceXmlDescriptor> persistenceUnits;
 
-	private PersistenceXmlParser(ClassLoaderService classLoaderService, PersistenceUnitTransactionType defaultTransactionType) {
+	protected PersistenceXmlParser(ClassLoaderService classLoaderService, PersistenceUnitTransactionType defaultTransactionType) {
 		this.classLoaderService = classLoaderService;
 		this.defaultTransactionType = defaultTransactionType;
 		this.persistenceUnits = new ConcurrentHashMap<>();
+	}
+
+	protected List<ParsedPersistenceXmlDescriptor> getResolvedPersistenceUnits() {
+		return new ArrayList<>(persistenceUnits.values());
 	}
 
 	private void doResolve(Map integration) {
@@ -236,8 +241,10 @@ public class PersistenceXmlParser {
 		}
 	}
 
-	private void parsePersistenceXml(URL xmlUrl, Map integration) {
-		LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
+	protected void parsePersistenceXml(URL xmlUrl, Map integration) {
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
+		}
 
 		final Document doc = loadUrl( xmlUrl );
 		final Element top = doc.getDocumentElement();

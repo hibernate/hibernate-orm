@@ -182,15 +182,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void deprecatedForceDescriminatorAnnotation();
 
 	@LogMessage(level = WARN)
-	@Message(value = "The Oracle9Dialect dialect has been deprecated; use either Oracle9iDialect or Oracle10gDialect instead",
-			id = 63)
-	void deprecatedOracle9Dialect();
-
-	@LogMessage(level = WARN)
-	@Message(value = "The OracleDialect dialect has been deprecated; use Oracle8iDialect instead", id = 64)
-	void deprecatedOracleDialect();
-
-	@LogMessage(level = WARN)
 	@Message(value = "DEPRECATED : use [%s] instead with custom [%s] implementation", id = 65)
 	void deprecatedUuidGenerator(String name, String name2);
 
@@ -1520,15 +1511,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Setting entity-identifier value binding where one already existed : %s.", id = 429)
 	void entityIdentifierValueBindingExists(String name);
-
-	@LogMessage(level = WARN)
-	@Message(value = "The DerbyDialect dialect has been deprecated; use one of the version-specific dialects instead",
-			id = 430)
-	void deprecatedDerbyDialect();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Unable to determine H2 database version, certain features may not work", id = 431)
-	void undeterminedH2Version();
 
 	@LogMessage(level = WARN)
 	@Message(value = "There were not column names specified for index %s on table %s", id = 432)

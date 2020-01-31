@@ -83,6 +83,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.*;
 
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.type.descriptor.DateTimeUtils.*;
 
 /**
@@ -136,7 +137,7 @@ public abstract class Dialect implements ConversionContext {
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected Dialect() {
-		LOG.usingDialect( this );
+		logSelectedDialect();
 
 		registerColumnType( Types.BIT, 1, "bit" );
 		registerColumnType( Types.BIT, "bit($l)" );
@@ -223,6 +224,22 @@ public abstract class Dialect implements ConversionContext {
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		defaultSizeStrategy = new DefaultSizeStrategyImpl();
+	}
+
+	private void logSelectedDialect() {
+		LOG.usingDialect( this );
+
+		Class<? extends Dialect> dialect = getClass();
+		if ( dialect.isAnnotationPresent(Deprecated.class) ) {
+			Class<?> superDialect = dialect.getSuperclass();
+			if ( !superDialect.isAnnotationPresent(Deprecated.class)
+				&& !superDialect.equals(Dialect.class) ) {
+				DEPRECATION_LOGGER.deprecatedDialect( dialect.getSimpleName(), superDialect.getName() );
+			}
+			else {
+				DEPRECATION_LOGGER.deprecatedDialect( dialect.getSimpleName() );
+			}
+		}
 	}
 
 	/**

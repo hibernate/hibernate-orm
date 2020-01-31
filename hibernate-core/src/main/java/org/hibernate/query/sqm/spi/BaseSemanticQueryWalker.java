@@ -564,7 +564,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return expression;
 	}
 
-	public Object visitByUnit(SqmByUnit byUnit) { return byUnit; }
+	public Object visitByUnit(SqmByUnit byUnit) {
+		return byUnit;
+	}
 
 	@Override
 	public Object visitDurationUnit(SqmDurationUnit durationUnit) {

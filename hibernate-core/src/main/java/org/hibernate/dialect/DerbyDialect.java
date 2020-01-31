@@ -115,6 +115,7 @@ public class DerbyDialect extends Dialect {
 				: new DerbyLimitHandler( getVersion() >= 1060 );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+		getDefaultProperties().setProperty( Environment.CRITERIA_LITERAL_HANDLING_MODE, "literal" );
 	}
 
 	public int getDefaultDecimalPrecision() {

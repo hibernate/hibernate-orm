@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.*;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
@@ -102,6 +103,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
+
+		getDefaultProperties().setProperty( Environment.CRITERIA_LITERAL_HANDLING_MODE, "literal" );
 	}
 
 	@Override

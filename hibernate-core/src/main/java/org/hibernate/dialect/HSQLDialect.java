@@ -112,6 +112,7 @@ public class HSQLDialect extends Dialect {
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( Environment.CRITERIA_LITERAL_HANDLING_MODE, "literal" );
 	}
 
 	private static int reflectedVersion(int version) {

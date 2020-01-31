@@ -70,6 +70,7 @@ public class MimerSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
+		getDefaultProperties().setProperty( Environment.CRITERIA_LITERAL_HANDLING_MODE, "literal" );
 	}
 
 	@Override

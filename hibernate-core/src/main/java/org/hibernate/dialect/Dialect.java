@@ -44,6 +44,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -56,6 +57,11 @@ import org.hibernate.query.TrimSpec;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.PhysicalIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
@@ -1573,7 +1579,18 @@ public abstract class Dialect implements ConversionContext {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping) {
+			if ( !supportsTuplesInSubqueries() ) {
+				return new InlineStrategy( this );
+			}
+		}
+		
+		return new PersistentTableStrategy(
+				new IdTable( entityDescriptor, name -> name ),
+				AfterUseAction.CLEAN,
+				PhysicalIdTableExporter::new,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

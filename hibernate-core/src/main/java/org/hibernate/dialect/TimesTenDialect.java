@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.*;
@@ -20,6 +19,10 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -216,28 +219,18 @@ public class TimesTenDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new GlobalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String generateIdTableName(String baseName) {
-//						final String name = super.generateIdTableName( baseName );
-//						return name.length() > 30 ? name.substring( 1, 30 ) : name;
-//					}
-//
-//					@Override
-//					public String getCreateIdTableCommand() {
-//						return "create global temporary table";
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						return "on commit delete rows";
-//					}
-//				},
-//				AfterUseAction.CLEAN
-//		);
+		return new GlobalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor,
+						name -> name.length() > 30 ? name.substring( 0, 30 ) : name ),
+				() -> new TempIdTableExporter( false, this::getTypeName ) {
+					@Override
+					protected String getCreateOptions() {
+						return "on commit delete rows";
+					}
+				},
+				AfterUseAction.CLEAN,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 	@Override

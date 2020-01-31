@@ -7,7 +7,10 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -15,21 +18,31 @@ import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ForUpdateFragment;
+import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -227,8 +240,17 @@ public class TeradataDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		return new GlobalTemporaryTableBulkIdStrategy( this, AfterUseAction.CLEAN );
+		return new GlobalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename ),
+				() -> new TempIdTableExporter( false, this::getTypeName ) {
+					@Override
+					public String getCreateOptions() {
+						return "on commit preserve rows";
+					}
+				},
+				AfterUseAction.CLEAN,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 //	@Override
@@ -457,59 +479,59 @@ public class TeradataDialect extends Dialect {
 		return sMsg;
 	}
 
-//	@Override
-//	public Exporter<Index> getIndexExporter() {
-//		return new TeradataIndexExporter(this);
-//	}
-//
-//	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
-//
-//		private TeradataIndexExporter(Dialect dialect) {
-//			super(dialect);
-//		}
-//
-//		@Override
-//		public String[] getSqlCreateStrings(Index index, JdbcServices jdbcServices) {
-//			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-//			QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
-//			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-//					qualifiedTableName,
-//					jdbcEnvironment.getDialect()
-//			);
-//
-//			final String indexNameForCreation;
-//			if ( getDialect().qualifyIndexName() ) {
-//				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-//						new QualifiedNameImpl(
-//								qualifiedTableName.getCatalogName(),
-//								qualifiedTableName.getSchemaName(),
-//								index.getName()
-//						),
-//						jdbcEnvironment.getDialect()
-//				);
-//			}
-//			else {
-//				indexNameForCreation = index.getName().render( jdbcEnvironment.getDialect() );
-//			}
-//
-//			StringBuilder columnList = new StringBuilder();
-//			boolean first = true;
-//			for ( PhysicalColumn column : index.getColumns() ) {
-//				if ( first ) {
-//					first = false;
-//				}
-//				else {
-//					columnList.append( ", " );
-//				}
-//				columnList.append( column.getName().render( jdbcEnvironment.getDialect() ) );
-//			}
-//
-//			return new String[] {
-//					"create index " + indexNameForCreation
-//							+ "(" + columnList + ") on " + tableName
-//			};
-//		}
-//	}
+	@Override
+	public Exporter<Index> getIndexExporter() {
+		return new TeradataIndexExporter(this);
+	}
+
+	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+
+		private TeradataIndexExporter(Dialect dialect) {
+			super(dialect);
+		}
+
+		@Override
+		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
+			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+			QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
+			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+					qualifiedTableName,
+					jdbcEnvironment.getDialect()
+			);
+
+			final String indexNameForCreation;
+			if ( getDialect().qualifyIndexName() ) {
+				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+						new QualifiedNameImpl(
+								qualifiedTableName.getCatalogName(),
+								qualifiedTableName.getSchemaName(),
+								Identifier.toIdentifier( index.getName() )
+						),
+						jdbcEnvironment.getDialect()
+				);
+			}
+			else {
+				indexNameForCreation = index.getName();
+			}
+
+			StringBuilder columnList = new StringBuilder();
+			boolean first = true;
+			for (Iterator<Column> column = index.getColumnIterator(); column.hasNext(); ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					columnList.append( ", " );
+				}
+				columnList.append( column.next().getName() );
+			}
+
+			return new String[] {
+					"create index " + indexNameForCreation
+							+ "(" + columnList + ") on " + tableName
+			};
+		}
+	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
@@ -519,7 +541,6 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return getVersion() < 14
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )

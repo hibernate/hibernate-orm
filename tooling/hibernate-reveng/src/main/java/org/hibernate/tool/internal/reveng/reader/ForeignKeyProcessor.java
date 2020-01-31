@@ -85,12 +85,12 @@ public class ForeignKeyProcessor {
 				String fkName = (String) exportedKeyRs.get("FK_NAME");
 				short keySeq = ((Short)exportedKeyRs.get("KEY_SEQ")).shortValue();
 								
-				Table fkTable = revengMetadataCollector.getTable((String) exportedKeyRs.get("FKTABLE_SCHEM"), (String) exportedKeyRs.get("FKTABLE_CAT"), fkTableName);
+				Table fkTable = getTable((String) exportedKeyRs.get("FKTABLE_CAT"), (String) exportedKeyRs.get("FKTABLE_SCHEM"), fkTableName);
 				
 				if (fkTable == null) {
-					fkTable = revengMetadataCollector.getTable(
-							getSchemaForModel(fkSchema, defaultSchema), 
+					fkTable = getTable(
 							getCatalogForModel(fkCatalog, defaultCatalog), 
+							getSchemaForModel(fkSchema, defaultSchema), 
 							fkTableName);
 				}
 				
@@ -188,10 +188,10 @@ public class ForeignKeyProcessor {
         			throw new MappingException("Foreign key " + userfkName + " already defined in the database!");
         		}
         		
-        		deptable = revengMetadataCollector.getTable(
-        				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
+        		deptable = getTable(
         				getCatalogForDBLookup(userfkTable.getCatalog(), defaultCatalog),
-        				userfkTable.getName());
+        				getSchemaForDBLookup(userfkTable.getSchema(), defaultSchema), 
+         				userfkTable.getName());
         		if(deptable==null) {
 					//	filter out stuff we don't have tables for!
 					log.debug("User defined foreign key " + userfkName + " references unknown or filtered table " + TableIdentifier.create(userfkTable) );
@@ -271,5 +271,26 @@ public class ForeignKeyProcessor {
 		if(str!=null && str.equals(str2) ) return true;
 		return false;
 	}
+	
+	private Table getTable(String catalog, String schema, String name) {
+		return revengMetadataCollector.getTable(
+				TableIdentifier.create(
+						quote(catalog), 
+						quote(schema), 
+						quote(name)));
+	}
 
+	private String quote(String name) {
+		if (name == null)
+			return name;
+		if (metaDataDialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name; // avoid double quoting
+			}
+			return "`" + name + "`";
+		} else {
+			return name;
+		}
+	}
 }

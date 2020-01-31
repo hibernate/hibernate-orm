@@ -58,17 +58,14 @@ public class TableCollector {
 		        String tableName = (String) tableRs.get("TABLE_NAME");
 				String schemaName = (String) tableRs.get("TABLE_SCHEM");
 		        String catalogName = (String) tableRs.get("TABLE_CAT");
-		        TableIdentifier ti = TableIdentifier.create(quote(catalogName), quote(schemaName), quote(tableName));		        
-				if(revengStrategy.excludeTable(ti) ) {
-					log.debug("Table " + ti + " excluded by strategy");
+		        TableIdentifier tableIdentifier = TableIdentifier.create(quote(catalogName), quote(schemaName), quote(tableName));		        
+				if(revengStrategy.excludeTable(tableIdentifier) ) {
+					log.debug("Table " + tableIdentifier + " excluded by strategy");
 		        	continue;
 		        }								
 				String comment = (String) tableRs.get("REMARKS");
 				String tableType = (String) tableRs.get("TABLE_TYPE");
-				if(revengMetadataCollector.getTable
-						  (schemaName, 
-								  catalogName, 
-								  tableName)!=null) {
+				if(revengMetadataCollector.getTable(tableIdentifier)!=null) {
 					  log.debug("Ignoring " + tableName + " since it has already been processed");
 					  continue;
 				  } else {
@@ -84,10 +81,6 @@ public class TableCollector {
 							  catalogName=null;
 						  }
 						  log.debug("Adding table " + tableName + " of type " + tableType);
-						  TableIdentifier tableIdentifier = TableIdentifier.create(
-								  quote(catalogName), 
-								  quote(schemaName), 
-								  quote(tableName));
 						  Table table = revengMetadataCollector.addTable(tableIdentifier);
 						  table.setComment(comment);
 						  if(tableType.equalsIgnoreCase("TABLE")) {

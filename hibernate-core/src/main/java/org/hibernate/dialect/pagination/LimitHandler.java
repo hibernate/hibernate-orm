@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.RowSelection;
 
 /**
  * Contract defining dialect-specific limit and offset handling.
- * Most implementations extends {@link AbstractLimitHandler}.
+ * Most implementations extend {@link AbstractLimitHandler}.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

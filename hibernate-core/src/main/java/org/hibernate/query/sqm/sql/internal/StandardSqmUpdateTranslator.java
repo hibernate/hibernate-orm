@@ -91,7 +91,7 @@ public class StandardSqmUpdateTranslator
 		);
 
 		try {
-			final NavigablePath rootPath = new NavigablePath( entityName );
+			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					null,

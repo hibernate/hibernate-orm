@@ -49,7 +49,7 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 
 			@Override
 			public Set<String> getAffectedTableNames() {
-				return getAffectedTableNames();
+				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
 			}
 		};
 	}

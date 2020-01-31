@@ -44,7 +44,6 @@ import org.hibernate.dialect.Ingres10Dialect;
 import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.InterbaseDialect;
-import org.hibernate.dialect.JDataStoreDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQL57Dialect;
@@ -211,7 +210,6 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, Ingres9Dialect.class );
 		addDialect( strategySelector, Ingres10Dialect.class );
 		addDialect( strategySelector, InterbaseDialect.class );
-		addDialect( strategySelector, JDataStoreDialect.class );
 		addDialect( strategySelector, MckoiDialect.class );
 		addDialect( strategySelector, MimerSQLDialect.class );
 		addDialect( strategySelector, MySQL5Dialect.class );

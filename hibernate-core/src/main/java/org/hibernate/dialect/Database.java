@@ -235,21 +235,6 @@ public enum Database {
 		}
 	},
 
-	INTERBASE {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new InterbaseDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("interbase");
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "interbase.interclient.Driver";
-		}
-	},
-
 	MARIADB {
 		@Override
 		public boolean matchesResolutionInfo(DialectResolutionInfo info) {
@@ -356,21 +341,6 @@ public enum Database {
 		}*/
 	},
 
-	POINTBASE {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new PointbaseDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("pointbase");
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.pointbase.jdbc.jdbcUniversalDriver";
-		}
-	},
-
 	POSTGRESQL {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
@@ -383,26 +353,6 @@ public enum Database {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.postgresql.Driver";
-		}
-	},
-
-	PROGRESS {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new ProgressDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith("progress")
-				|| databaseName.toLowerCase().startsWith("openedge");
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.ddtek.jdbc.openedge.OpenEdgeDriver";
-		}
-		@Override
-		public String getUrlPrefix() {
-			return "jdbc:datadirect:openedge:";
 		}
 	},
 

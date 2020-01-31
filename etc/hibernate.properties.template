@@ -165,33 +165,6 @@ hibernate.connection.url @DB_URL@
 #hibernate.connection.driver_class net.sourceforge.jtds.jdbc.Driver
 #hibernate.connection.url jdbc:jtds:sqlserver://1E1/test
 
-## Interbase
-
-#hibernate.dialect org.hibernate.dialect.InterbaseDialect
-#hibernate.connection.username sysdba
-#hibernate.connection.password masterkey
-
-## DO NOT specify hibernate.connection.sqlDialect
-
-## InterClient
-
-#hibernate.connection.driver_class interbase.interclient.Driver
-#hibernate.connection.url jdbc:interbase://localhost:3060/C:/firebird/test.gdb
-
-## Pure Java
-
-#hibernate.connection.driver_class org.firebirdsql.jdbc.FBDriver
-#hibernate.connection.url jdbc:firebirdsql:localhost/3050:/firebird/test.gdb
-
-
-## Pointbase
-
-#hibernate.dialect org.hibernate.dialect.PointbaseDialect
-#hibernate.connection.driver_class com.pointbase.jdbc.jdbcUniversalDriver
-#hibernate.connection.url jdbc:pointbase:embedded:sample
-#hibernate.connection.username PBPUBLIC
-#hibernate.connection.password PBPUBLIC
-
 
 ## Ingres
 

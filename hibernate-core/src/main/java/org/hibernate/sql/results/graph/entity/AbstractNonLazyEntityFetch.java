@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -26,18 +27,18 @@ import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
  *
  * @author Andrea Boriero
  */
-public abstract class AbstractNonLazyEntityFetch extends AbstractEntityResultGraphNode implements EntityFetch {
+public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
 	private final boolean nullable;
+	private final EntityValuedModelPart referencedModelPart;
 
 	public AbstractNonLazyEntityFetch(
 			FetchParent fetchParent,
 			EntityValuedModelPart fetchedPart,
 			NavigablePath navigablePath,
-			boolean nullable,
-			LockMode lockMode,
-			DomainResultCreationState creationState) {
-		super( fetchedPart, lockMode, navigablePath, creationState );
+			boolean nullable) {
+		super( fetchedPart.getEntityMappingType(), navigablePath );
+		this.referencedModelPart = fetchedPart;
 		this.fetchParent = fetchParent;
 		this.nullable = nullable;
 	}
@@ -85,4 +86,9 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractEntityResultGra
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState);
+
+	@Override
+	public EntityValuedModelPart getEntityValuedModelPart() {
+		return referencedModelPart;
+	}
 }

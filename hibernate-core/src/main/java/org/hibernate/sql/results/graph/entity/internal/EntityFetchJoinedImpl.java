@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -27,6 +28,7 @@ import org.hibernate.sql.results.graph.Initializer;
 public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 
 	private final EntityResultImpl entityResult;
+	private final LockMode lockMode;
 
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
@@ -35,8 +37,8 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		super( fetchParent, fetchedAttribute, navigablePath, nullable, lockMode, creationState );
-
+		super( fetchParent, fetchedAttribute, navigablePath, nullable );
+		this.lockMode = lockMode;
 		entityResult = new EntityResultImpl(
 				navigablePath,
 				fetchedAttribute,
@@ -53,7 +55,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		return new EntityInitializerJoinedFetch(
 				entityResult,
 				getNavigablePath(),
-				getLockMode(),
+				lockMode,
 				entityResult.getIdentifierResult(),
 				entityResult.getDiscriminatorResult(),
 				entityResult.getVersionResult(),
@@ -71,4 +73,5 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 	public boolean hasTableGroup() {
 		return true;
 	}
+
 }

@@ -7,7 +7,8 @@
 package org.hibernate.dialect.sequence;
 
 /**
- * Sequence support for {@link org.hibernate.dialect.InterbaseDialect}.
+ * Sequence support for {@link org.hibernate.dialect.FirebirdDialect}
+ * on Firebird 2.
  *
  * @author Gavin King
  */

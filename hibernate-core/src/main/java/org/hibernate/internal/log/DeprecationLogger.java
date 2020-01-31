@@ -249,4 +249,15 @@ public interface DeprecationLogger extends BasicLogger {
 					"5.3 in upgrading.  It will be removed in a later version."
 	)
 	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
+
+	@LogMessage(level = WARN)
+	@Message(value = "%s has been deprecated",
+			id = 90000025)
+	void deprecatedDialect(String dialect);
+
+	@LogMessage(level = WARN)
+	@Message(value = "%s has been deprecated; use %s instead",
+			id = 90000025)
+	void deprecatedDialect(String dialect, String replacement);
+
 }

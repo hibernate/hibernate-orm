@@ -55,6 +55,10 @@ public class RevengMetadataCollector {
 		tables.put(tableIdentifier, result);
 		return result;
 	}
+	
+	public Table getTable(TableIdentifier tableIdentifier) {
+		return tables.get(tableIdentifier);
+	}
 
 	public Table getTable(String schema, String catalog, String name) {
 		return tables.get(createIdentifier(catalog, schema, name));

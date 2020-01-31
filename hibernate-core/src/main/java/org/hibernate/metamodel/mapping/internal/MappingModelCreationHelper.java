@@ -753,7 +753,6 @@ public class MappingModelCreationHelper {
 			fkTarget = declaringEntityDescriptor.getIdentifierMapping();
 		}
 
-		final JdbcServices jdbcServices = creationProcess.getCreationContext().getSessionFactory().getJdbcServices();
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final String keyColumnExpression;
 			if ( bootValueMapping.isReferenceToPrimaryKey() ) {

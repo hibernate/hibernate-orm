@@ -13,8 +13,11 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.junit5.SessionFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,20 +31,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Chris Cranford
  */
-public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class,
-				Child2.class,
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				EntityWithBidirectionalOneToOneTest.Parent.class,
+				EntityWithBidirectionalOneToOneTest.Child.class,
+				EntityWithBidirectionalOneToOneTest.Child2.class
+		}
+)
+@ServiceRegistry
+@SessionFactory(generateStatistics = true)
+public class EntityWithBidirectionalOneToOneTest {
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction( session -> {
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Parent parent = new Parent( 1, "Hibernate ORM" );
 			Child child = new Child( 2, parent );
 			child.setName( "Acme" );
@@ -54,8 +57,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@AfterEach
-	public void tearDown() {
-		inTransaction( session -> {
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createQuery( "delete from Child2" ).executeUpdate();
 			session.createQuery( "delete from Parent" ).executeUpdate();
 			session.createQuery( "delete from Child" ).executeUpdate();
@@ -63,8 +66,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	public void testGetParent() {
-		inTransaction( session -> {
+	public void testGetParent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 1 );
 			Child child = parent.getOwnedBidirectionalChild();
 			assertThat( child, notNullValue() );
@@ -89,8 +92,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	public void testGetParent2() {
-		inTransaction( session -> {
+	public void testGetParent2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Parent parent = new Parent( 4, "Hibernate OGM" );
 			Child child = new Child( 5, parent );
 			child.setName( "Acme2" );
@@ -105,7 +108,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			session.save( child2 );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 4 );
 			Child child = parent.getOwnedBidirectionalChild();
 			assertThat( child, notNullValue() );
@@ -135,8 +138,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	public void testGetParent3() {
-		inTransaction( session -> {
+	public void testGetParent3(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 
 			Parent parent = new Parent( 4, "Hibernate Search" );
 			Child child = new Child( 5, parent );
@@ -156,7 +159,7 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 			session.save( child2 );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			final Parent parent = session.get( Parent.class, 4 );
 			assertThat( parent.getDescription(), equalTo( "Hibernate Search" ) );
 
@@ -188,8 +191,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	public void testGetChild() {
-		inTransaction( session -> {
+	public void testGetChild(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
 			Parent parent = child.getParentMappedByChild();
 			assertTrue(
@@ -216,8 +219,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 	}
 
 	@Test
-	public void testHqlSelectParent() {
-		inTransaction(
+	public void testHqlSelectParent(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final Parent parent = session.createQuery(
 							"SELECT p FROM Parent p JOIN p.ownedBidirectionalChild WHERE p.id = :id",
@@ -235,8 +238,8 @@ public class EntityWithBidirectionalOneToOneTest extends SessionFactoryBasedFunc
 
 	@Test
 	@FailureExpected
-	public void testHqlSelectChild() {
-		inTransaction(
+	public void testHqlSelectChild(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final String queryString = "SELECT c FROM Child c JOIN c.parentMappedByChild d WHERE d.id = :id";
 					final Child child = session.createQuery( queryString, Child.class )

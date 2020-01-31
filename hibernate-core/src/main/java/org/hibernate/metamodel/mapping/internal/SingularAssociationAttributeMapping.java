@@ -42,7 +42,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -142,7 +141,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		final String identifyingColumnsTableExpression;
 		final String inverseColumnsTableExpression;
 		final List<String> identifyingColumnsList = new ArrayList<>();
-		if ( foreignKeyDescriptor.getDirection() == ForeignKeyDirection.TO_PARENT ) {
+		if ( foreignKeyDescriptor.getDirection() == ForeignKeyDirection.FROM_PARENT && !referringPrimaryKey ) {
 			identifyingColumnsTableExpression = foreignKeyDescriptor.getTargetTableExpression();
 			inverseColumnsTableExpression = foreignKeyDescriptor.getReferringTableExpression();
 			foreignKeyDescriptor.visitTargetColumns(

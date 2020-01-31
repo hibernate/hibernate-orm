@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.reader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +14,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
+import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;

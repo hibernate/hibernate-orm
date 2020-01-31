@@ -37,12 +37,6 @@ public class DB2390DialectTestCase extends BaseEntityManagerFunctionalTestCase {
 		return new Class<?>[] { SimpleEntity.class };
 	}
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.USE_LEGACY_LIMIT_HANDLERS, Boolean.TRUE );
-	}
-
 	@Test
 	public void testLegacyLimitHandlerWithNoOffset() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

@@ -451,7 +451,7 @@ public class LoaderSelectBuilder {
 					if ( ! (fetchable instanceof BasicValuedModelPart ) ) {
 						fetchDepth++;
 					}
-					Fetch fetch = fetchedFetchable.generateFetch(
+					Fetch fetch = fetchable.generateFetch(
 							fetchParent,
 							fetchablePath,
 							fetchTiming,

@@ -12,7 +12,6 @@ import java.util.function.Function;
 
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.persister.entity.Joinable;
 
 /**

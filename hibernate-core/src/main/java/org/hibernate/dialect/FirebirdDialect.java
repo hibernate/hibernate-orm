@@ -29,9 +29,16 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorFirebirdDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -594,4 +601,20 @@ public class FirebirdDialect extends Dialect {
 		};
 	}
 
+	@Override
+	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		return getVersion() < 210
+				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
+				: new GlobalTemporaryTableStrategy(
+						new IdTable( entityDescriptor, name -> "HT_" + name ),
+						() -> new TempIdTableExporter( false, this::getTypeName ) {
+							@Override
+							protected String getCreateOptions() {
+								return "on commit delete rows";
+							}
+						},
+						AfterUseAction.CLEAN,
+						runtimeModelCreationContext.getSessionFactory()
+				);
+	}
 }

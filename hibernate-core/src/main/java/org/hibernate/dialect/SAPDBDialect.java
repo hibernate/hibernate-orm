@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.SAPDBSequenceSupport;
@@ -15,6 +14,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
+import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
@@ -195,23 +198,18 @@ public class SAPDBDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return new LocalTemporaryTableBulkIdStrategy(
-//				new IdTableSupportStandardImpl() {
-//					@Override
-//					public String generateIdTableName(String baseName) {
-//						return "temp." + super.generateIdTableName( baseName );
-//					}
-//
-//					@Override
-//					public String getCreateIdTableStatementOptions() {
-//						return "ignore rollback";
-//					}
-//				},
-//				AfterUseAction.DROP,
-//				null
-//		);
+		return new LocalTemporaryTableStrategy(
+				new IdTable( rootEntityDescriptor, name -> "temp." + name ),
+				() -> new TempIdTableExporter( true, this::getTypeName ) {
+					@Override
+					protected String getCreateOptions() {
+						return "ignore rollback";
+					}
+				},
+				AfterUseAction.DROP,
+				null,
+				runtimeModelCreationContext.getSessionFactory()
+		);
 	}
 
 	@Override

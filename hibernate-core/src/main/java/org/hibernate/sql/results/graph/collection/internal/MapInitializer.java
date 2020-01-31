@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.internal.PersistentMap;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -48,11 +51,16 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void readCollectionRow(RowProcessingState rowProcessingState) {
-		getCollectionInstance().load(
-				mapKeyAssembler.assemble( rowProcessingState ),
-				mapValueAssembler.assemble( rowProcessingState )
+	protected void readCollectionRow(
+			CollectionKey collectionKey,
+			List loadingState,
+			RowProcessingState rowProcessingState) {
+		//noinspection unchecked
+		loadingState.add(
+				new Object[] {
+						mapKeyAssembler.assemble( rowProcessingState ),
+						mapValueAssembler.assemble( rowProcessingState )
+				}
 		);
 	}
 

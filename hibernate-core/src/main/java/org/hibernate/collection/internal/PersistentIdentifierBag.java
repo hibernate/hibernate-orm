@@ -18,6 +18,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -39,7 +40,9 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	protected List<Object> values;
 	protected Map<Integer, Object> identifiers;
 
-	// The Collection provided to a PersistentIdentifierBag constructor,
+	/**
+	 * The Collection provided to a PersistentIdentifierBag constructor
+	 */
 	private Collection providedValues;
 
 	/**
@@ -528,6 +531,26 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		if ( old == null ) {
 			//maintain correct duplication if loaded in a cartesian product
 			values.add( element );
+		}
+	}
+
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+		assert isInitializing();
+		assert identifiers != null;
+		assert identifiers.isEmpty();
+		assert values != null;
+		assert values.isEmpty();
+
+		for ( int i = 0; i < loadingState.size(); i++ ) {
+			final Object[] row = (Object[]) loadingState.get( i );
+			final Object identifier = row[0];
+			final Object element = row[1];
+
+			Object old = identifiers.put( values.size(), identifier );
+			if ( old == null ) {
+				//maintain correct duplication if loaded in a cartesian product
+				values.add( element );
+			}
 		}
 	}
 }

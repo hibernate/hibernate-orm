@@ -18,9 +18,8 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 
@@ -274,48 +273,25 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		return map.toString();
 	}
 
-	private transient List<Object[]> loadingEntries;
-
 	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert elementAssembler != null;
-		assert indexAssembler != null;
-		assert identifierAssembler == null;
-
-		final Object element = elementAssembler.assemble( rowProcessingState );
-
-		if ( element != null ) {
-			final Object index = indexAssembler.assemble( rowProcessingState );
-			if ( loadingEntries == null ) {
-				loadingEntries = new ArrayList<>();
-			}
-			loadingEntries.add( new Object[] { index, element } );
-		}
-
-		return element;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public boolean endRead() {
-		if ( loadingEntries != null ) {
-			for ( Object[] entry : loadingEntries ) {
-				map.put( entry[0], entry[1] );
-			}
-			loadingEntries = null;
-		}
 		return super.endRead();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator entries(CollectionPersister persister) {
 		return map.entrySet().iterator();
+	}
+
+	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingState) {
+		assert isInitializing();
+		assert map != null;
+
+		for ( int i = 0; i < loadingState.size(); i++ ) {
+			final Object[] keyVal = (Object[]) loadingState.get( i );
+			//noinspection unchecked
+			map.put( keyVal[0], keyVal[1] );
+		}
 	}
 
 	/**

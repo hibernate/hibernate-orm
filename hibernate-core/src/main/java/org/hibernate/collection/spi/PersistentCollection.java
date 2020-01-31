@@ -9,9 +9,11 @@ package org.hibernate.collection.spi;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -91,6 +93,8 @@ public interface PersistentCollection {
 
 	/**
 	 * Called just before reading any rows from the JDBC result set
+	 *
+	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
 	 */
 	void beginRead();
 
@@ -98,6 +102,8 @@ public interface PersistentCollection {
 	 * Called after reading all rows from the JDBC result set
 	 *
 	 * @return Whether to end the read.
+	 *
+	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
 	 */
 	boolean endRead();
 
@@ -105,6 +111,8 @@ public interface PersistentCollection {
 	 * Called after initializing from cache
 	 *
 	 * @return ??
+	 *
+	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
 	 */
 	boolean afterInitialize();
 
@@ -158,13 +166,18 @@ public interface PersistentCollection {
 	 * Read a row from the JDBC values
 	 *
 	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
+	 *
+	 *
+	  todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
 	 */
-	Object readFrom(
+	default Object readFrom(
 			RowProcessingState rowProcessingState,
 			DomainResultAssembler elementAssembler,
 			DomainResultAssembler indexAssembler,
 			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException;
+			Object owner) throws HibernateException {
+		return null;
+	}
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the
@@ -458,4 +471,8 @@ public interface PersistentCollection {
 	 */
 	Collection getOrphans(Serializable snapshot, String entityName);
 
+	/**
+	 * Inject the state loaded for a collection instance.
+	 */
+	void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState);
 }

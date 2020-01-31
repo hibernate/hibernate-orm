@@ -7,6 +7,8 @@
 package org.hibernate.sql.results.graph.collection;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -18,13 +20,33 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  * @author Steve Ebersole
  */
 public interface LoadingCollectionEntry {
+	/**
+	 * The descriptor for the collection being loaded
+	 */
 	CollectionPersister getCollectionDescriptor();
 
+	/**
+	 * The initializer responsible for the loading
+	 */
 	CollectionInitializer getInitializer();
 
+	/**
+	 * The collection key.
+	 */
 	Serializable getKey();
 
+	/**
+	 * The collection instance being loaded
+	 */
 	PersistentCollection getCollectionInstance();
 
+	/**
+	 * Callback for row loading.  Allows delayed List creation
+	 */
+	void load(Consumer<List> loadingEntryConsumer);
+
+	/**
+	 * Complete the load
+	 */
 	void finishLoading(ExecutionContext executionContext);
 }

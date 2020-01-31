@@ -16,9 +16,8 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -394,33 +393,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert elementAssembler != null;
-		assert indexAssembler != null;
-		assert identifierAssembler == null;
-
-		final Object element = elementAssembler.assemble( rowProcessingState );
-		final int index = (int) indexAssembler.assemble( rowProcessingState );
-
-		//pad with nulls from the current last element up to the new index
-		for ( int i = list.size(); i<=index; i++) {
-			//noinspection unchecked
-			list.add( i, null );
-		}
-
-		//noinspection unchecked
-		list.set( index, element );
-
-		return element;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public Iterator entries(CollectionPersister persister) {
 		return list.iterator();
 	}
@@ -519,6 +491,14 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	public boolean entryExists(Object entry, int i) {
 		return entry!=null;
+	}
+
+	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingStateList) {
+		assert isInitializing();
+		assert list != null;
+
+		//noinspection unchecked
+		list.addAll( loadingStateList );
 	}
 
 	final class Clear implements DelayedOperation {

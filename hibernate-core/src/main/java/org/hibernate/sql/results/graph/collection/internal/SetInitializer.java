@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -40,8 +43,12 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	protected void readCollectionRow(RowProcessingState rowProcessingState) {
-		getCollectionInstance().load( elementAssembler.assemble( rowProcessingState ) );
+	protected void readCollectionRow(
+			CollectionKey collectionKey,
+			List loadingState,
+			RowProcessingState rowProcessingState) {
+		//noinspection unchecked
+		loadingState.add( elementAssembler.assemble( rowProcessingState ) );
 	}
 
 	@Override

@@ -77,7 +77,7 @@ public class StandardSqmDeleteTranslator
 		assert entityDescriptor != null;
 
 		try {
-			final NavigablePath rootPath = new NavigablePath( entityName );
+			final NavigablePath rootPath = statement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					null,

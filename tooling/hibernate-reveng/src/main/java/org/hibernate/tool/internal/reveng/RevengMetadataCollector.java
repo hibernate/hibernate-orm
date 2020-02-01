@@ -21,11 +21,11 @@ public class RevengMetadataCollector {
 	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
 
 	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
-		this(metaDataDialect);
+		this();
 		this.metadataCollector = metadataCollector;
 	}
 	
-	public RevengMetadataCollector(MetaDataDialect metaDataDialect) {
+	public RevengMetadataCollector() {
 		this.tables = new HashMap<TableIdentifier, Table>();
 		this.suggestedIdentifierStrategies = new HashMap<TableIdentifier, String>();
 	}

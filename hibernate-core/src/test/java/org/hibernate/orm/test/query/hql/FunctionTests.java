@@ -268,11 +268,20 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 	public void testOverlayFunctionParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select overlay(?2 placing ?1 from 3) from EntityOfBasics")
+					session.createQuery("select overlay(?1 placing 'yy' from 3)")
+							.setParameter(1, "xxxxxx")
+							.list();
+					session.createQuery("select overlay('xxxxxx' placing ?1 from 3)")
+							.setParameter(1, "yy")
+							.list();
+					session.createQuery("select overlay('xxxxxx' placing 'yy' from ?1)")
+							.setParameter(1, 3)
+							.list();
+					session.createQuery("select overlay(?2 placing ?1 from 3)")
 							.setParameter(1, "yy")
 							.setParameter(2, "xxxxxx")
 							.list();
-					session.createQuery("select overlay(:text placing :rep from 3) from EntityOfBasics")
+					session.createQuery("select overlay(:text placing :rep from 3)")
 							.setParameter("rep", "yy")
 							.setParameter("text", "xxxxxx")
 							.list();

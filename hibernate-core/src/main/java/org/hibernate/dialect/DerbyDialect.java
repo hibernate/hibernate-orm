@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
@@ -477,17 +476,14 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+		return (sqlException, message, sql) -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 //				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-				if( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState ) ) {
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				return null;
+			if ( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState ) ) {
+				throw new LockTimeoutException( message, sqlException, sql );
 			}
+			return null;
 		};
 	}
 

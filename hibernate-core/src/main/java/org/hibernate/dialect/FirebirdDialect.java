@@ -532,62 +532,59 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-				final String sqlExceptionMessage = sqlException.getMessage();
-				//final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+		return (sqlException, message, sql) -> {
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String sqlExceptionMessage = sqlException.getMessage();
+			//final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 
-				// Some of the error codes will only surface in Jaybird 3 or higher, as older versions return less specific error codes first
-				switch ( errorCode ) {
-					case 335544336:
-						// isc_deadlock (deadlock, note: not necessarily a deadlock, can also be an update conflict)
-						if (sqlExceptionMessage != null
-								&& sqlExceptionMessage.contains( "update conflicts with concurrent update" )) {
-							return new LockTimeoutException( message, sqlException, sql );
-						}
-						return new LockAcquisitionException( message, sqlException, sql );
-					case 335544345:
-						// isc_lock_conflict (lock conflict on no wait transaction)
-					case 335544510:
-						// isc_lock_timeout (lock time-out on wait transaction)
+			// Some of the error codes will only surface in Jaybird 3 or higher, as older versions return less specific error codes first
+			switch ( errorCode ) {
+				case 335544336:
+					// isc_deadlock (deadlock, note: not necessarily a deadlock, can also be an update conflict)
+					if (sqlExceptionMessage != null
+							&& sqlExceptionMessage.contains( "update conflicts with concurrent update" )) {
 						return new LockTimeoutException( message, sqlException, sql );
-					case 335544474:
-						// isc_bad_lock_level (invalid lock level {0})
-					case 335544475:
-						// isc_relation_lock (lock on table {0} conflicts with existing lock)
-					case 335544476:
-						// isc_record_lock (requested record lock conflicts with existing lock)
-						return new LockAcquisitionException( message, sqlException, sql );
-					case 335544466:
-						// isc_foreign_key (violation of FOREIGN KEY constraint "{0}" on table "{1}")
-					case 336396758:
-						// *no error name* (violation of FOREIGN KEY constraint "{0}")
-					case 335544558:
-						// isc_check_constraint (Operation violates CHECK constraint {0} on view or table {1})
-					case 336396991:
-						// *no error name* (Operation violates CHECK constraint {0} on view or table)
-					case 335544665:
-						// isc_unique_key_violation (violation of PRIMARY or UNIQUE KEY constraint "{0}" on table "{1}")
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
-								sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
-				}
-
-				// Apply heuristics based on exception message
-				String exceptionMessage = sqlException.getMessage();
-				if ( exceptionMessage != null ) {
-					if ( exceptionMessage.contains( "violation of " )
-							|| exceptionMessage.contains( "violates CHECK constraint" ) ) {
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
-								sqlException );
-						return new ConstraintViolationException( message, sqlException, sql, constraintName );
 					}
-				}
-
-				return null;
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 335544345:
+					// isc_lock_conflict (lock conflict on no wait transaction)
+				case 335544510:
+					// isc_lock_timeout (lock time-out on wait transaction)
+					return new LockTimeoutException( message, sqlException, sql );
+				case 335544474:
+					// isc_bad_lock_level (invalid lock level {0})
+				case 335544475:
+					// isc_relation_lock (lock on table {0} conflicts with existing lock)
+				case 335544476:
+					// isc_record_lock (requested record lock conflicts with existing lock)
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 335544466:
+					// isc_foreign_key (violation of FOREIGN KEY constraint "{0}" on table "{1}")
+				case 336396758:
+					// *no error name* (violation of FOREIGN KEY constraint "{0}")
+				case 335544558:
+					// isc_check_constraint (Operation violates CHECK constraint {0} on view or table {1})
+				case 336396991:
+					// *no error name* (Operation violates CHECK constraint {0} on view or table)
+				case 335544665:
+					// isc_unique_key_violation (violation of PRIMARY or UNIQUE KEY constraint "{0}" on table "{1}")
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
+							sqlException );
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 			}
+
+			// Apply heuristics based on exception message
+			String exceptionMessage = sqlException.getMessage();
+			if ( exceptionMessage != null ) {
+				if ( exceptionMessage.contains( "violation of " )
+						|| exceptionMessage.contains( "violates CHECK constraint" ) ) {
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
+							sqlException );
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+				}
+			}
+
+			return null;
 		};
 	}
 

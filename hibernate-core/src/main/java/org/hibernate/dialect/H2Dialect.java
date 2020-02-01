@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
@@ -257,31 +256,24 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		SQLExceptionConversionDelegate delegate = super.buildSQLExceptionConversionDelegate();
-		if (delegate == null) {
-			delegate = new SQLExceptionConversionDelegate() {
-				@Override
-				public JDBCException convert(SQLException sqlException, String message, String sql) {
-					final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+		return (sqlException, message, sql) -> {
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-					switch (errorCode) {
-						case 40001:
-							// DEADLOCK DETECTED
-							return new LockAcquisitionException(message, sqlException, sql);
-						case 50200:
-							// LOCK NOT AVAILABLE
-							return new PessimisticLockException(message, sqlException, sql);
-						case 90006:
-							// NULL not allowed for column [90006-145]
-							final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
-							return new ConstraintViolationException(message, sqlException, sql, constraintName);
-					}
+			switch (errorCode) {
+				case 40001:
+					// DEADLOCK DETECTED
+					return new LockAcquisitionException(message, sqlException, sql);
+				case 50200:
+					// LOCK NOT AVAILABLE
+					return new PessimisticLockException(message, sqlException, sql);
+				case 90006:
+					// NULL not allowed for column [90006-145]
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+					return new ConstraintViolationException(message, sqlException, sql, constraintName);
+			}
 
-					return null;
-				}
-			};
-		}
-		return delegate;
+			return null;
+		};
 	}
 
 	@Override

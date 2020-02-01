@@ -15,9 +15,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
-import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -82,32 +80,24 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		return conn;
 	}
 
-	private ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess = new ValueHolder<SQLExceptionConversionDelegate>(
-			new ValueHolder.DeferredInitializer<SQLExceptionConversionDelegate>() {
-				@Override
-				public SQLExceptionConversionDelegate initialize() {
-					return new SQLExceptionConversionDelegate() {
-						private final SQLStateConversionDelegate sqlStateDelegate = new SQLStateConversionDelegate(
-								new ConversionContext() {
-									@Override
-									public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
-										// this should never happen...
-										throw new HibernateException( "Unexpected call to org.hibernate.exception.spi.ConversionContext.getViolatedConstraintNameExtracter" );
-									}
-								}
-						);
-
-						@Override
-						public JDBCException convert(SQLException sqlException, String message, String sql) {
-							JDBCException exception = sqlStateDelegate.convert( sqlException, message, sql );
-							if ( exception == null ) {
-								// assume this is either a set-up problem or a problem connecting, which we will
-								// categorize the same here.
-								exception = new JDBCConnectionException( message, sqlException, sql );
-							}
-							return exception;
+	private ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess =
+			new ValueHolder<>( () -> new SQLExceptionConversionDelegate() {
+				private final SQLStateConversionDelegate sqlStateDelegate = new SQLStateConversionDelegate(
+						() -> {
+							// this should never happen...
+							throw new HibernateException( "Unexpected call to org.hibernate.exception.spi.ConversionContext.getViolatedConstraintNameExtracter" );
 						}
-					};
+				);
+
+				@Override
+				public JDBCException convert(SQLException sqlException, String message, String sql) {
+					JDBCException exception = sqlStateDelegate.convert( sqlException, message, sql );
+					if ( exception == null ) {
+						// assume this is either a set-up problem or a problem connecting, which we will
+						// categorize the same here.
+						exception = new JDBCConnectionException( message, sqlException, sql );
+					}
+					return exception;
 				}
 			}
 	);
@@ -133,7 +123,6 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 
 	/**
 	 * Exposed for testing purposes only.
-	 * @return
 	 */
 	public Properties getConnectionProperties() {
 		return new Properties( connectionProps );

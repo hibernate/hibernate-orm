@@ -16,6 +16,7 @@ import org.hibernate.JDBCException;
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface SQLExceptionConversionDelegate {
 	/**
 	 * Convert the given SQLException into the Hibernate {@link org.hibernate.JDBCException} hierarchy.

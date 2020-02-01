@@ -20,73 +20,71 @@ import javax.persistence.Table;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static javax.persistence.GenerationType.AUTO;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Parent.class, Child.class };
-	}
+@DomainModel(annotatedClasses = {
+		MultiLoadSubSelectCollectionTest.Parent.class,
+		MultiLoadSubSelectCollectionTest.Child.class
+})
+@ServiceRegistry
+@SessionFactory
+public class MultiLoadSubSelectCollectionTest {
 
 	protected void addSettings(Map settings) {
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}
 
-	@Before
-	public void before() {
-		Session session = sessionFactory().openSession();
-		session.getTransaction().begin();
-		session.setCacheMode( CacheMode.IGNORE );
-		for ( int i = 1; i <= 60; i++ ) {
-			final Parent p = new Parent( i, "Entity #" + i );
-			for ( int j = 0; j < i ; j++ ) {
-				Child child = new Child();
-				child.setParent( p );
-				p.getChildren().add( child );
+	@BeforeEach
+	public void before(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.setCacheMode( CacheMode.IGNORE );
+			for ( int i = 1; i <= 60; i++ ) {
+				final Parent p = new Parent( i, "Entity #" + i );
+				for ( int j = 0; j < i; j++ ) {
+					Child child = new Child();
+					child.setParent( p );
+					p.getChildren().add( child );
+				}
+				session.persist( p );
 			}
-			session.persist( p );
-		}
-		session.getTransaction().commit();
-		session.close();
+		} );
 	}
 
-	@After
-	public void after() {
-		Session session = sessionFactory().openSession();
-		session.getTransaction().begin();
-		session.createQuery( "delete Child" ).executeUpdate();
-		session.createQuery( "delete Parent" ).executeUpdate();
-		session.getTransaction().commit();
-		session.close();
+	@AfterEach
+	public void after(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createQuery( "delete Child" ).executeUpdate();
+			session.createQuery( "delete Parent" ).executeUpdate();
+		} );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12740" )
-	public void testSubselect() {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids(56) );
+	@TestForIssue(jiraKey = "HHH-12740")
+	public void testSubselect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids( 56 ) );
 					assertEquals( 56, list.size() );
 
 					// None of the collections should be loaded yet
@@ -98,13 +96,13 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 					// should be loaded.
 					Hibernate.initialize( list.get( 0 ).children );
 
-					for ( int i = 0 ; i < 50 ; i++ ) {
+					for ( int i = 0; i < 50; i++ ) {
 						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
 						assertEquals( i + 1, list.get( i ).children.size() );
 					}
 
 					// The collections for the 51st through 56th entities should still be uninitialized
-					for (int i = 50 ; i < 56 ; i ++ ) {
+					for ( int i = 50; i < 56; i++ ) {
 						assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
 					}
 
@@ -112,7 +110,7 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 					// also be initialized.
 					Hibernate.initialize( list.get( 50 ).children );
 
-					for ( int i = 50 ; i < 56 ; i++ ) {
+					for ( int i = 50; i < 56; i++ ) {
 						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
 						assertEquals( i + 1, list.get( i ).children.size() );
 					}
@@ -123,14 +121,14 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
 		for ( int i = 1; i <= count; i++ ) {
-			ids[i-1] = i;
+			ids[i - 1] = i;
 		}
 		return ids;
 	}
 
-	@Entity( name = "Parent" )
-	@Table( name = "Parent" )
-	@BatchSize( size = 15 )
+	@Entity(name = "Parent")
+	@Table(name = "Parent")
+	@BatchSize(size = 15)
 	public static class Parent {
 		Integer id;
 		String text;
@@ -172,7 +170,7 @@ public class MultiLoadSubSelectCollectionTest extends BaseNonConfigCoreFunctiona
 		}
 	}
 
-	@Entity( name = "Child" )
+	@Entity(name = "Child")
 	public static class Child {
 
 		@Id

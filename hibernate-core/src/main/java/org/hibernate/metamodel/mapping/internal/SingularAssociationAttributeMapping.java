@@ -13,6 +13,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.source.spi.EmbeddedAttributeMapping;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.ManyToOne;
@@ -47,6 +48,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -210,9 +212,13 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		}
 
 		final FetchParent associationFetchParent = fetchParent.resolveContainingAssociationParent();
-		assert associationFetchParent.getReferencedModePart() instanceof Association;
+		if(associationFetchParent == null){
+			return null;
+		}
+		final ModelPart referencedModePart = associationFetchParent.getReferencedModePart();
+		assert referencedModePart instanceof Association;
 
-		final Association associationParent = (Association) associationFetchParent.getReferencedModePart();
+		final Association associationParent = (Association) referencedModePart;
 
 		if ( Arrays.equals( associationParent.getIdentifyingColumnExpressions(), this.getIdentifyingColumnExpressions() ) ) {
 			// we need to determine the NavigablePath referring to the entity that the bi-dir

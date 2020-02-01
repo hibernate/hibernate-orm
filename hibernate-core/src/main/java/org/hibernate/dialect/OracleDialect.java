@@ -27,8 +27,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -55,6 +55,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.CastType.STRING;
 import static org.hibernate.query.TemporalUnit.*;
 
@@ -704,35 +705,24 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-
-		/**
-		 * Extract the name of the violated constraint from the given SQLException.
-		 *
-		 * @param sqle The exception that was the result of the constraint violation.
-		 * @return The extracted constraint name.
-		 */
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
-			switch ( errorCode ) {
-				case 1:
-				case 2291:
-				case 2292:
-					return extractUsingTemplate("(", ")", sqle.getMessage());
-				case 1400:
-					// simple nullability constraint
-					return null;
-				default:
-					return null;
-			}
-		}
-
-	};
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+					case 1:
+					case 2291:
+					case 2292:
+						return extractUsingTemplate( "(", ")", sqle.getMessage() );
+					case 1400:
+						// simple nullability constraint
+						return null;
+					default:
+						return null;
+				}
+			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {

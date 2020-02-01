@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -34,7 +34,7 @@ public class BasicSQLExceptionConverter {
 	 */
 	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
-	private static final SQLStateConverter CONVERTER = new SQLStateConverter( new ConstraintNameExtracter() );
+	private static final SQLStateConverter CONVERTER = new SQLStateConverter( sqle ->"???" );
 
 	/**
 	 * Perform a conversion.
@@ -46,10 +46,4 @@ public class BasicSQLExceptionConverter {
 		return CONVERTER.convert( sqlException, MSG, null );
 	}
 
-	private static class ConstraintNameExtracter implements ViolatedConstraintNameExtracter {
-		@Override
-		public String extractConstraintName(SQLException sqle) {
-			return "???";
-		}
-	}
 }

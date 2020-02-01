@@ -18,8 +18,8 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -34,8 +34,9 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorIn
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
-import java.sql.SQLException;
 import java.sql.Types;
+
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -270,52 +271,46 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				String constraintName;
+				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+					case -268:
+						constraintName = extractUsingTemplate(
+								"Unique constraint (",
+								") violated.",
+								sqle.getMessage()
+						);
+						break;
+					case -691:
+						constraintName = extractUsingTemplate(
+								"Missing key in referenced table for referential constraint (",
+								").",
+								sqle.getMessage()
+						);
+						break;
+					case -692:
+						constraintName = extractUsingTemplate(
+								"Key value for constraint (",
+								") is still being referenced.",
+								sqle.getMessage()
+						);
+						break;
+					default:
+						return null;
+				}
 
-			switch (errorCode) {
-				case -268:
-					constraintName = extractUsingTemplate(
-							"Unique constraint (",
-							") violated.",
-							sqle.getMessage()
-					);
-					break;
-				case -691:
-					constraintName = extractUsingTemplate(
-							"Missing key in referenced table for referential constraint (",
-							").",
-							sqle.getMessage()
-					);
-					break;
-				case -692:
-					constraintName = extractUsingTemplate(
-							"Key value for constraint (",
-							") is still being referenced.",
-							sqle.getMessage()
-					);
-					break;
-			}
-
-			if ( constraintName != null ) {
 				// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
 				final int i = constraintName.indexOf( '.' );
 				if ( i != -1 ) {
 					constraintName = constraintName.substring( i + 1 );
 				}
-			}
-
-			return constraintName;
-		}
-
-	};
+				return constraintName;
+			} );
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {

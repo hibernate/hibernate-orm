@@ -30,7 +30,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.ReflectHelper;
@@ -1803,14 +1803,10 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
-		public String extractConstraintName(SQLException sqle) {
-			return null;
-		}
-	};
+	private static final ViolatedConstraintNameExtractor EXTRACTOR = sqle -> null;
 
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
 

@@ -17,7 +17,7 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -90,7 +90,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 						private final SQLStateConversionDelegate sqlStateDelegate = new SQLStateConversionDelegate(
 								new ConversionContext() {
 									@Override
-									public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+									public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
 										// this should never happen...
 										throw new HibernateException( "Unexpected call to org.hibernate.exception.spi.ConversionContext.getViolatedConstraintNameExtracter" );
 									}

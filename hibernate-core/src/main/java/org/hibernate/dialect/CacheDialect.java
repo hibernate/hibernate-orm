@@ -18,8 +18,8 @@ import org.hibernate.dialect.sequence.CacheSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -31,6 +31,8 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.
@@ -320,19 +322,14 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
-	/**
-	 * The Cache ViolatedConstraintNameExtracter.
-	 */
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
-		}
-	};
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle ->
+					extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() )
+			);
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

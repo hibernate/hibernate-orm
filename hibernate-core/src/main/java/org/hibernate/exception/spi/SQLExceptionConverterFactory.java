@@ -86,19 +86,19 @@ public class SQLExceptionConverterFactory {
 		};
 	}
 
-	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {
+	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtractor violatedConstraintNameExtractor) {
 		try {
 			LOG.tracev( "Attempting to construct instance of specified SQLExceptionConverter [{0}]", converterClassName );
 			final Class converterClass = ReflectHelper.classForName( converterClassName );
 
-			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
+			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtractor param...
 			final Constructor[] ctors = converterClass.getDeclaredConstructors();
 			for ( Constructor ctor : ctors ) {
 				final Class[] parameterTypes = ctor.getParameterTypes();
 				if ( parameterTypes != null && ctor.getParameterCount() == 1 ) {
-					if ( ViolatedConstraintNameExtracter.class.isAssignableFrom( parameterTypes[0] ) ) {
+					if ( ViolatedConstraintNameExtractor.class.isAssignableFrom( parameterTypes[0] ) ) {
 						try {
-							return (SQLExceptionConverter) ctor.newInstance( violatedConstraintNameExtracter );
+							return (SQLExceptionConverter) ctor.newInstance(violatedConstraintNameExtractor);
 						}
 						catch (Throwable ignore) {
 							// eat it and try next

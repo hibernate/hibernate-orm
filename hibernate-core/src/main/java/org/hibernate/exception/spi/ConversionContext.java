@@ -10,5 +10,5 @@ package org.hibernate.exception.spi;
  * @author Steve Ebersole
  */
 public interface ConversionContext {
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter();
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter();
 }

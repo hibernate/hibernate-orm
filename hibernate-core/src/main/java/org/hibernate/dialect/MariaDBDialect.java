@@ -80,7 +80,7 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public String getQuerySequencesString() {
 		return getSequenceSupport().supportsSequences()
-				? "select table_name from information_schema.TABLES where table_type='SEQUENCE'"
+				? "select table_name from information_schema.TABLES where table_schema = database() and table_type='SEQUENCE'"
 				: super.getQuerySequencesString(); //fancy way to write "null"
 	}
 

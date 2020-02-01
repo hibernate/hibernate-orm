@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -555,21 +554,17 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-				switch ( sqlState ) {
-					case "40P01":
-						// DEADLOCK DETECTED
-						return new LockAcquisitionException(message, sqlException, sql);
-					case "55P03":
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException(message, sqlException, sql);
-					default:
-						// returning null allows other delegates to operate
-						return null;
-				}
+		return (sqlException, message, sql) -> {
+			switch ( JdbcExceptionHelper.extractSqlState( sqlException ) ) {
+				case "40P01":
+					// DEADLOCK DETECTED
+					return new LockAcquisitionException(message, sqlException, sql);
+				case "55P03":
+					// LOCK NOT AVAILABLE
+					return new PessimisticLockException(message, sqlException, sql);
+				default:
+					// returning null allows other delegates to operate
+					return null;
 			}
 		};
 	}

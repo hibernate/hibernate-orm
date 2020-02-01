@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.JDBCException;
 import org.hibernate.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -553,17 +552,14 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+		return (sqlException, message, sql) -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
-				if( -952 == errorCode && "57014".equals( sqlState )){
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				return null;
+			if ( -952 == errorCode && "57014".equals( sqlState ) ) {
+				throw new LockTimeoutException( message, sqlException, sql );
 			}
+			return null;
 		};
 	}
 

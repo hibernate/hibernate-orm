@@ -16,10 +16,12 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.CacheSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.exception.internal.CacheSQLExceptionConversionDelegate;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.DataException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -318,7 +320,23 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new CacheSQLExceptionConversionDelegate( this );
+		return (sqlException, message, sql) -> {
+			String sqlStateClassCode = JdbcExceptionHelper.extractSqlStateClassCode( sqlException );
+			if ( sqlStateClassCode != null ) {
+				int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+				if ( errorCode >= 119 && errorCode <= 127 && errorCode != 126 ) {
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+				}
+
+				if ( sqlStateClassCode.equals("22")
+						|| sqlStateClassCode.equals("21")
+						|| sqlStateClassCode.equals("02") ) {
+					return new DataException( message, sqlException, sql );
+				}
+			}
+			return null; // allow other delegates the chance to look
+		};
 	}
 
 	@Override

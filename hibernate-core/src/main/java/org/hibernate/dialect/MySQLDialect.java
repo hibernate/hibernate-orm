@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.NullPrecedence;
 import org.hibernate.PessimisticLockException;
@@ -657,29 +656,24 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				switch ( sqlException.getErrorCode() ) {
-					case 1205:
-					case 3572:
-						return new PessimisticLockException( message, sqlException, sql );
-					case 1207:
-					case 1206:
-						return new LockAcquisitionException( message, sqlException, sql );
-				}
-
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-
-				switch (sqlState) {
-					case "41000":
-						return new LockTimeoutException(message, sqlException, sql);
-					case "40001":
-						return new LockAcquisitionException(message, sqlException, sql);
-				}
-
-				return null;
+		return (sqlException, message, sql) -> {
+			switch ( sqlException.getErrorCode() ) {
+				case 1205:
+				case 3572:
+					return new PessimisticLockException( message, sqlException, sql );
+				case 1207:
+				case 1206:
+					return new LockAcquisitionException( message, sqlException, sql );
 			}
+
+			switch ( JdbcExceptionHelper.extractSqlState( sqlException ) ) {
+				case "41000":
+					return new LockTimeoutException(message, sqlException, sql);
+				case "40001":
+					return new LockAcquisitionException(message, sqlException, sql);
+			}
+
+			return null;
 		};
 	}
 

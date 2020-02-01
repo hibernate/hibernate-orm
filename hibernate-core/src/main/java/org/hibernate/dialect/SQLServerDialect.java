@@ -27,7 +27,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.regex.Pattern;
 
@@ -423,19 +422,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion() < 9 ) {
 			return super.buildSQLExceptionConversionDelegate(); //null
 		}
-		return new SQLExceptionConversionDelegate() {
-			@Override
-			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-				if ( "HY008".equals( sqlState ) ) {
-					throw new QueryTimeoutException( message, sqlException, sql );
-				}
-				if ( 1222 == errorCode ) {
-					throw new LockTimeoutException( message, sqlException, sql );
-				}
-				return null;
+		return (sqlException, message, sql) -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			if ( "HY008".equals( sqlState ) ) {
+				throw new QueryTimeoutException( message, sqlException, sql );
 			}
+			if ( 1222 == errorCode ) {
+				throw new LockTimeoutException( message, sqlException, sql );
+			}
+			return null;
 		};
 	}
 

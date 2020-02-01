@@ -381,8 +381,8 @@ public class MySQLDialect extends Dialect {
 		return NoSequenceSupport.INSTANCE;
 	}
 
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
-		return getVersion() < 500 ? super.getViolatedConstraintNameExtracter() : EXTRACTOR;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return getVersion() < 500 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =

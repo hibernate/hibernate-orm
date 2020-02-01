@@ -51,7 +51,7 @@ public class SQLExceptionConverterFactory {
 
 		String converterClassName = (String) properties.get( Environment.SQL_EXCEPTION_CONVERTER );
 		if ( StringHelper.isNotEmpty( converterClassName ) ) {
-			converter = constructConverter( converterClassName, dialect.getViolatedConstraintNameExtracter() );
+			converter = constructConverter( converterClassName, dialect.getViolatedConstraintNameExtractor() );
 		}
 
 		if ( converter == null ) {

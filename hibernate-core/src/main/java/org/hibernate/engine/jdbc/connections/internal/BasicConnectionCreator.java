@@ -85,7 +85,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 				private final SQLStateConversionDelegate sqlStateDelegate = new SQLStateConversionDelegate(
 						() -> {
 							// this should never happen...
-							throw new HibernateException( "Unexpected call to org.hibernate.exception.spi.ConversionContext.getViolatedConstraintNameExtracter" );
+							throw new HibernateException( "Unexpected call to ConversionContext.getViolatedConstraintNameExtractor" );
 						}
 				);
 

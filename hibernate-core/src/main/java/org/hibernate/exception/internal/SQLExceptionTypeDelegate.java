@@ -56,7 +56,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 					message,
 					sqlException,
 					sql,
-					getConversionContext().getViolatedConstraintNameExtracter().extractConstraintName( sqlException )
+					getConversionContext().getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 			);
 		}
 		else if ( SQLSyntaxErrorException.class.isInstance( sqlException ) ) {

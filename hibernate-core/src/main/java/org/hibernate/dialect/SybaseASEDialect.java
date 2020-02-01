@@ -21,7 +21,6 @@ import org.hibernate.sql.Sybase11JoinFragment;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
 
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
@@ -447,7 +446,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				case "ZZZZZ":
 					if (515 == errorCode) {
 						// Attempt to insert NULL value into column; column does not allow nulls.
-						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
 						return new ConstraintViolationException( message, sqlException, sql, constraintName );
 					}
 					break;

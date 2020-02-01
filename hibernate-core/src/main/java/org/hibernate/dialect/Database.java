@@ -132,21 +132,6 @@ public enum Database {
 		}
 	},
 
-	FRONTBASE {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new FrontBaseDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith( "FrontBase" );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.frontbase.jdbc.FBJDriver";
-		}
-	},
-
 	H2 {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

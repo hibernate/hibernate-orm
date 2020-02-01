@@ -264,7 +264,7 @@ public enum Database {
 	MAXDB {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new SAPDBDialect();
+			return new MaxDBDialect();
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {

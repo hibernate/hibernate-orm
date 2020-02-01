@@ -6,14 +6,16 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.dialect.MaxDBDialect;
+
 /**
- * Sequence support for {@link org.hibernate.dialect.SAPDBDialect}.
+ * Sequence support for {@link MaxDBDialect}.
  *
  * @author Gavin King
  */
-public final class SAPDBSequenceSupport extends NextvalSequenceSupport {
+public final class MaxDBSequenceSupport extends NextvalSequenceSupport {
 
-	public static final SequenceSupport INSTANCE = new SAPDBSequenceSupport();
+	public static final SequenceSupport INSTANCE = new MaxDBSequenceSupport();
 
 	@Override
 	public String getFromDual() {

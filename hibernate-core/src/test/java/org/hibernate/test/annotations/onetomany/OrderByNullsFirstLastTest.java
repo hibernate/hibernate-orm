@@ -13,18 +13,20 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil2.inSession;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 /**
  * @author Andrea Boriero
  */
-public class OerderByNullsFirstLastTest extends BaseCoreFunctionalTestCase {
+public class OrderByNullsFirstLastTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-465")
@@ -47,9 +49,13 @@ public class OerderByNullsFirstLastTest extends BaseCoreFunctionalTestCase {
 
 				session.getTransaction().begin();
 
-				Criteria criteria = session.createCriteria( Zoo.class );
-				criteria.addOrder( org.hibernate.criterion.Order.asc( "name" ).nulls( NullPrecedence.LAST ) );
-				Iterator<Zoo> iterator = (Iterator<Zoo>) criteria.list().iterator();
+				HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) session.getCriteriaBuilder();
+				CriteriaQuery<Zoo> criteriaQuery = cb.createQuery(Zoo.class);
+				Root<Zoo> root = criteriaQuery.from( Zoo.class );
+				criteriaQuery.select( root );
+				criteriaQuery.orderBy( cb.asc( root.get( "name" ) ).nullPrecedence( NullPrecedence.LAST ) );
+				
+				Iterator<Zoo> iterator = session.createQuery( criteriaQuery ).getResultList().iterator();
 
 				Assert.assertEquals( zoo2.getName(), iterator.next().getName() );
 				Assert.assertNull( iterator.next().getName() );

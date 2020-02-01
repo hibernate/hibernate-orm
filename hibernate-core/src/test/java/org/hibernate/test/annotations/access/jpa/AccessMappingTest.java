@@ -14,17 +14,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tuple.entity.EntityTuplizer;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
 
 /**
  * Tests verifying the correct behaviour for the usage of {@code @javax.persistence.Access}.
@@ -75,9 +73,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Field access should be used.",
 					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
@@ -96,9 +92,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Property access should be used.",
 					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
@@ -117,9 +111,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Property access should be used.",
 					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
@@ -158,9 +150,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Field access should be used.",
 					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
@@ -184,9 +174,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Student.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Field access should be used.",
 					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
@@ -211,9 +199,7 @@ public class AccessMappingTest {
         cfg.addAnnotatedClass( Being.class );
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Field access should be used since the default access mode gets inherited",
 					tuplizer.getIdentifierGetter() instanceof GetterFieldImpl
@@ -232,17 +218,13 @@ public class AccessMappingTest {
 
         SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 		try {
-			EntityTuplizer tuplizer = factory.getEntityPersister( Animal.class.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			EntityTuplizer tuplizer = factory.getEntityPersister( Animal.class.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Property access should be used since explicity configured via @Access",
 					tuplizer.getIdentifierGetter() instanceof GetterMethodImpl
 			);
 
-			tuplizer = factory.getEntityPersister( Horse.class.getName() )
-					.getEntityMetamodel()
-					.getTuplizer();
+			tuplizer = factory.getEntityPersister( Horse.class.getName() ).getEntityTuplizer();
 			assertTrue(
 					"Field access should be used since the default access mode gets inherited",
 					tuplizer.getGetter( 0 ) instanceof GetterFieldImpl

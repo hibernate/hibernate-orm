@@ -8,6 +8,7 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
+import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Test;
 
@@ -19,8 +20,11 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -93,20 +97,23 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Criteria criteria = s.createCriteria( NaturalIdOnManyToOne.class );
-		criteria.add( Restrictions.naturalId().set( "citizen", c1 ) );
-		criteria.setCacheable( true );
+		CriteriaBuilder cb = s.getCriteriaBuilder();
+		CriteriaQuery<NaturalIdOnManyToOne> criteriaQuery = cb.createQuery( NaturalIdOnManyToOne.class );
+		Root<NaturalIdOnManyToOne> root = criteriaQuery.from( NaturalIdOnManyToOne.class );
+		criteriaQuery.select( root );
+		criteriaQuery.where( cb.equal( root.get( "citizen" ), c1 ));
+		Query<NaturalIdOnManyToOne> query = s.createQuery( criteriaQuery );
+		query.setCacheable( true );
 
 		// first query
-		List results = criteria.list();
-		assertEquals( 1, results.size() );
+		query.uniqueResult();
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() ); // one for Citizen, one for NaturalIdOnManyToOne
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// query a second time - result should be in session cache
-		criteria.list();
+		query.uniqueResult();
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
 		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );

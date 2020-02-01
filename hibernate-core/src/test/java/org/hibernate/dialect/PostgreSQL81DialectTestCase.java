@@ -81,7 +81,7 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		SQLException psqlException = new java.sql.SQLException("ERROR: duplicate key value violates unique constraint \"uk_4bm1x2ultdmq63y3h5r3eg0ej\" Detail: Key (username, server_config)=(user, 1) already exists.", "23505");
 		BatchUpdateException batchUpdateException = new BatchUpdateException("Concurrent Error", "23505", null);
 		batchUpdateException.setNextException(psqlException);
-		String constraintName = dialect.getViolatedConstraintNameExtracter().extractConstraintName(batchUpdateException);
+		String constraintName = dialect.getViolatedConstraintNameExtractor().extractConstraintName(batchUpdateException);
 		assertThat(constraintName, is("uk_4bm1x2ultdmq63y3h5r3eg0ej"));
 	}
 

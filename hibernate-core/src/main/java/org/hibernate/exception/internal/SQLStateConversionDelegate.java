@@ -104,7 +104,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 				}
 				else if ( INTEGRITY_VIOLATION_CATEGORIES.contains( sqlStateClassCode ) ) {
 					final String constraintName = getConversionContext()
-							.getViolatedConstraintNameExtracter()
+							.getViolatedConstraintNameExtractor()
 							.extractConstraintName( sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}

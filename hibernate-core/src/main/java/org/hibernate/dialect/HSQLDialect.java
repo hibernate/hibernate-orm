@@ -313,7 +313,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return version < 200 ? EXTRACTOR_18 : EXTRACTOR_20;
 	}
 

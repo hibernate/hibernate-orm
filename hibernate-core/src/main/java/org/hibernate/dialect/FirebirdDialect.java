@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -504,7 +503,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 
@@ -568,7 +567,7 @@ public class FirebirdDialect extends Dialect {
 					// *no error name* (Operation violates CHECK constraint {0} on view or table)
 				case 335544665:
 					// isc_unique_key_violation (violation of PRIMARY or UNIQUE KEY constraint "{0}" on table "{1}")
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
+					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
 							sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 			}
@@ -578,7 +577,7 @@ public class FirebirdDialect extends Dialect {
 			if ( exceptionMessage != null ) {
 				if ( exceptionMessage.contains( "violation of " )
 						|| exceptionMessage.contains( "violates CHECK constraint" ) ) {
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(
+					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(
 							sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}

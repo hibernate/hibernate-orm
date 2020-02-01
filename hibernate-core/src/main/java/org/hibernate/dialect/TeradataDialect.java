@@ -387,8 +387,8 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
-		return getVersion() < 14 ? super.getViolatedConstraintNameExtracter() : EXTRACTOR;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return getVersion() < 14 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static ViolatedConstraintNameExtractor EXTRACTOR =

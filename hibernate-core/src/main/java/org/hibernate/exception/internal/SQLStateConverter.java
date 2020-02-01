@@ -22,7 +22,7 @@ public class SQLStateConverter extends StandardSQLExceptionConverter implements 
 		super();
 		final ConversionContext conversionContext = new ConversionContext() {
 			@Override
-			public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+			public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 				return extracter;
 			}
 		};

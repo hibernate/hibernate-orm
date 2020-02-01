@@ -38,8 +38,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.jboss.logging.Logger;
 
-import java.sql.SQLException;
-
 import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
@@ -236,7 +234,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 
@@ -268,7 +266,7 @@ public class H2Dialect extends Dialect {
 					return new PessimisticLockException(message, sqlException, sql);
 				case 90006:
 					// NULL not allowed for column [90006-145]
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
 			}
 

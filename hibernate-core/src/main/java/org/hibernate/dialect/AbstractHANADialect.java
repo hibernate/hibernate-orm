@@ -861,7 +861,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			// 461 - foreign key constraint violation
 			// 462 - failed on update or delete by foreign key constraint violation
 			if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
-				final String constraintName = getViolatedConstraintNameExtracter()
+				final String constraintName = getViolatedConstraintNameExtractor()
 						.extractConstraintName( sqlException );
 
 				return new ConstraintViolationException( message, sqlException, sql, constraintName );

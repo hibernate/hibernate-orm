@@ -704,7 +704,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 
@@ -760,7 +760,7 @@ public class OracleDialect extends Dialect {
 
 				case 1407:
 					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 
 				default:

@@ -325,7 +325,7 @@ public class CacheDialect extends Dialect {
 			if ( sqlStateClassCode != null ) {
 				int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 				if ( errorCode >= 119 && errorCode <= 127 && errorCode != 126 ) {
-					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName(sqlException);
+					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}
 
@@ -340,7 +340,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 

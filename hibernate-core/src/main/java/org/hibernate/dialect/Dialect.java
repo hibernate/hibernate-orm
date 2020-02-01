@@ -1792,7 +1792,7 @@ public abstract class Dialect implements ConversionContext {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR = sqle -> null;
 
-	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 

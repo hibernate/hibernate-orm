@@ -23,8 +23,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -237,32 +237,23 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		/**
-		 * Extract the name of the violated constraint from the given SQLException.
-		 *
-		 * @param sqle The exception that was the result of the constraint violation.
-		 * @return The extracted constraint name.
-		 */
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
-			// 23000: Check constraint violation: {0}
-			// 23001: Unique index or primary key violation: {0}
-			if ( sqle.getSQLState().startsWith( "23" ) ) {
-				final String message = sqle.getMessage();
-				final int idx = message.indexOf( "violation: " );
-				if ( idx > 0 ) {
-					constraintName = message.substring( idx + "violation: ".length() );
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				// 23000: Check constraint violation: {0}
+				// 23001: Unique index or primary key violation: {0}
+				if ( sqle.getSQLState().startsWith( "23" ) ) {
+					final String message = sqle.getMessage();
+					final int idx = message.indexOf( "violation: " );
+					if ( idx > 0 ) {
+						return message.substring( idx + "violation: ".length() );
+					}
 				}
-			}
-			return constraintName;
-		}
-	};
+				return null;
+			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {

@@ -16,7 +16,7 @@ import java.util.List;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -38,13 +38,7 @@ public class SqlExceptionHelper {
 	private static final String DEFAULT_WARNING_MSG = "SQL Warning";
 	private final boolean logWarnings;
 
-	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter(
-			new ViolatedConstraintNameExtracter() {
-				public String extractConstraintName(SQLException e) {
-					return null;
-				}
-			}
-	);
+	private static final SQLExceptionConverter DEFAULT_CONVERTER = new SQLStateConverter( e -> null );
 
 	private SQLExceptionConverter sqlExceptionConverter;
 

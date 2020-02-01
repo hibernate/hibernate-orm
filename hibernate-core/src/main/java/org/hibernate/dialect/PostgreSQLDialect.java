@@ -24,8 +24,8 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsAnsiDateLiteral;
 import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsAnsiTimeLiteral;
@@ -520,34 +521,37 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
 	/**
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
 	 * Orginally contributed by Denny Bartelt.
 	 */
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
-			switch (sqlState) {
-				// CHECK VIOLATION
-				case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
-				// UNIQUE VIOLATION
-				case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
-				// FOREIGN KEY VIOLATION
-				case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
-				// NOT NULL VIOLATION
-				case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
-				// TODO: RESTRICT VIOLATION
-				case 23001: return null;
-				// ALL OTHER
-				default: return null;
-			}
-		}
-	};
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				switch ( Integer.parseInt( JdbcExceptionHelper.extractSqlState( sqle ) ) ) {
+					// CHECK VIOLATION
+					case 23514:
+						return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
+					// UNIQUE VIOLATION
+					case 23505:
+						return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
+					// FOREIGN KEY VIOLATION
+					case 23503:
+						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+					// NOT NULL VIOLATION
+					case 23502:
+						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+					// TODO: RESTRICT VIOLATION
+					case 23001:
+						return null;
+					// ALL OTHER
+					default:
+						return null;
+				}
+			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {

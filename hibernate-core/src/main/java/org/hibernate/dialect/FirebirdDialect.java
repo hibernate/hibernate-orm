@@ -27,7 +27,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
@@ -504,33 +504,30 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return EXTRACTOR;
 	}
 
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
+	private static final Pattern FOREIGN_UNIQUE_OR_PRIMARY_KEY_PATTERN =
+			Pattern.compile( "violation of .+? constraint \"([^\"]+)\"" );
+	private static final Pattern CHECK_CONSTRAINT_PATTERN =
+			Pattern.compile( "Operation violates CHECK constraint (.+?) on view or table" );
 
-		final Pattern foreignUniqueOrPrimaryKeyPattern = Pattern.compile( "violation of .+? constraint \"([^\"]+)\"" );
-		final Pattern checkConstraintPattern = Pattern.compile(
-				"Operation violates CHECK constraint (.+?) on view or table" );
-
-		@Override
-		public String extractConstraintName(SQLException sqle) {
-			String message = sqle.getMessage();
-			if ( message != null ) {
-				Matcher foreignUniqueOrPrimaryKeyMatcher =
-						foreignUniqueOrPrimaryKeyPattern.matcher( message );
-				if ( foreignUniqueOrPrimaryKeyMatcher.find() ) {
-					return foreignUniqueOrPrimaryKeyMatcher.group( 1 );
-				}
-
-				Matcher checkConstraintMatcher = checkConstraintPattern.matcher( message );
-				if ( checkConstraintMatcher.find() ) {
-					return checkConstraintMatcher.group( 1 );
-				}
+	private static final ViolatedConstraintNameExtractor EXTRACTOR = sqle -> {
+		String message = sqle.getMessage();
+		if ( message != null ) {
+			Matcher foreignUniqueOrPrimaryKeyMatcher =
+					FOREIGN_UNIQUE_OR_PRIMARY_KEY_PATTERN.matcher( message );
+			if ( foreignUniqueOrPrimaryKeyMatcher.find() ) {
+				return foreignUniqueOrPrimaryKeyMatcher.group( 1 );
 			}
-			return null;
+
+			Matcher checkConstraintMatcher = CHECK_CONSTRAINT_PATTERN.matcher( message );
+			if ( checkConstraintMatcher.find() ) {
+				return checkConstraintMatcher.group( 1 );
+			}
 		}
+		return null;
 	};
 
 	@Override

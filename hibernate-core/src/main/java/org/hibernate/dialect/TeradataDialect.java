@@ -15,8 +15,8 @@ import org.hibernate.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
@@ -31,6 +31,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -385,43 +387,35 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return getVersion() < 14 ? super.getViolatedConstraintNameExtracter() : EXTRACTER;
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtracter() {
+		return getVersion() < 14 ? super.getViolatedConstraintNameExtracter() : EXTRACTOR;
 	}
 
-	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-		/**
-		 * Extract the name of the violated constraint from the given SQLException.
-		 *
-		 * @param sqle The exception that was the result of the constraint violation.
-		 * @return The extracted constraint name.
-		 */
-		@Override
-		protected String doExtractConstraintName(SQLException sqle) throws NumberFormatException {
-			String constraintName = null;
-
-			int errorCode = sqle.getErrorCode();
-			switch (errorCode) {
-				case 27003:
-					constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
-					break;
-				case 2700:
-					constraintName = extractUsingTemplate( "Referential constraint", "violation:", sqle.getMessage() );
-					break;
-				case 5317:
-					constraintName = extractUsingTemplate( "Check constraint (", ") violated.", sqle.getMessage() );
-					break;
-			}
-
-			if ( constraintName != null ) {
-				int i = constraintName.indexOf( '.' );
-				if ( i != -1 ) {
-					constraintName = constraintName.substring( i + 1 );
+	private static ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				String constraintName;
+				switch ( sqle.getErrorCode() ) {
+					case 27003:
+						constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
+						break;
+					case 2700:
+						constraintName = extractUsingTemplate( "Referential constraint", "violation:", sqle.getMessage() );
+						break;
+					case 5317:
+						constraintName = extractUsingTemplate( "Check constraint (", ") violated.", sqle.getMessage() );
+						break;
+					default:
+						return null;
 				}
-			}
-			return constraintName;
-		}
-	};
+
+				if ( constraintName != null ) {
+					int i = constraintName.indexOf( '.' );
+					if ( i != -1 ) {
+						constraintName = constraintName.substring( i + 1 );
+					}
+				}
+				return constraintName;
+			} );
 
 	@Override
 	public boolean supportsLockTimeouts() {

@@ -7,6 +7,7 @@
 package org.hibernate.exception.spi;
 
 import java.sql.SQLException;
+import java.util.function.Function;
 
 /**
  * Knows how to extract a violated constraint name from an error message based on the
@@ -15,7 +16,13 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public abstract class TemplatedViolatedConstraintNameExtracter implements ViolatedConstraintNameExtracter {
+public class TemplatedViolatedConstraintNameExtractor implements ViolatedConstraintNameExtractor {
+
+	private Function<SQLException,String> extractConstraintName;
+
+	public TemplatedViolatedConstraintNameExtractor(Function<SQLException,String> extractConstraintName) {
+		this.extractConstraintName = extractConstraintName;
+	}
 
 	@Override
 	public String extractConstraintName(SQLException sqle) {
@@ -24,7 +31,7 @@ public abstract class TemplatedViolatedConstraintNameExtracter implements Violat
 
 			// handle nested exceptions
 			do {
-				constraintName = doExtractConstraintName(sqle);
+				constraintName = extractConstraintName.apply(sqle);
 				if (sqle.getNextException() == null
 						|| sqle.getNextException() == sqle) {
 					break;
@@ -41,8 +48,6 @@ public abstract class TemplatedViolatedConstraintNameExtracter implements Violat
 		}
 	}
 
-	protected abstract String doExtractConstraintName(SQLException sqle) throws NumberFormatException;
-
 	/**
 	 * Extracts the constraint name based on a template (i.e., <i>templateStart</i><b>constraintName</b><i>templateEnd</i>).
 	 *
@@ -51,7 +56,7 @@ public abstract class TemplatedViolatedConstraintNameExtracter implements Violat
 	 * @param message       The templated error message containing the constraint name.
 	 * @return The found constraint name, or null.
 	 */
-	protected String extractUsingTemplate(String templateStart, String templateEnd, String message) {
+	public static String extractUsingTemplate(String templateStart, String templateEnd, String message) {
 		int templateStartPosition = message.indexOf( templateStart );
 		if ( templateStartPosition < 0 ) {
 			return null;

@@ -1756,13 +1756,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			return bigIntegerLiteral( ctx.literal().BIG_INTEGER_LITERAL().getText() );
 		}
 		else if ( ctx.literal().HEX_LITERAL() != null ) {
-			final String text = ctx.literal().HEX_LITERAL().getText();
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				return longLiteral( text );
-			}
-			else {
-				return integerLiteral( text );
-			}
+			return hexLiteral( ctx.literal().HEX_LITERAL().getText() );
 		}
 		else if ( ctx.literal().FLOAT_LITERAL() != null ) {
 			return floatLiteral( ctx.literal().FLOAT_LITERAL().getText() );
@@ -2073,6 +2067,35 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		catch (NumberFormatException e) {
 			throw new LiteralNumberFormatException(
 					"Unable to convert sqm literal [" + originalText + "] to Long",
+					e
+			);
+		}
+	}
+
+	private SqmLiteral<Number> hexLiteral(String text) {
+		final String originalText = text;
+		text = text.substring( 2 );
+		try {
+			final Number value;
+			final BasicDomainType type;
+			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
+				text = text.substring( 0, text.length() - 1 );
+				value = Long.parseUnsignedLong( text, 16 );
+				type = resolveExpressableTypeBasic( Long.class );
+			}
+			else {
+				value = Integer.parseUnsignedInt( text, 16 );
+				type = resolveExpressableTypeBasic( Integer.class );
+			}
+			return new SqmLiteral<Number>(
+					value,
+					type,
+					creationContext.getNodeBuilder()
+			);
+		}
+		catch (NumberFormatException e) {
+			throw new LiteralNumberFormatException(
+					"Unable to convert sqm literal [" + originalText + "]",
 					e
 			);
 		}

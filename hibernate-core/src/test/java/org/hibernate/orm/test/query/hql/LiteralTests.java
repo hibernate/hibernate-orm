@@ -13,6 +13,12 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 /**
  * @author Steve Ebersole
  */
@@ -186,6 +192,28 @@ public class LiteralTests {
 							.list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theBoolean = false or e1.theBoolean = true" )
 							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testHexadecimalLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 0x1A2B" )
+							.getSingleResult(), is(6699) );
+				}
+		);
+	}
+
+	@Test
+	public void testBigLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 10000000000000000bi" )
+							.getSingleResult(), is( BigInteger.valueOf(10000000000000000L) ) );
+					assertThat( session.createQuery( "select 9999999999999.9999bd" )
+							.getSingleResult(), is( BigDecimal.valueOf(99999999999999999L, 4) ) );;
 				}
 		);
 	}

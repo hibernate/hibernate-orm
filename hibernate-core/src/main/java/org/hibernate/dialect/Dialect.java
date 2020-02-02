@@ -3285,6 +3285,10 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public String formatBinaryliteral(byte[] bytes) {
+		return "X'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
+	}
+
 	/**
 	 * Pluggable strategy for determining the Size to use for columns of
 	 * a given SQL type when no explicit Size has been given.

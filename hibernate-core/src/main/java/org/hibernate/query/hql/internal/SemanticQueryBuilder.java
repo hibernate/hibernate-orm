@@ -1746,6 +1746,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if ( ctx.literal().STRING_LITERAL() != null ) {
 			return stringLiteral( ctx.literal().STRING_LITERAL().getText() );
 		}
+		else if ( ctx.literal().BINARY_LITERAL() != null ) {
+			return binaryLiteral( ctx.literal().BINARY_LITERAL().getText() );
+		}
 		else if ( ctx.literal().INTEGER_LITERAL() != null ) {
 			return integerLiteral( ctx.literal().INTEGER_LITERAL().getText() );
 		}
@@ -2030,6 +2033,14 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		return new SqmLiteral<>(
 				text,
 				resolveExpressableTypeBasic( String.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral<byte[]> binaryLiteral(String text) {
+		return new SqmLiteral(
+				StandardBasicTypes.BINARY.fromStringValue( text.substring( 2, text.length()-1 ) ),
+				resolveExpressableTypeBasic( byte[].class ),
 				creationContext.getNodeBuilder()
 		);
 	}

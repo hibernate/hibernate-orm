@@ -585,6 +585,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final Pattern OFFSET_PATTERN = compile(".*[-+]\\d{2}(:\\d{2})?$");
 
 	@Override
+	public String formatBinaryliteral(byte[] bytes) {
+		return "0x" + StandardBasicTypes.BINARY.toString( bytes );
+	}
+
+	@Override
 	protected String wrapTimestampLiteral(String timestamp) {
 		//needed because the {ts ... } JDBC escape chokes on microseconds
 		return OFFSET_PATTERN.matcher( timestamp ).matches()

@@ -692,6 +692,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String formatBinaryliteral(byte[] bytes) {
+		return "bytea '\\x" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
+	}
+
+	@Override
 	protected String wrapDateLiteral(String date) {
 		return wrapAsAnsiDateLiteral(date);
 	}

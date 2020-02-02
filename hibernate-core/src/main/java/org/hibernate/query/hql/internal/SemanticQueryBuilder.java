@@ -167,7 +167,6 @@ import static java.util.Collections.singletonList;
 import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
 import static org.hibernate.query.TemporalUnit.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
-import static org.hibernate.type.descriptor.DateTimeUtils.OFFSET_DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
 /**
@@ -264,7 +263,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// To-level statements
+	// Top-level statements
 
 	@Override
 	public SqmSelectStatement visitSelectStatement(HqlParser.SelectStatementContext ctx) {
@@ -828,7 +827,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve entity name [" + entityName + "] as DML target", entityName );
 		}
-
+		checkFQNEntityNameJpaComplianceViolationIfNeeded( entityName, entityReference );
 		return entityReference;
 	}
 
@@ -894,6 +893,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		final EntityDomainType entityDescriptor = getCreationContext().getJpaMetamodel().resolveHqlEntityReference(
 				name
 		);
+
+		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
@@ -3508,6 +3509,16 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				IdentifiableDomainType downcastTarget) {
 //			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( true, downcastTarget, DowncastLocation.FROM );
 			throw new NotYetImplementedFor6Exception();
+		}
+	}
+	
+	private void checkFQNEntityNameJpaComplianceViolationIfNeeded(String name, EntityDomainType entityDescriptor) {
+		if ( getCreationOptions().useStrictJpaCompliance() && ! name.equals( entityDescriptor.getName() ) ) {
+			// FQN is the only possible reason
+			throw new StrictJpaComplianceViolation("Encountered FQN entity name [" + name + "], " +
+					"but strict JPQL compliance was requested ( [" + entityDescriptor.getName() + "] should be used instead )",
+					StrictJpaComplianceViolation.Type.FQN_ENTITY_NAME
+			);
 		}
 	}
 }

@@ -48,7 +48,7 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 	public String toString(Byte[] bytes) {
 		final StringBuilder buf = new StringBuilder();
 		for ( Byte aByte : bytes ) {
-			final String hexStr = Integer.toHexString( aByte - Byte.MIN_VALUE );
+			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
 			if ( hexStr.length() == 1 ) {
 				buf.append( '0' );
 			}
@@ -67,7 +67,7 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 		Byte[] bytes = new Byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			final String hexStr = string.substring( i * 2, (i + 1) * 2 );
-			bytes[i] = (byte) ( Integer.parseInt( hexStr, 16 ) + Byte.MIN_VALUE );
+			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
 		}
 		return bytes;
 	}

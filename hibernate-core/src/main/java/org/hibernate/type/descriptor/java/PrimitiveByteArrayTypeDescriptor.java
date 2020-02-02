@@ -49,7 +49,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 	public String toString(byte[] bytes) {
 		final StringBuilder buf = new StringBuilder( bytes.length * 2 );
 		for ( byte aByte : bytes ) {
-			final String hexStr = Integer.toHexString( aByte - Byte.MIN_VALUE );
+			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
 			if ( hexStr.length() == 1 ) {
 				buf.append( '0' );
 			}
@@ -60,7 +60,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 
 	@Override
 	public String extractLoggableRepresentation(byte[] value) {
-		return (value == null) ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
+		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}
 
 	public byte[] fromString(String string) {
@@ -73,7 +73,7 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		byte[] bytes = new byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
 			final String hexStr = string.substring( i * 2, (i + 1) * 2 );
-			bytes[i] = (byte) (Integer.parseInt(hexStr, 16) + Byte.MIN_VALUE);
+			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
 		}
 		return bytes;
 	}

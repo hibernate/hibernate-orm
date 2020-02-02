@@ -1086,6 +1086,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String formatBinaryliteral(byte[] bytes) {
+		return "hextoraw('" + StandardBasicTypes.BINARY.toString( bytes ) + "')";
+	}
+
+	@Override
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		return (ResultSet) statement.getObject( position );
 	}

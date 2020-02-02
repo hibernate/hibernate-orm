@@ -18,6 +18,7 @@ import java.math.BigInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hibernate.type.StandardBasicTypes.BINARY;
 
 /**
  * @author Steve Ebersole
@@ -27,6 +28,18 @@ import static org.hamcrest.Matchers.is;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 public class LiteralTests {
+
+	@Test
+	public void testBinaryLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					byte[] bytes1 = (byte[]) session.createQuery( "select X'DEADBEEF'" ).getSingleResult();
+					assertThat( BINARY.toString(bytes1), is("deadbeef") );
+					byte[] bytes2 = (byte[]) session.createQuery( "select X'deadbeef'" ).getSingleResult();
+					assertThat( BINARY.toString(bytes2), is("deadbeef") );
+				}
+		);
+	}
 
 	@Test
 	public void testJdbcTimeLiteral(SessionFactoryScope scope) {

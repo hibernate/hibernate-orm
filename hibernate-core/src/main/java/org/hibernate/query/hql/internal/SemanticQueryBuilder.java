@@ -836,7 +836,9 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		log.debugf( "Attempting to resolve path [%s] as entity reference...", entityName );
 		EntityDomainType reference = null;
 		try {
-			entityName = creationContext.getJpaMetamodel().qualifyImportableName( entityName );
+			if ( !creationOptions.useStrictJpaCompliance() ) {
+				entityName = creationContext.getJpaMetamodel().qualifyImportableName( entityName );
+			}
 			reference = creationContext.getJpaMetamodel().entity( entityName );
 		}
 		catch (Exception ignore) {

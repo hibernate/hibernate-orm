@@ -74,7 +74,8 @@ dependencies {
     compile( libraries.jaxb_runtime )
 
 	// Antlr
-	antlr( libraries.antlr )
+    compile( libraries.antlr )
+    antlr( libraries.antlr )
 
 	// xjc plugin
     xjc( libraries.jaxb_runtime )

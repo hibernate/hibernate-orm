@@ -9,7 +9,6 @@ import java.util.Map;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 
@@ -20,7 +19,7 @@ public class RevengMetadataCollector {
 	private Map<String, List<ForeignKey>> oneToManyCandidates;
 	private final Map<TableIdentifier, String> suggestedIdentifierStrategies;
 
-	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector, MetaDataDialect metaDataDialect) {
+	public RevengMetadataCollector(InFlightMetadataCollector metadataCollector) {
 		this();
 		this.metadataCollector = metadataCollector;
 	}

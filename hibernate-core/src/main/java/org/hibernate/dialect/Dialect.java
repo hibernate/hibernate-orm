@@ -2988,7 +2988,9 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return {@code true} if mixed type arithmetic is supported
 	 */
-	public boolean supportsMixedTypeArithmetic() { return true; }
+	public boolean supportsMixedTypeArithmetic() {
+		return true;
+	}
 
 	public boolean isLegacyLimitHandlerBehaviorEnabled() {
 		return legacyLimitHandlerBehavior;
@@ -3067,8 +3069,12 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
-	public boolean supportsStoredProcedures() { return true; }
+	public boolean supportsStoredProcedures() {
+		return true;
+	}
 
-	public boolean supportsComputedIndexes() { return true; }
+	public boolean supportsComputedIndexes() {
+		return true;
+	}
 
 }

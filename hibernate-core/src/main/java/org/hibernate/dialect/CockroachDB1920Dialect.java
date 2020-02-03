@@ -22,97 +22,97 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  */
 public class CockroachDB1920Dialect extends PostgreSQL95Dialect {
 
-    public CockroachDB1920Dialect() {
-        super();
-        registerColumnType( Types.BLOB, "bytea" );
-    }
+	public CockroachDB1920Dialect() {
+		super();
+		registerColumnType(Types.BLOB, "bytea");
+	}
 
-    @Override
-    public IdentityColumnSupport getIdentityColumnSupport() {
-        return new CockroachDB1920IdentityColumnSupport();
-    }
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return new CockroachDB1920IdentityColumnSupport();
+	}
 
-    @Override
-    public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
-        // CockroachDB 19.2.0 does not support temporary tables, so we must override the Postgres behavior.
-        return new InlineIdsInClauseBulkIdStrategy();
-    }
+	@Override
+	public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+		// CockroachDB 19.2.0 does not support temporary tables, so we must override the Postgres behavior.
+		return new InlineIdsInClauseBulkIdStrategy();
+	}
 
-    public boolean doesReadCommittedCauseWritersToBlockReaders() {
-        return true;
-    }
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
 
-    @Override
-    public boolean supportsExpectedLobUsagePattern() {
-        return false;
-    }
+	@Override
+	public boolean supportsExpectedLobUsagePattern() {
+		return false;
+	}
 
-    @Override
-    public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-        SqlTypeDescriptor descriptor;
-        switch (sqlCode) {
-            case Types.BLOB: {
-                // Make BLOBs use byte[] storage.
-                descriptor = VarbinaryTypeDescriptor.INSTANCE;
-                break;
-            }
-            case Types.CLOB: {
-                // Make CLOBs use string storage.
-                descriptor = VarcharTypeDescriptor.INSTANCE;
-                break;
-            }
-            default: {
-                descriptor = super.getSqlTypeDescriptorOverride(sqlCode);
-                break;
-            }
-        }
-        return descriptor;
-    }
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		SqlTypeDescriptor descriptor;
+		switch (sqlCode) {
+			case Types.BLOB: {
+				// Make BLOBs use byte[] storage.
+				descriptor = VarbinaryTypeDescriptor.INSTANCE;
+				break;
+			}
+			case Types.CLOB: {
+				// Make CLOBs use string storage.
+				descriptor = VarcharTypeDescriptor.INSTANCE;
+				break;
+			}
+			default: {
+				descriptor = super.getSqlTypeDescriptorOverride(sqlCode);
+				break;
+			}
+		}
+		return descriptor;
+	}
 
-    @Override
-    public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
-        return false;
-    }
+	@Override
+	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
 
-    @Override
-    public boolean supportsLockTimeouts() {
-        return false;
-    }
+	@Override
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsSkipLocked() {
-        // CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
-        return false;
-    }
+	@Override
+	public boolean supportsSkipLocked() {
+		// CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+		return false;
+	}
 
-    @Override
-    public boolean supportsNoWait() {
-        // CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
-        return false;
-    }
+	@Override
+	public boolean supportsNoWait() {
+		// CockroachDB 19.2.0 doesn't support this: https://github.com/cockroachdb/cockroach/issues/40476
+		return false;
+	}
 
-    @Override
-    public boolean supportsMixedTypeArithmetic() {
-        return false;
-    }
+	@Override
+	public boolean supportsMixedTypeArithmetic() {
+		return false;
+	}
 
-    @Override
-    public boolean canCreateSchema() {
-        return false;
-    }
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsStoredProcedures() {
-        return false;
-    }
+	@Override
+	public boolean supportsStoredProcedures() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsComputedIndexes() {
-        return false;
-    }
+	@Override
+	public boolean supportsComputedIndexes() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsLoFunctions() {
-        return false;
-    }
+	@Override
+	public boolean supportsLoFunctions() {
+		return false;
+	}
 }

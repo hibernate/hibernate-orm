@@ -9,10 +9,16 @@ package org.hibernate.bytecode.internal;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.cfg.Environment;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+/**
+ * Most commonly the {@link ProxyFactoryFactory} will depend directly on the chosen {@link BytecodeProvider},
+ * however by registering them as two separate services we can allow to override either one
+ * or both of them.
+ * @author Sanne Grinovero
+ */
 public final class ProxyFactoryFactoryInitiator implements StandardServiceInitiator<ProxyFactoryFactory> {
 
 	/**
@@ -22,7 +28,8 @@ public final class ProxyFactoryFactoryInitiator implements StandardServiceInitia
 
 	@Override
 	public ProxyFactoryFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return Environment.getBytecodeProvider().getProxyFactoryFactory();
+		final BytecodeProvider bytecodeProvider = registry.getService( BytecodeProvider.class );
+		return bytecodeProvider.getProxyFactoryFactory();
 	}
 
 	@Override

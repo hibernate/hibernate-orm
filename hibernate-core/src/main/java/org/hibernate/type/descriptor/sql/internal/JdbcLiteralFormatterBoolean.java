@@ -23,6 +23,6 @@ public class JdbcLiteralFormatterBoolean extends BasicJdbcLiteralFormatter {
 
 	@Override
 	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
-		return unwrap( value, Boolean.class, session ).toString();
+		return dialect.toBooleanValueString( unwrap( value, Boolean.class, session ) );
 	}
 }

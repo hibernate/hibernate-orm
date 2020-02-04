@@ -7,10 +7,12 @@
 package org.hibernate.sql.results.graph.collection;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * Initializer implementation for initializing collections (plural attributes)
@@ -38,4 +40,6 @@ public interface CollectionInitializer extends Initializer {
 	default void endLoading(ExecutionContext context) {
 		// by default - nothing to do
 	}
+
+	CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
 }

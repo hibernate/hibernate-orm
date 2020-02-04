@@ -153,5 +153,11 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 		public PersistentCollection getCollectionInstance() {
 			return instance;
 		}
+
+		@Override
+		public CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState) {
+			resolveKey( rowProcessingState );
+			return collectionKey;
+		}
 	}
 }

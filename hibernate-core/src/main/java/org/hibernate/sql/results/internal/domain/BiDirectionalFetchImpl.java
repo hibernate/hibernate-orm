@@ -12,12 +12,19 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -28,7 +35,11 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.collection.internal.AbstractCollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -93,6 +104,7 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
+				fetchable,
 				getReferencedPath(),
 				fetchable.getJavaTypeDescriptor()
 		);
@@ -170,10 +182,13 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	private static class CircularFetchAssembler implements DomainResultAssembler {
 		private final NavigablePath circularPath;
 		private final JavaTypeDescriptor javaTypeDescriptor;
+		private final Fetchable fetchable;
 
 		public CircularFetchAssembler(
+				Fetchable fetchable,
 				NavigablePath circularPath,
 				JavaTypeDescriptor javaTypeDescriptor) {
+			this.fetchable = fetchable;
 			this.circularPath = circularPath;
 			this.javaTypeDescriptor = javaTypeDescriptor;
 		}
@@ -181,6 +196,24 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 			final EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
+			if ( initializer == null ) {
+
+				final Initializer parentInitializer = rowProcessingState.resolveInitializer(
+						circularPath.getParent() );
+				assert parentInitializer instanceof CollectionInitializer;
+				final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
+				final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
+				final EntityKey entityKey = new EntityKey(
+						collectionKey.getKey(),
+						(EntityPersister) ( (AttributeMapping) fetchable ).getMappedTypeDescriptor()
+				);
+
+				final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
+						.getSession();
+				return session.getPersistenceContext()
+						.getEntity( entityKey );
+
+			}
 			if ( initializer.getInitializedInstance() == null ) {
 				initializer.resolveKey( rowProcessingState );
 				initializer.resolveInstance( rowProcessingState );
@@ -199,9 +232,14 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 
 			NavigablePath path = circularPath.getParent();
 			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-			while ( ! ( parentInitializer instanceof EntityInitializer ) ) {
+			while ( !( parentInitializer instanceof EntityInitializer) && path.getParent() != null ) {
 				path = path.getParent();
 				parentInitializer = rowProcessingState.resolveInitializer( path );
+
+			}
+
+			if ( !( parentInitializer instanceof EntityInitializer ) ) {
+				return null;
 			}
 
 			return (EntityInitializer) parentInitializer;

@@ -112,6 +112,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 		return keyCollectionValue;
 	}
 
+	@Override
 	public CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState) {
 		resolveKey( rowProcessingState );
 		return collectionKey;

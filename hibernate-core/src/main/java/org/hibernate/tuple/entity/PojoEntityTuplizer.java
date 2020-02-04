@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
@@ -182,9 +183,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			PersistentClass persistentClass,
 			Getter idGetter,
 			Setter idSetter) {
-		// TODO : YUCK!!!  fix after HHH-1907 is complete
-		return Environment.getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory( getFactory() );
-//		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
+		ProxyFactoryFactory proxyFactory = getFactory().getServiceRegistry().getService( ProxyFactoryFactory.class );
+		return proxyFactory.buildProxyFactory( getFactory() );
 	}
 
 	@Override

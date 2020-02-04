@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -124,7 +125,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	protected Instantiator buildInstantiator(Component component) {
 		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( this.componentClass ) ) {
-			return new ProxiedInstantiator( this.componentClass );
+			ProxyFactoryFactory proxyFactoryFactory = component.getServiceRegistry().getService( ProxyFactoryFactory.class );
+			return new ProxiedInstantiator( this.componentClass, proxyFactoryFactory );
 		}
 		if ( optimizer == null ) {
 			return new PojoInstantiator( this.componentClass, null );
@@ -151,16 +153,14 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		private final Class proxiedClass;
 		private final BasicProxyFactory factory;
 
-		public ProxiedInstantiator(Class componentClass) {
+		public ProxiedInstantiator(Class componentClass, ProxyFactoryFactory proxyFactoryFactory) {
 			proxiedClass = componentClass;
 			if ( proxiedClass.isInterface() ) {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
+				factory = proxyFactoryFactory
 						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
 			}
 			else {
-				factory = Environment.getBytecodeProvider()
-						.getProxyFactoryFactory()
+				factory = proxyFactoryFactory
 						.buildBasicProxyFactory( proxiedClass, null );
 			}
 		}

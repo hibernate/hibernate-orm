@@ -23,12 +23,13 @@ import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {
 
-	public static DatabaseReader create(Properties properties, ReverseEngineeringStrategy revengStrategy,
-			MetaDataDialect mdd, ServiceRegistry serviceRegistry) {
+	public static DatabaseReader create(
+			Properties properties, 
+			ReverseEngineeringStrategy revengStrategy,
+			MetaDataDialect mdd, 
+			ServiceRegistry serviceRegistry) {
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
-		String defaultCatalogName = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		String defaultSchemaName = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		return new DatabaseReader(mdd, connectionProvider, defaultCatalogName, defaultSchemaName, revengStrategy);
+		return new DatabaseReader(properties, mdd, connectionProvider, revengStrategy);
 	}
 
 	private final ReverseEngineeringStrategy revengStrategy;
@@ -40,13 +41,16 @@ public class DatabaseReader {
 	private final String defaultSchema;
 	private final String defaultCatalog;
 
-	private DatabaseReader(MetaDataDialect dialect, ConnectionProvider provider, String defaultCatalog,
-			String defaultSchema, ReverseEngineeringStrategy reveng) {
+	private DatabaseReader(
+			Properties properties, 
+			MetaDataDialect dialect, 
+			ConnectionProvider provider, 
+			ReverseEngineeringStrategy reveng) {
 		this.metadataDialect = dialect;
 		this.provider = provider;
 		this.revengStrategy = reveng;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
+		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
+		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		if (revengStrategy == null) {
 			throw new IllegalStateException("Strategy cannot be null");
 		}

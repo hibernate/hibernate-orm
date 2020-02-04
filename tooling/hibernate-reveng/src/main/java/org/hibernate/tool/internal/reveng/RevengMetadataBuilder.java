@@ -16,7 +16,6 @@ import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
@@ -50,8 +49,6 @@ public class RevengMetadataBuilder {
 	private final BinderContext binderContext;
 	
 	private final StandardServiceRegistry serviceRegistry;
-	private final String defaultCatalog;
-	private final String defaultSchema;
 	
 	private RevengMetadataBuilder(
 			Properties properties,
@@ -72,8 +69,6 @@ public class RevengMetadataBuilder {
 						bootstrapContext,
 						metadataBuildingOptions);
 		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(bootstrapContext, metadataBuildingOptions, metadataCollector);
-		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		this.binderContext = BinderContext
 				.create(
 						metadataBuildingContext, 

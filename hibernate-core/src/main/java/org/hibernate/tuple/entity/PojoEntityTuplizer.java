@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
@@ -76,16 +77,13 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			optimizer = null;
 		}
 		else {
-			// todo : YUCK!!!
-			optimizer = Environment.getBytecodeProvider().getReflectionOptimizer(
+			final BytecodeProvider bytecodeProvider = entityMetamodel.getSessionFactory().getServiceRegistry().getService( BytecodeProvider.class );
+			optimizer = bytecodeProvider.getReflectionOptimizer(
 					mappedClass,
 					getterNames,
 					setterNames,
 					propTypes
 			);
-//			optimizer = getFactory().getSettings().getBytecodeProvider().getReflectionOptimizer(
-//					mappedClass, getterNames, setterNames, propTypes
-//			);
 		}
 	}
 

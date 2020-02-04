@@ -8,6 +8,7 @@ package org.hibernate.jpa.event.internal;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.property.access.spi.Getter;
@@ -33,7 +34,14 @@ final class EmbeddableCallback extends AbstractCallback {
 		try {
 			Object embeddable = embeddableGetter.get( entity );
 			if ( embeddable != null ) {
-				callbackMethod.invoke( embeddable );
+				if(embeddable instanceof Collection){
+					for(Object e:(Collection<?>) embeddable){
+						callbackMethod.invoke(e);
+					}
+				}
+				else {
+					callbackMethod.invoke(embeddable);
+				}
 			}
 			return true;
 		}

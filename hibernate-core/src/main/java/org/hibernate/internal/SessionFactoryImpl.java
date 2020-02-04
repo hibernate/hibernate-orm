@@ -208,8 +208,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
 
-		metadata.initSessionFactory( this );
-
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
 		String sfName = settings.getSessionFactoryName();
@@ -300,6 +298,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					metadata,
 					determineJpaMetaModelPopulationSetting( properties )
 			);
+
+			metadata.initSessionFactory( this );
 
 			//Named Queries:
 			this.namedQueryRepository = metadata.buildNamedQueryRepository( this );

@@ -20,10 +20,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ClassLoadingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XMethod;
+import org.hibernate.annotations.common.reflection.*;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
@@ -239,9 +237,22 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public Callback[] resolveEmbeddableCallbacks(Class entityClass, Property embeddableProperty, CallbackType callbackType, ReflectionManager reflectionManager) {
-
-		final String embeddableClassName = embeddableProperty.getType().getReturnedClass().getName();
-		final XClass embeddableXClass = reflectionManager.classForName( embeddableClassName );
+		XClass embeddableXClass = null;
+		//First lookup for Collection of embeddable and get the embeddable class
+		XClass entityXClass = reflectionManager.classForName(entityClass.getName());
+		for (XProperty prop : entityXClass.getDeclaredProperties(AccessType.FIELD.getType())) {
+			if (prop.getName().equals(embeddableProperty.getName())) {
+				if(prop.isCollection()){
+					embeddableXClass = prop.getElementClass();
+					break;
+				}
+			}
+		}
+		//else get class from a single embeddable
+		if(embeddableXClass == null){
+			final String embeddableClassName = embeddableProperty.getType().getReturnedClass().getName();
+			embeddableXClass = reflectionManager.classForName( embeddableClassName );
+		}
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
 		final List<Callback> callbacks = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();

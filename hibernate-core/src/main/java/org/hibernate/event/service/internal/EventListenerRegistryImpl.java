@@ -51,6 +51,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
 import static org.hibernate.event.spi.EventType.CLEAR;
@@ -149,7 +151,17 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 					propertyIterator.hasNext(); ) {
 				Property property = (Property) propertyIterator.next();
 
-				if ( property.getType().isComponentType() ) {
+				boolean mustBuildCallbacksForEmbeddable;
+				if(property.getType().isCollectionType()){
+					CollectionType collectionType = (CollectionType) property.getType();
+					final Type collectionElementType = collectionType.getElementType(getSessionFactory());
+					mustBuildCallbacksForEmbeddable = collectionElementType.isComponentType();
+				}
+				else {
+					mustBuildCallbacksForEmbeddable = property.getType().isComponentType();
+				}
+
+				if (mustBuildCallbacksForEmbeddable) {
 					callbackBuilder.buildCallbacksForEmbeddable(
 							property,
 							persistentClass.getClassName(),

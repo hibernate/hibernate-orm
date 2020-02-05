@@ -501,7 +501,6 @@ nullifFunction
 
 literal
 	: STRING_LITERAL
-	| BINARY_LITERAL
 	| INTEGER_LITERAL
 	| LONG_LITERAL
 	| BIG_INTEGER_LITERAL
@@ -512,8 +511,14 @@ literal
 	| NULL
 	| TRUE
 	| FALSE
+	| binaryLiteral
 	| temporalLiteral
 	| generalizedLiteral
+	;
+
+binaryLiteral
+	: BINARY_LITERAL
+	| LEFT_BRACE HEX_LITERAL (COMMA HEX_LITERAL)* RIGHT_BRACE
 	;
 
 temporalLiteral

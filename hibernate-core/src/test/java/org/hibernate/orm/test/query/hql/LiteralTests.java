@@ -37,6 +37,11 @@ public class LiteralTests {
 					assertThat( BINARY.toString(bytes1), is("deadbeef") );
 					byte[] bytes2 = (byte[]) session.createQuery( "select X'deadbeef'" ).getSingleResult();
 					assertThat( BINARY.toString(bytes2), is("deadbeef") );
+
+					byte[] bytes3 = (byte[]) session.createQuery( "select {0xDE, 0xAD, 0xBE, 0xEF}" ).getSingleResult();
+					assertThat( BINARY.toString(bytes3), is("deadbeef") );
+					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}'" ).getSingleResult();
+					assertThat( BINARY.toString(bytes4), is("deadbeef") );
 				}
 		);
 	}

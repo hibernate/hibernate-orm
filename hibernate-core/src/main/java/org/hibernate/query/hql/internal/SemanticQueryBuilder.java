@@ -1746,9 +1746,6 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		if ( ctx.literal().STRING_LITERAL() != null ) {
 			return stringLiteral( ctx.literal().STRING_LITERAL().getText() );
 		}
-		else if ( ctx.literal().BINARY_LITERAL() != null ) {
-			return binaryLiteral( ctx.literal().BINARY_LITERAL().getText() );
-		}
 		else if ( ctx.literal().INTEGER_LITERAL() != null ) {
 			return integerLiteral( ctx.literal().INTEGER_LITERAL().getText() );
 		}
@@ -1778,6 +1775,22 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		}
 		else if ( ctx.literal().NULL() != null ) {
 			return new SqmLiteralNull( creationContext.getQueryEngine().getCriteriaBuilder() );
+		}
+
+		if ( ctx.literal().binaryLiteral() != null ) {
+			if ( ctx.literal().binaryLiteral().BINARY_LITERAL() != null ) {
+				return binaryLiteral( ctx.literal().binaryLiteral().BINARY_LITERAL().getText() );
+			}
+			else {
+				StringBuilder text = new StringBuilder("x'");
+				for ( TerminalNode hex : ctx.literal().binaryLiteral().HEX_LITERAL() ) {
+					if ( hex.getText().length()!=4 ) {
+						throw new LiteralNumberFormatException( "not a byte: " + hex.getText() );
+					}
+					text.append( hex.getText().substring(2) );
+				}
+				return binaryLiteral( text.append("'").toString() );
+			}
 		}
 
 		if ( ctx.literal().temporalLiteral() != null ) {

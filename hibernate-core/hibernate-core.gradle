@@ -164,11 +164,9 @@ jar {
             // to use an older version of JAXB (the only one we can use in Karaf)
             "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
 
-//        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
-//        // uses ClassLoaderServiceImpl.
-//        instruction 'Export-Package',
-//            'org.hibernate.boot.registry.classloading.internal',
-//            '*'
+        instruction 'Export-Package',
+            'org.hibernate.boot.registry.classloading.internal',
+            '*'
     }
 }
 

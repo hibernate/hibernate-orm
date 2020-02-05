@@ -22,10 +22,10 @@ import org.hibernate.orm.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -142,7 +142,7 @@ public class EmbeddedTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-//	@FailureExpected(jiraKey = "HHH-8172")
+	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();

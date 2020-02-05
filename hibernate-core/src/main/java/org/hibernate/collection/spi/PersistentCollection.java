@@ -15,8 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -92,31 +90,6 @@ public interface PersistentCollection {
 	Object getValue();
 
 	/**
-	 * Called just before reading any rows from the JDBC result set
-	 *
-	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
-	 */
-	void beginRead();
-
-	/**
-	 * Called after reading all rows from the JDBC result set
-	 *
-	 * @return Whether to end the read.
-	 *
-	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
-	 */
-	boolean endRead();
-
-	/**
-	 * Called after initializing from cache
-	 *
-	 * @return ??
-	 *
-	 * todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
-	 */
-	boolean afterInitialize();
-
-	/**
 	 * Could the application possibly have a direct reference to
 	 * the underlying collection implementation?
 	 *
@@ -146,14 +119,6 @@ public interface PersistentCollection {
 	boolean setCurrentSession(SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
-	 * Read the state of the collection from a disassembled cached value
-	 *  @param persister The collection persister
-	 * @param disassembled The disassembled cached state
-	 * @param owner The collection owner
-	 */
-	void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner);
-
-	/**
 	 * Iterate all collection entries, during update of the database
 	 *
 	 * @param persister The collection persister.
@@ -161,23 +126,6 @@ public interface PersistentCollection {
 	 * @return The iterator
 	 */
 	Iterator entries(CollectionPersister persister);
-
-	/**
-	 * Read a row from the JDBC values
-	 *
-	 * @throws HibernateException Generally indicates a problem resolving data read from the ResultSet
-	 *
-	 *
-	  todo (6.0) remove these.  should no longer be a need with change in how collections are initialized
-	 */
-	default Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		return null;
-	}
 
 	/**
 	 * Get the identifier of the given collection entry.  This refers to the collection identifier, not the
@@ -223,15 +171,6 @@ public interface PersistentCollection {
 	Object getSnapshotElement(Object entry, int i);
 
 	/**
-	 * Called before any elements are read into the collection,
-	 * allowing appropriate initializations to occur.
-	 *
-	 * @param persister The underlying collection persister.
-	 * @param anticipatedSize The anticipated size of the collection after initialization is complete.
-	 */
-	void beforeInitialize(CollectionPersister persister, int anticipatedSize);
-
-	/**
 	 * Does the current state exactly match the snapshot?
 	 *
 	 * @param persister The collection persister
@@ -249,15 +188,6 @@ public interface PersistentCollection {
 	 * @return {@code true} if the given snapshot is empty
 	 */
 	boolean isSnapshotEmpty(Serializable snapshot);
-
-	/**
-	 * Disassemble the collection to get it ready for the cache
-	 *
-	 * @param persister The collection persister
-	 *
-	 * @return The disassembled state
-	 */
-	Object disassemble(CollectionPersister persister) ;
 
 	/**
 	 * Do we need to completely recreate this collection when it changes?
@@ -352,6 +282,53 @@ public interface PersistentCollection {
 	 * @return Was this collection initialized?  Or is its data still not (fully) loaded?
 	 */
 	boolean wasInitialized();
+
+	/**
+	 * Called prior to the initialization of this yet-uninitialized collection.  Pairs
+	 * with {@link #afterInitialize}
+	 */
+	void beforeInitialize(CollectionPersister persister, int anticipatedSize);
+
+	/**
+	 * Read the state of the collection from a disassembled cached value
+	 *
+	 * @param persister The collection persister
+	 * @param disassembled The disassembled cached state
+	 * @param owner The collection owner
+	 */
+	void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner);
+
+	/**
+	 * Called just before reading any rows from the JDBC result set.  Pairs with {@link #endRead}
+	 */
+	void beginRead();
+
+	/**
+	 * Inject the state loaded for a collection instance.
+	 */
+	void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState);
+
+	/**
+	 * Called after reading all rows from the JDBC result set.  Pairs with {@link #beginRead}
+	 *
+	 * @see #injectLoadedState
+	 */
+	@SuppressWarnings("UnusedReturnValue")
+	boolean endRead();
+
+	/**
+	 * Called after initialization is complete.  Pairs with {@link #beforeInitialize}
+	 */
+	boolean afterInitialize();
+
+	/**
+	 * Disassemble the collection to get it ready for the cache
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return The disassembled state
+	 */
+	Object disassemble(CollectionPersister persister) ;
 
 	/**
 	 * Does this instance have any "queued" operations?
@@ -470,9 +447,4 @@ public interface PersistentCollection {
 	 * @return The orphans
 	 */
 	Collection getOrphans(Serializable snapshot, String entityName);
-
-	/**
-	 * Inject the state loaded for a collection instance.
-	 */
-	void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState);
 }

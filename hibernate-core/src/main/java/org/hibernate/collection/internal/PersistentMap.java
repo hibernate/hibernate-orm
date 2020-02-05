@@ -137,16 +137,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.map = (Map) persister.getCollectionType().instantiate( anticipatedSize );
-	}
-
-	public void load(Object key, Object value) {
-		assert isInitializing();
-		map.put( key, value );
-	}
-
-	@Override
 	public int size() {
 		return readSize() ? getCachedSize() : map.size();
 	}
@@ -274,24 +264,53 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	public boolean endRead() {
-		return super.endRead();
-	}
-
-	@Override
 	public Iterator entries(CollectionPersister persister) {
 		return map.entrySet().iterator();
 	}
 
-	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingState) {
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
 		assert isInitializing();
-		assert map != null;
+		assert map == null;
+
+		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		this.map = (Map) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] keyVal = (Object[]) loadingState.get( i );
 			//noinspection unchecked
 			map.put( keyVal[0], keyVal[1] );
 		}
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
+			throws HibernateException {
+		final Serializable[] array = (Serializable[]) disassembled;
+		final int size = array.length;
+
+		this.map = (Map) persister.getCollectionSemantics().instantiateRaw( size, persister );
+
+		for ( int i = 0; i < size; i+=2 ) {
+			map.put(
+					persister.getIndexType().assemble( array[i], getSession(), owner ),
+					persister.getElementType().assemble( array[i+1], getSession(), owner )
+			);
+		}
+	}
+
+	@Override
+	public Object disassemble(CollectionPersister persister) throws HibernateException {
+		final Object[] result = new Object[ map.size() * 2 ];
+		final Iterator itr = map.entrySet().iterator();
+		int i=0;
+		while ( itr.hasNext() ) {
+			final Map.Entry e = (Map.Entry) itr.next();
+			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
+			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
+		}
+		return result;
+
 	}
 
 	/**
@@ -454,35 +473,6 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 			write();
 			return me.setValue( value );
 		}
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
-			throws HibernateException {
-		final Serializable[] array = (Serializable[]) disassembled;
-		final int size = array.length;
-		beforeInitialize( persister, size );
-		for ( int i = 0; i < size; i+=2 ) {
-			map.put(
-					persister.getIndexType().assemble( array[i], getSession(), owner ),
-					persister.getElementType().assemble( array[i+1], getSession(), owner )
-			);
-		}
-	}
-
-	@Override
-	public Object disassemble(CollectionPersister persister) throws HibernateException {
-		final Object[] result = new Object[ map.size() * 2 ];
-		final Iterator itr = map.entrySet().iterator();
-		int i=0;
-		while ( itr.hasNext() ) {
-			final Map.Entry e = (Map.Entry) itr.next();
-			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
-			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
-		}
-		return result;
-
 	}
 
 	@Override

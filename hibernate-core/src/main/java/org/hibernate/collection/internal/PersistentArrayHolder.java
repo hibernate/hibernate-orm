@@ -190,19 +190,9 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-	public void beginRead() {
-		super.beginRead();
-	}
-
-	@Override
 	public boolean endRead() {
 		setInitialized();
 		return true;
-	}
-
-	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		//if (tempList==null) throw new UnsupportedOperationException("Can't lazily initialize arrays");
 	}
 
 	@Override

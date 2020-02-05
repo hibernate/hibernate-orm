@@ -558,6 +558,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	@Override
+	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
+	}
+
+	@Override
 	public boolean afterInitialize() {
 		setInitialized();
 		//do this bit after setting initialized to true or it will recurse

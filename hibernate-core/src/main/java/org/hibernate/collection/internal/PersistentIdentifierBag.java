@@ -20,8 +20,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -110,7 +108,15 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
-		beforeInitialize( persister, size );
+
+		assert identifiers == null;
+		assert values == null;
+
+		identifiers = new HashMap<>();
+		values = size <= 0
+				? new ArrayList<>()
+				: new ArrayList<>( size );
+
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
 				(i/2),
@@ -237,16 +243,6 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		identifiers = anticipatedSize <= 0
-				? new HashMap<>()
-				: new HashMap<>( anticipatedSize + 1 + (int) ( anticipatedSize * .75f ), .75f );
-		values = anticipatedSize <= 0
-				? new ArrayList<>()
-				: new ArrayList<>( anticipatedSize );
-	}
-
-	@Override
 	public Object disassemble(CollectionPersister persister) {
 		final Object[] result = new Object[ values.size() * 2 ];
 		int i = 0;
@@ -352,30 +348,6 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 		final Object old = snap.get( id );
 		return old != null && elemType.isDirty( old, entry, getSession() );
-	}
-
-	@Override
-	public Object readFrom(
-			RowProcessingState rowProcessingState,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler indexAssembler,
-			DomainResultAssembler identifierAssembler,
-			Object owner) throws HibernateException {
-		assert indexAssembler == null;
-		final Object element = elementAssembler.assemble( rowProcessingState );
-		final Object identifier = identifierAssembler.assemble( rowProcessingState );
-
-		final Object old = identifiers.put(
-				values.size(),
-				identifier
-		);
-
-		if ( old == null ) {
-			//maintain correct duplication if loaded in a cartesian product
-			values.add( element );
-		}
-
-		return element;
 	}
 
 	@Override
@@ -525,21 +497,12 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 
-	public void load(Object identifier, Object element) {
-		assert isInitializing();
-		Object old = identifiers.put( values.size(), identifier );
-		if ( old == null ) {
-			//maintain correct duplication if loaded in a cartesian product
-			values.add( element );
-		}
-	}
-
 	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
-		assert isInitializing();
-		assert identifiers != null;
-		assert identifiers.isEmpty();
-		assert values != null;
-		assert values.isEmpty();
+		assert identifiers == null;
+		assert values == null;
+
+		identifiers = new HashMap<>();
+		values = new ArrayList<>( loadingState.size() );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] row = (Object[]) loadingState.get( i );

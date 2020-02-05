@@ -124,20 +124,16 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return bag.iterator();
 	}
 
-	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingState) {
-		assert isInitializing();
-		assert bag != null;
-		assert bag.isEmpty();
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
+		assert bag == null;
+
+		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		this.bag = (List) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			//noinspection unchecked,UseBulkOperation
 			bag.add( loadingState.get( i ) );
 		}
-	}
-
-	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.bag = (List) persister.getCollectionType().instantiate( anticipatedSize );
 	}
 
 	@Override
@@ -276,13 +272,17 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
+	public void initializeFromCache(CollectionPersister collectionDescriptor, Object disassembled, Object owner)
 			throws HibernateException {
+		assert bag == null;
+
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
-		beforeInitialize( persister, size );
+
+		this.bag = (List) collectionDescriptor.getCollectionSemantics().instantiateRaw( size, collectionDescriptor );
+
 		for ( Serializable item : array ) {
-			final Object element = persister.getElementType().assemble( item, getSession(), owner );
+			final Object element = collectionDescriptor.getElementType().assemble( item, getSession(), owner );
 			if ( element != null ) {
 				bag.add( element );
 			}

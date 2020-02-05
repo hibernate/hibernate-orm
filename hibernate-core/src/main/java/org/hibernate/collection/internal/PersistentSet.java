@@ -137,17 +137,14 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.set = (Set) persister.getCollectionType().instantiate( anticipatedSize );
-	}
-
-	@Override
 	@SuppressWarnings("unchecked")
 	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
 			throws HibernateException {
 		final Serializable[] array = (Serializable[]) disassembled;
 		final int size = array.length;
-		beforeInitialize( persister, size );
+
+		this.set = (Set) persister.getCollectionSemantics().instantiateRaw( size, persister );
+
 		for ( Serializable arrayElement : array ) {
 			final Object assembledArrayElement = persister.getElementType().assemble( arrayElement, getSession(), owner );
 			if ( assembledArrayElement != null ) {
@@ -329,6 +326,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 			PluralAttributeMapping attributeMapping,
 			List loadingStateList) {
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+
 		this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
 				loadingStateList.size(),
 				collectionDescriptor

@@ -121,17 +121,34 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		this.list = (List) persister.getCollectionType().instantiate( anticipatedSize );
+	@SuppressWarnings("unchecked")
+	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
+			throws HibernateException {
+		final Serializable[] array = (Serializable[]) disassembled;
+		final int size = array.length;
+
+		assert list == null;
+		this.list = (List) persister.getCollectionType().instantiate( size );
+
+		for ( Serializable arrayElement : array ) {
+			list.add( persister.getElementType().assemble( arrayElement, getSession(), owner ) );
+		}
 	}
 
-	public void load(int index, Object element) {
+	@Override
+	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingStateList) {
 		assert isInitializing();
-		// todo (6.0) : we need to account for base - but it is not exposed from collection descriptor nor attribute
-		for ( int i = list.size(); i <= index; ++i ) {
-			list.add( i, null );
-		}
-		list.set( index, element );
+		assert list == null;
+
+		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+
+		this.list = (List) collectionDescriptor.getCollectionSemantics().instantiateRaw(
+				loadingStateList.size(),
+				collectionDescriptor
+		);
+
+		//noinspection unchecked
+		list.addAll( loadingStateList );
 	}
 
 	@Override
@@ -398,18 +415,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public void initializeFromCache(CollectionPersister persister, Object disassembled, Object owner)
-			throws HibernateException {
-		final Serializable[] array = (Serializable[]) disassembled;
-		final int size = array.length;
-		beforeInitialize( persister, size );
-		for ( Serializable arrayElement : array ) {
-			list.add( persister.getElementType().assemble( arrayElement, getSession(), owner ) );
-		}
-	}
-
-	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
 		final int length = list.size();
 		final Object[] result = new Object[length];
@@ -491,14 +496,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	@Override
 	public boolean entryExists(Object entry, int i) {
 		return entry!=null;
-	}
-
-	public void injectLoadedState(PluralAttributeMapping collectionAttributeMapping, List loadingStateList) {
-		assert isInitializing();
-		assert list != null;
-
-		//noinspection unchecked
-		list.addAll( loadingStateList );
 	}
 
 	final class Clear implements DelayedOperation {

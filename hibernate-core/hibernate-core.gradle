@@ -163,10 +163,6 @@ jar {
             // We must specify the version explicitly to allow Karaf
             // to use an older version of JAXB (the only one we can use in Karaf)
             "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
-
-        instruction 'Export-Package',
-            'org.hibernate.boot.registry.classloading.internal',
-            '*'
     }
 }
 

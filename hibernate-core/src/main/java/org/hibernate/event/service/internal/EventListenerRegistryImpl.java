@@ -151,17 +151,12 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 					propertyIterator.hasNext(); ) {
 				Property property = (Property) propertyIterator.next();
 
-				boolean mustBuildCallbacksForEmbeddable;
-				if(property.getType().isCollectionType()){
-					CollectionType collectionType = (CollectionType) property.getType();
-					final Type collectionElementType = collectionType.getElementType(getSessionFactory());
-					mustBuildCallbacksForEmbeddable = collectionElementType.isComponentType();
-				}
-				else {
-					mustBuildCallbacksForEmbeddable = property.getType().isComponentType();
+				Type type = property.getType();
+				if ( type.isCollectionType() ) {
+					type = ( ( CollectionType ) type ).getElementType( getSessionFactory() );
 				}
 
-				if (mustBuildCallbacksForEmbeddable) {
+				if ( type.isComponentType() ) {
 					callbackBuilder.buildCallbacksForEmbeddable(
 							property,
 							persistentClass.getClassName(),

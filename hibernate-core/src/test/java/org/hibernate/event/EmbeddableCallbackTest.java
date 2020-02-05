@@ -70,44 +70,44 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13829")
 	public void testCollectionOfEmbeddable() {
-		AtomicReference<User> user  = new AtomicReference<>(new User());
+		AtomicReference<User> user  = new AtomicReference<>( new User() );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			user.get().id = 1;
 			user.get().userDetails = new UserDetails();
 			user.get().contactAddresses = new ArrayList<>();
-			user.get().contactAddresses.add(new ContactAddress());
-			user.get().contactAddresses.add(new ContactAddress());
+			user.get().contactAddresses.add( new ContactAddress() );
+			user.get().contactAddresses.add( new ContactAddress() );
 
 			entityManager.persist( user.get() );
-			user.get().contactAddresses.forEach( e -> assertEquals(1, e.prePersist));
+			user.get().contactAddresses.forEach( e -> assertEquals( 1, e.prePersist ) );
 		} );
 
-		user.get().contactAddresses.forEach( e -> assertEquals(1, e.postPersist));
+		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postPersist ) );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			User entity = entityManager.find( User.class, 1 );
 			assertEquals( "George", entity.name );
-			assertEquals("London",  entity.contactAddresses.get(0).city);
-			assertEquals("test@test.com",  entity.userDetails.email);
-			entity.contactAddresses.forEach( e -> assertEquals(1, e.postLoad));
+			assertEquals("London", entity.contactAddresses.get( 0 ).city );
+			assertEquals("test@test.com", entity.userDetails.email );
+			entity.contactAddresses.forEach( e -> assertEquals( 1, e.postLoad ) );
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			user.set(entityManager.find(User.class, 1));
+			user.set(entityManager.find( User.class, 1 ) );
 			user.get().name = "Nick";
-			user.get().contactAddresses.get(0).city = "Athens";
+			user.get().contactAddresses.get( 0 ).city = "Athens";
 			entityManager.persist( user.get() );
 		} );
 
-		user.get().contactAddresses.forEach( e -> assertEquals(1, e.preUpdate));
-		user.get().contactAddresses.forEach( e -> assertEquals(1, e.postUpdate));
+		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.preUpdate ) );
+		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postUpdate ) );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			user.set(entityManager.find(User.class, 1));
-			entityManager.remove(user.get());
-			user.get().contactAddresses.forEach( e -> assertEquals(1, e.preRemove));
+			user.set(entityManager.find( User.class, 1));
+			entityManager.remove( user.get() );
+			user.get().contactAddresses.forEach( e -> assertEquals( 1, e.preRemove ) );
 		} );
-		user.get().contactAddresses.forEach( e -> assertEquals(1, e.postRemove));
+		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postRemove ) );
 	}
 
 	@Test
@@ -115,14 +115,14 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 	public void testNullCollectionOfEmbeddable() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			User user = new User();
-		    user.id = 1;
+			user.id = 1;
 			entityManager.persist( user);
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			User user = entityManager.find( User.class, 1 );
 			assertNull( user.userDetails );
-			assertEquals(0, user.contactAddresses.size() );
+			assertEquals( 0, user.contactAddresses.size() );
 		} );
 	}
 

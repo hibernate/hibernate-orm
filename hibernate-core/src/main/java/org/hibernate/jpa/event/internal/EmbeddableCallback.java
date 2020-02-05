@@ -34,8 +34,8 @@ final class EmbeddableCallback extends AbstractCallback {
 		try {
 			Object embeddable = embeddableGetter.get( entity );
 			if ( embeddable != null ) {
-				if(embeddable instanceof Collection){
-					for(Object e:(Collection<?>) embeddable){
+				if( embeddable instanceof Collection ){
+					for( Object e : (Collection<?>) embeddable ){
 						callbackMethod.invoke(e);
 					}
 				}

@@ -56,7 +56,7 @@ include::{resourcesdir}/schema-generation.sql[]
 If we configure Hibernate to import the script above:
 
 [[schema-generation-import-file-configuration-example]]
-.Enabling query cache
+.Enabling schema generation import file
 ====
 [source, XML, indent=0]
 ----
@@ -204,7 +204,7 @@ The second INSERT statement fails because of the unique constraint violation.
 
 The https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
 
-Considering the following entity mapping, Hibernate generates the index when creating the database schema:
+Considering the following entity mapping. Hibernate generates the index when creating the database schema:
 
 [[schema-generation-columns-index-mapping-example]]
 .`@Index` mapping example

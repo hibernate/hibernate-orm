@@ -18,6 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -296,7 +297,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		@Override
 		public Size apply(
 				MethodVisitor methodVisitor, Context implementationContext, MethodDescription instrumentedMethod) {
-			return delegate.apply( new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+			return delegate.apply( new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 
 				@Override
 				public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {

@@ -33,7 +33,7 @@ Detailed information is provided later in this chapter.
 [[caching-config-properties]]
 ==== Caching configuration properties
 
-Besides specific provider configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behaviors:
+Besides provider specific configuration, there are a number of configurations options on the Hibernate side of the integration that control various caching behaviors:
 
 `hibernate.cache.use_second_level_cache`::
 	Enable or disable second level caching overall. By default, if the currently configured
@@ -43,7 +43,7 @@ Besides specific provider configuration, there are a number of configurations op
 `hibernate.cache.query_cache_factory`::
 	Query result caching is handled by a special contract that deals with staleness-based invalidation of the results.
 	The default implementation does not allow stale results at all. Use this for applications that would like to relax that.
-	Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`
+	Names an implementation of `org.hibernate.cache.spi.QueryCacheFactory`.
 `hibernate.cache.use_minimal_puts`::
 	Optimizes second-level cache operations to minimize writes, at the cost of more frequent reads. Providers typically set this appropriately.
 `hibernate.cache.region_prefix`::
@@ -322,7 +322,7 @@ For projection queries, the query cache stores the dehydrated entity state (e.g.
 This setting creates two new cache regions:
 
 `default-query-results-region`::
-	Holding the cached query results
+	Holding the cached query results.
 `default-update-timestamps-region`::
 	Holding timestamps of the most recent updates to queryable tables.
 	These are used to validate the results as they are served from the query cache.
@@ -670,7 +670,7 @@ shared among multiple `SessionFactory` instances in the same JVM.
 
 [NOTE]
 ====
-The http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton `CacheManager(s)` when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
+The http://www.ehcache.org/documentation/2.8/integrations/hibernate#optional[Ehcache documentation] recommends using multiple non-singleton ``CacheManager``s when there are multiple Hibernate `SessionFactory` instances running in the same JVM.
 ====
 
 [[caching-provider-ehcache-missing-cache-strategy]]
@@ -702,7 +702,7 @@ Note that caches created this way may be very badly configured (large size in pa
 [[caching-provider-infinispan]]
 === Infinispan
 
-Infinispan is a distributed in-memory key/value data store, available as a cache or data grid, which can be used as a Hibernate 2nd-level cache provider as well.
+Infinispan is a distributed in-memory key/value data store, available as a cache or data grid, which can be used as a Hibernate second-level cache provider as well.
 
 It supports advanced functionality such as transactions, events, querying, distributed processing, off-heap and geographical failover.
 

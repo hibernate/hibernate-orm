@@ -1366,8 +1366,13 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		}
 
 		final CacheMode effectiveCacheMode = CacheMode.fromJpaModes( queryOptions.getCacheRetrieveMode(), queryOptions.getCacheStoreMode() );
-		sessionCacheMode = getSession().getCacheMode();
-		getSession().setCacheMode( effectiveCacheMode );
+		if( effectiveCacheMode != null) {
+			sessionCacheMode = getSession().getCacheMode();
+			getSession().setCacheMode( effectiveCacheMode );
+		}
+		if ( entityGraphQueryHint != null && entityGraphQueryHint.getSemantic() == GraphSemantic.FETCH ) {
+			getSession().setFetchGraphLoadContext( entityGraphQueryHint.getGraph() );
+		}
 	}
 
 	protected void afterQuery() {
@@ -1379,6 +1384,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
+		getSession().setFetchGraphLoadContext( null );
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import javax.persistence.Id;
 
+import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -54,7 +55,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			TypePool typePool,
 			int writerFlags,
 			int readerFlags) {
-		return new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( opcode != Opcodes.GETFIELD && opcode != Opcodes.PUTFIELD ) {

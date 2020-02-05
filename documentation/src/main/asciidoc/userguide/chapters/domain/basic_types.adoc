@@ -1,5 +1,5 @@
 [[basic]]
-=== Basic Types
+=== Basic types
 :modeldir: ../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping
 :resourcedir: ../../../../../test/resources/org/hibernate/userguide/
@@ -15,33 +15,34 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 ==== Hibernate-provided BasicTypes
 
 .Standard BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=======================================================================================================================================================================================================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
 |StringType |VARCHAR |java.lang.String |string, java.lang.String
 |MaterializedClob |CLOB |java.lang.String |materialized_clob
 |TextType |LONGVARCHAR |java.lang.String |text
-|CharacterType |CHAR |char, java.lang.Character |char, java.lang.Character
-|BooleanType |BIT |boolean, java.lang.Boolean |boolean, java.lang.Boolean
+|CharacterType |CHAR |char, java.lang.Character |character, char, java.lang.Character
+|BooleanType |BOOLEAN |boolean, java.lang.Boolean |boolean, java.lang.Boolean
 |NumericBooleanType |INTEGER, 0 is false, 1 is true |boolean, java.lang.Boolean |numeric_boolean
 |YesNoType |CHAR, 'N'/'n' is false, 'Y'/'y' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |yes_no
 |TrueFalseType |CHAR, 'F'/'f' is false, 'T'/'t' is true. The uppercase value is written to the database. |boolean, java.lang.Boolean |true_false
 |ByteType |TINYINT |byte, java.lang.Byte |byte, java.lang.Byte
 |ShortType |SMALLINT |short, java.lang.Short |short, java.lang.Short
-|IntegerTypes |INTEGER |int, java.lang.Integer |int, java.lang.Integer
+|IntegerType |INTEGER |int, java.lang.Integer |integer, int, java.lang.Integer
 |LongType |BIGINT |long, java.lang.Long |long, java.lang.Long
 |FloatType |FLOAT |float, java.lang.Float |float, java.lang.Float
 |DoubleType |DOUBLE |double, java.lang.Double |double, java.lang.Double
 |BigIntegerType |NUMERIC |java.math.BigInteger |big_integer, java.math.BigInteger
 |BigDecimalType |NUMERIC |java.math.BigDecimal |big_decimal, java.math.bigDecimal
-|TimestampType |TIMESTAMP |java.sql.Timestamp |timestamp, java.sql.Timestamp
-|TimeType |TIME |java.sql.Time |time, java.sql.Time
-|DateType |DATE |java.sql.Date |date, java.sql.Date
-|CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar
+|TimestampType |TIMESTAMP |java.util.Date |timestamp, java.sql.Timestamp, java.util.Date
+|DbTimestampType |TIMESTAMP |java.util.Date |dbtimestamp
+|TimeType |TIME |java.util.Date |time, java.sql.Time
+|DateType |DATE |java.util.Date |date, java.sql.Date
+|CalendarType |TIMESTAMP |java.util.Calendar |calendar, java.util.Calendar, java.util.GregorianCalendar
 |CalendarDateType |DATE |java.util.Calendar |calendar_date
 |CalendarTimeType |TIME |java.util.Calendar |calendar_time
 |CurrencyType |VARCHAR |java.util.Currency |currency, java.util.Currency
-|LocaleType |VARCHAR |java.util.Locale |locale, java.utility.locale
+|LocaleType |VARCHAR |java.util.Locale |locale, java.util.Locale
 |TimeZoneType |VARCHAR, using the TimeZone ID |java.util.TimeZone |timezone, java.util.TimeZone
 |UrlType |VARCHAR |java.net.URL |url, java.net.URL
 |ClassType |VARCHAR (class FQN) |java.lang.Class |class, java.lang.Class
@@ -64,10 +65,12 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |PrimitiveCharacterArrayNClobType |NCHAR |char[] |N/A
 |CharacterNCharType |NCHAR |java.lang.Character |ncharacter
 |CharacterArrayNClobType |NCLOB |java.lang.Character[] |N/A
+|RowVersionType |VARBINARY |byte[] |row_version
+|ObjectType |VARCHAR |implementors of java.lang.Serializable | object, java.lang.Object
 |=======================================================================================================================================================================================================================================================================================
 
 .Java 8 BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
 |DurationType |BIGINT |java.time.Duration |Duration, java.time.Duration
@@ -81,16 +84,16 @@ Internally Hibernate uses a registry of basic types when it needs to resolve a s
 |=================================================================================================
 
 .Hibernate Spatial BasicTypes
-[cols=",,,",options="header",]
+[cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.spatial package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, or the class name of Geometry or any of its subclasses
-|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, or the class name of Geometry or any of its subclasses
+|JTSGeometryType |depends on the dialect | com.vividsolutions.jts.geom.Geometry |jts_geometry, and the class names of Geometry and its subclasses
+|GeolatteGeometryType |depends on the dialect | org.geolatte.geom.Geometry |geolatte_geometry, and the class names of Geometry and its subclasses
 |=================================================================================================
 
 [NOTE]
 ====
-To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use a `org.hibernate.spatial.SpatialDialect` implementation.
+To use the Hibernate Spatial types, you must add the `hibernate-spatial` dependency to your classpath _and_ use an `org.hibernate.spatial.SpatialDialect` implementation.
 
 See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more details.
 ====
@@ -150,18 +153,18 @@ Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract
 The `@Basic` annotation defines 2 attributes.
 
 `optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-JPA defines this as "a hint", which essentially means that it effect is specifically required.
+JPA defines this as "a hint", which essentially means that its effect is specifically required.
 As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
 JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.
 Hibernate ignores this setting for basic types unless you are using bytecode enhancement.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,BytecodeEnhancement>> for additional information on fetching and on bytecode enhancement.
+See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
 
 [[basic-column-annotation]]
 ==== The `@Column` annotation
 
 JPA defines rules for implicitly determining the name of tables and columns.
-For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming>>.
+For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
 If that implicit naming rule does not meet your requirements, you can explicitly tell Hibernate (and other providers) the column name to use.
@@ -182,12 +185,12 @@ The `@Column` annotation defines other mapping information as well. See its Java
 [[basic-registry]]
 ==== BasicTypeRegistry
 
-We said before that a Hibernate type is not a Java type, nor a SQL type, but that it understands both and performs the marshalling between them.
+We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
 But looking at the basic type mappings from the previous examples,
 how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
 or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
-The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (a `org.hibernate.type.Type` specialization) instances keyed by a name.
+The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.
 
 We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
 But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.
@@ -399,7 +402,7 @@ include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-regi
 ====
 Like `BasicType`, you can also register the `UserType` using a simple name.
 
-Without registering a name, the `UserType` mapping requires the fully-classified name:
+Without registering a name, the `UserType` mapping requires the fully qualified class name:
 
 [source, JAVA, indent=0]
 ----
@@ -576,7 +579,7 @@ include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter
 ----
 ====
 
-Traditionally, you could only use the dbData `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
+Traditionally, you could only use the DB data `Caption` representation, which in our case is a `String`, when referencing the `caption` entity property.
 
 [[basic-attribute-converter-query-parameter-converter-dbdata-example]]
 .Filtering by the `Caption` property using the DB data representation
@@ -985,7 +988,7 @@ Note that this can cause difficulty as the driver chooses to map many different 
 ==== UUID as identifier
 
 Hibernate supports using UUID values as identifiers, and they can even be generated on the user's behalf.
-For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifier generators_>>.
+For details, see the discussion of generators in <<chapters/domain/identifiers.adoc#identifiers,_Identifiers_>>.
 
 [[basic-datetime]]
 ==== Mapping Date/Time Values
@@ -1037,7 +1040,7 @@ include::{extrasdir}/basic/basic-datetime-temporal-date-persist-example.sql[]
 ----
 ====
 
-Only the year, month and the day field were saved into the database.
+Only the year, month and the day fields were saved into the database.
 
 If we change the `@Temporal` type to `TIME`:
 
@@ -1646,7 +1649,7 @@ include::{sourcedir}/../fetching/FetchingTest.java[tags=mapping-column-read-and-
 ----
 ====
 
-If a property uses more than one column, you must use the `forColumn` attribute to specify which column, the `@ColumnTransformer` read and write expressions are targeting.
+If a property uses more than one column, you must use the `forColumn` attribute to specify which column the `@ColumnTransformer` read and write expressions are targeting.
 
 [[mapping-column-read-and-write-composite-type-example]]
 .`@ColumnTransformer` `forColumn` attribute usage

@@ -27,7 +27,7 @@ There are a number of scopes for defining fetching:
 
 _static_::
 	Static definition of fetching strategies is done in the mappings.
-	The statically-defined fetch strategies are used in the absence of any dynamically defined strategies
+	The statically-defined fetch strategies are used in the absence of any dynamically defined strategies.
     SELECT:::
 		Performs a separate SQL select to load the data. This can either be EAGER (the second select is issued immediately) or LAZY (the second select is delayed until the data is needed).
 		This is the strategy generally termed N+1.
@@ -41,9 +41,9 @@ _static_::
       	Again, this can either be EAGER (the second select is issued immediately) or LAZY (the second select is delayed until the data is needed).
 _dynamic_ (sometimes referred to as runtime)::
 	The dynamic definition is really use-case centric. There are multiple ways to define dynamic fetching:
-    _fetch profiles_::: defined in mappings, but can be enabled/disabled on the `Session`.
-    HQL/JPQL::: and both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
-    entity graphs::: Starting in Hibernate 4.2 (JPA 2.1) this is also an option.
+    fetch profiles::: defined in mappings, but can be enabled/disabled on the `Session`.
+    HQL / JPQL::: both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
+    entity graphs::: starting in Hibernate 4.2 (JPA 2.1), this is also an option.
 
 [[fetching-direct-vs-query]]
 === Direct fetching vs. entity queries
@@ -101,7 +101,7 @@ so Hibernate requires a secondary select to ensure that the EAGER association is
 [IMPORTANT]
 ====
 If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
-which, in turn, can lean to N+1 query issues.
+which, in turn, can lead to N+1 query issues.
 
 For this reason, you should prefer LAZY associations.
 ====
@@ -206,10 +206,6 @@ include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fet
 
 [NOTE]
 ====
-Although the JPA standard specifies that you can override an EAGER fetching association at runtime using the `javax.persistence.fetchgraph` hint,
-currently, Hibernate does not implement this feature, so EAGER associations cannot be fetched lazily.
-For more info, check out the https://hibernate.atlassian.net/browse/HHH-8776[HHH-8776] Jira issue.
-
 When executing a JPQL query, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly,
 which can lead to N+1 query issues.
 
@@ -448,7 +444,7 @@ it allows you to fetch all the required data with a single query.
 === The `@Fetch` annotation mapping
 
 Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
-you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following `FetchMode(s)`:
+you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following ``FetchMode``s:
 
 SELECT::
 	The association is going to be fetched lazily using a secondary select for each individual entity,
@@ -611,7 +607,7 @@ include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-domain
 either List(s) that are annotated with @OrderColumn or Map(s).
 
 For bags (e.g. regular List(s) of entities that do not preserve any certain ordering),
-the @LazyCollection(LazyCollectionOption.EXTRA)` behaves like any other `FetchType.LAZY` collection
+the `@LazyCollection(LazyCollectionOption.EXTRA)` behaves like any other `FetchType.LAZY` collection
 (the collection is fetched entirely upon being accessed for the first time).
 ====
 

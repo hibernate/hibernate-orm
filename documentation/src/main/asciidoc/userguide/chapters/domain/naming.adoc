@@ -4,11 +4,11 @@
 
 Part of the mapping of an object model to the relational database is
 mapping names from the object model to the corresponding database names.
-Hibernate looks at this as 2 stage process:
+Hibernate looks at this as 2-stage process:
 
 * The first stage is determining a proper logical name from the domain model mapping.  A
-	logical name can be either explicitly specified by the user (using `@Column` or
-	`@Table` e.g.) or it can be implicitly determined by Hibernate through an
+	logical name can be either explicitly specified by the user (e.g., using `@Column` or
+	`@Table`) or it can be implicitly determined by Hibernate through an
 	<<ImplicitNamingStrategy>> contract.
 * Second is the resolving of this logical name to a physical name which is defined
 	by the <<PhysicalNamingStrategy>> contract.
@@ -25,7 +25,7 @@ Also, the NamingStrategy contract was often not flexible enough to properly appl
 "rule", either because the API lacked the information to decide or because the API was honestly
 not well defined as it grew.
 
-Due to these limitation, `org.hibernate.cfg.NamingStrategy` has been deprecated and then removed
+Due to these limitation, `org.hibernate.cfg.NamingStrategy` has been deprecated
 in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
 ====
 
@@ -38,7 +38,7 @@ repetitive information a developer must provide for mapping a domain model.
 ====
 JPA defines inherent rules about implicit logical name determination.  If JPA provider
 portability is a major concern, or if you really just like the JPA-defined implicit
-naming rules, be sure to stick with ImplicitNamingStrategyJpaCompliantImpl (the default)
+naming rules, be sure to stick with ImplicitNamingStrategyJpaCompliantImpl (the default).
 
 Also, JPA defines no separation between logical and physical name.  Following the JPA
 specification, the logical name *is* the physical name.  If JPA provider portability
@@ -58,7 +58,7 @@ determine a logical name when the mapping did not provide an explicit name.
 image:images/domain/naming/implicit_naming_strategy_diagram.svg[Implicit Naming Strategy Diagram]
 
 Hibernate defines multiple ImplicitNamingStrategy implementations out-of-the-box.  Applications
-are also free to plug-in custom implementations.
+are also free to plug in custom implementations.
 
 There are multiple ways to specify the ImplicitNamingStrategy to use.  First, applications can specify
 the implementation using the `hibernate.implicit_naming_strategy` configuration setting which accepts:
@@ -106,7 +106,7 @@ applications and integrations can define custom implementations of this Physical
 contract.  Here is an example PhysicalNamingStrategy for a fictitious company named Acme Corp
 whose naming standards are to:
 
-* prefer underscore-delimited words rather than camel-casing
+* prefer underscore-delimited words rather than camel casing
 * replace certain words with standard abbreviations
 
 .Example PhysicalNamingStrategy implementation

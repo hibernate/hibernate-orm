@@ -106,7 +106,7 @@ include::{extrasdir}/flushing-auto-flush-jpql-overlap-example.sql[]
 ----
 ====
 
-This time, the flush was triggered by a JPQL query because the pending entity persists action overlaps with the query being executed.
+This time, the flush was triggered by a JPQL query because the pending entity persisting action overlaps with the query being executed.
 
 ==== `AUTO` flush on native SQL query
 
@@ -173,7 +173,7 @@ include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
 Because the JPA doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is going to be flushed.
 
 [[flushing-commit-flush-sql-example]]
-.`COMMIT` flushing on SQL
+.`COMMIT` flushing on native SQL
 ====
 [source, JAVA, indent=0]
 ----
@@ -197,7 +197,7 @@ The `ALWAYS` is only available with the native `Session` API.
 The `ALWAYS` flush mode triggers a persistence context flush even when executing a native SQL query against the `Session` API.
 
 [[flushing-always-flush-sql-example]]
-.`COMMIT` flushing on SQL
+.`COMMIT` flushing on native SQL
 ====
 [source, JAVA, indent=0]
 ----
@@ -230,7 +230,7 @@ include::{extrasdir}/flushing-manual-flush-example.sql[]
 ----
 ====
 
-The `INSERT` statement was not executed because the persistence context because there was no manual `flush()` call.
+The `INSERT` statement was not executed because there was no manual `flush()` call.
 
 [NOTE]
 ====
@@ -277,6 +277,7 @@ The `ActionQueue` executes all operations in the following order:
 . `OrphanRemovalAction`
 . `EntityInsertAction` or `EntityIdentityInsertAction`
 . `EntityUpdateAction`
+. `QueuedOperationCollectionAction`
 . `CollectionRemoveAction`
 . `CollectionUpdateAction`
 . `CollectionRecreateAction`

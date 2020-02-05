@@ -297,7 +297,7 @@ Please note that the alias names in the result are simply examples, each alias w
 [width="100%",cols="23%,22%,55%",options="header",]
 |=======================================================================
 |Description |Syntax |Example
-|A simple property |`{[aliasname].[propertyname]`
+|A simple property |`{[aliasname].[propertyname]}`
 |`A_NAME as {item.name}`
 
 |A composite property |`{[aliasname].[componentname].[propertyname]}`
@@ -608,7 +608,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations_named-q
 ----
 ====
 
-Finally, if the association to a related entity involve a composite primary key, a `@FieldResult` element should be used for each foreign key column.
+Finally, if the association to a related entity involves a composite primary key, a `@FieldResult` element should be used for each foreign key column.
 The `@FieldResult` name is composed of the property name for the relationship, followed by a dot ("."), followed by the name or the field or property of the primary key.
 For this example, the following entities are going to be used:
 
@@ -900,8 +900,8 @@ The only requirement is to set the `callable` attribute to `true`.
 
 To check that the execution happens correctly, Hibernate allows you to define one of those three strategies:
 
-* none: no check is performed; the store procedure is expected to fail upon constraint violations
-* count: use of row-count returned by the `executeUpdate()` method call to check that the update was successful
+* none: no check is performed; the store procedure is expected to fail upon constraint violations.
+* count: use of row-count returned by the `executeUpdate()` method call to check that the update was successful.
 * param: like count but using a `CallableStatement` output parameter.
 
 To define the result check style, use the `check` parameter.

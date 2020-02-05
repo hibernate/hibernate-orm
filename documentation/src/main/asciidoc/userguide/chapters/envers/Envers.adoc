@@ -224,14 +224,14 @@ Sometimes, however, it is easier and more efficient to access it in the last rev
 `*org.hibernate.envers.default_schema*` (default: `null` - same schema as the table being audited)::
 The default schema name that should be used for audit tables.
 +
-Can be overridden using the `@AuditTable( schema="..." )` annotation.
+Can be overridden using the `@AuditTable( schema = "..." )` annotation.
 +
 If not present, the schema will be the same as the schema of the table being audited.
 
 `*org.hibernate.envers.default_catalog*` (default: `null` - same catalog as the table being audited)::
 The default catalog name that should be used for audit tables.
 +
-Can be overridden using the `@AuditTable( catalog="..." )` annotation.
+Can be overridden using the `@AuditTable( catalog = "..." )` annotation.
 +
 If not present, the catalog will be the same as the catalog of the normal tables.
 
@@ -255,7 +255,7 @@ This property is only evaluated if the `ValidityAuditStrategy` is used.
 
 `*org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name*`(default: `REVEND_TSTMP` )::
 Column name of the timestamp of the end revision until which the data was valid.
-Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true
+Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true.
 
 `*org.hibernate.envers.use_revision_entity_with_native_id*` (default: `true` )::
 Boolean flag that determines the strategy of revision number generation.
@@ -272,7 +272,7 @@ The default implementation creates `REVCHANGES` table that stores entity names o
 Single record encapsulates the revision identifier (foreign key to `REVINFO` table) and a string value.
 For more information, refer to <<envers-tracking-modified-entities-revchanges>> and <<envers-tracking-modified-entities-queries>>.
 
-`*org.hibernate.envers.global_with_modified_flag*` (default: `false`, can be individually overridden with `@Audited( withModifiedFlag=true )` )::
+`*org.hibernate.envers.global_with_modified_flag*` (default: `false`, can be individually overridden with `@Audited( withModifiedFlag = true )` )::
 Should property modification flags be stored for all audited entities and all properties.
 +
 When set to true, for all properties an additional boolean column in the audit tables will be created, filled with information if the given property changed in the given revision.
@@ -369,7 +369,7 @@ IMPORTANT: These subqueries are notoriously slow and difficult to index.
 . The alternative is a validity audit strategy.
 This strategy stores the start-revision and the end-revision of audit information.
 For each row inserted, updated or deleted in an audited table, one or more rows are inserted in the audit tables, together with the start revision of its validity.
-But at the same, time the end-revision field of the previous audit rows (if available) is set to this revision.
+But at the same time, the end-revision field of the previous audit rows (if available) is set to this revision.
 Queries on the audit information can then use 'between start and end revision' instead of subqueries as used by the default audit strategy.
 +
 The consequence of this strategy is that persisting audit information will be a bit slower because of the extra updates involved,
@@ -380,7 +380,7 @@ IMPORTANT: This can be improved even further by adding extra indexes.
 [[envers-audit-ValidityAuditStrategy]]
 ==== Configuring the `ValidityAuditStrategy`
 
-To better visualize how the `ValidityAuditStrategy`, consider the following exercise where
+To better visualize how the `ValidityAuditStrategy` works, consider the following exercise where
 we replay the previous audit logging example for the `Customer` entity.
 
 First, you need to configure the `ValidityAuditStrategy`:
@@ -395,7 +395,7 @@ include::{sourcedir}/ValidityStrategyAuditTest.java[tags=envers-audited-validity
 ====
 
 If, you're using the `persistence.xml` configuration file,
-then the mapping will looks as follows:
+then the mapping will look as follows:
 
 [source, XML, indent=0]
 ----
@@ -416,7 +416,7 @@ include::{extrasdir}/envers-audited-validity-mapping-example.sql[]
 ----
 ====
 
-As you can see, the `REVEND` column is added as well as its Foreign key to the `REVINFO` table.
+As you can see, the `REVEND` column is added as well as its foreign key to the `REVINFO` table.
 
 When rerunning the previous `Customer` audit log queries against the `ValidityAuditStrategy`,
 we get the following results:
@@ -443,7 +443,19 @@ When Envers starts a new revision, it creates a new revision entity which stores
 By default, that includes just:
 
 revision number::
-An integral value (`int/Integer` or `long/Long`). Essentially, the primary key of the revision
+An integral value (`int/Integer` or `long/Long`). Essentially, the primary key of the revision.
++
+[WARNING]
+====
+A revision number value should **always** be increasing and never overflows.
+
+The default implementations provided by Envers use an `int` data type which has an upper bounds of `Integer.MAX_VALUE`.
+It is critical that users consider whether this upper bounds is feasible for your application.  If a large range is needed, consider using a custom revision entity mapping using a `long` data type.
+
+In the event that the revision number reaches its upper bounds wrapping around becoming negative, an `AuditException` will be thrown causing the current transaction to be rolled back.
+This guarantees that the audit history remains in a valid state that can be queried by the Envers Query API.
+====
+
 revision timestamp::
 Either a `long/Long` or `java.util.Date` value representing the instant at which the revision was made.
 When using a `java.util.Date`, instead of a `long/Long` for the revision timestamp, take care not to store it to a column data type which will lose precision.
@@ -461,7 +473,7 @@ You can extend from `org.hibernate.envers.DefaultRevisionEntity`, if you wish, t
 +
 Simply add the custom revision entity as you do your normal entities and Envers will *find it*.
 +
-NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`
+NOTE: It is an error for there to be multiple entities marked as `@org.hibernate.envers.RevisionEntity`.
 
 . Second, you need to tell Envers how to create instances of your revision entity which is handled by the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/envers/RevisionListener.html#newRevision-java.lang.Object-[`newRevision( Object revisionEntity )`]
@@ -650,7 +662,7 @@ include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags
 The `CustomTrackingRevisionEntity` contains a `@OneToMany` list of `ModifiedTypeRevisionEntity`
 
 [[envers-tracking-modified-entities-revchanges-EntityType-example]]
-.The `EntityType` encapsulatets the entity type name before a class name modification
+.The `EntityType` encapsulates the entity type name before a class name modification
 ====
 [source, JAVA, indent=0]
 ----
@@ -658,7 +670,7 @@ include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags
 ----
 ====
 
-Now, when fetching the `CustomTrackingRevisionEntity`, you cna get access to the previous entity class name.
+Now, when fetching the `CustomTrackingRevisionEntity`, you can get access to the previous entity class name.
 
 [[envers-tracking-modified-entities-revchanges-query-example]]
 .Getting the `EntityType` through the `CustomTrackingRevisionEntity`
@@ -686,7 +698,7 @@ Tracking entity changes at the property level can be enabled by:
 . setting `org.hibernate.envers.global_with_modified_flag` configuration property to `true`.
   This global switch will cause adding modification flags to be stored for all audited properties of all audited entities.
 
-. using `@Audited( withModifiedFlag=true )` on a property or on an entity.
+. using `@Audited( withModifiedFlag = true )` on a property or on an entity.
 
 The trade-off coming with this functionality is an increased size of audit tables and a very little, almost negligible, performance drop during audit writes.
 This is due to the fact that every tracked property has to have an accompanying boolean column in the schema that stores information about the property modifications.
@@ -729,7 +741,7 @@ To see how "Modified Flags" can be utilized, check out the very simple query API
 === Selecting strategy for tracking property level changes
 
 By default, Envers uses the `legacy` modified column naming strategy.
-This strategy is designed to add columns based the following rule-set:
+This strategy is designed to add columns based on the following rule-set:
 
 . If property is annotated with `@Audited` and the _modifiedColumnName_ attribute is specified, the column will directly be based on the supplied name.
 . If property is not annotated with `@Audited` or if no _modifiedColumnName_ attribute is given, the column will be named after the java class property, appended with the configured suffix, the default being `_MOD`.
@@ -748,7 +760,7 @@ public class Customer {
 }
 ```
 
-This mapping will actually lead to some inconsistent naming between columns, see below with how the model's name will be stored in `customer_name` but the modified column that tracks whether this column changes between revisions is named `name_MOD`.
+This mapping will actually lead to some inconsistent naming between columns, see below for how the model's name will be stored in `customer_name` but the modified column that tracks whether this column changes between revisions is named `name_MOD`.
 
 ```
 CREATE TABLE Customer_AUD (
@@ -761,21 +773,21 @@ CREATE TABLE Customer_AUD (
 )
 ```
 
-An additional strategy called `improved`, aims to address these consistent column naming concerns.
+An additional strategy called `improved`, aims to address these inconsistent column naming concerns.
 This strategy uses the following rule-set:
 
 . Property is a Basic type (Single Column valued property)
 .. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
-.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value.
+.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value
 . Property is an Association (to-one mapping) with a Foreign Key using a single column
 .. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
-.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value.
+.. Otherwise use the resolved ORM column name appended with the modified flag suffix configured value
 . Property is an Association (to-one mapping) with a Foreign Key using multiple columns
 .. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
-.. Otherwise use the property name appended with the modified flag suffix configured value.
+.. Otherwise use the property name appended with the modified flag suffix configured value
 . Property is an Embeddable
 .. Use the _modifiedColumnName_ directly if one is supplied on the property mapping
-.. Otherwise use the property name appended with the modified flag suffix configured value.
+.. Otherwise use the property name appended with the modified flag suffix configured value
 
 While using this strategy, the same `Customer` mapping will generate the following table schema:
 
@@ -790,7 +802,7 @@ CREATE TABLE Customer_AUD (
 )
 ```
 
-When already using Envers in conjunction with the modified columns flag feature, its advised not to enable the new strategy immediately as schema changes would be required.
+When already using Envers in conjunction with the modified columns flag feature, it is advised not to enable the new strategy immediately as schema changes would be required.
 You will need to either migrate your existing schema manually to adhere to the rules above or use the explicit _modifiedColumnName_ attribute on the `@Audited` annotation for existing columns that use the feature.
 
 To configure a custom strategy implementation or use the improved strategy, the configuration option `org.hibernate.envers.modified_column_naming_strategy` will need to be set.
@@ -804,7 +816,7 @@ You can think of historic data as having two dimensions:
 horizontal:: The state of the database at a given revision. Thus, you can query for entities as they were at revision N.
 vertical:: The revisions, at which entities changed. Hence, you can query for revisions, in which a given entity changed.
 
-The queries in Envers are similar to Hibernate Criteria queries, so if you are common with them, using Envers queries will be much easier.
+The queries in Envers are similar to Hibernate Criteria queries, so if you are familiar with them, using Envers queries will be much easier.
 
 The main limitation of the current queries implementation is that you cannot traverse relations.
 You can only specify constraints on the ids of the related entities, and only on the "owning" side of the relation.
@@ -878,7 +890,7 @@ include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-by-entity-ident
 ----
 ====
 
-Apart for strict equality matching, you can also use an `IN` clause to provide multiple entity identifiers:
+Apart from strict equality matching, you can also use an `IN` clause to provide multiple entity identifiers:
 
 [[entities-in-clause-filtering-by-entity-identifier-example]]
 .Getting the `Customer` entities whose `address` identifier matches one of the given entity identifiers
@@ -928,10 +940,10 @@ You can add constraints to this query in the same way as to the previous one.
 
 There are some additional possibilities:
 
-. using `AuditEntity.revisionNumber()` you can specify constraints, projections and order on the revision number, in which the audited entity was modified
+. using `AuditEntity.revisionNumber()` you can specify constraints, projections and order on the revision number, in which the audited entity was modified.
 
 . similarly, using `AuditEntity.revisionProperty( propertyName )` you can specify constraints, projections and order on a property of the revision entity,
-  corresponding to the revision in which the audited entity was modified
+  corresponding to the revision in which the audited entity was modified.
 
 . `AuditEntity.revisionType()` gives you access as above to the type of the revision (`ADD`, `MOD`, `DEL`).
 
@@ -946,7 +958,7 @@ include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-by-revis
 
 The second additional feature you can use in queries for revisions is the ability to _maximize_/_minimize_ a property.
 
-For example, if you want to select the smallest possibler revision at which the value of the `createdOn`
+For example, if you want to select the smallest possible revision at which the value of the `createdOn`
 attribute was larger then a given value,
 you can run the following query:
 
@@ -956,7 +968,7 @@ you can run the following query:
 include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-minimize-example]
 ----
 
-The `minimize()` and `maximize()` methods return a criteria, to which you can add constraints,
+The `minimize()` and `maximize()` methods return a criterion, to which you can add constraints,
 which must be met by the entities with the _maximized_/_minimized_ properties.
 
 You probably also noticed that there are two boolean parameters, passed when creating the query.
@@ -994,7 +1006,7 @@ hold the audited property data at the _maximum_ revision number for each `Custom
 === Querying for entity revisions that modified a given property
 
 For the two types of queries described above it's possible to use special `Audit` criteria called `hasChanged()` and `hasNotChanged()`
-that makes use of the functionality described in <<envers-tracking-properties-changes>>.
+that make use of the functionality described in <<envers-tracking-properties-changes>>.
 
 Let's have a look at various queries that can benefit from these two criteria.
 
@@ -1082,17 +1094,17 @@ You can now obtain this information easily by using the following query:
 [source, JAVA, indent=0]
 ----
 List results  = AuditReaderFactory.get( entityManager )
-  .createQuery()
-  .forRevisionsOfEntityWithChanges( Customer.class, false )
-  .add( AuditEntity.id().eq( 1L ) )
-  .getResultList();
+    .createQuery()
+    .forRevisionsOfEntityWithChanges( Customer.class, false )
+    .add( AuditEntity.id().eq( 1L ) )
+    .getResultList();
 
 for ( Object entry : results ) {
-  final Object[] array = (Object[]) entry;
-  final Set<String> propertiesChanged = (Set<String>) array[3];
-  for ( String propertyName : propertiesChanged ) {
+    final Object[] array = (Object[]) entry;
+    final Set<String> propertiesChanged = (Set<String>) array[3];
+    for ( String propertyName : propertiesChanged ) {
     /* Do something useful with the modified property `propertyName` */
-  }
+    }
 }
 ----
 ====
@@ -1123,17 +1135,17 @@ include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modifie
 
 Other queries (also accessible from `org.hibernate.envers.CrossTypeRevisionChangesReader`):
 
-`List<Object> findEntities( Number )`::
+`List<Object> findEntities(Number)`::
   Returns snapshots of all audited entities changed (added, updated and removed) in a given revision.
-  Executes `N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
+  Executes `N + 1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
 
-`List<Object> findEntities( Number, RevisionType )`::
+`List<Object> findEntities(Number, RevisionType)`::
   Returns snapshots of all audited entities changed (added, updated or removed) in a given revision filtered by modification type.
-  Executes `N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
+  Executes `N + 1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
 
-`Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType( Number )`::
+`Map<RevisionType, List<Object>> findEntitiesGroupByRevisionType(Number)`::
   Returns a map containing lists of entity snapshots grouped by modification operation (e.g. addition, update and removal).
-  Executes `3N+1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
+  Executes `3N + 1` SQL queries, where `N` is a number of different entity classes modified within specified revision.
 
 [[envers-querying-entity-relation-joins]]
 === Querying for entities using entity relation joins
@@ -1148,7 +1160,7 @@ to traverse entity relations through an audit query, you must use the relation t
 
 [NOTE]
 ====
-Relation joins can be applied to `many-to-one` and `many-to-one` mappings only when using `JoinType.LEFT` or `JoinType.INNER`.
+Relation joins can be applied to `many-to-one` and `one-to-one` mappings only when using `JoinType.LEFT` or `JoinType.INNER`.
 ====
 
 The basis for creating an entity relation join query is as follows:
@@ -1173,7 +1185,7 @@ include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-le
 
 Like any other query, constraints may be added to restrict the results.
 
-For example, to find a `Customers` entities at a given revision whose addresses are in `România`,
+For example, to find all `Customer` entities at a given revision whose addresses are in `România`,
 you can use the following query:
 
 [[envers-querying-entity-relation-join-restriction]]
@@ -1254,7 +1266,7 @@ include::{extrasdir}/envers-querying-entity-relation-nested-join-multiple-restri
 
 Lastly, this example illustrates how related entity properties can be compared in a single constraint.
 
-Assuming, the `Customer` and the `Address` were previously changed as follows:
+Assuming the `Customer` and the `Address` were previously changed as follows:
 
 [[envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities]]
 .Changing the `Address` to match the `Country` name
@@ -1344,16 +1356,16 @@ but this can be overridden by specifying a different suffix/prefix in the config
 
 The audit table contains the following columns:
 
-id:: `id` of the original entity (this can be more then one column in the case of composite primary keys)
+id:: `id` of the original entity (this can be more then one column in the case of composite primary keys).
 revision number:: an integer, which matches to the revision number in the revision entity table.
 revision type:: The `org.hibernate.envers.RevisionType` enumeration ordinal stating if the change represents an INSERT, UPDATE or DELETE.
-audited fields:: properties from the original entity being audited
+audited fields:: properties from the original entity being audited.
 
 The primary key of the audit table is the combination of the original id of the entity and the revision number,
 so there can be at most one historic entry for a given entity instance at a given revision.
 
 The current entity data is stored in the original table and in the audit table.
-This is a duplication of data, however as this solution makes the query system much more powerful, and as memory is cheap, hopefully, this won't be a major drawback for the users.
+This is a duplication of data, however, as this solution makes the query system much more powerful, and as memory is cheap, hopefully, this won't be a major drawback for the users.
 
 A row in the audit table with entity id `ID`, revision `N`, and data `D` means: entity with id `ID` has data `D` from revision `N` upwards.
 Hence, if we want to find an entity at revision `M`, we have to search for a row in the audit table, which has the revision number smaller or equal to `M`, but as large as possible.
@@ -1386,7 +1398,7 @@ Your opinions on the subject are very welcome on the forum.
 If you would like to generate the database schema file with Hibernate,
 you simply need to use the hbm2ddl too.
 
-This task will generate the definitions of all entities, both of which are audited by Envers and those which are not.
+This task will generate the definitions of all entities, both of those which are audited by Envers and those which are not.
 
 See the <<chapters/schema/Schema.adoc#schema-generation, Schema generation>> chapter for more info.
 
@@ -1412,19 +1424,19 @@ include::{extrasdir}/envers-generateschema-example.sql[]
 ==== What isn't and will not be supported
 
 Bags are not supported because they can contain non-unique elements.
-Persisting, a bag of `String`s violates the relational database principle that each table is a set of tuples.
+Persisting a bag of `String`s violates the relational database principle that each table is a set of tuples.
 
 In case of bags, however (which require a join table), if there is a duplicate element, the two tuples corresponding to the elements will be the same.
-Although Hibernate allows this, Envers (or more precisely: the database connector) will throw an exception when trying to persist two identical elements because of a unique constraint violation.
+Although Hibernate allows this, Envers (or more precisely the database connector) will throw an exception when trying to persist two identical elements because of a unique constraint violation.
 
 There are at least two ways out if you need bag semantics:
 
-. use an indexed collection, with the `@javax.persistence.OrderColumn` annotation
+. use an indexed collection, with the `@javax.persistence.OrderColumn` annotation.
 . provide a unique id for your elements with the `@CollectionId` annotation.
 
 ==== What isn't and _will_ be supported
 
-. Bag style collections with a `@CollectionId` identifier column (see https://hibernate.atlassian.net/browse/HHH-3950[HHH-3950]).
+* Bag style collections with a `@CollectionId` identifier column (see https://hibernate.atlassian.net/browse/HHH-3950[HHH-3950]).
 
 === `@OneToMany` with `@JoinColumn`
 
@@ -1433,12 +1445,12 @@ Envers, however, has to do this so that when you read the revisions in which the
 
 To be able to name the additional join table, there is a special annotation: `@AuditJoinTable`, which has similar semantics to JPA `@JoinTable`.
 
-One special case is to have relations mapped with `@OneToMany` with `@JoinColumn` on the one side, and `@ManyToOne` and `@JoinColumn( insertable=false, updatable=false`) on the many side.
+One special case is to have relations mapped with `@OneToMany` with `@JoinColumn` on the one side, and `@ManyToOne` and `@JoinColumn( insertable = false, updatable = false`) on the many side.
 Such relations are, in fact, bidirectional, but the owning side is the collection.
 
 To properly audit such relations with Envers, you can use the `@AuditMappedBy` annotation.
 It enables you to specify the reverse property (using the `mappedBy` element).
-In case of indexed collections, the index column must also be mapped in the referenced entity (using `@Column( insertable=false, updatable=false )`, and specified using `positionMappedBy`.
+In case of indexed collections, the index column must also be mapped in the referenced entity (using `@Column( insertable = false, updatable = false )`, and specified using `positionMappedBy`.
 This annotation will affect only the way Envers works.
 Please note that the annotation is experimental and may change in the future.
 
@@ -1452,7 +1464,7 @@ Because audit tables tend to grow indefinitely, they can quickly become really l
 When the audit tables have grown to a certain limit (varying per RDBMS and/or operating system) it makes sense to start using table partitioning.
 SQL table partitioning offers a lot of advantages including, but certainly not limited to:
 
-. Improved query performance by selectively moving rows to various partitions (or even purging old rows)
+. Improved query performance by selectively moving rows to various partitions (or even purging old rows).
 . Faster data loads, index creation, etc.
 
 [[envers-partitioning-columns]]
@@ -1509,9 +1521,9 @@ Currently, the salary table contains the following rows for a certain person X:
 The salary for the current fiscal year (2010) is unknown.
 The agency requires that all changes in registered salaries for a fiscal year are recorded (i.e., an audit trail).
 The rationale behind this is that decisions made at a certain date are based on the registered salary at that time.
-And at any time it must be possible reproduce the reason why a certain decision was made at a certain date.
+And at any time it must be possible to reproduce the reason why a certain decision was made at a certain date.
 
-The following audit information is available, sorted on in order of occurrence:
+The following audit information is available, sorted in order of occurrence:
 
 .Salaries - audit table
 [width="100%",cols="20%,20%,20%,20%,20%",options="header",]
@@ -1541,7 +1553,7 @@ Remember that, in this case, Envers will have to update the _end revision timest
 . There are two revisions in the salary of the fiscal year 2007 which both have nearly the same _revision timestamp_ and a different __end revision timestamp__.
 
 On first sight, it is evident that the first revision was a mistake and probably not relevant.
-The only relevant revision for 2007 is the one with _end revision timestamp_ null.
+The only relevant revision for 2007 is the one with _end revision timestamp_ value of null.
 
 Based on the above, it is evident that only the _end revision timestamp_ is suitable for audit table partitioning.
 The _revision timestamp_ is not suitable.
@@ -1562,15 +1574,15 @@ the audit row will remain in the same partition (the 'extension bucket').
 
 And sometime in 2011, the last partition (or 'extension bucket') is split into two new partitions:
 
-. _end revision timestamp_ year = 2010:: This partition contains audit data that is potentially relevant (in 2011).
-. _end revision timestamp_ year >= 2011 or null:: This partition contains the most interesting audit data and is the new 'extension bucket'.
+. _end revision timestamp_ year = 2010: This partition contains audit data that is potentially relevant (in 2011).
+. _end revision timestamp_ year >= 2011 or null: This partition contains the most interesting audit data and is the new 'extension bucket'.
 
 [[envers-links]]
 === Envers links
 
 .  http://hibernate.org[Hibernate main page]
-.  http://community.jboss.org/en/envers?view=discussions[Forum]
+.  http://hibernate.org/community/[Forum]
 .  https://hibernate.atlassian.net/[JIRA issue tracker] (when adding issues concerning Envers, be sure to select the "envers" component!)
-.  https://hibernate.hipchat.com/chat/room/1238636[HipChat channel]
+.  https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user[Zulip channel]
 .  https://community.jboss.org/wiki/EnversFAQ[FAQ]
 

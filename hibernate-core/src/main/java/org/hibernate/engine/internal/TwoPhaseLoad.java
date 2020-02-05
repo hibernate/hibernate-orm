@@ -30,6 +30,8 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -181,6 +183,9 @@ public final class TwoPhaseLoad {
 		String entityName = persister.getEntityName();
 		String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
+		
+		final GraphImplementor<?> fetchGraphContext = session.getFetchGraphLoadContext();
+		
 		for ( int i = 0; i < hydratedState.length; i++ ) {
 			final Object value = hydratedState[i];
 			if ( debugEnabled ) {
@@ -204,7 +209,7 @@ public final class TwoPhaseLoad {
 					// IMPLEMENTATION NOTE: this is a lazy collection property on a bytecode-enhanced entity.
 					// HHH-10989: We need to resolve the collection so that a CollectionReference is added to StatefulPersistentContext.
 					// As mentioned above, hydratedState[i] needs to remain LazyPropertyInitializer.UNFETCHED_PROPERTY
-					// so do not assign the resolved, unitialized PersistentCollection back to hydratedState[i].
+					// so do not assign the resolved, uninitialized PersistentCollection back to hydratedState[i].
 					Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
 					types[i].resolve( value, session, entity, overridingEager );
 				}
@@ -226,6 +231,10 @@ public final class TwoPhaseLoad {
 				if ( debugEnabled ) {
 					LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
 				}
+			}
+			
+			if ( session.getFetchGraphLoadContext() != fetchGraphContext ) {
+				session.setFetchGraphLoadContext( fetchGraphContext );
 			}
 		}
 
@@ -364,27 +373,51 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * Check if eager of the association is overriden by anything.
+	 * Check if eager of the association is overridden (i.e. skipping metamodel strategy), including (order sensitive):
+	 * <ol>
+	 *     <li>fetch graph</li>
+	 *     <li>fetch profile</li>
+	 * </ol>
 	 *
 	 * @param session session
 	 * @param entityName entity name
 	 * @param associationName association name
-	 *
+	 * @param associationType association type
+	 * @param isDebugEnabled if debug log level enabled
 	 * @return null if there is no overriding, true if it is overridden to eager and false if it is overridden to lazy
 	 */
 	private static Boolean getOverridingEager(
 			final SharedSessionContractImplementor session,
 			final String entityName,
 			final String associationName,
-			final Type type,
+			final Type associationType,
 			final boolean isDebugEnabled) {
 		// Performance: check type.isCollectionType() first, as type.isAssociationType() is megamorphic
-		if ( type.isCollectionType() || type.isAssociationType()  ) {
-			final Boolean overridingEager = isEagerFetchProfile( session, entityName, associationName );
+		if ( associationType.isCollectionType() || associationType.isAssociationType()  ) {
 
-			//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
-			if ( isDebugEnabled ) {
-				if ( overridingEager != null ) {
+			// check 'fetch graph' first; skip 'fetch profile' if 'fetch graph' takes effect
+			Boolean overridingEager = isEagerFetchGraph( session, associationName, associationType );
+
+			if ( overridingEager != null ) {
+				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+				if ( isDebugEnabled ) {
+					LOG.debugf(
+							"Overriding eager fetching using fetch graph. EntityName: %s, associationName: %s, eager fetching: %s",
+							entityName,
+							associationName,
+							overridingEager
+					);
+				}
+
+				return overridingEager;
+			}
+			
+			// check 'fetch profile' next; skip 'metamodel' if 'fetch profile' takes effect
+			overridingEager = isEagerFetchProfile( session, entityName, associationName );
+
+			if ( overridingEager != null ) {
+				//This method is very hot, and private so let's piggy back on the fact that the caller already knows the debugging state.
+				if ( isDebugEnabled ) {
 					LOG.debugf(
 							"Overriding eager fetching using active fetch profile. EntityName: %s, associationName: %s, eager fetching: %s",
 							entityName,
@@ -392,10 +425,10 @@ public final class TwoPhaseLoad {
 							overridingEager
 					);
 				}
+				return overridingEager;
 			}
-
-			return overridingEager;
 		}
+		// let 'metamodel' decide eagerness
 		return null;
 	}
 
@@ -413,6 +446,39 @@ public final class TwoPhaseLoad {
 				if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {
 					return true;
 				}
+			}
+		}
+
+		return null;
+	}
+	
+	private static Boolean isEagerFetchGraph(SharedSessionContractImplementor session, String associationName, Type associationType) {
+		final GraphImplementor<?> context = session.getFetchGraphLoadContext();
+		
+		if ( context != null ) {
+			// 'fetch graph' is in effect, so null should not be returned
+			final AttributeNodeImplementor<Object> attributeNode = context.findAttributeNode( associationName );
+			if ( attributeNode != null ) {
+				if ( associationType.isCollectionType() ) {
+					// to do: deal with Map's key and value
+					session.setFetchGraphLoadContext( null );
+				}
+				else {
+					// set 'fetchGraphContext' to sub-graph so graph is explored further (internal loading)
+					final GraphImplementor<?> subContext = attributeNode.getSubGraphMap().get( associationType.getReturnedClass() );
+					if ( subContext != null ) {
+						session.setFetchGraphLoadContext( subContext );
+					}
+					else {
+						session.setFetchGraphLoadContext( null );
+					}
+				}
+				// explicit 'fetch graph' applies, so fetch eagerly
+				return true;
+			}
+			else {
+				// implicit 'fetch graph' applies, so fetch lazily
+				return false;
 			}
 		}
 

@@ -50,7 +50,7 @@ public class EntityGraphFunctionalTests extends BaseEntityManagerFunctionalTestC
 					final Issue issue = session.find(
 							Issue.class,
 							1,
-							Collections.singletonMap( GraphSemantic.FETCH.getJpaHintName(), graph )
+							Collections.singletonMap( GraphSemantic.LOAD.getJpaHintName(), graph )
 					);
 
 					assertTrue( Hibernate.isInitialized( issue ) );

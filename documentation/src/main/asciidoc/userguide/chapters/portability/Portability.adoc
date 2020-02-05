@@ -26,7 +26,7 @@ Generally, this required their users to configure the Hibernate dialect or defin
 Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
 This was much better, except that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
 
-Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine which dialect to should be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
+Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine which dialect to be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
 
 [source,java]
 ----
@@ -41,7 +41,7 @@ All other exceptions result in a warning and continuing on to the next resolver.
 The cool part about these resolvers is that users can also register their own custom resolvers which will be processed ahead of the built-in Hibernate ones.
 This might be useful in a number of different situations:
 
-* it allows easy integration for auto-detection of dialects beyond those shipped with Hibernate itself
+* it allows easy integration for auto-detection of dialects beyond those shipped with Hibernate itself.
 * it allows you to specify to use a custom dialect when a particular database is recognized.
 
 To register one or more resolvers, simply specify them (separated by commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the `DIALECT_RESOLVERS` constant on `org.hibernate.cfg.Environment`).
@@ -91,7 +91,7 @@ In terms of portability concerns, the function handling currently works pretty w
 
 SQL functions can be referenced in many ways by users.
 However, not all databases support the same set of functions.
-Hibernate, provides a means of mapping a _logical_ function name to a delegate which knows how to render that particular function, perhaps even using a totally different physical function call.
+Hibernate provides a means of mapping a _logical_ function name to a delegate which knows how to render that particular function, perhaps even using a totally different physical function call.
 
 [IMPORTANT]
 ====

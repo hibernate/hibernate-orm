@@ -4,8 +4,6 @@
 :boot-spi-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/boot/spi
 :extrasdir: extras
 
-org.hibernate.boot.spi.metadatabuildercontributor;
-
 The term bootstrapping refers to initializing and starting a software component.
 In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` instance or `EntityManagerFactory` instance, for JPA.
 The process is very different for each.
@@ -20,7 +18,7 @@ During the bootstrap process, you might want to customize Hibernate behavior so 
 
 This section discusses the process of bootstrapping a Hibernate `SessionFactory`.
 Specifically, it addresses the bootstrapping APIs as redesigned in 5.0.
-For a discussion of the legacy bootstrapping API, see <<appendices/Legacy_Bootstrap.adoc#appendix-legacy-bootstrap,Legacy Bootstrapping>>
+For a discussion of the legacy bootstrapping API, see <<appendices/Legacy_Bootstrap.adoc#appendix-legacy-bootstrap,Legacy Bootstrapping>>.
 
 [[bootstrap-native-registry]]
 ==== Building the ServiceRegistry
@@ -32,9 +30,9 @@ First is the `org.hibernate.boot.registry.BootstrapServiceRegistry`.
 The `BootstrapServiceRegistry` is intended to hold services that Hibernate needs at both bootstrap and run time.
 This boils down to 3 services:
 
-`org.hibernate.boot.registry.classloading.spi.ClassLoaderService`:: which controls how Hibernate interacts with `ClassLoader`s
+`org.hibernate.boot.registry.classloading.spi.ClassLoaderService`:: which controls how Hibernate interacts with ``ClassLoader``s.
 `org.hibernate.integrator.spi.IntegratorService`:: which controls the management and discovery of `org.hibernate.integrator.spi.Integrator` instances.
-`org.hibernate.boot.registry.selector.spi.StrategySelector`:: which control how Hibernate resolves implementations of various strategy contracts.
+`org.hibernate.boot.registry.selector.spi.StrategySelector`:: which controls how Hibernate resolves implementations of various strategy contracts.
 This is a very powerful service, but a full discussion of it is beyond the scope of this guide.
 
 [NOTE]
@@ -43,7 +41,7 @@ If you are ok with the default behavior of Hibernate in regards to these `Bootst
 (which is quite often the case, especially in stand-alone environments), then you don't need to explicitly build the `BootstrapServiceRegistry`.
 ====
 
-If you wish to alter how the `BootstrapServiceRegistry` is built, that is controlled through the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder:`
+If you wish to alter how the `BootstrapServiceRegistry` is built, that is controlled through the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder`:
 
 [[bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example]]
 .Controlling `BootstrapServiceRegistry` building
@@ -105,9 +103,9 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-event-listener-registrati
 
 The second step in native bootstrapping is the building of an `org.hibernate.boot.Metadata` object containing the parsed representations of an application domain model and its mapping to a database.
 The first thing we obviously need to build a parsed representation is the source information to be parsed (annotated classes, `hbm.xml` files, `orm.xml` files).
-This is the purpose of `org.hibernate.boot.MetadataSources`:
+This is the purpose of `org.hibernate.boot.MetadataSources`.
 
-`MetadataSources` has many other methods as well, explore its API and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataSources.html[Javadocs] for more information.
+`MetadataSources` has many other methods as well. Explore its API and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataSources.html[Javadocs] for more information.
 Also, all methods on `MetadataSources` offer fluent-style call chaining::
 
 [[bootstrap-native-metadata-source-example]]
@@ -149,7 +147,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-builder-e
 The final step in native bootstrapping is to build the `SessionFactory` itself.
 Much like discussed above, if you are ok with the default behavior of building a `SessionFactory` from a `Metadata` reference, you can simply call the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#buildSessionFactory--[`buildSessionFactory`] method on the `Metadata` object.
 
-However, if you would like to adjust that building process, you will need to use `SessionFactoryBuilder` as obtained via [`Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
+However, if you would like to adjust that building process, you will need to use `SessionFactoryBuilder` as obtained via `Metadata#getSessionFactoryBuilder`. Again, see its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/Metadata.html#getSessionFactoryBuilder--[Javadocs] for more details.
 
 [[bootstrap-native-SessionFactory-example]]
 .Native Bootstrapping - Putting it all together
@@ -336,4 +334,4 @@ The above `MetadataBuilderContributor` is used to register a `SqlFuction` which 
 By having access to the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/MetadataBuilder.html[`MetadataBuilder`] class that's used by the underlying `SessionFactory`, the JPA bootstrap becomes just as flexible as the Hibernate native bootstrap mechanism.
 
-You can then pass the custom `MetadataBuilderContributor` via the `hibernate.metadata_builder_contributor` configuration property as explained in the <<appendices/Configurations.adoc#configurations-bootstrap, configuration chapter>>
+You can then pass the custom `MetadataBuilderContributor` via the `hibernate.metadata_builder_contributor` configuration property as explained in the <<appendices/Configurations.adoc#configurations-bootstrap, Configuration chapter>>.

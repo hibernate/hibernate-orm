@@ -19,26 +19,31 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ToOneIdMapper extends AbstractToOneMapper {
 	private final IdMapper delegate;
 	private final String referencedEntityName;
 	private final boolean nonInsertableFake;
+	private final boolean lazyMapping;
 
 	public ToOneIdMapper(
 			IdMapper delegate,
 			PropertyData propertyData,
 			String referencedEntityName,
-			boolean nonInsertableFake) {
+			boolean nonInsertableFake,
+			boolean lazyMapping) {
 		super( delegate.getServiceRegistry(), propertyData );
 		this.delegate = delegate;
 		this.referencedEntityName = referencedEntityName;
 		this.nonInsertableFake = nonInsertableFake;
+		this.lazyMapping = lazyMapping;
 	}
 
 	@Override
@@ -50,9 +55,14 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 		final HashMap<String, Object> newData = new HashMap<>();
 
 		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
-		// bi-directional relation, we always store the "old", unchaged data, to prevent storing changes made
+		// bi-directional relation, we always store the "old", unchanged data, to prevent storing changes made
 		// to this field. It is the responsibility of the collection to properly update it if it really changed.
-		delegate.mapToMapFromEntity( newData, nonInsertableFake ? oldObj : newObj );
+		Object entity = nonInsertableFake ? oldObj : newObj;
+		if ( lazyMapping && entity instanceof HibernateProxy ) {
+			entity = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getImplementation();
+		}
+
+		delegate.mapToMapFromEntity( newData, entity );
 
 		for ( Map.Entry<String, Object> entry : newData.entrySet() ) {
 			data.put( entry.getKey(), entry.getValue() );

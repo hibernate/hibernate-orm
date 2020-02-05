@@ -28,7 +28,7 @@ Hibernate will internally determine which `ConnectionProvider` to use based on t
 
 Hibernate can integrate with a `javax.sql.DataSource` for obtaining JDBC Connections.
 Applications would tell Hibernate about the `DataSource` via the (required) `hibernate.connection.datasource` setting which can either specify a JNDI name or would reference the actual `DataSource` instance.
-For cases where a JNDI name is given, be sure to read <<chapters/jndi/JNDI.adoc#jndi,JNDI>>
+For cases where a JNDI name is given, be sure to read <<chapters/jndi/JNDI.adoc#jndi,JNDI>>.
 
 [NOTE]
 ====
@@ -185,7 +185,7 @@ This usage is discouraged and not discussed here.
 All of the provided ConnectionProvider implementations, other than `DataSourceConnectionProvider`, support consistent setting of transaction isolation for all `Connections` obtained from the underlying pool.
 The value for `hibernate.connection.isolation` can be specified in one of 3 formats:
 
-* the integer value accepted at the JDBC level
+* the integer value accepted at the JDBC level.
 * the name of the `java.sql.Connection` constant field representing the isolation you would like to use.
 For example, `TRANSACTION_REPEATABLE_READ` for https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#TRANSACTION_REPEATABLE_READ[`java.sql.Connection#TRANSACTION_REPEATABLE_READ`].
 Not that this is only supported for JDBC standard isolation levels, not for isolation levels specific to a particular JDBC driver.
@@ -212,7 +212,7 @@ If you don't want to use the default connection handling mode, you can specify a
 
 ==== Transaction type and connection handling
 
-By default, the connection handling mode is given by the underlying transaction coordinator. There are two types of transactions: `RESOURCE_LOCAL` (which involves a single database `Connection` and the transaction is controlled via the `commit` and `rollback` `Connection` methods) and `JTA` (which may involve multiple resources either database connections, JMS queues, etc).
+By default, the connection handling mode is given by the underlying transaction coordinator. There are two types of transactions: `RESOURCE_LOCAL` (which involves a single database `Connection` and the transaction is controlled via the `commit` and `rollback` `Connection` methods) and `JTA` (which may involve multiple resources including database connections, JMS queues, etc).
 
 ===== RESOURCE_LOCAL transaction connection handling
 
@@ -270,6 +270,7 @@ If for some reason it is not able to determine the proper one or you want to use
 |DB297 |Support for the DB2 database, version 9.7.
 |DB2390 |Support for DB2 Universal Database for OS/390, also known as DB2/390.
 |DB2400 |Support for DB2 Universal Database for iSeries, also known as DB2/400.
+|DB2400V7R3 |Support for DB2 Universal Database for i, also known as DB2/400, version 7.3
 |DerbyTenFive |Support for the Derby database, version 10.5
 |DerbyTenSix |Support for the Derby database, version 10.6
 |DerbyTenSeven |Support for the Derby database, version 10.7

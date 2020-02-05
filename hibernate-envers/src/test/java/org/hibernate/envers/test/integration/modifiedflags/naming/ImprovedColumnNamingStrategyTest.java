@@ -44,6 +44,8 @@ public class ImprovedColumnNamingStrategyTest extends BaseEnversJPAFunctionalTes
 		assertNotNull( table1.getColumn( new Column( "otherEntity_MOD" ) ) );
 		assertNotNull( table1.getColumn( new Column( "single_id_MOD" ) ) );
 		assertNotNull( table1.getColumn( new Column( "singleIdEntity2_id_MOD" ) ) );
+		assertNotNull( table1.getColumn( new Column( "client_option_MOD" ) ) );
+		assertNotNull( table1.getColumn( new Column( "cop_mod" ) ) );
 
 		final Table table2 = metadata().getEntityBinding( OtherEntity.class.getName() + "_AUD" ).getTable();
 		assertNotNull( table2.getColumn( new Column( "d_MOD" ) ) );

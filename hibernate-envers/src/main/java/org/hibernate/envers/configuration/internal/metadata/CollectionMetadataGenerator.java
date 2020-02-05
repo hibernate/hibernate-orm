@@ -277,7 +277,9 @@ public final class CollectionMetadataGenerator {
 					// The mapper will only be used to map from entity to map, so no need to provide other details
 					// when constructing the PropertyData.
 					new PropertyData( auditMappedBy, null, null, null ),
-					referencingEntityName, false
+					referencingEntityName,
+					false,
+					false
 			);
 
 			final String positionMappedBy;

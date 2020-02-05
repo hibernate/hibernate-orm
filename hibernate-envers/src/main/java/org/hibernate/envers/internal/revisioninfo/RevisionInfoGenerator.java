@@ -13,6 +13,11 @@ import org.hibernate.envers.RevisionType;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface RevisionInfoGenerator {
+	/**
+	 * Set the revision entity number reader instance.
+	 */
+	void setRevisionInfoNumberReader(RevisionInfoNumberReader revisionInfoNumberReader);
+
 	void saveRevisionData(Session session, Object revisionData);
 
 	Object generate();

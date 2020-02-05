@@ -40,10 +40,11 @@ public class LegacyModifiedColumnNamingStrategy implements ModifiedColumnNamingS
 		else {
 			columnName = propertyAuditingData.getModifiedFlagName();
 		}
-		MetadataTools.addModifiedFlagProperty(
+		MetadataTools.addModifiedFlagPropertyWithColumn(
 				parent,
 				propertyAuditingData.getName(),
 				globalCfg.getModifiedFlagSuffix(),
+				propertyAuditingData.getModifiedFlagName(),
 				columnName
 		);
 	}

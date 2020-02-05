@@ -591,7 +591,7 @@ public class AuditedPropertiesReader {
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
-			if( aud.modifiedColumnName() != null && !"".equals( aud.modifiedColumnName() ) ) {
+			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}
 			return true;

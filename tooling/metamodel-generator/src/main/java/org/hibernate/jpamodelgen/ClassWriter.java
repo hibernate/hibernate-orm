@@ -53,7 +53,8 @@ public final class ClassWriter {
 			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
-					getFullyQualifiedClassName( entity, metaModelPackage )
+					getFullyQualifiedClassName( entity, metaModelPackage ),
+					entity.getTypeElement()
 			);
 			OutputStream os = fo.openOutputStream();
 			PrintWriter pw = new PrintWriter( os );

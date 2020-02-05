@@ -62,7 +62,15 @@ public enum Database {
 				case "DSN": // z/OS
 					return new DB2390Dialect(info);
 				case "QSQ": // i
-					return new DB2400Dialect();
+					final int majorVersion = info.getDatabaseMajorVersion();
+					final int minorVersion = info.getDatabaseMinorVersion();
+
+					if ( majorVersion > 7 || ( majorVersion == 7 && minorVersion >= 3 ) ) {
+						return new DB2400V7R3Dialect();
+					}
+					else {
+						return new DB2400Dialect();
+					}
 				default:
 					return null;
 			}

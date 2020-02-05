@@ -8,8 +8,9 @@ package org.hibernate.envers.test.integration.modifiedflags.naming;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -51,6 +52,15 @@ public class TestEntity {
 
 	@OneToOne
 	private SingleIdEntity singleIdEntity2;
+
+	@Column(name = "client_option")
+	@Enumerated(EnumType.STRING)
+	private ClientOption clientOption;
+
+	@Column(name = "client_option2")
+	@Enumerated(EnumType.STRING)
+	@Audited(withModifiedFlag = true, modifiedColumnName = "cop_mod")
+	private ClientOption clientOption2;
 
 	public Integer getId() {
 		return id;
@@ -122,5 +132,21 @@ public class TestEntity {
 
 	public void setSingleIdEntity2(SingleIdEntity singleIdEntity2) {
 		this.singleIdEntity2 = singleIdEntity2;
+	}
+
+	public ClientOption getClientOption() {
+		return clientOption;
+	}
+
+	public void setClientOption(ClientOption clientOption) {
+		this.clientOption = clientOption;
+	}
+
+	public ClientOption getClientOption2() {
+		return clientOption2;
+	}
+
+	public void setClientOption2(ClientOption clientOption2) {
+		this.clientOption2 = clientOption2;
 	}
 }

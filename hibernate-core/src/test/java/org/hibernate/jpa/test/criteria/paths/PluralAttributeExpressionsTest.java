@@ -76,7 +76,6 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11225" )
-	@FailureExpected( jiraKey = "HHH-6686")
 	public void testElementMapIsEmptyHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "select m from MapEntity m where m.localized is empty" ).getResultList();
@@ -85,7 +84,6 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-11225" )
-	@FailureExpected( jiraKey = "HHH-6686")
 	public void testElementMapIsEmptyCriteria() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();

@@ -28,6 +28,7 @@ import org.dom4j.Element;
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public final class ToOneRelationMetadataGenerator {
 	private final AuditMetadataGenerator mainGenerator;
@@ -99,11 +100,13 @@ public final class ToOneRelationMetadataGenerator {
 			parent.add( element );
 		}
 
+		boolean lazy = ( (ToOne) value ).isLazy();
+
 		// Adding mapper for the id
 		final PropertyData propertyData = propertyAuditingData.getPropertyData();
 		mapper.addComposite(
 				propertyData,
-				new ToOneIdMapper( relMapper, propertyData, referencedEntityName, nonInsertableFake )
+				new ToOneIdMapper( relMapper, propertyData, referencedEntityName, nonInsertableFake, lazy )
 		);
 	}
 

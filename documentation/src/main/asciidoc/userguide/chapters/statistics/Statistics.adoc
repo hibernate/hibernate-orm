@@ -43,7 +43,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 `getDomainDataRegionStatistics(String regionName)`:: Get the second-level cache statistics per domain data (entity, collection, natural-id) region.
 `getQueryRegionStatistics(String regionName)`:: Get the second-level cache statistics per query region.
 `getCacheRegionStatistics(String regionName)`:: Get statistics for either a domain-data or query-result region
-(this method checks both, preferring domain data region if one).
+(this method checks both, preferring domain data region if one exists).
 
 [[statistics-session-factory]]
 ==== SessionFactory statistics methods
@@ -74,7 +74,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 [[statistics-concurrency-control]]
 ==== Concurrency Control statistics methods
 
-`getOptimisticFailureCount`:: The number of Hibernate `StaleObjectStateException`s or JPA `OptimisticLockException`s that occurred.
+`getOptimisticFailureCount`:: The number of Hibernate ``StaleObjectStateException``s or JPA ``OptimisticLockException``s that occurred.
 
 [[statistics-entity]]
 ==== Entity statistics methods
@@ -158,7 +158,7 @@ to make room for new query entries.
 [[statistics-query-plan-cache]]
 === Query plan cache statistics
 
-Every entity query, be it JPQL/HQL or Criteria API is compiled to an AST (Abstract Syntax Tree),
+Every entity query, be it JPQL/HQL or Criteria API, is compiled to an AST (Abstract Syntax Tree),
 and this process is resource-intensive.
 To speed up the entity query executions, Hibernate offers a query plan cache so that compiled plans can be reused.
 

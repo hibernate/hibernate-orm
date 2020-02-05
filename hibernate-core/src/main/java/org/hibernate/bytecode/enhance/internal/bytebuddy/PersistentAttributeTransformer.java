@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import javax.persistence.Embedded;
 
+import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
@@ -134,7 +135,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypePool typePool,
 			int writerFlags,
 			int readerFlags) {
-		return new MethodVisitor( Opcodes.ASM5, methodVisitor ) {
+		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( isEnhanced( owner, name, desc ) ) {

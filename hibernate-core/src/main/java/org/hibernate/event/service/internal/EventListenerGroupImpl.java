@@ -7,14 +7,12 @@
 package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
@@ -25,24 +23,21 @@ import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
 class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
-	private EventType<T> eventType;
+	private static final Logger log = Logger.getLogger( EventListenerGroupImpl.class );
+
+	private final EventType<T> eventType;
 	private final EventListenerRegistryImpl listenerRegistry;
 
 	private final Set<DuplicationStrategy> duplicationStrategies = new LinkedHashSet<>();
 
-	// Performance: make sure iteration on this type is efficient; in particular we do not want to allocate iterators,
-	// not having to capture state in lambdas.
-	// So we keep the listeners in both a List (for convenience) and in an array (for iteration). Make sure
-	// their content stays in synch!
 	private T[] listeners = null;
-
-	//Update both fields when making changes!
-	private List<T> listenersAsList;
 
 	public EventListenerGroupImpl(EventType<T> eventType, EventListenerRegistryImpl listenerRegistry) {
 		this.eventType = eventType;
@@ -82,11 +77,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@Override
 	public void clear() {
-		if ( duplicationStrategies != null ) {
-			duplicationStrategies.clear();
-		}
+		duplicationStrategies.clear();
 		listeners = null;
-		listenersAsList = null;
 	}
 
 	@Override
@@ -94,8 +86,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		final T[] ls = listeners;
 		if ( ls != null && ls.length != 0 ) {
 			final U event = eventSupplier.get();
-			for ( T listener : ls ) {
-				actionOnEvent.accept( listener, event );
+			//noinspection ForLoopReplaceableByForEach
+			for ( int i = 0; i < ls.length; i++ ) {
+				actionOnEvent.accept( ls[i], event );
 			}
 		}
 	}
@@ -104,8 +97,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	public final <U> void fireEventOnEachListener(final U event, final BiConsumer<T,U> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
-			for ( T listener : ls ) {
-				actionOnEvent.accept( listener, event );
+			//noinspection ForLoopReplaceableByForEach
+			for ( int i = 0; i < ls.length; i++ ) {
+				actionOnEvent.accept( ls[i], event );
 			}
 		}
 	}
@@ -114,8 +108,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	public <U,X> void fireEventOnEachListener(final U event, final X parameter, final EventActionWithParameter<T, U, X> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
-			for ( T listener : ls ) {
-				actionOnEvent.applyEventToListener( listener, event, parameter );
+			//noinspection ForLoopReplaceableByForEach
+			for ( int i = 0; i < ls.length; i++ ) {
+				actionOnEvent.applyEventToListener( ls[i], event, parameter );
 			}
 		}
 	}
@@ -125,118 +120,150 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		duplicationStrategies.add( strategy );
 	}
 
-	/**
-	 * Implementation note: should be final for performance reasons.
-	 * @deprecated this is not the most efficient way for iterating the event listeners.
-	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and co. for better alternatives.
-	 */
 	@Override
-	@Deprecated
-	public final Iterable<T> listeners() {
-		final List<T> ls = listenersAsList;
-		return ls == null ? Collections.EMPTY_LIST : ls;
+	public void appendListener(T listener) {
+		handleListenerAddition( listener, this::internalAppend );
 	}
 
 	@Override
 	@SafeVarargs
 	public final void appendListeners(T... listeners) {
-		internalAppendListeners( listeners );
-		checkForArrayRefresh();
-	}
-
-	private void checkForArrayRefresh() {
-		final List<T> list = listenersAsList;
-		if ( this.listeners == null ) {
-			T[] a = (T[]) Array.newInstance( eventType.baseListenerInterface(), list.size() );
-			listeners = list.<T>toArray( a );
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < listeners.length; i++ ) {
+			handleListenerAddition( listeners[i], this::internalAppend );
 		}
 	}
 
-	private void internalAppendListeners(T[] listeners) {
-		for ( T listener : listeners ) {
-			internalAppendListener( listener );
+	private void internalAppend(T listener) {
+		prepareListener( listener );
+
+		if ( listeners == null ) {
+			//noinspection unchecked
+			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			this.listeners[0] = listener;
 		}
+		else {
+			final int size = this.listeners.length;
+
+			//noinspection unchecked
+			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+
+			// first copy the existing listeners
+			System.arraycopy( this.listeners, 0, newCopy, 0, size );
+
+			// and then put the new one after them
+			newCopy[size] = listener;
+
+			this.listeners = newCopy;
+		}
+
 	}
 
 	@Override
-	public void appendListener(T listener) {
-		internalAppendListener( listener );
-		checkForArrayRefresh();
-	}
-
-	private void internalAppendListener(T listener) {
-		if ( listenerShouldGetAdded( listener ) ) {
-			internalAppend( listener );
-		}
+	public void prependListener(T listener) {
+		handleListenerAddition( listener, this::internalPrepend );
 	}
 
 	@Override
 	@SafeVarargs
 	public final void prependListeners(T... listeners) {
-		internalPrependListeners( listeners );
-		checkForArrayRefresh();
-	}
-
-	private void internalPrependListeners(T[] listeners) {
-		for ( T listener : listeners ) {
-			internalPreprendListener( listener );
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < listeners.length; i++ ) {
+			handleListenerAddition( listeners[i], this::internalPrepend );
 		}
 	}
 
-	@Override
-	public void prependListener(T listener) {
-		internalPreprendListener( listener );
-		checkForArrayRefresh();
-	}
+	private void internalPrepend(T listener) {
+		prepareListener( listener );
 
-	private void internalPreprendListener(T listener) {
-		if ( listenerShouldGetAdded( listener ) ) {
-			internalPrepend( listener );
+		if ( this.listeners == null ) {
+			//noinspection unchecked
+			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			this.listeners[0] = listener;
+		}
+		else {
+			final int size = this.listeners.length;
+
+			//noinspection unchecked
+			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+
+			// put the new one first
+			newCopy[0] = listener;
+
+			// and copy the rest after it
+			System.arraycopy( this.listeners, 0, newCopy, 1, size );
+
+			this.listeners = newCopy;
 		}
 	}
 
-	private boolean listenerShouldGetAdded(T listener) {
-		final List<T> ts = listenersAsList;
-		if ( ts == null ) {
-			listenersAsList = new ArrayList<>();
-			return true;
-			// no need to do de-dup checks
+	private void handleListenerAddition(T listener, Consumer<T> additionHandler) {
+		if ( listeners == null ) {
+			additionHandler.accept( listener );
+			return;
 		}
 
-		boolean doAdd = true;
-		strategy_loop: for ( DuplicationStrategy strategy : duplicationStrategies ) {
-			final ListIterator<T> itr = ts.listIterator();
-			while ( itr.hasNext() ) {
-				final T existingListener = itr.next();
+		final T[] localListenersRef = this.listeners;
+		final boolean debugEnabled = log.isDebugEnabled();
+
+		for ( DuplicationStrategy strategy : duplicationStrategies ) {
+
+			// for each strategy, see if the strategy indicates that any of the existing
+			//		listeners match the listener being added.  If so, we want to apply that
+			//		strategy's action.  Control it returned immediately after applying the action
+			//		on match - meaning no further strategies are checked...
+
+			for ( int i = 0; i < localListenersRef.length; i++ ) {
+				final T existingListener = localListenersRef[i];
+				if ( debugEnabled ) {
+					log.debugf(
+							"Checking incoming listener [`%s`] for match against existing listener [`%s`]",
+							listener,
+							existingListener
+					);
+				}
+
 				if ( strategy.areMatch( listener,  existingListener ) ) {
+					if ( debugEnabled ) {
+						log.debugf( "Found listener match between `%s` and `%s`", listener, existingListener );
+					}
+
 					switch ( strategy.getAction() ) {
-						// todo : add debug logging of what happens here...
 						case ERROR: {
 							throw new EventListenerRegistrationException( "Duplicate event listener found" );
 						}
 						case KEEP_ORIGINAL: {
-							doAdd = false;
-							break strategy_loop;
+							if ( debugEnabled ) {
+								log.debugf( "Skipping listener registration (%s) : `%s`", strategy.getAction(), listener );
+							}
+							return;
 						}
 						case REPLACE_ORIGINAL: {
-							checkAgainstBaseInterface( listener );
-							performInjections( listener );
-							itr.set( listener );
-							doAdd = false;
-							break strategy_loop;
+							if ( debugEnabled ) {
+								log.debugf( "Replacing listener registration (%s) : `%s` -> %s", strategy.getAction(), existingListener, listener );
+							}
+							prepareListener( listener );
+
+							listeners[i] = listener;
 						}
 					}
+
+					// we've found a match - we should return
+					//		- the match action has already been applied at this point
+					return;
 				}
 			}
 		}
-		return doAdd;
-	}
 
-	private void internalPrepend(T listener) {
+		// we did not find any match.. add it
 		checkAgainstBaseInterface( listener );
 		performInjections( listener );
-		listenersAsList.add( 0, listener );
-		listeners = null; //Marks it for refreshing
+		additionHandler.accept( listener );
+	}
+
+	private void prepareListener(T listener) {
+		checkAgainstBaseInterface( listener );
+		performInjections( listener );
 	}
 
 	private void performInjections(T listener) {
@@ -259,10 +286,20 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		}
 	}
 
-	private void internalAppend(T listener) {
-		checkAgainstBaseInterface( listener );
-		performInjections( listener );
-		listenersAsList.add( listener );
-		listeners = null; //Marks it for refreshing
+
+	/**
+	 * Implementation note: should be final for performance reasons.
+	 * @deprecated this is not the most efficient way for iterating the event listeners.
+	 * See {@link #fireEventOnEachListener(Object, BiConsumer)} and co. for better alternatives.
+	 */
+	@Override
+	@Deprecated
+	public final Iterable<T> listeners() {
+		if ( listeners == null ) {
+			//noinspection unchecked
+			return Collections.EMPTY_LIST;
+		}
+
+		return Arrays.asList( listeners );
 	}
 }

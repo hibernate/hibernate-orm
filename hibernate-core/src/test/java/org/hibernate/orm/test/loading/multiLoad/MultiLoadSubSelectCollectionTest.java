@@ -114,49 +114,6 @@ public class MultiLoadSubSelectCollectionTest {
 		);
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-12740")
-	public void testSubselect_2(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Parent> list = session.byMultipleIds( Parent.class ).multiLoad( ids( 1 ) );
-					assertEquals( 1, list.size() );
-
-					// None of the collections should be loaded yet
-					for ( Parent p : list ) {
-						assertFalse( Hibernate.isInitialized( p.children ) );
-					}
-
-					Hibernate.initialize( list.get( 0 ).children );
-
-
-//					// When the first collection is loaded, the full batch of 50 collections
-//					// should be loaded.
-//					Hibernate.initialize( list.get( 0 ).children );
-//
-//					for ( int i = 0; i < 50; i++ ) {
-//						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-//						assertEquals( i + 1, list.get( i ).children.size() );
-//					}
-//
-//					// The collections for the 51st through 56th entities should still be uninitialized
-//					for ( int i = 50; i < 56; i++ ) {
-//						assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
-//					}
-//
-//					// When the 51st collection gets initialized, the remaining collections should
-//					// also be initialized.
-//					Hibernate.initialize( list.get( 50 ).children );
-//
-//					for ( int i = 50; i < 56; i++ ) {
-//						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-//						assertEquals( i + 1, list.get( i ).children.size() );
-//					}
-				}
-		);
-	}
-
-
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
 		for ( int i = 1; i <= count; i++ ) {

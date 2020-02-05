@@ -753,8 +753,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws HibernateException
 	 */
 	public void close() throws HibernateException {
-		//This is an idempotent operation so we can do it even before the checks (it won't hurt):
-		Environment.getBytecodeProvider().resetCaches();
 		synchronized (this) {
 			if ( isClosed ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {

@@ -4,10 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.jointable;
+package org.hibernate.jpa.test.joinable;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Objects;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
@@ -20,59 +19,57 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.SecondaryTable;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryProducer;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Christian Beikov
  */
-public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				Address.class,
-				ResourceImpl.class,
-				IssuerImpl.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				ManyToOneJoinTableTest.ResourceImpl.class,
+				ManyToOneJoinTableTest.IssuerImpl.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@ServiceRegistry.Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+		}
+)
+@SessionFactory
+public class ManyToOneJoinTableTest implements SessionFactoryProducer {
+	private SQLStatementInterceptor sqlStatementInterceptor;
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-//		configuration.setProperty(AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES, Boolean.FALSE.toString());
+	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
+		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
+		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
+		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
 	}
 
-	@Test
-	public void testAvoidJoin() {
-		final HQLQueryPlan plan = sessionFactory().getQueryPlanCache().getHQLQueryPlan(
-				"SELECT e.id FROM Person e",
-				false,
-				Collections.EMPTY_MAP
-		);
-		assertEquals( 1, plan.getTranslators().length );
-		final QueryTranslator translator = plan.getTranslators()[0];
-		final String generatedSql = translator.getSQLString();
-		// Ideally, we could detect that *ToOne join tables aren't used, but that requires tracking the uses of properties
-		// Since *ToOne join tables are treated like secondary or subclass/superclass tables, the proper fix will allow many more optimizations
-		assertFalse( generatedSql.contains( "join" ) );
-	}
 
 	@Test
-	public void testRegression() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNamedQuery( IssuerImpl.SELECT_RESOURCES_BY_ISSUER )
-					.setParameter( "issuer", session.getReference( IssuerImpl.class, new Identifier( 1l, "ABC" ) ) )
-					.getResultList();
-		} );
+	public void testRegression(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createNamedQuery( IssuerImpl.SELECT_RESOURCES_BY_ISSUER )
+							.setParameter(
+									"issuer",
+									session.getReference( IssuerImpl.class, new Identifier( 1l, "ABC" ) )
+							)
+							.getResultList();
+				} );
 	}
 
 	public interface Issuer extends Resource {
@@ -183,6 +180,4 @@ public class ManyToOneJoinTableTest extends BaseCoreFunctionalTestCase {
 			this.identifier = identifier;
 		}
 	}
-
-
 }

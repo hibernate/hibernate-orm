@@ -24,9 +24,9 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
-import static org.hibernate.mapping.Column.DEFAULT_LENGTH;
-import static org.hibernate.mapping.Column.DEFAULT_PRECISION;
-import static org.hibernate.mapping.Column.DEFAULT_SCALE;
+import static org.hibernate.engine.jdbc.Size.DEFAULT_LENGTH;
+import static org.hibernate.engine.jdbc.Size.DEFAULT_PRECISION;
+import static org.hibernate.engine.jdbc.Size.DEFAULT_SCALE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -57,19 +57,23 @@ public class BasicTypeColumnDefinitionTest extends BaseEnversJPAFunctionalTestCa
 	@Test
 	@Priority(10)
 	public void testMetadataBindings() {
+		final Long expectedDefaultLength = new Long( DEFAULT_LENGTH );
+		final Long expectedDefaultPrecision = new Long( DEFAULT_PRECISION );
+		final Long expectedDefaultScale = new Long( DEFAULT_SCALE );
+
 		final Table auditTable = metadata().getEntityBinding( BasicTypeContainer.class.getName() + "_AUD" ).getTable();
 
 		final org.hibernate.mapping.Column caseNumber = auditTable.getColumn( toIdentifier( "caseNumber" ) );
 		assertEquals( "integer", caseNumber.getSqlType() );
-		assertEquals( DEFAULT_LENGTH, caseNumber.getLength() );
-		assertEquals( DEFAULT_PRECISION, caseNumber.getPrecision() );
-		assertEquals( DEFAULT_SCALE, caseNumber.getScale() );
+		assertEquals( expectedDefaultLength, caseNumber.getLength() );
+		assertEquals( expectedDefaultPrecision, caseNumber.getPrecision() );
+		assertEquals( expectedDefaultScale, caseNumber.getScale() );
 
 		final org.hibernate.mapping.Column colDef = auditTable.getColumn( toIdentifier( "columnWithDefinition" ) );
 		assertEquals( "varchar(10)", colDef.getSqlType() );
-		assertEquals( 10, colDef.getLength() );
-		assertEquals( DEFAULT_PRECISION, colDef.getPrecision() );
-		assertEquals( DEFAULT_SCALE, colDef.getScale() );
+		assertEquals( new Long( 10 ), colDef.getLength() );
+		assertEquals( expectedDefaultPrecision, colDef.getPrecision() );
+		assertEquals( expectedDefaultScale, colDef.getScale() );
 	}
 
 	@Test

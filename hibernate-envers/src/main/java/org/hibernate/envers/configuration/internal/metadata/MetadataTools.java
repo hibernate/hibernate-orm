@@ -11,6 +11,7 @@ import javax.persistence.JoinColumn;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.StringTools;
@@ -347,7 +348,11 @@ public final class MetadataTools {
 		String columnDefinition = column.getSqlType();
 		if ( !StringTools.isEmpty( columnDefinition ) ) {
 			final int sqlTypeCode = column.getSqlTypeCode( mapping );
-			final String sqlType = dialect.getTypeName( sqlTypeCode, column.getLength(), column.getPrecision(), column.getScale() );
+			final Size size = new Size()
+					.setLength( column.getLength() )
+					.setPrecision( column.getPrecision() )
+					.setScale( column.getScale() );
+			final String sqlType = dialect.getTypeName( sqlTypeCode, size );
 			LOG.infof(
 					"Column [%s] uses a column-definition of [%s], resolved sql-type as [%s].",
 					column.getName(),

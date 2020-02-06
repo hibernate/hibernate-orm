@@ -245,8 +245,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private JDBCException convert(SQLException e, String s) {
-		// todo : implement
-		return null;
+		return new JDBCException(s, e);
 	}
 
 	@Override

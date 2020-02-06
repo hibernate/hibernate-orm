@@ -27,9 +27,9 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.hibernate.testing.transaction.TransactionUtil2.fromTransaction;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -83,44 +83,57 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13829")
 	public void testCollectionOfEmbeddable() {
-		final AtomicReference<User> user  = new AtomicReference<>( new User() );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			user.get().id = 1;
-			user.get().userDetails = new UserDetails();
-			user.get().contactAddresses = new ArrayList<>();
-			user.get().contactAddresses.add( new ContactAddress() );
-			user.get().contactAddresses.add( new ContactAddress() );
+		User user = fromTransaction( this.entityManagerFactory(), entityManager -> {
+			final User u = new User();
+			u.id = 1;
+			u.userDetails = new UserDetails();
+			u.contactAddresses = new ArrayList<>();
+			u.contactAddresses.add( new ContactAddress() );
+			u.contactAddresses.add( new ContactAddress() );
 
-			entityManager.persist( user.get() );
-			user.get().contactAddresses.forEach( e -> assertEquals( 1, e.prePersist ) );
+			entityManager.persist( u );
+
+			u.contactAddresses.forEach( e -> assertEquals( 1, e.prePersist ) );
+			return u;
 		} );
 
-		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postPersist ) );
+		user.contactAddresses.forEach( e -> assertEquals( 1, e.postPersist ) );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			User entity = entityManager.find( User.class, 1 );
+
 			assertEquals( "George", entity.name );
 			assertEquals("London", entity.contactAddresses.get( 0 ).city );
 			assertEquals("test@test.com", entity.userDetails.email );
 			entity.contactAddresses.forEach( e -> assertEquals( 1, e.postLoad ) );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			user.set(entityManager.find( User.class, 1 ) );
-			user.get().name = "Nick";
-			user.get().contactAddresses.get( 0 ).city = "Athens";
-			entityManager.persist( user.get() );
+		user = fromTransaction( this.entityManagerFactory(), entityManager -> {
+			User u = entityManager.find( User.class, 1 );
+			u.name = "Nick";
+			u.contactAddresses.get( 0 ).city = "Athens";
+
+			entityManager.persist( u );
+
+			return u;
 		} );
 
-		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.preUpdate ) );
-		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postUpdate ) );
+		user.contactAddresses.forEach( e -> assertEquals( 1, e.preUpdate ) );
+		user.contactAddresses.forEach( e -> assertEquals( 1, e.postUpdate ) );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			user.set(entityManager.find( User.class, 1));
-			entityManager.remove( user.get() );
-			user.get().contactAddresses.forEach( e -> assertEquals( 1, e.preRemove ) );
+		user = fromTransaction( this.entityManagerFactory(), entityManager -> {
+			User u = entityManager.find( User.class, 1 );
+
+			assertEquals( "Nick", u.name );
+			assertEquals( "Athens", u.contactAddresses.get( 0 ).city );
+
+			entityManager.remove( u );
+			u.contactAddresses.forEach( e -> assertEquals( 1, e.preRemove ) );
+
+			return u;
 		} );
-		user.get().contactAddresses.forEach( e -> assertEquals( 1, e.postRemove ) );
+
+		user.contactAddresses.forEach( e -> assertEquals( 1, e.postRemove ) );
 	}
 
 	@Test

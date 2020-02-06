@@ -251,7 +251,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 			}
 		}
 		//else get class from a single embeddable
-		if( embeddableXClass == null ){
+		if ( embeddableXClass == null ) {
 			final String embeddableClassName = embeddableProperty.getType().getReturnedClass().getName();
 			embeddableXClass = reflectionManager.classForName( embeddableClassName );
 		}

@@ -434,14 +434,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		queryParameters.validateParameters();
 		HQLQueryPlan plan = getQueryPlan( query, false );
-		boolean success = false;
-		int result = 0;
+		int result;
 		try {
 			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
 		}
 		finally {
-			afterOperation( success );
+			afterOperation();
 		}
 		temporaryPersistenceContext.clear();
 		return result;
@@ -558,20 +556,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		queryParameters.validateParameters();
 		HQLQueryPlan plan = getQueryPlan( query, false );
-		boolean success = false;
-		List results = Collections.EMPTY_LIST;
+		List results;
 		try {
 			results = plan.performList( queryParameters, this );
-			success = true;
 		}
 		finally {
-			afterOperation( success );
+			afterOperation();
 		}
 		temporaryPersistenceContext.clear();
 		return results;
 	}
 
-	public void afterOperation(boolean success) {
+	public void afterOperation() {
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
@@ -641,17 +637,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 
 		List results = Collections.EMPTY_LIST;
-		boolean success = false;
 		try {
 			for ( int i = 0; i < size; i++ ) {
 				final List currentResults = loaders[i].list( this );
 				currentResults.addAll( results );
 				results = currentResults;
 			}
-			success = true;
 		}
 		finally {
-			afterOperation( success );
+			afterOperation();
 		}
 		temporaryPersistenceContext.clear();
 		return results;
@@ -671,14 +665,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
-		boolean success = false;
 		List results;
 		try {
 			results = loader.list( this, queryParameters );
-			success = true;
 		}
 		finally {
-			afterOperation( success );
+			afterOperation();
 		}
 		temporaryPersistenceContext.clear();
 		return results;
@@ -727,14 +719,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		queryParameters.validateParameters();
 		NativeSQLQueryPlan plan = getNativeQueryPlan( nativeSQLQuerySpecification );
 
-		boolean success = false;
-		int result = 0;
+		int result;
 		try {
 			result = plan.performExecuteUpdate( queryParameters, this );
-			success = true;
 		}
 		finally {
-			afterOperation( success );
+			afterOperation();
 		}
 		temporaryPersistenceContext.clear();
 		return result;

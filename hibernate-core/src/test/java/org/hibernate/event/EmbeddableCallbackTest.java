@@ -6,7 +6,19 @@
  */
 package org.hibernate.event;
 
-import javax.persistence.*;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
+import javax.persistence.PreUpdate;
+import javax.persistence.PreRemove;
+import javax.persistence.PostRemove;
+import javax.persistence.PostLoad;
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
+import javax.persistence.Column;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -18,7 +30,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Vlad Mihalcea
@@ -70,7 +83,7 @@ public class EmbeddableCallbackTest extends BaseEntityManagerFunctionalTestCase 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13829")
 	public void testCollectionOfEmbeddable() {
-		AtomicReference<User> user  = new AtomicReference<>( new User() );
+		final AtomicReference<User> user  = new AtomicReference<>( new User() );
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			user.get().id = 1;
 			user.get().userDetails = new UserDetails();

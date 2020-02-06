@@ -70,16 +70,6 @@ public class TableCollector {
 					  continue;
 				  } else {
 					  if ( ("TABLE".equalsIgnoreCase(tableType) || "VIEW".equalsIgnoreCase(tableType) || "SYNONYM".equals(tableType) ) ) { //||
-						  // ("SYNONYM".equals(tableType) && isOracle() ) ) { // only on oracle ? TODO: HBX-218
-						  // it's a regular table or a synonym
-						  
-						  // ensure schema and catalogname is truly empty (especially mysql returns null schema, "" catalog)
-						  if(schemaName!=null && schemaName.trim().length()==0) {
-							  schemaName = null;
-						  }                     
-						  if(catalogName!=null && catalogName.trim().length()==0) {
-							  catalogName=null;
-						  }
 						  log.debug("Adding table " + tableName + " of type " + tableType);
 						  Table table = revengMetadataCollector.addTable(tableIdentifier);
 						  table.setComment(comment);

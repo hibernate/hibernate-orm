@@ -18,6 +18,7 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.internal.ColumnInformationImpl;
 import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl;
 import org.hibernate.tool.schema.extract.internal.TableInformationImpl;
@@ -47,6 +48,13 @@ public class CheckForExistingForeignKeyTest {
 		 */
 		public SchemaMigrator() {
 			super( null, null );
+		}
+
+		@Override
+		protected DatabaseInformation getDatabaseInformation(
+			DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace)
+		{
+			return null;
 		}
 
 		/**

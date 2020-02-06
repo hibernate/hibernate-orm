@@ -14,6 +14,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -33,6 +34,10 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			HibernateSchemaManagementTool tool,
 			SchemaFilter schemaFilter) {
 		super( tool, schemaFilter );
+	}
+
+	protected DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace) {
+		return Helper.buildDatabaseInformation(tool.getServiceRegistry(), ddlTransactionIsolator, namespace.getName());
 	}
 
 	@Override

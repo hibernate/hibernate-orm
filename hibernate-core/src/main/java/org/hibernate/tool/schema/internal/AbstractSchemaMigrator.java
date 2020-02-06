@@ -93,11 +93,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
 			try {
-				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
-						tool.getServiceRegistry(),
-						ddlTransactionIsolator,
-						metadata.getDatabase().getDefaultNamespace().getName()
-				);
+				final DatabaseInformation databaseInformation = getDatabaseInformation(ddlTransactionIsolator, metadata.getDatabase().getDefaultNamespace());
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(
 						targetDescriptor,
@@ -138,6 +134,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 		}
 	}
+
+	protected abstract DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace);
 
 	protected abstract NameSpaceTablesInformation performTablesMigration(
 			Metadata metadata,

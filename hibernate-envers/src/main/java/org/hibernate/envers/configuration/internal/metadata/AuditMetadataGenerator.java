@@ -633,7 +633,7 @@ public final class AuditMetadataGenerator {
 
 				// Adding the "key" element with all id columns...
 				final Element keyMapping = mappingData.getFirst().addElement( "key" );
-				MetadataTools.addColumns( keyMapping, pc.getTable().getPrimaryKey().columnIterator(), metadata );
+				MetadataTools.addColumns( keyMapping, pc.getTable().getPrimaryKey().getColumnIterator(), metadata );
 
 				// ... and the revision number column, read from the revision info relation mapping.
 				keyMapping.add( (Element) cloneAndSetupRevisionInfoRelationMapping().element( "column" ).clone() );

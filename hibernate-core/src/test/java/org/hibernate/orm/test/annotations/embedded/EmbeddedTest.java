@@ -359,9 +359,11 @@ public class EmbeddedTest {
 					// Create short swap
 					Swap shortSwap = new Swap();
 					shortSwap.setTenor( 2 );
+
 					FixedLeg shortFixed = new FixedLeg();
 					shortFixed.setPaymentFrequency( Frequency.SEMIANNUALLY );
 					shortFixed.setRate( 5.6 );
+
 					FloatLeg shortFloating = new FloatLeg();
 					shortFloating.setPaymentFrequency( Frequency.QUARTERLY );
 					shortFloating.setRateIndex( RateIndex.LIBOR );
@@ -371,9 +373,11 @@ public class EmbeddedTest {
 					// Create medium swap
 					Swap swap = new Swap();
 					swap.setTenor( 7 );
+
 					FixedLeg fixed = new FixedLeg();
 					fixed.setPaymentFrequency( Frequency.MONTHLY );
 					fixed.setRate( 7.6 );
+
 					FloatLeg floating = new FloatLeg();
 					floating.setPaymentFrequency( Frequency.MONTHLY );
 					floating.setRateIndex( RateIndex.TIBOR );
@@ -383,9 +387,11 @@ public class EmbeddedTest {
 					// Create long swap
 					Swap longSwap = new Swap();
 					longSwap.setTenor( 7 );
+
 					FixedLeg longFixed = new FixedLeg();
 					longFixed.setPaymentFrequency( Frequency.MONTHLY );
 					longFixed.setRate( 7.6 );
+
 					FloatLeg longFloating = new FloatLeg();
 					longFloating.setPaymentFrequency( Frequency.MONTHLY );
 					longFloating.setRateIndex( RateIndex.TIBOR );
@@ -480,35 +486,25 @@ public class EmbeddedTest {
 
 	@Test
 	public void testParent(SessionFactoryScope scope) {
-		scope.inSession(
+		Book book = new Book();
+		scope.inTransaction(
 				session -> {
-					session.getTransaction().begin();
-					try {
-						Book book = new Book();
-						book.setIsbn( "1234" );
-						book.setName( "HiA Second Edition" );
-						Summary summary = new Summary();
-						summary.setText( "This is a HiA SE summary" );
-						summary.setSize( summary.getText().length() );
-						book.setSummary( summary );
-						session.persist( book );
-						session.getTransaction().commit();
+					book.setIsbn( "1234" );
+					book.setName( "HiA Second Edition" );
+					Summary summary = new Summary();
+					summary.setText( "This is a HiA SE summary" );
+					summary.setSize( summary.getText().length() );
+					book.setSummary( summary );
+					session.persist( book );
+				}
+		);
 
-						session.clear();
-
-						Transaction tx = session.beginTransaction();
-						Book loadedBook = session.get( Book.class, book.getIsbn() );
-						assertNotNull( loadedBook.getSummary() );
-						assertEquals( loadedBook, loadedBook.getSummary().getSummarizedBook() );
-						session.delete( loadedBook );
-						tx.commit();
-					}
-					catch (Exception e) {
-						if ( session.getTransaction().isActive() ) {
-							session.getTransaction().rollback();
-						}
-						throw e;
-					}
+		scope.inTransaction(
+				session -> {
+					Book loadedBook = session.get( Book.class, book.getIsbn() );
+					assertNotNull( loadedBook.getSummary() );
+					assertEquals( loadedBook, loadedBook.getSummary().getSummarizedBook() );
+					session.delete( loadedBook );
 				}
 		);
 	}

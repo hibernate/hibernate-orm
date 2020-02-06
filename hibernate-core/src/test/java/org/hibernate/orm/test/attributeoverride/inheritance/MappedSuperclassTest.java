@@ -69,7 +69,7 @@ public class MappedSuperclassTest {
 							ForeignCustomer.class
 					).getSingleResult();
 					assertThat( foreignCustomer.getName(), is( "foreign" ) );
-					assertThat( foreignCustomer.getAddress().getCity(), is( nullValue() ) );
+					assertThat( foreignCustomer.getAddress(), is( nullValue() ) );
 				}
 		);
 	}

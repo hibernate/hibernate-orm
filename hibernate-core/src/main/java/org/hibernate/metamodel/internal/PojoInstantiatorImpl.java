@@ -33,7 +33,7 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 				: resolveConstructor( getMappedPojoClass() );
 	}
 
-	private static Constructor resolveConstructor(Class mappedPojoClass) {
+	protected static Constructor resolveConstructor(Class mappedPojoClass) {
 		try {
 			//noinspection unchecked
 			return ReflectHelper.getDefaultConstructor( mappedPojoClass);

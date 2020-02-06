@@ -85,7 +85,7 @@ public class MultiLoadSubSelectCollectionTest {
 
 					// None of the collections should be loaded yet
 					for ( Parent p : list ) {
-						assertFalse( Hibernate.isInitialized( list.get( 0 ).children ) );
+						assertFalse( Hibernate.isInitialized( p.children ) );
 					}
 
 					// When the first collection is loaded, the full batch of 50 collections

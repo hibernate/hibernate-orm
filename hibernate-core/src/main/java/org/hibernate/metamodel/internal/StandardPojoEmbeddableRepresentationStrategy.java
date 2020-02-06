@@ -12,7 +12,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
@@ -47,6 +49,7 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 				creationContext
 		);
 
+
 		assert bootDescriptor.getComponentClass() != null;
 
 		this.strategySelector = creationContext.getSessionFactory()
@@ -54,6 +57,13 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 				.getService( StrategySelector.class );
 
 		this.reflectionOptimizer = buildReflectionOptimizer( bootDescriptor, creationContext );
+		final ConfigurationService configurationService = creationContext.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+				.getService(ConfigurationService.class);
+		boolean createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
+				configurationService.getSettings(),
+				false
+		);
 
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();

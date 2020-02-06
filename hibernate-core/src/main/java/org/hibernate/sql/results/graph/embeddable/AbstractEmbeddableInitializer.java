@@ -10,6 +10,9 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -36,6 +39,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	// per-row state
 	private final Object[] resolvedValues;
+	private final boolean createEmptyCompositesEnabled;
 	private Object compositeInstance;
 
 
@@ -65,6 +69,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					assemblerMap.put( stateArrayContributor, stateAssembler );
 				}
 		);
+
+		createEmptyCompositesEnabled = embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
 	}
 
@@ -136,6 +142,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				compositeInstance
 		);
 
+		boolean areAllValuesNull = true;
 		for ( Map.Entry<StateArrayContributorMapping, DomainResultAssembler> entry : assemblerMap.entrySet() ) {
 			final Object contributorValue = entry.getValue().assemble(
 					rowProcessingState,
@@ -143,13 +150,21 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			);
 
 			resolvedValues[ entry.getKey().getStateArrayPosition() ] = contributorValue;
+			if ( contributorValue != null ) {
+				areAllValuesNull = false;
+			}
 		}
 
-		embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-				compositeInstance,
-				resolvedValues
-		);
 
+		if ( !createEmptyCompositesEnabled && areAllValuesNull ) {
+			compositeInstance = null;
+		}
+		else {
+			embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
+					compositeInstance,
+					resolvedValues
+			);
+		}
 	}
 
 	@Override

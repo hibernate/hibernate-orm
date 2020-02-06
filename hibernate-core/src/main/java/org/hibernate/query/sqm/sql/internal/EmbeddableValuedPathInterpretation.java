@@ -78,6 +78,10 @@ public class EmbeddableValuedPathInterpretation<T> implements AssignableSqmPathI
 		this.tableGroup = tableGroup;
 	}
 
+	public Expression getSqlExpression() {
+		return sqlExpression;
+	}
+
 	@Override
 	public NavigablePath getNavigablePath() {
 		return sqmPath.getNavigablePath();

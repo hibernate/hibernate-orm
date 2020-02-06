@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -1108,12 +1109,56 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
-		nullnessPredicate.getExpression().accept( this );
-		if ( nullnessPredicate.isNegated() ) {
-			appendSql( " is not null" );
+		final Expression expression = nullnessPredicate.getExpression();
+		if ( expression instanceof EmbeddableValuedPathInterpretation ) {
+			final EmbeddableValuedPathInterpretation embeddableValuedPathInterpretation = (EmbeddableValuedPathInterpretation) expression;
+
+			final Expression sqlExpression = embeddableValuedPathInterpretation.getSqlExpression();
+			String predicateValue;
+			if ( nullnessPredicate.isNegated() ) {
+				predicateValue = " is not null";
+			}
+			else {
+				predicateValue = " is null";
+			}
+			if ( sqlExpression instanceof SqlTuple ) {
+				SqlTuple tuple = (SqlTuple) sqlExpression;
+				String separator = NO_SEPARATOR;
+
+				boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
+				if ( isCurrentWhereClause ) {
+					appendSql( OPEN_PARENTHESIS );
+				}
+
+				for ( Expression exp : tuple.getExpressions() ) {
+					appendSql( separator );
+					exp.accept( this );
+					appendSql( predicateValue );
+					separator = " and ";
+				}
+
+				if ( isCurrentWhereClause ) {
+					appendSql( CLOSE_PARENTHESIS );
+				}
+			}
+			else {
+				expression.accept( this );
+				if ( nullnessPredicate.isNegated() ) {
+					appendSql( " is not null" );
+				}
+				else {
+					appendSql( " is null" );
+				}
+			}
 		}
 		else {
-			appendSql( " is null" );
+			expression.accept( this );
+			if ( nullnessPredicate.isNegated() ) {
+				appendSql( " is not null" );
+			}
+			else {
+				appendSql( " is null" );
+			}
 		}
 	}
 

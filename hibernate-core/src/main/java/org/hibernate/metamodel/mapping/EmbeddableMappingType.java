@@ -17,9 +17,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -88,6 +91,8 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	private final EmbeddableValuedModelPart valueMapping;
 
+	private final boolean createEmptyCompositesEnabled;
+
 	private EmbeddableMappingType(
 			@SuppressWarnings("unused") Component bootDescriptor,
 			EmbeddableRepresentationStrategy representationStrategy,
@@ -99,6 +104,14 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
+		final ConfigurationService cs = sessionFactory.getServiceRegistry()
+				.getService(ConfigurationService.class);
+
+		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
+				cs.getSettings(),
+				false
+		);
 
 	}
 
@@ -391,5 +404,9 @@ public class EmbeddableMappingType implements ManagedMappingType {
 					}
 				}
 		);
+	}
+
+	public boolean isCreateEmptyCompositesEnabled() {
+		return createEmptyCompositesEnabled;
 	}
 }

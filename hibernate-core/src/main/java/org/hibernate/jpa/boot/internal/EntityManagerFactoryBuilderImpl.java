@@ -196,8 +196,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			integrationSettings = Collections.emptyMap();
 		}
 
+		Map mergedIntegrationSettings = null;
+		Properties properties = persistenceUnit.getProperties();
+		if ( properties != null ) {
+			mergedIntegrationSettings = new HashMap( persistenceUnit.getProperties() );
+			mergedIntegrationSettings.putAll( integrationSettings );
+		}
+
 		// Build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
+		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry(
+				mergedIntegrationSettings != null ? mergedIntegrationSettings : integrationSettings,
+				providedClassLoader,
+				providedClassLoaderService
+		);
 
 		// merge configuration sources and build the "standard" service registry
 		final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );

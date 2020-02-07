@@ -76,6 +76,9 @@ public class TemplateRenderer {
 			i++;
 		}
 
+		if ( template.endsWith( "?" ) ) {
+			chunk.append( "?" );
+		}
 		if ( chunk.length() > 0 ) {
 			chunkList.add( chunk.toString() );
 		}

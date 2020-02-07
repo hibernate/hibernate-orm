@@ -663,7 +663,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] {
 				"org/hibernate/test/annotations/query/orm.xml"
 		};

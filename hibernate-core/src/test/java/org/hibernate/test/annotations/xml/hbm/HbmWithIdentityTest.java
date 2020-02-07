@@ -42,7 +42,7 @@ public class HbmWithIdentityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] {
 				"org/hibernate/test/annotations/xml/hbm/A.hbm.xml",
 				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml",

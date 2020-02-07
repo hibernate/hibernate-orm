@@ -44,7 +44,7 @@ public class IdClassXmlTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] {
 				"org/hibernate/test/annotations/idclass/xml/HabitatSpeciesLink.xml"
 		};

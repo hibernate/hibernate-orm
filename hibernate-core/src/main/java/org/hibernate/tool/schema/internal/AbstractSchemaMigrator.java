@@ -135,7 +135,10 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 	}
 
-	protected abstract DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace);
+	protected DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace)
+	{
+		return Helper.buildDatabaseInformation(tool.getServiceRegistry(), ddlTransactionIsolator, namespace.getName());
+	}
 
 	protected abstract NameSpaceTablesInformation performTablesMigration(
 			Metadata metadata,

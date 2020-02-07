@@ -36,10 +36,6 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 		super( tool, schemaFilter );
 	}
 
-	protected DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace) {
-		return Helper.buildDatabaseInformation(tool.getServiceRegistry(), ddlTransactionIsolator, namespace.getName());
-	}
-
 	@Override
 	protected NameSpaceTablesInformation performTablesMigration(
 			Metadata metadata,

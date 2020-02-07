@@ -19,11 +19,11 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 /**
  * Will cache all database information by reading the tableinformation from the name space in one call.
  * Schema migration becomes much faster when this object is used.
- * NOTE: superclass already caches the sequence information, so perhaps cache can also be coded in superlcass
+ * NOTE: superclass already caches the sequence information, so perhaps cache can also be coded in superclass
  * @author francois
  */
 public class DatabaseInformationCachedImpl extends DatabaseInformationImpl {
-	private NameSpaceTablesInformation defaultNameSpaceTablesInformation = null;
+	private NameSpaceTablesInformation defaultNameSpaceTablesInformation;
 	private final Namespace defaultNamespace;
 
 	/**
@@ -34,22 +34,22 @@ public class DatabaseInformationCachedImpl extends DatabaseInformationImpl {
 	 * @param defaultNamespace       NameSpace
 	 */
 	public DatabaseInformationCachedImpl(
-		ServiceRegistry serviceRegistry,
-		JdbcEnvironment jdbcEnvironment,
-		DdlTransactionIsolator ddlTransactionIsolator, Namespace defaultNamespace)
-		throws SQLException {
+			ServiceRegistry serviceRegistry,
+			JdbcEnvironment jdbcEnvironment,
+			DdlTransactionIsolator ddlTransactionIsolator, Namespace defaultNamespace)
+			throws SQLException {
 		super(serviceRegistry, jdbcEnvironment, ddlTransactionIsolator, defaultNamespace.getName());
 		this.defaultNamespace = defaultNamespace;
 	}
 
 	@Override
 	public TableInformation getTableInformation(QualifiedTableName qualifiedTableName) {
-
 		if (defaultNameSpaceTablesInformation == null) {
-			// Load table information from the whole space in one go (expected to be used in case of schemaMigration, so (almost) all
+			// Load table information from the whole namespace in one go (expected to be used in case of schemaMigration, so (almost) all
 			// tables are likely to be retrieved)
 			defaultNameSpaceTablesInformation = getTablesInformation(defaultNamespace);
 		}
+
 		TableInformation tableInformation = defaultNameSpaceTablesInformation.getTableInformation(qualifiedTableName.getTableName().getText());
 		if (tableInformation != null) {
 			return tableInformation;

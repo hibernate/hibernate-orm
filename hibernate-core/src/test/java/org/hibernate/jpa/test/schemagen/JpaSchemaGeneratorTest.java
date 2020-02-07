@@ -154,10 +154,6 @@ public class JpaSchemaGeneratorTest extends BaseEntityManagerFunctionalTestCase 
 		}
 	}
 
-	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
-	}
-
 	/* Disable hibernate schema export */
 	@Override
 	protected boolean createSchema() {

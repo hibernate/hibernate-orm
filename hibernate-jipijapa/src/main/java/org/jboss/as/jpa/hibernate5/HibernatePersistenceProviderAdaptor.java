@@ -43,17 +43,11 @@ public class HibernatePersistenceProviderAdaptor implements PersistenceProviderA
 	@SuppressWarnings("WeakerAccess")
 	public static final String HIBERNATE_EXTENDED_BEANMANAGER = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
 
-	private volatile JtaManager jtaManager;
 	private volatile Platform platform;
 	private static final String NONE = SharedCacheMode.NONE.name();
 
 	@Override
-	public void injectJtaManager(JtaManager jtaManager) {
-		// todo : why?  `this.jtaManager` is never used aside from setting here in this method
-		if ( this.jtaManager != jtaManager ) {
-			this.jtaManager = jtaManager;
-		}
-	}
+	public void injectJtaManager(JtaManager jtaManager) { }
 
 	@Override
 	public void injectPlatform(Platform platform) {

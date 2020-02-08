@@ -58,14 +58,14 @@ public class DatabaseReader {
 	
 	public void readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
 		try {
-			getMetaDataDialect().configure(provider);
+			metadataDialect.configure(provider);
 
 			HashMap<Table, Boolean> foundTables = new HashMap<Table, Boolean>();
 
 			for (Iterator<SchemaSelection> iter = getSchemaSelections(defaultCatalog, defaultSchema).iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
 				TableCollector tableCollector = TableCollector.create(
-						getMetaDataDialect(), 
+						metadataDialect, 
 						revengStrategy, 
 						revengMetadataCollector, 
 						selection);
@@ -74,12 +74,12 @@ public class DatabaseReader {
 
 		
 			for (Table table : foundTables.keySet()) {
-				BasicColumnProcessor.processBasicColumns(getMetaDataDialect(), revengStrategy, defaultSchema,
+				BasicColumnProcessor.processBasicColumns(metadataDialect, revengStrategy, defaultSchema,
 						defaultCatalog, table);
-				PrimaryKeyProcessor.processPrimaryKey(getMetaDataDialect(), revengStrategy, defaultSchema,
+				PrimaryKeyProcessor.processPrimaryKey(metadataDialect, revengStrategy, defaultSchema,
 						defaultCatalog, revengMetadataCollector, table);
 				if (foundTables.get(table)) {
-					IndexProcessor.processIndices(getMetaDataDialect(), defaultSchema, defaultCatalog, table);
+					IndexProcessor.processIndices(metadataDialect, defaultSchema, defaultCatalog, table);
 				}
 			}
 
@@ -88,7 +88,7 @@ public class DatabaseReader {
 			revengMetadataCollector.setOneToManyCandidates(oneToManyCandidates);
 
 		} finally {
-			getMetaDataDialect().close();
+			metadataDialect.close();
 			revengStrategy.close();
 		}
 	}
@@ -105,7 +105,7 @@ public class DatabaseReader {
 	private Map<String, List<ForeignKey>> resolveForeignKeys(RevengMetadataCollector revengMetadataCollector) {
 		List<ForeignKeysInfo> fks = new ArrayList<ForeignKeysInfo>();
 		ForeignKeyProcessor foreignKeyProcessor = ForeignKeyProcessor.create(
-				getMetaDataDialect(), 
+				metadataDialect, 
 				revengStrategy, 
 				defaultCatalog, 
 				defaultSchema, 
@@ -129,10 +129,6 @@ public class DatabaseReader {
 			mergeMultiMap(oneToManyCandidates, map);
 		}
 		return oneToManyCandidates;
-	}
-
-	public MetaDataDialect getMetaDataDialect() {
-		return metadataDialect;
 	}
 
 	private void mergeMultiMap(Map<String, List<ForeignKey>> dest, Map<String, List<ForeignKey>> src) {

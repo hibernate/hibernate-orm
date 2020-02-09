@@ -56,10 +56,7 @@ public class H2Dialect extends Dialect {
 
 	private final LimitHandler limitHandler;
 
-	private final boolean dropConstraints;
-
-//	private final String querySequenceString;
-//	private final SequenceInformationExtractor sequenceInformationExtractor;
+	private final boolean cascadeConstraints;
 
 	public H2Dialect() {
 		this(0, 0);
@@ -68,30 +65,20 @@ public class H2Dialect extends Dialect {
 	public H2Dialect(int version, int buildId) {
 		super();
 
-		limitHandler = !( version > 140 || buildId >= 199 )
-				? LimitOffsetLimitHandler.INSTANCE
-				: OffsetFetchLimitHandler.INSTANCE;
-
-//		if ( buildId >= 32 ) {
-//			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
-//			this.querySequenceString = "select * from information_schema.sequences";
-//		}
-//		else {
-//			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
-//			this.querySequenceString = null;
-//		}
+		//TODO: actually I think all builds of 1.4 support OFFSET FETCH
+		limitHandler = version > 140 || version == 140 && buildId >= 199
+				? OffsetFetchLimitHandler.INSTANCE
+				: LimitOffsetLimitHandler.INSTANCE;
 
 		//Note: H2 'bit' is a synonym for 'boolean', not a proper bit type
 //		registerColumnType( Types.BIT, "bit" );
 
-		if ( !( version > 120 || buildId >= 139 ) ) {
+		if ( version < 120 || version == 120 && buildId < 139 ) {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version / 100, version % 100 / 10, buildId );
 		}
 
-		// Prior to 1.4.200 we didn't need to drop constraints before
-		// dropping tables, that just lead to error messages about
-		// missing tables when we don't have a schema in the database
-		dropConstraints = version > 140 && buildId >= 200;
+		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
+		cascadeConstraints = version > 140 || version == 140 && buildId >= 200;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
@@ -195,17 +182,33 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
-		return true;
+		return !supportsIfExistsBeforeTableName();
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return cascadeConstraints;
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return dropConstraints;
+		return cascadeConstraints;
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return cascadeConstraints ? " cascade "
+				: super.getCascadeConstraintsString();
+	}
+
+	@Override
+	public boolean dropConstraints() {
+		return false;
 	}
 
 	@Override
@@ -342,11 +345,6 @@ public class H2Dialect extends Dialect {
 		return false;
 	}
 	
-	@Override
-	public boolean dropConstraints() {
-		return dropConstraints;
-	}
-
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new H2IdentityColumnSupport();

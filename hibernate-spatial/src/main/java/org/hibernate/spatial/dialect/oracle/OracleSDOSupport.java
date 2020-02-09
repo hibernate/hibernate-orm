@@ -22,6 +22,7 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.spatial.dialect.WithCustomJPAFilter;
 
 import org.jboss.logging.Logger;
 
@@ -33,7 +34,7 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 01/11/16.
  */
-class OracleSDOSupport implements SpatialDialect, Serializable {
+class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFilter {
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -331,4 +332,8 @@ class OracleSDOSupport implements SpatialDialect, Serializable {
 	}
 
 
+	@Override
+	public String filterExpression(String geometryParam, String filterParam) {
+		return SpatialFunction.filter.name() + "(" + geometryParam + ", " + filterParam + ") = 'TRUE' ";
+	}
 }

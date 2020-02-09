@@ -18,6 +18,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.WithCustomJPAFilter;
 
 import org.jboss.logging.Logger;
 
@@ -26,7 +27,7 @@ import org.jboss.logging.Logger;
  *
  * @author Karel Maesen
  */
-public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect, Serializable {
+public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect, WithCustomJPAFilter, Serializable {
 
 	private static final HSMessageLogger log = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -101,5 +102,8 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements Spatial
 		return ( getFunctions().get( function.toString() ) != null );
 	}
 
-
+	@Override
+	public String filterExpression(String geometryParam, String filterParam) {
+		return sdoSupport.filterExpression( geometryParam, filterParam );
+	}
 }

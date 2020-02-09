@@ -20,6 +20,7 @@ import org.hibernate.query.criteria.internal.predicate.AbstractSimplePredicate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialFilter;
+import org.hibernate.spatial.dialect.WithCustomJPAFilter;
 import org.hibernate.spatial.jts.EnvelopeAdapter;
 
 import org.locationtech.jts.geom.Envelope;
@@ -45,7 +46,7 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Geometry filter) {
 		this( criteriaBuilder, geometry,
-				criteriaBuilder.literal( filter )
+			  criteriaBuilder.literal( filter )
 		);
 	}
 
@@ -53,7 +54,7 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
 		this( criteriaBuilder, geometry,
-				EnvelopeAdapter.toPolygon( envelope, srid )
+			  EnvelopeAdapter.toPolygon( envelope, srid )
 		);
 	}
 
@@ -68,11 +69,14 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 		String geometryParameter = ( (Renderable) geometry ).render( renderingContext );
 		String filterParameter = ( (Renderable) filter ).render( renderingContext );
 		Dialect dialect = renderingContext.getDialect();
-		if ( dialect instanceof SpatialDialect ) {
-			return SpatialFunction.filter.name() + "(" + geometryParameter + ", " + filterParameter + ") = true";
+		if ( !( dialect instanceof SpatialDialect ) ) {
+			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );
+		}
+		if ( dialect instanceof WithCustomJPAFilter ) {
+			return ( (WithCustomJPAFilter) dialect ).filterExpression( geometryParameter, filterParameter );
 		}
 		else {
-			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );
+			return SpatialFunction.filter.name() + "(" + geometryParameter + ", " + filterParameter + ") = true";
 		}
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.oracle;
 
 import java.io.Serializable;
+import java.util.Locale;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -291,7 +292,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getHavingSridSQL(String columnName) {
-		return String.format( " (MDSYS.ST_GEOMETRY(%s).ST_SRID() = ?)", columnName );
+		return String.format( " (MDSYS.ST_GEOMETRY(%s).ST_SRID() = ?)", columnName , Locale.US);
 	}
 
 	/**
@@ -305,7 +306,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 */
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		return String.format( "( MDSYS.ST_GEOMETRY(%s).ST_ISEMPTY() = %d )", columnName, isEmpty ? 1 : 0 );
+		return String.format( "( MDSYS.ST_GEOMETRY(%s).ST_ISEMPTY() = %d )", columnName, isEmpty ? 1 : 0 , Locale.US);
 	}
 
 	/**

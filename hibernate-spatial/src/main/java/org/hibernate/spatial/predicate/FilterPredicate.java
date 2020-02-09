@@ -45,16 +45,14 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 	public FilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Geometry filter) {
-		this( criteriaBuilder, geometry,
-			  criteriaBuilder.literal( filter )
+		this( criteriaBuilder, geometry, criteriaBuilder.literal( filter )
 		);
 	}
 
 	public FilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
-		this( criteriaBuilder, geometry,
-			  EnvelopeAdapter.toPolygon( envelope, srid )
+		this( criteriaBuilder, geometry, EnvelopeAdapter.toPolygon( envelope, srid )
 		);
 	}
 

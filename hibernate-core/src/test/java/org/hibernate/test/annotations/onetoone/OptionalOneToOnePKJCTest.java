@@ -166,7 +166,7 @@ public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetoone/orm.xml" };
 	}
 }

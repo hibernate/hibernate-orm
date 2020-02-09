@@ -24,7 +24,7 @@ public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/reflection/element-collection-converter-orm.xml" };
 	}
 

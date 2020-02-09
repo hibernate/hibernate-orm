@@ -373,7 +373,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	}
 
 	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
-		if ( primaryKey == null || ! primaryKey.columnIterator().hasNext() ) {
+		if ( primaryKey == null || ! primaryKey.getColumnIterator().hasNext() ) {
 			// happens for many-to-many tables
 			return false;
 		}

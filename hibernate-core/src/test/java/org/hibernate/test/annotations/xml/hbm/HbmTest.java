@@ -80,7 +80,7 @@ public class HbmTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[]{
 				"org/hibernate/test/annotations/xml/hbm/Government.hbm.xml",
 				"org/hibernate/test/annotations/xml/hbm/CloudType.hbm.xml",

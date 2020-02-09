@@ -35,7 +35,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 					dialect,
 					uniqueKey.getName(),
 					uniqueKey.getTable(),
-					uniqueKey.columnIterator(),
+					uniqueKey.getColumnIterator(),
 					uniqueKey.getColumnOrderMap(),
 					true,
 					metadata
@@ -63,7 +63,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 	}
 	
 	private boolean hasNullable(org.hibernate.mapping.UniqueKey uniqueKey) {
-		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.columnIterator();
+		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.getColumnIterator();
 		while ( iter.hasNext() ) {
 			if ( iter.next().isNullable() ) {
 				return true;

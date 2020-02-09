@@ -54,7 +54,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected String[] getXmlFiles() {
+	protected String[] getOrmXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/xml/ejb3/orm2.xml" };
 	}
 }

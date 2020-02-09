@@ -204,7 +204,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				configuration.addPackage( annotatedPackage );
 			}
 		}
-		String[] xmlFiles = getXmlFiles();
+		String[] xmlFiles = getOrmXmlFiles();
 		if ( xmlFiles != null ) {
 			for ( String xmlFile : xmlFiles ) {
 				try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
@@ -237,8 +237,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return NO_MAPPINGS;
 	}
 
-	protected String[] getXmlFiles() {
-		// todo : rename to getOrmXmlFiles()
+	protected String[] getOrmXmlFiles() {
 		return NO_MAPPINGS;
 	}
 

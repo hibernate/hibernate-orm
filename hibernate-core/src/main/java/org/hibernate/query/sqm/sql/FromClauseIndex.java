@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 import org.jboss.logging.Logger;
 
@@ -28,13 +27,12 @@ import org.jboss.logging.Logger;
 public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	private static final Logger log = Logger.getLogger( FromClauseIndex.class );
 
-//	private Map<NavigablePath, TableGroupJoin> tableGroupJoinMap;
 	private final Map<String, TableGroup> tableGroupByAliasXref = new HashMap<>();
 
 	/**
 	 * Holds *explicitly* fetched joins
 	 */
-	private Map<NavigablePath, SqmAttributeJoin> fetchesByPath;
+	private Map<String, SqmAttributeJoin> fetchesByPath;
 
 	public FromClauseIndex() {
 	}
@@ -66,21 +64,14 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 			fetchesByPath = new HashMap<>();
 		}
 		NavigablePath navigablePath = sqmJoin.getNavigablePath();
-		fetchesByPath.put( navigablePath, sqmJoin );
-		if ( containsAlias( navigablePath ) ) {
-			fetchesByPath.put( getPathWithoutAlias(navigablePath), sqmJoin );
-		}
+		fetchesByPath.put( navigablePath.getIdentifierForTableGroup(), sqmJoin );
 	}
 
 	public boolean isResolved(SqmFrom fromElement) {
 		return tableGroupMap.containsKey( fromElement.getNavigablePath() );
 	}
 
-//	public TableGroupJoin findTableGroupJoin(NavigablePath navigablePath) {
-//		return tableGroupJoinMap == null ? null : tableGroupJoinMap.get( navigablePath );
-//	}
-
 	public SqmAttributeJoin findFetchedJoinByPath(NavigablePath path) {
-		return fetchesByPath == null ? null : fetchesByPath.get( path );
+		return fetchesByPath == null ? null : fetchesByPath.get( path.getIdentifierForTableGroup() );
 	}
 }

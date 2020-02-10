@@ -20,10 +20,7 @@ public class SqmCreationHelper {
 	}
 
 	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {
-		final String localPath = alias == null
-				? base
-				: base + '(' + alias + ')';
-		return lhs.append( localPath );
+		return lhs.append( base, alias );
 	}
 
 	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, String alias) {

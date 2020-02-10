@@ -155,6 +155,9 @@ public class LoaderSqlAstCreationState
 				if ( tableGroup.getNavigablePath().equals( navigablePath ) ) {
 					return tableGroup;
 				}
+				if(tableGroup.getNavigablePath().getIdentifierForTableGroup().equals( navigablePath.getIdentifierForTableGroup() )){
+					return tableGroup;
+				}
 
 				throw new IllegalArgumentException(
 						"NavigablePath [" + navigablePath + "] did not match base TableGroup ["

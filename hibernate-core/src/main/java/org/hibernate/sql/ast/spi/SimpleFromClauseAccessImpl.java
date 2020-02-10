@@ -19,19 +19,19 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 public class SimpleFromClauseAccessImpl implements FromClauseAccess {
-	protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
+	protected final Map<String, TableGroup> tableGroupMap = new HashMap<>();
 
 	public SimpleFromClauseAccessImpl() {
 	}
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		return tableGroupMap.get( navigablePath );
+		return tableGroupMap.get( navigablePath.getIdentifierForTableGroup() );
 	}
 
 	@Override
 	public void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup) {
-		final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
+		final TableGroup previous = tableGroupMap.put( navigablePath.getIdentifierForTableGroup(), tableGroup );
 		if ( previous != null ) {
 			SqlTreeCreationLogger.LOGGER.debugf(
 					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",
@@ -40,18 +40,5 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 					previous
 			);
 		}
-		if ( containsAlias( navigablePath ) ) {
-			tableGroupMap.put( getPathWithoutAlias( navigablePath ), tableGroup );
-		}
-	}
-
-	protected boolean containsAlias(NavigablePath navigablePath) {
-		return navigablePath.getLocalName().endsWith( ")" );
-	}
-
-	protected NavigablePath getPathWithoutAlias(NavigablePath navigablePath) {
-		final String fullPath = navigablePath.getFullPath();
-		final String navigableName = fullPath.substring( fullPath.lastIndexOf( '.' ) + 1, fullPath.lastIndexOf( '(' ) );
-		return new NavigablePath( navigablePath.getParent(), navigableName );
 	}
 }

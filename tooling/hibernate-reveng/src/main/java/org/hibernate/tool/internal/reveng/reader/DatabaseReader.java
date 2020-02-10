@@ -38,8 +38,7 @@ public class DatabaseReader {
 
 	private final ConnectionProvider provider;
 
-	private final String defaultSchema;
-	private final String defaultCatalog;
+	private final Properties properties;
 
 	private DatabaseReader(
 			Properties properties, 
@@ -49,8 +48,7 @@ public class DatabaseReader {
 		this.metadataDialect = dialect;
 		this.provider = provider;
 		this.revengStrategy = reveng;
-		this.defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		this.defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		this.properties = properties;
 		if (revengStrategy == null) {
 			throw new IllegalStateException("Strategy cannot be null");
 		}
@@ -62,7 +60,7 @@ public class DatabaseReader {
 
 			HashMap<Table, Boolean> foundTables = new HashMap<Table, Boolean>();
 
-			for (Iterator<SchemaSelection> iter = getSchemaSelections(defaultCatalog, defaultSchema).iterator(); iter.hasNext();) {
+			for (Iterator<SchemaSelection> iter = getSchemaSelections().iterator(); iter.hasNext();) {
 				SchemaSelection selection = iter.next();
 				TableCollector tableCollector = TableCollector.create(
 						metadataDialect, 
@@ -74,12 +72,12 @@ public class DatabaseReader {
 
 		
 			for (Table table : foundTables.keySet()) {
-				BasicColumnProcessor.processBasicColumns(metadataDialect, revengStrategy, defaultSchema,
-						defaultCatalog, table);
-				PrimaryKeyProcessor.processPrimaryKey(metadataDialect, revengStrategy, defaultSchema,
-						defaultCatalog, revengMetadataCollector, table);
+				BasicColumnProcessor.processBasicColumns(metadataDialect, revengStrategy, getDefaultSchema(),
+						getDefaultCatalog(), table);
+				PrimaryKeyProcessor.processPrimaryKey(metadataDialect, revengStrategy, getDefaultSchema(),
+						getDefaultCatalog(), revengMetadataCollector, table);
 				if (foundTables.get(table)) {
-					IndexProcessor.processIndices(metadataDialect, defaultSchema, defaultCatalog, table);
+					IndexProcessor.processIndices(metadataDialect, getDefaultSchema(), getDefaultCatalog(), table);
 				}
 			}
 
@@ -107,8 +105,8 @@ public class DatabaseReader {
 		ForeignKeyProcessor foreignKeyProcessor = ForeignKeyProcessor.create(
 				metadataDialect, 
 				revengStrategy, 
-				defaultCatalog, 
-				defaultSchema, 
+				getDefaultCatalog(), 
+				getDefaultSchema(), 
 				revengMetadataCollector);
 		for (Table table : revengMetadataCollector.getTables()) {
 			// Done here after the basic process of collections as we might not have touched
@@ -147,13 +145,21 @@ public class DatabaseReader {
 
 	}
 
-	private List<SchemaSelection> getSchemaSelections(String catalog, String schema) {
+	private List<SchemaSelection> getSchemaSelections() {
 		List<SchemaSelection> result = revengStrategy.getSchemaSelections();
 		if (result == null) {
 			result = new ArrayList<SchemaSelection>();
-			result.add(new SchemaSelection(catalog, schema));
+			result.add(new SchemaSelection(getDefaultCatalog(), getDefaultSchema()));
 		}
 		return result;
+	}
+	
+	private String getDefaultSchema() {
+		return properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+	}
+	
+	private String getDefaultCatalog() {
+		return properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 	}
 
 }

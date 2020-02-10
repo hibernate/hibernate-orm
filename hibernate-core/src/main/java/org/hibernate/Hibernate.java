@@ -110,8 +110,7 @@ public final class Hibernate {
 	public static Class getClass(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
 			return ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
-					.getImplementation()
-					.getClass();
+					.getPersistentClass();
 		}
 		else {
 			return proxy.getClass();

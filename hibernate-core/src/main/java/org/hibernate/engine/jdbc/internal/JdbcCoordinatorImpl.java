@@ -445,6 +445,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void beforeTransactionCompletion() {
 		owner.beforeTransactionCompletion();
+		if ( getConnectionReleaseMode() == ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION ) {
+			this.logicalConnection.beforeTransactionCompletion();
+		}
 	}
 
 	@Override

@@ -268,8 +268,18 @@ public class HibernateToolTask extends Task {
 	}
 	
 	public void addConfiguredProperty(Environment.Variable property) {
-		properties.put(property.getKey(), property.getValue());
-	}
-	
+		String key = property.getKey();
+		String value = property.getValue();
+		if (key==null) {
+			log( "Ignoring unnamed task property", Project.MSG_WARN );
+			return;
+		}
+		if (value==null){
+			//This is legal in ANT, make sure we warn properly:
+			log( "Ignoring task property '" +key+"' as no value was specified", Project.MSG_WARN );
+			return;
+		}
+		properties.put( key, value );
+	}	
 	
 }

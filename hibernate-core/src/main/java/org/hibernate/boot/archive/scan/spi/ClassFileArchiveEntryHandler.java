@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.archive.scan.spi;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.persistence.Converter;

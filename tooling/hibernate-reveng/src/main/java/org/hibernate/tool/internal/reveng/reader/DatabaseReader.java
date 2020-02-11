@@ -66,8 +66,8 @@ public class DatabaseReader {
 						metadataDialect, 
 						revengStrategy, 
 						revengMetadataCollector, 
-						selection);
-				foundTables.putAll(tableCollector.processTables());
+						properties);
+				foundTables.putAll(tableCollector.processTables(selection));
 			}
 
 		

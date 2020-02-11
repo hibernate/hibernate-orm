@@ -3,6 +3,7 @@ package org.hibernate.tool.internal.reveng.reader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
@@ -21,31 +22,31 @@ public class TableCollector {
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
-			SchemaSelection schemaSelection) {
+			Properties properties) {
 		return new TableCollector(
 				metaDataDialect, 
 				revengStrategy, 
 				revengMetadataCollector, 
-				schemaSelection);
+				properties);
 	}
 	
 	private MetaDataDialect metaDataDialect;
 	private ReverseEngineeringStrategy revengStrategy;
 	private RevengMetadataCollector revengMetadataCollector;
-	private SchemaSelection schemaSelection;
+	private Properties properties;
 	
 	private TableCollector(
 			MetaDataDialect metaDataDialect, 
 			ReverseEngineeringStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
-			SchemaSelection schemaSelection) {
+			Properties properties) {
 		this.metaDataDialect = metaDataDialect;
 		this.revengStrategy = revengStrategy;
 		this.revengMetadataCollector = revengMetadataCollector;
-		this.schemaSelection = schemaSelection;
+		this.properties = properties;
 	}
 
-	public Map<Table, Boolean> processTables() {
+	public Map<Table, Boolean> processTables(SchemaSelection schemaSelection) {
 		  Iterator<Map<String,Object>> tableIterator = null;
 		  HashMap<Table, Boolean> processedTables = new HashMap<Table, Boolean>();
 		  try {			  

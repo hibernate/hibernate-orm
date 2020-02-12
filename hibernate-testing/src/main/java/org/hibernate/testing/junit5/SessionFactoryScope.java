@@ -93,7 +93,16 @@ public class SessionFactoryScope implements SessionFactoryAccess {
 
 		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
-			action.accept( session );
+			try {
+				action.accept( session );
+			}
+			catch (Exception e) {
+				Transaction transaction = session.getTransaction();
+				if ( transaction != null && transaction.isActive() ) {
+					transaction.rollback();
+				}
+				throw e;
+			}
 			log.trace( "called action" );
 		}
 		finally {

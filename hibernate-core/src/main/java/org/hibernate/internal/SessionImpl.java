@@ -135,10 +135,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
-import org.hibernate.jdbc.WorkExecutor;
-import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -2294,33 +2290,6 @@ public class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 		persistenceContext.setReadOnly( entity, readOnly );
-	}
-
-	@Override
-	public void doWork(final Work work) throws HibernateException {
-		WorkExecutorVisitable<Void> realWork = new WorkExecutorVisitable<Void>() {
-			@Override
-			public Void accept(WorkExecutor<Void> workExecutor, Connection connection) throws SQLException {
-				workExecutor.executeWork( work, connection );
-				return null;
-			}
-		};
-		doWork( realWork );
-	}
-
-	@Override
-	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
-		WorkExecutorVisitable<T> realWork = new WorkExecutorVisitable<T>() {
-			@Override
-			public T accept(WorkExecutor<T> workExecutor, Connection connection) throws SQLException {
-				return workExecutor.executeReturningWork( work, connection );
-			}
-		};
-		return doWork( realWork );
-	}
-
-	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
-		return getJdbcCoordinator().coordinateWork( work );
 	}
 
 	@Override

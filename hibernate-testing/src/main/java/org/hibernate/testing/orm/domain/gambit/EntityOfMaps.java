@@ -37,6 +37,10 @@ public class EntityOfMaps {
 
 	private Map<String, String> basicByBasic;
 
+	private SortedMap<String, String> sortedBasicByBasic;
+	private SortedMap<String, String> sortedBasicByBasicWithComparator;
+	private SortedMap<String, String> sortedBasicByBasicWithSortNaturalByDefault;
+
 	private Map<EnumValue, String> basicByEnum;
 	private Map<EnumValue, String> basicByConvertedEnum;
 
@@ -49,10 +53,9 @@ public class EntityOfMaps {
 	private Map<String, SimpleEntity> manyToManyByBasic;
 	private Map<String, SimpleComponent> componentByBasicOrdered;
 
-	private SortedMap<String, String> sortedBasicByBasic;
-	private SortedMap<String, String> sortedBasicByBasicWithComparator;
 	private SortedMap<String, SimpleEntity> sortedManyToManyByBasic;
 	private SortedMap<String, SimpleEntity> sortedManyToManyByBasicWithComparator;
+	private SortedMap<String, SimpleEntity> sortedManyToManyByBasicWithSortNaturalByDefault;
 
 	public EntityOfMaps() {
 	}
@@ -137,6 +140,25 @@ public class EntityOfMaps {
 			sortedBasicByBasicWithComparator = new TreeMap<>();
 		}
 		sortedBasicByBasicWithComparator.put( key, val );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedBasicByBasicWithSortNaturalByDefault
+
+	@ElementCollection
+	public SortedMap<String, String> getSortedBasicByBasicWithSortNaturalByDefault() {
+		return sortedBasicByBasicWithSortNaturalByDefault;
+	}
+
+	public void setSortedBasicByBasicWithSortNaturalByDefault(SortedMap<String, String> sortedBasicByBasicWithSortNaturalByDefault) {
+		this.sortedBasicByBasicWithSortNaturalByDefault = sortedBasicByBasicWithSortNaturalByDefault;
+	}
+
+	public void addSortedBasicByBasicWithSortNaturalByDefault(String key, String val) {
+		if ( sortedBasicByBasicWithSortNaturalByDefault == null ) {
+			sortedBasicByBasicWithSortNaturalByDefault = new TreeMap<>();
+		}
+		sortedBasicByBasicWithSortNaturalByDefault.put( key, val );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -282,6 +304,30 @@ public class EntityOfMaps {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// componentByBasicOrdered
+
+	// NOTE : effectively the same as a natural-sorted map in terms of reading
+
+	@ElementCollection
+	@MapKeyColumn( name = "ordered_component_key")
+	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
+	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
+		return componentByBasicOrdered;
+	}
+
+	public void setComponentByBasicOrdered(Map<String, SimpleComponent> componentByBasicOrdered) {
+		this.componentByBasicOrdered = componentByBasicOrdered;
+	}
+
+	public void addComponentByBasicOrdered(String key, SimpleComponent value) {
+		if ( componentByBasicOrdered == null ) {
+			componentByBasicOrdered = new LinkedHashMap<>();
+		}
+		componentByBasicOrdered.put( key, value );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// sortedManyToManyByBasic
 
 	@ManyToMany
@@ -307,33 +353,30 @@ public class EntityOfMaps {
 		this.sortedManyToManyByBasicWithComparator = sortedManyToManyByBasicWithComparator;
 	}
 
-	public void addSortedManyToManyByComponent(String key, SimpleEntity value) {
-		if ( sortedManyToManyByBasic == null ) {
-			sortedManyToManyByBasic = new TreeMap<>();
+	public void addSortedManyToManyByBasicWithComparator(String key, SimpleEntity value) {
+		if ( sortedManyToManyByBasicWithComparator == null ) {
+			sortedManyToManyByBasicWithComparator = new TreeMap<>();
 		}
-		sortedManyToManyByBasic.put( key, value );
+		sortedManyToManyByBasicWithComparator.put( key, value );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// componentByBasicOrdered
+	// sortedManyToManyByBasicWithSortNaturalByDefault
 
-	// NOTE : effectively the same as a natural-sorted map in terms of reading
-
-	@ElementCollection
-	@MapKeyColumn( name = "ordered_component_key")
-	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
-	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
-		return componentByBasicOrdered;
+	@ManyToMany
+	public SortedMap<String, SimpleEntity> getSortedManyToManyByBasicWithSortNaturalByDefault() {
+		return sortedManyToManyByBasicWithSortNaturalByDefault;
 	}
 
-	public void setComponentByBasicOrdered(Map<String, SimpleComponent> componentByBasicOrdered) {
-		this.componentByBasicOrdered = componentByBasicOrdered;
+	public void setSortedManyToManyByBasicWithSortNaturalByDefault(SortedMap<String, SimpleEntity> sortedManyToManyByBasicWithSortNaturalByDefault) {
+		this.sortedManyToManyByBasicWithSortNaturalByDefault = sortedManyToManyByBasicWithSortNaturalByDefault;
 	}
 
-	public void addComponentByBasicOrdered(String key, SimpleComponent value) {
-		if ( componentByBasicOrdered == null ) {
-			componentByBasicOrdered = new LinkedHashMap<>();
+	public void addSortedManyToManyByBasicWithSortNaturalByDefault(String key, SimpleEntity value) {
+		if ( sortedManyToManyByBasicWithSortNaturalByDefault == null ) {
+			sortedManyToManyByBasicWithSortNaturalByDefault = new TreeMap<>();
 		}
-		componentByBasicOrdered.put( key, value );
+		sortedManyToManyByBasicWithSortNaturalByDefault.put( key, value );
 	}
+
 }

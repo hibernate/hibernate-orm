@@ -47,11 +47,14 @@ public class MapOperationTests {
 					entityContainingMaps.addBasicByBasic( "someKey", "someValue" );
 					entityContainingMaps.addBasicByBasic( "anotherKey", "anotherValue" );
 
-					entityContainingMaps.addSortedBasicByBasic( "key1", "value1" );
 					entityContainingMaps.addSortedBasicByBasic( "key2", "value2" );
+					entityContainingMaps.addSortedBasicByBasic( "key1", "value1" );
 
 					entityContainingMaps.addSortedBasicByBasicWithComparator( "kEy1", "value1" );
 					entityContainingMaps.addSortedBasicByBasicWithComparator( "KeY2", "value2" );
+
+					entityContainingMaps.addSortedBasicByBasicWithSortNaturalByDefault( "key2", "value2" );
+					entityContainingMaps.addSortedBasicByBasicWithSortNaturalByDefault( "key1", "value1" );
 
 					entityContainingMaps.addBasicByEnum( EnumValue.ONE, "one" );
 					entityContainingMaps.addBasicByEnum( EnumValue.TWO, "two" );
@@ -159,6 +162,30 @@ public class MapOperationTests {
 					assertThat( first.getKey(), is( "kEy1" ) );
 					assertThat( first.getValue(), is( "value1" ) );
 					assertThat( second.getKey(), is( "KeY2" ) );
+					assertThat( second.getValue(), is( "value2" ) );
+				}
+		);
+	}
+
+	@Test
+	public void testSortedMapWithSortNaturalByDefaultAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityOfMaps entity = session.get( EntityOfMaps.class, 1 );
+					assertThat( entity.getSortedBasicByBasicWithSortNaturalByDefault(), InitializationCheckMatcher.isNotInitialized() );
+
+					// trigger the init
+					Hibernate.initialize( entity.getSortedBasicByBasicWithSortNaturalByDefault() );
+					assertThat( entity.getSortedBasicByBasicWithSortNaturalByDefault(), InitializationCheckMatcher.isInitialized() );
+					assertThat( entity.getSortedBasicByBasicWithSortNaturalByDefault().size(), is( 2 ) );
+					assertThat( entity.getBasicByEnum(), InitializationCheckMatcher.isNotInitialized() );
+
+					final Iterator<Map.Entry<String, String>> iterator = entity.getSortedBasicByBasicWithSortNaturalByDefault().entrySet().iterator();
+					final Map.Entry<String, String> first = iterator.next();
+					final Map.Entry<String, String> second = iterator.next();
+					assertThat( first.getKey(), is( "key1" ) );
+					assertThat( first.getValue(), is( "value1" ) );
+					assertThat( second.getKey(), is( "key2" ) );
 					assertThat( second.getValue(), is( "value2" ) );
 				}
 		);

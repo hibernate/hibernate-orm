@@ -663,14 +663,6 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		if ( isSortedCollection ) {
-			if ( ! hadExplicitSort && !hadOrderBy ) {
-				throw new AnnotationException(
-						"A sorted collection must define an ordering or sorting : " + safeCollectionRole()
-				);
-			}
-		}
-
 		collection.setSorted( isSortedCollection || hadExplicitSort );
 
 		if ( comparatorClass != null ) {

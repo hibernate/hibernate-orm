@@ -78,13 +78,16 @@ public class PluralAttributeMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfSets.class );
 
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 11 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 12 ) );
 
 		final AttributeMapping setOfBasics = containerEntityDescriptor.findAttributeMapping( "setOfBasics" );
 		assertThat( setOfBasics, notNullValue() );
 
 		final AttributeMapping sortedSetOfBasics = containerEntityDescriptor.findAttributeMapping( "sortedSetOfBasics" );
 		assertThat( sortedSetOfBasics, notNullValue() );
+
+		final AttributeMapping sortedSetOfBasicsWithSortNaturalByDefault = containerEntityDescriptor.findAttributeMapping( "sortedSetOfBasicsWithSortNaturalByDefault" );
+		assertThat( sortedSetOfBasicsWithSortNaturalByDefault, notNullValue() );
 
 		final AttributeMapping orderedSetOfBasics = containerEntityDescriptor.findAttributeMapping( "orderedSetOfBasics" );
 		assertThat( orderedSetOfBasics, notNullValue() );
@@ -113,8 +116,7 @@ public class PluralAttributeMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfMaps.class );
 
-		// 14 for now, until entity-valued map keys is supported
-		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 14 ) );
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 16 ) );
 
 		final PluralAttributeMapping basicByBasic = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByBasic" );
 		assertThat( basicByBasic, notNullValue() );
@@ -125,6 +127,11 @@ public class PluralAttributeMappingTests {
 		assertThat( sortedBasicByBasic, notNullValue() );
 		assertThat( sortedBasicByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( sortedBasicByBasic.getElementDescriptor(), notNullValue() );
+
+		final PluralAttributeMapping sortedBasicByBasicWithSortNaturalByDefault = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "sortedBasicByBasicWithSortNaturalByDefault" );
+		assertThat( sortedBasicByBasicWithSortNaturalByDefault, notNullValue() );
+		assertThat( sortedBasicByBasicWithSortNaturalByDefault.getKeyDescriptor(), notNullValue() );
+		assertThat( sortedBasicByBasicWithSortNaturalByDefault.getElementDescriptor(), notNullValue() );
 
 		final PluralAttributeMapping basicByEnum = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "basicByEnum" );
 		assertThat( basicByEnum, notNullValue() );
@@ -165,6 +172,11 @@ public class PluralAttributeMappingTests {
 		assertThat( sortedManyToManyByBasic, notNullValue() );
 		assertThat( sortedManyToManyByBasic.getKeyDescriptor(), notNullValue() );
 		assertThat( sortedManyToManyByBasic.getElementDescriptor(), notNullValue() );
+
+		final PluralAttributeMapping sortedManyToManyByBasicWithSortNaturalByDefault = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "sortedManyToManyByBasicWithSortNaturalByDefault" );
+		assertThat( sortedManyToManyByBasicWithSortNaturalByDefault, notNullValue() );
+		assertThat( sortedManyToManyByBasicWithSortNaturalByDefault.getKeyDescriptor(), notNullValue() );
+		assertThat( sortedManyToManyByBasicWithSortNaturalByDefault.getElementDescriptor(), notNullValue() );
 
 		final PluralAttributeMapping componentByBasicOrdered = (PluralAttributeMapping) containerEntityDescriptor.findAttributeMapping( "componentByBasicOrdered" );
 		assertThat( componentByBasicOrdered, notNullValue() );

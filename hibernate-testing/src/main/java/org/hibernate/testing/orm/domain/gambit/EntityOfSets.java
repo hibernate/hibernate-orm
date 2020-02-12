@@ -40,7 +40,7 @@ public class EntityOfSets {
 	private Set<String> setOfBasics;
 	private SortedSet<String> sortedSetOfBasics;
 	private SortedSet<String> sortedSetOfBasicsWithComparator;
-
+	private SortedSet<String> sortedSetOfBasicsWithSortNaturalByDefault;
 	private Set<String> orderedSetOfBasics;
 
 	private Set<EnumValue> setOfEnums;
@@ -162,6 +162,26 @@ public class EntityOfSets {
 			sortedSetOfBasicsWithComparator = new TreeSet<>();
 		}
 		sortedSetOfBasicsWithComparator.add( value );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedSetOfBasicsWithSortNaturalByDefault
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasicsWithSortNaturalByDefault")
+	public SortedSet<String> getSortedSetOfBasicsWithSortNaturalByDefault() {
+		return sortedSetOfBasicsWithSortNaturalByDefault;
+	}
+
+	public void setSortedSetOfBasicsWithSortNaturalByDefault(SortedSet<String> sortedSetOfBasicsWithSortNaturalByDefault) {
+		this.sortedSetOfBasicsWithSortNaturalByDefault = sortedSetOfBasicsWithSortNaturalByDefault;
+	}
+
+	public void addSortedBasicWithSortNaturalByDefault(String value) {
+		if ( sortedSetOfBasicsWithSortNaturalByDefault == null ) {
+			sortedSetOfBasicsWithSortNaturalByDefault = new TreeSet<>();
+		}
+		sortedSetOfBasicsWithSortNaturalByDefault.add( value );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

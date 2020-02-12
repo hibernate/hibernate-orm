@@ -6,9 +6,12 @@
  */
 package org.hibernate.orm.test.metamodel.mapping.collections;
 
+import java.util.Iterator;
+
 import org.hibernate.Hibernate;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import org.hibernate.testing.hamcrest.InitializationCheckMatcher;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -25,6 +28,7 @@ import org.hamcrest.collection.IsIterableContainingInOrder;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitialized;
 import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotInitialized;
@@ -55,6 +59,9 @@ public class SetOperationTests {
 					entity.addSortedBasicWithComparator( "bcD" );
 					entity.addSortedBasicWithComparator( "Efg" );
 					entity.addSortedBasicWithComparator( "aBC" );
+
+					entity.addSortedBasicWithSortNaturalByDefault( "def" );
+					entity.addSortedBasicWithSortNaturalByDefault( "abc" );
 
 					entity.addEnum( EnumValue.ONE );
 					entity.addEnum( EnumValue.TWO );
@@ -202,6 +209,28 @@ public class SetOperationTests {
 							"DeF",
 							"Efg"
 					) );
+				}
+		);
+	}
+
+	@Test
+	public void testSortedSetWithSortNaturalByDefaultAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityOfSets entity = session.get( EntityOfSets.class, 1 );
+					assertThat( entity.getSortedSetOfBasicsWithSortNaturalByDefault(), InitializationCheckMatcher.isNotInitialized() );
+
+					// trigger the init
+					Hibernate.initialize( entity.getSortedSetOfBasicsWithSortNaturalByDefault() );
+					assertThat( entity.getSortedSetOfBasicsWithSortNaturalByDefault(), InitializationCheckMatcher.isInitialized() );
+					assertThat( entity.getSortedSetOfBasicsWithSortNaturalByDefault().size(), is( 2 ) );
+					assertThat( entity.getSetOfEnums(), InitializationCheckMatcher.isNotInitialized() );
+
+					final Iterator<String> iterator = entity.getSortedSetOfBasicsWithSortNaturalByDefault().iterator();
+					final String first = iterator.next();
+					final String second = iterator.next();
+					assertThat( first, is( "abc" ) );
+					assertThat( second, is( "def" ) );
 				}
 		);
 	}

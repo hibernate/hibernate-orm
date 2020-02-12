@@ -18,8 +18,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.SessionStatistics;
@@ -959,27 +957,6 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 	 * proxy should be made modifiable
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
-
-	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
-	 *
-	 * @param work The work to be performed.
-	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
-	 */
-	void doWork(Work work) throws HibernateException;
-
-	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
-	 * execution returns the result of the {@link ReturningWork#execute} call.
-	 *
-	 * @param work The work to be performed.
-	 * @param <T> The type of the result returned from the work
-	 *
-	 * @return the result from calling {@link ReturningWork#execute}.
-	 *
-	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
-	 */
-	<T> T doReturningWork(ReturningWork<T> work) throws HibernateException;
 
 	@Override
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);

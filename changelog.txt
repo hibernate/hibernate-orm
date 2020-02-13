@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.12.Final (February 13, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31827/tab/release-report-done
+
+** Bug
+    * [HHH-13858] - Fix Oracle failing tests
+    * [HHH-13859] - NPE on scanning for entities in a project having module-info.class resources
+
+** New Feature
+    * [HHH-13861] - Expose the doWork() and doReturningWork() APIs on StatelessSession as well
+    * [HHH-13863] - Introduce a module to distribute some helpers useful to compile Hibernate ORM to GraalVM native images
+
+** Improvement
+    * [HHH-13864] - Cosmetic change of format when reporting version number
+
+
 Changes in 5.4.11.Final (February 07, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

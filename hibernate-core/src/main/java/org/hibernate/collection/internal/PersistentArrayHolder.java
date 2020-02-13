@@ -130,6 +130,13 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert array == null;
+		array = Array.newInstance( persister.getElementClass(), 0 );
+		endRead();
+	}
+
+	@Override
 	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
 		assert isInitializing();
 		array = Array.newInstance( elementClass, loadingState.size() );

@@ -114,6 +114,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert set == null;
+		set = (Set) persister.getCollectionType().instantiate( 0 );
+		endRead();
+	}
+
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final java.util.Map sn = (java.util.Map) getSnapshot();

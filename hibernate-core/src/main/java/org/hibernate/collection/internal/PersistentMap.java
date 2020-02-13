@@ -110,6 +110,13 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert map == null;
+		map = (Map) persister.getCollectionType().instantiate( 0 );
+		endRead();
+	}
+
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final Map snapshotMap = (Map) getSnapshot();

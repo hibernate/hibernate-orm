@@ -261,6 +261,13 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert bag == null;
+		bag = (List) persister.getCollectionType().instantiate( 0 );
+		endRead();
+	}
+
+	@Override
 	public Object disassemble(CollectionPersister persister) {
 		final int length = bag.size();
 		final Object[] result = new Object[length];
@@ -293,7 +300,6 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public boolean needsRecreate(CollectionPersister persister) {
 		return !persister.isOneToMany();
 	}
-
 
 	// For a one-to-many, a <bag> is not really a bag;
 	// it is *really* a set, since it can't contain the

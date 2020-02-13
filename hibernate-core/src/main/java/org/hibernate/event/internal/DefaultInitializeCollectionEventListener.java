@@ -72,6 +72,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					LOG.trace( "Collection not cached" );
 				}
 				ceLoadedPersister.initialize( ce.getLoadedKey(), source );
+				handlePotentiallyEmptyCollection( collection, source, ce, ceLoadedPersister );
 				if ( LOG.isTraceEnabled() ) {
 					LOG.trace( "Collection initialized" );
 				}
@@ -83,6 +84,21 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					);
 				}
 			}
+		}
+	}
+
+	private void handlePotentiallyEmptyCollection(
+			PersistentCollection collection,
+			SessionImplementor source,
+			CollectionEntry ce, CollectionPersister ceLoadedPersister) {
+		if ( !collection.wasInitialized() ) {
+			collection.initializeEmptyCollection( ceLoadedPersister );
+			org.hibernate.sql.results.internal.Helper.finalizeCollectionLoading(
+					source.getPersistenceContext(),
+					ceLoadedPersister,
+					collection,
+					ce.getLoadedKey()
+			);
 		}
 	}
 

@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -90,27 +87,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
-		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
-		if ( collectionEntry == null ) {
-			collectionEntry = persistenceContext.addInitializedCollection(
-					collectionDescriptor,
-					getCollectionInstance(),
-					getKey()
-			);
-		}
-		else {
-			collectionEntry.postInitialize( collectionInstance );
-		}
-
-		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
-			persistenceContext.addCollectionHolder( collectionInstance );
-		}
-
-		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
-		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
-
-		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
-		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x
+		Helper.finalizeCollectionLoading( persistenceContext, collectionDescriptor, collectionInstance, getKey() );
 	}
 
 	@Override

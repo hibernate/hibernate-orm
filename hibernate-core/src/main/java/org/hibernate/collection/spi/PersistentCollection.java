@@ -447,4 +447,6 @@ public interface PersistentCollection {
 	 * @return The orphans
 	 */
 	Collection getOrphans(Serializable snapshot, String entityName);
+
+	void initializeEmptyCollection(CollectionPersister persister);
 }

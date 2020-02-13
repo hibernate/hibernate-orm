@@ -373,6 +373,14 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert identifiers == null;
+		identifiers = new HashMap<>();
+		values = new ArrayList<>();
+		endRead();
+	}
+
+	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
 		final Iterator itr = values.iterator();
 		int i = 0;

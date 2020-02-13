@@ -99,6 +99,13 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
+	public void initializeEmptyCollection(CollectionPersister persister) {
+		assert list == null;
+		list = (List) persister.getCollectionType().instantiate( 0 );
+		endRead();
+	}
+
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final List sn = (List) getSnapshot();

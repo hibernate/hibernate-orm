@@ -10,7 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.BatchFetchQueue;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -58,4 +63,31 @@ public class Helper {
 		}
 	}
 
+	public static void finalizeCollectionLoading(
+			PersistenceContext persistenceContext,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection collectionInstance,
+			Object key) {
+		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
+		if ( collectionEntry == null ) {
+			collectionEntry = persistenceContext.addInitializedCollection(
+					collectionDescriptor,
+					collectionInstance,
+					key
+			);
+		}
+		else {
+			collectionEntry.postInitialize( collectionInstance );
+		}
+
+		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
+			persistenceContext.addCollectionHolder( collectionInstance );
+		}
+
+		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
+		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
+
+		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
+		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x
+	}
 }

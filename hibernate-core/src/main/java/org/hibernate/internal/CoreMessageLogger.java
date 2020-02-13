@@ -1441,7 +1441,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void validatorNotFound();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Hibernate Core {%s}", id = 412)
+	@Message(value = "Hibernate ORM core version %s", id = 412)
 	void version(String versionString);
 
 	@LogMessage(level = WARN)

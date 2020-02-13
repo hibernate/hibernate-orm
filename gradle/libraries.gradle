@@ -45,6 +45,9 @@ ext {
     jaxbApiVersionOsgiRange = "[2.2,3)"
     jaxbRuntimeVersion = '2.3.1'
 
+    //GraalVM
+    graalvmVersion = '19.3.1'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -167,7 +170,9 @@ ext {
             wildfly_transaction_client : 'org.wildfly.transaction:wildfly-transaction-client:1.1.7.Final',
 
             jboss_ejb_spec_jar          : 'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final',
-            jboss_annotation_spec_jar   : 'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:1.0.0.Final'
+            jboss_annotation_spec_jar   : 'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:1.0.0.Final',
+
+            graalvm_nativeimage         : "org.graalvm.nativeimage:svm:${graalvmVersion}"
         ]
 }
 

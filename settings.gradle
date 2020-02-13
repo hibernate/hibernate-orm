@@ -30,6 +30,7 @@ include 'hibernate-infinispan'
 include 'hibernate-jipijapa'
 
 include 'hibernate-orm-modules'
+include 'hibernate-graalvm'
 
 if ( JavaVersion.current().isJava11Compatible() ) {
     include 'hibernate-integrationtest-java-modules'

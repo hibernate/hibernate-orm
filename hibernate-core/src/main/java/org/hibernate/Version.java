@@ -52,6 +52,6 @@ public final class Version {
 	 */
 	@AllowSysOut
 	public static void main(String[] args) {
-		System.out.println( "Hibernate Core {" + getVersionString() + "}" );
+		System.out.println( "Hibernate ORM core version " + getVersionString() );
 	}
 }

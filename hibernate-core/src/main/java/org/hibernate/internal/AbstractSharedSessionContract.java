@@ -51,6 +51,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -728,6 +731,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return buildNamedQuery( name, resultClass );
 	}
 
+	@Override
+	public void doWork(final Work work) throws HibernateException {
+		WorkExecutorVisitable<Void> realWork = (workExecutor, connection) -> {
+			workExecutor.executeWork( work, connection );
+			return null;
+		};
+		doWork( realWork );
+	}
+
+	@Override
+	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
+		WorkExecutorVisitable<T> realWork = (workExecutor, connection) -> workExecutor.executeReturningWork(
+				work,
+				connection
+		);
+		return doWork( realWork );
+	}
+
+	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
+		return getJdbcCoordinator().coordinateWork( work );
+	}
+
 	protected <T> QueryImplementor<T> buildNamedQuery(String queryName, Class<T> resultType) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -793,7 +818,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
-
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")

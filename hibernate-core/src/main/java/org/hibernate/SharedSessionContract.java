@@ -13,6 +13,8 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
 
@@ -163,4 +165,30 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
+
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
+	 *
+	 * @param work The work to be performed.
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	default void doWork(Work work) throws HibernateException {
+		throw new UnsupportedOperationException( "The doWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
+	}
+
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
+	 * execution returns the result of the {@link ReturningWork#execute} call.
+	 *
+	 * @param work The work to be performed.
+	 * @param <T> The type of the result returned from the work
+	 *
+	 * @return the result from calling {@link ReturningWork#execute}.
+	 *
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
+		throw new UnsupportedOperationException( "The doReturningWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
+	}
+
 }

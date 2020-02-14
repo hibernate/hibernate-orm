@@ -3,6 +3,76 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+hanges in 5.4.12.Final (February 13, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31827/tab/release-report-done
+
+** Bug
+    * [HHH-13858] - Fix Oracle failing tests
+    * [HHH-13859] - NPE on scanning for entities in a project having module-info.class resources
+
+** New Feature
+    * [HHH-13861] - Expose the doWork() and doReturningWork() APIs on StatelessSession as well
+    * [HHH-13863] - Introduce a module to distribute some helpers useful to compile Hibernate ORM to GraalVM native images
+
+** Improvement
+    * [HHH-13864] - Cosmetic change of format when reporting version number
+
+
+Changes in 5.4.11.Final (February 07, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31818/tab/release-report-done
+
+** Bug
+    * [HHH-6615] - int type in Revision number
+    * [HHH-6686] - JPQL operator "is empty" failes for @ElementCollection
+    * [HHH-10844] - Resolve columnDefinition to appropriate sql-type for audit mappings
+    * [HHH-13373] - Hibernate report query hibernate_sequence table error in spring-boot application starting on a multi-database mariadb server
+    * [HHH-13456] - ForeignGenerator Throws ClassCastException When Using StatelessSession
+    * [HHH-13472] -  Error creating hibernate_sequence in MariaDB 10.3
+    * [HHH-13644] - NullPointerException when calling StoredProcedureQuery.getResultStream() instead of StoredProcedureQuery.getResultList()
+    * [HHH-13677] - org.hibernate.flushMode property not applied
+    * [HHH-13704] - Make sure javassist is really an optional dependency
+    * [HHH-13752] - Delete doesn't work when many-to-many uses non-primary key for join table
+    * [HHH-13759] - Bytecode enhancement fails for an embedded field in a MappedSuperclass
+    * [HHH-13760] - Envers tries to use relationship's entity as value for column instead of numeric identifier (cast class exception happens) for LAZY @ManyToOne
+    * [HHH-13770] - Envers - modified flag column value set to null from 5.4.7 onwards
+    * [HHH-13780] - Allow NamedQuery to set hint QueryHints.PASS_DISTINCT_THROUGH
+    * [HHH-13783] - org.hibernate.MappingException: The increment size of the sequence is set to [10] in the entity mapping while … size is [1]
+    * [HHH-13792] - L2 entity cache is evicted prior to committing transaction for HQL/native updates
+    * [HHH-13796] - Missing from clause in query from BinaryLogicOperatorNode row value constructor translation
+    * [HHH-13804] - HibernateProxy might need to be instantiated even with build-time enhancement
+    * [HHH-13806] - CoreMessageLogger#unableToLoadCommand is not printing the cause of the error
+    * [HHH-13808] - Incorrect String format in log
+    * [HHH-13831] - Replaced listener is not called when EventListenerGroup#fireEventOnEachListener is called
+
+** Task
+    * [HHH-13726] - Extract org.hibernate.internal.SessionFactoryImpl#prepareEventListeners from SessionFactoryImpl
+    * [HHH-13767] - Remove mention of Oracle and DB2 not being in MC
+    * [HHH-13821] - Update to Byte Buddy 1.10.7
+    * [HHH-13822] - OSGi integration tests need to be able to download dependencies from Maven Central using HTTPS
+    * [HHH-13823] - Various visibility changes to help prototyping of Hibernate RX
+    * [HHH-13833] - Byte Buddy enhancer should use ASM7 opcodes to improve compatibility with code compiled for Java 11
+    * [HHH-13837] - Initialize the Hibernate VERSION as a real constant
+    * [HHH-13838] - Allow extension of PersistenceXmlParser
+    * [HHH-13849] - Convert ProxyFactoryFactory and BytecodeProvider into a Service
+
+** Improvement
+    * [HHH-8776] - Ability for JPA entity-graphs to handle non-lazy attributes as lazy
+    * [HHH-11958] - Apply QueryHints.HINT_READONLY to load operations
+    * [HHH-12856] - Upgrade DB2400 dialect to use the DB2 for i improvements
+    * [HHH-13390] - Upgrade  JPA MetaModel Generator (jpamodelgen) to support Gradle Incremental Compile
+    * [HHH-13800] - Correct some typos in the javadocs of hibernate-core module
+    * [HHH-13802] - fix javadoc warnings in 'hibernate-core'
+    * [HHH-13809] - Various improvements in the user guides
+    * [HHH-13830] - Fixing typo on the build task description
+    * [HHH-13832] - Optimise setting of default Flush Mode on a newly created Session
+    * [HHH-13850] - Clear the BytecodeProvider caches both after SessionFactory creation and stop
+    * [HHH-13851] - Rework initialization of ProxyFactoryFactory to move responsibility out of PojoEntityTuplizer
+    * [HHH-13854] - Allow extensions of StandardServiceRegistryBuilder to ignore Environment variables
+
 
 Changes in 6.0.0.Alpha4 (December 20, 2019)
 ------------------------------------------------------------------------------------------------------------------------
@@ -20,8 +90,6 @@ https://hibernate.atlassian.net/projects/HHH/versions/31817
 ** Improvement
     * [HHH-13718] - secondary tables support
     * [HHH-13769] - Avoid unnecessary joins
-
-
 
 
 Changes in 5.4.10.Final (December 05, 2019)

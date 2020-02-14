@@ -1,4 +1,4 @@
-package org.hibernate.jpa.test.graphs.mapped_by_id;
+package org.hibernate.jpa.test.graphs.mappedbyid;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -99,12 +99,12 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 
 		entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
 		
-		EntityGraph<CompanyWithFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyWithFetchProfile.class );
+		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
 		entityGraph.addAttributeNodes( "markets" );
 
 		Map<String, Object> properties = Collections.singletonMap( "javax.persistence.fetchgraph", entityGraph );
 
-		CompanyWithFetchProfile company = entityManager.find( CompanyWithFetchProfile.class, companyWithFetchProfileId, properties );
+		CompanyFetchProfile company = entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
@@ -126,7 +126,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		subSubgraph.addAttributeNodes( "managers" );
 		subSubgraph.addAttributeNodes( "friends" );
 
-		company = entityManager.find( CompanyWithFetchProfile.class, companyWithFetchProfileId, properties );
+		company = entityManager.find( CompanyFetchProfile.class, companyWithFetchProfileId, properties );
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
@@ -189,17 +189,17 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		entityManager.persist( company );
 		companyId = company.id;
 
-		CompanyWithFetchProfile companyWithFetchProfile = new CompanyWithFetchProfile();
-		companyWithFetchProfile.employees.add( employee );
-		companyWithFetchProfile.employees.add( manager1 );
-		companyWithFetchProfile.employees.add( manager2 );
-		companyWithFetchProfile.location = location;
-		companyWithFetchProfile.markets.add( Market.SERVICES );
-		companyWithFetchProfile.markets.add( Market.TECHNOLOGY );
-		companyWithFetchProfile.phoneNumbers.add( "012-345-6789" );
-		companyWithFetchProfile.phoneNumbers.add( "987-654-3210" );
-		entityManager.persist( companyWithFetchProfile );
-		companyWithFetchProfileId = companyWithFetchProfile.id;
+		CompanyFetchProfile companyFetchProfile = new CompanyFetchProfile();
+		companyFetchProfile.employees.add( employee );
+		companyFetchProfile.employees.add( manager1 );
+		companyFetchProfile.employees.add( manager2 );
+		companyFetchProfile.location = location;
+		companyFetchProfile.markets.add( Market.SERVICES );
+		companyFetchProfile.markets.add( Market.TECHNOLOGY );
+		companyFetchProfile.phoneNumbers.add( "012-345-6789" );
+		companyFetchProfile.phoneNumbers.add( "987-654-3210" );
+		entityManager.persist( companyFetchProfile );
+		companyWithFetchProfileId = companyFetchProfile.id;
 		
 		entityManager.getTransaction().commit();
 		entityManager.close();
@@ -207,7 +207,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, CompanyWithFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
+		return new Class<?>[] { Company.class, CompanyFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
 	
 }

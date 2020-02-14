@@ -97,11 +97,12 @@ public class StandardServiceRegistryBuilder {
 	}
 
 	/**
-	 * Intended for use exclusively from JPA boot-strapping.
+	 * Intended for use exclusively from JPA boot-strapping, or extensions of
+	 * this class. Consider this an SPI.
 	 *
 	 * @see #forJpa
 	 */
-	private StandardServiceRegistryBuilder(
+	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			Map settings,
 			LoadedConfig loadedConfig) {

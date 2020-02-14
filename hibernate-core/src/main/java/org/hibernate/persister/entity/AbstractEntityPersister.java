@@ -3921,7 +3921,7 @@ public abstract class AbstractEntityPersister
 		final String[] deleteStrings;
 		if ( isImpliedOptimisticLocking && loadedState != null ) {
 			// we need to utilize dynamic delete statements
-			deleteStrings = generateSQLDeletStrings( loadedState );
+			deleteStrings = generateSQLDeleteStrings( loadedState );
 		}
 		else {
 			// otherwise, utilize the static delete statements
@@ -3939,7 +3939,7 @@ public abstract class AbstractEntityPersister
 				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}
 
-	private String[] generateSQLDeletStrings(Object[] loadedState) {
+	private String[] generateSQLDeleteStrings(Object[] loadedState) {
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {

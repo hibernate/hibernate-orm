@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
@@ -93,6 +94,12 @@ public class TableCollector {
     		log.debug("Adding table " + tableIdentifier + " of type " + tableType);
     		Table table = revengMetadataCollector.addTable(tableIdentifier);
     		table.setComment(comment);
+			BasicColumnProcessor.processBasicColumns(
+					metaDataDialect, 
+					revengStrategy, 
+					properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
+					properties.getProperty(AvailableSettings.DEFAULT_CATALOG), 
+					table);
     		processedTables.put(table, tableType.equalsIgnoreCase("TABLE"));
     	}
     	else {

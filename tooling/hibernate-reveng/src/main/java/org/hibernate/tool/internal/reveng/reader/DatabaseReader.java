@@ -72,8 +72,6 @@ public class DatabaseReader {
 
 		
 			for (Table table : foundTables.keySet()) {
-				BasicColumnProcessor.processBasicColumns(metadataDialect, revengStrategy, getDefaultSchema(),
-						getDefaultCatalog(), table);
 				PrimaryKeyProcessor.processPrimaryKey(metadataDialect, revengStrategy, getDefaultSchema(),
 						getDefaultCatalog(), revengMetadataCollector, table);
 				if (foundTables.get(table)) {

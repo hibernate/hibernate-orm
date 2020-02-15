@@ -14,6 +14,7 @@ import javax.persistence.Id;
  */
 @Entity
 public class Ticket {
+	@Id
 	private Integer id;
 
 	private String key;
@@ -21,9 +22,8 @@ public class Ticket {
 	private String subject;
 	private String details;
 
-	private Incident asssociatedIncident;
+//	private Incident associatedIncident;
 
-	@Id
 	public Integer getId() {
 		return id;
 	}

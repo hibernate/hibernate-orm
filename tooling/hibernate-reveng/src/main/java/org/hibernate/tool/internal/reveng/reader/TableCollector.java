@@ -12,6 +12,7 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.jboss.logging.Logger;
 
@@ -99,6 +100,13 @@ public class TableCollector {
 					revengStrategy, 
 					properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
 					properties.getProperty(AvailableSettings.DEFAULT_CATALOG), 
+					table);
+			PrimaryKeyProcessor.processPrimaryKey(
+					metaDataDialect, 
+					revengStrategy, 
+					properties.getProperty(AvailableSettings.DEFAULT_SCHEMA),
+					properties.getProperty(AvailableSettings.DEFAULT_CATALOG), 
+					revengMetadataCollector, 
 					table);
     		processedTables.put(table, tableType.equalsIgnoreCase("TABLE"));
     	}

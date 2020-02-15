@@ -18,7 +18,6 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.IndexProcessor;
-import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {
@@ -72,8 +71,6 @@ public class DatabaseReader {
 
 		
 			for (Table table : foundTables.keySet()) {
-				PrimaryKeyProcessor.processPrimaryKey(metadataDialect, revengStrategy, getDefaultSchema(),
-						getDefaultCatalog(), revengMetadataCollector, table);
 				if (foundTables.get(table)) {
 					IndexProcessor.processIndices(metadataDialect, getDefaultSchema(), getDefaultCatalog(), table);
 				}

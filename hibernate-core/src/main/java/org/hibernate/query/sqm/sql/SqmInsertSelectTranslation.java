@@ -31,7 +31,7 @@ public class SqmInsertSelectTranslation {
 		return sqlAst;
 	}
 
-	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamMap() {
+	public Map<SqmParameter, List<JdbcParameter>> getJdbcParamsBySqmParam() {
 		return jdbcParamMap;
 	}
 }

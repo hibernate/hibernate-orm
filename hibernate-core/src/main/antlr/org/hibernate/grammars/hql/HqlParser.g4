@@ -65,8 +65,7 @@ intoSpec
 	;
 
 targetFieldsSpec
-	:
-	LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
+	: LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +89,7 @@ fromClauseSpace
 	;
 
 pathRoot
-	: entityName (identificationVariableDef)?
+	: entityName identificationVariableDef?
 	;
 
 /**
@@ -110,15 +109,15 @@ identificationVariableDef
 	;
 
 crossJoin
-	: CROSS JOIN pathRoot (identificationVariableDef)?
+	: CROSS JOIN pathRoot identificationVariableDef?
 	;
 
 jpaCollectionJoin
-	:	COMMA IN LEFT_PAREN path RIGHT_PAREN (identificationVariableDef)?
+	:	COMMA IN LEFT_PAREN path RIGHT_PAREN identificationVariableDef?
 	;
 
 qualifiedJoin
-	: joinTypeQualifier JOIN FETCH? qualifiedJoinRhs (qualifiedJoinPredicate)?
+	: joinTypeQualifier JOIN FETCH? qualifiedJoinRhs qualifiedJoinPredicate?
 	;
 
 joinTypeQualifier
@@ -127,7 +126,7 @@ joinTypeQualifier
 	;
 
 qualifiedJoinRhs
-	: path (identificationVariableDef)?
+	: path identificationVariableDef?
 	;
 
 qualifiedJoinPredicate
@@ -148,7 +147,7 @@ selectionList
 	;
 
 selection
-	: selectExpression (resultIdentifier)?
+	: selectExpression resultIdentifier?
 	;
 
 selectExpression
@@ -251,7 +250,7 @@ syntacticDomainPath
  * cases: TREAT, KEY, ELEMENTS, VALUES
  */
 generalPathFragment
-	: dotIdentifierSequence (indexedPathAccessFragment)?
+	: dotIdentifierSequence indexedPathAccessFragment?
 	;
 
 indexedPathAccessFragment
@@ -259,15 +258,15 @@ indexedPathAccessFragment
 	;
 
 treatedNavigablePath
-	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN (pathContinuation)?
+	: TREAT LEFT_PAREN path AS dotIdentifierSequence RIGHT_PAREN pathContinuation?
 	;
 
 collectionElementNavigablePath
-	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN (pathContinuation)?
+	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 mapKeyNavigablePath
-	: KEY LEFT_PAREN path RIGHT_PAREN (pathContinuation)?
+	: KEY LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 

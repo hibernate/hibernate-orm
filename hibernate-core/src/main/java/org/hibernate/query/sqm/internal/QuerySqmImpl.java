@@ -51,6 +51,8 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -531,6 +533,10 @@ public class QuerySqmImpl<R>
 			return buildUpdateQueryPlan();
 		}
 
+		if ( getSqmStatement() instanceof SqmInsertStatement ) {
+			return buildInsertQueryPlan();
+		}
+
 		throw new NotYetImplementedException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "not yet supported" );
 	}
 
@@ -562,6 +568,22 @@ public class QuerySqmImpl<R>
 		else {
 			return new MultiTableUpdateQueryPlan( sqmUpdate, domainParameterXref, multiTableStrategy );
 		}
+	}
+
+	private NonSelectQueryPlan buildInsertQueryPlan() {
+		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
+
+		final String entityNameToUpdate = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
+
+//		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
+//		if ( multiTableStrategy == null ) {
+			return new SimpleInsertQueryPlan( (SqmInsertSelectStatement) sqmInsert, domainParameterXref );
+//		}
+//		else {
+			//TODO:
+//			return new MultiTableUpdateQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
+//		}
 	}
 
 	@Override

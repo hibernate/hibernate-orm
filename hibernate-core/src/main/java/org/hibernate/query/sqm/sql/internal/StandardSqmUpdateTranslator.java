@@ -12,7 +12,6 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -94,7 +93,7 @@ public class StandardSqmUpdateTranslator
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
-					null,
+					sqmStatement.getRoot().getAlias(),
 					false,
 					LockMode.WRITE,
 					getSqlAliasBaseGenerator(),
@@ -163,9 +162,9 @@ public class StandardSqmUpdateTranslator
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
 		final List<Assignment> assignments = new ArrayList<>();
 
-		final List<ColumnReference> targetColumnReferences = new ArrayList<>();
-
 		for ( SqmAssignment sqmAssignment : setClause.getAssignments() ) {
+			final List<ColumnReference> targetColumnReferences = new ArrayList<>();
+
 			getProcessingStateStack().push(
 					new SqlAstProcessingStateImpl(
 							getProcessingStateStack().getCurrent(),
@@ -263,13 +262,10 @@ public class StandardSqmUpdateTranslator
 
 					assert assignedPathJdbcCount == valueExprJdbcCount;
 
-					if ( valueExpression instanceof ColumnReference ) {
-						assert valueExprJdbcCount == 1;
-
-						assignments.add( new Assignment( (ColumnReference) valueExpression, valueExpression ) );
-					}
-					else {
-						throw new NotYetImplementedFor6Exception( "Support for composite valued assignments in an UPDATE query is not yet implemented" );
+					for (ColumnReference columnReference : targetColumnReferences) {
+						assignments.add(
+								new Assignment( columnReference, valueExpression )
+						);
 					}
 				}
 			}

@@ -170,7 +170,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		for ( SqmFrom fromElement : sqmFromByPath.values() ) {
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
-					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
+//					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
 				}
 				found = fromElement;
 			}

@@ -304,24 +304,28 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 
 	@Override
 	public SqmInsertSelectStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
-		final EntityDomainType<?> targetType = visitEntityName( ctx.insertSpec().intoSpec().entityName() );
 
-		final SqmRoot<?> root = new SqmRoot<>( targetType, null, creationContext.getNodeBuilder() );
-		processingStateStack.getCurrent().getPathRegistry().register( root );
+		final SqmRoot<?> root = new SqmRoot<>(
+				visitEntityName( ctx.rootEntity().entityName() ),
+				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
+				creationContext.getNodeBuilder()
+		);
 
 		// for now we only support the INSERT-SELECT form
-		final SqmInsertSelectStatement insertStatement = new SqmInsertSelectStatement<>(
-				root,
-				creationContext.getQueryEngine().getCriteriaBuilder()
-		);
+		final SqmInsertSelectStatement<?> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
 		parameterCollector = insertStatement;
+		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
+				insertStatement,
+				this
+		);
 
-		processingStateStack.push( new SqmDmlCreationProcessingState( insertStatement, this ) );
+		processingStateStack.push( processingState );
+		processingState.getPathRegistry().register( root );
 
 		try {
 			insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
 
-			for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.insertSpec().targetFieldsSpec().dotIdentifierSequence() ) {
+			for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
 				final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
 				// todo : validate each resolved stateField...
 				insertStatement.addInsertTargetStateField( stateField );
@@ -337,8 +341,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmUpdateStatement visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
 		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.entityName() ),
-				visitIdentificationVariableDef( ctx.identificationVariableDef() ),
+				visitEntityName( ctx.rootEntity().entityName() ),
+				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 
@@ -371,8 +375,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmDeleteStatement visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
 		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.entityName() ),
-				visitIdentificationVariableDef( ctx.identificationVariableDef() ),
+				visitEntityName( ctx.rootEntity().entityName() ),
+				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 

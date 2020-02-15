@@ -80,7 +80,7 @@ public class StandardSqmDeleteTranslator
 			final NavigablePath rootPath = statement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
-					null,
+					statement.getRoot().getAlias(),
 					false,
 					LockMode.WRITE,
 					stem -> getSqlAliasBaseGenerator().createSqlAliasBase( stem ),

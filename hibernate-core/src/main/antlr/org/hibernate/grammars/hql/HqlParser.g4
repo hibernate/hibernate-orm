@@ -35,16 +35,20 @@ subQuery
 	: querySpec
 	;
 
+rootEntity
+	: entityName identificationVariableDef?
+	;
+
 deleteStatement
-	: DELETE FROM? entityName identificationVariableDef? whereClause?
+	: DELETE FROM? rootEntity whereClause?
 	;
 
 updateStatement
-	: UPDATE FROM? entityName identificationVariableDef? setClause whereClause?
+	: UPDATE rootEntity setClause whereClause?
 	;
 
 setClause
-	: SET assignment+
+	: SET assignment (COMMA assignment)*
 	;
 
 assignment
@@ -52,16 +56,7 @@ assignment
 	;
 
 insertStatement
-// todo (6.0 : VERSIONED
-	: INSERT insertSpec querySpec
-	;
-
-insertSpec
-	: intoSpec targetFieldsSpec
-	;
-
-intoSpec
-	: INTO entityName
+	: INSERT INTO? rootEntity targetFieldsSpec querySpec
 	;
 
 targetFieldsSpec

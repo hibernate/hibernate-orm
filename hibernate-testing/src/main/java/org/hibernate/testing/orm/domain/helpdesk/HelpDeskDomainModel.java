@@ -17,7 +17,8 @@ public class HelpDeskDomainModel extends AbstractDomainModelDescriptor {
 	public HelpDeskDomainModel() {
 		super(
 				Status.class,
-				Account.class
+				Account.class,
+				Ticket.class
 		);
 	}
 }

@@ -281,7 +281,7 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 					);
 				}
 				else {
-					writer.insertBefore( typeDescriptor.buildInLineDirtyCheckingBodyFragment( enhancementContext, persistentField ) );
+					writer.insertBefore( typeDescriptor.buildInLineDirtyCheckingBodyFragment( enhancementContext, managedCtClass, persistentField ) );
 				}
 
 				handleCompositeField( managedCtClass, persistentField, writer );

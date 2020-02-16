@@ -18,6 +18,8 @@ import javassist.CtField;
 import javassist.NotFoundException;
 
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 /**
  * utility class to generate interceptor methods
@@ -37,7 +39,7 @@ public abstract class AttributeTypeDescriptor {
 
 	public abstract String buildWriteInterceptionBodyFragment(String fieldName);
 
-	public String buildInLineDirtyCheckingBodyFragment(JavassistEnhancementContext context, CtField currentValue) {
+	public String buildInLineDirtyCheckingBodyFragment(JavassistEnhancementContext context, CtClass managedCtClass, CtField currentValue) {
 		StringBuilder builder = new StringBuilder();
 		try {
 			// should ignore primary keys
@@ -49,6 +51,8 @@ public abstract class AttributeTypeDescriptor {
 			String readFragment = inheritanceMetadata.isInherited() && !inheritanceMetadata.isVisible()
 					? "super." + inheritanceMetadata.getReaderName() + "()"
 					: "this." + currentValue.getName();
+
+			fetchValeBeforeComparison( context, managedCtClass, currentValue, builder );
 
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
 				// primitives || enums
@@ -77,6 +81,24 @@ public abstract class AttributeTypeDescriptor {
 		catch (NotFoundException ignore) {
 		}
 		return builder.toString();
+	}
+
+	private void fetchValeBeforeComparison(JavassistEnhancementContext context, CtClass managedCtClass, CtField currentValue, StringBuilder builder) throws NotFoundException {
+		if ( PersistentAttributesHelper.isAssignable(managedCtClass, PersistentAttributeInterceptable.class.getName() )
+				&& context.isLazyLoadable(currentValue)) {
+			// should fetch the value by calling the GET method (if not loaded yet) , in order to initialize the value before the comparison,
+			// otherwise the value = null
+			builder.append( String.format(
+					" if( %1$s != null " +
+							" &&  %1$s instanceof %2$s " +
+							" &&  !((%2$s) %1$s).isAttributeLoaded(\"%3$s\") " +
+							" &&  $1 == null) ",
+					EnhancerConstants.INTERCEPTOR_FIELD_NAME,
+					LazyAttributeLoadingInterceptor.class.getName(),
+					currentValue.getName() )
+			);
+			builder.append( String.format("  {  get%s();  }", currentValue.getType().getName()) );
+		}
 	}
 
 	/* --- */

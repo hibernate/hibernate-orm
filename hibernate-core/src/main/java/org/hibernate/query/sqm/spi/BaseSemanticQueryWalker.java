@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -34,6 +35,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
@@ -63,6 +65,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
@@ -387,6 +390,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
+	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
+		predicate.getExpression().accept( this );
+		return predicate;
+	}
+
+	@Override
 	public Object visitOrderByClause(SqmOrderByClause orderByClause) {
 		if ( orderByClause == null ) {
 			return null;
@@ -581,6 +590,16 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
 		return expression;
+	}
+
+	@Override
+	public Object visitAny(SqmAny<?> sqmAny) {
+		return sqmAny;
+	}
+
+	@Override
+	public Object visitEvery(SqmEvery<?> sqmEvery) {
+		return sqmEvery;
 	}
 
 	@Override

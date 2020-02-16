@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -74,6 +75,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
@@ -100,6 +102,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
@@ -129,6 +132,7 @@ import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -136,6 +140,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
@@ -148,6 +153,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -1954,6 +1960,22 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	@Override
+	public Object visitAny(SqmAny<?> sqmAny) {
+		return new Any(
+				visitSubQueryExpression( sqmAny.getSubquery() ),
+				null //resolveMappingExpressable( sqmAny.getNodeType() )
+		);
+	}
+
+	@Override
+	public Object visitEvery(SqmEvery<?> sqmEvery) {
+		return new Every(
+				visitSubQueryExpression( sqmEvery.getSubquery() ),
+				null //resolveMappingExpressable( sqmEvery.getNodeType() )
+		);
+	}
+
+	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
 		return new QueryLiteral<>(
 				sqmEnumLiteral.getEnumValue(),
@@ -2209,5 +2231,10 @@ public abstract class BaseSqmToSqlAstConverter
 				(QuerySpec) predicate.getSubQueryExpression().accept( this ),
 				predicate.isNegated()
 		);
+	}
+
+	@Override
+	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
+		return new ExistsPredicate( (QuerySpec) predicate.getExpression().accept( this ) );
 	}
 }

@@ -44,6 +44,17 @@ public class InsertUpdateTests {
 	}
 
 	@Test
+	public void testInsertValues(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("delete from Ticket").executeUpdate();
+					session.createQuery("insert into Ticket (id, key, subject, details) values (6, 'ABC123', 'Outage', 'Something is broken')").executeUpdate();
+					session.createQuery("insert into Ticket (id, key, subject, details) values (2, 'XYZ123', 'Outage', 'Something is broken'), (13, 'HIJ456', 'x', 'x')").executeUpdate();
+				}
+		);
+	}
+
+	@Test
 	public void testInsertSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

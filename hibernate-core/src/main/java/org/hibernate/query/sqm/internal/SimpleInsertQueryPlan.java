@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.sql.SqmInsertTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
-import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
+import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -75,7 +75,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-			final SqlAstInsertSelectTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
+			final SqlAstInsertTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
 
 			jdbcInsert = sqlAstTranslator.translate( sqmInterpretation.getSqlAst() );
 		}

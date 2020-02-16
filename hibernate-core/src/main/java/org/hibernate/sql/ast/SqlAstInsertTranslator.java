@@ -12,6 +12,6 @@ import org.hibernate.sql.exec.spi.JdbcInsert;
 /**
  * @author Steve Ebersole
  */
-public interface SqlAstInsertSelectTranslator extends SqlAstTranslator {
+public interface SqlAstInsertTranslator extends SqlAstTranslator {
 	JdbcInsert translate(InsertStatement sqlAst);
 }

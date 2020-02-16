@@ -23,7 +23,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
-import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
+import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -129,7 +129,7 @@ public final class ExecuteWithIdTableHelper {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstInsertSelectTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
+		final SqlAstInsertTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
 		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( idTableInsert );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(

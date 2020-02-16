@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.version;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -14,8 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQL57Dialect;
+import org.hibernate.dialect.MariaDB53Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -29,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-10026" )
-@RequiresDialect( MariaDBDialect.class )
+@RequiresDialect( MariaDB53Dialect.class )
 public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

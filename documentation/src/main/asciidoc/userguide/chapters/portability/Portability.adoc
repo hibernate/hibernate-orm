@@ -26,7 +26,7 @@ Generally, this required their users to configure the Hibernate dialect or defin
 Starting with version 3.2, Hibernate introduced the notion of automatically detecting the dialect to use based on the `java.sql.DatabaseMetaData` obtained from a `java.sql.Connection` to that database.
 This was much better, except that this resolution was limited to databases Hibernate know about ahead of time and was in no way configurable or overrideable.
 
-Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine which dialect to be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
+Starting with version 3.3, Hibernate has a far more powerful way to automatically determine which dialect to be used by relying on a series of delegates which implement the `org.hibernate.dialect.resolver.DialectResolver` which defines only a single method:
 
 [source,java]
 ----

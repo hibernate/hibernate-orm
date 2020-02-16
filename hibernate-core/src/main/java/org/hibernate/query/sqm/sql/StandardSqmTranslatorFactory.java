@@ -12,7 +12,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.internal.StandardSqmDeleteTranslator;
-import org.hibernate.query.sqm.sql.internal.StandardSqmInsertSelectTranslator;
+import org.hibernate.query.sqm.sql.internal.StandardSqmInsertTranslator;
 import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.query.sqm.sql.internal.StandardSqmUpdateTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -55,13 +55,13 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 	}
 
 	@Override
-	public SqmInsertSelectTranslator createInsertSelectTranslator(
+	public SqmInsertTranslator createInsertTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers influencers,
 			SqlAstCreationContext creationContext) {
-		return new StandardSqmInsertSelectTranslator(
+		return new StandardSqmInsertTranslator(
 				creationContext,
 				queryOptions,
 				domainParameterXref,

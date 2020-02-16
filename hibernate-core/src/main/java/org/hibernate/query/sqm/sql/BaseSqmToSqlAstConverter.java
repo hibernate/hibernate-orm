@@ -103,6 +103,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -319,6 +320,11 @@ public abstract class BaseSqmToSqlAstConverter
 
 	@Override
 	public Object visitInsertSelectStatement(SqmInsertSelectStatement statement) {
+		throw new AssertionFailure( "InsertStatement not supported" );
+	}
+
+	@Override
+	public Object visitInsertValuesStatement(SqmInsertValuesStatement statement) {
 		throw new AssertionFailure( "InsertStatement not supported" );
 	}
 

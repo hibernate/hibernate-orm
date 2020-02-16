@@ -573,12 +573,12 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildInsertQueryPlan() {
 		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
 
-		final String entityNameToUpdate = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
+//		final String entityNameToUpdate = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
+//		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
 
 //		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 //		if ( multiTableStrategy == null ) {
-			return new SimpleInsertQueryPlan( (SqmInsertSelectStatement) sqmInsert, domainParameterXref );
+			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 //		}
 //		else {
 			//TODO:

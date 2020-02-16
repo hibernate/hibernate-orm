@@ -269,6 +269,7 @@ TYPE				: [tT] [yY] [pP] [eE];
 UPDATE				: [uU] [pP] [dD] [aA] [tT] [eE];
 UPPER				: [uU] [pP] [pP] [eE] [rR];
 VALUE				: [vV] [aA] [lL] [uU] [eE];
+VALUES				: [vV] [aA] [lL] [uU] [eE] [sS];
 WEEK				: [wW] [eE] [eE] [kK];
 WHEN				: [wW] [hH] [eE] [nN];
 WHERE				: [wW] [hH] [eE] [rR] [eE];

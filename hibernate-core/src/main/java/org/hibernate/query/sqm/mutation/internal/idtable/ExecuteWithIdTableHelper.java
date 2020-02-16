@@ -31,7 +31,7 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -69,7 +69,7 @@ public final class ExecuteWithIdTableHelper {
 		assert mutatingTableGroup.getModelPart() instanceof EntityMappingType;
 		final EntityMappingType mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
 
-		final InsertSelectStatement idTableInsert = new InsertSelectStatement();
+		final InsertStatement idTableInsert = new InsertStatement();
 
 		final TableReference idTableReference = new TableReference( idTable.getTableExpression(), null, false, factory );
 		idTableInsert.setTargetTable( idTableReference );

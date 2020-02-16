@@ -12,11 +12,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.sql.SqmInsertSelectTranslation;
-import org.hibernate.query.sqm.sql.SqmInsertSelectTranslator;
+import org.hibernate.query.sqm.sql.SqmInsertTranslation;
+import org.hibernate.query.sqm.sql.SqmInsertTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -32,7 +32,7 @@ import java.util.Map;
  * @author Gavin King
  */
 public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
-	private final SqmInsertSelectStatement sqmInsert;
+	private final SqmInsertStatement sqmInsert;
 	private final DomainParameterXref domainParameterXref;
 
 	private JdbcInsert jdbcInsert;
@@ -40,7 +40,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<JdbcParameter>>> jdbcParamsXref;
 
 	public SimpleInsertQueryPlan(
-			SqmInsertSelectStatement sqmInsert,
+			SqmInsertStatement sqmInsert,
 			DomainParameterXref domainParameterXref) {
 		this.sqmInsert = sqmInsert;
 		this.domainParameterXref = domainParameterXref;
@@ -55,7 +55,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 			final QueryEngine queryEngine = factory.getQueryEngine();
 
 			final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
-			final SqmInsertSelectTranslator translator = translatorFactory.createInsertSelectTranslator(
+			final SqmInsertTranslator translator = translatorFactory.createInsertTranslator(
 					executionContext.getQueryOptions(),
 					domainParameterXref,
 					executionContext.getQueryParameterBindings(),
@@ -63,7 +63,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 					factory
 			);
 
-			final SqmInsertSelectTranslation sqmInterpretation = translator.translate(sqmInsert);
+			final SqmInsertTranslation sqmInterpretation = translator.translate(sqmInsert);
 
 			tableGroupAccess = translator.getFromClauseAccess();
 

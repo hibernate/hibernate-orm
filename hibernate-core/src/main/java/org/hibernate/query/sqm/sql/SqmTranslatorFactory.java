@@ -32,7 +32,7 @@ public interface SqmTranslatorFactory {
 			LoadQueryInfluencers influencers,
 			SqlAstCreationContext creationContext);
 
-	SqmInsertSelectTranslator createInsertSelectTranslator(
+	SqmInsertTranslator createInsertTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,

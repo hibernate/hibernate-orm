@@ -56,11 +56,19 @@ assignment
 	;
 
 insertStatement
-	: INSERT INTO? rootEntity targetFieldsSpec querySpec
+	: INSERT INTO? rootEntity targetFieldsSpec (querySpec | valuesList)
 	;
 
 targetFieldsSpec
 	: LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
+	;
+
+valuesList
+	: VALUES values (COMMA values)*
+	;
+
+values
+	: LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

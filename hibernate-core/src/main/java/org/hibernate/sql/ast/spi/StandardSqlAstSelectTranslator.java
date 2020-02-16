@@ -46,8 +46,7 @@ public class StandardSqlAstSelectTranslator
 
 		String separator = "";
 
-		for ( int i = 0; i < sqlAst.getCteTable().getCteColumns().size(); i++ ) {
-			final CteColumn cteColumn = sqlAst.getCteTable().getCteColumns().get( i );
+		for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
 			appendSql( separator );
 			appendSql( cteColumn.getColumnExpression() );
 			separator = ", ";

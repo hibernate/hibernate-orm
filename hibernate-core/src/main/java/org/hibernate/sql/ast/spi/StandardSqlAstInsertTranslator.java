@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
+import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -23,10 +23,10 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 /**
  * @author Steve Ebersole
  */
-public class StandardSqlAstInsertSelectTranslator
+public class StandardSqlAstInsertTranslator
 		extends AbstractSqlAstTranslator
-		implements SqlAstInsertSelectTranslator {
-	public StandardSqlAstInsertSelectTranslator(SessionFactoryImplementor sessionFactory) {
+		implements SqlAstInsertTranslator {
+	public StandardSqlAstInsertTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 	}
 
@@ -43,16 +43,15 @@ public class StandardSqlAstInsertSelectTranslator
 			renderImplicitTargetColumnSpec();
 		}
 		else {
-			for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
-				if ( firstPass ) {
+			for (ColumnReference targetColumnReference : targetColumnReferences) {
+				if (firstPass) {
 					firstPass = false;
 				}
 				else {
 					appendSql( ", " );
 				}
 
-				final ColumnReference columnReference = targetColumnReferences.get( i );
-				appendSql( columnReference.getColumnExpression() );
+				appendSql( targetColumnReference.getColumnExpression() );
 			}
 		}
 
@@ -89,17 +88,17 @@ public class StandardSqlAstInsertSelectTranslator
 		return new JdbcInsert() {
 			@Override
 			public String getSql() {
-				return StandardSqlAstInsertSelectTranslator.this.getSql();
+				return StandardSqlAstInsertTranslator.this.getSql();
 			}
 
 			@Override
 			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstInsertSelectTranslator.this.getParameterBinders();
+				return StandardSqlAstInsertTranslator.this.getParameterBinders();
 			}
 
 			@Override
 			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstInsertSelectTranslator.this.getAffectedTableNames();
+				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
 			}
 		};
 	}
@@ -118,8 +117,7 @@ public class StandardSqlAstInsertSelectTranslator
 
 		String separator = "";
 
-		for ( int i = 0; i < sqlAst.getCteTable().getCteColumns().size(); i++ ) {
-			final CteColumn cteColumn = sqlAst.getCteTable().getCteColumns().get( i );
+		for ( CteColumn cteColumn : sqlAst.getCteTable().getCteColumns() ) {
 			appendSql( separator );
 			appendSql( cteColumn.getColumnExpression() );
 			separator = ", ";
@@ -136,17 +134,17 @@ public class StandardSqlAstInsertSelectTranslator
 		return new JdbcInsert() {
 			@Override
 			public String getSql() {
-				return StandardSqlAstInsertSelectTranslator.this.getSql();
+				return StandardSqlAstInsertTranslator.this.getSql();
 			}
 
 			@Override
 			public List<JdbcParameterBinder> getParameterBinders() {
-				return StandardSqlAstInsertSelectTranslator.this.getParameterBinders();
+				return StandardSqlAstInsertTranslator.this.getParameterBinders();
 			}
 
 			@Override
 			public Set<String> getAffectedTableNames() {
-				return StandardSqlAstInsertSelectTranslator.this.getAffectedTableNames();
+				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
 			}
 		};
 	}

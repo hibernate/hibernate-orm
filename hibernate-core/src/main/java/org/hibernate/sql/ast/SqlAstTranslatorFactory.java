@@ -27,7 +27,7 @@ public interface SqlAstTranslatorFactory {
 	/**
 	 * Builds a single-use insert-select translator
 	 */
-	SqlAstInsertSelectTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory);
+	SqlAstInsertTranslator buildInsertTranslator(SessionFactoryImplementor sessionFactory);
 
 	SqlAstUpdateTranslator buildUpdateTranslator(SessionFactoryImplementor sessionFactory);
 

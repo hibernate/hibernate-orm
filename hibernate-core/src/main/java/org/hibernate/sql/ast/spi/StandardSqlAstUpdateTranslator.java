@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -26,7 +25,7 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
 public class StandardSqlAstUpdateTranslator
 		extends AbstractSqlAstTranslator
 		implements SqlAstUpdateTranslator {
-	private final Dialect dialect;
+//	private final Dialect dialect;
 
 	public StandardSqlAstUpdateTranslator(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
@@ -34,7 +33,7 @@ public class StandardSqlAstUpdateTranslator
 		// todo (6.0) : use the Dialect to determine how to handle column references
 		//		- specifically should they use the table-alias, the table-expression
 		//			or neither for its qualifier
-		dialect = getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect();
+//		dialect = getSessionFactory().getJdbcServices().getJdbcEnvironment().getDialect();
 	}
 
 	private String updatingTableAlias;
@@ -48,7 +47,7 @@ public class StandardSqlAstUpdateTranslator
 
 		appendSql( " set " );
 		boolean firstPass = true;
-		for ( int i = 0; i < sqlAst.getAssignments().size(); i++ ) {
+		for ( Assignment assignment : sqlAst.getAssignments() ) {
 			if ( firstPass ) {
 				firstPass = false;
 			}
@@ -56,15 +55,14 @@ public class StandardSqlAstUpdateTranslator
 				appendSql( ", " );
 			}
 
-			final Assignment assignment = sqlAst.getAssignments().get( i );
 			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 			if ( columnReferences.size() == 1 ) {
 				columnReferences.get( 0 ).accept( this );
 			}
 			else {
 				appendSql( " (" );
-				for ( int cri = 0; cri < columnReferences.size(); cri++ ) {
-					columnReferences.get( cri ).accept( this );
+				for (ColumnReference columnReference : columnReferences) {
+					columnReference.accept( this );
 				}
 				appendSql( ") " );
 			}

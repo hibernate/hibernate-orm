@@ -372,6 +372,7 @@ predicate
 	| expression (NOT)? BETWEEN expression AND expression	# BetweenPredicate
 	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
 	| expression comparisonOperator expression				# ComparisonPredicate
+	| EXISTS expression										# ExistsPredicate
 	| MEMBER OF path										# MemberOfPredicate
 	| NOT predicate											# NegatedPredicate
 	| predicate AND predicate								# AndPredicate
@@ -657,14 +658,6 @@ sumFunction
 	: SUM LEFT_PAREN DISTINCT? expression RIGHT_PAREN
 	;
 
-everyFunction
-	: (EVERY|ALL) LEFT_PAREN DISTINCT? predicate RIGHT_PAREN
-	;
-
-anyFunction
-	: (ANY|SOME) LEFT_PAREN DISTINCT? predicate RIGHT_PAREN
-	;
-
 minFunction
 	: MIN LEFT_PAREN DISTINCT? expression RIGHT_PAREN
 	;
@@ -675,6 +668,14 @@ maxFunction
 
 countFunction
 	: COUNT LEFT_PAREN DISTINCT? (expression | ASTERISK) RIGHT_PAREN
+	;
+
+everyFunction
+	: (EVERY|ALL) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN
+	;
+
+anyFunction
+	: (ANY|SOME) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN
 	;
 
 standardFunction

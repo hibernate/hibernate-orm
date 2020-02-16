@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -24,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
@@ -43,6 +45,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -460,7 +463,17 @@ public class SqlTreePrinter implements SqlAstWalker {
 		throw new NotYetImplementedFor6Exception();
 	}
 
-//	@Override
+	@Override
+	public void visitAny(Any any) {
+
+	}
+
+	@Override
+	public void visitEvery(Every every) {
+
+	}
+
+	//	@Override
 //	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
 //		throw new NotYetImplementedFor6Exception();
 //	}
@@ -547,6 +560,11 @@ public class SqlTreePrinter implements SqlAstWalker {
 					visitQuerySpec( inSubQueryPredicate.getSubQuery() );
 				}
 		);
+	}
+
+	@Override
+	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
+
 	}
 
 	@Override

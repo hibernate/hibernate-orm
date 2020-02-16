@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -33,6 +34,7 @@ import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
@@ -54,6 +56,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -888,8 +891,19 @@ public abstract class AbstractSqlAstWalker
 		appendSql( " end" );
 	}
 
+	@Override
+	public void visitAny(Any any) {
+		appendSql( "some " );
+		any.getSubquery().accept( this );
+	}
 
-//	@Override
+	@Override
+	public void visitEvery(Every every) {
+		appendSql( "all " );
+		every.getSubquery().accept( this );
+	}
+
+	//	@Override
 //	public void visitGenericParameter(GenericParameter parameter) {
 //		visitJdbcParameterBinder( parameter.getParameterBinder() );
 //
@@ -1062,6 +1076,12 @@ public abstract class AbstractSqlAstWalker
 		}
 		appendSql( " in " );
 		visitQuerySpec( inSubQueryPredicate.getSubQuery() );
+	}
+
+	@Override
+	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
+		appendSql( "exists " );
+		existsPredicate.getExpression().accept( this );
 	}
 
 	@Override

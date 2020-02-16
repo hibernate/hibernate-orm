@@ -9,6 +9,7 @@ package org.hibernate.sql.ast;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
@@ -18,6 +19,7 @@ import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
@@ -36,6 +38,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -98,6 +101,10 @@ public interface SqlAstWalker {
 
 	void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression);
 
+	void visitAny(Any any);
+
+	void visitEvery(Every every);
+
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 
 	void visitSqlSelectionExpression(SqlSelectionExpression expression);
@@ -123,6 +130,8 @@ public interface SqlAstWalker {
 	void visitInListPredicate(InListPredicate inListPredicate);
 
 	void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate);
+
+	void visitExistsPredicate(ExistsPredicate existsPredicate);
 
 	void visitJunction(Junction junction);
 

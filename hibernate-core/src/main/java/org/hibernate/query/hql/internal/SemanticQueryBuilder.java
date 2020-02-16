@@ -94,6 +94,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
@@ -102,6 +103,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
@@ -130,6 +132,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
@@ -1284,6 +1287,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 		// todo : handle PersistentCollectionReferenceInList labeled branch
 
 		throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
+	}
+
+	@Override
+	public SqmPredicate visitExistsPredicate(HqlParser.ExistsPredicateContext ctx) {
+		final SqmExpression expression = (SqmExpression) ctx.expression().accept( this );
+		return new SqmExistsPredicate( expression, creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -2886,10 +2895,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmExpression visitEveryFunction(HqlParser.EveryFunctionContext ctx) {
 
-		final SqmExpression<?> arg = (SqmExpression) ctx.predicate().accept( this );
-		SqmTypedNode<?> argument = ctx.DISTINCT() != null
-				? new SqmDistinct<>(arg, getCreationContext().getNodeBuilder())
-				: arg;
+		if ( ctx.subQuery()!=null ) {
+			SqmSubQuery<?> subquery = (SqmSubQuery<?>) ctx.subQuery().accept(this);
+			return new SqmEvery( subquery, subquery.getNodeType(), creationContext.getNodeBuilder() );
+		}
+
+		final SqmExpression<?> argument = (SqmExpression) ctx.predicate().accept( this );
 
 		return getFunctionDescriptor("every").generateSqmExpression(
 				argument,
@@ -2902,10 +2913,12 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmExpression visitAnyFunction(HqlParser.AnyFunctionContext ctx) {
 
-		final SqmExpression<?> arg = (SqmExpression) ctx.predicate().accept( this );
-		SqmTypedNode<?> argument = ctx.DISTINCT() != null
-				? new SqmDistinct<>(arg, getCreationContext().getNodeBuilder())
-				: arg;
+		if ( ctx.subQuery()!=null ) {
+			SqmSubQuery<?> subquery = (SqmSubQuery<?>) ctx.subQuery().accept(this);
+			return new SqmAny( subquery, subquery.getNodeType(), creationContext.getNodeBuilder() );
+		}
+
+		final SqmExpression<?> argument = (SqmExpression) ctx.predicate().accept( this );
 
 		return getFunctionDescriptor("any").generateSqmExpression(
 				argument,

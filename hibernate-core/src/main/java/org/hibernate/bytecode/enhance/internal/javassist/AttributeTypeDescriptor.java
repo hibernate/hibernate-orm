@@ -97,7 +97,7 @@ public abstract class AttributeTypeDescriptor {
 					LazyAttributeLoadingInterceptor.class.getName(),
 					currentValue.getName() )
 			);
-			builder.append( String.format("  {  get%s();  }", currentValue.getType().getName()) );
+			builder.append( String.format("  {  get%s();  }", currentValue.getName().substring(0, 1).toUpperCase() + currentValue.getName().substring(1)) );
 		}
 	}
 

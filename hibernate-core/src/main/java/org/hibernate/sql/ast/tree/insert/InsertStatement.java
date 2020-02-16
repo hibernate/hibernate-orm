@@ -7,60 +7,73 @@
 package org.hibernate.sql.ast.tree.insert;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
-public class InsertStatement implements MutationStatement {
+public class InsertStatement implements MutationStatement, CteConsumer {
+	private static final Logger log = Logger.getLogger( InsertStatement.class );
+
 	private TableReference targetTable;
 	private List<ColumnReference> targetColumnReferences;
-	private List<Expression> values;
-
-	public InsertStatement(TableReference targetTable) {
-		this.targetTable = targetTable;
-	}
+	private QuerySpec sourceSelectStatement;
+	private List<Values> valuesList = new ArrayList<>();
 
 	public TableReference getTargetTable() {
 		return targetTable;
 	}
 
 	public void setTargetTable(TableReference targetTable) {
+		log.tracef( "Setting INSERT target table [%s]", targetTable );
+		if ( this.targetTable != null ) {
+			log.debugf( "INSERT target table has been set multiple times" );
+		}
 		this.targetTable = targetTable;
 	}
 
 	public List<ColumnReference> getTargetColumnReferences() {
-		return targetColumnReferences;
+		return targetColumnReferences == null ? Collections.emptyList() : targetColumnReferences;
 	}
 
-	public void setTargetColumnReferences(List<ColumnReference> targetColumnReferences) {
-		this.targetColumnReferences = targetColumnReferences;
-	}
-
-	public void addTargetColumnReference(ColumnReference columnReference) {
+	public void addTargetColumnReferences(ColumnReference... references) {
 		if ( targetColumnReferences == null ) {
 			targetColumnReferences = new ArrayList<>();
 		}
-		targetColumnReferences.add( columnReference );
+
+		Collections.addAll( this.targetColumnReferences, references );
 	}
 
-	public List<Expression> getValues() {
-		return values;
-	}
-
-	public void setValues(List<Expression> values) {
-		this.values = values;
-	}
-
-	public void addValue(Expression expression) {
-		if ( values == null ) {
-			values = new ArrayList<>();
+	public void addTargetColumnReferences(List<ColumnReference> references) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
 		}
-		values.add( expression );
+
+		this.targetColumnReferences.addAll( references );
+	}
+
+	public QuerySpec getSourceSelectStatement() {
+		return sourceSelectStatement;
+	}
+
+	public void setSourceSelectStatement(QuerySpec sourceSelectStatement) {
+		this.sourceSelectStatement = sourceSelectStatement;
+	}
+
+	public List<Values> getValuesList() {
+		return valuesList;
+	}
+
+	public void setValuesList(List<Values> valuesList) {
+		this.valuesList = valuesList;
 	}
 }

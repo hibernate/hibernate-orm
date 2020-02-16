@@ -13,9 +13,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstInsertSelectTranslator;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
@@ -30,7 +31,7 @@ public class StandardSqlAstInsertSelectTranslator
 	}
 
 	@Override
-	public JdbcInsert translate(InsertSelectStatement sqlAst) {
+	public JdbcInsert translate(InsertStatement sqlAst) {
 		appendSql( "insert into " );
 		appendSql( sqlAst.getTargetTable().getTableExpression() );
 
@@ -57,7 +58,33 @@ public class StandardSqlAstInsertSelectTranslator
 
 		appendSql( ") " );
 
-		visitQuerySpec( sqlAst.getSourceSelectStatement() );
+		if ( sqlAst.getSourceSelectStatement()!=null ) {
+			visitQuerySpec( sqlAst.getSourceSelectStatement() );
+		}
+		else {
+			appendSql("values");
+			boolean firstTuple = true;
+			for ( Values values : sqlAst.getValuesList() ) {
+				if (firstTuple) {
+					firstTuple = false;
+				}
+				else {
+					appendSql(", ");
+				}
+				appendSql(" (");
+				boolean firstExpr = true;
+				for ( Expression expression : values.getExpressions() ) {
+					if (firstExpr) {
+						firstExpr = false;
+					}
+					else {
+						appendSql(", ");
+					}
+					expression.accept( this );
+				}
+				appendSql(")");
+			}
+		}
 
 		return new JdbcInsert() {
 			@Override
@@ -82,7 +109,7 @@ public class StandardSqlAstInsertSelectTranslator
 
 	@Override
 	public JdbcInsert translate(CteStatement sqlAst) {
-		assert sqlAst.getCteConsumer() instanceof DeleteStatement;
+		assert sqlAst.getCteConsumer() instanceof InsertStatement;
 
 		appendSql( "with " );
 		appendSql( sqlAst.getCteLabel() );
@@ -104,7 +131,7 @@ public class StandardSqlAstInsertSelectTranslator
 
 		appendSql( ") " );
 
-		translate( (InsertSelectStatement) sqlAst.getCteConsumer() );
+		translate( (InsertStatement) sqlAst.getCteConsumer() );
 
 		return new JdbcInsert() {
 			@Override

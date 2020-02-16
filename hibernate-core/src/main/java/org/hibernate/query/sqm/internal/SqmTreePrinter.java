@@ -62,6 +62,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
@@ -90,6 +92,7 @@ import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.jboss.logging.Logger;
 
 /**
@@ -287,6 +290,24 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 								() -> statement.getInsertionTargetPaths().forEach( sqmPath -> sqmPath.accept( this ) )
 						);
 						visitQuerySpec( statement.getSelectQuerySpec() );
+					}
+			);
+		}
+
+		return null;
+	}
+
+	@Override
+	public Object visitInsertValuesStatement(SqmInsertValuesStatement<?> statement) {
+		if ( DEBUG_ENABLED ) {
+			processStanza(
+					"insert",
+					() -> {
+						logWithIndentation( "[target = %s]", statement.getTarget().getNavigablePath().getFullPath() );
+						processStanza(
+								"into",
+								() -> statement.getInsertionTargetPaths().forEach( sqmPath -> sqmPath.accept( this ) )
+						);
 					}
 			);
 		}
@@ -572,6 +593,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 				() -> selection.getSelectableNode().accept( this )
 		);
 
+		return null;
+	}
+
+	@Override
+	public Object visitValues(SqmValues values) {
 		return null;
 	}
 

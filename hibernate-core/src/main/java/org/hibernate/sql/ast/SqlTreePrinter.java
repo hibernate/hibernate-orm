@@ -40,7 +40,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
@@ -139,19 +139,19 @@ public class SqlTreePrinter implements SqlAstWalker {
 					}
 			);
 		}
-		else if ( sqlAstStatement instanceof InsertSelectStatement ) {
-			final InsertSelectStatement insertSelectStatement = (InsertSelectStatement) sqlAstStatement;
+		else if ( sqlAstStatement instanceof InsertStatement) {
+			final InsertStatement insertStatement = (InsertStatement) sqlAstStatement;
 			logNode(
 					"insert-select-statement",
 					() -> {
 						logNode(
 								"target",
-								() -> logNode( insertSelectStatement.getTargetTable().toString() )
+								() -> logNode( insertStatement.getTargetTable().toString() )
 						);
 						logNode(
 								"into",
 								() -> {
-									for ( ColumnReference spec : insertSelectStatement.getTargetColumnReferences() ) {
+									for ( ColumnReference spec : insertStatement.getTargetColumnReferences() ) {
 										logNode(
 												"target-column",
 												() -> spec.accept( this )
@@ -161,7 +161,7 @@ public class SqlTreePrinter implements SqlAstWalker {
 						);
 						logNode(
 								"select",
-								() -> visitQuerySpec( insertSelectStatement.getSourceSelectStatement() )
+								() -> visitQuerySpec( insertStatement.getSourceSelectStatement() )
 						);
 					}
 			);

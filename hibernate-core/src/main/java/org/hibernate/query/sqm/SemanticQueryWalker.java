@@ -56,6 +56,8 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
@@ -98,6 +100,8 @@ public interface SemanticQueryWalker<T> {
 	T visitAssignment(SqmAssignment assignment);
 
 	T visitInsertSelectStatement(SqmInsertSelectStatement<?> statement);
+
+	T visitInsertValuesStatement(SqmInsertValuesStatement<?> statement);
 
 	T visitDeleteStatement(SqmDeleteStatement<?> statement);
 
@@ -152,6 +156,8 @@ public interface SemanticQueryWalker<T> {
 	T visitSelectClause(SqmSelectClause selectClause);
 
 	T visitSelection(SqmSelection selection);
+
+	T visitValues(SqmValues values);
 
 	T visitGroupByClause(SqmGroupByClause clause);
 

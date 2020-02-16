@@ -6,12 +6,12 @@
  */
 package org.hibernate.sql.ast;
 
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 
 /**
  * @author Steve Ebersole
  */
 public interface SqlAstInsertSelectTranslator extends SqlAstTranslator {
-	JdbcInsert translate(InsertSelectStatement sqlAst);
+	JdbcInsert translate(InsertStatement sqlAst);
 }

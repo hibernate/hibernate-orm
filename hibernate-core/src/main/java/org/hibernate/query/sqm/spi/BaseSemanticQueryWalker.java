@@ -58,6 +58,8 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
@@ -139,6 +141,18 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			stateField.accept( this );
 		}
 		visitQuerySpec( statement.getSelectQuerySpec() );
+		return statement;
+	}
+
+	@Override
+	public Object visitInsertValuesStatement(SqmInsertValuesStatement<?> statement) {
+		visitRootPath( statement.getTarget() );
+		for ( SqmPath<?> stateField : statement.getInsertionTargetPaths() ) {
+			stateField.accept( this );
+		}
+		for ( SqmValues sqmValues : statement.getValuesList() ) {
+			visitValues( sqmValues );
+		}
 		return statement;
 	}
 
@@ -285,6 +299,14 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	public Object visitSelection(SqmSelection selection) {
 		selection.getSelectableNode().accept( this );
 		return selection;
+	}
+
+	@Override
+	public Object visitValues(SqmValues values) {
+		for ( SqmExpression expression : values.getExpressions() ) {
+			expression.accept( this );
+		}
+		return values;
 	}
 
 	@Override

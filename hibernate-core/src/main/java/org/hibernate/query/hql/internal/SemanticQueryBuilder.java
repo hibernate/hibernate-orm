@@ -126,6 +126,9 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -300,7 +303,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	}
 
 	@Override
-	public SqmInsertSelectStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
+	public SqmInsertStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
 
 		final SqmRoot<?> root = new SqmRoot<>(
 				visitEntityName( ctx.rootEntity().entityName() ),
@@ -308,30 +311,65 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				creationContext.getNodeBuilder()
 		);
 
-		// for now we only support the INSERT-SELECT form
-		final SqmInsertSelectStatement<?> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
-		parameterCollector = insertStatement;
-		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
-				insertStatement,
-				this
-		);
+		if ( ctx.querySpec()!=null ) {
+			final SqmInsertSelectStatement<?> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
+			parameterCollector = insertStatement;
+			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
+					insertStatement,
+					this
+			);
 
-		processingStateStack.push( processingState );
-		processingState.getPathRegistry().register( root );
+			processingStateStack.push( processingState );
+			processingState.getPathRegistry().register( root );
 
-		try {
-			insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
+			try {
+				insertStatement.setSelectQuerySpec( visitQuerySpec( ctx.querySpec() ) );
 
-			for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
-				final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
-				// todo : validate each resolved stateField...
-				insertStatement.addInsertTargetStateField( stateField );
+				for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
+					final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
+					// todo : validate each resolved stateField...
+					insertStatement.addInsertTargetStateField( stateField );
+				}
+
+				return insertStatement;
+			}
+			finally {
+				processingStateStack.pop();
 			}
 
-			return insertStatement;
 		}
-		finally {
-			processingStateStack.pop();
+		else {
+			final SqmInsertValuesStatement<?> insertStatement = new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
+			parameterCollector = insertStatement;
+			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
+					insertStatement,
+					this
+			);
+
+			processingStateStack.push( processingState );
+			processingState.getPathRegistry().register( root );
+
+			try {
+				for ( HqlParser.ValuesContext values : ctx.valuesList().values() ) {
+					SqmValues sqmValues = new SqmValues();
+					for ( HqlParser.ExpressionContext expressionContext : values.expression() ) {
+						sqmValues.getExpressions().add( (SqmExpression) expressionContext.accept( this ) );
+					}
+					insertStatement.getValuesList().add( sqmValues );
+				}
+
+				for ( HqlParser.DotIdentifierSequenceContext stateFieldCtx : ctx.targetFieldsSpec().dotIdentifierSequence() ) {
+					final SqmPath stateField = (SqmPath) visitDotIdentifierSequence( stateFieldCtx );
+					// todo : validate each resolved stateField...
+					insertStatement.addInsertTargetStateField( stateField );
+				}
+
+				return insertStatement;
+			}
+			finally {
+				processingStateStack.pop();
+			}
+
 		}
 	}
 

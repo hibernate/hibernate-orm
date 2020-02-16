@@ -11,13 +11,14 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 
 /**
  * Implementation of InsertSelect.
  *
  * @author Steve Ebersole
  *
- * @deprecated (since 6.0) Use {@link org.hibernate.sql.ast.tree.insert.InsertSelectStatement} instead
+ * @deprecated (since 6.0) Use {@link InsertStatement} instead
  */
 @Deprecated
 public class InsertSelect {

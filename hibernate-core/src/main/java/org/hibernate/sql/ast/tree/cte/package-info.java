@@ -24,7 +24,7 @@
  * 			* select - `QuerySpec`
  * 			* delete - `DeleteStatement`
  * 			* update - `UpdateStatement`
- * 			* insert-select - `InsertSelectStatement
+ * 			* insert-select - `InsertStatement
  *
  * 	consumer:: querySpec | deleteStatement | updateStatement | insertSelectStatement
  *

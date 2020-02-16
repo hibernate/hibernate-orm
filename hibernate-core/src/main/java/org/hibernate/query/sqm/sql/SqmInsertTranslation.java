@@ -10,24 +10,24 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.insert.InsertStatement;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmInsertSelectTranslation {
-	private final InsertSelectStatement sqlAst;
+public class SqmInsertTranslation {
+	private final InsertStatement sqlAst;
 	private final Map<SqmParameter, List<JdbcParameter>> jdbcParamMap;
 
-	public SqmInsertSelectTranslation(
-			InsertSelectStatement sqlAst,
+	public SqmInsertTranslation(
+			InsertStatement sqlAst,
 			Map<SqmParameter, List<JdbcParameter>> jdbcParamMap) {
 		this.sqlAst = sqlAst;
 		this.jdbcParamMap = jdbcParamMap;
 	}
 
-	public InsertSelectStatement getSqlAst() {
+	public InsertStatement getSqlAst() {
 		return sqlAst;
 	}
 

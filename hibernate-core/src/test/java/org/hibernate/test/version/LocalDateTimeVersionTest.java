@@ -7,13 +7,16 @@
 package org.hibernate.test.version;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MySQL57Dialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -33,10 +36,12 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 	}
 
 	@Test
+	@RequiresDialect( MySQL57Dialect.class )
 	public void testInstantUsageAsVersion() {
 		Session session = openSession();
 		session.getTransaction().begin();
 		TheEntity e = new TheEntity( 1 );
+		e.setName( "original name" );
 		session.save( e );
 		session.getTransaction().commit();
 		session.close();
@@ -44,6 +49,9 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 		session = openSession();
 		session.getTransaction().begin();
 		e = session.byId( TheEntity.class ).load( 1 );
+		e.setName( "changed name" );
+		session.createQuery("SELECT e FROM TheEntity e").getResultList();
+		e.setName( "changed name again" );
 		assertThat( e.getTs(), notNullValue() );
 		session.getTransaction().commit();
 		session.close();
@@ -61,7 +69,8 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 	@Table(name="the_entity")
 	public static class TheEntity {
 		private Integer id;
-		private LocalDateTime ts;
+		private Date ts;
+		private String name;
 
 		public TheEntity() {
 		}
@@ -80,12 +89,20 @@ public class LocalDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCas
 		}
 
 		@Version
-		public LocalDateTime getTs() {
+		public Date getTs() {
 			return ts;
 		}
 
-		public void setTs(LocalDateTime ts) {
+		public void setTs(Date ts) {
 			this.ts = ts;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 }

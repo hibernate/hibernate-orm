@@ -157,20 +157,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( enversService, referencedEntityName );
-				boolean ignoreNotFound = false;
-				if ( !referencedEntity.isAudited() ) {
-					final String referencingEntityName = enversService.getEntitiesConfigurations().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
-					if ( referencingEntityName == null && primaryKey == null ) {
-						// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
-						// an embeddable in an element-collection
-						// todo: perhaps the mapper should account for this instead?
-						ignoreNotFound = true;
-					}
-					else {
-						ignoreNotFound = enversService.getEntitiesConfigurations().getRelationDescription( referencingEntityName, getPropertyData().getName() ).isIgnoreNotFound();
-					}
-				}
-				if ( ignoreNotFound ) {
+				if ( isIgnoreNotFound( enversService, referencedEntity, data, primaryKey ) ) {
 					// Eagerly loading referenced entity to silence potential (in case of proxy)
 					// EntityNotFoundException or ObjectNotFoundException. Assigning null reference.
 					value = ToOneEntityLoader.loadImmediate(
@@ -207,5 +194,26 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			String idPrefix2,
 			String prefix2) {
 		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
+	}
+
+	// todo: is referenced entity needed any longer?
+	private boolean isIgnoreNotFound(
+			EnversService enversService,
+			EntityInfo referencedEntity,
+			Map data,
+			Object primaryKey) {
+		final String referencingEntityName = enversService.getEntitiesConfigurations()
+				.getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+
+		if ( referencingEntityName == null && primaryKey == null ) {
+			// HHH-11215 - Fix for NPE when Embeddable with ManyToOne inside ElementCollection
+			// an embeddable in an element-collection
+			// todo: perhaps the mapper should account for this instead?
+			return true;
+		}
+
+		return enversService.getEntitiesConfigurations()
+				.getRelationDescription( referencingEntityName, getPropertyData().getName() )
+				.isIgnoreNotFound();
 	}
 }

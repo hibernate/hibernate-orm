@@ -15,6 +15,7 @@ import jakarta.persistence.EnumType;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Value;
@@ -36,6 +37,7 @@ public class PropertyAuditingData {
 	private String accessType;
 	private final List<AuditOverrideData> auditJoinTableOverrides = new ArrayList<>( 0 );
 	private RelationTargetAuditMode relationTargetAuditMode;
+	private RelationTargetNotFoundAction relationTargetNotFoundAction;
 	private String auditMappedBy;
 	private String relationMappedBy;
 	private String positionMappedBy;
@@ -68,6 +70,7 @@ public class PropertyAuditingData {
 				name,
 				accessType,
 				RelationTargetAuditMode.AUDITED,
+				RelationTargetNotFoundAction.DEFAULT,
 				null,
 				null,
 				forceInsertable,
@@ -81,6 +84,7 @@ public class PropertyAuditingData {
 	 *
 	 * @param name the property name
 	 * @param accessType the access type
+	 * @param relationTargetNotFoundAction the relation target not found action
 	 * @param forceInsertable whether the property is forced insertable
  	 * @param synthetic whether the property is a synthetic, non-logic column-based property
 	 * @param value the mapping model's value
@@ -88,6 +92,7 @@ public class PropertyAuditingData {
 	public PropertyAuditingData(
 			String name,
 			String accessType,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
 			boolean forceInsertable,
 			boolean synthetic,
 			Value value) {
@@ -95,6 +100,7 @@ public class PropertyAuditingData {
 				name,
 				accessType,
 				RelationTargetAuditMode.AUDITED,
+				relationTargetNotFoundAction,
 				null,
 				null,
 				forceInsertable,
@@ -107,6 +113,7 @@ public class PropertyAuditingData {
 			String name,
 			String accessType,
 			RelationTargetAuditMode relationTargetAuditMode,
+			RelationTargetNotFoundAction relationTargetNotFoundAction,
 			String auditMappedBy,
 			String positionMappedBy,
 			boolean forceInsertable,
@@ -116,6 +123,7 @@ public class PropertyAuditingData {
 		this.beanName = name;
 		this.accessType = accessType;
 		this.relationTargetAuditMode = relationTargetAuditMode;
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 		this.auditMappedBy = auditMappedBy;
 		this.positionMappedBy = positionMappedBy;
 		this.forceInsertable = forceInsertable;
@@ -283,6 +291,14 @@ public class PropertyAuditingData {
 	 */
 	public void setRelationTargetAuditMode(RelationTargetAuditMode relationTargetAuditMode) {
 		this.relationTargetAuditMode = relationTargetAuditMode;
+	}
+
+	public RelationTargetNotFoundAction getRelationTargetNotFoundAction() {
+		return relationTargetNotFoundAction;
+	}
+
+	public void setRelationTargetNotFoundAction(RelationTargetNotFoundAction relationTargetNotFoundAction) {
+		this.relationTargetNotFoundAction = relationTargetNotFoundAction;
 	}
 
 	public boolean isSynthetic() {

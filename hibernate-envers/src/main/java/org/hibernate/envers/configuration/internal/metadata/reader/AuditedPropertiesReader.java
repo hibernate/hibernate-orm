@@ -34,6 +34,7 @@ import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.internal.ModifiedColumnNameResolver;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
@@ -594,6 +595,7 @@ public class AuditedPropertiesReader {
 		}
 		if ( aud != null ) {
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
+			propertyData.setRelationTargetNotFoundAction( getRelationNotFoundAction( property, allClassAudited ) );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
 			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
@@ -735,10 +737,40 @@ public class AuditedPropertiesReader {
 		return overriddenAuditedClasses.contains( clazz );
 	}
 
+	private RelationTargetNotFoundAction getRelationNotFoundAction(XProperty property, Audited classAudited) {
+		final Audited propertyAudited = property.getAnnotation( Audited.class );
+
+		// class isn't annotated, check property
+		if ( classAudited == null ) {
+			if ( propertyAudited == null ) {
+				// both class and property are not annotated, use default behavior
+				return RelationTargetNotFoundAction.DEFAULT;
+			}
+			// Property is annotated use its value
+			return propertyAudited.targetNotFoundAction();
+		}
+
+		// if class is annotated, take its value by default
+		RelationTargetNotFoundAction action = classAudited.targetNotFoundAction();
+		if ( propertyAudited != null ) {
+			// both places have audited, use the property value only if it is not DEFAULT
+			if ( !propertyAudited.targetNotFoundAction().equals( RelationTargetNotFoundAction.DEFAULT ) ) {
+				action = propertyAudited.targetNotFoundAction();
+			}
+		}
+
+		return action;
+	}
+
 	private static final Audited DEFAULT_AUDITED = new Audited() {
 		@Override
 		public RelationTargetAuditMode targetAuditMode() {
 			return RelationTargetAuditMode.AUDITED;
+		}
+
+		@Override
+		public RelationTargetNotFoundAction targetNotFoundAction() {
+			return RelationTargetNotFoundAction.DEFAULT;
 		}
 
 		@Override

@@ -71,6 +71,7 @@ public class Configuration {
 	private final boolean modifiedFlagsEnabled;
 	private final boolean modifiedFlagsDefined;
 	private final boolean findByRevisionExactMatch;
+	private final boolean globalLegacyRelationTargetNotFound;
 
 	private final boolean trackEntitiesChanged;
 	private boolean trackEntitiesOverride;
@@ -128,6 +129,7 @@ public class Configuration {
 		modifiedFlagsEnabled = configProps.getBoolean( EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, false );
 
 		findByRevisionExactMatch = configProps.getBoolean( EnversSettings.FIND_BY_REVISION_EXACT_MATCH, false );
+		globalLegacyRelationTargetNotFound = configProps.getBoolean( EnversSettings.GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG, true );
 
 		auditTablePrefix = configProps.getString( EnversSettings.AUDIT_TABLE_PREFIX, DEFAULT_PREFIX );
 		auditTableSuffix = configProps.getString( EnversSettings.AUDIT_TABLE_SUFFIX, DEFAULT_SUFFIX );
@@ -224,6 +226,10 @@ public class Configuration {
 
 	public boolean isFindByRevisionExactMatch() {
 		return findByRevisionExactMatch;
+	}
+
+	public boolean isGlobalLegacyRelationTargetNotFound() {
+		return globalLegacyRelationTargetNotFound;
 	}
 
 	public boolean isRevisionEndTimestampEnabled() {

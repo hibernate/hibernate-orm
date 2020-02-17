@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
@@ -152,6 +153,7 @@ public class ClassesAuditingData {
 				final PropertyAuditingData auditingData = new PropertyAuditingData(
 						indexColumnName,
 						propertyAccessorName,
+						RelationTargetNotFoundAction.ERROR,
 						false,
 						true,
 						indexValue
@@ -170,6 +172,7 @@ public class ClassesAuditingData {
 					final PropertyAuditingData propertyAuditingData = new PropertyAuditingData(
 							indexColumnName,
 							propertyAccessorName,
+							RelationTargetNotFoundAction.ERROR,
 							true,
 							true,
 							indexValue

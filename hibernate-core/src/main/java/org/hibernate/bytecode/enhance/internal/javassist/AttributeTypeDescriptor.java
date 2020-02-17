@@ -52,7 +52,7 @@ public abstract class AttributeTypeDescriptor {
 					? "super." + inheritanceMetadata.getReaderName() + "()"
 					: "this." + currentValue.getName();
 
-			fetchValeBeforeComparison( context, managedCtClass, currentValue, builder );
+			fetchValueBeforeComparisonIfNeeded( context, managedCtClass, currentValue, builder );
 
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
 				// primitives || enums
@@ -83,21 +83,31 @@ public abstract class AttributeTypeDescriptor {
 		return builder.toString();
 	}
 
-	private void fetchValeBeforeComparison(JavassistEnhancementContext context, CtClass managedCtClass, CtField currentValue, StringBuilder builder) throws NotFoundException {
-		if ( PersistentAttributesHelper.isAssignable(managedCtClass, PersistentAttributeInterceptable.class.getName() )
-				&& context.isLazyLoadable(currentValue)) {
-			// should fetch the value by calling the GET method (if not loaded yet) , in order to initialize the value before the comparison,
-			// otherwise the value = null
+	private void fetchValueBeforeComparisonIfNeeded(
+			JavassistEnhancementContext context,
+			CtClass managedCtClass,
+			CtField currentValue,
+			StringBuilder builder) {
+		if ( PersistentAttributesHelper.isAssignable( managedCtClass, PersistentAttributeInterceptable.class.getName() )
+				&& context.isLazyLoadable( currentValue ) ) {
+			// Should fetch the value by calling the GET method (if not loaded yet) , in order to initialize the value before the comparison,
+			// otherwise the original value = null and the dirty checking is wrong
 			builder.append( String.format(
-					" if( %1$s != null " +
+					" if( $1 == null " +
+							" && %1$s != null " +
 							" &&  %1$s instanceof %2$s " +
-							" &&  !((%2$s) %1$s).isAttributeLoaded(\"%3$s\") " +
-							" &&  $1 == null) ",
+							" &&  !((%2$s) %1$s).isAttributeLoaded(\"%3$s\") ) ",
 					EnhancerConstants.INTERCEPTOR_FIELD_NAME,
 					LazyAttributeLoadingInterceptor.class.getName(),
-					currentValue.getName() )
+					currentValue.getName()
+							)
 			);
-			builder.append( String.format("  {  get%s();  }", currentValue.getName().substring(0, 1).toUpperCase() + currentValue.getName().substring(1)) );
+			builder.append( String.format(
+					"  {  get%s();  }",
+					currentValue.getName()
+							.substring( 0, 1 )
+							.toUpperCase() + currentValue.getName().substring( 1 )
+			) );
 		}
 	}
 

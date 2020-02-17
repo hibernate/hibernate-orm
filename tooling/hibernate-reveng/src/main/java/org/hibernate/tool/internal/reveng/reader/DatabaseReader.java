@@ -17,7 +17,6 @@ import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
-import org.hibernate.tool.internal.reveng.IndexProcessor;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {
@@ -67,13 +66,6 @@ public class DatabaseReader {
 						revengMetadataCollector, 
 						properties);
 				foundTables.putAll(tableCollector.processTables(selection));
-			}
-
-		
-			for (Table table : foundTables.keySet()) {
-				if (foundTables.get(table)) {
-					IndexProcessor.processIndices(metadataDialect, getDefaultSchema(), getDefaultCatalog(), table);
-				}
 			}
 
 			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector);

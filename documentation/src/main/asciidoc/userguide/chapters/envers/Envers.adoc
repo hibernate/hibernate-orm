@@ -321,6 +321,12 @@ This behavior is great when you want to find the snapshot of a non-related entit
 The new (optional) behavior when this option is enabled forces the query to perform an exact-match instead.
 In order for these methods to return a non-`null` value, a revision entry must exist for the entity with the specified primary key and revision number; otherwise the result will be `null`.
 
+`*org.hibernate.envers.global_relation_not_found_legacy_flag*` (default: `true` )::
+Globally defines whether legacy relation not-found behavior should be used or not.
++
+By specifying `true`, any `EntityNotFoundException` errors will be thrown unless the `Audited` annotation explicitly specifies to _ignore_ not-found relations.
+By specifying `false`, any `EntityNotFoundException` will be be ignored unless the `Audited` annotation explicitly specifies to _raise the error_ rather than silently ignore not-found relations.
+
 [IMPORTANT]
 ====
 The following configuration options have been added recently and should be regarded as experimental:
@@ -332,6 +338,7 @@ The following configuration options have been added recently and should be regar
 .  `org.hibernate.envers.original_id_prop_name`
 .  `org.hibernate.envers.find_by_revision_exact_match`
 .  `org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric`
+.  `org.hibernate.envers.global_relation_not_found_legacy_flag`
 ====
 
 [[envers-additional-mappings]]

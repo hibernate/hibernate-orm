@@ -11,6 +11,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.Incubating;
+
 /**
  * When applied to a class, indicates that all of its properties should be audited.
  * When applied to a field, indicates that this field should be audited.
@@ -19,6 +21,7 @@ import java.lang.annotation.Target;
  * @author Tomasz Bech
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
@@ -29,6 +32,23 @@ public @interface Audited {
 	 * This is useful for dictionary-like entities, which don't change and don't need to be audited.
 	 */
 	RelationTargetAuditMode targetAuditMode() default RelationTargetAuditMode.AUDITED;
+
+	/**
+	 * Specifies if the entity that is the relation target isn't found, how should the system react.
+	 *
+	 * The default is to use the behavior configured based on the system property:
+	 * {@link org.hibernate.envers.configuration.EnversSettings#GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG}.
+	 *
+	 * When the configuration property is {@code true}, this is to use the legacy behavior which
+	 * implies that the system should throw the {@code EntityNotFoundException} errors unless
+	 * the user has explicitly specified the value {@link RelationTargetNotFoundAction#IGNORE}.
+	 *
+	 * When the configuration property is {@code false}, this is to use the new behavior which
+	 * implies that the system should ignore the {@code EntityNotFoundException} errors unless
+	 * the user has explicitly specified the value {@link RelationTargetNotFoundAction#ERROR}.
+	 */
+	@Incubating
+	RelationTargetNotFoundAction targetNotFoundAction() default RelationTargetNotFoundAction.DEFAULT;
 
 	/**
 	 * Specifies the superclasses for which properties should be audited, even if the superclasses are not

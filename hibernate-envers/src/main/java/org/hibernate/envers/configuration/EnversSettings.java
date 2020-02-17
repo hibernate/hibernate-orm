@@ -172,4 +172,15 @@ public interface EnversSettings {
 	 * @since 4.3.0
 	 */
 	String CASCADE_DELETE_REVISION = "org.hibernate.envers.cascade_delete_revision";
+
+	/**
+	 * Globally defines whether legacy relation not-found behavior should be used or not.
+	 * Defaults to {@code true}.
+	 *
+	 * By specifying {@code true}, any {@code EntityNotFoundException} will be thrown unless the containing
+	 * class or property explicitly specifies that use case to be ignored.  Conversely, when specifying the
+	 * value {@code false}, the inverse applies and requires explicitly specifying the use case as error so
+	 * that the exception is thrown.
+	 */
+	String GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG = "org.hibernate.envers.global_relation_not_found_legacy_flag";
 }

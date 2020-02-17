@@ -9,6 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -63,7 +64,7 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 				referencedEntityName,
 				relMapper,
 				insertable,
-				MappingTools.ignoreNotFound( value )
+				shouldIgnoreNotFoundRelation( propertyAuditingData, value )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -185,5 +186,17 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 						getMetadataBuildingContext().getServiceRegistry()
 				)
 		);
+	}
+
+	private boolean shouldIgnoreNotFoundRelation(PropertyAuditingData propertyAuditingData, Value value) {
+		final RelationTargetNotFoundAction action = propertyAuditingData.getRelationTargetNotFoundAction();
+		if ( getMetadataBuildingContext().getConfiguration().isGlobalLegacyRelationTargetNotFound() ) {
+			// When legacy is enabled, the user must explicitly specify IGNORE for it to be ignored.
+			return MappingTools.ignoreNotFound( value ) || RelationTargetNotFoundAction.IGNORE.equals( action );
+		}
+		else {
+			// When non-legacy is enabled, the situation is ignored when not ERROR
+			return !RelationTargetNotFoundAction.ERROR.equals( action );
+		}
 	}
 }

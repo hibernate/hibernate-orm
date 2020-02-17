@@ -11,19 +11,28 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, CteConsumer {
+public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, CteConsumer, DomainResultProducer {
 	private final boolean isRoot;
 
 	private final FromClause fromClause;
@@ -112,6 +121,41 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 
 	@Override
 	public MappingModelExpressable getExpressionType() {
-		return null;
+		SqlSelection first = selectClause.getSqlSelections().get(0);
+		return ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType();
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		SqlSelection first = selectClause.getSqlSelections().get(0);
+		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
+		JavaTypeDescriptor descriptor = ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType()
+				.getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
+		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				descriptor,
+				typeConfiguration
+		);
+	}
+
+	@Override
+	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		SqlSelection first = selectClause.getSqlSelections().get(0);
+		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
+		JavaTypeDescriptor descriptor = ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType()
+				.getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
+
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+				this,
+				descriptor,
+				typeConfiguration
+		);
+
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				descriptor
+		);
 	}
 }

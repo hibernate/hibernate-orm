@@ -525,7 +525,9 @@ public abstract class BaseSqmToSqlAstConverter
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
 		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
 
-		assert ! fromClauseIndex.isResolved( sqmRoot );
+		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
+			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
+		}
 
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
 

@@ -103,4 +103,13 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 				executionContext.getSession()
 		);
 	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				type.getBasicType().getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+		);
+	}
 }

@@ -27,6 +27,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Nicolas Doroskevich
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class GlobalConfiguration {
 	private final EnversService enversService;
@@ -60,6 +61,9 @@ public class GlobalConfiguration {
 
 	// Suffix to be used for modified flags columns
 	private String modifiedFlagSuffix;
+
+	// Indicates that RelationTargetNotFoundAction behavior uses new behavior (the default) when true
+	private boolean globalLegacyRelationTargetNotFound;
 
 	// Use revision entity with native id generator
 	private final boolean useRevisionEntityWithNativeId;
@@ -143,6 +147,12 @@ public class GlobalConfiguration {
 				EnversSettings.MODIFIED_FLAG_SUFFIX,
 				properties,
 				"_MOD"
+		);
+
+		globalLegacyRelationTargetNotFound = ConfigurationHelper.getBoolean(
+				EnversSettings.GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG,
+				properties,
+				true
 		);
 
 		final String revisionListenerClassName = (String) properties.get( EnversSettings.REVISION_LISTENER );
@@ -258,5 +268,9 @@ public class GlobalConfiguration {
 
 	public ModifiedColumnNamingStrategy getModifiedColumnNamingStrategy() {
 		return modifiedColumnNamingStrategy;
+	}
+
+	public boolean isGlobalLegacyRelationTargetNotFound() {
+		return globalLegacyRelationTargetNotFound;
 	}
 }

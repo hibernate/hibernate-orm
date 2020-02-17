@@ -10,6 +10,7 @@ package org.hibernate.envers.configuration;
  * Configuration property names.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public interface EnversSettings {
 	/**
@@ -142,4 +143,17 @@ public interface EnversSettings {
 	 * @since 5.4.7
 	 */
 	String MODIFIED_COLUMN_NAMING_STRATEGY = "org.hibernate.envers.modified_column_naming_strategy";
+
+	/**
+	 * Globally defines whether legacy relation not-found behavior should be used or not.
+	 * Defaults to {@code true}.
+	 *
+	 * By specifying {@code true}, any {@code EntityNotFoundException} will be thrown unless the containing
+	 * class or property explicitly specifies that use case to be ignored.  Conversely, when specifying the
+	 * value {@code false}, the inverse applies an requires explicitly specifying the use case as error so
+	 * that the exception is thrown.
+	 *
+	 * @since 5.4.13
+	 */
+	String GLOBAL_RELATION_NOT_FOUND_LEGACY_FLAG = "org.hibernate.envers.global_relation_not_found_legacy_flag";
 }

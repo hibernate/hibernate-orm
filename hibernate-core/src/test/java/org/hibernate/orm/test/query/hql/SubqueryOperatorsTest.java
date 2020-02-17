@@ -53,6 +53,33 @@ public class SubqueryOperatorsTest extends SessionFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	public void testSubqueryInVariousClauses() {
+		inTransaction(
+				session -> {
+					List res0 = session.createQuery(
+							"select (select 1) as one, (select 'foo') as foo order by one, foo, (select 2)" )
+							.list();
+					assertThat( res0.size(), is( 1 ) );
+					List res1 = session.createQuery(
+							"select (select 1) as one, (select 'foo') as foo from SimpleEntity o order by one, foo, (select 2)" )
+							.list();
+					assertThat( res1.size(), is( 2 ) );
+					List res2 = session.createQuery(
+							"select (select x.id from SimpleEntity x where x.id = o.id) as xid from SimpleEntity o order by xid" )
+							.list();
+					assertThat( res2.size(), is( 2 ) );
+					List res3 = session.createQuery(
+							"from SimpleEntity o where o.someString = (select 'aaa') and o.id >= (select 0)" )
+							.list();
+					assertThat( res3.size(), is( 1 ) );
+					List res4 = session.createQuery(
+							"from SimpleEntity o where o.id = (select y.id from SimpleEntity y where y.id = o.id)" )
+							.list();
+					assertThat( res4.size(), is( 2 ) );
+				} );
+	}
+
+	@Test
 	public void testExists() {
 		inTransaction(
 				session -> {

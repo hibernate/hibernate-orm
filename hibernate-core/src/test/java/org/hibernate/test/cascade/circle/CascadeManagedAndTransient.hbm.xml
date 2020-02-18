@@ -12,7 +12,7 @@
     <class name="Route" table="HB_Route">
 
         <id name="routeID" type="long"><generator class="native"/></id>
-        <version name="version" column="VERS" type="long" />
+        <!--<version name="version" column="VERS" type="long" />-->
 
         <property name="name" type="string" not-null="true"/>
 
@@ -29,7 +29,6 @@
     <class name="Tour" table="HB_Tour">
 
         <id name="tourID" type="long"><generator class="native"/></id>
-        <version name="version" column="VERS" type="long" />
 
         <property name="name" type="string" not-null="true"/>
 
@@ -42,7 +41,7 @@
     <class name="Transport" table="HB_Transport">
 
         <id name="transportID" type="long"><generator class="native"/></id>
-        <version name="version" column="VERS" type="long" />
+        <!--<version name="version" column="VERS" type="long" />-->
 
         <property name="name" type="string" not-null="true"/>
 
@@ -70,7 +69,7 @@
 
     <class name="Vehicle" table="HB_Vehicle">
         <id name="vehicleID" type="long"><generator class="native"/></id>
-        <version name="version" column="VERS" type="long" />
+        <!--<version name="version" column="VERS" type="long" />-->
 
         <property name="name"/>
         <set name="transports" inverse="false" lazy="true" cascade="merge,refresh,persist,save-update">
@@ -89,7 +88,7 @@
     <class name="Node" table="HB_Node">
 
         <id name="nodeID" type="long"><generator class="native"/></id>
-        <version name="version" column="VERS" type="long" />
+        <!--<version name="version" column="VERS" type="long" />-->
 
         <property name="name" type="string" not-null="true"/>
 

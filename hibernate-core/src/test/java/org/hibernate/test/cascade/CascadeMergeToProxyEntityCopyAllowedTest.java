@@ -161,7 +161,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 		@Column(name = "id")
 		protected Long objectID = INVALID_OBJECT_ID;
 
-		@Version
+		//@Version
 		private int version;
 
 		@Column(nullable = false, unique = true, length = 36)

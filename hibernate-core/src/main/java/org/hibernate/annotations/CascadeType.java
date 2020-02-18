@@ -14,34 +14,42 @@ public enum CascadeType {
 	 * Includes all types listed here.
 	 */
 	ALL,
+
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#PERSIST}.
 	 */
 	PERSIST,
+
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#MERGE}.
 	 */
 	MERGE,
+
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#REMOVE}.
 	 */
 	REMOVE,
+
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#REFRESH}.
 	 */
 	REFRESH,
+
 	/**
 	 * Corresponds to the Hibernate native DELETE action.
 	 */
 	DELETE,
+
 	/**
 	 * Corresponds to the Hibernate native SAVE_UPDATE (direct reattachment) action.
 	 */
 	SAVE_UPDATE,
+
 	/**
 	 * Corresponds to the Hibernate native REPLICATE action.
 	 */
 	REPLICATE,
+
 	/**
 	 * Hibernate originally handled orphan removal as a specialized cascade.
 	 *
@@ -49,10 +57,12 @@ public enum CascadeType {
 	 */
 	@Deprecated
 	DELETE_ORPHAN,
+
 	/**
 	 * Corresponds to the Hibernate native LOCK action.
 	 */
 	LOCK,
+
 	/**
 	 * JPA originally planned on calling DETACH EVICT.
 	 *
@@ -60,6 +70,7 @@ public enum CascadeType {
 	 */
 	@Deprecated
 	EVICT,
+
 	/**
 	 * Corresponds to {@link javax.persistence.CascadeType#DETACH}.
 	 */

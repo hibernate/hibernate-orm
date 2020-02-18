@@ -6,8 +6,7 @@
  */
 
 // $Id: Job.java 6663 2005-05-03 20:55:31Z steveebersole $
-package org.hibernate.test.cascade;
-
+package org.hibernate.orm.test.cascade;
 
 /**
  * Implementation of Job.
@@ -21,9 +20,9 @@ public class Job {
 	private int status;
 
 	/** GCLIB constructor */
-	public Job() {}
+	Job() {}
 
-	public Job(JobBatch batch) {
+	protected Job(JobBatch batch) {
 		this.batch = batch;
 	}
 

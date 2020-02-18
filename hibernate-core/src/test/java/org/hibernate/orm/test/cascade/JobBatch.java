@@ -6,7 +6,8 @@
  */
 
 // $Id: JobBatch.java 6663 2005-05-03 20:55:31Z steveebersole $
-package org.hibernate.test.cascade;
+package org.hibernate.orm.test.cascade;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;

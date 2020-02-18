@@ -9,17 +9,15 @@
 
 <hibernate-mapping package="org.hibernate.test.cascade">
 
-	<class name="JobBatch" table="T_JOB_BATCH">
-		<id name="id" column="BATCH_ID">
+	<class name="Job" table="T_JOB">
+		<id name="id" column="JOB_ID">
 			<generator class="native"/>
 		</id>
 
-		<property name="batchDate" type="timestamp" column="BATCH_DATE" not-null="true"/>
+		<many-to-one name="batch" class="JobBatch" cascade="none" column="BATCH_ID"/>
 
-		<set name="jobs" inverse="true" fetch="select" lazy="true" cascade="all">
-			<key column="BATCH_ID"/>
-			<one-to-many class="Job"/>
-		</set>
+		<property name="status" type="int" column="JOB_STATUS" not-null="true"/>
+		<property name="processingInstructions" type="string" column="PI" not-null="true"/>
 
 	</class>
 

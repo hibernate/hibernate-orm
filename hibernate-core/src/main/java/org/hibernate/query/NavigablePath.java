@@ -24,8 +24,6 @@ public class NavigablePath implements DotIdentifierSequence {
 	private final String fullPath;
 	private final String identifierForTableGroup;
 
-	private final int hashCode;
-
 	public NavigablePath(NavigablePath parent, String navigableName) {
 		this.parent = parent;
 
@@ -51,9 +49,6 @@ public class NavigablePath implements DotIdentifierSequence {
 				identifierForTableGroup = navigableName;
 			}
 		}
-
-
-		this.hashCode = fullPath.hashCode();
 	}
 
 	public NavigablePath(String localName) {
@@ -64,9 +59,6 @@ public class NavigablePath implements DotIdentifierSequence {
 		this.parent = null;
 		this.fullPath = alias == null ? rootName : rootName + "(" + alias + ")";
 		identifierForTableGroup = rootName;
-		;
-
-		this.hashCode = fullPath.hashCode();
 	}
 
 	public NavigablePath(NavigablePath parent, String property, String alias) {
@@ -98,8 +90,6 @@ public class NavigablePath implements DotIdentifierSequence {
 				this.identifierForTableGroup = property;
 			}
 		}
-
-		this.hashCode = fullPath.hashCode();
 	}
 
 	public NavigablePath() {
@@ -140,7 +130,7 @@ public class NavigablePath implements DotIdentifierSequence {
 
 	@Override
 	public int hashCode() {
-		return hashCode;
+		return fullPath.hashCode();
 	}
 
 	@Override

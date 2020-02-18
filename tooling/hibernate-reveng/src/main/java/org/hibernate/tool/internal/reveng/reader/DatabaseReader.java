@@ -55,22 +55,15 @@ public class DatabaseReader {
 	public void readDatabaseSchema(RevengMetadataCollector revengMetadataCollector) {
 		try {
 			metadataDialect.configure(provider);
-
-			HashMap<Table, Boolean> foundTables = new HashMap<Table, Boolean>();
-
+			TableCollector tableCollector = TableCollector.create(
+					metadataDialect, 
+					revengStrategy, 
+					revengMetadataCollector, 
+					properties);
 			for (Iterator<SchemaSelection> iter = getSchemaSelections().iterator(); iter.hasNext();) {
-				SchemaSelection selection = iter.next();
-				TableCollector tableCollector = TableCollector.create(
-						metadataDialect, 
-						revengStrategy, 
-						revengMetadataCollector, 
-						properties);
-				foundTables.putAll(tableCollector.processTables(selection));
+				tableCollector.processTables(iter.next());
 			}
-
-			Map<String, List<ForeignKey>> oneToManyCandidates = resolveForeignKeys(revengMetadataCollector);
-
-			revengMetadataCollector.setOneToManyCandidates(oneToManyCandidates);
+			revengMetadataCollector.setOneToManyCandidates(resolveForeignKeys(revengMetadataCollector));
 
 		} finally {
 			metadataDialect.close();

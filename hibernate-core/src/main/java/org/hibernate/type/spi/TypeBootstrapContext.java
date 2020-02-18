@@ -19,15 +19,6 @@ import java.util.Map;
  *
  * @since 5.4
  */
-public class TypeBootstrapContext {
-
-	private final Map<String, Object> configurationSettings;
-
-	public TypeBootstrapContext(Map<String, Object> configurationSettings) {
-		this.configurationSettings = configurationSettings;
-	}
-
-	public Map<String, Object> getConfigurationSettings() {
-		return configurationSettings;
-	}
+public interface TypeBootstrapContext {
+	Map<String, Object> getConfigurationSettings();
 }

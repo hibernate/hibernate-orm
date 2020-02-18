@@ -16,7 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.spi.TypeBootstrapContext;
@@ -25,8 +24,6 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
@@ -42,9 +39,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  */
 @Deprecated
 @SuppressWarnings({"unchecked"})
-public final class TypeFactory implements Serializable {
-	private static final CoreMessageLogger LOG = messageLogger( TypeFactory.class );
-
+public final class TypeFactory implements Serializable, TypeBootstrapContext {
 	/**
 	 * @deprecated Use {@link TypeConfiguration}/{@link TypeConfiguration.Scope} instead
 	 */
@@ -59,6 +54,11 @@ public final class TypeFactory implements Serializable {
 	public TypeFactory(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 		this.typeScope = (TypeScope) () -> typeConfiguration;
+	}
+
+	@Override
+	public Map<String, Object> getConfigurationSettings() {
+		return typeConfiguration.getServiceRegistry().getService( ConfigurationService.class ).getSettings();
 	}
 
 	public SessionFactoryImplementor resolveSessionFactory() {
@@ -92,25 +92,21 @@ public final class TypeFactory implements Serializable {
 
 	public Type type(Class<Type> typeClass, Properties parameters) {
 		try {
-			Type type;
+			final Type type;
 
-			Constructor<Type> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
+			final Constructor<Type> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
 					typeClass,
 					TypeBootstrapContext.class
 			);
 			if ( bootstrapContextAwareTypeConstructor != null ) {
-				ConfigurationService configurationService = typeConfiguration.getServiceRegistry().getService(
-						ConfigurationService.class );
-				Map<String, Object> configurationSettings = configurationService.getSettings();
-				type = bootstrapContextAwareTypeConstructor.newInstance( new TypeBootstrapContext(
-						configurationSettings
-				) );
+				type = bootstrapContextAwareTypeConstructor.newInstance( this );
 			}
 			else {
 				type = typeClass.newInstance();
 			}
 
 			injectParameters( type, parameters );
+
 			return type;
 		}
 		catch (Exception e) {
@@ -143,7 +139,6 @@ public final class TypeFactory implements Serializable {
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
 	@Deprecated
-	@SuppressWarnings({"JavaDoc"})
 	public static CompositeCustomType customComponent(
 			Class<CompositeUserType> typeClass,
 			Properties parameters,

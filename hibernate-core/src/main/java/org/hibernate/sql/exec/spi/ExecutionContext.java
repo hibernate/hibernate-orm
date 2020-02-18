@@ -45,6 +45,10 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	default Object getEntityId() {
+		return null;
+	}
+
 	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 		// by default do nothing
 	}

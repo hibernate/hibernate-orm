@@ -34,7 +34,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -63,11 +62,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 
 		final int numberOfIds = ArrayHelper.countNonNull( batchIds );
 		if ( numberOfIds <= 1 ) {
-			if ( singleIdLoader == null ) {
-				singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( getLoadable(), session.getFactory() );
-				singleIdLoader.prepare();
-			}
-
+			initializeSingleIdLoaderIfNeeded( session );
 
 			final T result = singleIdLoader.load( pkValue, lockOptions, session );
 			if ( result == null ) {
@@ -187,6 +182,14 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 			Object entityInstance,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
+		initializeSingleIdLoaderIfNeeded( session );
 		return singleIdLoader.load( pkValue, entityInstance, lockOptions, session );
+	}
+
+	private void initializeSingleIdLoaderIfNeeded(SharedSessionContractImplementor session) {
+		if ( singleIdLoader == null ) {
+			singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( getLoadable(), session.getFactory() );
+			singleIdLoader.prepare();
+		}
 	}
 }

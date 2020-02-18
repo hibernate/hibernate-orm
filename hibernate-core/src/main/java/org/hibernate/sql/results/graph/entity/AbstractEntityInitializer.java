@@ -398,8 +398,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			if ( isEntityReturn() ) {
 				final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalId();
-				if ( requestedEntityId != null && requestedEntityId.equals( entityKey.getIdentifier() ) ) {
-					entityInstance = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalObject();
+				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions().getEffectiveOptionalObject();
+				if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals( entityKey.getIdentifier() ) ) {
+					entityInstance = optionalEntityInstance;
 				}
 			}
 		}

@@ -23,7 +23,8 @@ public interface SingleIdEntityLoader<T> extends SingleEntityLoader<T> {
 
 	/**
 	 * Load by primary key value, populating the passed entity instance.  Used to initialize an uninitialized
-	 * bytecode-proxy.  The passed instance is the enhanced proxy
+	 * bytecode-proxy or {@link org.hibernate.event.spi.LoadEvent} handling.
+	 * The passed instance is the enhanced proxy or the entity to be loaded.
 	 */
 	T load(Object pkValue, Object entityInstance, LockOptions lockOptions, SharedSessionContractImplementor session);
 

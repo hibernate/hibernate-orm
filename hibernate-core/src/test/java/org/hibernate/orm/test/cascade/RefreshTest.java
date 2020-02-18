@@ -6,20 +6,30 @@
  */
 package org.hibernate.orm.test.cascade;
 
-import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.Date;
-import java.util.Iterator;
-
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.engine.spi.SessionImplementor;
-
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.Assert.assertEquals;
 
 /**
  * Implementation of RefreshTest.
@@ -27,61 +37,113 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/Job.hbm.xml",
-				"org/hibernate/orm/test/cascade/JobBatch.hbm.xml"
-		}
+	annotatedClasses = {
+		RefreshTest.Job.class,
+		RefreshTest.JobBatch.class
+	}
 )
 @SessionFactory
-@FailureExpected( reason = "This should be fixed by Nathan PR")
 public class RefreshTest {
 
-	@Test
-	public void testRefreshCascade(SessionFactoryScope scope) {
+	private JobBatch batch;
+
+	@BeforeEach
+	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					JobBatch batch = new JobBatch( new Date() );
-					batch.createJob().setProcessingInstructions( "Just do it!" );
-					batch.createJob().setProcessingInstructions( "I know you can do it!" );
+			session -> {
+				batch = new JobBatch( new Date() );
+				batch.createJob().processingInstructions = "Just do it!";
+				batch.createJob().processingInstructions = "I know you can do it!";
 
-					// write the stuff to the database; at this stage all job.status values are zero
-					session.persist( batch );
-					session.flush();
+				// write the stuff to the database; at this stage all job.status values are zero
+				session.save( batch );
+			}
+		);
 
-					// behind the session's back, let's modify the statuses
-					updateStatuses( session );
+		// behind the session's back, let's modify the statuses to one
+		scope.inSession( this::updateStatuses );
+	}
 
-					// Now lets refresh the persistent batch, and see if the refresh cascaded to the jobs collection elements
-					session.refresh( batch );
-
-					Iterator itr = batch.getJobs().iterator();
-					while ( itr.hasNext() ) {
-						Job job = (Job) itr.next();
-						assertEquals( 1, job.getStatus(), "Jobs not refreshed!" );
-					}
-				}
+	@Test
+	void testRefreshCascade(SessionFactoryScope scope) {
+		scope.inTransaction(
+			session -> {
+				session.refresh( batch );
+				batch.jobs.forEach( job -> assertEquals( "Jobs not refreshed!", 1, job.status ) );
+			}
 		);
 	}
 
 	private void updateStatuses(final SessionImplementor session) {
 		session.doWork(
-				connection -> {
-					PreparedStatement stmnt = null;
-					try {
-						stmnt = session.getJdbcCoordinator().getStatementPreparer().prepareStatement(
-								"UPDATE T_JOB SET JOB_STATUS = 1" );
-						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( stmnt );
-					}
-					finally {
-						if ( stmnt != null ) {
-							try {
-								session.getJdbcCoordinator().getResourceRegistry().release( stmnt );
-							}
-							catch (Throwable ignore) {
-							}
+			connection -> {
+				Statement stmnt = null;
+				try {
+					stmnt = session.getJdbcCoordinator().getStatementPreparer().createStatement();
+					stmnt.execute( "UPDATE T_JOB SET JOB_STATUS = 1" );
+				}
+				finally {
+					if ( stmnt != null ) {
+						try {
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
+						}
+						catch( Throwable ignore ) {
 						}
 					}
 				}
+			}
 		);
+	}
+
+	@Entity( name = "Job" )
+	@Table( name = "T_JOB" )
+	static class Job {
+
+		@Id @GeneratedValue
+		Long id;
+
+		@ManyToOne( fetch = FetchType.LAZY )
+		JobBatch batch;
+
+		@Column( name = "PI", nullable = false )
+		String processingInstructions;
+
+		@Column( name = "JOB_STATUS", nullable = false )
+		int status;
+
+		Job() {}
+
+		Job(JobBatch batch) {
+			this.batch = batch;
+		}
+
+	}
+
+	@Entity( name = "JobBatch" )
+	@Table( name = "T_JOB_BATCH" )
+	static class JobBatch {
+
+		@Id @GeneratedValue
+		Long id;
+
+		@Column( nullable = false )
+		@Temporal( TemporalType.TIMESTAMP )
+		Date batchDate;
+
+		@OneToMany( mappedBy = "batch", fetch = FetchType.LAZY, cascade = CascadeType.ALL )
+		@Fetch( FetchMode.SELECT )
+		Set<Job> jobs = new HashSet<>();
+
+		JobBatch() {}
+
+		JobBatch(Date batchDate) {
+			this.batchDate = batchDate;
+		}
+
+		Job createJob() {
+			Job job = new Job( this );
+			jobs.add( job );
+			return job;
+		}
 	}
 }

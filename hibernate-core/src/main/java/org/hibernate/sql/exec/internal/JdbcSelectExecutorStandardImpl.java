@@ -158,7 +158,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 			@Override
 			public Object getEffectiveOptionalId() {
-				return null;
+				return executionContext.getEntityId();
 			}
 
 			@Override

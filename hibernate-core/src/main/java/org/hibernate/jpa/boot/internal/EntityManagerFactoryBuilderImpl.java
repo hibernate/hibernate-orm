@@ -181,7 +181,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService ) {
 		this( persistenceUnit, integrationSettings, null, providedClassLoaderService);
 	}
-	
+
 	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
@@ -193,13 +193,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		if ( integrationSettings == null ) {
-			integrationSettings = Collections.emptyMap();
+			integrationSettings = new HashMap();
 		}
 
 		Map mergedIntegrationSettings = null;
 		Properties properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
-			mergedIntegrationSettings = new HashMap( persistenceUnit.getProperties() );
+			// original integratin setting entries take precedence
+			mergedIntegrationSettings = new HashMap( properties );
 			mergedIntegrationSettings.putAll( integrationSettings );
 		}
 

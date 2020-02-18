@@ -189,6 +189,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		public boolean supportsAggressiveRelease() {
 			return connectionProvider.supportsAggressiveRelease();
 		}
+
+		@Override
+		public boolean connectionWarningsResetCanBeSkippedOnClose() {
+			return connectionProvider.connectionWarningsResetCanBeSkippedOnClose();
+		}
 	}
 
 	public static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {

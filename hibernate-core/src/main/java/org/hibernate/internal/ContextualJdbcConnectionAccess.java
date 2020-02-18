@@ -66,4 +66,9 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 	public boolean supportsAggressiveRelease() {
 		return connectionProvider.supportsAggressiveRelease();
 	}
+
+	@Override
+	public boolean connectionWarningsResetCanBeSkippedOnClose() {
+		return connectionProvider.needsWarningsClearedOnClose();
+	}
 }

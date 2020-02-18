@@ -98,6 +98,11 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return this.serviceRegistry;
 	}
 
+	@Override
+	public boolean isConnectionWarningsResetCanBeSkippedOnClose() {
+		return settings().isConnectionWarningsResetCanBeSkippedOnClose();
+	}
+
 	private SessionFactoryOptions settings() {
 		return this.sessionFactory.getSessionFactoryOptions();
 	}

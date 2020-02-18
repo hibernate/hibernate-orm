@@ -252,6 +252,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private boolean nativeExceptionHandling51Compliance;
 	private int queryStatisticsMaxSize;
+	private final boolean connectionWarningsResetCanBeSkippedOnClose;
 
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
@@ -534,6 +535,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
 			this.nativeExceptionHandling51Compliance = false;
 		}
+
+		this.connectionWarningsResetCanBeSkippedOnClose = jdbcServices.getBootstrapJdbcConnectionAccess().connectionWarningsResetCanBeSkippedOnClose();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1070,6 +1073,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return omitJoinOfSuperclassTablesEnabled;
+	}
+
+	@Override
+	public boolean isConnectionWarningsResetCanBeSkippedOnClose() {
+		return connectionWarningsResetCanBeSkippedOnClose;
 	}
 
 

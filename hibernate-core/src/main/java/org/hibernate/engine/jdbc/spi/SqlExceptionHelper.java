@@ -51,7 +51,7 @@ public class SqlExceptionHelper {
 	/**
 	 * Create an exception helper with a default exception converter.
 	 */
-	public SqlExceptionHelper( boolean logWarnings) {
+	public SqlExceptionHelper(boolean logWarnings) {
 		this( DEFAULT_CONVERTER, logWarnings );
 	}
 
@@ -266,11 +266,23 @@ public class SqlExceptionHelper {
 	 * @param connection The JDBC connection potentially containing warnings
 	 */
 	public void logAndClearWarnings(Connection connection) {
-		handleAndClearWarnings( connection, STANDARD_WARNING_HANDLER );
+		handleAndClearWarnings( connection, STANDARD_WARNING_HANDLER, true );
 	}
 
 	public void logAndClearWarnings(Statement statement) {
 		handleAndClearWarnings( statement, STANDARD_WARNING_HANDLER );
+	}
+
+	/**
+	 * If logging of warnings has been enabled, extract them from the driver and log them.
+	 *
+	 * @param connection
+	 * @param requiresWarningsReset when set to false, we might skip invoking {@link Connection#clearWarnings()} as we trust the connection pool to do it.
+	 */
+	public void logAndClearWarnings(
+			final Connection connection,
+			final boolean requiresWarningsReset) {
+		handleAndClearWarnings( connection, STANDARD_WARNING_HANDLER, requiresWarningsReset );
 	}
 
 	/**
@@ -285,9 +297,27 @@ public class SqlExceptionHelper {
 	public void handleAndClearWarnings(
 			Connection connection,
 			WarningHandler handler) {
+		handleAndClearWarnings( connection, handler, true );
+	}
+
+	/**
+	 * General purpose handling of warnings associated with a JDBC {@link Connection}.
+	 *
+	 * @param connection The JDBC connection potentially containing warnings
+	 * @param handler The handler for each individual warning in the stack.
+	 * @param requiresWarningsReset when set to false, we might skip invoking {@link Connection#clearWarnings()} as we trust the connection pool to do it.
+	 *
+	 * @see #walkWarnings
+	 */
+	@SuppressWarnings({"ThrowableResultOfMethodCallIgnored"})
+	public void handleAndClearWarnings(
+			Connection connection,
+			WarningHandler handler,
+			final boolean requiresWarningsReset) {
 		//Start with a pessimistic assumption, but allow to skip if we happen to learn more
 		//when (and if) we actually do retrieve the warnings:
 		boolean thereMightBeWarnings = true;
+		boolean thereDefinitelyAreWarnigs = false;
 		if ( logWarnings ) {
 			try {
 				SQLWarning warnings = connection.getWarnings();
@@ -296,6 +326,7 @@ public class SqlExceptionHelper {
 				}
 				else {
 					walkWarnings( warnings, handler );
+					thereDefinitelyAreWarnigs = true;
 				}
 			}
 			catch (SQLException sqle) {
@@ -303,7 +334,11 @@ public class SqlExceptionHelper {
 				LOG.debug( "could not log warnings", sqle );
 			}
 		}
-		if ( thereMightBeWarnings ) {
+		//If there are warnings for sure, we prefer to clear them even when requiresWarningsReset is set
+		//so to avoid duplicate warnings being logged (as the connection pool would likely do it as well)
+		//Also consider: flag requiresWarningsReset is a performance tool, but if there are known warnings
+		//we're not operating at peak performance anyway.
+		if ( thereDefinitelyAreWarnigs || ( thereMightBeWarnings && requiresWarningsReset ) ) {
 			try {
 				// Sybase fail if we don't do that, sigh...
 				connection.clearWarnings();

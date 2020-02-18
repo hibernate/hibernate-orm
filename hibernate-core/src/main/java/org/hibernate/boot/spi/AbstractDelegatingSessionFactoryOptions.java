@@ -452,4 +452,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return delegate.isOmitJoinOfSuperclassTablesEnabled();
 	}
+
+	@Override
+	public boolean isConnectionWarningsResetCanBeSkippedOnClose() {
+		return delegate.isConnectionWarningsResetCanBeSkippedOnClose();
+	}
 }

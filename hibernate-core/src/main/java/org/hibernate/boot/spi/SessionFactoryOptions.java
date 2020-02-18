@@ -316,4 +316,13 @@ public interface SessionFactoryOptions {
 	}
 
 	boolean isOmitJoinOfSuperclassTablesEnabled();
+
+	/**
+	 * On connection release, we normally reset all JDBC warnings on it, as the connection is
+	 * possibly reused by some external party.
+	 * Many pools will perform this operation as well; if you are sure that Hibernate ORM may
+	 * safely skip this operation, set this to true to avoid performing this operation
+	 * unnecessarily: on some JDBC drivers it's not very efficient.
+	 */
+	boolean isConnectionWarningsResetCanBeSkippedOnClose();
 }

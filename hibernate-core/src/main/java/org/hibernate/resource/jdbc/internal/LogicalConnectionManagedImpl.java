@@ -39,6 +39,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private final transient SqlExceptionHelper sqlExceptionHelper;
 
 	private final transient PhysicalConnectionHandlingMode connectionHandlingMode;
+	private final boolean requiresWarningsResetOnClose;
 
 	private transient Connection physicalConnection;
 	private boolean closed;
@@ -64,8 +65,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			acquireConnectionIfNeeded();
 		}
 
+		this.requiresWarningsResetOnClose = !jdbcSessionContext.isConnectionWarningsResetCanBeSkippedOnClose();
 		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
-		if ( providerDisablesAutoCommit ) {
+		if ( providerDisablesAutoCommit && log.isDebugEnabled() ) {
 			log.debug(
 					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
 							"enabled when you are certain that the Connections given to Hibernate by the " +
@@ -186,8 +188,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 
 		try {
-			if ( !physicalConnection.isClosed() ) {
-				sqlExceptionHelper.logAndClearWarnings( physicalConnection );
+			if ( !physicalConnection.isClosed()) {
+				sqlExceptionHelper.logAndClearWarnings( physicalConnection, requiresWarningsResetOnClose );
 			}
 			jdbcConnectionAccess.releaseConnection( physicalConnection );
 		}

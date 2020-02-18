@@ -45,4 +45,17 @@ public interface JdbcConnectionAccess extends Serializable {
 	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
 	 */
 	boolean supportsAggressiveRelease();
+
+	/**
+	 * If the underlying connection provider takes care of clearing any warnings on the JDBC Connection
+	 * when it's closed (returned to the pool), return true so that Hibernate ORM may skip this operation.
+	 * Setting this to true does not guarantee that Hibernate ORM will never clear the warnings:
+	 * consider this only as a possible performance optimisation.
+	 *
+	 * @since 5.4.13 Introduced as backwards compatible micro-optimisation
+	 * @return
+	 */
+	public default boolean connectionWarningsResetCanBeSkippedOnClose() {
+		return false;
+	}
 }

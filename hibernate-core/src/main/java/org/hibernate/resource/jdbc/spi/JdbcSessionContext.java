@@ -49,4 +49,6 @@ public interface JdbcSessionContext {
 	SessionFactoryImplementor getSessionFactory();
 
 	ServiceRegistry getServiceRegistry();
+
+	boolean isConnectionWarningsResetCanBeSkippedOnClose();
 }

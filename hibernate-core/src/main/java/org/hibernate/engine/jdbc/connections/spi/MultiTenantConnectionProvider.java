@@ -78,4 +78,8 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
 	public boolean supportsAggressiveRelease();
+
+	public default boolean needsWarningsClearedOnClose() {
+		return true;
+	}
 }

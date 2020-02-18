@@ -59,4 +59,21 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
 	public boolean supportsAggressiveRelease();
+
+	/**
+	 * Hibernate ORM will normally clear all warnings on the JDBC Connection before
+	 * closing it, this is one aspect of the connection release process.
+	 * When the Connection Pool implementation provides the same functionality
+	 * of clearing all warnings on close, it might be desirable to delegate
+	 * this responsibility to the pool as with some JDBC drivers the operation
+	 * is not very efficient.
+	 * Return true to allow Hibernate to skip the #clearWarnings operation in most
+	 * cases; this is not a strict guarantee that Hibernate will never invoke it.
+	 * @return This returns false by default as it's safe and backwards compatible.
+	 * Return true if you trust the Connection Pool to clear warnings on close.
+	 * @see Connection#clearWarnings()
+	 */
+	public default boolean connectionWarningsResetCanBeSkippedOnClose() {
+		return false;
+	}
 }

@@ -4470,7 +4470,12 @@ public abstract class AbstractEntityPersister
 			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}
 
-		return singleIdEntityLoader.load( id, lockOptions, session );
+		if ( optionalObject == null ) {
+			return singleIdEntityLoader.load( id, lockOptions, session );
+		}
+		else {
+			return singleIdEntityLoader.load( id, optionalObject, lockOptions, session );
+		}
 	}
 
 	public SingleIdEntityLoader getSingleIdEntityLoader() {

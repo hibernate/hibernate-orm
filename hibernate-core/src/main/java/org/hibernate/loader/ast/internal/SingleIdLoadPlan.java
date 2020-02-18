@@ -137,6 +137,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					}
 
 					@Override
+					public Object getEntityId() {
+						return restrictedValue;
+					}
+
+					@Override
 					public QueryOptions getQueryOptions() {
 						return QueryOptions.NONE;
 					}

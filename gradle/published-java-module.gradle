@@ -136,9 +136,9 @@ javadoc {
 			addStringOption( 'Xdoclint:none', '-quiet' )
 		}
 
-		// by default, exclude the files from Asciidoclet processing
-		// add the @asciidoclet tag to enable Asciidoclet on a particular file
-		options.addStringOption( '-exclude-asciidoclet-process', '**' )
+//		// by default, exclude the files from Asciidoclet processing
+//		// add the @asciidoclet tag to enable Asciidoclet on a particular file
+//		options.addStringOption( '-exclude-asciidoclet-process', '**' )
 
 		tags(
 				'todo:X"',

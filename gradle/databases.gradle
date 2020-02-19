@@ -98,6 +98,13 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test'
                 ],
+                nuodb : [
+                        'db.dialect' : 'com.nuodb.hibernate.nuodb-hibernate.NuoDBDialect',
+                        'jdbc.driver': 'com.nuodb.jdbc.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:com.nuodb.hib://localhost/hibernate_orm_test'
+                ],
                 postgis : [
                         'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',

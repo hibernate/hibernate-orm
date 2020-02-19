@@ -53,3 +53,5 @@ databases/postgis/
 *.swp
 *.swo
 
+# Temporary environment
+env/vol*

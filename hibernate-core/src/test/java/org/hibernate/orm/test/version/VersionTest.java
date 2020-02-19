@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.version;
+package org.hibernate.orm.test.version;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import org.junit.Test;
 
@@ -28,7 +29,12 @@ import static org.junit.Assert.assertTrue;
 public class VersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "version/PersonThing.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/version/PersonThing.hbm.xml" };
+	}
+
+	@Override
+	protected String getBaseForMappings() {
+		return "";
 	}
 
 	@Test
@@ -148,9 +154,6 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private Person getPerson(Session s) {
-		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-		CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
-		criteria.from( Person.class );
-		return s.createQuery( criteria ).uniqueResult();
+		return session.createQuery( "select p from Person p", Person.class ).uniqueResult();
 	}
 }

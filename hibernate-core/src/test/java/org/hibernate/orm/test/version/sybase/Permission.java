@@ -5,27 +5,29 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-// $Id: Group.java 7805 2005-08-10 16:25:11Z steveebersole $
-package org.hibernate.test.version.sybase;
+// $Id: Permission.java 7805 2005-08-10 16:25:11Z steveebersole $
+package org.hibernate.orm.test.version.sybase;
 import java.util.Date;
-import java.util.Set;
 
 /**
- * Implementation of Group.
+ * Implementation of Permission.
  *
  * @author Steve Ebersole
  */
-public class Group {
+public class Permission {
 	private Long id;
 	private Date timestamp;
 	private String name;
-	private Set users;
+	private String context;
+	private String access;
 
-	public Group() {
+	public Permission() {
 	}
 
-	public Group(String name) {
+	public Permission(String name, String context, String access) {
 		this.name = name;
+		this.context = context;
+		this.access = access;
 	}
 
 	public Long getId() {
@@ -52,11 +54,19 @@ public class Group {
 		this.name = name;
 	}
 
-	public Set getUsers() {
-		return users;
+	public String getContext() {
+		return context;
 	}
 
-	public void setUsers(Set users) {
-		this.users = users;
+	public void setContext(String context) {
+		this.context = context;
+	}
+
+	public String getAccess() {
+		return access;
+	}
+
+	public void setAccess(String access) {
+		this.access = access;
 	}
 }

@@ -15,7 +15,7 @@
     a version increment on the owning instance)
  -->
 <hibernate-mapping 
-		package="org.hibernate.test.version">
+		package="org.hibernate.orm.test.version">
 
 	<class name="Person">
 		<id name="name"/>

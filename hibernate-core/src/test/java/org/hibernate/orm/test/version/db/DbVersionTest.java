@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.version.db;
+package org.hibernate.orm.test.version.db;
 
 import java.sql.Timestamp;
 
@@ -25,6 +25,11 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "version/db/User.hbm.xml" };
+	}
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
 	}
 
 	@Test

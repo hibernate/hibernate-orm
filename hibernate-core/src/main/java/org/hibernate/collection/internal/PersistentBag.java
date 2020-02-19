@@ -17,12 +17,11 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 /**
@@ -128,11 +127,17 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		assert bag == null;
 
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
-		this.bag = (List) collectionDescriptor.getCollectionSemantics().instantiateRaw( loadingState.size(), collectionDescriptor );
+		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
-		for ( int i = 0; i < loadingState.size(); i++ ) {
-			//noinspection unchecked,UseBulkOperation
-			bag.add( loadingState.get( i ) );
+		final int elementCount = loadingState == null ? 0 : loadingState.size();
+
+		this.bag = (List) collectionSemantics.instantiateRaw( elementCount, collectionDescriptor );
+
+		if ( loadingState != null ) {
+			for ( int i = 0; i < elementCount; i++ ) {
+				//noinspection unchecked
+				bag.add( loadingState.get( i ) );
+			}
 		}
 	}
 

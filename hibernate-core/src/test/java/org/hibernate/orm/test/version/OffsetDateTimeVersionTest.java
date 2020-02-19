@@ -4,9 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.version;
+package org.hibernate.orm.test.version;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -25,7 +25,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-10026" )
-public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
+public class OffsetDateTimeVersionTest extends BaseNonConfigCoreFunctionalTestCase {
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { TheEntity.class };
@@ -60,7 +61,7 @@ public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Table(name="the_entity")
 	public static class TheEntity {
 		private Integer id;
-		private Instant ts;
+		private OffsetDateTime ts;
 
 		public TheEntity() {
 		}
@@ -79,11 +80,11 @@ public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 
 		@Version
-		public Instant getTs() {
+		public OffsetDateTime getTs() {
 			return ts;
 		}
 
-		public void setTs(Instant ts) {
+		public void setTs(OffsetDateTime ts) {
 			this.ts = ts;
 		}
 	}

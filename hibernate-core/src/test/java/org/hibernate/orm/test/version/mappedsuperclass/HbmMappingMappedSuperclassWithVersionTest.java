@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.version.mappedsuperclass;
+package org.hibernate.orm.test.version.mappedsuperclass;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
 public class HbmMappingMappedSuperclassWithVersionTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] {"org/hibernate/test/version/mappedsuperclass/TestEntity.hbm.xml"};
+		return new String[] {"org/hibernate/orm/test/version/mappedsuperclass/TestEntity.hbm.xml"};
 	}
 
 	@Override

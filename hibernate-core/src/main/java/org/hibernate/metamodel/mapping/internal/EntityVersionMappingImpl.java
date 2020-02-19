@@ -19,7 +19,6 @@ import org.hibernate.type.BasicType;
 public class EntityVersionMappingImpl extends BasicValuedSingularAttributeMapping implements EntityVersionMapping {
 	public EntityVersionMappingImpl(
 			String attributeName,
-			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String containingTableExpression,
 			String mappedColumnExpression,
@@ -28,7 +27,7 @@ public class EntityVersionMappingImpl extends BasicValuedSingularAttributeMappin
 			PropertyAccess propertyAccess) {
 		super(
 				attributeName,
-				stateArrayPosition,
+				0,
 				attributeMetadataAccess,
 				FetchStrategy.IMMEDIATE_JOIN,
 				containingTableExpression,

@@ -15,7 +15,7 @@
     a version increment on the owning instance)
  -->
 <hibernate-mapping
-        package="org.hibernate.test.version.mappedsuperclass">
+        package="org.hibernate.orm.test.version.mappedsuperclass">
 
     <class name="TestEntity">
         <id name="id">

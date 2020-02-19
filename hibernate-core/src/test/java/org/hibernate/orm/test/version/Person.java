@@ -6,7 +6,7 @@
  */
 
 //$Id: Person.java 7676 2005-07-29 06:27:10Z oneovthafew $
-package org.hibernate.test.version;
+package org.hibernate.orm.test.version;
 import java.util.ArrayList;
 import java.util.List;
 

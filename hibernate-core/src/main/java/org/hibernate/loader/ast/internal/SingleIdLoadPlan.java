@@ -89,36 +89,38 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
-				restrictivePart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() )
-		);
+		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
+		assert jdbcParameters.size() % jdbcTypeCount == 0;
+
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
 
 		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 
-		restrictivePart.visitJdbcValues(
-				restrictedValue,
-				Clause.WHERE,
-				(value, type) -> {
-					assert paramItr.hasNext();
-					final JdbcParameter parameter = paramItr.next();
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBinding() {
-								@Override
-								public JdbcMapping getBindType() {
-									return type;
-								}
+		while ( paramItr.hasNext() ) {
+			restrictivePart.visitJdbcValues(
+					restrictedValue,
+					Clause.WHERE,
+					(value, type) -> {
+						assert paramItr.hasNext();
+						final JdbcParameter parameter = paramItr.next();
+						jdbcParameterBindings.addBinding(
+								parameter,
+								new JdbcParameterBinding() {
+									@Override
+									public JdbcMapping getBindType() {
+										return type;
+									}
 
-								@Override
-								public Object getBindValue() {
-									return value;
+									@Override
+									public Object getBindValue() {
+										return value;
+									}
 								}
-							}
-					);
-				},
-				session
-		);
-		assert !paramItr.hasNext();
+						);
+					},
+					session
+			);
+		}
 
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,

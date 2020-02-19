@@ -38,7 +38,7 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 		this.relationalJtd = relationalJtd;
 		this.relationalStd = relationalStd;
 		this.valueConverter = valueConverter;
-		this.mutabilityPlan = mutabilityPlan;
+		this.mutabilityPlan = mutabilityPlan == null ? domainJtd.getMutabilityPlan() : mutabilityPlan;
 	}
 
 	@Override

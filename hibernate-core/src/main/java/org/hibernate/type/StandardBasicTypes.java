@@ -949,11 +949,21 @@ public final class StandardBasicTypes {
 				"url", java.net.URL.class.getName()
 		);
 
+
+		// Specialized version handlers
+
 		handle(
 				ROW_VERSION,
 				null,
 				basicTypeRegistry,
 				"row_version"
+		);
+
+		handle(
+				DbTimestampType.INSTANCE,
+				null,
+				basicTypeRegistry,
+				DbTimestampType.INSTANCE.getName()
 		);
 
 		// todo (6.0) - ? how to handle DbTimestampType?

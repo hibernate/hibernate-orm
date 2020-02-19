@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.version.sybase;
+package org.hibernate.orm.test.version.sybase;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,9 +17,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.SourceType;
-import org.hibernate.annotations.Type;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

@@ -116,6 +116,7 @@ import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -141,8 +142,10 @@ import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -213,6 +216,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -5764,7 +5768,11 @@ public abstract class AbstractEntityPersister
 
 				versionMapping = creationProcess.processSubPart(
 						versionPropertyName,
-						(role, creationProcess1) -> generateVersionMapping( this, creationProcess )
+						(role, creationProcess1) -> generateVersionMapping(
+								this,
+								(RootClass) bootEntityDescriptor,
+								creationProcess
+						)
 				);
 			}
 
@@ -5881,7 +5889,7 @@ public abstract class AbstractEntityPersister
 			discriminatorMapping = new EntityDiscriminatorMappingImpl(
 					this,
 					getRootTableName(),
-					getDiscriminatorColumnName(),
+					getDiscriminatorColumnReaders(),
 					(BasicType) getDiscriminatorType()
 			);
 		}
@@ -6079,10 +6087,81 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	/**
+	 * @param entityPersister The AbstractEntityPersister being constructed - still initializing
+	 * @param bootModelRootEntityDescriptor The boot-time entity descriptor for the "root entity" in the hierarchy
+	 * @param creationProcess The SF creation process - access to useful things
+	 */
 	private static EntityVersionMapping generateVersionMapping(
-			EntityPersister entityPersister,
+			AbstractEntityPersister entityPersister,
+			RootClass bootModelRootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		throw new NotYetImplementedFor6Exception( AbstractEntityPersister.class );
+		final PropertyAccess propertyAccess = entityPersister.representationStrategy.resolvePropertyAccess(
+				bootModelRootEntityDescriptor.getVersion()
+		);
+
+		final BasicValue.Resolution<?> basicTypeResolution = ( (BasicValue) bootModelRootEntityDescriptor.getVersion().getValue() ).resolve();
+
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
+			private final MutabilityPlan mutabilityPlan = basicTypeResolution.getMutabilityPlan();
+
+			@Override
+			public PropertyAccess getPropertyAccess() {
+				return propertyAccess;
+			}
+
+			@Override
+			public MutabilityPlan getMutabilityPlan() {
+				return mutabilityPlan;
+			}
+
+			@Override
+			public boolean isNullable() {
+				return false;
+			}
+
+			@Override
+			public boolean isInsertable() {
+				return true;
+			}
+
+			@Override
+			public boolean isUpdatable() {
+				return true;
+			}
+
+			@Override
+			public boolean isIncludedInDirtyChecking() {
+				return false;
+			}
+
+			@Override
+			public boolean isIncludedInOptimisticLocking() {
+				return false;
+			}
+
+			@Override
+			public CascadeStyle getCascadeStyle() {
+				return CascadeStyles.NONE;
+			}
+		};
+
+		final Iterator versionColumnIterator = bootModelRootEntityDescriptor.getVersion().getColumnIterator();
+		assert versionColumnIterator.hasNext();
+
+		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+		final String versionColumnName = ( (Column) versionColumnIterator.next() ).getQuotedName( dialect );
+		assert !versionColumnIterator.hasNext();
+
+		return new EntityVersionMappingImpl(
+				bootModelRootEntityDescriptor.getVersion().getName(),
+				attributeMetadataAccess,
+				entityPersister.getRootTableName(),
+				versionColumnName,
+				basicTypeResolution.getResolvedBasicType(),
+				entityPersister,
+				propertyAccess
+		);
 	}
 
 	private AttributeMapping generateNonIdAttributeMapping(

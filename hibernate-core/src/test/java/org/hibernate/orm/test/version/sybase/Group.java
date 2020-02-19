@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-// $Id: Group.java 7736 2005-08-03 20:03:34Z steveebersole $
-package org.hibernate.test.version.db;
+// $Id: Group.java 7805 2005-08-10 16:25:11Z steveebersole $
+package org.hibernate.orm.test.version.sybase;
 import java.util.Date;
 import java.util.Set;
 

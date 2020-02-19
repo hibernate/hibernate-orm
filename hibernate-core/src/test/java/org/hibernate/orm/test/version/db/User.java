@@ -5,8 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-// $Id: User.java 7805 2005-08-10 16:25:11Z steveebersole $
-package org.hibernate.test.version.sybase;
+// $Id: User.java 7736 2005-08-03 20:03:34Z steveebersole $
+package org.hibernate.orm.test.version.db;
+import java.sql.Timestamp;
 import java.util.Set;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Set;
  */
 public class User {
 	private Long id;
-	private byte[] timestamp;
+	private Timestamp timestamp;
 	private String username;
 	private Set groups;
 	private Set permissions;
@@ -36,11 +37,11 @@ public class User {
 		this.id = id;
 	}
 
-	public byte[] getTimestamp() {
+	public Timestamp getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(byte[] timestamp) {
+	public void setTimestamp(Timestamp timestamp) {
 		this.timestamp = timestamp;
 	}
 

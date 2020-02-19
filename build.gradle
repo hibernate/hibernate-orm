@@ -39,6 +39,12 @@ allprojects {
 				dirs "${System.env.ADDITIONAL_REPO}"
 			}
 		}
+		// Needed atm for asciidoclet PR-91, which does not seem to work anyway :(
+		// todo (6.0) : remove once/if PR-91 ever works and becomes part of asciidoclet proper
+		maven {
+			name 'jboss-snapshots-repository'
+			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+		}
 	}
 	apply plugin: 'idea'
 	apply plugin: 'eclipse'

@@ -65,9 +65,6 @@ configurations {
 	provided {
 		description = 'Non-exported compile-time dependencies.'
 	}
-	asciidoclet {
-		description = 'Dependencies for Asciidoctor Javadoc taglet'
-	}
 }
 
 configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
@@ -111,8 +108,6 @@ dependencies {
 	testRuntime( libraries.mssql )
 	testRuntime( libraries.informix )
 	testRuntime( libraries.hana )
-
-	asciidoclet( libraries.asciidoclet )
 
 	if ( db.equalsIgnoreCase( 'oracle' ) ) {
 		testRuntime( libraries.oracle ) {

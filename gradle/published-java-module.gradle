@@ -13,6 +13,20 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Configurations and Dependencies
+
+configurations {
+	asciidoclet {
+		description = 'Dependencies for Asciidoctor Javadoc taglet'
+	}
+}
+
+dependencies {
+	asciidoclet( libraries.asciidoclet )
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Jar
 
 jar {
@@ -87,8 +101,12 @@ javadoc {
 	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
 	configure( options ) {
-//		docletpath = configurations.asciidoclet.files.asType(List)
-//		doclet = 'org.asciidoctor.Asciidoclet'
+		// this is the config needed to use asciidoclet for Javadoc rendering.  It relies on a build from John's PR @ https://github.com/asciidoctor/asciidoclet/pull/91
+		// however, the PR does not work for me in that Javadocs with `@asciidoclet` are not rendered using asciidoc(tor/let).  Also tried the preferable `@asciidoc`
+		// with the same result.  Leaving all this config in place however as the outcome is the same as not enabling it.
+		// todo (6.0) : need to find out why the asciidoclet PR does not work
+		docletpath = configurations.asciidoclet.files.asType(List)
+		doclet = 'org.asciidoctor.Asciidoclet'
 		windowTitle = "$project.name JavaDocs"
 		docTitle = "$project.name JavaDocs ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
@@ -116,10 +134,14 @@ javadoc {
 			addStringOption( 'Xdoclint:none', '-quiet' )
 		}
 
+		// by default, exclude the files from Asciidoclet processing
+		// add the @asciidoclet tag to enable Asciidoclet on a particular file
+		options.addStringOption( '-exclude-asciidoclet-process', '**' )
+
 		tags(
 				'todo:X"',
 				'apiNote:a:"API Note:"',
-				'implSpec:a:"Implementation Requirements:"',
+				'implSpec:a:"Implementation Specification:"',
 				'implNote:a:"Implementation Note:"'
 		)
 	}

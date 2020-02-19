@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
- * @asciidoc
+ * @asciidoclet
  *
  * Represents a selection at the SQL/JDBC level.  Essentially made up of:
  *

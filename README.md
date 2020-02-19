@@ -42,13 +42,10 @@ To run the matrix tests for NuoDB:
 
 1. Compile the code: `./gradlew clean compile`
 
-1. Tell the tests about your NuoDB database:
-    1. `cp databases/nuodb/resources/hibernate.properties hibernate-core/target/resources/test`.  
-    2. Edit `hibernate-core/target/resources/test/hibernate.properties` and set the database URL, username and password
-       as required.
 
 1. Run tests:
 
+   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder. This script will create a NuoDB env with an admin service, a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against.
    * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`). To setup gradle, see original readme content below.  The expected output is:
 
      ```sh
@@ -58,18 +55,9 @@ To run the matrix tests for NuoDB:
    * **Warnings:**
      * If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
-     * Not all tests clean up after themselves.  You may need to drop the DBO schema used by the tests by
-       running "`DROP SCHEMA DBO CASCADE`".
+     * Not all tests clean up after themselves.  You may need to drop the HIBERNATE_ORM_TEST schema used by the tests by
+       running "`DROP SCHEMA HIBERNATE_ORM_TEST CASCADE`".
 
-     * If you get this error, the easiest solution is to delete and reclone the entire repository.
-
-       ``` sh
-       FAILURE: Build failed with an exception.
-
-       * What went wrong:
-       Execution failed for task ':hibernate-core:jar'.
-       > Could not add MANIFEST.MF to ZIP '/.../hibernate-orm/hibernate-core/target/libs/hibernate-core-5.4.1-SNAPSHOT.jar'.
-​       ```
 
 1. Run individual tests
 
@@ -92,7 +80,7 @@ To run the matrix tests for NuoDB:
    gradle clean ...
    ```
 
-Please note that even if NuoDB is not available, 3603 tests complete, 1922 fail, and 801 are skipped. So 880 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
+Please note that even if NuoDB is not available, 4588 tests complete, 2823 fail, and 840 are skipped. So 925 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 
 ## Upgrade Hibernate Dialect
 

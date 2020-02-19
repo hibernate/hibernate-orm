@@ -105,8 +105,10 @@ javadoc {
 		// however, the PR does not work for me in that Javadocs with `@asciidoclet` are not rendered using asciidoc(tor/let).  Also tried the preferable `@asciidoc`
 		// with the same result.  Leaving all this config in place however as the outcome is the same as not enabling it.
 		// todo (6.0) : need to find out why the asciidoclet PR does not work
-		docletpath = configurations.asciidoclet.files.asType(List)
-		doclet = 'org.asciidoctor.Asciidoclet'
+		//
+		// Travis CI JDK 11 build did not like this
+//		docletpath = configurations.asciidoclet.files.asType(List)
+//		doclet = 'org.asciidoctor.Asciidoclet'
 		windowTitle = "$project.name JavaDocs"
 		docTitle = "$project.name JavaDocs ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."

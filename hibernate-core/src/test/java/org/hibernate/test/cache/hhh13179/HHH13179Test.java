@@ -20,6 +20,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.CacheRegionStatistics;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -28,7 +29,7 @@ import org.junit.Test;
 /**
  * Check that second level caching works for hbm mapped joined subclass inheritance structures
  */
-@TestForIssue( jiraKey = "HHH-13179")
+@TestForIssue(jiraKey = "HHH-13179")
 public class HHH13179Test extends BaseCoreFunctionalTestCase {
 
 	// Add your entities here.
@@ -56,6 +57,7 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 				"org/hibernate/test/cache/hhh13179/DiscriminatorSubclassPerson.hbm.xml"
 		};
 	}
+
 	// If those mappings reside somewhere other than resources/org/hibernate/test, change this.
 	@Override
 	protected String getBaseForMappings() {
@@ -79,14 +81,15 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 
 		String regionName = "org.hibernate.test.cache.hhh13179.JoinedSubclassPerson";
-		
+
 		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache put should be 0", 0, cacheRegionStatistics.getPutCount());
+		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
+				regionName );
+		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
 
 		JoinedSubclassPerson person1 = new JoinedSubclassUIPerson();
-		person1.setOid(1L);
-		s.save(person1);
+		person1.setOid( 1L );
+		s.save( person1 );
 
 		tx.commit();
 
@@ -95,11 +98,11 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 
-		JoinedSubclassPerson person2 = s.get(JoinedSubclassPerson.class, 1L);
+		JoinedSubclassPerson person2 = s.get( JoinedSubclassPerson.class, 1L );
 
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache hit should be 1", 1, cacheRegionStatistics.getHitCount());
-		Assert.assertEquals("Cache put should be 1", 1, cacheRegionStatistics.getPutCount());
+		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
+		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
+		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
 
 		tx.commit();
 		s.close();
@@ -114,12 +117,13 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		String regionName = "org.hibernate.test.cache.hhh13179.UnionSubclassPerson";
 
 		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache put should be 0", 0, cacheRegionStatistics.getPutCount());
+		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
+				regionName );
+		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
 
 		UnionSubclassPerson person1 = new UnionSubclassUIPerson();
-		person1.setOid(1L);
-		s.save(person1);
+		person1.setOid( 1L );
+		s.save( person1 );
 
 		tx.commit();
 
@@ -128,11 +132,11 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 
-		UnionSubclassPerson person2 = s.get(UnionSubclassPerson.class, 1L);
+		UnionSubclassPerson person2 = s.get( UnionSubclassPerson.class, 1L );
 
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache hit should be 1", 1, cacheRegionStatistics.getHitCount());
-		Assert.assertEquals("Cache put should be 1", 1, cacheRegionStatistics.getPutCount());
+		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
+		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
+		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
 
 		tx.commit();
 		s.close();
@@ -147,12 +151,13 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		String regionName = "org.hibernate.test.cache.hhh13179.DiscriminatorSubclassPerson";
 
 		// sanity check
-		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache put should be 0", 0, cacheRegionStatistics.getPutCount());
+		CacheRegionStatistics cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(
+				regionName );
+		Assert.assertEquals( "Cache put should be 0", 0, cacheRegionStatistics.getPutCount() );
 
 		DiscriminatorSubclassPerson person1 = new DiscriminatorSubclassUIPerson();
-		person1.setOid(1L);
-		s.save(person1);
+		person1.setOid( 1L );
+		s.save( person1 );
 
 		tx.commit();
 
@@ -161,11 +166,11 @@ public class HHH13179Test extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 
-		DiscriminatorSubclassPerson person2 = s.get(DiscriminatorSubclassPerson.class, 1L);
+		DiscriminatorSubclassPerson person2 = s.get( DiscriminatorSubclassPerson.class, 1L );
 
-		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics(regionName);
-		Assert.assertEquals("Cache hit should be 1", 1, cacheRegionStatistics.getHitCount());
-		Assert.assertEquals("Cache put should be 1", 1, cacheRegionStatistics.getPutCount());
+		cacheRegionStatistics = s.getSessionFactory().getStatistics().getCacheRegionStatistics( regionName );
+		Assert.assertEquals( "Cache hit should be 1", 1, cacheRegionStatistics.getHitCount() );
+		Assert.assertEquals( "Cache put should be 1", 1, cacheRegionStatistics.getPutCount() );
 
 		tx.commit();
 		s.close();

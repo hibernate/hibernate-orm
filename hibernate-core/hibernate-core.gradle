@@ -68,7 +68,7 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
-compile("com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5")
+    implementation( "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5" )
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support

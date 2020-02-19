@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.cascade;
+package org.hibernate.orm.test.cascade;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -20,42 +20,36 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
-import org.hibernate.cfg.Configuration;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertNotNull;
 
-@TestForIssue( jiraKey = "HHH-13590")
-public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-13590")
+@DomainModel(
+		annotatedClasses = {
+				CascadeMergeToProxySimpleTest.AbstractEntity.class,
+				CascadeMergeToProxySimpleTest.Event.class,
+				CascadeMergeToProxySimpleTest.Project.class
+		}
+)
+@SessionFactory
+public class CascadeMergeToProxySimpleTest {
 	protected static final Random RANDOM_GENERATOR = new Random();
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				AbstractEntity.class,
-				Event.class,
-				Project.class
-		};
-	}
-
 	@Test
-	public void test() {
-		final Event root = (Event) mergeEntity( new Event( generateBId(), new Project( generateBId() ) ) );
-		Event rootFromDB = (Event) mergeEntity( root );
+	public void test(SessionFactoryScope scope) {
+		final Event root = (Event) mergeEntity( scope, new Event( generateBId(), new Project( generateBId() ) ) );
+		Event rootFromDB = (Event) mergeEntity( scope, root );
 
 		assertNotNull( rootFromDB );
 	}
 
-	private Object mergeEntity(Object entity) {
-		return doInHibernate(
-				this::sessionFactory, session -> {
-					return session.merge( entity );
-				}
-		);
+	private Object mergeEntity(SessionFactoryScope scope, Object entity) {
+		return scope.fromTransaction( session -> session.merge( entity ) );
 	}
 
 	private String generateBId() {
@@ -63,11 +57,6 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 				( Long.toString( System.currentTimeMillis() ) + RANDOM_GENERATOR.nextInt() )
 						.getBytes()
 		).toString();
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
 	}
 
 	@MappedSuperclass
@@ -87,13 +76,14 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 		protected AbstractEntity(String bId) {
 			this.bID = bId;
 		}
+
 		public long getObjectID() {
 			return objectID;
 		}
 
 		@Override
 		public String toString() {
-			return String.format("%s[id=%d]", getClass().getSimpleName(), getObjectID());
+			return String.format( "%s[id=%d]", getClass().getSimpleName(), getObjectID() );
 		}
 
 		public String getBID() {
@@ -102,12 +92,16 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if ( o == null || !this.getClass().isInstance( o ) ) return false;
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || !this.getClass().isInstance( o ) ) {
+				return false;
+			}
 
 			AbstractEntity that = (AbstractEntity) o;
 
-			return bID != null ? bID.equals( that.bID) : that.bID == null;
+			return bID != null ? bID.equals( that.bID ) : that.bID == null;
 		}
 
 		@Override
@@ -119,10 +113,14 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 	@Entity(name = "Event")
 	public static class Event extends AbstractEntity {
 
-		@OneToMany(targetEntity = Event.class, cascade = { CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.LAZY)
+		@OneToMany(targetEntity = Event.class, cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY)
 		private Set<Event> children = new HashSet<>();
 
-		@ManyToOne(targetEntity = Project.class, fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+		@ManyToOne(targetEntity = Project.class, fetch = FetchType.LAZY, cascade = {
+				CascadeType.PERSIST,
+				CascadeType.MERGE,
+				CascadeType.REFRESH
+		})
 		private Project project;
 
 		public Event() {
@@ -131,7 +129,7 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 
 		public Event(String bid, Project project) {
 			super( bid );
-			setProject(project);
+			setProject( project );
 		}
 
 		public void setProject(Project project) {
@@ -148,7 +146,7 @@ public class CascadeMergeToProxySimpleTest extends BaseCoreFunctionalTestCase {
 
 		public void addChild(Event event) {
 			assert event != null;
-			this.children.add(event);
+			this.children.add( event );
 		}
 
 	}

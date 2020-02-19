@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.cascade;
+package org.hibernate.orm.test.cascade;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,39 +27,43 @@ import javax.persistence.Transient;
 import javax.persistence.TypedQuery;
 import javax.persistence.Version;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@TestForIssue( jiraKey = "HHH-13590")
-public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-13590")
+@DomainModel(
+		annotatedClasses = {
+				CascadeMergeToProxyEntityCopyAllowedTest.AbstractEntity.class,
+				CascadeMergeToProxyEntityCopyAllowedTest.Event.class,
+				CascadeMergeToProxyEntityCopyAllowedTest.Project.class,
+				CascadeMergeToProxyEntityCopyAllowedTest.Speaker.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@ServiceRegistry.Setting(
+						name = "AvailableSettings.MERGE_ENTITY_COPY_OBSERVER", value = "allow"
+				)
+		}
+)
+public class CascadeMergeToProxyEntityCopyAllowedTest {
 	private Project defaultProject;
 
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				AbstractEntity.class,
-				Event.class,
-				Project.class,
-				Speaker.class
-		};
-	}
-
 	@Test
-	public void test() {
-		final Event root = (Event) persistEntity( new Event( null, defaultProject  ) );
+	public void test(SessionFactoryScope scope) {
+		final Event root = (Event) persistEntity( scope, new Event( null, defaultProject ) );
 
-		Event rootFromDB = doInHibernate(
-				this::sessionFactory, session -> {
+		Event rootFromDB = scope.fromTransaction(
+				session -> {
 					TypedQuery<Event> eventTypedQuery = session.createQuery(
 							"SELECT e FROM Event e LEFT JOIN FETCH e.speakers LEFT JOIN FETCH e.children LEFT JOIN FETCH e.project WHERE e.objectID = :oid",
 							Event.class
@@ -72,27 +76,26 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 				}
 		);
 		assertNotNull( rootFromDB );
-		assertEquals(0, rootFromDB.getChildren().size());
+		assertEquals( 0, rootFromDB.getChildren().size() );
 		assertEquals( 0, rootFromDB.getSpeakers().size() );
 		assertEquals( root, rootFromDB );
 
-		Speaker speaker = (Speaker) persistEntity( new Speaker(defaultProject) );
+		Speaker speaker = (Speaker) persistEntity( scope, new Speaker( defaultProject ) );
 		final long speakerId = speaker.getObjectID();
 
-		speaker = doInHibernate(
-				this::sessionFactory, session -> {
-					return session.find( Speaker.class, speakerId );
-				}
+		speaker = scope.fromTransaction(
+				session ->
+						session.find( Speaker.class, speakerId )
 		);
 		assertNotNull( speaker );
 
-		Event child = new Event(rootFromDB, defaultProject);
+		Event child = new Event( rootFromDB, defaultProject );
 		child.addSpeaker( speaker );
 
-		rootFromDB = (Event) persistEntity( rootFromDB );
+		rootFromDB = (Event) persistEntity( scope, rootFromDB );
 		final long rootFromDBId = rootFromDB.getObjectID();
-		rootFromDB = doInHibernate(
-				this::sessionFactory, session -> {
+		rootFromDB = scope.fromTransaction(
+				session -> {
 					TypedQuery<Event> eventTypedQuery = session.createQuery(
 							"SELECT e FROM Event e LEFT JOIN FETCH e.speakers LEFT JOIN FETCH e.children LEFT JOIN FETCH e.project WHERE e.objectID = :oid",
 							Event.class
@@ -105,14 +108,14 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 				}
 		);
 		assertNotNull( rootFromDB );
-		assertEquals(1, rootFromDB.getChildren().size());
-		assertEquals(0, rootFromDB.getSpeakers().size());
+		assertEquals( 1, rootFromDB.getChildren().size() );
+		assertEquals( 0, rootFromDB.getSpeakers().size() );
 
 	}
 
-	private Object persistEntity(Object entity ) {
-		return doInHibernate(
-				this::sessionFactory, session -> {
+	private Object persistEntity(SessionFactoryScope scope, Object entity) {
+		return scope.fromTransaction(
+				session -> {
 					Object mergedEntity = session.merge( entity );
 					session.persist( mergedEntity );
 					session.flush();
@@ -121,27 +124,24 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 		);
 	}
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( AvailableSettings.MERGE_ENTITY_COPY_OBSERVER, "allow" );
-	}
-
-	@Before
-	public void setupData() {
-		Long objectId = doInHibernate(
-				this::sessionFactory, session -> {
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
+		Long objectId = scope.fromTransaction(
+				session -> {
 					Project project = (Project) session.merge( new Project() );
 					session.persist( project );
 					session.flush();
 					return project.getObjectID();
 				}
 		);
-		doInHibernate(
-				this::sessionFactory, session -> {
-					TypedQuery<Project> projectTypedQuery = session.createQuery("SELECT p FROM Project p WHERE p.objectID = :oid", Project.class);
+		scope.inTransaction(
+				session -> {
+					TypedQuery<Project> projectTypedQuery = session.createQuery(
+							"SELECT p FROM Project p WHERE p.objectID = :oid",
+							Project.class
+					);
 
-					projectTypedQuery.setParameter("oid", objectId);
+					projectTypedQuery.setParameter( "oid", objectId );
 
 					defaultProject = projectTypedQuery.getSingleResult();
 				}
@@ -151,7 +151,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 	@MappedSuperclass
 	public static class AbstractEntity {
 
-		static long INVALID_OBJECT_ID = -1 ;
+		static long INVALID_OBJECT_ID = -1;
 
 		@Transient
 		protected static final Random RANDOM_GENERATOR = new Random();
@@ -183,16 +183,16 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 		}
 
 		public static boolean isValidObjectID(long id) {
-			return (id > 0 && id != AbstractEntity.INVALID_OBJECT_ID);
+			return ( id > 0 && id != AbstractEntity.INVALID_OBJECT_ID );
 		}
 
 		public boolean isPersistent() {
-			return isValidObjectID(getObjectID());
+			return isValidObjectID( getObjectID() );
 		}
 
 		@Override
 		public String toString() {
-			return String.format("%s[id=%d]", getClass().getSimpleName(), getObjectID());
+			return String.format( "%s[id=%d]", getClass().getSimpleName(), getObjectID() );
 		}
 
 		public String getBID() {
@@ -201,12 +201,16 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
 
 			AbstractEntity that = (AbstractEntity) o;
 
-			return bID != null ? bID.equals(that.bID) : that.bID == null;
+			return bID != null ? bID.equals( that.bID ) : that.bID == null;
 
 		}
 
@@ -223,13 +227,20 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 		@ManyToOne(targetEntity = Event.class, fetch = FetchType.EAGER)
 		private Event parent;
 
-		@OneToMany(targetEntity = Event.class, cascade = { CascadeType.ALL}, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "parent")
+		@OneToMany(targetEntity = Event.class, cascade = { CascadeType.ALL }, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "parent")
 		private Set<Event> children = new HashSet<>();
 
-		@ManyToOne(targetEntity = Project.class, fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+		@ManyToOne(targetEntity = Project.class, fetch = FetchType.LAZY, cascade = {
+				CascadeType.PERSIST,
+				CascadeType.MERGE,
+				CascadeType.REFRESH
+		})
 		private Project project;
 
-		@ManyToMany(targetEntity = Speaker.class, fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.REFRESH})
+		@ManyToMany(targetEntity = Speaker.class, fetch = FetchType.LAZY, cascade = {
+				CascadeType.PERSIST,
+				CascadeType.REFRESH
+		})
 		private Set<Speaker> speakers = new HashSet<>();
 
 
@@ -238,13 +249,14 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 		}
 
 		public Event(Event parent, Project project) {
-			setParent(parent);
-			setProject(project);
+			setParent( parent );
+			setProject( project );
 
-			if (parent == null) {
+			if ( parent == null ) {
 				//nothing to do here, Event has no parent
-			} else {
-				parent.addChild(this);
+			}
+			else {
+				parent.addChild( this );
 			}
 		}
 
@@ -274,13 +286,13 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 
 		public void addSpeaker(Speaker speaker) {
 			assert speaker != null;
-			this.speakers.add(speaker);
+			this.speakers.add( speaker );
 		}
 
 		public void addChild(Event event) {
 			assert event != null;
-			this.children.add(event);
-			event.setParent(this);
+			this.children.add( event );
+			event.setParent( this );
 		}
 
 	}
@@ -297,7 +309,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest extends BaseCoreFunctional
 
 
 		@ManyToOne(targetEntity = Project.class, fetch = FetchType.LAZY,
-				cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+				cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
 		private Project project;
 
 		public Speaker() {

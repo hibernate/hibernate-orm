@@ -48,6 +48,12 @@ public class HibernatePlugin implements Plugin<Project> {
 		}
 	}
 
+	/**
+	 * Gradle doesn't allow lambdas in doLast or doFirst configurations and causing up-to-date checks
+	 * to fail. Extracting the lambda to an inner class works around this issue.
+	 *
+	 * @link https://github.com/gradle/gradle/issues/5510
+	 */
 	private static class EnhancerAction implements Action<Task> {
 
 		private final SourceSet sourceSet;

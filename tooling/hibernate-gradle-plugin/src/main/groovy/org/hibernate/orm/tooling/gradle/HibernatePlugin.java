@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -43,10 +44,29 @@ public class HibernatePlugin implements Plugin<Project> {
 
 			final Task compileTask = project.getTasks().findByName( sourceSet.getCompileJavaTaskName() );
 			assert compileTask != null;
-			compileTask.doLast(
-					task -> EnhancementHelper.enhance( sourceSet, hibernateExtension.enhance, project )
-			);
+			compileTask.doLast(new EnhancerAction( sourceSet, hibernateExtension, project ));
 		}
+	}
+
+	private static class EnhancerAction implements Action<Task> {
+
+		private final SourceSet sourceSet;
+
+		private final HibernateExtension hibernateExtension;
+
+		private final Project project;
+
+		private EnhancerAction(SourceSet sourceSet, HibernateExtension hibernateExtension, Project project) {
+			this.sourceSet = sourceSet;
+			this.hibernateExtension = hibernateExtension;
+			this.project = project;
+		}
+
+		@Override
+		public void execute(Task task) {
+			EnhancementHelper.enhance( sourceSet, hibernateExtension.enhance, project );
+		}
+
 	}
 
 }

@@ -5269,9 +5269,8 @@ public abstract class AbstractEntityPersister
 		if ( getVersionMapping() == null ) {
 			return null;
 		}
-		final StateArrayContributorMetadata attrMetadata = getVersionMapping().getAttributeMetadataAccess().resolveAttributeMetadata( this );
-		assert attrMetadata != null;
-		return attrMetadata.getPropertyAccess().getGetter().get( object );
+
+		return getVersionMapping().getVersionAttribute().getPropertyAccess().getGetter().get( object );
 	}
 
 	@Override
@@ -6096,55 +6095,8 @@ public abstract class AbstractEntityPersister
 			AbstractEntityPersister entityPersister,
 			RootClass bootModelRootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final PropertyAccess propertyAccess = entityPersister.representationStrategy.resolvePropertyAccess(
-				bootModelRootEntityDescriptor.getVersion()
-		);
-
-		final BasicValue.Resolution<?> basicTypeResolution = ( (BasicValue) bootModelRootEntityDescriptor.getVersion().getValue() ).resolve();
-
-		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
-			private final MutabilityPlan mutabilityPlan = basicTypeResolution.getMutabilityPlan();
-
-			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return false;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return true;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return true;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-				return false;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				return false;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				return CascadeStyles.NONE;
-			}
-		};
+		final BasicValue bootModelVersionValue = (BasicValue) bootModelRootEntityDescriptor.getVersion().getValue();
+		final BasicValue.Resolution<?> basicTypeResolution = bootModelVersionValue.resolve();
 
 		final Iterator versionColumnIterator = bootModelRootEntityDescriptor.getVersion().getColumnIterator();
 		assert versionColumnIterator.hasNext();
@@ -6155,12 +6107,10 @@ public abstract class AbstractEntityPersister
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getVersion().getName(),
-				attributeMetadataAccess,
 				entityPersister.getRootTableName(),
 				versionColumnName,
 				basicTypeResolution.getResolvedBasicType(),
-				entityPersister,
-				propertyAccess
+				entityPersister
 		);
 	}
 
@@ -6175,14 +6125,25 @@ public abstract class AbstractEntityPersister
 
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
 
-		if ( propertyIndex == getVersionProperty() ) {
-			return getVersionMapping();
-		}
-
 		final String tableExpression = getPropertyTableName( attrName );
 		final String[] attrColumnNames = getPropertyColumnNames( propertyIndex );
 
 		final PropertyAccess propertyAccess = getRepresentationStrategy().resolvePropertyAccess( bootProperty );
+
+		if ( propertyIndex == getVersionProperty() ) {
+			return MappingModelCreationHelper.buildBasicAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					bootProperty,
+					this,
+					(BasicType) attrType,
+					tableExpression,
+					attrColumnNames[0],
+					propertyAccess,
+					tupleAttrDefinition.getCascadeStyle(),
+					creationProcess
+			);
+		}
 
 		if ( attrType instanceof BasicType ) {
 			return MappingModelCreationHelper.buildBasicAttributeMapping(

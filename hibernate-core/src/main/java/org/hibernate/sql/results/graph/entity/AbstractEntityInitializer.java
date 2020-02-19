@@ -482,6 +482,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		);
 
 		final Object version;
+
 		if ( versionAssembler != null ) {
 			version = versionAssembler.assemble( rowProcessingState );
 		}

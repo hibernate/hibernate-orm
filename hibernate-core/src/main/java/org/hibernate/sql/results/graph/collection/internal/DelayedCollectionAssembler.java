@@ -87,37 +87,44 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 				return;
 			}
 
-			collectionKey = new CollectionKey(
-					fetchedMapping.getCollectionDescriptor(),
-					parentAccess.getParentKey()
-			);
+			final Object parentKey = parentAccess.getParentKey();
+			if ( parentKey != null ) {
+				collectionKey = new CollectionKey(
+						fetchedMapping.getCollectionDescriptor(),
+						parentKey
+				);
 
-			parentAccess.registerResolutionListener( owner -> instance.setOwner( owner ) );
+				parentAccess.registerResolutionListener( owner -> instance.setOwner( owner ) );
+			}
 		}
 
 		@Override
 		public void resolveInstance(RowProcessingState rowProcessingState) {
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
-			final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );
-			final PersistentCollection registeredInstance = persistenceContext.getCollection( collectionKey );
+			if ( collectionKey != null ) {
+				final SharedSessionContractImplementor session = rowProcessingState.getSession();
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
+				final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
+						.findLoadingCollectionEntry( collectionKey );
+				final PersistentCollection registeredInstance = persistenceContext.getCollection( collectionKey );
 
-			if ( loadingEntry != null ) {
-				instance = loadingEntry.getCollectionInstance();
-				return;
+				if ( loadingEntry != null ) {
+					instance = loadingEntry.getCollectionInstance();
+					return;
+				}
+
+				if ( registeredInstance != null ) {
+					this.instance = registeredInstance;
+					return;
+				}
+
+
+				this.instance = makePersistentCollection( fetchedMapping, collectionKey, rowProcessingState );
+				persistenceContext.addUninitializedCollection(
+						getInitializingCollectionDescriptor(),
+						instance,
+						collectionKey.getKey()
+				);
 			}
-
-			if ( registeredInstance != null ) {
-				this.instance = registeredInstance;
-				return;
-			}
-
-			this.instance = makePersistentCollection( fetchedMapping, collectionKey, rowProcessingState );
-			persistenceContext.addUninitializedCollection(
-					getInitializingCollectionDescriptor(),
-					instance,
-					collectionKey.getKey()
-			);
 		}
 
 		private static PersistentCollection makePersistentCollection(

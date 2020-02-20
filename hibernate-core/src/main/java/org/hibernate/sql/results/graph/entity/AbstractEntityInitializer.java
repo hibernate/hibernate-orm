@@ -190,6 +190,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@SuppressWarnings("unused")
 	public Object getKeyValue() {
+		if ( entityKey == null ) {
+			return null;
+		}
 		return entityKey.getIdentifier();
 	}
 

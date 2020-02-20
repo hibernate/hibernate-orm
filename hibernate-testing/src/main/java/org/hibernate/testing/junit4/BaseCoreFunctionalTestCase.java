@@ -236,6 +236,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return NO_MAPPINGS;
 	}
 
+	@Deprecated
 	protected String[] getXmlFiles() {
 		// todo : rename to getOrmXmlFiles()
 		return NO_MAPPINGS;

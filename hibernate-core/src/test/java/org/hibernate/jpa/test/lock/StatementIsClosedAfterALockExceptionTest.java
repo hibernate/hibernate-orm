@@ -15,8 +15,11 @@ import javax.persistence.LockModeType;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil;
@@ -33,6 +36,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );

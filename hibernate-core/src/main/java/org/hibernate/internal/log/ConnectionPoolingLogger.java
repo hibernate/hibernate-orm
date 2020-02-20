@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -39,7 +40,7 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	void connectionProperties(Properties connectionProps);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Using Hibernate built-in connection pool (not for production use!)", id = 10001002)
+	@Message(value = "Using built-in connection pool (not intended for production use)", id = 10001002)
 	void usingHibernateBuiltInConnectionPool();
 
 	@LogMessage(level = INFO)
@@ -80,4 +81,12 @@ public interface ConnectionPoolingLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Problem closing pooled connection", id = 10001009)
 	void unableToClosePooledConnection(@Cause SQLException e);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Connection pool size: %s (min=%s)", id = 10001115)
+	void hibernateConnectionPoolSize(int poolSize, int minSize);
+
+	@LogMessage(level = ERROR)
+	@Message(value = "Error closing connection", id = 10001284)
+	void unableToCloseConnection(@Cause Exception e);
 }

@@ -347,10 +347,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Handling transient entity in delete processing", id = 114)
 	void handlingTransientEntity();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Hibernate connection pool size: %s (min=%s)", id = 115)
-	void hibernateConnectionPoolSize(int poolSize, int minSize);
-
 	@LogMessage(level = WARN)
 	@Message(value = "Config specified explicit optimizer of [%s], but [%s=%s]; using optimizer [%s] increment default of [%s].", id = 116)
 	void honoringOptimizerSetting(
@@ -928,10 +924,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to cleanup temporary id table after use [%s]", id = 283)
 	void unableToCleanupTemporaryIdTable(Throwable t);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Error closing connection", id = 284)
-	void unableToCloseConnection(@Cause Exception e);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Error closing InitialContext [%s]", id = 285)

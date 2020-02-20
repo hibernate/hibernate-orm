@@ -26,9 +26,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.ConnectionPoolingLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -36,6 +33,8 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -51,8 +50,6 @@ import org.hibernate.service.spi.Stoppable;
  */
 public class DriverManagerConnectionProviderImpl
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
-
-	private static final ConnectionPoolingLogger log = ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 
 	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
 	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";
@@ -72,7 +69,7 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public void configure(Map configurationValues) {
-		log.usingHibernateBuiltInConnectionPool();
+		CONNECTIONS_LOGGER.usingHibernateBuiltInConnectionPool();
 		PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		PoolState newstate = new PoolState( pool, validationInterval );
@@ -133,11 +130,11 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		if ( success ) {
-			log.loadedDriver( driverClassName );
+			CONNECTIONS_LOGGER.loadedDriver( driverClassName );
 		}
 		else {
 			//we're hoping that the driver is already loaded
-			log.noDriver( AvailableSettings.DRIVER );
+			CONNECTIONS_LOGGER.noDriver( AvailableSettings.DRIVER );
 			StringBuilder list = new StringBuilder();
 			Enumeration<Driver> drivers = DriverManager.getDrivers();
 			while ( drivers.hasMoreElements() ) {
@@ -146,36 +143,36 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			log.loadedDrivers( list.toString() );
+			CONNECTIONS_LOGGER.loadedDrivers( list.toString() );
 		}
 
 		if ( url == null ) {
-			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
-			log.error( msg );
+			final String msg = CONNECTIONS_LOGGER.jdbcUrlNotSpecified( AvailableSettings.URL );
+			CONNECTIONS_LOGGER.error( msg );
 			throw new HibernateException( msg );
 		}
 		connectionCreatorBuilder.setUrl( url );
 
-		log.usingUrl( url );
+		CONNECTIONS_LOGGER.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
 		// if debug level is enabled, then log the password, otherwise mask it
-		if ( log.isDebugEnabled() ) {
-			log.connectionProperties( connectionProps );
+		if ( CONNECTIONS_LOGGER.isDebugEnabled() ) {
+			CONNECTIONS_LOGGER.connectionProperties( connectionProps );
 		}
 		else {
-			log.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
+			CONNECTIONS_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 		}
 		connectionCreatorBuilder.setConnectionProps( connectionProps );
 
 		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
-		log.autoCommitMode( autoCommit );
+		CONNECTIONS_LOGGER.autoCommitMode( autoCommit );
 		connectionCreatorBuilder.setAutoCommit( autoCommit );
 
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
 		if ( isolation != null ) {
-			log.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
+			CONNECTIONS_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 		}
 		connectionCreatorBuilder.setIsolation( isolation );
 
@@ -184,7 +181,7 @@ public class DriverManagerConnectionProviderImpl
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistryImplementor serviceRegistry) {
 		if ( driverClassName == null ) {
-			log.debug( "No driver class specified" );
+			CONNECTIONS_LOGGER.debug( "No driver class specified" );
 			return null;
 		}
 
@@ -273,8 +270,6 @@ public class DriverManagerConnectionProviderImpl
 		private final ConcurrentLinkedQueue<Connection> allConnections = new ConcurrentLinkedQueue<Connection>();
 		private final ConcurrentLinkedQueue<Connection> availableConnections = new ConcurrentLinkedQueue<Connection>();
 
-		private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
-
 		private final ConnectionCreator connectionCreator;
 		private final boolean autoCommit;
 		private final int minSize;
@@ -284,12 +279,12 @@ public class DriverManagerConnectionProviderImpl
 
 		private PooledConnections(
 				Builder builder) {
-			log.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+			CONNECTIONS_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
 			connectionCreator = builder.connectionCreator;
 			autoCommit = builder.autoCommit;
 			maxSize = builder.maxSize;
 			minSize = builder.minSize;
-			log.hibernateConnectionPoolSize( maxSize, minSize );
+			CONNECTIONS_LOGGER.hibernateConnectionPoolSize( maxSize, minSize );
 			addConnections( builder.initialSize );
 		}
 
@@ -299,18 +294,18 @@ public class DriverManagerConnectionProviderImpl
 			if ( !primed && size >= minSize ) {
 				// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
 				// defined min-size.
-				log.debug( "Connection pool now considered primed; min-size will be maintained" );
+				CONNECTIONS_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
 				primed = true;
 			}
 
 			if ( size < minSize && primed ) {
 				int numberToBeAdded = minSize - size;
-				log.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+				CONNECTIONS_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
 				addConnections( numberToBeAdded );
 			}
 			else if ( size > maxSize ) {
 				int numberToBeRemoved = size - maxSize;
-				log.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+				CONNECTIONS_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
 				removeConnections( numberToBeRemoved );
 			}
 		}
@@ -340,7 +335,7 @@ public class DriverManagerConnectionProviderImpl
 			try {
 				int allocationCount = allConnections.size() - availableConnections.size();
 				if(allocationCount > 0) {
-					log.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
+					CONNECTIONS_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
 				}
 			}
 			finally {
@@ -364,7 +359,7 @@ public class DriverManagerConnectionProviderImpl
 					allConnections.remove( connection );
 				}
 				catch (SQLException e) {
-					log.unableToCloseConnection( e );
+					CONNECTIONS_LOGGER.unableToCloseConnection( e );
 				}
 			}
 		}
@@ -458,7 +453,7 @@ public class DriverManagerConnectionProviderImpl
 				if ( !active ) {
 					return;
 				}
-				log.cleaningUpConnectionPool( pool.getUrl() );
+				CONNECTIONS_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
 				active = false;
 				if ( executorService != null ) {
 					executorService.shutdown();
@@ -468,7 +463,7 @@ public class DriverManagerConnectionProviderImpl
 					pool.close();
 				}
 				catch (SQLException e) {
-					log.unableToClosePooledConnection( e );
+					CONNECTIONS_LOGGER.unableToClosePooledConnection( e );
 				}
 			}
 			finally {

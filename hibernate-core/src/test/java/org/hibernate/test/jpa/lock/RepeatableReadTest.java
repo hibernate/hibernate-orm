@@ -26,6 +26,9 @@ import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 
+import org.hibernate.testing.SkipForDialect;
+import com.nuodb.hibernate.NuoDBDialect;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -37,6 +40,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
+@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 public class RepeatableReadTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();

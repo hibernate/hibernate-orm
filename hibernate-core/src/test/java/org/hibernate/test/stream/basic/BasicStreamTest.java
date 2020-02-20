@@ -49,7 +49,7 @@ public class BasicStreamTest extends BaseNonConfigCoreFunctionalTestCase {
 		final Stream<MyEntity> stream = session.createQuery( "from MyEntity", MyEntity.class ).stream();
 		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( true ) );
 		stream.forEach( System.out::println );
-		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( true ) );
+		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( false ) );
 		stream.close();
 		assertThat( ( (SessionImplementor) session ).getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources(), is( false ) );
 

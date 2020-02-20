@@ -159,9 +159,10 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
 It's good practice not to mix forms in a given query.
 ====
 
-In terms of execution, JPA `Query` offers 2 different methods for retrieving a result set.
+In terms of execution, JPA `Query` offers 3 different methods for retrieving a result set.
 
 * `Query#getResultList()` - executes the select query and returns back the list of results.
+* `Query#getResultStream()` - executes the select query and returns back a `Stream` over the results.
 * `Query#getSingleResult()` - executes the select query and returns a single result. If there were more than one result an exception is thrown.
 
 [[jpql-api-list-example]]
@@ -170,6 +171,15 @@ In terms of execution, JPA `Query` offers 2 different methods for retrieving a r
 [source, JAVA, indent=0]
 ----
 include::{sourcedir}/HQLTest.java[tags=jpql-api-list-example]
+----
+====
+
+[[jpql-api-stream-example]]
+.JPA `getResultStream()` result
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=jpql-api-stream-example]
 ----
 ====
 
@@ -413,6 +423,29 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-stream-example]
 ====
 Just like with `ScrollableResults`, you should always close a Hibernate `Stream` either explicitly or using a https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html[try-with-resources] block.
 ====
+
+[[jpql-api-stream]]
+==== Query streaming
+
+Since version 2.2, the JPA `Query` interface offers support for returning a `Stream` via the `getResultStream` method.
+
+Just like the `scroll` method, you can use a try-with-resources block to close the `Stream`
+prior to closing the currently running Persistence Context.
+
+Since Hibernate 5.4, the `Stream` is also closed when calling a terminal operation,
+as illustrated by the following example.
+
+[[jpql-api-stream-terminal-operation]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=jpql-api-stream-terminal-operation]
+----
+====
+
+The `Stream` is closed automatically after calling the `collect` method,
+since there is no reason to keep the underlying JDBC `ResultSet` open
+if the `Stream` cannot be reused.
 
 [[hql-case-sensitivity]]
 === Case Sensitivity

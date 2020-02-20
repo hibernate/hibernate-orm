@@ -79,6 +79,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.StreamDecorator;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -1548,8 +1549,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
-		final Stream<R> stream = StreamSupport.stream( spliterator, false );
-		stream.onClose( scrollableResults::close );
+		final Stream<R> stream = new StreamDecorator(
+				StreamSupport.stream( spliterator, false ),
+				scrollableResults::close
+		);
 
 		return stream;
 	}

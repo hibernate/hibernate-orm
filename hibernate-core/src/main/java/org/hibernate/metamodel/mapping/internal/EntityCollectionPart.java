@@ -47,7 +47,6 @@ public class EntityCollectionPart
 	private final EntityMappingType entityMappingType;
 
 	private ModelPart fkTargetModelPart;
-	private String[] identifyingColumns;
 
 	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
@@ -75,14 +74,6 @@ public class EntityCollectionPart
 		else {
 			fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
 		}
-
-		final List<String> identifyingColumnsList = new ArrayList<>();
-		collectionDescriptor.getAttributeMapping().getKeyDescriptor().visitReferringColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
-					identifyingColumnsList.add( containingTableExpression + "." + columnExpression );
-				}
-		);
-		this.identifyingColumns = identifyingColumnsList.toArray( new String[0] );
 	}
 
 
@@ -211,10 +202,5 @@ public class EntityCollectionPart
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		// todo (6.0) : this will not strictly work - we'd want a new ForeignKeyDescriptor that points the other direction
 		return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
-	}
-
-	@Override
-	public String[] getIdentifyingColumnExpressions() {
-		return identifyingColumns;
 	}
 }

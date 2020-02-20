@@ -13,10 +13,4 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public interface Association extends Fetchable {
 	ForeignKeyDescriptor getForeignKeyDescriptor();
-
-	/**
-	 * The column expressions that identify this association.
-	 * Mainly used in circularity detection
-	 */
-	String[] getIdentifyingColumnExpressions();
 }

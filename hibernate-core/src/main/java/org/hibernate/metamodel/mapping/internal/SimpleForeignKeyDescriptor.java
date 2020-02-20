@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -57,6 +58,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private final String targetColumnExpression;
 	private final JdbcMapping jdbcMapping;
 	private final ForeignKeyDirection fKeyDirection;
+	private final int hasCode;
 
 	public SimpleForeignKeyDescriptor(
 			ForeignKeyDirection fKeyDirection,
@@ -71,6 +73,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpression = targetColumnExpression;
 		this.jdbcMapping = jdbcMapping;
+
+		this.hasCode = Objects.hash(
+				keyColumnContainingTable,
+				keyColumnExpression,
+				targetColumnContainingTable,
+				targetColumnExpression
+		);
 	}
 
 	@Override
@@ -404,5 +413,25 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	public String getTargetColumnExpression() {
 		return targetColumnExpression;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		SimpleForeignKeyDescriptor that = (SimpleForeignKeyDescriptor) o;
+		return Objects.equals( keyColumnContainingTable, that.keyColumnContainingTable ) &&
+				Objects.equals( targetColumnContainingTable, that.targetColumnContainingTable ) &&
+				Objects.equals( keyColumnExpression, that.keyColumnExpression ) &&
+				Objects.equals( targetColumnExpression, that.targetColumnExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hasCode;
 	}
 }

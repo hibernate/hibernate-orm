@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -81,11 +77,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private String identifyingColumnsTableExpression;
-	private String inverseIdentifyingColumnsTableExpression;
-	private String[] identifyingColumns;
-
-
-
 
 	public SingularAssociationAttributeMapping(
 			String name,
@@ -139,30 +130,14 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
 
 		final String identifyingColumnsTableExpression;
-		final String inverseColumnsTableExpression;
-		final List<String> identifyingColumnsList = new ArrayList<>();
 		if ( foreignKeyDescriptor.getDirection() == ForeignKeyDirection.FROM_PARENT && !referringPrimaryKey ) {
 			identifyingColumnsTableExpression = foreignKeyDescriptor.getTargetTableExpression();
-			inverseColumnsTableExpression = foreignKeyDescriptor.getReferringTableExpression();
-			foreignKeyDescriptor.visitTargetColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						identifyingColumnsList.add( containingTableExpression + "." + columnExpression );
-					}
-			);
 		}
 		else {
 			identifyingColumnsTableExpression = foreignKeyDescriptor.getReferringTableExpression();
-			inverseColumnsTableExpression = foreignKeyDescriptor.getTargetTableExpression();
-			foreignKeyDescriptor.visitReferringColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						identifyingColumnsList.add( containingTableExpression + "." + columnExpression );
-					}
-			);
 		}
 
-		this.identifyingColumns = identifyingColumnsList.toArray( new String[0] );
 		this.identifyingColumnsTableExpression = identifyingColumnsTableExpression;
-		this.inverseIdentifyingColumnsTableExpression = inverseColumnsTableExpression;
 	}
 
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
@@ -186,11 +161,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public String[] getIdentifyingColumnExpressions() {
-		return identifyingColumns;
 	}
 
 	@Override
@@ -218,7 +188,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 		final Association associationParent = (Association) referencedModePart;
 
-		if ( Arrays.equals( associationParent.getIdentifyingColumnExpressions(), this.getIdentifyingColumnExpressions() ) ) {
+		if (foreignKeyDescriptor.equals( associationParent.getForeignKeyDescriptor() ) ) {
 			// we need to determine the NavigablePath referring to the entity that the bi-dir
 			// fetch will "return" for its Assembler.  so we walk "up" the FetchParent graph
 			// to find the "referenced entity" reference

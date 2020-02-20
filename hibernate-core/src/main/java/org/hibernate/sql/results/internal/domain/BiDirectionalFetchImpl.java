@@ -156,13 +156,6 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public String[] getIdentifyingColumnExpressions() {
-		// fetch parent really always needs to be an Association, so we simply cast here
-		//		should maybe verify this in ctor
-		return ( (Association) fetchParent ).getIdentifyingColumnExpressions();
-	}
-
-	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

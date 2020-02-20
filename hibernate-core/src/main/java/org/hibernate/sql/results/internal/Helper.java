@@ -52,12 +52,20 @@ public class Helper {
 		if ( ResultsLogger.INSTANCE.isDebugEnabled() ) {
 			return initializer -> {
 				ResultsLogger.INSTANCE.debug( "Adding initializer : " + initializer );
-				initializers.add( initializer );
+				addIfNotPresent( initializers, initializer );
 			};
 		}
 		else {
-			return initializers::add;
+			return initializer ->
+					addIfNotPresent( initializers, initializer );
 		}
+	}
+
+	private static void addIfNotPresent(List<Initializer> initializers, Initializer initializer) {
+		if ( initializers.contains( initializer ) ) {
+			return;
+		}
+		initializers.add( initializer );
 	}
 
 	public static void finalizeCollectionLoading(

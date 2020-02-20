@@ -32,7 +32,6 @@ To run the matrix tests for NuoDB:
 1. Set the Hibernate dialect - this must match the Hibernate 5 dialect you installed earlier.
 
    * **Note:** the value you set _does not_ have `-hib5` in the end:
-
      ```bash
      export DIALECT_VERSION=20.x.x      (Linux/MacOS)
      set DIALECT_VERSION=20.x.x         (Windows)
@@ -49,14 +48,15 @@ To run the matrix tests for NuoDB:
    * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`). To setup gradle, see original readme content below.  The expected output is:
 
      ```sh
-     6935 tests completed, 114 failed, 822 skipped
+     9444 tests completed, 2698 failed, 1803 skipped
      ```
 
    * **Warnings:**
      * If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
-     * Not all tests clean up after themselves.  You may need to drop the HIBERNATE_ORM_TEST schema used by the tests by
-       running "`DROP SCHEMA HIBERNATE_ORM_TEST CASCADE`".
+     * Not all tests clean up after themselves.  If using the local database You may need to restart the environment by rerunning the script `env/setup.sh`.
+
+     * Test execution takes ~30m in average with a live database and ~3m without.
 
 
 1. Run individual tests
@@ -69,6 +69,8 @@ To run the matrix tests for NuoDB:
    ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
    ```
 
+   **NOTE:** Not all tests are against NuoDB and actually some are explicitly skipped due to timeout and locks. Those tests have the special annotation `@SkipForDialect(value = NuoDBDialect.class)`
+
 1. Pull Jar from Sonatype
    Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
    Note the build number - NNNN (a 4 digit number such as 1050). To use this dependency run as follows:
@@ -80,7 +82,7 @@ To run the matrix tests for NuoDB:
    gradle clean ...
    ```
 
-Please note that even if NuoDB is not available, 4588 tests complete, 2823 fail, and 840 are skipped. So 925 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
+Please note that even if a NuoDB database is not available, 4588 tests complete, 2823 fail, and 840 are skipped. So 925 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
 
 ## Upgrade Hibernate Dialect
 

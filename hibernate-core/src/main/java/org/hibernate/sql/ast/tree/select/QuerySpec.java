@@ -25,7 +25,6 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -122,15 +121,14 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	@Override
 	public MappingModelExpressable getExpressionType() {
 		SqlSelection first = selectClause.getSqlSelections().get(0);
-		return ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType();
+		return first.getExpressionType();
 	}
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		SqlSelection first = selectClause.getSqlSelections().get(0);
 		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
-		JavaTypeDescriptor descriptor = ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType()
-				.getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
+		JavaTypeDescriptor descriptor = first.getExpressionType().getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				descriptor,
@@ -142,8 +140,7 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	public DomainResult createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		SqlSelection first = selectClause.getSqlSelections().get(0);
 		TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration();
-		JavaTypeDescriptor descriptor = ( (SqlSelectionImpl) first ).getWrappedSqlExpression().getExpressionType()
-				.getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
+		JavaTypeDescriptor descriptor = first.getExpressionType().getJdbcMappings( typeConfiguration ).get(0).getJavaTypeDescriptor();
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(

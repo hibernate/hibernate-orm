@@ -15,6 +15,7 @@ import javax.persistence.Id;
 
 import javassist.CtClass;
 import javassist.CtField;
+import javassist.CtMethod;
 import javassist.NotFoundException;
 
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -102,11 +103,13 @@ public abstract class AttributeTypeDescriptor {
 					currentValue.getName()
 							)
 			);
-			builder.append( String.format(
-					"  {  get%s();  }",
+			CtMethod getterMethod = PersistentAttributesHelper.findGetterOrNull(
+					managedCtClass,
 					currentValue.getName()
-							.substring( 0, 1 )
-							.toUpperCase() + currentValue.getName().substring( 1 )
+			);
+			builder.append( String.format(
+					"  {  %s();  }",
+					getterMethod.getName()
 			) );
 		}
 	}

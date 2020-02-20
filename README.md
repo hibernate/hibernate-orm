@@ -44,7 +44,7 @@ To run the matrix tests for NuoDB:
 
 1. Run tests:
 
-   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder. This script will create a NuoDB env with an admin service, a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against.
+   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder. This script will create a NuoDB env with an admin service, a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against. Requires docker to be installed on the server.
    * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`). To setup gradle, see original readme content below.  The expected output is:
 
      ```sh
@@ -54,7 +54,7 @@ To run the matrix tests for NuoDB:
    * **Warnings:**
      * If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
-     * Not all tests clean up after themselves.  If using the local database You may need to restart the environment by rerunning the script `env/setup.sh`.
+     * Not all tests clean up after themselves.  If using the local database you may need to restart the environment by rerunning the script `env/setup.sh`.
 
      * Test execution takes ~30m in average with a live database and ~3m without.
 

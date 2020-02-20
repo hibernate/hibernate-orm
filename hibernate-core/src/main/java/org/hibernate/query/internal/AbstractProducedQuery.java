@@ -56,6 +56,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.EmptyScrollableResults;
@@ -64,7 +65,6 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.TypedParameterValue;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -80,6 +80,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterListBinding;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.StreamDecorator;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -1512,8 +1513,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
-		final Stream<R> stream = StreamSupport.stream( spliterator, false );
-		stream.onClose( scrollableResults::close );
+		final Stream<R> stream = new StreamDecorator(
+				StreamSupport.stream( spliterator, false ),
+				scrollableResults::close
+		);
 
 		return stream;
 	}

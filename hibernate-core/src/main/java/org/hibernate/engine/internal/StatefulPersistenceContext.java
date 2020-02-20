@@ -907,6 +907,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	/**
 	 * Add a collection to the cache, with a given collection entry.
+	 *
+	 * @param coll The collection for which we are adding an entry.
+	 * @param entry The entry representing the collection.
+	 * @param key The key of the collection's entry.
 	 */
 	private void addCollection(PersistentCollection coll, CollectionEntry entry, Object key) {
 		getOrInitializeCollectionEntries().put( coll, entry );

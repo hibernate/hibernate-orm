@@ -9,11 +9,13 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -55,27 +57,36 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 		}
 		identifier = identifierAssembler.assemble( rowProcessingState );
 
-		// todo (6.0) : technically the entity could be managed or cached already.  who/what handles that?
-
-		// todo (6.0) : could also be getting loaded elsewhere (LoadingEntityEntry)
 		if ( identifier == null ) {
 			// todo (6.0) : check this is the correct behaviour
 			entityInstance = null;
 		}
 		else {
-			if ( concreteDescriptor.hasProxy() ) {
-				entityInstance = concreteDescriptor.createProxy(
-						identifier,
-						rowProcessingState.getSession()
-				);
+			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
+			final Object entity = rowProcessingState.getSession().getPersistenceContext().getEntity( entityKey );
+			if ( entity != null ) {
+				entityInstance = entity;
 			}
-			else if ( concreteDescriptor
-					.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading() ) {
-				entityInstance = concreteDescriptor.instantiate(
-						identifier,
-						rowProcessingState.getSession()
-				);
+			else {
+				LoadingEntityEntry loadingEntityLocally = rowProcessingState.getJdbcValuesSourceProcessingState()
+						.findLoadingEntityLocally( entityKey );
+				if ( loadingEntityLocally != null ) {
+					entityInstance = loadingEntityLocally.getEntityInstance();
+				}
+				else if ( concreteDescriptor.hasProxy() ) {
+					entityInstance = concreteDescriptor.createProxy(
+							identifier,
+							rowProcessingState.getSession()
+					);
+				}
+				else if ( concreteDescriptor
+						.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading() ) {
+					entityInstance = concreteDescriptor.instantiate(
+							identifier,
+							rowProcessingState.getSession()
+					);
+				}
 			}
 
 			notifyParentResolutionListeners( entityInstance );

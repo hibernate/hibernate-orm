@@ -156,6 +156,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 		return columns.iterator();
 	}
 
+	@Deprecated
 	public Iterator<Column> columnIterator() {
 		return columns.iterator();
 	}

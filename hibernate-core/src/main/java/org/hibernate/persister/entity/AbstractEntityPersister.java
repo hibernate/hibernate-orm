@@ -5273,7 +5273,9 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
 		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
-		setIdentifier( instance, id, session );
+		if ( id != null ) {
+			setIdentifier( instance, id, session );
+		}
 		return instance;
 	}
 

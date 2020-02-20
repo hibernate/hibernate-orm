@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -63,6 +64,11 @@ public class SqlSelectionImpl implements SqlSelection {
 	@Override
 	public int getValuesArrayPosition() {
 		return valuesArrayPosition;
+	}
+
+	@Override
+	public MappingModelExpressable getExpressionType() {
+		return getWrappedSqlExpression().getExpressionType();
 	}
 
 	@Override

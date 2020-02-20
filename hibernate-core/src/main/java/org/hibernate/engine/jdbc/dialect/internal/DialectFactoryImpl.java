@@ -19,8 +19,12 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Standard implementation of the {@link DialectFactory} service.
@@ -28,6 +32,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareService {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( "SQL dialect" );
+
 	private StrategySelector strategySelector;
 	private DialectResolver dialectResolver;
 
@@ -49,11 +55,26 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	@Override
 	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
-		if ( !isEmpty( dialectReference ) ) {
-			return constructDialect( dialectReference, resolutionInfoSource );
-		}
-		else {
-			return determineDialect( resolutionInfoSource );
+		Dialect dialect = !isEmpty(dialectReference) ?
+				constructDialect(dialectReference, resolutionInfoSource) :
+				determineDialect(resolutionInfoSource);
+		logSelectedDialect( dialect );
+		return dialect;
+	}
+
+	private static void logSelectedDialect(Dialect dialect) {
+		LOG.usingDialect( dialect );
+
+		Class<? extends Dialect> dialectClass = dialect.getClass();
+		if ( dialectClass.isAnnotationPresent(Deprecated.class) ) {
+			Class<?> superDialectClass = dialectClass.getSuperclass();
+			if ( !superDialectClass.isAnnotationPresent(Deprecated.class)
+					&& !superDialectClass.equals(Dialect.class) ) {
+				DEPRECATION_LOGGER.deprecatedDialect( dialectClass.getSimpleName(), superDialectClass.getName() );
+			}
+			else {
+				DEPRECATION_LOGGER.deprecatedDialect( dialectClass.getSimpleName() );
+			}
 		}
 	}
 

@@ -33,8 +33,6 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -89,7 +87,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.*;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.type.descriptor.DateTimeUtils.*;
 
 /**
@@ -107,7 +104,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.*;
  * @author Gavin King, David Channon
  */
 public abstract class Dialect implements ConversionContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Dialect.class );
 
 	/**
 	 * Defines a default batch size constant
@@ -143,7 +139,6 @@ public abstract class Dialect implements ConversionContext {
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected Dialect() {
-		logSelectedDialect();
 
 		registerColumnType( Types.BIT, 1, "bit" );
 		registerColumnType( Types.BIT, "bit($l)" );
@@ -230,22 +225,6 @@ public abstract class Dialect implements ConversionContext {
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		defaultSizeStrategy = new DefaultSizeStrategyImpl();
-	}
-
-	private void logSelectedDialect() {
-		LOG.usingDialect( this );
-
-		Class<? extends Dialect> dialect = getClass();
-		if ( dialect.isAnnotationPresent(Deprecated.class) ) {
-			Class<?> superDialect = dialect.getSuperclass();
-			if ( !superDialect.isAnnotationPresent(Deprecated.class)
-				&& !superDialect.equals(Dialect.class) ) {
-				DEPRECATION_LOGGER.deprecatedDialect( dialect.getSimpleName(), superDialect.getName() );
-			}
-			else {
-				DEPRECATION_LOGGER.deprecatedDialect( dialect.getSimpleName() );
-			}
-		}
 	}
 
 	/**

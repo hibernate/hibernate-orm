@@ -6,19 +6,14 @@
  */
 package org.hibernate.orm.test.metamodel.mapping.collections;
 
-import java.util.Iterator;
-
 import org.hibernate.Hibernate;
 import org.hibernate.persister.collection.CollectionPersister;
 
-import org.hibernate.testing.hamcrest.CollectionMatchers;
-import org.hibernate.testing.hamcrest.InitializationCheckMatcher;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
 import org.hibernate.testing.orm.domain.gambit.SimpleComponent;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,14 +21,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
+import org.hamcrest.collection.IsIterableContainingInOrder;
+
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
+import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitialized;
+import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotInitialized;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory
@@ -47,7 +45,16 @@ public class SetOperationTests {
 					entity.addBasic( "another value" );
 
 					entity.addSortedBasic( "def" );
+					entity.addSortedBasic( "cde" );
+					entity.addSortedBasic( "bcd" );
+					entity.addSortedBasic( "efg" );
 					entity.addSortedBasic( "abc" );
+
+					entity.addSortedBasicWithComparator( "DeF" );
+					entity.addSortedBasicWithComparator( "cDe" );
+					entity.addSortedBasicWithComparator( "bcD" );
+					entity.addSortedBasicWithComparator( "Efg" );
+					entity.addSortedBasicWithComparator( "aBC" );
 
 					entity.addEnum( EnumValue.ONE );
 					entity.addEnum( EnumValue.TWO );
@@ -66,9 +73,7 @@ public class SetOperationTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityOfSets where name is not null" ).executeUpdate();
-				}
+				session -> session.createQuery( "delete from EntityOfSets where name is not null" ).executeUpdate()
 		);
 	}
 
@@ -77,8 +82,8 @@ public class SetOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfSets entity = session.load( EntityOfSets.class, 1 );
-					assertThat( entity, is( notNullValue() ) );
-					assertThat( entity, InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity, notNullValue() );
+					assertThat( entity, isNotInitialized() );
 				}
 		);
 	}
@@ -88,9 +93,9 @@ public class SetOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfSets entity = session.get( EntityOfSets.class, 1 );
-					assertThat( entity, is( notNullValue() ) );
-					assertThat( entity, InitializationCheckMatcher.isInitialized() );
-					assertThat( entity.getSetOfBasics(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity, notNullValue() );
+					assertThat( entity, isInitialized() );
+					assertThat( entity.getSetOfBasics(), isNotInitialized() );
 				}
 		);
 	}
@@ -104,7 +109,7 @@ public class SetOperationTests {
 							EntityOfSets.class
 					).getSingleResult();
 
-					assertThat( entity.getSetOfBasics(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity.getSetOfBasics(), isNotInitialized() );
 				}
 		);
 	}
@@ -118,9 +123,8 @@ public class SetOperationTests {
 							EntityOfSets.class
 					).getSingleResult();
 
-					assertThat( entity.getSetOfBasics(), InitializationCheckMatcher.isInitialized() );
-
-					assert  entity.getSetOfBasics().size() == 2;
+					assertThat( entity.getSetOfBasics(), isInitialized() );
+					assertThat( entity.getSetOfBasics(), hasSize( 2 ) );
 				}
 		);
 	}
@@ -143,13 +147,13 @@ public class SetOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfSets entity = session.get( EntityOfSets.class, 1 );
-					assertThat( entity.getSetOfBasics(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity.getSetOfBasics(), isNotInitialized() );
 
 					// trigger the init
-					assertThat( entity.getSetOfBasics().size(), is( 2 ) );
+					assertThat( entity.getSetOfBasics(), hasSize( 2 ) );
 
-					assertThat( entity.getSetOfBasics(), InitializationCheckMatcher.isInitialized() );
-					assertThat( entity.getSetOfEnums(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity.getSetOfBasics(), isInitialized() );
+					assertThat( entity.getSetOfEnums(), isNotInitialized() );
 				}
 		);
 	}
@@ -159,19 +163,45 @@ public class SetOperationTests {
 		scope.inTransaction(
 				session -> {
 					final EntityOfSets entity = session.get( EntityOfSets.class, 1 );
-					assertThat( entity.getSortedSetOfBasics(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity.getSortedSetOfBasics(), isNotInitialized() );
 
 					// trigger the init
 					Hibernate.initialize( entity.getSortedSetOfBasics() );
-					assertThat( entity.getSortedSetOfBasics(), InitializationCheckMatcher.isInitialized() );
-					assertThat( entity.getSortedSetOfBasics().size(), is( 2 ) );
-					assertThat( entity.getSetOfEnums(), InitializationCheckMatcher.isNotInitialized() );
+					assertThat( entity.getSortedSetOfBasics(), isInitialized() );
+					assertThat( entity.getSortedSetOfBasics(), hasSize( 5 ) );
+					assertThat( entity.getSetOfEnums(), isNotInitialized() );
 
-					final Iterator<String> iterator = entity.getSortedSetOfBasics().iterator();
-					final String first = iterator.next();
-					final String second = iterator.next();
-					assertThat( first, is( "abc" ) );
-					assertThat( second, is( "def" ) );
+					assertThat( entity.getSortedSetOfBasics(), IsIterableContainingInOrder.contains(
+							"abc",
+							"bcd",
+							"cde",
+							"def",
+							"efg"
+					) );
+				}
+		);
+	}
+
+	@Test
+	public void testSortedSetWithComparatorAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final EntityOfSets entity = session.get( EntityOfSets.class, 1 );
+					assertThat( entity.getSortedSetOfBasicsWithComparator(), isNotInitialized() );
+
+					// trigger the init
+					Hibernate.initialize( entity.getSortedSetOfBasicsWithComparator() );
+					assertThat( entity.getSortedSetOfBasicsWithComparator(), isInitialized() );
+					assertThat( entity.getSortedSetOfBasicsWithComparator(), hasSize( 5 ) );
+					assertThat( entity.getSetOfEnums(), isNotInitialized() );
+
+					assertThat( entity.getSortedSetOfBasicsWithComparator(), IsIterableContainingInOrder.contains(
+							"aBC",
+							"bcD",
+							"cDe",
+							"DeF",
+							"Efg"
+					) );
 				}
 		);
 	}

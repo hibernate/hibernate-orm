@@ -409,55 +409,55 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
+		final SqmAttributeJoin sqmJoin;
 		if ( joinedPathSource instanceof SingularPersistentAttribute ) {
-			return buildSingularJoin(
+			sqmJoin = buildSingularJoin(
 					(SingularPersistentAttribute<T,A>) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-
-		if ( joinedPathSource instanceof BagPersistentAttribute ) {
-			return buildBagJoin(
+		else if ( joinedPathSource instanceof BagPersistentAttribute ) {
+			sqmJoin = buildBagJoin(
 					(BagPersistentAttribute) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-
-		if ( joinedPathSource instanceof ListPersistentAttribute ) {
-			return buildListJoin(
+		else if ( joinedPathSource instanceof ListPersistentAttribute ) {
+			sqmJoin = buildListJoin(
 					(ListPersistentAttribute) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-
-		if ( joinedPathSource instanceof MapPersistentAttribute ) {
-			return buildMapJoin(
+		else if ( joinedPathSource instanceof MapPersistentAttribute ) {
+			sqmJoin = buildMapJoin(
 					(MapPersistentAttribute) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-
-		if ( joinedPathSource instanceof SetPersistentAttribute ) {
-			return buildSetJoin(
+		else if ( joinedPathSource instanceof SetPersistentAttribute ) {
+			sqmJoin = buildSetJoin(
 					(SetPersistentAttribute) joinedPathSource,
 					joinType,
 					fetched
 			);
 		}
-
-		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Passed attribute [%s] did not correspond to a joinable reference [%s] relative to %s",
-						joinedPathSource.getPathName(),
-						joinedPathSource,
-						getNavigablePath().getFullPath()
-				)
-		);
+		else {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Passed attribute [%s] did not correspond to a joinable reference [%s] relative to %s",
+							joinedPathSource.getPathName(),
+							joinedPathSource,
+							getNavigablePath().getFullPath()
+					)
+			);
+		}
+		addSqmJoin( sqmJoin );
+		return sqmJoin;
 	}
 
 	private <A> SqmSingularJoin<T,A> buildSingularJoin(

@@ -57,7 +57,7 @@ public class VersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( passp.getVersion(), 1 );
+		assertEquals( 1, passp.getVersion() );
 
 		s = openSession();
 		t = s.beginTransaction();

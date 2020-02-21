@@ -24,6 +24,7 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
 /**
@@ -38,6 +39,8 @@ public class EntityOfSets {
 
 	private Set<String> setOfBasics;
 	private SortedSet<String> sortedSetOfBasics;
+	private SortedSet<String> sortedSetOfBasicsWithComparator;
+
 	private Set<String> orderedSetOfBasics;
 
 	private Set<EnumValue> setOfEnums;
@@ -140,6 +143,26 @@ public class EntityOfSets {
 		sortedSetOfBasics.add( value );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// sortedSetOfBasicsWithComparator
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasicsWithComparator")
+	@SortComparator( SimpleBasicSortComparator.class )
+	public SortedSet<String> getSortedSetOfBasicsWithComparator() {
+		return sortedSetOfBasicsWithComparator;
+	}
+
+	public void setSortedSetOfBasicsWithComparator(SortedSet<String> sortedSetOfBasicsWithComparator) {
+		this.sortedSetOfBasicsWithComparator = sortedSetOfBasicsWithComparator;
+	}
+
+	public void addSortedBasicWithComparator(String value) {
+		if ( sortedSetOfBasicsWithComparator == null ) {
+			sortedSetOfBasicsWithComparator = new TreeSet<>();
+		}
+		sortedSetOfBasicsWithComparator.add( value );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfConvertedEnums

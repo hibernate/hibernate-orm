@@ -14,19 +14,18 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
 import org.hibernate.testing.orm.domain.gambit.SimpleComponent;
-import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -102,7 +101,7 @@ public class ListOperationTests {
 					assertThat( result.getListOfBasics(), notNullValue() );
 					assertThat( Hibernate.isInitialized( result.getListOfBasics() ), is( true ) );
 					assertTrue( session.getPersistenceContext().containsCollection( (PersistentCollection) result.getListOfBasics() ) );
-					assertThat( result.getListOfBasics().size(), is( 3 ) );
+					assertThat( result.getListOfBasics(), hasSize( 3 ) );
 
 					assertThat( result.getListOfConvertedEnums(), notNullValue() );
 					assertThat( Hibernate.isInitialized( result.getListOfConvertedEnums() ), is( false ) );

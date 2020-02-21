@@ -52,7 +52,7 @@ public class OneToOneWithDerivedIdentityTest extends SessionFactoryBasedFunction
 		inTransaction(
 				session -> {
 					Person person = session.get( Person.class, PERSON_ID );
-					assertEquals( person.getName(), "Alfio" );
+					assertEquals( "Alfio", person.getName() );
 				} );
 	}
 

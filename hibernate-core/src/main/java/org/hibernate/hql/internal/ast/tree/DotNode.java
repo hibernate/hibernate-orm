@@ -394,11 +394,14 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 		if ( isDotNode( parent ) ) {
 			// our parent is another dot node, meaning we are being further dereferenced.
-			// thus we need to generate a join unless the parent refers to the associated
-			// entity's PK (because 'our' table would know the FK).
+			// thus we need to generate a join unless the association is non-nullable and
+			// parent refers to the associated entity's PK (because 'our' table would know the FK).
 			parentAsDotNode = (DotNode) parent;
 			property = parentAsDotNode.propertyName;
-			joinIsNeeded = generateJoin && !isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName );
+			joinIsNeeded = generateJoin && (
+					entityType.isNullable() ||
+					!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
+			);
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause

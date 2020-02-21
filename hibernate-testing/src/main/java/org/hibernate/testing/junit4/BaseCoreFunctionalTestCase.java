@@ -238,8 +238,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	/**
 	 *
-	 * @author TheGeekyAsian
-	 *
 	 * @deprecated (Since 6.0) this method will be renamed to getOrmXmlFile().
 	 */
 	@Deprecated

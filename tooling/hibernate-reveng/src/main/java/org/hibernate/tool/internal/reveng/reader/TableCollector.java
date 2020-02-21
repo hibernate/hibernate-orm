@@ -13,7 +13,6 @@ import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.IndexProcessor;
-import org.hibernate.tool.internal.reveng.PrimaryKeyProcessor;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.jboss.logging.Logger;
 

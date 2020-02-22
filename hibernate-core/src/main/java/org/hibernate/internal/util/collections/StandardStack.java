@@ -47,7 +47,7 @@ public class StandardStack<T> implements Stack<T> {
 		if ( internalStack.size() < 2 ) {
 			return null;
 		}
-		return internalStack.get( internalStack.size() - 2 );
+		return internalStack.get( 1 );
 	}
 
 	@Override

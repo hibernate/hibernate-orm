@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.reader;
 
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;

@@ -196,6 +196,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( splitPosition > 0 ) {
 				final String prefix = pathSoFar.substring( 0, splitPosition );
 				final String terminal = pathSoFar.substring( splitPosition + 1 );
+				//TODO: try interpreting paths of form foo.bar.Foo.Bar as foo.bar.Foo$Bar
 
 				try {
 					final Class<?> namedClass = creationContext
@@ -206,6 +207,16 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = creationContext.getJpaMetamodel()
 								.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry();
+
+						if ( namedClass.isEnum() ) {
+							return new SqmEnumLiteral(
+									Enum.valueOf( (Class) namedClass, terminal ),
+									(EnumJavaTypeDescriptor<?>) javaTypeDescriptorRegistry.resolveDescriptor( namedClass ),
+									terminal,
+									creationContext.getNodeBuilder()
+							);
+						}
+
 						try {
 							final Field referencedField = namedClass.getDeclaredField( terminal );
 							if ( referencedField != null ) {
@@ -216,18 +227,6 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 							}
 						}
 						catch (Exception ignore) {
-						}
-
-						if ( namedClass.isEnum() ) {
-							//noinspection unchecked
-							final Enum referencedEnum = Enum.valueOf( (Class) namedClass, terminal );
-							//noinspection unchecked
-							return new SqmEnumLiteral(
-									referencedEnum,
-									(EnumJavaTypeDescriptor) javaTypeDescriptorRegistry.resolveDescriptor( namedClass ),
-									terminal,
-									creationContext.getNodeBuilder()
-							);
 						}
 					}
 				}

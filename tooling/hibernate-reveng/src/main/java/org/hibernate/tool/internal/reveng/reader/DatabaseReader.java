@@ -16,7 +16,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {

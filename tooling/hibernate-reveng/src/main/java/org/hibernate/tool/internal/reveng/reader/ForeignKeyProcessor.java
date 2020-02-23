@@ -14,7 +14,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.ForeignKeysInfo;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.TableNameQualifier;

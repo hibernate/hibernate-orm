@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import java.util.ArrayList;
 import java.util.Collection;

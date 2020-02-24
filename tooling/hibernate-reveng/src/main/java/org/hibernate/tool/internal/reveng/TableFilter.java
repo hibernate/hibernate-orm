@@ -2,7 +2,7 @@ package org.hibernate.tool.internal.reveng;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 
 
 /**

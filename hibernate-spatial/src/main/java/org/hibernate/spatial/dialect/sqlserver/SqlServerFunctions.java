@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.sqlserver;
 
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -62,5 +63,7 @@ class SqlServerFunctions extends SpatialFunctionsRegistry {
 				"pointonsurface", new SqlServerMethod( "STPointOnSurface" )
 		);
 
+		// Register spatial filter function.
+		put( SpatialFunction.filter.name(), new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "?1.Filter(?2)" ) );
 	}
 }

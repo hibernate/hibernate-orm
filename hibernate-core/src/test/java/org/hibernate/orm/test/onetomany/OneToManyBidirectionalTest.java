@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -478,6 +479,21 @@ public class OneToManyBidirectionalTest {
 
 				} )
 		);
+	}
+
+	@Test
+	public void testCircularReferenceDetection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Order> orders = session.createQuery(
+					"select o from Order o join fetch o.lineItems",
+					Order.class
+			).list();
+			orders.forEach( order ->
+				order.getLineItems().forEach( item ->
+					assertThat( item.getOrder(), sameInstance( order ) )
+				)
+			);
+		} );
 	}
 
 	@Entity(name = "Order")

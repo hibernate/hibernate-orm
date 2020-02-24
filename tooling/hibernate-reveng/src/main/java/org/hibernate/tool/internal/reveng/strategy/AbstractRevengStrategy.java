@@ -17,7 +17,7 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
+import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -32,7 +32,7 @@ public abstract class AbstractRevengStrategy implements ReverseEngineeringStrate
 	
 	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 
-	private ReverseEngineeringSettings settings = new ReverseEngineeringSettings(this);
+	private RevengSettings settings = new RevengSettings(this);
 
 	static {
 		AUTO_OPTIMISTICLOCK_COLUMNS = new HashSet<String>();
@@ -234,7 +234,7 @@ public abstract class AbstractRevengStrategy implements ReverseEngineeringStrate
 		return true;
 	}
 
-	public void setSettings(ReverseEngineeringSettings settings) {
+	public void setSettings(RevengSettings settings) {
 		this.settings = settings;		
 	}
 

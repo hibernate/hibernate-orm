@@ -8,7 +8,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
+import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -116,7 +116,7 @@ public class DelegatingReverseEngineeringStrategy implements ReverseEngineeringS
 	 * 
 	 * @see ReverseEngineeringStrategy.setSettings
 	 */
-	public void setSettings(ReverseEngineeringSettings settings) {
+	public void setSettings(RevengSettings settings) {
 		if(delegate!=null) delegate.setSettings(settings);
 	}
 

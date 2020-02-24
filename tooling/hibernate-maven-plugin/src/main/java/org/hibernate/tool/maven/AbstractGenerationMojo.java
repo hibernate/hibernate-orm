@@ -12,7 +12,7 @@ import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
+import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 
@@ -82,8 +82,8 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
         		ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
         				revengStrategy, 
         				revengFiles);
-        ReverseEngineeringSettings settings =
-                new ReverseEngineeringSettings(strategy)
+        RevengSettings settings =
+                new RevengSettings(strategy)
                         .setDefaultPackageName(packageName)
                         .setDetectManyToMany(detectManyToMany)
                         .setDetectOneToOne(detectOneToOne)

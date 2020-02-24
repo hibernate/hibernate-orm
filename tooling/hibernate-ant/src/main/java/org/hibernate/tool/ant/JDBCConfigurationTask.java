@@ -14,7 +14,7 @@ import org.apache.tools.ant.types.Path;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.ReverseEngineeringSettings;
+import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.util.ReflectionUtil;
@@ -67,8 +67,8 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 			strategy = loadreverseEngineeringStrategy(reverseEngineeringStrategyClass, strategy);			
 		}
 		
-		ReverseEngineeringSettings qqsettings = 
-			new ReverseEngineeringSettings(strategy).setDefaultPackageName(packageName)
+		RevengSettings qqsettings = 
+			new RevengSettings(strategy).setDefaultPackageName(packageName)
 			.setDetectManyToMany( detectManyToMany )
 			.setDetectOneToOne( detectOneToOne )
 			.setDetectOptimisticLock( detectOptimisticLock );

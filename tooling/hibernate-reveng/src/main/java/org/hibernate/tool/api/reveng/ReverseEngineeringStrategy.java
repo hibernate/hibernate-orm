@@ -16,7 +16,7 @@ public interface ReverseEngineeringStrategy {
 	 * 
 	 * @param settings used for this
 	 */
-	public void  setSettings(ReverseEngineeringSettings settings);
+	public void  setSettings(RevengSettings settings);
 	
 	/**
 	 * Close any resources this strategy might have used. Called after reverse engineering has been completed.

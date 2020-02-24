@@ -1,6 +1,6 @@
 package org.hibernate.tool.api.reveng;
 
-public class ReverseEngineeringSettings {
+public class RevengSettings {
 
 	
 	final ReverseEngineeringStrategy rootStrategy;
@@ -13,11 +13,11 @@ public class ReverseEngineeringSettings {
 	private boolean detectOneToOne = true;
 
 	
-	public ReverseEngineeringSettings(ReverseEngineeringStrategy rootStrategy) {
+	public RevengSettings(ReverseEngineeringStrategy rootStrategy) {
 		this.rootStrategy = rootStrategy;
 	}
 	
-	public ReverseEngineeringSettings setDefaultPackageName(String defaultPackageName) {
+	public RevengSettings setDefaultPackageName(String defaultPackageName) {
 		if(defaultPackageName==null) {
 			this.defaultPackageName = "";
 		} else {
@@ -36,7 +36,7 @@ public class ReverseEngineeringSettings {
 		return detectOptimisticLock ;
 	}
 	
-	public ReverseEngineeringSettings setDetectOptimisticLock(
+	public RevengSettings setDetectOptimisticLock(
 			boolean optimisticLockSupportEnabled) {
 		this.detectOptimisticLock = optimisticLockSupportEnabled;
 		return this;
@@ -48,7 +48,7 @@ public class ReverseEngineeringSettings {
 	}
 	
 	
-	public ReverseEngineeringSettings setCreateCollectionForForeignKey(
+	public RevengSettings setCreateCollectionForForeignKey(
 			boolean createCollectionForForeignKey) {
 		this.createCollectionForForeignKey = createCollectionForForeignKey;
 		return this;
@@ -59,13 +59,13 @@ public class ReverseEngineeringSettings {
 		return createManyToOneForForeignKey;
 	}
 	
-	public ReverseEngineeringSettings setCreateManyToOneForForeignKey(
+	public RevengSettings setCreateManyToOneForForeignKey(
 			boolean createManyToOneForForeignKey) {
 		this.createManyToOneForForeignKey = createManyToOneForForeignKey;
 		return this;
 	}
 
-	public ReverseEngineeringSettings setDetectManyToMany(boolean b) {
+	public RevengSettings setDetectManyToMany(boolean b) {
 		this.detectManyToMany = b;
 		return this;
 	}
@@ -74,7 +74,7 @@ public class ReverseEngineeringSettings {
 		return detectManyToMany;
 	}
 	
-	public ReverseEngineeringSettings setDetectOneToOne(boolean b) {
+	public RevengSettings setDetectOneToOne(boolean b) {
 		this.detectOneToOne = b;
 		return this;
 	}

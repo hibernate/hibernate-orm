@@ -8,8 +8,9 @@ import java.util.List;
 
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.internal.reveng.strategy.DelegatingStrategy;
 
-public class TableSelectorStrategy extends DelegatingReverseEngineeringStrategy {
+public class TableSelectorStrategy extends DelegatingStrategy {
 	
 	List<SchemaSelection> selections = new ArrayList<SchemaSelection>();
 	

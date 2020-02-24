@@ -30,6 +30,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.reveng.strategy.DelegatingStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
@@ -283,7 +284,7 @@ public class OverrideRepository  {
 	}
 
 	public RevengStrategy getReverseEngineeringStrategy(RevengStrategy delegate) {
-		return new DelegatingReverseEngineeringStrategy(delegate) {
+		return new DelegatingStrategy(delegate) {
 
 			public boolean excludeTable(TableIdentifier ti) {
 				return OverrideRepository.this.excludeTable(ti);

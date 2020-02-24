@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class DelegatingReverseEngineeringStrategy implements RevengStrategy {
+public class DelegatingStrategy implements RevengStrategy {
 
 	RevengStrategy delegate;
 
@@ -21,7 +21,7 @@ public class DelegatingReverseEngineeringStrategy implements RevengStrategy {
 		return delegate==null?null:delegate.getForeignKeys(referencedTable);
 	}
 
-	public DelegatingReverseEngineeringStrategy(RevengStrategy delegate) {
+	public DelegatingStrategy(RevengStrategy delegate) {
 		this.delegate = delegate;
 	}
 

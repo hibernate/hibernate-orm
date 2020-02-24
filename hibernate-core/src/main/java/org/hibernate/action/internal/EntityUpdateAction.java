@@ -211,7 +211,7 @@ public class EntityUpdateAction extends EntityAction {
 
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 		if ( entry == null ) {
-			throw new AssertionFailure( "possible nonthreadsafe access to session" );
+			throw new AssertionFailure( "possible non-threadsafe access to session" );
 		}
 
 		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {

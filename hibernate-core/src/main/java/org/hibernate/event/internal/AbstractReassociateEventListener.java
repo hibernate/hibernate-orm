@@ -47,7 +47,7 @@ public abstract class AbstractReassociateEventListener implements Serializable {
 
 		if ( log.isTraceEnabled() ) {
 			log.tracev(
-					"Reassociating transient instance: {0}",
+					"Re-associating transient instance: {0}",
 					MessageHelper.infoString( persister, id, event.getSession().getFactory() )
 			);
 		}

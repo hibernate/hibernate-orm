@@ -420,14 +420,14 @@ public class EntityBinder {
 				cond = definition == null ? null : definition.getDefaultFilterCondition();
 				if ( StringHelper.isEmpty( cond ) ) {
 					throw new AnnotationException(
-							"no filter condition found for filter " + filterName + " in " + this.name
+							"no filter condition found for filter [" + filterName + "] in " + this.name
 					);
 				}
 			}
 			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(),
 					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
-		LOG.debugf( "Import with entity name %s", name );
+		LOG.debugf( "Import with entity name [%s]", name );
 		try {
 			context.getMetadataCollector().addImport( name, persistentClass.getEntityName() );
 			String entityName = persistentClass.getEntityName();
@@ -870,7 +870,7 @@ public class EntityBinder {
 		);
 
 		if ( persistentClass instanceof TableOwner ) {
-			LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
+			LOG.debugf( "Bind entity [%s] on table [%s]", persistentClass.getEntityName(), table.getName() );
 			( (TableOwner) persistentClass ).setTable( table );
 		}
 		else {
@@ -1313,7 +1313,7 @@ public class EntityBinder {
 
 		if ( hibernateAccessType != null && jpaAccessType != null && hibernateAccessType != jpaAccessType ) {
 			throw new MappingException(
-					"Found @Access and @AccessType with conflicting values on a property in class " + annotatedClass.toString()
+					"Found @Access and @AccessType with conflicting values on a property in class [" + annotatedClass.toString() + "]"
 			);
 		}
 

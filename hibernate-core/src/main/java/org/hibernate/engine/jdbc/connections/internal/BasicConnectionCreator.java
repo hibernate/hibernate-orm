@@ -67,7 +67,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 			}
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
+			throw convertSqlException( "Unable to set transaction isolation [" + isolation + "]", e );
 		}
 
 		try {
@@ -76,7 +76,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 			}
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
+			throw convertSqlException( "Unable to set auto-commit [" + autoCommit + "]", e );
 		}
 
 		return conn;

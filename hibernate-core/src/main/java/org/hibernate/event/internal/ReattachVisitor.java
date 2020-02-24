@@ -80,7 +80,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
-					"Collection dereferenced while transient {0}",
+					"Collection dereferenced while transient: {0}",
 					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
 			);
 		}

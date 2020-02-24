@@ -79,7 +79,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 				throw new HibernateException(
 						"identifier of an instance of " + persister.getEntityName() + " was altered from "
-								+ id + " to " + oid
+								+ oid + " to " + id
 				);
 			}
 		}
@@ -128,7 +128,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				if ( !propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
 					throw new HibernateException(
 							String.format(
-									"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
+									"An immutable natural identifier of entity [%s] was altered from `%s` to `%s`",
 									persister.getEntityName(),
 									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
 											snapshot[i],
@@ -283,7 +283,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 				else {
 					LOG.tracev(
-							"Updating deleted entity: ",
+							"Updating deleted entity: {0}",
 							MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
 					);
 				}
@@ -701,7 +701,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
 			LOG.tracev(
-					"Found dirty properties [{0}] : {1}",
+					"Found dirty properties in [{0}] : {1}",
 					MessageHelper.infoString( persister.getEntityName(), id ),
 					Arrays.toString( dirtyPropertyNames )
 			);

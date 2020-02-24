@@ -167,7 +167,7 @@ public class OutputsImpl implements Outputs {
 		protected Output buildOutput() {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
-						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
+						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s]",
 						isResultSet(),
 						getUpdateCount(),
 						hasExtendedReturns()

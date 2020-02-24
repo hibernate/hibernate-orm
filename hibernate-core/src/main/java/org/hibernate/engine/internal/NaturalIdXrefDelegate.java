@@ -162,10 +162,10 @@ public class NaturalIdXrefDelegate {
 	 */
 	protected void validateNaturalId(EntityPersister persister, Object[] naturalIdValues) {
 		if ( !persister.hasNaturalIdentifier() ) {
-			throw new IllegalArgumentException( "Entity did not define a natrual-id" );
+			throw new IllegalArgumentException( "Entity did not define a natural-id" );
 		}
 		if ( persister.getNaturalIdentifierProperties().length != naturalIdValues.length ) {
-			throw new IllegalArgumentException( "Mismatch between expected number of natural-id values and found." );
+			throw new IllegalArgumentException( "Mismatch between expected number of natural-id values and found ones." );
 		}
 	}
 
@@ -334,7 +334,7 @@ public class NaturalIdXrefDelegate {
 
 		final NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
-			throw new AssertionFailure( "Expecting NaturalIdResolutionCache to exist already for entity " + persister.getEntityName() );
+			throw new AssertionFailure( "Expecting NaturalIdResolutionCache to exist already for entity: " + persister.getEntityName() );
 		}
 
 		entityNaturalIdResolutionCache.stashInvalidNaturalIdReference( invalidNaturalIdValues );

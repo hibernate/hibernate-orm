@@ -145,7 +145,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 			registerMBean( objectName, service.getManagementBean() );
 		}
 		catch ( MalformedObjectNameException e ) {
-			throw new HibernateException( "Unable to generate service IbjectName", e );
+			throw new HibernateException( "Unable to generate service ObjectName", e );
 		}
 	}
 

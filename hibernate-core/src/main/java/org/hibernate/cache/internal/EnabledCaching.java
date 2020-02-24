@@ -117,7 +117,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				throw new HibernateException(
 						String.format(
 								Locale.ROOT,
-								"Region [%s] returned from RegionFactory [%s] was named differently than requested name.  Expecting `%s`, but found `%s`",
+								"Region [%s] returned from RegionFactory [%s] was named differently than requested name. Expecting `%s`, but found `%s`",
 								region,
 								getRegionFactory().getClass().getName(),
 								regionConfig.getRegionName(),
@@ -451,7 +451,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public void evictQueryRegions() {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evicting cache of all query regions." );
+			LOG.debug( "Evicting cache of all query regions" );
 		}
 
 		evictQueryResultRegion( defaultQueryResultsCache );

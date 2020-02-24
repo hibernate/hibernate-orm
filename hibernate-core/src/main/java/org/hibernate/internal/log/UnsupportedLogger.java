@@ -30,7 +30,7 @@ public interface UnsupportedLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Global configuration option '" + AvailableSettings.ENFORCE_LEGACY_PROXY_CLASSNAMES + "' was enabled. " +
-			"Generated proxies will use backwards compatible classnames. This option is unsupported and will be removed.",
+			"Generated proxies will use backwards compatible class names. This option is unsupported and will be removed.",
 			id = 90002001)
 	void usingLegacyClassnamesForProxies();
 

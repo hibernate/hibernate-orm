@@ -362,7 +362,7 @@ public class PropertyBinder {
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
 					throw new AnnotationException(
-							"Only one generator annotation is allowed:" + StringHelper.qualify(
+							"Only one generator annotation is allowed: " + StringHelper.qualify(
 									holder.getPath(),
 									name
 							)
@@ -436,7 +436,7 @@ public class PropertyBinder {
 		}
 		catch (Exception e) {
 			throw new AnnotationException(
-					"Exception occurred during processing of generator annotation:" + StringHelper.qualify(
+					"Exception occurred during processing of generator annotation: " + StringHelper.qualify(
 							holder.getPath(),
 							name
 					), e

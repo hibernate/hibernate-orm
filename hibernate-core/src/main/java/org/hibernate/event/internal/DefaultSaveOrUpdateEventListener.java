@@ -61,7 +61,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		// For an uninitialized proxy, noop, don't even need to return an id, since it is never a save()
 		if ( reassociateIfUninitializedProxy( object, source ) ) {
-			LOG.trace( "Reassociated uninitialized proxy" );
+			LOG.trace( "Re-associated uninitialized proxy" );
 		}
 		else {
 			//initialize properties of the event:

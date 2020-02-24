@@ -32,7 +32,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	public Identifier determinePrimaryTableName(ImplicitEntityNameSource source) {
 		if ( source == null ) {
 			// should never happen, but to be defensive...
-			throw new HibernateException( "Entity naming information was not provided." );
+			throw new HibernateException( "Entity naming information was not provided" );
 		}
 
 		String tableName = transformEntityName( source.getEntityNaming() );

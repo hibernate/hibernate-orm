@@ -526,7 +526,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			// In case any of the enums cannot be stored in 4 bits anymore, we'd have to re-structure the compressed
 			// state int
 			if ( enumConstants.length > 15 ) {
-				throw new AssertionFailure( "Cannot store enum type " + enumType.getName() + " in compressed state as"
+				throw new AssertionFailure( "Cannot store enum type [" + enumType.getName() + "] in compressed state as"
 						+ " it has too many values." );
 			}
 

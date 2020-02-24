@@ -75,7 +75,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
 		final String lockableEntityName = lockable.getEntityName();
 		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockableEntityName + "]" );
+			throw new HibernateException( "write locks via update not supported for non-versioned entity [" + lockableEntityName + "]" );
 		}
 
 		// todo : should we additionally check the current isolation mode explicitly?

@@ -551,7 +551,7 @@ public class TableBinder {
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
-			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
+			LOG.debugf( "Retrieving property: %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
 			Iterator mappedByColumns;
@@ -615,13 +615,13 @@ public class TableBinder {
 				}
 				else {
 					throw new AssertionFailure(
-							"Do a property ref on an unexpected Value type: "
+							"Property ref on an unexpected Value type: "
 									+ value.getClass().getName()
 					);
 				}
 				if ( referencedPropertyName == null ) {
 					throw new AssertionFailure(
-							"No property ref found while expected"
+							"No property ref found as expected"
 					);
 				}
 				Property synthProp = referencedEntity.getReferencedProperty( referencedPropertyName );
@@ -640,7 +640,7 @@ public class TableBinder {
 					//implicit case, we hope PK and FK columns are in the same order
 					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
 						throw new AnnotationException(
-								"A Foreign key refering " + referencedEntity.getEntityName()
+								"A Foreign key referring " + referencedEntity.getEntityName()
 										+ " from " + associatedClass.getEntityName()
 										+ " has the wrong number of column. should be " + referencedEntity.getIdentifier()
 										.getColumnSpan()

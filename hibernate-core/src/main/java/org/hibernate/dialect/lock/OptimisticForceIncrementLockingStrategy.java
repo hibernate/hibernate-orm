@@ -44,7 +44,7 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entity [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit.

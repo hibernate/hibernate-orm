@@ -84,7 +84,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		if ( ctx.attributePath().attributeQualifier() == null ) {
 			if ( PARSING_LOGGER.isDebugEnabled() ) {
 				PARSING_LOGGER.debugf(
-						"%s Start attribute : %s",
+						"[%s] Start attribute : %s",
 						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
 						attributeName
 				);
@@ -97,7 +97,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 			if ( PARSING_LOGGER.isDebugEnabled() ) {
 				PARSING_LOGGER.debugf(
-						"%s Start qualified attribute : %s.%s",
+						"[%s] Start qualified attribute : %s.%s",
 						StringHelper.repeat( ">>", attributeNodeStack.depth() + 1 ),
 						attributeName,
 						qualifierName
@@ -126,7 +126,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
-					"%s Finished attribute : %s",
+					"[%s] Finished attribute : %s",
 					StringHelper.repeat( "<<", attributeNodeStack.depth() + 1 ),
 					attributeName
 			);
@@ -164,7 +164,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
-					"%s Starting graph : %s",
+					"[%s] Starting graph : %s",
 					StringHelper.repeat( ">>", attributeNodeStack.depth() + 2 ),
 					subTypeName
 			);
@@ -190,7 +190,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
-					"%s Finished graph : %s",
+					"[%s] Finished graph : %s",
 					StringHelper.repeat( "<<", attributeNodeStack.depth() + 2 ),
 					subGraph.getGraphedType().getTypeName()
 			);

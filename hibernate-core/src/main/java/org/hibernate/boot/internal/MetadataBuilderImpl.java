@@ -97,7 +97,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 		else if ( BootstrapServiceRegistry.class.isInstance( serviceRegistry ) ) {
 			log.debugf(
-					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely wont end well" +
+					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);
 			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();

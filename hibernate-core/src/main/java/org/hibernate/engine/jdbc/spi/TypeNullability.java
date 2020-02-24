@@ -50,7 +50,7 @@ public enum TypeNullability {
 				return UNKNOWN;
 			}
 			default: {
-				throw new IllegalArgumentException( "Unknown type nullability code [" + code + "] enountered" );
+				throw new IllegalArgumentException( "Unknown type nullability code [" + code + "] encountered" );
 			}
 		}
 	}

@@ -298,7 +298,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( matchingPersistentClass != null ) {
 			throw new DuplicateMappingException(
 					String.format(
-							"The [%s] and [%s] entities share the same JPA entity name: [%s] which is not allowed!",
+							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed!",
 							matchingPersistentClass.getClassName(),
 							persistentClass.getClassName(),
 							jpaEntityName
@@ -478,7 +478,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
 		if ( old != null && !old.equals( generator ) ) {
 			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + " you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
+				throw new IllegalArgumentException( "Duplicate generator name found: " + old.getName() + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
 			else {
 				log.duplicateGeneratorName( old.getName() );
@@ -999,7 +999,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		if ( physicalName == null ) {
 			throw new MappingException(
-					"Unable to find column with logical name " + logicalName.render() + " in table " + table.getName()
+					"Unable to find column with logical name [" + logicalName.render() + "] in table [" + table.getName() + "]"
 			);
 		}
 		return physicalName;
@@ -1037,7 +1037,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		if ( logicalName == null ) {
 			throw new MappingException(
-					"Unable to find column with physical name " + physicalNameString + " in table " + table.getName()
+					"Unable to find column with physical name [" + physicalNameString + "] in table [" + table.getName() + "]"
 			);
 		}
 		return logicalName.render();
@@ -1846,9 +1846,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				final String referencedEntityName = fk.getReferencedEntityName();
 				if ( referencedEntityName == null ) {
 					throw new MappingException(
-							"An association from the table " +
+							"An association from the table [" +
 									fk.getTable().getName() +
-									" does not specify the referenced entity"
+									"] does not specify the referenced entity"
 					);
 				}
 
@@ -1856,9 +1856,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				final PersistentClass referencedClass = getEntityBinding( referencedEntityName );
 				if ( referencedClass == null ) {
 					throw new MappingException(
-							"An association from the table " +
+							"An association from the table [" +
 									fk.getTable().getName() +
-									" refers to an unmapped class: " +
+									"] refers to an unmapped class: " +
 									referencedEntityName
 					);
 				}

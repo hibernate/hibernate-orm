@@ -44,7 +44,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
-			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entity [" + lockable.getEntityName() + "]" );
 		}
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
 		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object ) );

@@ -77,7 +77,7 @@ public final class ClassWriter {
 		catch ( IOException ioEx ) {
 			context.logMessage(
 					Diagnostic.Kind.ERROR,
-					"Problem opening file to write MetaModel for " + entity.getSimpleName() + ioEx.getMessage()
+					"Problem opening file to write MetaModel for " + entity.getSimpleName() + ": " + ioEx.getMessage()
 			);
 		}
 	}

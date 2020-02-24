@@ -7,12 +7,12 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
-import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 	
-	private ReverseEngineeringStrategy reverseEngineeringStrategy = new DefaultReverseEngineeringStrategy();
+	private ReverseEngineeringStrategy reverseEngineeringStrategy = null;
     private Properties properties = new Properties();
 
 	public RevengMetadataDescriptor(
@@ -24,6 +24,8 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
 		}
 		if (reverseEngineeringStrategy != null) {
 			this.reverseEngineeringStrategy = reverseEngineeringStrategy;
+		} else {
+			this.reverseEngineeringStrategy = ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy();
 		}
 		if (this.properties.get(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS) == null) {
 			this.properties.put(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS, true);

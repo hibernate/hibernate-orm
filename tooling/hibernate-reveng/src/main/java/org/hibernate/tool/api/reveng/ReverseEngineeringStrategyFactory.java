@@ -2,14 +2,13 @@ package org.hibernate.tool.api.reveng;
 
 import java.io.File;
 
-import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.OverrideRepository;
 import org.hibernate.tool.util.ReflectionUtil;
 
 public class ReverseEngineeringStrategyFactory {
 	
 	private static final String DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME = 
-			DefaultReverseEngineeringStrategy.class.getName();
+			DefaultRevengStrategy.class.getName();
 	
 	public static ReverseEngineeringStrategy createReverseEngineeringStrategy(
 			String reverseEngineeringClassName) {

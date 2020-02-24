@@ -28,8 +28,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
+import org.hibernate.tool.api.reveng.DefaultRevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
@@ -68,7 +68,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		dialect = serviceRegistry.getService(JdbcServices.class).getDialect();
 
 		tableSelector = new TableSelectorStrategy(
-				new DefaultReverseEngineeringStrategy() );
+				new DefaultRevengStrategy() );
 		metadataDialect = MetaDataDialectFactory
 				.createMetaDataDialect(
 						dialect, 

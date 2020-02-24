@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import java.beans.Introspector;
 import java.util.ArrayList;
@@ -26,9 +26,9 @@ import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
-public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStrategy {
+public abstract class AbstractRevengStrategy implements ReverseEngineeringStrategy {
 
-	static final private Logger log = Logger.getLogger(DefaultReverseEngineeringStrategy.class);
+	static final private Logger log = Logger.getLogger(AbstractRevengStrategy.class);
 	
 	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 
@@ -41,7 +41,7 @@ public class DefaultReverseEngineeringStrategy implements ReverseEngineeringStra
 	}
 	
 		
-	public DefaultReverseEngineeringStrategy() {
+	public AbstractRevengStrategy() {
 		super();
 	}
 	

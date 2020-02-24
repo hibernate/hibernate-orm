@@ -30,7 +30,7 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
     /** The class name of the reverse engineering strategy to use.
      * Extend the DefaultReverseEngineeringStrategy and override the corresponding methods, e.g.
      * to adapt the generate class names or to provide custom type mappings. */
-    @Parameter(defaultValue = "org.hibernate.tool.internal.reveng.DefaultReverseEngineeringStrategy")
+    @Parameter(defaultValue = "org.hibernate.tool.api.reveng.DefaultRevengStrategy")
     private String revengStrategy;
 
     /** If true, tables which are pure many-to-many link tables will be mapped as such.

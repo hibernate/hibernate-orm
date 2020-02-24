@@ -5,7 +5,7 @@ import java.io.File;
 import org.hibernate.tool.internal.reveng.OverrideRepository;
 import org.hibernate.tool.util.ReflectionUtil;
 
-public class ReverseEngineeringStrategyFactory {
+public class RevengStrategyFactory {
 	
 	private static final String DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME = 
 			DefaultRevengStrategy.class.getName();

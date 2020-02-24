@@ -9,20 +9,20 @@ public class ReverseEngineeringStrategyFactoryTest {
 	@Test
 	public void testCreateReverseEngineeringStrategy() {
 		RevengStrategy reverseEngineeringStrategy = 
-				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy();
+				RevengStrategyFactory.createReverseEngineeringStrategy();
 		Assert.assertNotNull(reverseEngineeringStrategy);
 		Assert.assertEquals(
 				DefaultRevengStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());
 		reverseEngineeringStrategy = 
-				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
+				RevengStrategyFactory.createReverseEngineeringStrategy(
 						TestReverseEngineeringStrategyFactory.class.getName());
 		Assert.assertNotNull(reverseEngineeringStrategy);
 		Assert.assertEquals(
 				TestReverseEngineeringStrategyFactory.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());
 		reverseEngineeringStrategy = 
-				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(null);
+				RevengStrategyFactory.createReverseEngineeringStrategy(null);
 		Assert.assertEquals(
 				DefaultRevengStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());		

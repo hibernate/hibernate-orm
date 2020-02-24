@@ -16,7 +16,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
+import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.util.ReflectionUtil;
 
 
@@ -60,7 +60,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 		}
 
 		RevengStrategy strategy = 
-				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
+				RevengStrategyFactory.createReverseEngineeringStrategy(
 						null, revengFileList);
 		
 		if(reverseEngineeringStrategyClass!=null) {

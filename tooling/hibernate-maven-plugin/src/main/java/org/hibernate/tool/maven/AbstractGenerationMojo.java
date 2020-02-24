@@ -14,7 +14,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
+import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 
 public abstract class AbstractGenerationMojo extends AbstractMojo {
 
@@ -79,7 +79,7 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
     		revengFiles = new File[] { revengFile };
     	}
         RevengStrategy strategy = 
-        		ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
+        		RevengStrategyFactory.createReverseEngineeringStrategy(
         				revengStrategy, 
         				revengFiles);
         RevengSettings settings =

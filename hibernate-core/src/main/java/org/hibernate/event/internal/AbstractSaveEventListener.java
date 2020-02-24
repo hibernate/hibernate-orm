@@ -114,7 +114,7 @@ public abstract class AbstractSaveEventListener
 		EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Object generatedId = persister.getIdentifierGenerator().generate( source, entity );
 		if ( generatedId == null ) {
-			throw new IdentifierGenerationException( "null id generated for:" + entity.getClass() );
+			throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
 		}
 		else if ( generatedId == IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR ) {
 			return source.getIdentifier( entity );

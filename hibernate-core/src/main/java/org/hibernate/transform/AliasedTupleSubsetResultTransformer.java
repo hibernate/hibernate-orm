@@ -24,7 +24,7 @@ public abstract class AliasedTupleSubsetResultTransformer
 		if ( aliases.length != tupleLength ) {
 			throw new IllegalArgumentException(
 					"aliases and tupleLength must have the same length; " +
-							"aliases.length=" + aliases.length + "tupleLength=" + tupleLength
+							"aliases.length=" + aliases.length + "; tupleLength=" + tupleLength
 			);
 		}
 		boolean[] includeInTransform = new boolean[tupleLength];

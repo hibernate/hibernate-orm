@@ -234,7 +234,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				}
 				catch (ClassCastException e) {
 					throw new MappingException(
-							"dotted notation reference neither a component nor a many/one to one", e
+							"dotted notation references neither a component nor a many/one to one", e
 					);
 				}
 			}
@@ -250,13 +250,13 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				}
 				catch (ClassCastException e) {
 					throw new MappingException(
-							"dotted notation reference neither a component nor a many/one to one", e
+							"dotted notation references neither a component nor a many/one to one", e
 					);
 				}
 			}
 		}
 		else {
-			throw new MappingException( "dotted notation reference neither a component nor a many/one to one" );
+			throw new MappingException( "dotted notation references neither a component nor a many/one to one" );
 		}
 		return parentPropIter;
 	}

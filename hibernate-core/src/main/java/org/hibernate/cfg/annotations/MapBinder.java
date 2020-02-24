@@ -532,7 +532,7 @@ public class MapBinder extends CollectionBinder {
 			return targetValue;
 		}
 		else {
-			throw new AssertionFailure( "Unknown type encounters for map key: " + value.getClass() );
+			throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
 		}
 	}
 

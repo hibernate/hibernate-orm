@@ -65,7 +65,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					}
 				}
 				else {
-					LOG.trace( "Don't need to execute flush" );
+					LOG.trace( "No need to execute flush" );
 					event.setFlushRequired( false );
 					actionQueue.clearFromFlushNeededCheck( oldSize );
 				}

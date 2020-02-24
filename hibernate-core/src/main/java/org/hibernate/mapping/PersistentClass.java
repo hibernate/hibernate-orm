@@ -182,7 +182,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 				throw new MappingException(
 						"Circular inheritance mapping detected: " +
 								subclass.getEntityName() +
-								" will have it self as superclass when extending " +
+								" will have itself as superclass when extending " +
 								getEntityName()
 				);
 			}

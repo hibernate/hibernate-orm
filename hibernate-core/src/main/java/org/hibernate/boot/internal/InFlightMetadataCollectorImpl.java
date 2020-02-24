@@ -298,7 +298,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		if ( matchingPersistentClass != null ) {
 			throw new DuplicateMappingException(
 					String.format(
-							"The [%s] and [%s] entities share the same JPA entity name: [%s] which is not allowed!",
+							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed!",
 							matchingPersistentClass.getClassName(),
 							persistentClass.getClassName(),
 							jpaEntityName
@@ -478,7 +478,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
 		if ( old != null && !old.equals( generator ) ) {
 			if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + " you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
+				throw new IllegalArgumentException( "Duplicate generator name " + old.getName() + "; you will likely want to set the property " + AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE + " to false " );
 			}
 			else {
 				log.duplicateGeneratorName( old.getName() );

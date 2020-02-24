@@ -342,8 +342,8 @@ public final class QueryParameters {
 		final int values = positionalParameterValues == null ? 0 : positionalParameterValues.length;
 		if ( types != values ) {
 			throw new QueryException(
-					"Number of positional parameter types:" + types +
-							" does not match number of positional parameters: " + values
+					"Number of positional parameter types [" + types +
+							"] does not match number of positional parameters [" + values + "]"
 			);
 		}
 	}

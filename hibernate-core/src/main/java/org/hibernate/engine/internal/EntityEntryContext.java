@@ -192,7 +192,7 @@ public class EntityEntryContext {
 			// NOTE: otherPersistenceContext may be operating on the entityEntry in a different thread.
 			//       it is not safe to associate entityEntry with this EntityEntryContext.
 			throw new HibernateException(
-					"Illegal attempt to associate a ManagedEntity with two open persistence contexts. " + entityEntry
+					"Illegal attempt to associate a ManagedEntity with two open persistence contexts: " + entityEntry
 			);
 		}
 		else {

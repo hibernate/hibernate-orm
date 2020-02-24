@@ -612,7 +612,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		throw new LazyInitializationException(
 				"failed to lazily initialize a collection" +
 						(role == null ? "" : " of role: " + role) +
-						", " + message
+						": " + message
 		);
 	}
 
@@ -698,7 +698,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			final String msg = generateUnexpectedSessionStateMessage( session );
 			if ( isConnectedToSession() ) {
 				throw new HibernateException(
-						"Illegal attempt to associate a collection with two open sessions. " + msg
+						"Illegal attempt to associate a collection with two open sessions: " + msg
 				);
 			}
 			else {
@@ -783,7 +783,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	public final void forceInitialization() throws HibernateException {
 		if ( !initialized ) {
 			if ( initializing ) {
-				throw new AssertionFailure( "force initialize loading collection" );
+				throw new AssertionFailure( "force initializing collection loading" );
 			}
 			initialize( false );
 		}

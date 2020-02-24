@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -61,4 +62,6 @@ public interface EntityInitializer extends Initializer, FetchParentAccess {
 		}
 		return entityInstance;
 	}
+
+	EntityKey getEntityKey();
 }

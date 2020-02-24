@@ -21,6 +21,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -101,8 +102,18 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 		@Override
 		public void resolveInstance(RowProcessingState rowProcessingState) {
 			if ( collectionKey != null ) {
+				EntityInitializer entityInitializer = getEntityInitializer( rowProcessingState );
+
 				final SharedSessionContractImplementor session = rowProcessingState.getSession();
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
+
+				final Object entityUsingInterceptor = persistenceContext.getEntity(entityInitializer.getEntityKey() );
+				if ( entityUsingInterceptor != null ) {
+					return;
+				}
+
+				final Object key = collectionKey.getKey();
+
 				final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
 						.findLoadingCollectionEntry( collectionKey );
 				final PersistentCollection registeredInstance = persistenceContext.getCollection( collectionKey );
@@ -117,14 +128,21 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 					return;
 				}
 
-
 				this.instance = makePersistentCollection( fetchedMapping, collectionKey, rowProcessingState );
 				persistenceContext.addUninitializedCollection(
 						getInitializingCollectionDescriptor(),
 						instance,
-						collectionKey.getKey()
+						key
 				);
 			}
+		}
+
+		private EntityInitializer getEntityInitializer(RowProcessingState rowProcessingState) {
+			Initializer initializer = rowProcessingState.resolveInitializer( getNavigablePath().getParent() );
+			while ( !( initializer instanceof EntityInitializer ) ) {
+				initializer = rowProcessingState.resolveInitializer( initializer.getNavigablePath().getParent() );
+			}
+			return (EntityInitializer) initializer;
 		}
 
 		private static PersistentCollection makePersistentCollection(

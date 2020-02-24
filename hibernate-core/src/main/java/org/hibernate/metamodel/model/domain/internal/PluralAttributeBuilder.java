@@ -134,7 +134,8 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			return determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
 		}
 
-		if ( java.util.List.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+		if ( java.util.List.class.isAssignableFrom( attributeMetadata.getJavaType() )
+				|| attributeMetadata.getJavaType().isArray() ) {
 			return metadataContext.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( Integer.class );
 		}
 

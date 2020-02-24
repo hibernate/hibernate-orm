@@ -1295,6 +1295,9 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isLazy() {
+		if ( isArray ) {
+			return false; // array is always eagerly fetched
+		}
 		return isLazy;
 	}
 
@@ -2183,6 +2186,9 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isExtraLazy() {
+		if ( isArray ) {
+			return false; // array is always eagerly fetched
+		}
 		return isExtraLazy;
 	}
 

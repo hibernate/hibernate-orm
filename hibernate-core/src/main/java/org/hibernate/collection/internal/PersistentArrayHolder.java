@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -41,6 +42,8 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;
+
+	private transient AfterLoadAction afterLoadAction;
 
 	/**
 	 * Constructs a PersistentCollection instance for holding an array.
@@ -199,6 +202,9 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	public boolean endRead() {
 		setInitialized();
+		if ( afterLoadAction != null ) {
+			afterLoadAction.afterLoad( getSession(), array, null );
+		}
 		return true;
 	}
 
@@ -293,4 +299,18 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	public boolean entryExists(Object entry, int i) {
 		return entry != null;
 	}
+
+	/**
+	 * Registers a {@link AfterLoadAction callback} so initialized array value can be assigned
+	 * back to owner entity's array field.
+	 * <p>
+	 * For simplicity only one callback can be registered (old callback will be overridden by new one).
+	 *
+	 * @param afterLoadAction array loading callback
+	 * @see org.hibernate.persister.entity.AbstractEntityPersister#setPropertyValues(Object, Object[])
+	 */
+	public void registerAfterLoadAction(AfterLoadAction afterLoadAction) {
+		this.afterLoadAction = afterLoadAction;
+	}
+
 }

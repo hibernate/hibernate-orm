@@ -61,6 +61,7 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.classic.Lifecycle;
+import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -5167,30 +5168,32 @@ public abstract class AbstractEntityPersister
 		else {
 			if ( hasSubclasses() ) {
 				visitAttributeMappings(
-						attribute -> {
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
-							}
-						}
+						attribute -> setPropertyValueInternally( attribute, object, values )
 				);
 			}
 			else {
 				visitFetchables(
-						fetchable -> {
-							final AttributeMapping attribute = (AttributeMapping) fetchable;
-							final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
-							final Object value = values[stateArrayPosition];
-							if ( value != UNFETCHED_PROPERTY ) {
-								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
-							}
-
-						},
+						fetchable -> setPropertyValueInternally( (AttributeMapping) fetchable, object, values ),
 						null
 				);
+			}
+		}
+	}
+
+	private void setPropertyValueInternally(AttributeMapping attribute, Object object, Object[] values) {
+		final int stateArrayPosition = ( (StateArrayContributorMapping) attribute ).getStateArrayPosition();
+		final Object value = values[stateArrayPosition];
+		if ( value != UNFETCHED_PROPERTY ) {
+			final Setter setter = attribute.getPropertyAccess().getSetter();
+			if ( value instanceof PersistentArrayHolder ) {
+				// array field cannot be assigned a Hibernate wrapper, i.e. PersistentArrayHolder
+				// so delayed assignment callback is mandatory
+				( (PersistentArrayHolder) value ).registerAfterLoadAction(
+						( session, array, persister ) -> setter.set( object, array, getFactory() )
+				);
+			}
+			else {
+				setter.set( object, value, getFactory() );
 			}
 		}
 	}

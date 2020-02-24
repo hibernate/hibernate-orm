@@ -676,7 +676,7 @@ public abstract class Loader {
 		}
 	}
 
-	private static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SharedSessionContractImplementor session) {
+	protected static EntityKey getOptionalObjectKey(QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		final Object optionalObject = queryParameters.getOptionalObject();
 		final Serializable optionalId = queryParameters.getOptionalId();
 		final String optionalEntityName = queryParameters.getOptionalEntityName();
@@ -1237,7 +1237,7 @@ public abstract class Loader {
 		}
 	}
 
-	private void endCollectionLoad(
+	protected void endCollectionLoad(
 			final Object resultSetId,
 			final SharedSessionContractImplementor session,
 			final CollectionPersister collectionPersister) {
@@ -1450,7 +1450,7 @@ public abstract class Loader {
 	 * is being initialized, to account for the possibility of the collection having
 	 * no elements (hence no rows in the result set).
 	 */
-	private void handleEmptyCollections(
+	protected void handleEmptyCollections(
 			final Serializable[] keys,
 			final Object resultSetId,
 			final SharedSessionContractImplementor session) {
@@ -1637,7 +1637,7 @@ public abstract class Loader {
 	/**
 	 * The entity instance is already in the session cache
 	 */
-	private void instanceAlreadyLoaded(
+	protected void instanceAlreadyLoaded(
 			final ResultSet rs,
 			final int i,
 			final Loadable persister,
@@ -1707,7 +1707,7 @@ public abstract class Loader {
 	/**
 	 * The entity instance is not in the session cache
 	 */
-	private Object instanceNotYetLoaded(
+	protected Object instanceNotYetLoaded(
 			final ResultSet rs,
 			final int i,
 			final Loadable persister,

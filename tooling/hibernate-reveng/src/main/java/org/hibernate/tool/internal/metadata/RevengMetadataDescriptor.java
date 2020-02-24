@@ -5,7 +5,7 @@ import java.util.Properties;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
+import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
@@ -27,8 +27,8 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
 		} else {
 			this.reverseEngineeringStrategy = ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy();
 		}
-		if (this.properties.get(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS) == null) {
-			this.properties.put(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS, true);
+		if (this.properties.get(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS) == null) {
+			this.properties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
 		}
 	}
 

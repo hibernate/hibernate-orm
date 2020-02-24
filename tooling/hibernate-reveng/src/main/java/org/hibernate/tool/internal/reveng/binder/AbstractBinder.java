@@ -3,7 +3,7 @@ package org.hibernate.tool.internal.reveng.binder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.api.reveng.ReverseEngineeringConstants;
+import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
 
 abstract class AbstractBinder {
@@ -35,7 +35,7 @@ abstract class AbstractBinder {
 	}
 	
 	Boolean preferBasicCompositeIds() {
-		return (Boolean)binderContext.properties.get(ReverseEngineeringConstants.PREFER_BASIC_COMPOSITE_IDS);
+		return (Boolean)binderContext.properties.get(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS);
 	}
 	
 }

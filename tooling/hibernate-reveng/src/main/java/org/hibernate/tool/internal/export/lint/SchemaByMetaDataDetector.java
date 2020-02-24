@@ -31,8 +31,8 @@ import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
 import org.hibernate.tool.api.reveng.DefaultRevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
-import org.hibernate.tool.internal.reveng.TableSelectorStrategy;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
+import org.hibernate.tool.internal.reveng.strategy.TableSelectorStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 

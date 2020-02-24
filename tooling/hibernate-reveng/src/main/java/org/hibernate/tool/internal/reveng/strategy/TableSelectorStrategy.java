@@ -1,14 +1,13 @@
 /**
  * 
  */
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
-import org.hibernate.tool.internal.reveng.strategy.DelegatingStrategy;
 
 public class TableSelectorStrategy extends DelegatingStrategy {
 	

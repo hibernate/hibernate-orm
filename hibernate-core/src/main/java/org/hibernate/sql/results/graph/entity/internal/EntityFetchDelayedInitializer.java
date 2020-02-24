@@ -117,6 +117,11 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 	}
 
 	@Override
+	public EntityKey getEntityKey() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public Object getParentKey() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

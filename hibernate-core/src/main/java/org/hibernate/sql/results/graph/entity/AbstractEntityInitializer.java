@@ -197,6 +197,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	@Override
+	public EntityKey getEntityKey() {
+		return entityKey;
+	}
+
+	@Override
 	public Object getParentKey() {
 		return getKeyValue();
 	}
@@ -342,12 +347,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
+		final SharedSessionContractImplementor session = rowProcessingState
+				.getJdbcValuesSourceProcessingState()
+				.getSession();
+
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+
+		final Object existingEntity = persistenceContext.getEntity( entityKey );
+
+		if ( existingEntity != null ) {
+			entityInstance = existingEntity;
+			return;
+		}
 
 		// look to see if another initializer from a parent load context or an earlier
 		// initializer is already loading the entity
 
-		final LoadingEntityEntry existingLoadingEntry = session.getPersistenceContext()
+		final LoadingEntityEntry existingLoadingEntry = persistenceContext
 				.getLoadContexts()
 				.findLoadingEntityEntry( entityKey );
 
@@ -390,7 +406,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( entityInstance == null ) {
 			// see if it is managed in the Session already
-			final Object entity = session.getPersistenceContext().getEntity( entityKey );
+			final Object entity = persistenceContext.getEntity( entityKey );
 			if ( entity != null ) {
 				this.entityInstance = entity;
 			}
@@ -432,6 +448,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+
+		if ( persistenceContext.getEntity( entityKey ) != null ) {
+			return;
+		}
+
 		final Serializable entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
@@ -441,8 +464,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
-		PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		// todo (6.0): do we really need this check ?
 		if ( persistenceContext.containsEntity( entityKey ) ) {

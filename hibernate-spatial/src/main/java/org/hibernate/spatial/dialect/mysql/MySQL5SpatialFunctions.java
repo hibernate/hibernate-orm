@@ -7,6 +7,7 @@
 package org.hibernate.spatial.dialect.mysql;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -163,6 +164,13 @@ class MySQL5SpatialFunctions extends SpatialFunctionsRegistry {
 //				"union"
 //		)
 //		);
+
+		functionMap.put(
+				SpatialFunction.filter.name(), new StandardSQLFunction(
+						"MBRIntersects",
+						StandardBasicTypes.BOOLEAN
+				)
+		);
 	}
 
 }

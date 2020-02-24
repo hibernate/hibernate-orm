@@ -78,7 +78,7 @@ public class Cloneable {
 					);
 				}
 				catch (Throwable t) {
-					throw new HibernateException( "Unable copy copy listener [" + pd.getName() + "]" );
+					throw new HibernateException( "Unable to copy listener [" + pd.getName() + "]" );
 				}
 			}
 		}

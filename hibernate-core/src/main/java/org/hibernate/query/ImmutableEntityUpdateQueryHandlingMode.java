@@ -51,7 +51,7 @@ public enum ImmutableEntityUpdateQueryHandlingMode {
 		}
 		throw new HibernateException(
 				"Unrecognized immutable_entity_update_query_handling_mode value : " + mode
-						+ ".  Supported values include 'warning' and 'exception''."
+						+ ".  Supported values include 'warning' and 'exception'."
 		);
 	}
 }

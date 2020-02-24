@@ -160,7 +160,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 		if ( entry.isReferenceEntry() ) {
 			if ( event.getInstanceToLoad() != null ) {
 				throw new HibernateException(
-						"Attempt to load entity [%s] from cache using provided object instance, but cache " +
+						"Attempt to load entity from cache using provided object instance, but cache " +
 								"is storing references: " + event.getEntityId() );
 			}
 			else {

@@ -74,7 +74,7 @@ public abstract class AbstractBinder implements Binder {
 			return new BufferedXMLEventReader( staxReader, 100 );
 		}
 		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create stax reader", e, origin );
+			throw new MappingException( "Unable to create StAX reader", e, origin );
 		}
 	}
 
@@ -92,7 +92,7 @@ public abstract class AbstractBinder implements Binder {
 			return new BufferedXMLEventReader( staxReader, 100 );
 		}
 		catch ( XMLStreamException e ) {
-			throw new MappingException( "Unable to create stax reader", e, origin );
+			throw new MappingException( "Unable to create StAX reader", e, origin );
 		}
 	}
 
@@ -138,7 +138,7 @@ public abstract class AbstractBinder implements Binder {
 			}
 		}
 		catch ( Exception e ) {
-			throw new MappingException( "Error accessing stax stream", e, origin );
+			throw new MappingException( "Error accessing StAX stream", e, origin );
 		}
 
 		if ( rootElementStartEvent == null ) {

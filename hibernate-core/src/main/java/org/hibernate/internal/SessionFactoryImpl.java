@@ -665,7 +665,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		//		2) an explicit SynchronizationType is specified
 		if ( !getServiceRegistry().getService( TransactionCoordinatorBuilder.class ).isJta() ) {
 			throw new IllegalStateException(
-					"Illegal attempt to specify a SynchronizationType when building an EntityManager from a " +
+					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
 			);
 		}
@@ -879,7 +879,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
 		throw new PersistenceException(
 				String.format(
-						"Unsure how to how to properly unwrap given Query [%s] as basis for named query",
+						"Unsure how to properly unwrap given Query [%s] as basis for named query",
 						query
 				)
 		);

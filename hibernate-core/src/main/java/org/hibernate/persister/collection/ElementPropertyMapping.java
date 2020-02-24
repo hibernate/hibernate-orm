@@ -47,7 +47,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 	 * Given a property path, return the corresponding column name(s).
 	 */
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
-		throw new UnsupportedOperationException( "References to collections must be define a SQL alias" );
+		throw new UnsupportedOperationException( "References to collections must define an SQL alias" );
 	}
 
 	public Type getType() {

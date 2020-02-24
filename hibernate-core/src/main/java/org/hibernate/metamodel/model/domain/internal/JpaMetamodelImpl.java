@@ -309,7 +309,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 	private void applyNamedEntityGraphs(java.util.Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
 			log.debugf(
-					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s",
+					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s]",
 					definition.getRegisteredName(),
 					definition.getEntityName(),
 					definition.getJpaEntityName()

@@ -63,7 +63,7 @@ public enum OptimisticLockStyle {
 				return ALL;
 			}
 			default: {
-				throw new IllegalArgumentException( "Illegal legacy optimistic lock style code :" + oldCode );
+				throw new IllegalArgumentException( "Illegal legacy optimistic lock style code : " + oldCode );
 			}
 		}
 	}

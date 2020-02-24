@@ -236,7 +236,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			checkTargetState(session);
 		}
 		else {
-			throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - Session was closed or disced" );
+			throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - Session was closed or disconnected" );
 		}
 	}
 

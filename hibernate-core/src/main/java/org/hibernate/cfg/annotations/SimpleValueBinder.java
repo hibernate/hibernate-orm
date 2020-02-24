@@ -210,7 +210,7 @@ public class SimpleValueBinder {
 					}
 					case TIME: {
 						throw new NotYetImplementedException(
-								"Calendar cannot persist TIME only" + StringHelper.qualify( persistentClassName, propertyName )
+								"Calendar cannot persist TIME only: " + StringHelper.qualify( persistentClassName, propertyName )
 						);
 					}
 					default: {
@@ -492,7 +492,7 @@ public class SimpleValueBinder {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
 				throw new AnnotationException(
 						String.format(
-								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s];" +
+								"AttributeConverter and explicit Type cannot be applied to same attribute [%s.%s]; " +
 										"remove @Type or specify @Convert(disableConversion = true)",
 								persistentClassName,
 								propertyName

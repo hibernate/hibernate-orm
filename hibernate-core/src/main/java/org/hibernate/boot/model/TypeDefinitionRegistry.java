@@ -92,7 +92,7 @@ public class TypeDefinitionRegistry {
 					throw new IllegalArgumentException(
 							String.format(
 									Locale.ROOT,
-									"Attempted to ovewrite registration [%s] for type definition.",
+									"Attempted to overwrite registration [%s] for type definition.",
 									name
 							)
 					);

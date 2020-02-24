@@ -71,7 +71,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 					LOG.debugf( "Unable to locate [%s] on classpath", systemId );
 				}
 				else {
-					LOG.debugf( "Located [%s] in classpath", systemId );
+					LOG.debugf( "Located [%s] on classpath", systemId );
 					source = new InputSource( stream );
 					source.setPublicId( publicId );
 					source.setSystemId( systemId );
@@ -92,7 +92,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 			}
 		}
 		else {
-			LOG.debugf( "Located [%s] in classpath", systemId );
+			LOG.debugf( "Located [%s] on classpath", systemId );
 			source = new InputSource( dtdStream );
 			source.setPublicId( publicId );
 			source.setSystemId( systemId );

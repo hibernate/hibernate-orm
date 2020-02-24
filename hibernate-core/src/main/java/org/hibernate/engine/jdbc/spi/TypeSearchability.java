@@ -58,7 +58,7 @@ public enum TypeSearchability {
 				return CHAR;
 			}
 			default: {
-				throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] enountered" );
+				throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] encountered" );
 			}
 		}
 	}

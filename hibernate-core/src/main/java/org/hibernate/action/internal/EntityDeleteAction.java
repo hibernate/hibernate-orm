@@ -128,7 +128,7 @@ public class EntityDeleteAction extends EntityAction {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entry = persistenceContext.removeEntry( instance );
 		if ( entry == null ) {
-			throw new AssertionFailure( "possible nonthreadsafe access to session" );
+			throw new AssertionFailure( "possible non-threadsafe access to session" );
 		}
 		entry.postDelete();
 

@@ -61,7 +61,7 @@ public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseEntity
 		em.getTransaction().begin();
 		try {
 			em.merge( hoarder );
-			fail( "should have failed due IllegalStateException");
+			fail( "should have failed due to IllegalStateException");
 		}
 		catch (IllegalStateException ex) {
 			//expected
@@ -106,7 +106,7 @@ public class MergeMultipleEntityCopiesDisallowedByDefaultTest extends BaseEntity
 		// now item1Merged is managed and it has a nested detached item
 		try {
 			em.merge( item1Merged );
-			fail( "should have failed due IllegalStateException");
+			fail( "should have failed due to IllegalStateException");
 		}
 		catch (IllegalStateException ex) {
 			//expected

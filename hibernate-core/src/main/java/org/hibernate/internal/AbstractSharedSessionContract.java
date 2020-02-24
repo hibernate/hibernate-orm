@@ -195,7 +195,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 			if ( sharedOptions.getPhysicalConnectionHandlingMode() != this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode() ) {
 				log.debug(
-						"Session creation specified 'PhysicalConnectionHandlingMode which is invalid in conjunction " +
+						"Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
 								"with sharing JDBC connection between sessions; ignoring"
 				);
 			}

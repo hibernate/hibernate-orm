@@ -117,7 +117,7 @@ public class MetaAttributeHelper {
 		return result;
 	}
 	
-	 static class SimpleMetaAttribute {
+	 public static class SimpleMetaAttribute {
 		String value;
 		boolean inheritable = true;
 		public SimpleMetaAttribute(String value, boolean inherit) {

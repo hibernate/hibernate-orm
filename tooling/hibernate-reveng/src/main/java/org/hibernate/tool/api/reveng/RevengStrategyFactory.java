@@ -2,7 +2,7 @@ package org.hibernate.tool.api.reveng;
 
 import java.io.File;
 
-import org.hibernate.tool.internal.reveng.OverrideRepository;
+import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
 import org.hibernate.tool.util.ReflectionUtil;
 
 public class RevengStrategyFactory {

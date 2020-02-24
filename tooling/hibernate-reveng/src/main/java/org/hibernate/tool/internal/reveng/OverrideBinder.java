@@ -14,6 +14,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

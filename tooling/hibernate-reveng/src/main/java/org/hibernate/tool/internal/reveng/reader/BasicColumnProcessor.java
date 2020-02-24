@@ -8,7 +8,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
@@ -21,7 +21,7 @@ public class BasicColumnProcessor {
 
 	public static void processBasicColumns(
 			MetaDataDialect metaDataDialect, 
-			ReverseEngineeringStrategy revengStrategy, 
+			RevengStrategy revengStrategy, 
 			String defaultSchema, String defaultCatalog, 
 			Table table) {
 		

@@ -26,7 +26,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;
@@ -282,7 +282,7 @@ public class OverrideRepository  {
 		tableFilters.add(filter);
 	}
 
-	public ReverseEngineeringStrategy getReverseEngineeringStrategy(ReverseEngineeringStrategy delegate) {
+	public RevengStrategy getReverseEngineeringStrategy(RevengStrategy delegate) {
 		return new DelegatingReverseEngineeringStrategy(delegate) {
 
 			public boolean excludeTable(TableIdentifier ti) {
@@ -569,7 +569,7 @@ public class OverrideRepository  {
 		return result;
  	}
 
-	public ReverseEngineeringStrategy getReverseEngineeringStrategy() {
+	public RevengStrategy getReverseEngineeringStrategy() {
 		return getReverseEngineeringStrategy(null);
 	}
 

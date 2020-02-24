@@ -17,7 +17,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 
 public class BinderUtils {
 	
@@ -81,7 +81,7 @@ public class BinderUtils {
 
 
     static AssociationInfo getAssociationInfo(
-    		ReverseEngineeringStrategy revengStrategy,
+    		RevengStrategy revengStrategy,
     		ForeignKey foreignKey, 
     		boolean inverseProperty) {
     	if (inverseProperty) {

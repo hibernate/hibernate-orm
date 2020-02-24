@@ -12,7 +12,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -25,7 +25,7 @@ public class ForeignKeyProcessor {
 	
 	public static ForeignKeyProcessor create(
 			MetaDataDialect metaDataDialect,
-			ReverseEngineeringStrategy revengStrategy,
+			RevengStrategy revengStrategy,
 			String defaultCatalog,
 			String defaultSchema,
 			RevengMetadataCollector revengMetadataCollector) {
@@ -38,14 +38,14 @@ public class ForeignKeyProcessor {
 	}
 	
 	private final MetaDataDialect metaDataDialect;
-	private final ReverseEngineeringStrategy revengStrategy;
+	private final RevengStrategy revengStrategy;
 	private final String defaultSchema;
 	private final String defaultCatalog;
 	private final RevengMetadataCollector revengMetadataCollector;
 	
 	private ForeignKeyProcessor(
 			MetaDataDialect metaDataDialect,
-			ReverseEngineeringStrategy revengStrategy,
+			RevengStrategy revengStrategy,
 			String defaultCatalog,
 			String defaultSchema,
 			RevengMetadataCollector revengMetadataCollector) {

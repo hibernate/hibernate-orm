@@ -10,26 +10,26 @@ public class ReverseEngineeringStrategyFactory {
 	private static final String DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME = 
 			DefaultRevengStrategy.class.getName();
 	
-	public static ReverseEngineeringStrategy createReverseEngineeringStrategy(
+	public static RevengStrategy createReverseEngineeringStrategy(
 			String reverseEngineeringClassName) {
-		ReverseEngineeringStrategy result = null;
+		RevengStrategy result = null;
 		try {
 			Class<?> reverseEngineeringClass = 
 					ReflectionUtil.classForName(
 							reverseEngineeringClassName == null ? 
 									DEFAULT_REVERSE_ENGINEERING_STRATEGY_CLASS_NAME : 
 									reverseEngineeringClassName);
-			result = (ReverseEngineeringStrategy)reverseEngineeringClass.newInstance();
+			result = (RevengStrategy)reverseEngineeringClass.newInstance();
 		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException exception) {
 			throw new RuntimeException("An exporter of class '" + reverseEngineeringClassName + "' could not be created", exception);
 		}
 		return result;
 	}
 	
-	public static ReverseEngineeringStrategy createReverseEngineeringStrategy(
+	public static RevengStrategy createReverseEngineeringStrategy(
 			String reverseEngineeringClassName,
 			File[] revengFiles) {
-		ReverseEngineeringStrategy result = 
+		RevengStrategy result = 
 				createReverseEngineeringStrategy(reverseEngineeringClassName);
 		if (revengFiles != null && revengFiles.length > 0) {
 			OverrideRepository overrideRepository = new OverrideRepository();
@@ -41,7 +41,7 @@ public class ReverseEngineeringStrategyFactory {
 		return result;
 	}
 	
-	public static ReverseEngineeringStrategy createReverseEngineeringStrategy() {
+	public static RevengStrategy createReverseEngineeringStrategy() {
 		return createReverseEngineeringStrategy(null);
 	}
 	

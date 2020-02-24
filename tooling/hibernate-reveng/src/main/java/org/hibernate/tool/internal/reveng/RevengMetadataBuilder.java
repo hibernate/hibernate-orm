@@ -20,7 +20,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
@@ -36,7 +36,7 @@ public class RevengMetadataBuilder {
 	
 	public static RevengMetadataBuilder create(
 			Properties properties, 
-			ReverseEngineeringStrategy reverseEngineeringStrategy) {
+			RevengStrategy reverseEngineeringStrategy) {
 		return new RevengMetadataBuilder(properties, reverseEngineeringStrategy);
 	}
 	
@@ -45,14 +45,14 @@ public class RevengMetadataBuilder {
 	private final Properties properties;
 	private final MetadataBuildingContext metadataBuildingContext;	
 	private final InFlightMetadataCollectorImpl metadataCollector;	
-	private final ReverseEngineeringStrategy revengStrategy;
+	private final RevengStrategy revengStrategy;
 	private final BinderContext binderContext;
 	
 	private final StandardServiceRegistry serviceRegistry;
 	
 	private RevengMetadataBuilder(
 			Properties properties,
-			ReverseEngineeringStrategy reverseEngineeringStrategy) {
+			RevengStrategy reverseEngineeringStrategy) {
 		this.properties = properties;
 		this.revengStrategy = reverseEngineeringStrategy;
 		this.serviceRegistry = new StandardServiceRegistryBuilder()

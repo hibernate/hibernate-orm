@@ -9,7 +9,7 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
 
-public interface ReverseEngineeringStrategy {
+public interface RevengStrategy {
 
 	/**
 	 * Generic method used to initialize the reverse engineering strategy.

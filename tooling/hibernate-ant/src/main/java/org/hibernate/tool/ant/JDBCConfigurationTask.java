@@ -15,7 +15,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.util.ReflectionUtil;
 
@@ -41,7 +41,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 	}
 	protected MetadataDescriptor createMetadataDescriptor() {
 		Properties properties = loadPropertiesFile();
-		ReverseEngineeringStrategy res = createReverseEngineeringStrategy();
+		RevengStrategy res = createReverseEngineeringStrategy();
 		properties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
 		return MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(
@@ -49,7 +49,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 						properties);
 	}
 	
-	private ReverseEngineeringStrategy createReverseEngineeringStrategy() {
+	private RevengStrategy createReverseEngineeringStrategy() {
 		File[] revengFileList = null;
 		if (revengFiles != null ) {
 			String[] fileNames = revengFiles.list();
@@ -59,7 +59,7 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 			}
 		}
 
-		ReverseEngineeringStrategy strategy = 
+		RevengStrategy strategy = 
 				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
 						null, revengFileList);
 		
@@ -107,18 +107,18 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 		detectOptimisticLock = b;
 	}
 	
-    private ReverseEngineeringStrategy loadreverseEngineeringStrategy(final String className, ReverseEngineeringStrategy delegate) 
+    private RevengStrategy loadreverseEngineeringStrategy(final String className, RevengStrategy delegate) 
     throws BuildException {
         try {
             Class<?> clazz = ReflectionUtil.classForName(className);			
-			Constructor<?> constructor = clazz.getConstructor(new Class[] { ReverseEngineeringStrategy.class });
-            return (ReverseEngineeringStrategy) constructor.newInstance(new Object[] { delegate }); 
+			Constructor<?> constructor = clazz.getConstructor(new Class[] { RevengStrategy.class });
+            return (RevengStrategy) constructor.newInstance(new Object[] { delegate }); 
         } 
         catch (NoSuchMethodException e) {
 			try {
 				getProject().log("Could not find public " + className + "(ReverseEngineeringStrategy delegate) constructor on ReverseEngineeringStrategy. Trying no-arg version.",Project.MSG_VERBOSE);			
 				Class<?> clazz = ReflectionUtil.classForName(className);						
-				ReverseEngineeringStrategy rev = (ReverseEngineeringStrategy) clazz.newInstance();
+				RevengStrategy rev = (RevengStrategy) clazz.newInstance();
 				getProject().log("Using non-delegating strategy, thus packagename and revengfile will be ignored.", Project.MSG_INFO);
 				return rev;
 			} 

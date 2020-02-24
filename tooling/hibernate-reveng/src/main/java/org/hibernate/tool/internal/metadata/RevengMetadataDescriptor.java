@@ -6,17 +6,17 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 	
-	private ReverseEngineeringStrategy reverseEngineeringStrategy = null;
+	private RevengStrategy reverseEngineeringStrategy = null;
     private Properties properties = new Properties();
 
 	public RevengMetadataDescriptor(
-			ReverseEngineeringStrategy reverseEngineeringStrategy, 
+			RevengStrategy reverseEngineeringStrategy, 
 			Properties properties) {
 		this.properties.putAll(Environment.getProperties());
 		if (properties != null) {

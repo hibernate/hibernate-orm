@@ -13,7 +13,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.ReverseEngineeringStrategyFactory;
 
 public abstract class AbstractGenerationMojo extends AbstractMojo {
@@ -66,19 +66,19 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
 
     public void execute() {
         getLog().info("Starting " + this.getClass().getSimpleName() + "...");
-        ReverseEngineeringStrategy strategy = setupReverseEngineeringStrategy();
+        RevengStrategy strategy = setupReverseEngineeringStrategy();
         Properties properties = loadPropertiesFile();
         MetadataDescriptor jdbcDescriptor = createJdbcDescriptor(strategy, properties);
         executeExporter(jdbcDescriptor);
         getLog().info("Finished " + this.getClass().getSimpleName() + "!");
     }
 
-    private ReverseEngineeringStrategy setupReverseEngineeringStrategy() {
+    private RevengStrategy setupReverseEngineeringStrategy() {
     	File[] revengFiles = null;
     	if (revengFile != null) {
     		revengFiles = new File[] { revengFile };
     	}
-        ReverseEngineeringStrategy strategy = 
+        RevengStrategy strategy = 
         		ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy(
         				revengStrategy, 
         				revengFiles);
@@ -110,7 +110,7 @@ public abstract class AbstractGenerationMojo extends AbstractMojo {
         }
     }
 
-    private MetadataDescriptor createJdbcDescriptor(ReverseEngineeringStrategy strategy, Properties properties) {
+    private MetadataDescriptor createJdbcDescriptor(RevengStrategy strategy, Properties properties) {
     	properties.put(MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, preferBasicCompositeIds);
         return MetadataDescriptorFactory
                 .createReverseEngineeringDescriptor(

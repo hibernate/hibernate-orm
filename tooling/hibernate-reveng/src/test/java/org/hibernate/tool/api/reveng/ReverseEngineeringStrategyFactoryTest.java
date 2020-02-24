@@ -8,7 +8,7 @@ public class ReverseEngineeringStrategyFactoryTest {
 	
 	@Test
 	public void testCreateReverseEngineeringStrategy() {
-		ReverseEngineeringStrategy reverseEngineeringStrategy = 
+		RevengStrategy reverseEngineeringStrategy = 
 				ReverseEngineeringStrategyFactory.createReverseEngineeringStrategy();
 		Assert.assertNotNull(reverseEngineeringStrategy);
 		Assert.assertEquals(

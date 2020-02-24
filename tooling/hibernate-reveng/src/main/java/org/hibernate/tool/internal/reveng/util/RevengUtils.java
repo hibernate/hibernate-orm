@@ -3,13 +3,13 @@ package org.hibernate.tool.internal.reveng.util;
 import java.util.List;
 
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
 public class RevengUtils {
 
 	public static List<String> getPrimaryKeyInfoInRevengStrategy(
-			ReverseEngineeringStrategy revengStrat, 
+			RevengStrategy revengStrat, 
 			Table table, 
 			String defaultCatalog, 
 			String defaultSchema) {
@@ -26,7 +26,7 @@ public class RevengUtils {
 	}
 	
 	public static String getTableIdentifierStrategyNameInRevengStrategy(
-			ReverseEngineeringStrategy revengStrat, 
+			RevengStrategy revengStrat, 
 			TableIdentifier tableIdentifier, 
 			String defaultCatalog, 
 			String defaultSchema) {

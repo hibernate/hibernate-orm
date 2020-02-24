@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
 public class ForeignKeysInfo {
@@ -31,7 +31,7 @@ public class ForeignKeysInfo {
 		this.referencedColumns = refColumns;
 	}
 	
-	public Map<String, List<ForeignKey>> process(ReverseEngineeringStrategy revengStrategy) {
+	public Map<String, List<ForeignKey>> process(RevengStrategy revengStrategy) {
 		Map<String, List<ForeignKey>> oneToManyCandidates = new HashMap<String, List<ForeignKey>>();
         Iterator<Entry<String, Table>> iterator = dependentTables.entrySet().iterator();
 		while (iterator.hasNext() ) {

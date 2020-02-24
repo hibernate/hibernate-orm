@@ -4,7 +4,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 
 abstract class AbstractBinder {
 	
@@ -22,7 +22,7 @@ abstract class AbstractBinder {
 		return binderContext.metadataCollector;
 	}
 	
-	ReverseEngineeringStrategy getRevengStrategy() {
+	RevengStrategy getRevengStrategy() {
 		return binderContext.revengStrategy;
 	}
 	

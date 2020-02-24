@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
@@ -18,7 +18,7 @@ public class TypeUtils {
 
 	public static String determinePreferredType(
 			InFlightMetadataCollector metadataCollector,
-			ReverseEngineeringStrategy revengStrategy,
+			RevengStrategy revengStrategy,
 			Table table, 
 			Column column, 
 			boolean generatedIdentifier) {

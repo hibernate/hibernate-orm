@@ -9,19 +9,19 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class DelegatingReverseEngineeringStrategy implements ReverseEngineeringStrategy {
+public class DelegatingReverseEngineeringStrategy implements RevengStrategy {
 
-	ReverseEngineeringStrategy delegate;
+	RevengStrategy delegate;
 
 	public List<ForeignKey> getForeignKeys(TableIdentifier referencedTable) {
 		return delegate==null?null:delegate.getForeignKeys(referencedTable);
 	}
 
-	public DelegatingReverseEngineeringStrategy(ReverseEngineeringStrategy delegate) {
+	public DelegatingReverseEngineeringStrategy(RevengStrategy delegate) {
 		this.delegate = delegate;
 	}
 
@@ -114,7 +114,7 @@ public class DelegatingReverseEngineeringStrategy implements ReverseEngineeringS
 	 * 
 	 * If subclasses need to use the Settings then it should keep its own reference, but still remember to initialize the delegates settings by calling super.setSettings(settings).
 	 * 
-	 * @see ReverseEngineeringStrategy.setSettings
+	 * @see RevengStrategy.setSettings
 	 */
 	public void setSettings(RevengSettings settings) {
 		if(delegate!=null) delegate.setSettings(settings);

@@ -9,7 +9,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
@@ -21,7 +21,7 @@ public class TableCollector {
 	
 	public static TableCollector create(
 			MetaDataDialect metaDataDialect, 
-			ReverseEngineeringStrategy revengStrategy, 
+			RevengStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
 			Properties properties) {
 		return new TableCollector(
@@ -32,13 +32,13 @@ public class TableCollector {
 	}
 	
 	private MetaDataDialect metaDataDialect;
-	private ReverseEngineeringStrategy revengStrategy;
+	private RevengStrategy revengStrategy;
 	private RevengMetadataCollector revengMetadataCollector;
 	private Properties properties;
 	
 	private TableCollector(
 			MetaDataDialect metaDataDialect, 
-			ReverseEngineeringStrategy revengStrategy, 
+			RevengStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
 			Properties properties) {
 		this.metaDataDialect = metaDataDialect;

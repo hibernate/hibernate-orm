@@ -6,14 +6,14 @@ package org.hibernate.tool.internal.reveng;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 
 public class TableSelectorStrategy extends DelegatingReverseEngineeringStrategy {
 	
 	List<SchemaSelection> selections = new ArrayList<SchemaSelection>();
 	
-	public TableSelectorStrategy(ReverseEngineeringStrategy res) {
+	public TableSelectorStrategy(RevengStrategy res) {
 		super(res);
 	}
 	

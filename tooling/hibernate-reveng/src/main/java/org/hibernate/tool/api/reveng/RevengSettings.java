@@ -3,7 +3,7 @@ package org.hibernate.tool.api.reveng;
 public class RevengSettings {
 
 	
-	final ReverseEngineeringStrategy rootStrategy;
+	final RevengStrategy rootStrategy;
 	
 	private String defaultPackageName = "";
 	private boolean detectOptimisticLock = true;
@@ -13,7 +13,7 @@ public class RevengSettings {
 	private boolean detectOneToOne = true;
 
 	
-	public RevengSettings(ReverseEngineeringStrategy rootStrategy) {
+	public RevengSettings(RevengStrategy rootStrategy) {
 		this.rootStrategy = rootStrategy;
 	}
 	
@@ -84,7 +84,7 @@ public class RevengSettings {
 	}
 	
 	/** return the top/root strategy. Allows a lower strategy to ask another question. Be aware of possible recursive loops; e.g. do not call the root.tableToClassName in tableToClassName of a custom reversengineeringstrategy. */
-	public ReverseEngineeringStrategy getRootStrategy() {
+	public RevengStrategy getRootStrategy() {
 		return rootStrategy;
 	}
 

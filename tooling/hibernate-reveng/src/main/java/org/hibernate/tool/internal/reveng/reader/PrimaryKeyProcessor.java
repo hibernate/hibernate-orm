@@ -13,7 +13,7 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.sql.Alias;
 import org.hibernate.tool.api.dialect.MetaDataDialect;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.jboss.logging.Logger;
@@ -24,7 +24,7 @@ public class PrimaryKeyProcessor {
 
 	public static void processPrimaryKey(
 			MetaDataDialect metaDataDialect, 
-			ReverseEngineeringStrategy revengStrategy, 
+			RevengStrategy revengStrategy, 
 			String defaultSchema, 
 			String defaultCatalog, 
 			RevengMetadataCollector revengMetadataCollector, 

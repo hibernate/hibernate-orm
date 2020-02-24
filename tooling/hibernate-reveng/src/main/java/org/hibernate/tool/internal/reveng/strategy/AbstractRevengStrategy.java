@@ -18,7 +18,7 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.ReverseEngineeringStrategy;
+import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
@@ -26,7 +26,7 @@ import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
-public abstract class AbstractRevengStrategy implements ReverseEngineeringStrategy {
+public abstract class AbstractRevengStrategy implements RevengStrategy {
 
 	static final private Logger log = Logger.getLogger(AbstractRevengStrategy.class);
 	
@@ -315,7 +315,7 @@ public abstract class AbstractRevengStrategy implements ReverseEngineeringStrate
 		}
 	}
 
-	protected ReverseEngineeringStrategy getRoot() {
+	protected RevengStrategy getRoot() {
 		return settings.getRootStrategy();
 	}
 	

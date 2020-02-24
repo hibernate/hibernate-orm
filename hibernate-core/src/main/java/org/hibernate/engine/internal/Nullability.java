@@ -106,7 +106,7 @@ public final class Nullability {
 					if ( !nullability[i] && value == null ) {
 						//check basic level one nullablilty
 						throw new PropertyValueException(
-								"not-null property references a null or transient value",
+								"non-null property references a null or transient value",
 								persister.getEntityName(),
 								persister.getPropertyNames()[i]
 							);
@@ -117,7 +117,7 @@ public final class Nullability {
 						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
 						if ( breakProperties != null ) {
 							throw new PropertyValueException(
-								"not-null property references a null or transient value",
+								"non-null property references a null or transient value",
 								persister.getEntityName(),
 								buildPropertyPath( persister.getPropertyNames()[i], breakProperties )
 							);

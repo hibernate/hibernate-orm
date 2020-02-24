@@ -317,7 +317,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			throw new AnnotationException(
-					"Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @CollectionOfElements: "
+					"Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @ElementCollection: "
 							+ StringHelper.qualify( entityName, property.getName() )
 			);
 		}
@@ -347,28 +347,28 @@ public abstract class CollectionBinder {
 			String entityName, boolean isIndexed) {
 		if ( java.util.Set.class.equals( clazz) ) {
 			if ( property.isAnnotationPresent( CollectionId.class) ) {
-				throw new AnnotationException("Set do not support @CollectionId: "
+				throw new AnnotationException("Set does not support @CollectionId: "
 						+ StringHelper.qualify( entityName, property.getName() ) );
 			}
 			return new SetBinder( false );
 		}
 		else if ( java.util.SortedSet.class.equals( clazz ) ) {
 			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "Set do not support @CollectionId: "
+				throw new AnnotationException( "Set does not support @CollectionId: "
 						+ StringHelper.qualify( entityName, property.getName() ) );
 			}
 			return new SetBinder( true );
 		}
 		else if ( java.util.Map.class.equals( clazz ) ) {
 			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "Map do not support @CollectionId: "
+				throw new AnnotationException( "Map does not support @CollectionId: "
 						+ StringHelper.qualify( entityName, property.getName() ) );
 			}
 			return new MapBinder( false );
 		}
 		else if ( java.util.SortedMap.class.equals( clazz ) ) {
 			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "Map do not support @CollectionId: "
+				throw new AnnotationException( "Map does not support @CollectionId: "
 						+ StringHelper.qualify( entityName, property.getName() ) );
 			}
 			return new MapBinder( true );
@@ -385,7 +385,7 @@ public abstract class CollectionBinder {
 			if ( isIndexed ) {
 				if ( property.isAnnotationPresent( CollectionId.class ) ) {
 					throw new AnnotationException(
-							"List do not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
+							"List does not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
 									+ StringHelper.qualify( entityName, property.getName() ) );
 				}
 				return new ListBinder();
@@ -535,7 +535,7 @@ public abstract class CollectionBinder {
 				&& (property.isAnnotationPresent( JoinColumn.class )
 					|| property.isAnnotationPresent( JoinColumns.class )
 					|| propertyHolder.getJoinTable( property ) != null ) ) {
-			String message = "Associations marked as mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
+			String message = "Associations marked as @mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
 			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
 			throw new AnnotationException( message );
 		}
@@ -666,7 +666,7 @@ public abstract class CollectionBinder {
 		if ( isSortedCollection ) {
 			if ( ! hadExplicitSort && !hadOrderBy ) {
 				throw new AnnotationException(
-						"A sorted collection must define and ordering or sorting : " + safeCollectionRole()
+						"A sorted collection must define an ordering or sorting : " + safeCollectionRole()
 				);
 			}
 		}
@@ -692,7 +692,7 @@ public abstract class CollectionBinder {
 	private AnnotationException buildIllegalSortCombination() {
 		return new AnnotationException(
 				String.format(
-						"Illegal combination of annotations on %s.  Only one of @%s, @%s and @%s can be used",
+						"Illegal combination of annotations on %s. Only one of @%s, @%s and @%s can be used",
 						safeCollectionRole(),
 						Sort.class.getName(),
 						SortNatural.class.getName(),
@@ -723,7 +723,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			throw new AssertionFailure(
-					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @CollectionOfElements"
+					"Define fetch strategy on a property not annotated with @ManyToOne nor @OneToMany nor @ElementCollection"
 			);
 		}
 		if ( lazy != null ) {
@@ -762,7 +762,7 @@ public abstract class CollectionBinder {
 				return collectionType;
 			}
 			else {
-				String errorMsg = "Collection has neither generic type or OneToMany.targetEntity() defined: "
+				String errorMsg = "Collection has neither generic type nor OneToMany.targetEntity() defined: "
 						+ safeCollectionRole();
 				throw new AnnotationException( errorMsg );
 			}
@@ -989,7 +989,7 @@ public abstract class CollectionBinder {
 					}
 			else {
 				throw new AnnotationException(
-						"Illegal use of @FilterJoinTable on an association without join table:"
+						"Illegal use of @FilterJoinTable on an association without join table: "
 								+ StringHelper.qualify( propertyHolder.getPath(), propertyName )
 				);
 			}
@@ -1004,7 +1004,7 @@ public abstract class CollectionBinder {
 				}
 				else {
 					throw new AnnotationException(
-							"Illegal use of @FilterJoinTable on an association without join table:"
+							"Illegal use of @FilterJoinTable on an association without join table: "
 									+ StringHelper.qualify( propertyHolder.getPath(), propertyName )
 					);
 				}
@@ -1067,7 +1067,7 @@ public abstract class CollectionBinder {
 			}
 			else {
 				throw new AnnotationException(
-						"Illegal use of @WhereJoinTable on an association without join table:"
+						"Illegal use of @WhereJoinTable on an association without join table: "
 								+ StringHelper.qualify( propertyHolder.getPath(), propertyName )
 				);
 			}
@@ -1095,7 +1095,7 @@ public abstract class CollectionBinder {
 			cond = buildingContext.getMetadataCollector().getFilterDefinition( name ).getDefaultFilterCondition();
 			if ( StringHelper.isEmpty( cond ) ) {
 				throw new AnnotationException(
-						"no filter condition found for filter " + name + " in "
+						"no filter condition found for filter [" + name + "] in "
 								+ StringHelper.qualify( propertyHolder.getPath(), propertyName )
 				);
 			}
@@ -1313,7 +1313,7 @@ public abstract class CollectionBinder {
 				LOG.debugf("Binding a OneToMany: %s through an association table", path);
 			}
 			else if (isCollectionOfEntities) {
-				LOG.debugf("Binding as ManyToMany: %s", path);
+				LOG.debugf("Binding a ManyToMany: %s", path);
 			}
 			else if (anyAnn != null) {
 				LOG.debugf("Binding a ManyToAny: %s", path);
@@ -1365,7 +1365,7 @@ public abstract class CollectionBinder {
 			}
 			catch (MappingException e) {
 				throw new AnnotationException(
-						"mappedBy reference an unknown target entity property: "
+						"mappedBy references an unknown target entity property: "
 								+ collType + "." + joinColumns[0].getMappedBy() + " in "
 								+ collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName()
 				);
@@ -1671,7 +1671,7 @@ public abstract class CollectionBinder {
 				!( collValue.getElement() instanceof SimpleValue ) && //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
 				collValue.getElement().getFetchMode() != FetchMode.JOIN ) {
 			throw new MappingException(
-					"@ManyToMany or @CollectionOfElements defining filter or where without join fetching "
+					"@ManyToMany or @ElementCollection defining filter or where without join fetching "
 							+ "not valid within collection using join fetching[" + collValue.getRole() + "]"
 			);
 		}

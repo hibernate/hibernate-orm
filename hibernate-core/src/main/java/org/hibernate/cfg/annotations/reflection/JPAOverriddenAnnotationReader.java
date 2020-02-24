@@ -1675,7 +1675,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				type = AccessType.valueOf( access );
 			}
 			catch ( IllegalArgumentException e ) {
-				throw new AnnotationException( access + " is not a valid access type. Check you xml confguration." );
+				throw new AnnotationException( access + " is not a valid access type. Check you xml configuration." );
 			}
 
 			if ( ( AccessType.PROPERTY.equals( type ) && this.element instanceof Method ) ||
@@ -1850,7 +1850,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		else {
 			if ( isMandatory ) {
-				throw new AnnotationException( current.getPath() + ".column is mandatory. " + SCHEMA_VALIDATION );
+				throw new AnnotationException( current.getPath() + " column is mandatory. " + SCHEMA_VALIDATION );
 			}
 			return null;
 		}
@@ -1881,7 +1881,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				type = AccessType.valueOf( access );
 			}
 			catch ( IllegalArgumentException e ) {
-				throw new AnnotationException( access + " is not a valid access type. Check you xml confguration." );
+				throw new AnnotationException( access + " is not a valid access type. Check you xml configuration." );
 			}
 			ad.setValue( "value", type );
 			return AnnotationFactory.create( ad );
@@ -2481,7 +2481,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			copyStringAttribute( ann, subelement, "name", false );
 			Element queryElt = subelement.element( "query" );
 			if ( queryElt == null ) {
-				throw new AnnotationException( "No <query> element found." + SCHEMA_VALIDATION );
+				throw new AnnotationException( "No <query> element found" + SCHEMA_VALIDATION );
 			}
 			copyStringElement( queryElt, ann, "query" );
 			List<Element> elements = subelement.elements( "hint" );
@@ -2614,7 +2614,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 				else {
 					throw new AnnotationException(
-							"Unknown DiscrimiatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
+							"Unknown DiscriminatorType in XML: " + value + " (" + SCHEMA_VALIDATION + ")"
 					);
 				}
 			}

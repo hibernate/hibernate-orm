@@ -103,7 +103,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 			if ( persistentField.getType().asErasure().isAssignableTo( Map.class ) || targetType.isAssignableTo( Map.class ) ) {
 				log.infof(
-						"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported ",
+						"Bi-directional association not managed for field [%s#%s]: @ManyToMany in java.util.Map attribute not supported",
 						managedCtClass.getName(),
 						persistentField.getName()
 				);

@@ -83,7 +83,7 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 			final String propertyName = entityPersister.getPropertyNames()[position];
 			if ( ! naturalIdValues.containsKey( propertyName ) ) {
 				throw new HibernateException(
-						String.format( "No value specified for natural-id property %s#%s", getEntityName(), propertyName )
+						String.format( "No value specified for natural-id property: %s#%s", getEntityName(), propertyName )
 				);
 			}
 			orderedNaturalIdValues[i++] = naturalIdValues.get( entityPersister.getPropertyNames()[position] );

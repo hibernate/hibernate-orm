@@ -97,7 +97,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 					return invokeMethod( columnIndexMethod, buildColumnIndexMethodArgs( args, columnIndex ) );
 				}
 				catch ( SQLException ex ) {
-					final String msg = "Exception getting column index for column: [" + args[0] +
+					final String msg = "Exception thrown when getting column index for column: [" + args[0] +
 							"].\nReverting to using: [" + args[0] +
 							"] as first argument for method: [" + method + "]";
 					SQL_EXCEPTION_HELPER.logExceptions( ex, msg );

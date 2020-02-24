@@ -44,7 +44,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			final CollectionPersister ceLoadedPersister = ce.getLoadedPersister();
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
-						"Initializing collection {0}",
+						"Initializing collection: {0}",
 						MessageHelper.collectionInfoString(
 								ceLoadedPersister,
 								collection,

@@ -89,7 +89,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 					}
 				}
 				if ( persister == null ) {
-					throw new IllegalArgumentException( "Non-entity object instance passed to evict : " + object );
+					throw new IllegalArgumentException( "Non-entity object instance passed to evict() : " + object );
 				}
 			}
 		}

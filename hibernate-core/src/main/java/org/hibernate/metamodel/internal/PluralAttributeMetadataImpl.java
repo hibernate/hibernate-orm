@@ -163,7 +163,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		else {
 			throw new AssertionFailure(
 					"Fail to process type argument in a generic declaration. Member : " + getMemberDescription()
-							+ " Type: " + type.getClass()
+							+ "; Type : " + type.getClass()
 			);
 		}
 	}

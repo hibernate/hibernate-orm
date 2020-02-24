@@ -251,8 +251,8 @@ public class MergeContext implements Map {
 			}
 			if ( oldOperatedOn != null ) {
 				throw new IllegalStateException(
-						"MergeContext#mergeEntityToOperatedOnFlagMap contains a merge entity " + printEntity( mergeEntity )
-								+ ", but MergeContext#mergeToManagedEntityXref does not."
+						"MergeContext#mergeEntityToOperatedOnFlagMap contains a merge entity [" + printEntity( mergeEntity )
+								+ "], but MergeContext#mergeToManagedEntityXref does not."
 				);
 			}
 		}
@@ -260,15 +260,15 @@ public class MergeContext implements Map {
 			// mergeEntity was already mapped in mergeToManagedEntityXref
 			if ( oldManagedEntity != managedEntity ) {
 				throw new IllegalArgumentException(
-						"Error occurred while storing a merge Entity " + printEntity( mergeEntity )
-								+ ". It was previously associated with managed entity " + printEntity( oldManagedEntity )
-								+ ". Attempted to replace managed entity with " + printEntity( managedEntity )
+						"Error occurred while storing a merge Entity [" + printEntity( mergeEntity )
+								+ "]. It was previously associated with managed entity [" + printEntity( oldManagedEntity )
+								+ "]. Attempted to replace managed entity with " + printEntity( managedEntity )
 				);
 			}
 			if ( oldOperatedOn == null ) {
 				throw new IllegalStateException(
-						"MergeContext#mergeToManagedEntityXref contained a merge entity " + printEntity( mergeEntity )
-								+ ", but MergeContext#mergeEntityToOperatedOnFlagMap did not."
+						"MergeContext#mergeToManagedEntityXref contained a merge entity [" + printEntity( mergeEntity )
+								+ "], but MergeContext#mergeEntityToOperatedOnFlagMap did not."
 				);
 			}
 		}

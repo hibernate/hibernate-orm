@@ -50,18 +50,18 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 					return new SchemaNameResolverJava17Delegate();
 				}
 				catch (java.lang.AbstractMethodError e) {
-					log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
+					log.debugf( "Unable to use Java 1.7 Connection#getSchema()" );
 					return SchemaNameResolverFallbackDelegate.INSTANCE;
 				}
 			}
 			else {
-				log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
+				log.debugf( "Unable to use Java 1.7 Connection#getSchema()" );
 				return SchemaNameResolverFallbackDelegate.INSTANCE;
 			}
 		}
 		catch (Exception ignore) {
 			log.debugf(
-					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: "
+					"Unable to use Java 1.7 Connection#getSchema(); an error occurred trying to resolve the connection default schema resolver: "
 							+ ignore.getMessage() );
 			return SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
@@ -98,7 +98,7 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 						"Use of DefaultSchemaNameResolver requires Dialect to provide the " +
 								"proper SQL statement/command but provided Dialect [" +
 								dialect.getClass().getName() + "] did not return anything " +
-								"from Dialect#getCurrentSchemaCommand"
+								"from Dialect#getCurrentSchemaCommand()"
 				);
 			}
 

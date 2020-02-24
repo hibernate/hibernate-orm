@@ -97,8 +97,8 @@ public class CacheableResultTransformer implements ResultTransformer {
 		int tupleLength = ArrayHelper.countTrue( includeInTuple );
 		if ( aliases != null && aliases.length != tupleLength ) {
 			throw new IllegalArgumentException(
-					"if aliases is not null, then the length of aliases[] must equal the number of true elements in includeInTuple; " +
-							"aliases.length=" + aliases.length + "tupleLength=" + tupleLength
+					"if aliases are not null, then the length of aliases must equal the number of true elements in includeInTuple; " +
+							"aliases.length=" + aliases.length + "; tupleLength=" + tupleLength
 			);
 		}
 		return new CacheableResultTransformer(

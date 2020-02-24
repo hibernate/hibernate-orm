@@ -187,7 +187,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		EntityPersister persister = source.getEntityPersister( entityName, event.getObject() );
 		Object id =  persister.getIdentifier( event.getObject(), source );
 		entityName = entityName == null ? source.guessEntityName( event.getObject() ) : entityName;
-		throw new IllegalArgumentException("Removing a detached instance "+ entityName + "#" + id);
+		throw new IllegalArgumentException("Removing a detached instance: "+ entityName + "#" + id);
 	}
 
 	/**

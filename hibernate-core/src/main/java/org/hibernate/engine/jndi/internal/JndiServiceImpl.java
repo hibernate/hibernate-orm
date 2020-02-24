@@ -97,7 +97,7 @@ public class JndiServiceImpl implements JndiService {
 			return initialContext.lookup( name );
 		}
 		catch ( NamingException e ) {
-			throw new JndiException( "Unable to lookup JNDI name [" + jndiName + "]", e );
+			throw new JndiException( "Unable to look up JNDI name [" + jndiName + "]", e );
 		}
 		finally {
 			cleanUp( initialContext );

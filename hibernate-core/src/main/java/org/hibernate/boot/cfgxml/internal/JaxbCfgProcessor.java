@@ -73,7 +73,7 @@ public class JaxbCfgProcessor {
 			}
 		}
 		catch ( XMLStreamException e ) {
-			throw new HibernateException( "Unable to create stax reader", e );
+			throw new HibernateException( "Unable to create StAX reader", e );
 		}
 	}
 
@@ -104,7 +104,7 @@ public class JaxbCfgProcessor {
 			}
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Error accessing stax stream", e );
+			throw new HibernateException( "Error accessing StAX stream", e );
 		}
 
 		if ( event == null ) {

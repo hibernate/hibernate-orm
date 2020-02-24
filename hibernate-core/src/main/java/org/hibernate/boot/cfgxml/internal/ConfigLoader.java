@@ -168,7 +168,7 @@ public class ConfigLoader {
 		}
 		catch (FileNotFoundException e) {
 			throw new ConfigurationException(
-					"Unable locate specified properties file [" + file.getAbsolutePath() + "]",
+					"Unable to locate specified properties file [" + file.getAbsolutePath() + "]",
 					e
 			);
 		}

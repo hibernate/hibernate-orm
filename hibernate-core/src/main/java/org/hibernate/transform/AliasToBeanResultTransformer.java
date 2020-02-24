@@ -80,10 +80,10 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			}
 		}
 		catch ( InstantiationException e ) {
-			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
+			throw new HibernateException( "Could not instantiate result class: " + resultClass.getName() );
 		}
 		catch ( IllegalAccessException e ) {
-			throw new HibernateException( "Could not instantiate resultclass: " + resultClass.getName() );
+			throw new HibernateException( "Could not instantiate result class: " + resultClass.getName() );
 		}
 
 		return result;

@@ -674,7 +674,7 @@ public class ProcedureCallImpl<R>
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
-				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
+				throw new IllegalStateException( "Current CallableStatement output was not a ResultSet, but getResultList was called" );
 			}
 
 			return ( (ResultSetOutput) rtn ).getResultList();
@@ -708,7 +708,7 @@ public class ProcedureCallImpl<R>
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( !(rtn instanceof ResultSetOutput) ) {
-				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
+				throw new IllegalStateException( "Current CallableStatement output was not a ResultSet, but getResultList was called" );
 			}
 
 			return ( (ResultSetOutput) rtn ).getResultList();

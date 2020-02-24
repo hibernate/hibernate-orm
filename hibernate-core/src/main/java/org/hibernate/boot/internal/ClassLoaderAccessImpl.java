@@ -42,7 +42,7 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	}
 
 	public void injectTempClassLoader(ClassLoader jpaTempClassLoader) {
-		log.debugf( "ClassLoaderAccessImpl#injectTempClassLoader(%s) [was %s]", jpaTempClassLoader, this.jpaTempClassLoader );
+		log.debugf( "ClassLoaderAccessImpl#injectTempClassLoader(%s); was [%s]", jpaTempClassLoader, this.jpaTempClassLoader );
 		this.jpaTempClassLoader = jpaTempClassLoader;
 	}
 

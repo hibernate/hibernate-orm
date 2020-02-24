@@ -185,7 +185,7 @@ public class AttributeFactory {
 	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
-		LOG.trace( "Building version attribute [ownerType.getTypeName()" + "." + "property.getName()]" );
+		LOG.trace( "Building version attribute [" + ownerType.getTypeName() + "." + property.getName() + "]" );
 
 		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata<X, Y>) determineAttributeMetadata(
 				wrap( ownerType, property ),

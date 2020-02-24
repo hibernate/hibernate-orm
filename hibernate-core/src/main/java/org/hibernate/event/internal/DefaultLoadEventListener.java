@@ -151,8 +151,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 
 		throw new TypeMismatchException(
-				"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass
-						+ ", got " + event.getEntityId().getClass()
+				"Provided id of the wrong type for class: " + persister.getEntityName() + ". Expected: " + idClass
+						+ ", got: " + event.getEntityId().getClass()
 		);
 	}
 

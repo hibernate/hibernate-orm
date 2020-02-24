@@ -69,7 +69,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 	@Override
 	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
-			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new HibernateException( "write locks via update not supported for non-versioned entity [" + lockable.getEntityName() + "]" );
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();

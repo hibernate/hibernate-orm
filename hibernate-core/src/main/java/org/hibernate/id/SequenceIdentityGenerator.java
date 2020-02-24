@@ -74,7 +74,7 @@ public class SequenceIdentityGenerator
 			this.sequenceNextValFragment = dialect.getSelectSequenceNextValString( sequenceName );
 			this.keyColumns = getPersister().getRootTableKeyColumnNames();
 			if ( keyColumns.length > 1 ) {
-				throw new HibernateException( "sequence-identity generator cannot be used with with multi-column keys" );
+				throw new HibernateException( "sequence-identity generator cannot be used with multi-column keys" );
 			}
 		}
 

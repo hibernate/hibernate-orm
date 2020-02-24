@@ -346,7 +346,7 @@ public final class TwoPhaseLoad {
 
 		if ( debugEnabled ) {
 			LOG.debugf(
-					"Done materializing entity %s",
+					"Done materializing entity: %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
 			);
 		}

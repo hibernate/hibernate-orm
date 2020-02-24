@@ -118,7 +118,7 @@ public class ArchiveHelper {
 				jarUrl = new URL( "file:" + jarPath );
 			}
 			catch (MalformedURLException ee) {
-				throw new IllegalArgumentException( "Unable to find jar:" + jarPath, ee );
+				throw new IllegalArgumentException( "Unable to find jar: " + jarPath, ee );
 			}
 		}
 		return jarUrl;

@@ -30,7 +30,6 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper;
-import org.hibernate.tool.internal.reveng.OverrideBinder;
 import org.hibernate.tool.internal.reveng.SQLTypeMapping;
 import org.hibernate.tool.internal.reveng.TableFilter;
 import org.hibernate.tool.internal.reveng.MetaAttributeHelper.SimpleMetaAttribute;

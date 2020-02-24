@@ -25,7 +25,7 @@ public class MetaAttributeHelper {
 	}
 
 
-	static MultiValuedMap<String, SimpleMetaAttribute> loadAndMergeMetaMap(
+	public static MultiValuedMap<String, SimpleMetaAttribute> loadAndMergeMetaMap(
 			Element classElement,
 			MultiValuedMap<String, SimpleMetaAttribute> inheritedMeta) {
 		return MetaAttributeHelper.mergeMetaMaps(
@@ -33,7 +33,7 @@ public class MetaAttributeHelper {
 				inheritedMeta);
 	}
 
-	static MultiValuedMap<String, SimpleMetaAttribute> loadMetaMap(Element element) {
+	public static MultiValuedMap<String, SimpleMetaAttribute> loadMetaMap(Element element) {
 		MultiValuedMap<String, SimpleMetaAttribute> result = new HashSetValuedHashMap<String, SimpleMetaAttribute>();
 		List<Element> metaAttributeList = new ArrayList<Element>();
 		ArrayList<Element> metaNodes = getChildElements(element, "meta");

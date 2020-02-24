@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.reveng;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.hibernate.tool.api.reveng.TableIdentifier;

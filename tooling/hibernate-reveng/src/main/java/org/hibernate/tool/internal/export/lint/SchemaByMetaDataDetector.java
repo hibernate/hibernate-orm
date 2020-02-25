@@ -28,7 +28,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengDialect;
-import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
@@ -129,17 +129,17 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			String[] strings = StringHelper.split(".", (String) key);
 			if(strings.length==1) {
 				tableSelector.clearSchemaSelections();
-				tableSelector.addSchemaSelection( new SchemaSelection(null,null, strings[0]) );
+				tableSelector.addSchemaSelection( createSchemaSelection(null,null, strings[0]) );
 				Collection<Table> collection = readFromDatabase();
 				return !collection.isEmpty();
 			} else if(strings.length==3) {
 				tableSelector.clearSchemaSelections();
-				tableSelector.addSchemaSelection( new SchemaSelection(strings[0],strings[1], strings[2]) );
+				tableSelector.addSchemaSelection( createSchemaSelection(strings[0],strings[1], strings[2]) );
 				Collection<Table> collection = readFromDatabase();
 				return !collection.isEmpty();
 			} else if (strings.length==2) {
 				tableSelector.clearSchemaSelections();
-				tableSelector.addSchemaSelection( new SchemaSelection(null,strings[0], strings[1]) );
+				tableSelector.addSchemaSelection( createSchemaSelection(null,strings[0], strings[1]) );
 				Collection<Table> collection = readFromDatabase();
 				return !collection.isEmpty();
 			}
@@ -217,9 +217,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	private void setSchemaSelection(Table table) {
 		tableSelector.clearSchemaSelections();
-		tableSelector.addSchemaSelection( new SchemaSelection( table
-				.getCatalog(), table.getSchema(), table.getName() ) );
-
+		tableSelector.addSchemaSelection( createSchemaSelection(
+				table.getCatalog(), 
+				table.getSchema(), 
+				table.getName() ) );
 	}
 
 	/**
@@ -287,6 +288,24 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector();
 		reader.readDatabaseSchema(revengMetadataCollector);
 		return revengMetadataCollector.getTables();
+	}
+	
+	private SchemaSelection createSchemaSelection(String matchCatalog, String matchSchema, String matchTable) {
+		return new SchemaSelection() {
+			@Override
+			public String getMatchCatalog() {
+				return matchCatalog;
+			}
+			@Override
+			public String getMatchSchema() {
+				return matchSchema;
+			}
+			@Override
+			public String getMatchTable() {
+				return matchTable;
+			}
+			
+		};
 	}
 
 }

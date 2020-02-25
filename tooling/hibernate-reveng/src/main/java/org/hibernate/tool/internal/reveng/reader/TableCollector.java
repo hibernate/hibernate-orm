@@ -10,7 +10,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.jboss.logging.Logger;

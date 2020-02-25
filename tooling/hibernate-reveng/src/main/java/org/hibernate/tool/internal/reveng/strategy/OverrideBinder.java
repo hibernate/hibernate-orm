@@ -11,7 +11,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
@@ -370,11 +370,22 @@ public class OverrideBinder {
 	private static void bindSchemaSelection(
 			Element schemaSelectionElement, 
 			OverrideRepository repository) {
-		SchemaSelection schemaSelection = new SchemaSelection();
-		schemaSelection.setMatchCatalog(getAttribute(schemaSelectionElement, "match-catalog"));
-		schemaSelection.setMatchSchema(getAttribute(schemaSelectionElement, "match-schema"));
-		schemaSelection.setMatchTable(getAttribute(schemaSelectionElement, "match-table"));
-		repository.addSchemaSelection(schemaSelection);
+		repository.addSchemaSelection(
+				new SchemaSelection() {
+					@Override
+					public String getMatchCatalog() {
+						return getAttribute(schemaSelectionElement, "match-catalog");
+					}
+					@Override
+					public String getMatchSchema() {
+						return getAttribute(schemaSelectionElement, "match-schema");
+					}
+					@Override
+					public String getMatchTable() {
+						return getAttribute(schemaSelectionElement, "match-table");
+					}
+					
+				});
 	}
 	
 	private static void bindTypeMapping(

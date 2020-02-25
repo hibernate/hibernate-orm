@@ -15,7 +15,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.SchemaSelection;
+import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 
 public class DatabaseReader {
@@ -128,7 +128,20 @@ public class DatabaseReader {
 		List<SchemaSelection> result = revengStrategy.getSchemaSelections();
 		if (result == null) {
 			result = new ArrayList<SchemaSelection>();
-			result.add(new SchemaSelection(getDefaultCatalog(), getDefaultSchema()));
+			result.add(new SchemaSelection() {
+				@Override
+				public String getMatchCatalog() {
+					return getDefaultCatalog();
+				}
+				@Override
+				public String getMatchSchema() {
+					return getDefaultSchema();
+				}
+				@Override
+				public String getMatchTable() {
+					return null;
+				}				
+			});
 		}
 		return result;
 	}

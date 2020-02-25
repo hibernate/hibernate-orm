@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.SchemaSelection;
 
 public class TableSelectorStrategy extends DelegatingStrategy {
 	

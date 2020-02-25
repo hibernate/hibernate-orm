@@ -9,6 +9,12 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
 
 public interface RevengStrategy {
+	
+	interface SchemaSelection {
+		String getMatchCatalog();
+		String getMatchSchema();
+		String getMatchTable();
+	}
 
 	/**
 	 * Generic method used to initialize the reverse engineering strategy.

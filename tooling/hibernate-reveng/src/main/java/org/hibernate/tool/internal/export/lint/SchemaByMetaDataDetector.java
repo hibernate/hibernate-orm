@@ -26,7 +26,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
+import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
@@ -69,7 +69,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		tableSelector = new TableSelectorStrategy(
 				new DefaultStrategy() );
-		metadataDialect = MetaDataDialectFactory
+		metadataDialect = RevengDialectFactory
 				.createMetaDataDialect(
 						dialect, 
 						properties );

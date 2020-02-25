@@ -1,4 +1,4 @@
-package org.hibernate.tool.api.dialect;
+package org.hibernate.tool.api.reveng;
 
 import java.util.Properties;
 
@@ -9,7 +9,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.internal.dialect.H2MetaDataDialect;
 import org.hibernate.tool.internal.dialect.HSQLMetaDataDialect;
 import org.hibernate.tool.internal.dialect.JDBCMetaDataDialect;
@@ -17,9 +16,9 @@ import org.hibernate.tool.internal.dialect.MySQLMetaDataDialect;
 import org.hibernate.tool.internal.dialect.OracleMetaDataDialect;
 import org.hibernate.tool.internal.dialect.SQLServerMetaDataDialect;
 
-public class MetaDataDialectFactory {
+public class RevengDialectFactory {
 	
-	private MetaDataDialectFactory() {}
+	private RevengDialectFactory() {}
 
 	public static RevengDialect createMetaDataDialect(Dialect dialect, Properties cfg) {
 		String property = cfg.getProperty( "hibernatetool.metadatadialect" );
@@ -40,7 +39,7 @@ public class MetaDataDialectFactory {
 		if ( property != null ) {
 			try {
 				return (RevengDialect) ReflectHelper.classForName( property,
-						MetaDataDialectFactory.class ).newInstance();
+						RevengDialectFactory.class ).newInstance();
 			}
 			catch (Throwable e) {
 				throw new RuntimeException(

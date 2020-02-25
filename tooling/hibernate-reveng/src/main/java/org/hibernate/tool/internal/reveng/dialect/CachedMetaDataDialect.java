@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.dialect;
+package org.hibernate.tool.internal.reveng.dialect;
 
 import java.util.ArrayList;
 import java.util.HashMap;

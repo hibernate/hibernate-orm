@@ -1,5 +1,5 @@
 
-package org.hibernate.tool.internal.dialect;
+package org.hibernate.tool.internal.reveng.dialect;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

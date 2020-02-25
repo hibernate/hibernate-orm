@@ -9,12 +9,12 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tool.internal.dialect.H2MetaDataDialect;
-import org.hibernate.tool.internal.dialect.HSQLMetaDataDialect;
-import org.hibernate.tool.internal.dialect.JDBCMetaDataDialect;
-import org.hibernate.tool.internal.dialect.MySQLMetaDataDialect;
-import org.hibernate.tool.internal.dialect.OracleMetaDataDialect;
-import org.hibernate.tool.internal.dialect.SQLServerMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.H2MetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.HSQLMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.JDBCMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.MySQLMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.OracleMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.SQLServerMetaDataDialect;
 
 public class RevengDialectFactory {
 	

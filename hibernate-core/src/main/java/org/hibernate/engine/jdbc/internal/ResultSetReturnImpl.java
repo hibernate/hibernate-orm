@@ -46,9 +46,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(PreparedStatement statement) {
 		// IMPL NOTE : SQL logged by caller
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			final ResultSet rs;
@@ -58,7 +58,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -79,9 +79,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(CallableStatement callableStatement) {
 		// IMPL NOTE : SQL logged by caller
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			final ResultSet rs;
@@ -91,7 +91,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement, executeStart );
+				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos );
 			}
 			postExtract( rs, callableStatement );
 			return rs;
@@ -104,9 +104,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			final ResultSet rs;
@@ -116,7 +116,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( sql, executeStart );
+				sqlStatementLogger.logSlowQuery( sql, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -129,9 +129,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet execute(PreparedStatement statement) {
 		// sql logged by StatementPreparerImpl
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			final ResultSet rs;
@@ -146,7 +146,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -159,9 +159,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet execute(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			final ResultSet rs;
@@ -176,7 +176,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			}
 			finally {
 				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStart );
+				sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
 			}
 			postExtract( rs, statement );
 			return rs;
@@ -188,9 +188,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 
 	@Override
 	public int executeUpdate(PreparedStatement statement) {
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			jdbcExecuteStatementStart();
@@ -201,16 +201,16 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStart );
+			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
 		}
 	}
 
 	@Override
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
-		long executeStart = 0;
+		long executeStartNanos = 0;
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStart = System.currentTimeMillis();
+			executeStartNanos = System.nanoTime();
 		}
 		try {
 			jdbcExecuteStatementStart();
@@ -221,7 +221,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		finally {
 			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStart );
+			sqlStatementLogger.logSlowQuery( statement, executeStartNanos );
 		}
 	}
 

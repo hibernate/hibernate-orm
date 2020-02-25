@@ -144,7 +144,7 @@ public class SchemaExport {
 
 	private String importFiles;
 
-	private final List<Exception> exceptions = new ArrayList<Exception>();
+	private final List<Exception> exceptions = new ArrayList<>();
 
 
 	/**
@@ -479,8 +479,8 @@ public class SchemaExport {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<String>();
-		List<String> jarFiles = new ArrayList<String>();
+		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			String targetText = null;

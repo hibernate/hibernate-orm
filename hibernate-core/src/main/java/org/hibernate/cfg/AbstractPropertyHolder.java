@@ -368,10 +368,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	private void buildHierarchyColumnOverride(XClass element) {
 		XClass current = element;
-		Map<String, Column[]> columnOverride = new HashMap<String, Column[]>();
-		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<String, JoinColumn[]>();
-		Map<String, JoinTable> joinTableOverride = new HashMap<String, JoinTable>();
-		Map<String, ForeignKey> foreignKeyOverride = new HashMap<String, ForeignKey>();
+		Map<String, Column[]> columnOverride = new HashMap<>();
+		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<>();
+		Map<String, JoinTable> joinTableOverride = new HashMap<>();
+		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		while ( current != null && !context.getBootstrapContext().getReflectionManager().toXClass( Object.class ).equals( current ) ) {
 			if ( current.isAnnotationPresent( Entity.class ) || current.isAnnotationPresent( MappedSuperclass.class )
 					|| current.isAnnotationPresent( Embeddable.class ) ) {
@@ -399,7 +399,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, Column[]> buildColumnOverride(XAnnotatedElement element, String path) {
-		Map<String, Column[]> columnOverride = new HashMap<String, Column[]>();
+		Map<String, Column[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			AttributeOverride singleOverride = element.getAnnotation( AttributeOverride.class );
 			AttributeOverrides multipleOverrides = element.getAnnotation( AttributeOverrides.class );
@@ -443,7 +443,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, JoinColumn[]> buildJoinColumnOverride(XAnnotatedElement element, String path) {
-		Map<String, JoinColumn[]> columnOverride = new HashMap<String, JoinColumn[]>();
+		Map<String, JoinColumn[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
 			if ( overrides != null ) {
@@ -459,7 +459,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ForeignKey> buildForeignKeyOverride(XAnnotatedElement element, String path) {
-		Map<String, ForeignKey> foreignKeyOverride = new HashMap<String, ForeignKey>();
+		Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
 			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
 			if ( overrides != null ) {
@@ -489,7 +489,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, JoinTable> buildJoinTableOverride(XAnnotatedElement element, String path) {
-		Map<String, JoinTable> tableOverride = new HashMap<String, JoinTable>();
+		Map<String, JoinTable> tableOverride = new HashMap<>();
 		if ( element != null ) {
 			AssociationOverride[] overrides = buildAssociationOverrides( element, path );
 			if ( overrides != null ) {

@@ -34,7 +34,7 @@ public class DatabaseInformationImpl
 	private final ImprovedExtractionContextImpl extractionContext;
 	private final InformationExtractor extractor;
 
-	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
+	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<>();
 
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,

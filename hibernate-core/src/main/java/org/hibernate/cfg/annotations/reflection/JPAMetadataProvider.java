@@ -53,7 +53,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 	private final boolean xmlMappingEnabled;
 
 	private Map<Object, Object> defaults;
-	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
+	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<>(100);
 
 	/**
 	 * @deprecated Use {@link JPAMetadataProvider#JPAMetadataProvider(BootstrapContext)} instead.
@@ -118,7 +118,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 				defaults.put( "catalog", xmlDefaults.getCatalog() );
 				defaults.put( "delimited-identifier", xmlDefaults.getDelimitedIdentifier() );
 				defaults.put( "cascade-persist", xmlDefaults.getCascadePersist() );
-				List<Class> entityListeners = new ArrayList<Class>();
+				List<Class> entityListeners = new ArrayList<>();
 				for ( String className : xmlContext.getDefaultEntityListeners() ) {
 					try {
 						entityListeners.add( classLoaderAccess.classForName( className ) );

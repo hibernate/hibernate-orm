@@ -345,7 +345,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 
 	@SuppressWarnings("UnnecessaryUnboxing")
 	public Set<Table> getIdentityTables() {
-		Set<Table> tables = new HashSet<Table>();
+		Set<Table> tables = new HashSet<>();
 		Iterator iter = getSubclassClosureIterator();
 		while ( iter.hasNext() ) {
 			PersistentClass clazz = (PersistentClass) iter.next();

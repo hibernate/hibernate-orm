@@ -385,7 +385,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
 		//noinspection unchecked
-		return new SqmTuple<R>(
+		return new SqmTuple<>(
 				(List) asList( expressions ),
 //				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
 				this
@@ -395,7 +395,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<JpaExpression<?>> expressions) {
 		//noinspection unchecked
-		return new SqmTuple<R>(
+		return new SqmTuple<>(
 				(List) expressions,
 //				getTypeConfiguration().standardExpressableTypeForJavaType( tupleType ),
 				this
@@ -405,7 +405,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
 		//noinspection unchecked
-		return new SqmTuple<R>(
+		return new SqmTuple<>(
 				(List) asList( expressions ),
 				tupleType,
 				this
@@ -416,7 +416,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public <R> SqmTuple<R> tuple(
 			DomainType<R> tupleType, List<JpaExpression<?>> expressions) {
 		//noinspection unchecked
-		return new SqmTuple<R>(
+		return new SqmTuple<>(
 				new ArrayList<>((List) expressions),
 				tupleType,
 				this
@@ -1249,7 +1249,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		//noinspection unchecked
-		return new SqmCoalesce<Y>(
+		return new SqmCoalesce<>(
 				(AllowableFunctionReturnType) highestPrecedenceType(
 						((SqmExpression) x).getNodeType(),
 						((SqmExpression) y).getNodeType()

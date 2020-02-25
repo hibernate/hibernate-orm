@@ -78,7 +78,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		else {
 			GenerationState state;
 			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<String, GenerationState>();
+				tenantSpecificState = new ConcurrentHashMap<>();
 				state = createGenerationState();
 				tenantSpecificState.put( tenantIdentifier, state );
 			}

@@ -27,7 +27,7 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(ExecutionContext executionContext) {
-		final List<R> overallResults = new ArrayList<R>();
+		final List<R> overallResults = new ArrayList<>();
 
 		for ( SelectQueryPlan<R> aggregatedQueryPlan : aggregatedQueryPlans ) {
 			overallResults.addAll( aggregatedQueryPlan.performList( executionContext ) );

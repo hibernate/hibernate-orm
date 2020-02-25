@@ -74,7 +74,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	protected Map<String, AttributeConversionInfo> buildAttributeConversionInfoMap(XClass entityXClass) {
-		final HashMap<String, AttributeConversionInfo> map = new HashMap<String, AttributeConversionInfo>();
+		final HashMap<String, AttributeConversionInfo> map = new HashMap<>();
 		collectAttributeConversionInfo( map, entityXClass );
 		return map;
 	}
@@ -263,7 +263,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 */
 	private Map<String, Join> getJoinsPerRealTableName() {
 		if ( joinsPerRealTableName == null ) {
-			joinsPerRealTableName = new HashMap<String, Join>( joins.size() );
+			joinsPerRealTableName = new HashMap<>( joins.size() );
 			for (Join join : joins.values()) {
 				joinsPerRealTableName.put( join.getTable().getName(), join );
 			}

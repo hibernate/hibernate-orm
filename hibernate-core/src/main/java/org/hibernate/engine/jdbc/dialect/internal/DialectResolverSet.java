@@ -29,7 +29,7 @@ public class DialectResolverSet implements DialectResolver {
 	private List<DialectResolver> resolvers;
 
 	public DialectResolverSet() {
-		this( new ArrayList<DialectResolver>() );
+		this( new ArrayList<>() );
 	}
 
 	public DialectResolverSet(List<DialectResolver> resolvers) {

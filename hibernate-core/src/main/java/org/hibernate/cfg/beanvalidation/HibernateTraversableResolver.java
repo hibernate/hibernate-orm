@@ -37,7 +37,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			SessionFactoryImplementor factory) {
 		this.associations = associationsPerEntityPersister.get( persister );
 		if (this.associations == null) {
-			this.associations = new HashSet<String>();
+			this.associations = new HashSet<>();
 			addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory );
 			associationsPerEntityPersister.put( persister, associations );
 		}

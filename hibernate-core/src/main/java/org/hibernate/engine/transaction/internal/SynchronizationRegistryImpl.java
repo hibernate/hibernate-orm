@@ -32,7 +32,7 @@ public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 		}
 
 		if ( synchronizations == null ) {
-			synchronizations = new LinkedHashSet<Synchronization>();
+			synchronizations = new LinkedHashSet<>();
 		}
 
 		boolean added = synchronizations.add( synchronization );

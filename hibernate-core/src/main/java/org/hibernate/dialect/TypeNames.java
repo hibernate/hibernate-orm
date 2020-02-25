@@ -65,14 +65,14 @@ public final class TypeNames {
 	 * Holds default type mappings for a JDBC type code. These are the mappings
 	 * with no specified maximum size.
 	 */
-	private final Map<Integer, String> defaults = new HashMap<Integer, String>();
+	private final Map<Integer, String> defaults = new HashMap<>();
 
 	/**
 	 * Holds mappings which are limited by a maximum size. The nested map is a
 	 * {@link TreeMap} with its mappings sorted by maximum size, ensuring proper
 	 * iteration ordering in {@link #get(int, Long, Integer, Integer)}
 	 */
-	private final Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
+	private final Map<Integer, Map<Long, String>> weighted = new HashMap<>();
 
 	/**
 	 * Get default type name for specified {@link java.sql.Types JDBC type code}.

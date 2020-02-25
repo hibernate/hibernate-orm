@@ -26,9 +26,9 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
  */
 public final class Template {
 
-	private static final Set<String> KEYWORDS = new HashSet<String>();
-	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<String>();
-	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<String>();
+	private static final Set<String> KEYWORDS = new HashSet<>();
+	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<>();
+	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<>();
 	static {
 		KEYWORDS.add("and");
 		KEYWORDS.add("or");
@@ -211,7 +211,7 @@ public final class Template {
 
 			// Special processing for ANSI SQL TRIM function
 			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
-				List<String> operands = new ArrayList<String>();
+				List<String> operands = new ArrayList<>();
 				StringBuilder builder = new StringBuilder();
 
 				boolean hasMoreOperands = true;

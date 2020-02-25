@@ -56,9 +56,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	private final ReflectionManager reflectionManager;
 
-	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
+	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<>();
 
-	private final List<XClass> xClasses = new ArrayList<XClass>();
+	private final List<XClass> xClasses = new ArrayList<>();
 
 	public AnnotationMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
@@ -257,12 +257,12 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<XClass>( original );
+		List<XClass> copy = new ArrayList<>( original );
 		insertMappedSuperclasses( original, copy );
 
 		// order the hierarchy
-		List<XClass> workingCopy = new ArrayList<XClass>( copy );
-		List<XClass> newList = new ArrayList<XClass>( copy.size() );
+		List<XClass> workingCopy = new ArrayList<>( copy );
+		List<XClass> newList = new ArrayList<>( copy.size() );
 		while ( workingCopy.size() > 0 ) {
 			XClass clazz = workingCopy.get( 0 );
 			orderHierarchy( workingCopy, newList, copy, clazz );

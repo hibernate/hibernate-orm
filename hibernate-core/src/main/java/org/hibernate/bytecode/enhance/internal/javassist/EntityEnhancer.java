@@ -310,7 +310,7 @@ public class EntityEnhancer extends PersistentAttributesEnhancer {
 			if ( !enhancementContext.isMappedSuperclassClass( managedCtSuperclass ) ) {
 				return collectInheritCollectionFields( managedCtSuperclass );
 			}
-			List<CtField> collectionList = new ArrayList<CtField>();
+			List<CtField> collectionList = new ArrayList<>();
 
 			for ( CtField ctField : managedCtSuperclass.getDeclaredFields() ) {
 				if ( !Modifier.isStatic( ctField.getModifiers() ) ) {

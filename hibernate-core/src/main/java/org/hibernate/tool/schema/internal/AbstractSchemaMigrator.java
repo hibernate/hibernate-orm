@@ -160,7 +160,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		final Database database = metadata.getDatabase();
 

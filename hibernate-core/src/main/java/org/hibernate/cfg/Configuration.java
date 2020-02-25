@@ -761,7 +761,7 @@ public class Configuration {
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<AuxiliaryDatabaseObject>();
+			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
 	}

@@ -35,9 +35,9 @@ public class SimpleSelect {
 	protected String orderBy;
 	protected String comment;
 
-	protected List<String> columns = new ArrayList<String>();
-	protected Map<String, String> aliases = new HashMap<String, String>();
-	protected List<String> whereTokens = new ArrayList<String>();
+	protected List<String> columns = new ArrayList<>();
+	protected Map<String, String> aliases = new HashMap<>();
+	protected List<String> whereTokens = new ArrayList<>();
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
 
@@ -155,7 +155,7 @@ public class SimpleSelect {
 		}
 
 		buf.append( "select " );
-		Set<String> uniqueColumns = new HashSet<String>();
+		Set<String> uniqueColumns = new HashSet<>();
 		Iterator<String> iter = columns.iterator();
 		boolean appendComma = false;
 		while ( iter.hasNext() ) {

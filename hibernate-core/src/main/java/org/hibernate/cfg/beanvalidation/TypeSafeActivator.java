@@ -171,7 +171,7 @@ class TypeSafeActivator {
 				settings,
 				classLoaderAccess
 		);
-		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
+		Set<Class<?>> groups = new HashSet<>( Arrays.asList( groupsArray ) );
 
 		for ( PersistentClass persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();

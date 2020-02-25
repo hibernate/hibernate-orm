@@ -1329,7 +1329,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		public T clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" immplies the default listeners will be applied
-				this.listeners = new ArrayList<SessionEventListener>( 3 );
+				this.listeners = new ArrayList<>( 3 );
 			}
 			else {
 				listeners.clear();

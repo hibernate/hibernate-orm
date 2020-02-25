@@ -445,7 +445,7 @@ public final class ArrayHelper {
 
 	public static <T> List<T> toExpandableList(T[] values) {
 		if ( values == null ) {
-			return new ArrayList<T>();
+			return new ArrayList<>();
 		}
 		return Arrays.asList( values );
 	}

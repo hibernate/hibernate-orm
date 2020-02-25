@@ -745,7 +745,7 @@ public class TableBinder {
 	}
 
 	public static List<JPAIndexHolder> buildJpaIndexHolder(javax.persistence.Index[] indexes){
-		List<JPAIndexHolder> holders = new ArrayList<JPAIndexHolder>( indexes.length );
+		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
 		for(javax.persistence.Index index : indexes){
 			holders.add( new JPAIndexHolder( index ) );
 		}
@@ -758,7 +758,7 @@ public class TableBinder {
 	@Deprecated
 	@SuppressWarnings({ "JavaDoc" })
 	public static List<String[]> buildUniqueConstraints(UniqueConstraint[] constraintsArray) {
-		List<String[]> result = new ArrayList<String[]>();
+		List<String[]> result = new ArrayList<>();
 		if ( constraintsArray.length != 0 ) {
 			for (UniqueConstraint uc : constraintsArray) {
 				result.add( uc.columnNames() );

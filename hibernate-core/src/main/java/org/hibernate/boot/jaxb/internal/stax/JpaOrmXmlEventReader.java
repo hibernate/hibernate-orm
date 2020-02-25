@@ -7,7 +7,6 @@
 package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -143,7 +142,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> mapNamespaces(Iterator<Namespace> originalNamespaceIterator ) {
-		final List<Namespace> mappedNamespaces = new ArrayList<Namespace>();
+		final List<Namespace> mappedNamespaces = new ArrayList<>();
 
 //		final String elementNamespacePrefix = startElement.getName().getPrefix();
 //		if ( EMPTY_NAMESPACE_PREFIX.equals( elementNamespacePrefix ) ) {

@@ -226,7 +226,7 @@ public final class CascadeStyles {
 	private static final Map<String, CascadeStyle> STYLES = buildBaseCascadeStyleMap();
 
 	private static Map<String, CascadeStyle> buildBaseCascadeStyleMap() {
-		final HashMap<String, CascadeStyle> base = new HashMap<String, CascadeStyle>();
+		final HashMap<String, CascadeStyle> base = new HashMap<>();
 
 		base.put( "all", ALL );
 		base.put( "all-delete-orphan", ALL_DELETE_ORPHAN );

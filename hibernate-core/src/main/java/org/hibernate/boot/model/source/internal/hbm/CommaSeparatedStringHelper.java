@@ -39,7 +39,7 @@ public final class CommaSeparatedStringHelper {
 			return Collections.emptySet();
 		}
 
-		HashSet<String> set = new HashSet<String>( x );
+		HashSet<String> set = new HashSet<>( x );
 		if ( values != null && !values.isEmpty() ) {
 			Collections.addAll( set, COMMA_SEPARATED_PATTERN.split( values ) );
 		}

@@ -511,9 +511,9 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 */
 	protected static class EnumState<E extends Enum<E>> {
 
-		protected static final EnumState<LockMode> LOCK_MODE = new EnumState<LockMode>( 0, LockMode.class );
-		protected static final EnumState<Status> STATUS = new EnumState<Status>( 4, Status.class );
-		protected static final EnumState<Status> PREVIOUS_STATUS = new EnumState<Status>( 8, Status.class );
+		protected static final EnumState<LockMode> LOCK_MODE = new EnumState<>( 0, LockMode.class );
+		protected static final EnumState<Status> STATUS = new EnumState<>( 4, Status.class );
+		protected static final EnumState<Status> PREVIOUS_STATUS = new EnumState<>( 8, Status.class );
 
 		protected final int offset;
 		protected final E[] enumConstants;

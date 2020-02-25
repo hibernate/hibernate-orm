@@ -45,7 +45,7 @@ public class JdbcEscapeFunctionDescriptor
 						typeConfiguration
 				);
 
-		return new SelfRenderingSqmFunction<T>(
+		return new SelfRenderingSqmFunction<>(
 				JdbcEscapeFunctionDescriptor.this,
 				(sqlAppender, sqlAstArguments, walker) -> {
 					sqlAppender.appendSql("{fn ");

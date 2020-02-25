@@ -26,7 +26,7 @@ public class InFragment {
 	public static final String NOT_NULL = "not null";
 
 	protected String columnName;
-	protected List<Object> values = new ArrayList<Object>();
+	protected List<Object> values = new ArrayList<>();
 
 	/**
 	 * @param value an SQL literal, NULL, or NOT_NULL

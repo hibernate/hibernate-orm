@@ -30,7 +30,7 @@ public enum ValidationMode {
 	}
 
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		Set<ValidationMode> modes = new HashSet<ValidationMode>(3);
+		Set<ValidationMode> modes = new HashSet<>(3);
 		if (modeProperty == null) {
 			modes.add( ValidationMode.AUTO );
 		}

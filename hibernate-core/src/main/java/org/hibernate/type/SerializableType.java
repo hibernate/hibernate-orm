@@ -31,7 +31,7 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 	private final Class<T> serializableClass;
 
 	public SerializableType(Class<T> serializableClass) {
-		super( VarbinaryTypeDescriptor.INSTANCE, new SerializableTypeDescriptor<T>( serializableClass )  );
+		super( VarbinaryTypeDescriptor.INSTANCE, new SerializableTypeDescriptor<>( serializableClass )  );
 		this.serializableClass = serializableClass;
 	}
 

@@ -226,11 +226,11 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 *
 	 * @param selection The row selection options
 	 *
-	 * @return Whether a first row limit in indicated
+	 * @return Whether a first row limit was indicated
 	 */
 	public static boolean hasFirstRow(RowSelection selection) {
 		return selection != null
-				&& selection.getFirstRow() == null
+				&& selection.getFirstRow() != null
 				&& selection.getFirstRow() > 0;
 	}
 
@@ -244,7 +244,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * @return The appropriate value to bind into the limit clause.
 	 */
 	protected final int getMaxOrLimit(RowSelection selection) {
-		if ( selection==null || selection.getMaxRows()==null ) {
+		if ( selection == null || selection.getMaxRows() == null ) {
 			return Integer.MAX_VALUE;
 		}
 		final int firstRow = getFirstRow( selection );

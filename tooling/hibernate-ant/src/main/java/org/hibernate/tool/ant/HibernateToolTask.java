@@ -17,7 +17,7 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
-import org.hibernate.tool.api.export.ExporterUtil;
+import org.hibernate.tool.ant.util.ExceptionUtil;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.util.StringUtil;
 
@@ -202,7 +202,7 @@ public class HibernateToolTask extends Task {
 			log(ex, Project.MSG_ERR);
 		}
 
-		String newbieMessage = ExporterUtil.getProblemSolutionOrCause(re);
+		String newbieMessage = ExceptionUtil.getProblemSolutionOrCause(re);
 		if(newbieMessage!=null) {
 			log(newbieMessage);
 		} 		

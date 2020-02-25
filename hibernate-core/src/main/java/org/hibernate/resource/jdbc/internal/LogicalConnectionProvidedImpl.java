@@ -29,7 +29,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	private boolean closed;
 
 	public LogicalConnectionProvidedImpl(Connection providedConnection, ResourceRegistry resourceRegistry) {
-		this.resourceRegistry = resourceRegistry;
+		super( resourceRegistry );
 		if ( providedConnection == null ) {
 			throw new IllegalArgumentException( "Provided Connection cannot be null" );
 		}
@@ -39,7 +39,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	private LogicalConnectionProvidedImpl(boolean closed, boolean initiallyAutoCommit) {
-		this.resourceRegistry = new ResourceRegistryStandardImpl();
+		super( new ResourceRegistryStandardImpl() );
 		this.closed = closed;
 		this.initiallyAutoCommit = initiallyAutoCommit;
 	}
@@ -58,7 +58,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public Connection close() {
 		log.trace( "Closing logical connection" );
 
-		getResourceRegistry().releaseResources();
+		this.resourceRegistry.releaseResources();
 
 		try {
 			return providedConnection;
@@ -105,7 +105,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public Connection manualDisconnect() {
 		errorIfClosed();
 		try {
-			resourceRegistry.releaseResources();
+			this.resourceRegistry.releaseResources();
 			return providedConnection;
 		}
 		finally {

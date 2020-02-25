@@ -24,7 +24,11 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	private static final Logger log = Logger.getLogger( AbstractLogicalConnectionImplementor.class );
 
 	private TransactionStatus status = TransactionStatus.NOT_ACTIVE;
-	protected ResourceRegistry resourceRegistry;
+	protected final ResourceRegistry resourceRegistry;
+
+	protected AbstractLogicalConnectionImplementor(ResourceRegistry resourceRegistry) {
+		this.resourceRegistry = resourceRegistry;
+	}
 
 	@Override
 	public PhysicalJdbcTransaction getPhysicalJdbcTransaction() {

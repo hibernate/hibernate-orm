@@ -50,9 +50,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			JdbcSessionContext jdbcSessionContext,
 			ResourceRegistry resourceRegistry,
 			JdbcServices jdbcServices) {
+		super( resourceRegistry );
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.observer = jdbcSessionContext.getObserver();
-		this.resourceRegistry = resourceRegistry;
 
 		this.connectionHandlingMode = determineConnectionHandlingMode(
 				jdbcSessionContext.getPhysicalConnectionHandlingMode(),
@@ -139,7 +139,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.afterStatement();
 
 		if ( connectionHandlingMode.getReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
-			if ( getResourceRegistry().hasRegisteredResources() ) {
+			if ( this.resourceRegistry.hasRegisteredResources() ) {
 				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
 			}
 			else {
@@ -197,7 +197,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		finally {
 			observer.jdbcConnectionReleaseEnd();
 			physicalConnection = null;
-			getResourceRegistry().releaseResources();
+			this.resourceRegistry.releaseResources();
 		}
 	}
 
@@ -228,7 +228,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			return null;
 		}
 
-		getResourceRegistry().releaseResources();
+		this.resourceRegistry.releaseResources();
 
 		log.trace( "Closing logical connection" );
 		try {

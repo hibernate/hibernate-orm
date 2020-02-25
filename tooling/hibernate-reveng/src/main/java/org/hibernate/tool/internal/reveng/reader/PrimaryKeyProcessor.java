@@ -12,7 +12,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.sql.Alias;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -23,7 +23,7 @@ public class PrimaryKeyProcessor {
 	private static final Logger log = Logger.getLogger(PrimaryKeyProcessor.class);
 
 	public static void processPrimaryKey(
-			MetaDataDialect metaDataDialect, 
+			RevengDialect metaDataDialect, 
 			RevengStrategy revengStrategy, 
 			String defaultSchema, 
 			String defaultCatalog, 
@@ -155,7 +155,7 @@ public class PrimaryKeyProcessor {
 		return schema==null?defaultSchema:schema;
 	}
 
-	private static Column getColumn(MetaDataDialect metaDataDialect, Table table, String columnName) {
+	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
 		Column column = new Column();
 		column.setName(quote(metaDataDialect, columnName));
 		Column existing = table.getColumn(column);
@@ -165,7 +165,7 @@ public class PrimaryKeyProcessor {
 		return column;
 	}
 
-	private static String quote(MetaDataDialect metaDataDialect, String columnName) {
+	private static String quote(RevengDialect metaDataDialect, String columnName) {
 		   if(columnName==null) return columnName;
 		   if(metaDataDialect.needQuote(columnName)) {
 			   if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {

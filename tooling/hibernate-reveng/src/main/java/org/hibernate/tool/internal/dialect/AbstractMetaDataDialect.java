@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.jboss.logging.Logger;
 
 /**
@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * @author max
  *
  */
-public abstract class AbstractMetaDataDialect implements MetaDataDialect {
+public abstract class AbstractMetaDataDialect implements RevengDialect {
 
 	protected final Logger log = Logger.getLogger(this.getClass());
 	

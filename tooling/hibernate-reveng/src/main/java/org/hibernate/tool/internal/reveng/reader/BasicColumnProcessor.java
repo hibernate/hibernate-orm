@@ -7,7 +7,7 @@ import java.util.Map;
 import org.hibernate.JDBCException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -20,7 +20,7 @@ public class BasicColumnProcessor {
 	private static final Logger log = Logger.getLogger(BasicColumnProcessor.class);
 
 	public static void processBasicColumns(
-			MetaDataDialect metaDataDialect, 
+			RevengDialect metaDataDialect, 
 			RevengStrategy revengStrategy, 
 			String defaultSchema, String defaultCatalog, 
 			Table table) {
@@ -130,7 +130,7 @@ public class BasicColumnProcessor {
         return size>=0 && size!=Integer.MAX_VALUE;
     }
 
-	private static String quote(String columnName, MetaDataDialect metaDataDialect) {
+	private static String quote(String columnName, RevengDialect metaDataDialect) {
 		   if(columnName==null) return columnName;
 		   if(metaDataDialect.needQuote(columnName)) {
 			   if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {

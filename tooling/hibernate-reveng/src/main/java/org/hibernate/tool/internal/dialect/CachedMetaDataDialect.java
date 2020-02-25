@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 
-public class CachedMetaDataDialect implements MetaDataDialect {
+public class CachedMetaDataDialect implements RevengDialect {
 	
-	MetaDataDialect delegate;
+	RevengDialect delegate;
 	private Map<StringKey, List<Map<String, Object>>> cachedTables = new HashMap<StringKey, List<Map<String, Object>>>();
 	private Map<StringKey, List<Map<String, Object>>> cachedColumns = new HashMap<StringKey, List<Map<String, Object>>>();
 	private Map<StringKey, List<Map<String, Object>>> cachedExportedKeys = new HashMap<StringKey, List<Map<String, Object>>>();
@@ -19,7 +19,7 @@ public class CachedMetaDataDialect implements MetaDataDialect {
 	private Map<StringKey, List<Map<String, Object>>> cachedIndexInfo = new HashMap<StringKey, List<Map<String, Object>>>();
 	private Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeyStrategyName = new HashMap<StringKey, List<Map<String, Object>>>();
 
-	public CachedMetaDataDialect(MetaDataDialect realMetaData) {
+	public CachedMetaDataDialect(RevengDialect realMetaData) {
 		this.delegate = realMetaData;
 	}
 	

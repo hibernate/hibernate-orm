@@ -13,7 +13,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
@@ -22,7 +22,7 @@ public class IndexProcessor {
 	private static final Logger log = Logger.getLogger(IndexProcessor.class);
 
 	public static void processIndices(
-			MetaDataDialect metaDataDialect, 
+			RevengDialect metaDataDialect, 
 			String  defaultSchema, 
 			String defaultCatalog, 
 			Table table) {
@@ -142,7 +142,7 @@ public class IndexProcessor {
 		return schema==null?defaultSchema:schema;
 	}
 
-	private static Column getColumn(MetaDataDialect metaDataDialect, Table table, String columnName) {
+	private static Column getColumn(RevengDialect metaDataDialect, Table table, String columnName) {
 		Column column = new Column();
 		column.setName(quote(columnName, metaDataDialect));
 		Column existing = table.getColumn(column);
@@ -152,7 +152,7 @@ public class IndexProcessor {
 		return column;
 	}	
 	
-	private static String quote(String columnName, MetaDataDialect metaDataDialect) {
+	private static String quote(String columnName, RevengDialect metaDataDialect) {
 		   if(columnName==null) return columnName;
 		   if(metaDataDialect.needQuote(columnName)) {
 			   if(columnName.length()>1 && columnName.charAt(0)=='`' && columnName.charAt(columnName.length()-1)=='`') {

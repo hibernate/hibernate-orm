@@ -11,7 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
@@ -24,7 +24,7 @@ public class ForeignKeyProcessor {
 	private static final Logger log = Logger.getLogger(ForeignKeyProcessor.class);
 	
 	public static ForeignKeyProcessor create(
-			MetaDataDialect metaDataDialect,
+			RevengDialect metaDataDialect,
 			RevengStrategy revengStrategy,
 			String defaultCatalog,
 			String defaultSchema,
@@ -37,14 +37,14 @@ public class ForeignKeyProcessor {
 				revengMetadataCollector);
 	}
 	
-	private final MetaDataDialect metaDataDialect;
+	private final RevengDialect metaDataDialect;
 	private final RevengStrategy revengStrategy;
 	private final String defaultSchema;
 	private final String defaultCatalog;
 	private final RevengMetadataCollector revengMetadataCollector;
 	
 	private ForeignKeyProcessor(
-			MetaDataDialect metaDataDialect,
+			RevengDialect metaDataDialect,
 			RevengStrategy revengStrategy,
 			String defaultCatalog,
 			String defaultSchema,

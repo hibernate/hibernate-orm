@@ -1,4 +1,4 @@
-package org.hibernate.tool.api.dialect;
+package org.hibernate.tool.api.reveng;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * @author Max Rydahl Andersen
  *
  */
-public interface MetaDataDialect {
+public interface RevengDialect {
 
 	/**
 	 * Configure the metadatadialect. 

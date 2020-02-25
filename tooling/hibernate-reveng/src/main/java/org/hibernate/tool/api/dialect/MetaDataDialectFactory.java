@@ -9,6 +9,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.internal.dialect.H2MetaDataDialect;
 import org.hibernate.tool.internal.dialect.HSQLMetaDataDialect;
 import org.hibernate.tool.internal.dialect.JDBCMetaDataDialect;
@@ -20,9 +21,9 @@ public class MetaDataDialectFactory {
 	
 	private MetaDataDialectFactory() {}
 
-	public static MetaDataDialect createMetaDataDialect(Dialect dialect, Properties cfg) {
+	public static RevengDialect createMetaDataDialect(Dialect dialect, Properties cfg) {
 		String property = cfg.getProperty( "hibernatetool.metadatadialect" );
-		MetaDataDialect mdd = fromClassName(property);
+		RevengDialect mdd = fromClassName(property);
 		if(mdd==null) {
 			mdd = fromDialect(dialect);
 		}
@@ -35,10 +36,10 @@ public class MetaDataDialectFactory {
 		return mdd;
 	}
 
-	public static MetaDataDialect fromClassName(String property) {
+	public static RevengDialect fromClassName(String property) {
 		if ( property != null ) {
 			try {
-				return (MetaDataDialect) ReflectHelper.classForName( property,
+				return (RevengDialect) ReflectHelper.classForName( property,
 						MetaDataDialectFactory.class ).newInstance();
 			}
 			catch (Throwable e) {
@@ -50,7 +51,7 @@ public class MetaDataDialectFactory {
 		}
 	}
 	
-	public static MetaDataDialect fromDialect(Dialect dialect) {
+	public static RevengDialect fromDialect(Dialect dialect) {
 		if(dialect!=null) {  
 			if(dialect instanceof Oracle8iDialect) {
 				return new OracleMetaDataDialect();
@@ -67,7 +68,7 @@ public class MetaDataDialectFactory {
 		return null;
 	}
 	
-	public static MetaDataDialect fromDialectName(String dialect) {
+	public static RevengDialect fromDialectName(String dialect) {
 		if (dialect.toLowerCase().contains("oracle")) {
 			return new OracleMetaDataDialect();
 		}

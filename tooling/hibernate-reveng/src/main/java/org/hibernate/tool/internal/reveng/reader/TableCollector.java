@@ -8,7 +8,7 @@ import java.util.Properties;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -20,7 +20,7 @@ public class TableCollector {
 	private static final Logger log = Logger.getLogger(TableCollector.class);
 	
 	public static TableCollector create(
-			MetaDataDialect metaDataDialect, 
+			RevengDialect metaDataDialect, 
 			RevengStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
 			Properties properties) {
@@ -31,13 +31,13 @@ public class TableCollector {
 				properties);
 	}
 	
-	private MetaDataDialect metaDataDialect;
+	private RevengDialect metaDataDialect;
 	private RevengStrategy revengStrategy;
 	private RevengMetadataCollector revengMetadataCollector;
 	private Properties properties;
 	
 	private TableCollector(
-			MetaDataDialect metaDataDialect, 
+			RevengDialect metaDataDialect, 
 			RevengStrategy revengStrategy, 
 			RevengMetadataCollector revengMetadataCollector, 
 			Properties properties) {

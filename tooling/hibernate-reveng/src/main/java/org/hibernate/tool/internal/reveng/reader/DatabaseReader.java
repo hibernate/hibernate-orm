@@ -13,7 +13,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.SchemaSelection;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
@@ -23,7 +23,7 @@ public class DatabaseReader {
 	public static DatabaseReader create(
 			Properties properties, 
 			RevengStrategy revengStrategy,
-			MetaDataDialect mdd, 
+			RevengDialect mdd, 
 			ServiceRegistry serviceRegistry) {
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
 		return new DatabaseReader(properties, mdd, connectionProvider, revengStrategy);
@@ -31,7 +31,7 @@ public class DatabaseReader {
 
 	private final RevengStrategy revengStrategy;
 
-	private MetaDataDialect metadataDialect;
+	private RevengDialect metadataDialect;
 
 	private final ConnectionProvider provider;
 
@@ -39,7 +39,7 @@ public class DatabaseReader {
 
 	private DatabaseReader(
 			Properties properties, 
-			MetaDataDialect dialect, 
+			RevengDialect dialect, 
 			ConnectionProvider provider, 
 			RevengStrategy reveng) {
 		this.metadataDialect = dialect;

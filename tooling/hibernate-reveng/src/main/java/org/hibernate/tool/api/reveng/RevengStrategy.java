@@ -7,7 +7,6 @@ import java.util.Properties;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
 
 public interface RevengStrategy {
 
@@ -90,7 +89,7 @@ public interface RevengStrategy {
 	public boolean useColumnForOptimisticLock(TableIdentifier identifier, String column);
 
 	/** 
-	 * Return list of SchemaSelctors to be used when asking {@link MetaDataDialect} for metadata. 
+	 * Return list of SchemaSelctors to be used when asking {@link RevengDialect} for metadata. 
 	 * 
 	 * @return list of {@link SchemaSelection} instances 
 	 */

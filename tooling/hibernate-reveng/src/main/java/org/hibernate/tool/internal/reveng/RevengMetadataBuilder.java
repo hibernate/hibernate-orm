@@ -18,8 +18,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.dialect.MetaDataDialect;
 import org.hibernate.tool.api.dialect.MetaDataDialectFactory;
+import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.internal.reveng.binder.BinderContext;
 import org.hibernate.tool.internal.reveng.binder.RootClassBinder;
@@ -90,7 +90,7 @@ public class RevengMetadataBuilder {
 	}
 	
 	private RevengMetadataCollector readFromDatabase() {
-		MetaDataDialect mdd = MetaDataDialectFactory
+		RevengDialect mdd = MetaDataDialectFactory
 				.createMetaDataDialect(
 						serviceRegistry.getService(JdbcServices.class).getDialect(), 
 						properties );

@@ -504,10 +504,10 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		if ( type == EventType.POST_COMMIT_DELETE
 				|| type == EventType.POST_COMMIT_INSERT
 				|| type == EventType.POST_COMMIT_UPDATE ) {
-			listenerGroup = new PostCommitEventListenerGroupImpl<T>( type, this );
+			listenerGroup = new PostCommitEventListenerGroupImpl<>( type, this );
 		}
 		else {
-			listenerGroup = new EventListenerGroupImpl<T>( type, this );
+			listenerGroup = new EventListenerGroupImpl<>( type, this );
 		}
 
 		if ( defaultListener != null ) {

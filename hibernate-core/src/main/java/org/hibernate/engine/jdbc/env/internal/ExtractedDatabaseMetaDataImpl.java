@@ -74,7 +74,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 				: Collections.<String>emptySet();
 		this.typeInfoSet = typeInfoSet != null
 				? typeInfoSet
-				: new LinkedHashSet<TypeInfo>();
+				: new LinkedHashSet<>();
 
 		this.supportsRefCursors = supportsRefCursors;
 		this.supportsNamedParameters = supportsNamedParameters;
@@ -236,7 +236,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 		public Builder addExtraKeyword(String keyword) {
 			if ( this.extraKeywords == null ) {
-				this.extraKeywords = new HashSet<String>();
+				this.extraKeywords = new HashSet<>();
 			}
 			this.extraKeywords.add( keyword );
 			return this;
@@ -254,7 +254,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 		public Builder addTypeInfo(TypeInfo typeInfo) {
 			if ( this.typeInfoSet == null ) {
-				this.typeInfoSet = new LinkedHashSet<TypeInfo>();
+				this.typeInfoSet = new LinkedHashSet<>();
 			}
 			typeInfoSet.add( typeInfo );
 			return this;

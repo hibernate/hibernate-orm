@@ -90,7 +90,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		else {
 			GenerationState state;
 			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new HashMap<String, GenerationState>();
+				tenantSpecificState = new HashMap<>();
 				state = new GenerationState();
 				tenantSpecificState.put( tenantIdentifier, state );
 			}

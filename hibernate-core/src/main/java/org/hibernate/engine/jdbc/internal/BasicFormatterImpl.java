@@ -22,12 +22,12 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class BasicFormatterImpl implements Formatter {
 
-	private static final Set<String> BEGIN_CLAUSES = new HashSet<String>();
-	private static final Set<String> END_CLAUSES = new HashSet<String>();
-	private static final Set<String> LOGICAL = new HashSet<String>();
-	private static final Set<String> QUANTIFIERS = new HashSet<String>();
-	private static final Set<String> DML = new HashSet<String>();
-	private static final Set<String> MISC = new HashSet<String>();
+	private static final Set<String> BEGIN_CLAUSES = new HashSet<>();
+	private static final Set<String> END_CLAUSES = new HashSet<>();
+	private static final Set<String> LOGICAL = new HashSet<>();
+	private static final Set<String> QUANTIFIERS = new HashSet<>();
+	private static final Set<String> DML = new HashSet<>();
+	private static final Set<String> MISC = new HashSet<>();
 
 	static {
 		BEGIN_CLAUSES.add( "left" );
@@ -83,8 +83,8 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
-		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
-		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<Boolean>();
+		private LinkedList<Integer> parenCounts = new LinkedList<>();
+		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
 
 		int indent = 1;
 

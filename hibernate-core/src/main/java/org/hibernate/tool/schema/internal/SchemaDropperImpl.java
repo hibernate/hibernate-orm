@@ -200,7 +200,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// NOTE : init commands are irrelevant for dropping...
 
@@ -267,7 +267,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 
 		if ( tryToDropCatalogs || tryToDropSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			Set<Identifier> exportedCatalogs = new HashSet<>();
 
 			for ( Namespace namespace : database.getNamespaces() ) {
 
@@ -494,7 +494,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

@@ -57,7 +57,7 @@ public class SqmCteStatement extends AbstractSqmStatement implements SqmStatemen
 
 	@Override
 	public <U> JpaSubQuery<U> subquery(Class<U> type) {
-		return new SqmSubQuery<U>(
+		return new SqmSubQuery<>(
 				this,
 				new SqmQuerySpec<>( nodeBuilder() ),
 				nodeBuilder()

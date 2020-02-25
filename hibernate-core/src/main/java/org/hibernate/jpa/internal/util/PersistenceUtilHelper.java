@@ -328,7 +328,7 @@ public final class PersistenceUtilHelper {
 	public static class ClassMetadataCache {
 		private final Class specifiedClass;
 		private List<Class<?>> classHierarchy;
-		private Map<String, AttributeAccess> attributeAccessMap = new HashMap<String, AttributeAccess>();
+		private Map<String, AttributeAccess> attributeAccessMap = new HashMap<>();
 
 		public ClassMetadataCache(Class<?> clazz) {
 			this.specifiedClass = clazz;
@@ -336,7 +336,7 @@ public final class PersistenceUtilHelper {
 		}
 
 		private static List<Class<?>> findClassHierarchy(Class<?> clazz) {
-			List<Class<?>> classes = new ArrayList<Class<?>>();
+			List<Class<?>> classes = new ArrayList<>();
 			Class<?> current = clazz;
 			do {
 				classes.add( current );
@@ -411,11 +411,11 @@ public final class PersistenceUtilHelper {
 	 */
 	//TODO not really thread-safe
 	public static class MetadataCache implements Serializable {
-		private transient Map<Class<?>, ClassMetadataCache> classCache = new WeakHashMap<Class<?>, ClassMetadataCache>();
+		private transient Map<Class<?>, ClassMetadataCache> classCache = new WeakHashMap<>();
 
 
 		private void readObject(java.io.ObjectInputStream stream) {
-			classCache = new WeakHashMap<Class<?>, ClassMetadataCache>();
+			classCache = new WeakHashMap<>();
 		}
 
 		ClassMetadataCache getClassMetadata(Class<?> clazz) {

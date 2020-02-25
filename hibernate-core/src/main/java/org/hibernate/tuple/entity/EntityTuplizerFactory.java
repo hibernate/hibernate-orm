@@ -145,7 +145,7 @@ public class EntityTuplizerFactory implements Serializable {
 	}
 
 	private static Map<EntityMode,Class<? extends EntityTuplizer>> buildBaseMapping() {
-		Map<EntityMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<EntityMode,Class<? extends EntityTuplizer>>();
+		Map<EntityMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<>();
 		map.put( EntityMode.POJO, PojoEntityTuplizer.class );
 		map.put( EntityMode.MAP, DynamicMapEntityTuplizer.class );
 		return map;

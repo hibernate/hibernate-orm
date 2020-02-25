@@ -31,7 +31,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean globallyQuoteIdentifiers;
 	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
-	private final Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	private final Set<String> reservedWords = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
 

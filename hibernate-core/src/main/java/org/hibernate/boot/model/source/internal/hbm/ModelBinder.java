@@ -2674,7 +2674,7 @@ public class ModelBinder {
 		}
 
 		if ( embeddableSource.isUnique() ) {
-			final ArrayList<Column> cols = new ArrayList<Column>();
+			final ArrayList<Column> cols = new ArrayList<>();
 			final Iterator itr = componentBinding.getColumnIterator();
 			while ( itr.hasNext() ) {
 				final Object selectable = itr.next();
@@ -4207,7 +4207,7 @@ public class ModelBinder {
 	private static class NaturalIdUniqueKeyBinderImpl implements NaturalIdUniqueKeyBinder {
 		private final MappingDocument mappingDocument;
 		private final PersistentClass entityBinding;
-		private final List<Property> attributeBindings = new ArrayList<Property>();
+		private final List<Property> attributeBindings = new ArrayList<>();
 
 		public NaturalIdUniqueKeyBinderImpl(MappingDocument mappingDocument, PersistentClass entityBinding) {
 			this.mappingDocument = mappingDocument;
@@ -4223,7 +4223,7 @@ public class ModelBinder {
 		public void process() {
 			log.debugf( "Binding natural-id UniqueKey for entity : " + entityBinding.getEntityName() );
 
-			final List<Identifier> columnNames = new ArrayList<Identifier>();
+			final List<Identifier> columnNames = new ArrayList<>();
 
 			final UniqueKey uk = new UniqueKey();
 			uk.setTable( entityBinding.getTable() );

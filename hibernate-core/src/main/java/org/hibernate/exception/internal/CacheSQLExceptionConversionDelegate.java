@@ -26,8 +26,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
  */
 public class CacheSQLExceptionConversionDelegate extends AbstractSQLExceptionConversionDelegate {
 
-	private static final Set<String> DATA_CATEGORIES = new HashSet<String>();
-	private static final Set<Integer> INTEGRITY_VIOLATION_CATEGORIES = new HashSet<Integer>();
+	private static final Set<String> DATA_CATEGORIES = new HashSet<>();
+	private static final Set<Integer> INTEGRITY_VIOLATION_CATEGORIES = new HashSet<>();
 
 	static {
 		DATA_CATEGORIES.add( "22" );

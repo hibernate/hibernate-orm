@@ -202,7 +202,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 	private List<String> getFollowers(Iterator parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
-		List<String> followers = new ArrayList<String>();
+		List<String> followers = new ArrayList<>();
 		while ( parentPropIter.hasNext() ) {
 			String currentPropertyName = ( (Property) parentPropIter.next() ).getName();
 			String currentName = reducedName + '.' + currentPropertyName;

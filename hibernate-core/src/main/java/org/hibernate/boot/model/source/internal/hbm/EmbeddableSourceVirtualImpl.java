@@ -57,7 +57,7 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 		this.attributeRoleBase = container.getAttributeRoleBase();
 		this.attributePathBase = container.getAttributePathBase();
 
-		this.attributeSources = new ArrayList<AttributeSource>();
+		this.attributeSources = new ArrayList<>();
 		AttributesHelper.processAttributes(
 				mappingDocument,
 				new AttributesHelper.Callback() {

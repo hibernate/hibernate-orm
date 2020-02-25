@@ -66,7 +66,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 
 	private Map<String,DataSource> dataSourceMap() {
 		if ( dataSourceMap == null ) {
-			dataSourceMap = new ConcurrentHashMap<String, DataSource>();
+			dataSourceMap = new ConcurrentHashMap<>();
 		}
 		return dataSourceMap;
 	}

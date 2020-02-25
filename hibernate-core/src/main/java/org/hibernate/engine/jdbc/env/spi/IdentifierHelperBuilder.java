@@ -32,7 +32,7 @@ public class IdentifierHelperBuilder {
 
 	private NameQualifierSupport nameQualifierSupport = NameQualifierSupport.BOTH;
 
-	private Set<String> reservedWords = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER );
+	private Set<String> reservedWords = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;

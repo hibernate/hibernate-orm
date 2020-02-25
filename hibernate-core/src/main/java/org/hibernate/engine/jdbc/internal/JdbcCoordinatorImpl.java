@@ -303,7 +303,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
 		final Connection connection = getLogicalConnection().getPhysicalConnection();
 		try {
-			final T result = work.accept( new WorkExecutor<T>(), connection );
+			final T result = work.accept( new WorkExecutor<>(), connection );
 			afterStatementExecution();
 			return result;
 		}

@@ -24,7 +24,7 @@ public class AnsiSqlKeywords {
 	private final Set<String> keywordsSql2003;
 
 	public AnsiSqlKeywords() {
-		final Set<String> keywordsSql2003 = new HashSet<String>();
+		final Set<String> keywordsSql2003 = new HashSet<>();
 		keywordsSql2003.add( "ADD" );
 		keywordsSql2003.add( "ALL" );
 		keywordsSql2003.add( "ALLOCATE" );

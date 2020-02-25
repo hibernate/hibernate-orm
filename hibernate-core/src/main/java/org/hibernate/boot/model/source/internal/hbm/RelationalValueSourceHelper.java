@@ -307,7 +307,7 @@ public class RelationalValueSourceHelper {
 			MappingDocument mappingDocument,
 			String containingTableName,
 			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
-		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
+		List<RelationalValueSource> result = new ArrayList<>();
 
 		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getFormulaAttribute() ) ) {
 			// we have an explicit formula attribute (i.e., <SOMETHING formula="abc"/>)

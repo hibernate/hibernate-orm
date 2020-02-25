@@ -176,7 +176,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		}
 
 		public List<ParameterMemento> toMementos(SessionFactoryImplementor sessionFactory) {
-			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
+			final List<ParameterMemento> mementos = new ArrayList<>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
 				mementos.add(definition.toMemento( sessionFactory ));
 			}

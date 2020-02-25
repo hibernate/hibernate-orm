@@ -34,7 +34,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		return new SelfRenderingSqmFunction<T>(
+		return new SelfRenderingSqmFunction<>(
 				this,
 				(sqlAppender, sqlAstArguments, walker)
 						-> render(sqlAppender, sqlAstArguments, walker),

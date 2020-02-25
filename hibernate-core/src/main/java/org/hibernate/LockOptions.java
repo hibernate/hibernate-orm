@@ -324,7 +324,7 @@ public class LockOptions implements Serializable {
 		destination.setScope( source.getScope() );
 		destination.setTimeOut( source.getTimeOut() );
 		if ( source.aliasSpecificLockModes != null ) {
-			destination.aliasSpecificLockModes = new HashMap<String,LockMode>( source.aliasSpecificLockModes );
+			destination.aliasSpecificLockModes = new HashMap<>( source.aliasSpecificLockModes );
 		}
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;

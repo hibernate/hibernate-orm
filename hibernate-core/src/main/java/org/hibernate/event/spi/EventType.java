@@ -78,7 +78,7 @@ public final class EventType<T> {
 
 
 	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
-		return new EventType<T>( name, listenerClass );
+		return new EventType<>( name, listenerClass );
 	}
 
 	/**
@@ -89,7 +89,7 @@ public final class EventType<T> {
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<String, EventType>();
+					final Map<String, EventType> typeByNameMap = new HashMap<>();
 					for ( Field field : EventType.class.getDeclaredFields() ) {
 						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
 							try {

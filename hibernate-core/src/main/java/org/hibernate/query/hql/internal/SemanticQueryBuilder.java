@@ -2112,7 +2112,7 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 				value = Integer.parseUnsignedInt( text, 16 );
 				type = resolveExpressableTypeBasic( Integer.class );
 			}
-			return new SqmLiteral<Number>(
+			return new SqmLiteral<>(
 					value,
 					type,
 					creationContext.getNodeBuilder()

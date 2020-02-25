@@ -44,7 +44,7 @@ class IdClassSource implements EmbeddableSource {
 		this.attributePathBase = rootEntitySource.getAttributePathBase().append( "<IdClass>" );
 		this.attributeRoleBase = rootEntitySource.getAttributeRoleBase().append( "<IdClass>" );
 
-		this.attributeSources = new ArrayList<AttributeSource>();
+		this.attributeSources = new ArrayList<>();
 		for ( Object attribute : rootEntitySource.jaxbEntityMapping().getCompositeId().getKeyPropertyOrKeyManyToOne() ) {
 			if ( JaxbHbmCompositeKeyBasicAttributeType.class.isInstance( attribute ) ) {
 				attributeSources.add(

@@ -480,7 +480,7 @@ public class MetadataContext {
 		}
 	}
 
-	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
+	private final Set<Class> processedMetamodelClasses = new HashSet<>();
 
 	private <X> void registerAttributes(Class metamodelClass, ManagedDomainType<X> managedType) {
 		if ( !processedMetamodelClasses.add( metamodelClass ) ) {

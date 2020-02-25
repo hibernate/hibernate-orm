@@ -250,7 +250,7 @@ public class AttributeFactory {
 							.getManagedTypeRepresentationResolver()
 							.resolveStrategy( component, context.getRuntimeModelCreationContext() );
 
-					embeddableType = new EmbeddableTypeImpl<Y>(
+					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
 							representationStrategy,
 							context.getJpaMetamodel()
@@ -376,7 +376,7 @@ public class AttributeFactory {
 			// collection or entity
 			if ( type.isEntityType() ) {
 				// entity
-				return new SingularAttributeMetadataImpl<X, Y>(
+				return new SingularAttributeMetadataImpl<>(
 						propertyMapping,
 						attributeContext.getOwnerType(),
 						member,

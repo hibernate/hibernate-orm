@@ -163,7 +163,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 		try {
 			mBeanServer.registerMBean( mBean, objectName );
 			if ( registeredMBeans == null ) {
-				registeredMBeans = new ArrayList<ObjectName>();
+				registeredMBeans = new ArrayList<>();
 			}
 			registeredMBeans.add( objectName );
 		}

@@ -65,7 +65,7 @@ public class HbmEventReader extends EventReaderDelegate {
 
 	@SuppressWarnings("unchecked")
 	private StartElement applyNamespace(StartElement startElement) {
-		final List<Namespace> targetNamespaces = new ArrayList<Namespace>();
+		final List<Namespace> targetNamespaces = new ArrayList<>();
 
 		if ( "".equals( startElement.getName().getNamespaceURI() ) ) {
 			// add the default namespace mapping

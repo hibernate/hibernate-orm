@@ -54,28 +54,28 @@ public class ImplicitResultSetMappingDefinition implements ResultSetMappingBindi
 
 		public void addReturn(JaxbHbmNativeQueryScalarReturnType scalarReturn) {
 			if ( valueMappingSources == null ) {
-				valueMappingSources = new ArrayList();
+				valueMappingSources = new ArrayList<>();
 			}
 			valueMappingSources.add( scalarReturn );
 		}
 
 		public void addReturn(JaxbHbmNativeQueryReturnType rootReturn) {
 			if ( valueMappingSources == null ) {
-				valueMappingSources = new ArrayList();
+				valueMappingSources = new ArrayList<>();
 			}
 			valueMappingSources.add( rootReturn );
 		}
 
 		public void addReturn(JaxbHbmNativeQueryJoinReturnType joinReturn) {
 			if ( valueMappingSources == null ) {
-				valueMappingSources = new ArrayList();
+				valueMappingSources = new ArrayList<>();
 			}
 			valueMappingSources.add( joinReturn );
 		}
 
 		public void addReturn(JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturn) {
 			if ( valueMappingSources == null ) {
-				valueMappingSources = new ArrayList<JaxbHbmNativeQueryCollectionLoadReturnType>();
+				valueMappingSources = new ArrayList<>();
 			}
 			valueMappingSources.add( collectionLoadReturn );
 		}

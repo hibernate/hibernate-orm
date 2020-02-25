@@ -195,7 +195,7 @@ public class ScanningCoordinator {
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		final Set<String> nonLocatedMappingFileNames = new HashSet<String>();
+		final Set<String> nonLocatedMappingFileNames = new HashSet<>();
 		final List<String> explicitMappingFileNames = scanEnvironment.getExplicitlyListedMappingFiles();
 		if ( explicitMappingFileNames != null ) {
 			nonLocatedMappingFileNames.addAll( explicitMappingFileNames );
@@ -222,8 +222,8 @@ public class ScanningCoordinator {
 		// classes and packages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		final List<String> unresolvedListedClassNames = scanEnvironment.getExplicitlyListedClassNames() == null
-				? new ArrayList<String>()
-				: new ArrayList<String>( scanEnvironment.getExplicitlyListedClassNames() );
+				? new ArrayList<>()
+				: new ArrayList<>( scanEnvironment.getExplicitlyListedClassNames() );
 
 		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
 			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {

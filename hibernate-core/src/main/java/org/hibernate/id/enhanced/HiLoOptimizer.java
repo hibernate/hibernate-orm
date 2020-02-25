@@ -113,7 +113,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 		else {
 			GenerationState state;
 			if ( tenantSpecificState == null ) {
-				tenantSpecificState = new ConcurrentHashMap<String, GenerationState>();
+				tenantSpecificState = new ConcurrentHashMap<>();
 				state = new GenerationState();
 				tenantSpecificState.put( tenantIdentifier, state );
 			}

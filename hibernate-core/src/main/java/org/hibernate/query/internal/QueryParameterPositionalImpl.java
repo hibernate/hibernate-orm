@@ -42,7 +42,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	public static <T> QueryParameterPositionalImpl<T> fromNativeQuery(int position) {
-		return new QueryParameterPositionalImpl<T>(
+		return new QueryParameterPositionalImpl<>(
 				position,
 				false,
 				null

@@ -45,7 +45,7 @@ public final class EntityPrinter {
 			return entity.getClass().getName();
 		}
 
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 
 		if ( entityPersister.hasIdentifierProperty() ) {
 			result.put(
@@ -89,7 +89,7 @@ public final class EntityPrinter {
 	}
 
 	public String toString(Map<String, TypedValue> namedTypedValues) throws HibernateException {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
 			result.put(
 					entry.getKey(), entry.getValue().getType().toLoggableString(

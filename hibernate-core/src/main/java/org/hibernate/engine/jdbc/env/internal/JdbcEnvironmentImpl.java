@@ -64,7 +64,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
-	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<>();
 	private final NameQualifierSupport nameQualifierSupport;
 
 	/**
@@ -345,7 +345,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	private Set<String> buildMergedReservedWords(Dialect dialect, DatabaseMetaData dbmd) throws SQLException {
-		Set<String> reservedWords = new HashSet<String>();
+		Set<String> reservedWords = new HashSet<>();
 		reservedWords.addAll( dialect.getKeywords() );
 		// todo : do we need to explicitly handle SQL:2003 keywords?
 		reservedWords.addAll( Arrays.asList( dbmd.getSQLKeywords().split( "," ) ) );

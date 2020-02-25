@@ -27,7 +27,7 @@ public class QuerySelect {
 	private String comment;
 	private boolean distinct;
 
-	private static final HashSet<String> DONT_SPACE_TOKENS = new HashSet<String>();
+	private static final HashSet<String> DONT_SPACE_TOKENS = new HashSet<>();
 
 	static {
 		//dontSpace.add("'");

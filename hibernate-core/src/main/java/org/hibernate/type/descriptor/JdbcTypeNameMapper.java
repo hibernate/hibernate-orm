@@ -27,7 +27,7 @@ public final class JdbcTypeNameMapper {
 	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
 
 	private static Map<Integer, String> buildJdbcTypeMap() {
-		HashMap<Integer, String> map = new HashMap<Integer, String>();
+		HashMap<Integer, String> map = new HashMap<>();
 		Field[] fields = java.sql.Types.class.getFields();
 		if ( fields == null ) {
 			throw new HibernateException( "Unexpected problem extracting JDBC type mapping codes from java.sql.Types" );

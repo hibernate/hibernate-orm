@@ -82,7 +82,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		return conn;
 	}
 
-	private ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess = new ValueHolder<SQLExceptionConversionDelegate>(
+	private ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess = new ValueHolder<>(
 			new ValueHolder.DeferredInitializer<SQLExceptionConversionDelegate>() {
 				@Override
 				public SQLExceptionConversionDelegate initialize() {

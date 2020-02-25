@@ -216,11 +216,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		final Database database = metadata.getDatabase();
 
-		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
+		final Set<String> exportIdentifiers = new HashSet<>( 50 );
 
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+			Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : database.getNamespaces() ) {
 
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
@@ -608,7 +608,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	private static class JournalingGenerationTarget implements GenerationTarget {
-		private final ArrayList<String> commands = new ArrayList<String>();
+		private final ArrayList<String> commands = new ArrayList<>();
 
 		@Override
 		public void prepare() {

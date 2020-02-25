@@ -23,7 +23,7 @@ public class JPAIndexHolder {
 
 	public JPAIndexHolder(Index index) {
 		StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
-		List<String> tmp = new ArrayList<String>();
+		List<String> tmp = new ArrayList<>();
 		while ( tokenizer.hasMoreElements() ) {
 			tmp.add( tokenizer.nextToken().trim() );
 		}

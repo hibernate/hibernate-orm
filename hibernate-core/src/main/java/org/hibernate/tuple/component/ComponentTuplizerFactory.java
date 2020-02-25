@@ -156,7 +156,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	}
 
 	private static Map<EntityMode,Class<? extends ComponentTuplizer>> buildBaseMapping() {
-		Map<EntityMode,Class<? extends ComponentTuplizer>> map = new ConcurrentHashMap<EntityMode,Class<? extends ComponentTuplizer>>();
+		Map<EntityMode,Class<? extends ComponentTuplizer>> map = new ConcurrentHashMap<>();
 		map.put( EntityMode.POJO, PojoComponentTuplizer.class );
 		map.put( EntityMode.MAP, DynamicMapComponentTuplizer.class );
 		return map;

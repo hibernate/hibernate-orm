@@ -54,7 +54,7 @@ public class DefaultIdentifierGeneratorFactory
 	private ServiceRegistry serviceRegistry;
 	private Dialect dialect;
 
-	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
+	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.

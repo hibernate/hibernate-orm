@@ -49,7 +49,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 			JTASessionContext.class.getName()
 	);
 
-	private transient Map<Object, Session> currentSessionMap = new ConcurrentHashMap<Object, Session>();
+	private transient Map<Object, Session> currentSessionMap = new ConcurrentHashMap<>();
 
 	/**
 	 * Constructs a JTASessionContext

@@ -53,7 +53,7 @@ import org.apache.tools.ant.types.FileSet;
  * @see SchemaUpdate
  */
 public class SchemaUpdateTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<FileSet>();
+	private List<FileSet> fileSets = new LinkedList<>();
 	private File propertiesFile;
 	private File configurationFile;
 	private File outputFile;
@@ -235,7 +235,7 @@ public class SchemaUpdateTask extends MatchingTask {
 	}
 
 	private String[] collectFiles() {
-		List<String> files = new LinkedList<String>();
+		List<String> files = new LinkedList<>();
 		for ( FileSet fileSet : fileSets ) {
 			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
 			final String[] dsFiles = ds.getIncludedFiles();

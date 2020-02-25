@@ -212,7 +212,7 @@ public abstract class ResultSetMappingBinder {
 
 		if ( rtnSource.getReturnDiscriminator() != null ) {
 			if ( results == null ) {
-				results = new HashMap<String, String[]>();
+				results = new HashMap<>();
 			}
 
 			final String column = rtnSource.getReturnDiscriminator().getColumn();
@@ -246,8 +246,8 @@ public abstract class ResultSetMappingBinder {
 
 		final HashMap results = new HashMap();
 
-		List<JaxbHbmNativeQueryPropertyReturnType> propertyReturnSources = new ArrayList<JaxbHbmNativeQueryPropertyReturnType>();
-		List<String> propertyNames = new ArrayList<String>();
+		List<JaxbHbmNativeQueryPropertyReturnType> propertyReturnSources = new ArrayList<>();
+		List<String> propertyNames = new ArrayList<>();
 
 
 		for ( JaxbHbmNativeQueryPropertyReturnType propertyReturnSource : rtnSource.getReturnProperty() ) {
@@ -309,7 +309,7 @@ public abstract class ResultSetMappingBinder {
 				}
 
 				boolean hasFollowers = false;
-				List<String> followers = new ArrayList<String>();
+				List<String> followers = new ArrayList<>();
 				while ( parentPropItr.hasNext() ) {
 					final Property parentProperty = (Property) parentPropItr.next();
 					final String currentPropertyName = parentProperty.getName();
@@ -332,7 +332,7 @@ public abstract class ResultSetMappingBinder {
 			}
 		}
 
-		Set<String> uniqueReturnProperty = new HashSet<String>();
+		Set<String> uniqueReturnProperty = new HashSet<>();
 		for ( JaxbHbmNativeQueryPropertyReturnType propertyReturnBinding : propertyReturnSources ) {
 			final String name = propertyReturnBinding.getName();
 			if ( "class".equals( name ) ) {
@@ -420,7 +420,7 @@ public abstract class ResultSetMappingBinder {
 
 	private static ArrayList<String> extractResultColumns(JaxbHbmNativeQueryPropertyReturnType propertyReturnSource) {
 		final String column = unquote( propertyReturnSource.getColumn() );
-		ArrayList<String> allResultColumns = new ArrayList<String>();
+		ArrayList<String> allResultColumns = new ArrayList<>();
 		if ( column != null ) {
 			allResultColumns.add( column );
 		}

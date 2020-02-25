@@ -26,9 +26,9 @@ import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
-public abstract class AbstractRevengStrategy implements RevengStrategy {
+public abstract class AbstractStrategy implements RevengStrategy {
 
-	static final private Logger log = Logger.getLogger(AbstractRevengStrategy.class);
+	static final private Logger log = Logger.getLogger(AbstractStrategy.class);
 	
 	private static Set<String> AUTO_OPTIMISTICLOCK_COLUMNS;
 
@@ -41,7 +41,7 @@ public abstract class AbstractRevengStrategy implements RevengStrategy {
 	}
 	
 		
-	public AbstractRevengStrategy() {
+	public AbstractStrategy() {
 		super();
 	}
 	

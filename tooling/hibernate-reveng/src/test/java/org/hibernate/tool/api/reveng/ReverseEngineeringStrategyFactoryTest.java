@@ -1,5 +1,6 @@
 package org.hibernate.tool.api.reveng;
 
+import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,7 +13,7 @@ public class ReverseEngineeringStrategyFactoryTest {
 				RevengStrategyFactory.createReverseEngineeringStrategy();
 		Assert.assertNotNull(reverseEngineeringStrategy);
 		Assert.assertEquals(
-				DefaultRevengStrategy.class.getName(), 
+				DefaultStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());
 		reverseEngineeringStrategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy(
@@ -24,10 +25,10 @@ public class ReverseEngineeringStrategyFactoryTest {
 		reverseEngineeringStrategy = 
 				RevengStrategyFactory.createReverseEngineeringStrategy(null);
 		Assert.assertEquals(
-				DefaultRevengStrategy.class.getName(), 
+				DefaultStrategy.class.getName(), 
 				reverseEngineeringStrategy.getClass().getName());		
 	}
 	
-	public static class TestReverseEngineeringStrategyFactory extends DefaultRevengStrategy {}
+	public static class TestReverseEngineeringStrategyFactory extends DefaultStrategy {}
 
 }

@@ -285,21 +285,32 @@ public class SqlExceptionHelper {
 	public void handleAndClearWarnings(
 			Connection connection,
 			WarningHandler handler) {
-		try {
-			if ( logWarnings ) {
-				walkWarnings( connection.getWarnings(), handler );
+		//Start with a pessimistic assumption, but allow to skip if we happen to learn more
+		//when (and if) we actually do retrieve the warnings:
+		boolean thereMightBeWarnings = true;
+		if ( logWarnings ) {
+			try {
+				SQLWarning warnings = connection.getWarnings();
+				if ( warnings == null ) {
+					thereMightBeWarnings = false;
+				}
+				else {
+					walkWarnings( warnings, handler );
+				}
+			}
+			catch (SQLException sqle) {
+				// workaround for WebLogic
+				LOG.debug( "could not log warnings", sqle );
 			}
 		}
-		catch (SQLException sqle) {
-			// workaround for WebLogic
-			LOG.debug( "could not log warnings", sqle );
-		}
-		try {
-			// Sybase fail if we don't do that, sigh...
-			connection.clearWarnings();
-		}
-		catch (SQLException sqle) {
-			LOG.debug( "could not clear warnings", sqle );
+		if ( thereMightBeWarnings ) {
+			try {
+				// Sybase fail if we don't do that, sigh...
+				connection.clearWarnings();
+			}
+			catch (SQLException sqle) {
+				LOG.debug( "could not clear warnings", sqle );
+			}
 		}
 	}
 
@@ -319,13 +330,21 @@ public class SqlExceptionHelper {
 		// the log level would actually allow a warning to be logged.
 		if ( logWarnings ) {
 			try {
-				walkWarnings( statement.getWarnings(), handler );
+				SQLWarning warnings = statement.getWarnings();
+				if ( warnings == null ) {
+				}
+				else {
+					walkWarnings( warnings, handler );
+				}
 			}
 			catch (SQLException sqlException) {
 				// workaround for WebLogic
 				LOG.debug( "could not log warnings", sqlException );
 			}
 		}
+		//N.B. don't do the same optimisations as we do for handleAndClearWarnings(Connection, Handler):
+		//clearing warnings on a statement is much cheaper than on a connection, and we can't delegate
+		//this responsibility to the connection pool.
 		try {
 			// Sybase fail if we don't do that, sigh...
 			statement.clearWarnings();

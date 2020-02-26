@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.MappingMetamodel;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.EntityOfArrays;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
 import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -34,6 +35,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 @SuppressWarnings("WeakerAccess")
 public class PluralAttributeMappingTests {
+
+	@Test
+	public void testArrays(SessionFactoryScope scope) {
+		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
+		final EntityMappingType containerEntityDescriptor = domainModel.getEntityDescriptor( EntityOfArrays.class );
+
+		assertThat( containerEntityDescriptor.getNumberOfAttributeMappings(), is( 2 ) );
+
+		final AttributeMapping arrayOfBasics = containerEntityDescriptor.findAttributeMapping( "arrayOfBasics" );
+		assertThat( arrayOfBasics, notNullValue() );
+	}
 
 	@Test
 	public void testLists(SessionFactoryScope scope) {

@@ -19,6 +19,7 @@ public class GambitDomainModel extends AbstractDomainModelDescriptor {
 				BasicEntity.class,
 				Component.class,
 				EmbeddedIdEntity.class,
+				EntityOfArrays.class,
 				EntityOfBasics.class,
 				EntityOfComposites.class,
 				EntityOfDynamicComponent.class,

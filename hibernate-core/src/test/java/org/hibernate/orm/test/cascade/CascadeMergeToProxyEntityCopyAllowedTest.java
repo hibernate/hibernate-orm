@@ -27,6 +27,8 @@ import javax.persistence.Transient;
 import javax.persistence.TypedQuery;
 import javax.persistence.Version;
 
+import org.hibernate.cfg.AvailableSettings;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -35,6 +37,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -51,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ServiceRegistry(
 		settings = {
 				@ServiceRegistry.Setting(
-						name = "AvailableSettings.MERGE_ENTITY_COPY_OBSERVER", value = "allow"
+						name = AvailableSettings.MERGE_ENTITY_COPY_OBSERVER, value = "allow"
 				)
 		}
 )
@@ -237,7 +240,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 		})
 		private Project project;
 
-		@ManyToMany(targetEntity = Speaker.class, fetch = FetchType.LAZY, cascade = {
+		@ManyToMany(targetEntity = Speaker.class,fetch = FetchType.LAZY, cascade = {
 				CascadeType.PERSIST,
 				CascadeType.REFRESH
 		})

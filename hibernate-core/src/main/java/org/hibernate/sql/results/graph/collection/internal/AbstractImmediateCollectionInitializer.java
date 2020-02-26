@@ -67,10 +67,24 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			return;
 		}
 
+		final PluralAttributeMapping collectionAttributeMapping = getCollectionAttributeMapping();
+		final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
+		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		final CollectionKey collectionKey = resolveCollectionKey( rowProcessingState );
+
+		if ( collectionKey == null ) {
+			collectionInstance = collectionSemantics.instantiateWrapper(
+					null,
+					collectionDescriptor,
+					session
+			);
+			collectionInstance.initializeEmptyCollection( collectionDescriptor );
+			persistenceContext.addNonLazyCollection( collectionInstance );
+		}
 
 		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
 			CollectionLoadingLogger.INSTANCE.tracef(
@@ -91,10 +105,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				.findLoadingCollectionEntry( collectionKey );
 //		final LoadingCollectionEntry existingLoadingEntry = rowProcessingState.getJdbcValuesSourceProcessingState()
 //				.findLoadingCollectionLocally( getCollectionDescriptor(), collectionKey.getKey() );
-
-		final PluralAttributeMapping collectionAttributeMapping = getCollectionAttributeMapping();
-		final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
 		if ( existingLoadingEntry != null ) {
 			collectionInstance = existingLoadingEntry.getCollectionInstance();

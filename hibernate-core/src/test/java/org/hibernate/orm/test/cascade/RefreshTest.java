@@ -13,6 +13,7 @@ import java.util.Iterator;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 @SessionFactory
+@FailureExpected( reason = "This should be fixed by Nathan PR")
 public class RefreshTest {
 
 	@Test

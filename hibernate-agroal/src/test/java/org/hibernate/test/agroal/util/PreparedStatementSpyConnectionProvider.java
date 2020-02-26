@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.agroal.internal.AgroalConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -34,8 +35,15 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
 	private final List<Connection> releasedConnections = new ArrayList<>( );
+	private final AtomicInteger clearWarningsCallCounter = new AtomicInteger( 0 );
+	private final boolean skipWarningsOnClose;
 
 	public PreparedStatementSpyConnectionProvider() {
+		this(true);
+	}
+
+	public PreparedStatementSpyConnectionProvider(boolean skipWarningsOnClose) {
+		this.skipWarningsOnClose = skipWarningsOnClose;
 	}
 
 	protected Connection actualConnection() throws SQLException {
@@ -62,6 +70,11 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 		super.stop();
 	}
 
+	@Override
+	public boolean connectionWarningsResetCanBeSkippedOnClose() {
+		return skipWarningsOnClose;
+	}
+
 	private Connection spy(Connection connection) {
 		if ( MockUtil.isMock( connection ) ) {
 			return connection;
@@ -75,6 +88,12 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 				preparedStatementMap.put( statementSpy, sql );
 				return statementSpy;
 			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
+
+			Mockito.doAnswer( invocation -> {
+				invocation.callRealMethod();
+				clearWarningsCallCounter.incrementAndGet();
+				return null;
+			} ).when( connectionSpy ).clearWarnings();
 
 			Mockito.doAnswer( invocation -> {
 				Statement statement = (Statement) invocation.callRealMethod();
@@ -96,6 +115,7 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 		releasedConnections.clear();
 		preparedStatementMap.keySet().forEach( Mockito::reset );
 		preparedStatementMap.clear();
+		clearWarningsCallCounter.set( 0 );
 	}
 
 	/**
@@ -112,5 +132,9 @@ public class PreparedStatementSpyConnectionProvider extends AgroalConnectionProv
 	 */
 	public List<Connection> getReleasedConnections() {
 		return releasedConnections;
+	}
+
+	public int getCountInvocationsToClearWarnings() {
+		return clearWarningsCallCounter.get();
 	}
 }

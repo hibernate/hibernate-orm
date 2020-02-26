@@ -118,6 +118,11 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
+	public boolean connectionWarningsResetCanBeSkippedOnClose() {
+		return true;
+	}
+
+	@Override
 	@SuppressWarnings( "rawtypes" )
 	public boolean isUnwrappableAs(Class unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType ) || AgroalConnectionProvider.class.isAssignableFrom( unwrapType ) || DataSource.class.isAssignableFrom( unwrapType );

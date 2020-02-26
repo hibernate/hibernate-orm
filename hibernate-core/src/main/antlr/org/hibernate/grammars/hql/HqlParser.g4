@@ -44,7 +44,7 @@ updateStatement
 	;
 
 setClause
-	: SET assignment+
+	: SET assignment (COMMA assignment)*
 	;
 
 assignment

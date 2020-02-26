@@ -21,6 +21,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -78,7 +79,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.nameQualifierSupport = nameQualifierSupport;
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( serviceRegistry, cfgService, dialect ) );
 
 		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
@@ -116,11 +117,22 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
 	}
 
-	private static boolean logWarnings(ConfigurationService cfgService, Dialect dialect) {
+	private static boolean logWarnings(
+			final ServiceRegistryImplementor registry,
+			ConfigurationService cfgService,
+			Dialect dialect) {
+		//We will have the default depend on two conditions:
+		// - the Dialect to not recommend against the feature
+		// - and still disable it if the ConnectionProvider implements the optimisation org.hibernate.engine.jdbc.connections.spi.ConnectionProvider.connectionWarningsResetCanBeSkippedOnClose
+		//Why: otherwise having to check for warnings to be logged works against the optimisation.
+
+		ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
+		boolean optimisationEnabled = connectionProvider.connectionWarningsResetCanBeSkippedOnClose();
+
 		return cfgService.getSetting(
 				AvailableSettings.LOG_JDBC_WARNINGS,
 				StandardConverters.BOOLEAN,
-				dialect.isJdbcLogWarningsEnabledByDefault()
+				dialect.isJdbcLogWarningsEnabledByDefault() && !optimisationEnabled
 		);
 	}
 
@@ -231,7 +243,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
+		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( serviceRegistry, cfgService, dialect ) );
 
 		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
 		if ( nameQualifierSupport == null ) {

@@ -35,11 +35,6 @@ public class SingletonStack<T> implements Stack<T> {
 	}
 
 	@Override
-	public T getPrevious() {
-		return null;
-	}
-
-	@Override
 	public int depth() {
 		return 1;
 	}

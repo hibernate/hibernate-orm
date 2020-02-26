@@ -43,14 +43,6 @@ public class StandardStack<T> implements Stack<T> {
 	}
 
 	@Override
-	public T getPrevious() {
-		if ( internalStack.size() < 2 ) {
-			return null;
-		}
-		return internalStack.get( internalStack.size() - 2 );
-	}
-
-	@Override
 	public int depth() {
 		return internalStack.size();
 	}

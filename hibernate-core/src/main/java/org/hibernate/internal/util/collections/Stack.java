@@ -33,11 +33,6 @@ public interface Stack<T> {
 	T getCurrent();
 
 	/**
-	 * The element previously at the top of the stack before the current one
-	 */
-	T getPrevious();
-
-	/**
 	 * How many elements are currently on the stack?
 	 */
 	int depth();

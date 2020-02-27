@@ -12,14 +12,13 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -32,7 +31,7 @@ public class DelayedCollectionInitializer implements CollectionInitializer {
 	private final FetchParentAccess parentAccess;
 
 	private CollectionKey collectionKey;
-	private PersistentCollection instance;
+	private PersistentCollection collectionInstance;
 
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
@@ -62,78 +61,58 @@ public class DelayedCollectionInitializer implements CollectionInitializer {
 					parentKey
 			);
 
-			parentAccess.registerResolutionListener( owner -> instance.setOwner( owner ) );
+			parentAccess.registerResolutionListener( owner -> collectionInstance.setOwner( owner ) );
 		}
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-
 		if ( collectionKey != null ) {
-			EntityInitializer entityInitializer = getEntityInitializer( rowProcessingState );
-
-
-			final Object entityUsingInterceptor = persistenceContext.getEntity( entityInitializer.getEntityKey() );
-			if ( entityUsingInterceptor != null ) {
-				return;
-			}
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 			final Object key = collectionKey.getKey();
 
 			final LoadingCollectionEntry loadingEntry = persistenceContext.getLoadContexts()
 					.findLoadingCollectionEntry( collectionKey );
-			final PersistentCollection registeredInstance = persistenceContext.getCollection( collectionKey );
 
 			if ( loadingEntry != null ) {
-				instance = loadingEntry.getCollectionInstance();
+				collectionInstance = loadingEntry.getCollectionInstance();
 				return;
 			}
 
-			if ( registeredInstance != null ) {
-				instance = registeredInstance;
+			final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
+
+			if ( existing != null ) {
+				collectionInstance = existing;
 				return;
 			}
 
-			instance = makePersistentCollection( fetchedMapping, key, rowProcessingState );
+			final CollectionPersister collectionDescriptor = fetchedMapping.getCollectionDescriptor();
+
+			final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+
+			collectionInstance = collectionSemantics.instantiateWrapper(
+					key,
+					collectionDescriptor,
+					session
+			);
+
+			parentAccess.registerResolutionListener(
+					owner -> collectionInstance.setOwner( owner )
+			);
 
 			persistenceContext.addUninitializedCollection(
-					getInitializingCollectionDescriptor(),
-					instance,
+					collectionDescriptor,
+					collectionInstance,
 					key
 			);
-		}
-		else {
-			instance = makePersistentCollection( fetchedMapping, collectionKey, rowProcessingState );
-			instance.initializeEmptyCollection( getInitializingCollectionDescriptor() );
-			persistenceContext.addNonLazyCollection( instance );
+
+			if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY ) {
+				session.getPersistenceContext().addCollectionHolder( collectionInstance );
+			}
 		}
 	}
-
-	private static PersistentCollection makePersistentCollection(
-			PluralAttributeMapping fetchedMapping,
-			Object collectionKey,
-			RowProcessingState rowProcessingState) {
-		final CollectionPersister collectionDescriptor = fetchedMapping.getCollectionDescriptor();
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
-		return collectionSemantics.instantiateWrapper(
-				collectionKey,
-				collectionDescriptor,
-				rowProcessingState.getSession()
-		);
-	}
-
-	private EntityInitializer getEntityInitializer(RowProcessingState rowProcessingState) {
-		Initializer initializer = rowProcessingState.resolveInitializer( getNavigablePath().getParent() );
-		while ( !( initializer instanceof EntityInitializer ) ) {
-			initializer = rowProcessingState.resolveInitializer( initializer.getNavigablePath().getParent() );
-		}
-		return (EntityInitializer) initializer;
-
-	}
-
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
@@ -147,7 +126,7 @@ public class DelayedCollectionInitializer implements CollectionInitializer {
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		collectionKey = null;
-		instance = null;
+		collectionInstance = null;
 	}
 
 	@Override
@@ -157,7 +136,7 @@ public class DelayedCollectionInitializer implements CollectionInitializer {
 
 	@Override
 	public PersistentCollection getCollectionInstance() {
-		return instance;
+		return collectionInstance;
 	}
 
 	@Override

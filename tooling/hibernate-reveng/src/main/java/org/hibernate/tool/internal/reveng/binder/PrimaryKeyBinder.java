@@ -22,7 +22,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.binder.ForeignKeyUtils.ForeignKeyForColumns;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
@@ -63,7 +62,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 				table, 
 				BinderUtils.makeUnique(rc,getIdPropertyName(tableIdentifier, keyColumns)), 
 				id, 
-				DefaultAssociationInfo.create(null, null, true, true));
+				RevengUtils.createAssociationInfo(null, null, true, true));
 		rc.setIdentifierProperty(property);
 		rc.setIdentifier(id);
 		return pki;

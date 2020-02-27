@@ -5,7 +5,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.api.reveng.AssociationInfo;
-import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 class EntityPropertyBinder extends AbstractBinder {
 	
@@ -32,28 +32,22 @@ class EntityPropertyBinder extends AbstractBinder {
         return propertyBinder.bind(table, propertyName, value, associationInfo);
 	}
 
-    private DefaultAssociationInfo determineAssociationInfo(
+    private AssociationInfo determineAssociationInfo(
     		ForeignKey foreignKey, 
     		boolean inverseProperty, 
     		boolean mutable) {
     	AssociationInfo origin = BinderUtils
     			.getAssociationInfo(getRevengStrategy(), foreignKey, inverseProperty);
-    	DefaultAssociationInfo result = DefaultAssociationInfo.create(null, null, mutable, mutable);
     	if(origin != null){
-        	updateAssociationInfo(origin, result);
+        	return RevengUtils.createAssociationInfo(
+        			origin.getCascade(), 
+        			origin.getFetch(), 
+        			origin.getInsert() != null ? origin.getInsert() : mutable, 
+        			origin.getUpdate() != null ? origin.getUpdate() : mutable
+        		);
+        } else {
+        	return RevengUtils.createAssociationInfo(null, null, mutable, mutable);
         }
-        return result;
     }
     
-    private void updateAssociationInfo(AssociationInfo origin, DefaultAssociationInfo target) {
-    	target.setCascade(origin.getCascade());
-    	if(origin.getUpdate()!=null) {
-    		target.setUpdate(origin.getUpdate());;
-    	} 
-    	if(origin.getInsert()!=null) {
-    		target.setInsert(origin.getInsert());
-    	}
-    	target.setFetch(origin.getFetch());
-    }
-
 }

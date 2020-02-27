@@ -3,6 +3,7 @@ package org.hibernate.tool.internal.reveng.util;
 import java.util.List;
 
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
@@ -49,6 +50,32 @@ public class RevengUtils {
 		String tableCatalog = getCatalogForModel(table.getCatalog(), defaultCatalog);
 		String tableSchema = getSchemaForModel(table.getSchema(), defaultSchema);
 		return TableIdentifier.create(tableCatalog, tableSchema, tableName);
+	}
+	
+	public static AssociationInfo createAssociationInfo(			
+			String cascade, 
+			String fetch, 
+			Boolean insert, 
+			Boolean update) {
+		return new AssociationInfo() {
+			@Override
+			public String getCascade() {
+				return cascade;
+			}
+			@Override
+			public String getFetch() {
+				return fetch;
+			}
+			@Override
+			public Boolean getUpdate() {
+				return update;
+			}
+			@Override
+			public Boolean getInsert() {
+				return insert;
+			}
+			
+		};
 	}
 
 	/** If catalog is equal to defaultCatalog then we return null so it will be null in the generated code. */

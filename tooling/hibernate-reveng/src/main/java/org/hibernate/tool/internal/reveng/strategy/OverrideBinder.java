@@ -11,10 +11,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -234,7 +235,7 @@ public class OverrideBinder {
 		Boolean excludeOneToOne = null;
 		ArrayList<Element> oneToOnes = getChildElements(element, "one-to-one");
 		Element oneToOne = null;
-		DefaultAssociationInfo associationInfo = null;
+		AssociationInfo associationInfo = null;
 		if(oneToOnes.size() > 0) {
 			oneToOne = oneToOnes.get(0);
 			oneToOneProperty = getAttribute(oneToOne, "property");
@@ -246,7 +247,7 @@ public class OverrideBinder {
 		Boolean excludeInverseOneToOne = null;
 		ArrayList<Element> inverseOneToOnes = getChildElements(element, "inverse-one-to-one");
 		Element inverseOneToOne = null;
-		DefaultAssociationInfo inverseAssociationInfo = null;
+		AssociationInfo inverseAssociationInfo = null;
 		if(inverseOneToOnes.size() > 0) {
 			inverseOneToOne = inverseOneToOnes.get(0);
 			inverseOneToOneProperty = getAttribute(inverseOneToOne, "property");
@@ -273,8 +274,8 @@ public class OverrideBinder {
 			OverrideRepository repository) {
 		String manyToOneProperty = null;
 		Boolean excludeManyToOne = null;
-		DefaultAssociationInfo associationInfo = null;
-		DefaultAssociationInfo inverseAssociationInfo = null;
+		AssociationInfo associationInfo = null;
+		AssociationInfo inverseAssociationInfo = null;
 		ArrayList<Element> manyToOnes = getChildElements(element, "many-to-one");
 		Element manyToOne = null;
 		if (manyToOnes.size() > 0) {
@@ -308,32 +309,14 @@ public class OverrideBinder {
 		}
 	}
 	
-	private static DefaultAssociationInfo extractAssociationInfo(Element manyToOne) {
-		DefaultAssociationInfo associationInfo = null;
-		if(manyToOne.hasAttribute("cascade")) {
-			associationInfo = ensureInit(associationInfo);
-			associationInfo.setCascade(manyToOne.getAttribute("cascade"));
-		}		
-		if(manyToOne.hasAttribute("fetch")) {
-			associationInfo = ensureInit(associationInfo);
-			associationInfo.setFetch(manyToOne.getAttribute("fetch"));
-		}					
-		if(manyToOne.hasAttribute("insert")) {
-			associationInfo = ensureInit(associationInfo);
-			associationInfo.setInsert(Boolean.parseBoolean(manyToOne.getAttribute("insert")));
-		}					
-		if(manyToOne.hasAttribute("update")) {
-			associationInfo = ensureInit(associationInfo);
-			associationInfo.setUpdate(Boolean.parseBoolean(manyToOne.getAttribute("update")));
-		}
-		return associationInfo;
-	}
-
-	private static DefaultAssociationInfo ensureInit(
-			DefaultAssociationInfo associationInfo) {
-		return associationInfo == null
-				? DefaultAssociationInfo.create(null, null, null, null)
-						: associationInfo;
+	private static AssociationInfo extractAssociationInfo(Element manyToOne) {
+		return RevengUtils.createAssociationInfo(
+				manyToOne.hasAttribute("cascade") ? manyToOne.getAttribute("cascade") : null, 
+				manyToOne.hasAttribute("fetch") ? manyToOne.getAttribute("fetch") : null, 
+				manyToOne.hasAttribute("insert") ? 
+					Boolean.parseBoolean(manyToOne.getAttribute("insert")) : null, 
+				manyToOne.hasAttribute("update") ? 
+					Boolean.parseBoolean(manyToOne.getAttribute("update")) : null);
 	}
 
 	private static boolean validateFkAssociations(Element element){

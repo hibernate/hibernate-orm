@@ -3,7 +3,7 @@ package org.hibernate.tool.internal.reveng.binder;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.internal.reveng.DefaultAssociationInfo;
+import org.hibernate.tool.internal.reveng.util.RevengUtils;
 
 class BasicPropertyBinder extends AbstractBinder {
 	
@@ -26,7 +26,7 @@ class BasicPropertyBinder extends AbstractBinder {
 				table, 
 				propertyName, 
 				simpleValueBinder.bind(table, column, false), 
-				DefaultAssociationInfo.create(null, null, true, true));
+				RevengUtils.createAssociationInfo(null, null, true, true));
 	}
 
 }

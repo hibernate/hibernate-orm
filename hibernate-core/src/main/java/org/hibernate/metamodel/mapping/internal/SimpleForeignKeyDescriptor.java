@@ -130,8 +130,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		if ( lhs.getTableExpression().equals( keyColumnContainingTable ) ) {
-			assert rhs.getTableExpression().equals( targetColumnContainingTable );
+		final String rhsTableExpression = rhs.getTableExpression();
+		final String lhsTableExpression = lhs.getTableExpression();
+		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
+			assert rhsTableExpression.equals( targetColumnContainingTable );
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
@@ -149,7 +151,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 		else {
-			assert rhs.getTableExpression().equals( keyColumnContainingTable );
+			assert rhsTableExpression.equals( keyColumnContainingTable );
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
@@ -175,65 +177,33 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final TableReference keyTableReference = getTableReference( lhs, tableGroup, keyColumnContainingTable );
-		ColumnReference keyColumnReference;
-		keyColumnReference = new ColumnReference(
-				keyTableReference,
-				keyColumnExpression,
-				jdbcMapping,
-				creationContext.getSessionFactory()
-		);
+		TableReference lhsTableReference;
+		TableReference rhsTableKeyReference;
+		if ( targetColumnContainingTable.equals( keyColumnContainingTable )  ) {
+			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keyColumnContainingTable );
 
-		ColumnReference targetColumnReference;
-		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
-			final TableReference targetTableKeyReference = getTableReferenceWhenTargetEqualsKey(
+			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
 					targetColumnContainingTable
-			);
-			targetColumnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey(
-							targetTableKeyReference,
-							targetColumnExpression
-					),
-					s -> new ColumnReference(
-							targetTableKeyReference.getIdentificationVariable(),
-							targetColumnExpression,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					)
 			);
 		}
 		else {
-			final TableReference targetTableKeyReference = getTableReference(
+			lhsTableReference = getTableReference( lhs, tableGroup, keyColumnContainingTable );
+
+			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
 					targetColumnContainingTable
 			);
-			targetColumnReference = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-					SqlExpressionResolver.createColumnReferenceKey(
-							targetTableKeyReference,
-							targetColumnExpression
-					),
-					s -> new ColumnReference(
-							targetTableKeyReference.getIdentificationVariable(),
-							targetColumnExpression,
-							jdbcMapping,
-							creationContext.getSessionFactory()
-					)
-			);
 		}
-		if ( fKeyDirection == ForeignKeyDirection.FROM_PARENT ) {
-			return new ComparisonPredicate(
-					targetColumnReference,
-					ComparisonOperator.EQUAL,
-					keyColumnReference
-			);
-		}
-		return new ComparisonPredicate(
-				keyColumnReference,
-				ComparisonOperator.EQUAL,
-				targetColumnReference
+
+		return generateJoinPredicate(
+				lhsTableReference,
+				rhsTableKeyReference,
+				sqlAstJoinType,
+				sqlExpressionResolver,
+				creationContext
 		);
 	}
 

@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -46,7 +47,6 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	private Object keyCollectionValue;
 
 	private CollectionKey collectionKey;
-
 
 	@SuppressWarnings("WeakerAccess")
 	protected AbstractCollectionInitializer(
@@ -131,9 +131,12 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			return;
 		}
 
+		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getProcessingOptions();
+
 		keyContainerValue = keyContainerAssembler.assemble(
 				rowProcessingState,
-				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+				processingOptions
 		);
 
 		if ( keyCollectionAssembler == null || keyContainerAssembler == keyCollectionAssembler ) {
@@ -142,7 +145,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 		else {
 			keyCollectionValue = keyCollectionAssembler.assemble(
 					rowProcessingState,
-					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+					processingOptions
 			);
 		}
 
@@ -151,6 +154,20 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
 					keyContainerValue
+			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						StringHelper.collapse( this.getClass().getName() ),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
+		}
+		else if ( keyCollectionValue != null ) {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					keyCollectionValue
 			);
 
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {

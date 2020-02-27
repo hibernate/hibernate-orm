@@ -332,14 +332,21 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 			PluralAttributeMapping attributeMapping,
 			List loadingStateList) {
 		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		if ( loadingStateList != null ) {
+			this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
+					loadingStateList.size(),
+					collectionDescriptor
+			);
 
-		this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
-				loadingStateList.size(),
-				collectionDescriptor
-		);
-
-		//noinspection unchecked
-		this.set.addAll( loadingStateList );
+			//noinspection unchecked
+			this.set.addAll( loadingStateList );
+		}
+		else {
+			this.set = (Set) attributeMapping.getCollectionDescriptor().getCollectionSemantics().instantiateRaw(
+					0,
+					collectionDescriptor
+			);
+		}
 	}
 
 	@Override

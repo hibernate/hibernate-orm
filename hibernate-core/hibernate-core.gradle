@@ -293,8 +293,38 @@ test {
         jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
     }
 
-    beforeTest { descriptor ->
-        //println "Starting test: " + descriptor
+    // beforeTest { descriptor ->
+    //     println "Starting test: " + descriptor
+    // }
+
+    // Dinamically retrieves the plan of tests to run. If not provided, all tests are included.
+    // Pre-defined test plans are: green and red.
+    // Custom plans can be created as long the .test-list file is added to hibernate-core and
+    // the environment variable is set to the name of the file without the extension section
+    //     ex.: TEST_PLAN=my ./gradlew clean :hibernate-core:test
+    def testPlan = System.env['TEST_PLAN']
+
+    if (testPlan != null) {
+	    def testFile = file( "${testPlan}.test-list" )
+        if (testFile.exists() && testFile.readLines()) {
+            def testList = testFile.readLines()
+            println "Using ${testPlan.toUpperCase()} test plan."
+            filter {
+                testList.each { testName ->
+                    includeTestsMatching testName
+                }
+            }
+        } else {
+            println "Environment variable TEST_PLAN is set as ${testPlan} but no ${testPlan}.test-list file was found."
+            println "A .test-file contains a list of filtered tests to run. If you would like to have"
+            println "your own list just create a new file like `hibernate-core/my.test-list` and assing the environment"
+            println "variable like so:"
+            println "  export TEST_PLAN=my"
+            println "Run the test command again."
+            System.exit(-1);
+        }
+    } else {
+        println "Running all tests!"
     }
 
     // Allow to exclude specific tests

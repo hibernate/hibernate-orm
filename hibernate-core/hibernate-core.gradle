@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.tasks.testing.TestResult.ResultType
 
 description = 'Hibernate\'s core ORM functionality'
 

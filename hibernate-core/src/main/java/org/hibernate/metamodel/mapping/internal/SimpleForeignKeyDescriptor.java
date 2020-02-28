@@ -88,6 +88,46 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public DomainResult createCollectionFecthDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		if ( targetColumnContainingTable.equals( keyColumnContainingTable ) ) {
+			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+			final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+			final TableReference tableReference = tableGroup.resolveTableReference( keyColumnContainingTable );
+			final String identificationVariable = tableReference.getIdentificationVariable();
+			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
+					sqlExpressionResolver.resolveSqlExpression(
+							SqlExpressionResolver.createColumnReferenceKey(
+									tableReference,
+									targetColumnExpression
+							),
+							s -> {
+								return new ColumnReference(
+										identificationVariable,
+										targetColumnExpression,
+										jdbcMapping,
+										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+								);
+							}
+					),
+					jdbcMapping.getJavaTypeDescriptor(),
+					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+			);
+
+			//noinspection unchecked
+			return new BasicResult(
+					sqlSelection.getValuesArrayPosition(),
+					null,
+					jdbcMapping.getJavaTypeDescriptor()
+			);
+		}else {
+			return createDomainResult( collectionPath, tableGroup, creationState );
+		}
+	}
+
+	@Override
 	public DomainResult createDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,

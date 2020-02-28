@@ -177,6 +177,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
 				);
 			}
+		}else {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					parentAccess.getParentKey()
+			);
 		}
 	}
 

@@ -25,7 +25,15 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	ForeignKeyDirection getDirection();
 
-	DomainResult createDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState);
+	DomainResult createCollectionFecthDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState);
+
+	DomainResult createDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableGroup lhs,

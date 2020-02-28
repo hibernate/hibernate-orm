@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.api.tasks.testing.TestResult.ResultType
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'antlr'
@@ -325,6 +326,13 @@ test {
         }
     } else {
         println "Running all tests!"
+    }
+    testLogging {
+        afterSuite { desc, result ->
+            if (!desc.parent && result.resultType == ResultType.SUCCESS) { // will match the outermost suite and shows only if succeded
+                println "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+            }
+        }
     }
 }
 

@@ -14,9 +14,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole

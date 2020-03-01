@@ -9,7 +9,6 @@ package org.hibernate.engine.query.spi;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.type.Type;
 
 /**
  * Descriptor regarding an ordinal parameter.

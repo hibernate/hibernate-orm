@@ -6,10 +6,7 @@
  */
 package org.hibernate.dialect.unique;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.mapping.UniqueKey;
 
 /**
  * @author Andrea Boriero

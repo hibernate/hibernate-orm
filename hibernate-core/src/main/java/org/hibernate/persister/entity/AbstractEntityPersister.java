@@ -141,8 +141,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
@@ -216,7 +214,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Basic functionality for persisting an entity via JDBC

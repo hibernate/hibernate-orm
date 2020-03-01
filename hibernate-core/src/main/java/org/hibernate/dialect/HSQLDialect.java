@@ -6,16 +6,25 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.*;
+import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.OptimisticLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
+import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.pagination.LegacyHSQLLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
@@ -44,13 +53,12 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
 import org.jboss.logging.Logger;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-
-import static org.hibernate.query.CastType.*;
+import static org.hibernate.query.CastType.BOOLEAN;
+import static org.hibernate.query.CastType.INTEGER;
+import static org.hibernate.query.CastType.LONG;
 
 /**
  * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.

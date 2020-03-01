@@ -10,12 +10,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 

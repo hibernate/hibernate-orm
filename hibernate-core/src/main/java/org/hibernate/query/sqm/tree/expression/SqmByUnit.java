@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;

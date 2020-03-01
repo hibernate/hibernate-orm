@@ -7,13 +7,10 @@
 package org.hibernate.type;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-
 import javax.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;

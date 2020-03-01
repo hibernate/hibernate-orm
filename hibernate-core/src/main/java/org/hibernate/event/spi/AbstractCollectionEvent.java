@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;

@@ -54,7 +54,6 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;

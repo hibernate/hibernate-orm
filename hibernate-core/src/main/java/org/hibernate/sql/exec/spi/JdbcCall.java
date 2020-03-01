@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.List;
-
 /**
  * @author Steve Ebersole
  */

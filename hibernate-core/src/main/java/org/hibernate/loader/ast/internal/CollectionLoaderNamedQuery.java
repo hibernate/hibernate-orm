@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;

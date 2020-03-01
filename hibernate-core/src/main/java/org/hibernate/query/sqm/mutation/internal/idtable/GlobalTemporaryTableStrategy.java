@@ -10,8 +10,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.function.Supplier;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

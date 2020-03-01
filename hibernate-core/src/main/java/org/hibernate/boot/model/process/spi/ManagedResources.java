@@ -8,12 +8,9 @@ package org.hibernate.boot.model.process.spi;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.cfg.AttributeConverterDefinition;
 
 /**
  * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}

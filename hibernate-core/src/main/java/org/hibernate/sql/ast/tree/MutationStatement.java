@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.ast.tree;
 
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
-
 /**
  * Specialization of Statement for mutation (DML) statements
  *

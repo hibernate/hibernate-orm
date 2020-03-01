@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
 import org.hibernate.engine.spi.EntityEntry;

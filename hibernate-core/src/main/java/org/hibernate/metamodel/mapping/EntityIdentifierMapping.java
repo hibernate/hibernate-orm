@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.property.access.spi.PropertyAccess;
 
 /**
  * @author Steve Ebersole

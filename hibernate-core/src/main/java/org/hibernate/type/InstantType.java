@@ -7,16 +7,12 @@
 package org.hibernate.type;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
-
 import javax.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;

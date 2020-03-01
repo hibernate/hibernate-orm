@@ -8,9 +8,6 @@ package org.hibernate.dialect.pagination;
 
 import org.hibernate.engine.spi.RowSelection;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 /**
  * A {@link LimitHandler} for databases which support the
  * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}

@@ -8,9 +8,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.sql.PreparedStatement;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.resource.jdbc.LogicalConnection;
 
 /**
  * Helper for creating various types of

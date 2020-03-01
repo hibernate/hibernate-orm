@@ -7,7 +7,6 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;

@@ -12,17 +12,11 @@ import java.util.Objects;
 import javax.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.AbstractQueryParameter;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.type.ProcedureParameterExtractionAware;
-import org.hibernate.type.ProcedureParameterNamedBinder;
+import org.hibernate.query.AbstractQueryParameter;
 
 /**
  * @author Steve Ebersole

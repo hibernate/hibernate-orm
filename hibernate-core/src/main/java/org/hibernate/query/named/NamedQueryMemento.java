@@ -12,7 +12,6 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**

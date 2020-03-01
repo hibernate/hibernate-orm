@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.internal.JoinHelper;
@@ -31,7 +30,6 @@ import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.engine.internal.JoinHelper.getLHSColumnNames;
 import static org.hibernate.engine.internal.JoinHelper.getLHSTableName;

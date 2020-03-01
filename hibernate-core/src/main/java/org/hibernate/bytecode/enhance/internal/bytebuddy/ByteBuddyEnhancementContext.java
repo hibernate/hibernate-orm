@@ -6,16 +6,12 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import static net.bytebuddy.matcher.ElementMatchers.isGetter;
-
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
@@ -24,6 +20,8 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.matcher.ElementMatcher;
+
+import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
 class ByteBuddyEnhancementContext {
 

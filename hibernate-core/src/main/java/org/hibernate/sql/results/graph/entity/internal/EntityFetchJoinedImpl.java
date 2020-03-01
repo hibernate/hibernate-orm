@@ -10,16 +10,15 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Andrea Boriero

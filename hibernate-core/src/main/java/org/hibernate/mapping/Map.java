@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.OrderedMapType;

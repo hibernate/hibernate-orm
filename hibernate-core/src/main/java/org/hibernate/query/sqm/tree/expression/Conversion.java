@@ -11,15 +11,11 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A conversion of a duration to a given temporal unit,

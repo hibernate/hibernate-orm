@@ -7,7 +7,6 @@
 package org.hibernate.collection.internal;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

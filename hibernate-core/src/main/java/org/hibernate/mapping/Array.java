@@ -10,7 +10,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;

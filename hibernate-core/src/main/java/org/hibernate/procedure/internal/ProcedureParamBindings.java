@@ -9,12 +9,10 @@ package org.hibernate.procedure.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.ParameterMode;
-
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;

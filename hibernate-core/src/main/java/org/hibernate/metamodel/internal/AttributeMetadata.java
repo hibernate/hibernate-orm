@@ -10,7 +10,6 @@ import java.lang.reflect.Member;
 
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**

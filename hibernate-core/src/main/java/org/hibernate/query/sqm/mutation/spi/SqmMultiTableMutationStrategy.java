@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.mutation.spi;
 
-import org.hibernate.Metamodel;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;

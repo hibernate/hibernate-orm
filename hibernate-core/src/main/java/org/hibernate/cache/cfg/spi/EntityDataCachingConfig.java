@@ -7,7 +7,6 @@
 package org.hibernate.cache.cfg.spi;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 

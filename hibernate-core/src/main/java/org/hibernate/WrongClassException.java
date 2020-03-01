@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Serializable;
-
 /**
  * Thrown when loading an entity (by identifier) results in a value that cannot be treated as the subclass
  * type requested by the caller.

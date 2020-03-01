@@ -9,14 +9,12 @@ package org.hibernate.query.spi;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
-import org.hibernate.annotations.Cache;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.Limit;
 import org.hibernate.query.ResultListTransformer;

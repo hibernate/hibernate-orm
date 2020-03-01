@@ -6,22 +6,13 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import javax.persistence.metamodel.Bindable;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**

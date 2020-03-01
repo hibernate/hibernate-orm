@@ -7,11 +7,8 @@
 package org.hibernate.type;
 
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-
 import javax.persistence.TemporalType;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
 import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;

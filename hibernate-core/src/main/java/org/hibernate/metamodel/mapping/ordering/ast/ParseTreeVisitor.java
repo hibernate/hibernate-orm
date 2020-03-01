@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import org.hibernate.SortOrder;
 import org.hibernate.grammars.ordering.OrderingParser;

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 

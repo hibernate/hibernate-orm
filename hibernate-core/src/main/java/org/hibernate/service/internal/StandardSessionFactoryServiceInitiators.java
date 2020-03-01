@@ -7,7 +7,6 @@
 package org.hibernate.service.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.query.spi.NativeQueryInterpreterInitiator;

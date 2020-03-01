@@ -7,7 +7,6 @@
 package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 

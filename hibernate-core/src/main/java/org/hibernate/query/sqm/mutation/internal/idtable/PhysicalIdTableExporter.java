@@ -8,10 +8,6 @@ package org.hibernate.query.sqm.mutation.internal.idtable;
 
 import java.util.function.Function;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

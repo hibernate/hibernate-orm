@@ -744,7 +744,7 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private CollectionLoader standardCollectionLoader;
+	private volatile CollectionLoader standardCollectionLoader;
 
 	@Override
 	public void initialize(Object key, SharedSessionContractImplementor session) throws HibernateException {
@@ -752,10 +752,13 @@ public abstract class AbstractCollectionPersister
 		determineLoaderToUse( key, session ).load( key, session );
 	}
 
+	// lazily initialize instance field via 'double-checked locking'
+	// see https://en.wikipedia.org/wiki/Double-checked_locking
 	protected CollectionLoader getStandardCollectionLoader() {
 		CollectionLoader localCopy = standardCollectionLoader;
 		if ( localCopy == null ) {
 			synchronized (this) {
+				localCopy = standardCollectionLoader;
 				if ( localCopy == null ) {
 					localCopy = createCollectionLoader( LoadQueryInfluencers.NONE );
 					standardCollectionLoader  = localCopy;

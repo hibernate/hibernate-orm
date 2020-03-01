@@ -149,13 +149,13 @@ public class Database {
 
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
 		return auxiliaryDatabaseObjects == null
-				? Collections.<AuxiliaryDatabaseObject>emptyList()
+				? Collections.emptyList()
 				: auxiliaryDatabaseObjects.values();
 	}
 
 	public Collection<InitCommand> getInitCommands() {
 		return initCommands == null
-				? Collections.<InitCommand>emptyList()
+				? Collections.emptyList()
 				: initCommands;
 	}
 

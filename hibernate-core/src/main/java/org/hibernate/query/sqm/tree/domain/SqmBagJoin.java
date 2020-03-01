@@ -55,7 +55,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public BagPersistentAttribute<O,E> getModel() {
-		return (BagPersistentAttribute<O, E>) getReferencedPathSource();
+		return getReferencedPathSource();
 	}
 
 	@Override

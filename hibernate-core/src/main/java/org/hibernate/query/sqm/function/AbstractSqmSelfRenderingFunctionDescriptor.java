@@ -36,8 +36,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			TypeConfiguration typeConfiguration) {
 		return new SelfRenderingSqmFunction<>(
 				this,
-				(sqlAppender, sqlAstArguments, walker)
-						-> render(sqlAppender, sqlAstArguments, walker),
+				this::render,
 				arguments,
 				impliedResultType,
 				getReturnTypeResolver(),

@@ -843,7 +843,7 @@ public class Configuration {
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap == null
-				? Collections.<NamedEntityGraphDefinition>emptyList()
+				? Collections.emptyList()
 				: namedEntityGraphMap.values();
 	}
 

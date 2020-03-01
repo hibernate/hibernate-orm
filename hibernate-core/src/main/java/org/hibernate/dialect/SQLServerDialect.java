@@ -309,7 +309,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		// note: at least my local SQL Server 2005 Express shows this not working...
 		return false;
 	}
@@ -378,7 +378,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		);
 		final int pos = sql.indexOf( ";" );
 		if ( pos > -1 ) {
-			buffer.append( sql.substring( 0, pos ) );
+			buffer.append( sql, 0, pos );
 		}
 		else {
 			buffer.append( sql );

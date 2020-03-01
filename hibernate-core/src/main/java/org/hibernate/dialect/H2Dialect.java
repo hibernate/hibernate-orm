@@ -325,7 +325,7 @@ public class H2Dialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		return false;
 	}
 

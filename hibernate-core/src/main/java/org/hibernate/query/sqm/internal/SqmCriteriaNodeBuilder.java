@@ -1250,7 +1250,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		//noinspection unchecked
 		return new SqmCoalesce<>(
-				(AllowableFunctionReturnType) highestPrecedenceType(
+				highestPrecedenceType(
 						((SqmExpression) x).getNodeType(),
 						((SqmExpression) y).getNodeType()
 				),

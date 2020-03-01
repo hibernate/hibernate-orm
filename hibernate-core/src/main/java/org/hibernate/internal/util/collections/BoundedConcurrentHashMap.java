@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -1224,7 +1225,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.evictCap = evictCap;
 			eviction = es.make( this, evictCap, lf );
 			evictionListener = listener;
-			setTable( HashEntry.<K, V>newArray( cap ) );
+			setTable( HashEntry.newArray( cap ) );
 		}
 
 		@SuppressWarnings("unchecked")
@@ -1561,9 +1562,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 				lock();
 				try {
 					HashEntry<K, V>[] tab = table;
-					for ( int i = 0; i < tab.length; i++ ) {
-						tab[i] = null;
-					}
+					Arrays.fill( tab, null );
 					++modCount;
 					eviction.clear();
 					count = 0; // write-volatile

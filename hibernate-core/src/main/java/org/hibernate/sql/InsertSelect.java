@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,9 +51,7 @@ public class InsertSelect {
 	}
 
 	public InsertSelect addColumns(String[] columnNames) {
-		for ( String columnName : columnNames ) {
-			this.columnNames.add( columnName );
-		}
+		Collections.addAll( this.columnNames, columnNames );
 		return this;
 	}
 

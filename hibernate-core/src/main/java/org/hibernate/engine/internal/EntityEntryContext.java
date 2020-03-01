@@ -249,7 +249,7 @@ public class EntityEntryContext {
 
 		if ( ImmutableManagedEntityHolder.class.isInstance( managedEntity ) ) {
 			assert entity == ( (ImmutableManagedEntityHolder) managedEntity ).managedEntity;
-			immutableManagedEntityXref.remove( (ManagedEntity) entity );
+			immutableManagedEntityXref.remove( entity );
 
 		}
 		else if ( !ManagedEntity.class.isInstance( entity ) ) {

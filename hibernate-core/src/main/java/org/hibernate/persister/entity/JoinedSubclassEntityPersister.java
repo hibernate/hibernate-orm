@@ -1252,7 +1252,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	private class CaseSearchedExpressionInfo{
+	private static class CaseSearchedExpressionInfo{
 		CaseSearchedExpression caseSearchedExpression;
 		List<ColumnReference> columnReferences = new ArrayList<>(  );
 	}

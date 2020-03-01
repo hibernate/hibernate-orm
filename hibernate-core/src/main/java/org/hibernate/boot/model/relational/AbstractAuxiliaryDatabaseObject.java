@@ -59,7 +59,7 @@ public abstract class AbstractAuxiliaryDatabaseObject
 		dialectScopes.add( dialectName );
 	}
 
-	public Set getDialectScopes() {
+	public Set<String> getDialectScopes() {
 		return dialectScopes;
 	}
 

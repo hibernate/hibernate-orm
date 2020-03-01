@@ -881,7 +881,7 @@ public class OracleDialect extends Dialect {
 		if ( pos > -1 ) {
 			final StringBuilder buffer = new StringBuilder( sql.length() + hints.length() + 8 );
 			if ( pos > 0 ) {
-				buffer.append( sql.substring( 0, pos ) );
+				buffer.append( sql, 0, pos );
 			}
 			buffer
 			.append( statementType )

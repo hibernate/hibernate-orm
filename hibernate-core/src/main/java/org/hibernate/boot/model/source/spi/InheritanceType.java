@@ -16,5 +16,5 @@ public enum InheritanceType {
 	NO_INHERITANCE,
 	DISCRIMINATED,
 	JOINED,
-	UNION;
+	UNION
 }

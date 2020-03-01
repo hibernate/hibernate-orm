@@ -52,7 +52,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 			// if they also specified the data source *name*, then lets assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
 			final Object dataSourceConfigValue = configurationValues.get( AvailableSettings.DATASOURCE );
-			if ( dataSourceConfigValue != null && String.class.isInstance( dataSourceConfigValue ) ) {
+			if ( String.class.isInstance( dataSourceConfigValue ) ) {
 				return new DataSourceBasedMultiTenantConnectionProviderImpl();
 			}
 

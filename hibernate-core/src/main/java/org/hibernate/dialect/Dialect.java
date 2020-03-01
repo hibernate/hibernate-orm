@@ -2705,7 +2705,7 @@ public abstract class Dialect implements ConversionContext {
 	 * database; false otherwise.
 	 * @since 3.2
 	 */
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		// todo : pretty sure this is the same as the java.sql.DatabaseMetaData.locatorsUpdateCopy method added in JDBC 4, see HHH-6046
 		return true;
 	}

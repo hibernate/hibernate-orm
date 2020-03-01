@@ -238,7 +238,7 @@ public final class ExecuteWithIdTableHelper {
 			);
 
 			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
-				( (SessionImplementor) executionContext.getSession() ).doWork( idTableCreationWork );
+				executionContext.getSession().doWork( idTableCreationWork );
 			}
 			else {
 				final IsolationDelegate isolationDelegate = executionContext.getSession()
@@ -274,7 +274,7 @@ public final class ExecuteWithIdTableHelper {
 			);
 
 			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
-				( (SessionImplementor) executionContext.getSession() ).doWork( idTableDropWork );
+				executionContext.getSession().doWork( idTableDropWork );
 			}
 			else {
 				final IsolationDelegate isolationDelegate = executionContext.getSession()

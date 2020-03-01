@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Enumeration;
@@ -157,8 +158,6 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		SOFT
 	}
 
-	;
-
 
 	public static enum Option {
 		/**
@@ -167,8 +166,6 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		 */
 		IDENTITY_COMPARISONS
 	}
-
-	;
 
 	/* ---------------- Constants -------------- */
 
@@ -559,7 +556,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			this.keyType = keyType;
 			this.valueType = valueType;
 			this.identityComparisons = identityComparisons;
-			setTable( HashEntry.<K, V>newArray( initialCapacity ) );
+			setTable( HashEntry.newArray( initialCapacity ) );
 		}
 
 		@SuppressWarnings("unchecked")
@@ -885,9 +882,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				lock();
 				try {
 					HashEntry<K, V>[] tab = table;
-					for ( int i = 0; i < tab.length; i++ ) {
-						tab[i] = null;
-					}
+					Arrays.fill( tab, null );
 					++modCount;
 					// replace the reference queue to avoid unnecessary stale cleanups
 					refQueue = new ReferenceQueue<>();

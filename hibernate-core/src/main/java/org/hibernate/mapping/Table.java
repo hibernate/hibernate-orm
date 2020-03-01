@@ -533,7 +533,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
 		String pkname = null;
 		if ( hasPrimaryKey() && identityColumn ) {
-			pkname = ( (Column) getPrimaryKey().getColumnIterator().next() ).getQuotedName( dialect );
+			pkname = getPrimaryKey().getColumnIterator().next().getQuotedName( dialect );
 		}
 
 		Iterator iter = getColumnIterator();

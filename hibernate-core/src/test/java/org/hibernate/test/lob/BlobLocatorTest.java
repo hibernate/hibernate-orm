@@ -67,7 +67,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		// test mutation via setting the new clob data...
-		if ( getDialect().supportsLobValueChangePropogation() ) {
+		if ( getDialect().supportsLobValueChangePropagation() ) {
 			s = openSession();
 			s.beginTransaction();
 			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );

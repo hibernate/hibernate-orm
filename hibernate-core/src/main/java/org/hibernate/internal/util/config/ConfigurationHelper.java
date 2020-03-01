@@ -431,7 +431,7 @@ public final class ConfigurationHelper {
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
 			final Object value = entry.getValue();
-			if ( value != null && String.class.isInstance( value ) ) {
+			if ( String.class.isInstance( value ) ) {
 				final String resolved = resolvePlaceHolder( ( String ) value );
 				if ( !value.equals( resolved ) ) {
 					if ( resolved == null ) {

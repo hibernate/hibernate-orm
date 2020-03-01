@@ -38,7 +38,7 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	}
 
 	public HibernateTypeSourceImpl(String name) {
-		this( name, Collections.<String, String>emptyMap() );
+		this( name, Collections.emptyMap() );
 	}
 
 	public HibernateTypeSourceImpl(String name, Map<String, String> parameters) {

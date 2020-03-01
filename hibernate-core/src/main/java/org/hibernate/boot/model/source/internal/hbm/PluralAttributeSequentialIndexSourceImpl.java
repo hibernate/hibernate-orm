@@ -41,7 +41,7 @@ public class PluralAttributeSequentialIndexSourceImpl
 				null,
 				new RelationalValueSourceHelper.AbstractColumnsAndFormulasSource() {
 					final List<JaxbHbmColumnType> columnElements = jaxbListIndex.getColumn() == null
-							? Collections.<JaxbHbmColumnType>emptyList()
+							? Collections.emptyList()
 							: Collections.singletonList( jaxbListIndex.getColumn() );
 
 					@Override

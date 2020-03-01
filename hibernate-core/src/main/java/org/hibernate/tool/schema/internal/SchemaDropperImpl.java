@@ -87,7 +87,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	public SchemaDropperImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
 		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( smt == null || !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
+		if ( !HibernateSchemaManagementTool.class.isInstance( smt ) ) {
 			smt = new HibernateSchemaManagementTool();
 			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
 		}

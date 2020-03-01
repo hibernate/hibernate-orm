@@ -653,7 +653,7 @@ public class NativeQueryImpl<R>
 			if ( querySpaces == null ) {
 				querySpaces = new HashSet<>();
 			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+			querySpaces.addAll( Arrays.asList( spaces ) );
 		}
 	}
 

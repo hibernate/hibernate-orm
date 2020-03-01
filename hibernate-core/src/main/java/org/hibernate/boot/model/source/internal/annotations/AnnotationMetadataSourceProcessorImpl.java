@@ -180,7 +180,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					@Override
 					public boolean shouldImplicitlyQuoteIdentifiers() {
 						final Object isDelimited = persistenceUnitDefaults.get( "delimited-identifier" );
-						return isDelimited != null && isDelimited == Boolean.TRUE;
+						return isDelimited == Boolean.TRUE;
 					}
 				}
 		);

@@ -240,7 +240,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			throws HibernateException, SQLException {
 		return resolveAny(
 				(String) discriminatorType.nullSafeGet( rs, names[0], session, owner ),
-				(Serializable) identifierType.nullSafeGet( rs, names[1], session, owner ),
+				identifierType.nullSafeGet( rs, names[1], session, owner ),
 				session
 		);
 	}

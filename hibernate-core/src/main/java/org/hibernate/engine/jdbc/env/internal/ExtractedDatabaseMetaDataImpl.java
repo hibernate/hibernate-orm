@@ -71,7 +71,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 		this.extraKeywords = extraKeywords != null
 				? extraKeywords
-				: Collections.<String>emptySet();
+				: Collections.emptySet();
 		this.typeInfoSet = typeInfoSet != null
 				? typeInfoSet
 				: new LinkedHashSet<>();

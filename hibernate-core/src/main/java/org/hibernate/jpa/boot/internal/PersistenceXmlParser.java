@@ -398,7 +398,7 @@ public class PersistenceXmlParser {
 		}
 
 		NodeList children = element.getChildNodes();
-		StringBuilder result = new StringBuilder("");
+		StringBuilder result = new StringBuilder();
 		for ( int i = 0; i < children.getLength() ; i++ ) {
 			if ( children.item( i ).getNodeType() == Node.TEXT_NODE ||
 					children.item( i ).getNodeType() == Node.CDATA_SECTION_NODE ) {

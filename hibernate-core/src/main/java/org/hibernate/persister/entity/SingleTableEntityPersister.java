@@ -300,7 +300,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				throw new MappingException( "discriminator mapping required for single table polymorphic persistence" );
 			}
 			forceDiscriminator = persistentClass.isForceDiscriminator();
-			Selectable selectable = (Selectable) discrimValue.getColumnIterator().next();
+			Selectable selectable = discrimValue.getColumnIterator().next();
 			if ( discrimValue.hasFormula() ) {
 				Formula formula = (Formula) selectable;
 				discriminatorFormula = formula.getFormula();

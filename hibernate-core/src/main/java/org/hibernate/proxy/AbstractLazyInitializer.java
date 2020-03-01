@@ -190,8 +190,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - no Session" );
 			}
 			try {
-				SessionFactoryImplementor sf = (SessionFactoryImplementor)
-						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
+				SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 				SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setFlushMode( FlushMode.MANUAL );

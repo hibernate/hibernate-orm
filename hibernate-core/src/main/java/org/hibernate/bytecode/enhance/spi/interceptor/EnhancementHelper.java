@@ -204,8 +204,7 @@ public class EnhancementHelper {
 			throwLazyInitializationException( Cause.NO_SF_UUID, entityName, attributeName );
 		}
 
-		final SessionFactoryImplementor sf = (SessionFactoryImplementor)
-				SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
+		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );

@@ -370,7 +370,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				if ( sessionFactoryName == null && sessionFactoryUuid == null ) {
 					throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
 				}
-				sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+				sessionFactory = SessionFactoryRegistry.INSTANCE.findSessionFactory(
 						sessionFactoryUuid,
 						sessionFactoryName
 				);
@@ -420,7 +420,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private Object readResolve() throws InvalidObjectException {
 			if ( sessionFactory == null ) {
 				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
-					sessionFactory = (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE.findSessionFactory(
+					sessionFactory = SessionFactoryRegistry.INSTANCE.findSessionFactory(
 							sessionFactoryUuid,
 							sessionFactoryName
 					);

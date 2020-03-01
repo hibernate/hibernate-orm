@@ -32,7 +32,7 @@ public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 
 		if ( getPluralAttribute() instanceof ListPersistentAttribute ) {
 			//noinspection unchecked
-			this.indexPathSource = ( (ListPersistentAttribute) getPluralAttribute() ).getIndexPathSource();
+			this.indexPathSource = getPluralAttribute().getIndexPathSource();
 		}
 		else if ( getPluralAttribute() instanceof MapPersistentAttribute ) {
 			//noinspection unchecked

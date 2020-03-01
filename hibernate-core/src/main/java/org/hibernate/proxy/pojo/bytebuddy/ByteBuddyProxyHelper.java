@@ -55,7 +55,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
 				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
-				.implement( (Type[]) interfaces )
+				.implement( interfaces )
 				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
 						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
 				.method( byteBuddyState.getProxyDefinitionHelpers().getHibernateGeneratedMethodFilter() )

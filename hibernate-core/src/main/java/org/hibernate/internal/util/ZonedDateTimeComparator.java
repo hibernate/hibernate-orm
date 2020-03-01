@@ -14,7 +14,7 @@ import java.util.Comparator;
  * @author Andrea Boriero
  */
 public class ZonedDateTimeComparator implements Comparator<ZonedDateTime>, Serializable {
-	public static final Comparator INSTANCE = new ZonedDateTimeComparator();
+	public static final Comparator<ZonedDateTime> INSTANCE = new ZonedDateTimeComparator();
 
 	public int compare(ZonedDateTime one, ZonedDateTime another) {
 		return one.toInstant().compareTo( another.toInstant() );

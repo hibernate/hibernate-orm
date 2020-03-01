@@ -438,7 +438,7 @@ public abstract class CollectionType extends AbstractType implements Association
 				);
 			}
 
-			return (Serializable) id;
+			return id;
 		}
 	}
 

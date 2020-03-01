@@ -118,7 +118,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 					final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
-					event.setResult( source.load( proxyInterceptor.getEntityName(), (Serializable) proxyInterceptor.getIdentifier() ) );
+					event.setResult( source.load( proxyInterceptor.getEntityName(), proxyInterceptor.getIdentifier() ) );
 					//EARLY EXIT!
 					return;
 				}

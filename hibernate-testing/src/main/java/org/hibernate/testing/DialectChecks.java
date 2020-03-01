@@ -163,9 +163,9 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportsLobValueChangePropogation implements DialectCheck {
+	public static class SupportsLobValueChangePropagation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLobValueChangePropogation();
+			return dialect.supportsLobValueChangePropagation();
 		}
 	}
 

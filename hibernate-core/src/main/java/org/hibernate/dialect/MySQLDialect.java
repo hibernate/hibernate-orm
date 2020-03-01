@@ -638,7 +638,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		// note: at least my local MySQL 5.1 install shows this not working...
 		return false;
 	}

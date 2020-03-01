@@ -76,7 +76,7 @@ public class AttributeNodeImpl<J>
 			return Collections.emptyMap();
 		}
 		else {
-			return (Map) subGraphMap;
+			return subGraphMap;
 		}
 	}
 

@@ -38,6 +38,6 @@ public class CurrencyType
 	}
 
 	public String objectToSQLString(Currency value, Dialect dialect) throws Exception {
-		return "\'" + toString(  value ) + "\'";
+		return "'" + toString(  value ) + "'";
 	}
 }

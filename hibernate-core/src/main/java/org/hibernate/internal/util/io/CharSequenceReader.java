@@ -90,10 +90,10 @@ public class CharSequenceReader extends Reader {
 			return -1L;
 		}
 		else {
-			int dest = (int)Math.min((long)this.charSequence.length(), (long)this.position + n);
+			int dest = (int)Math.min(this.charSequence.length(), (long)this.position + n);
 			int count = dest - this.position;
 			this.position = dest;
-			return (long)count;
+			return count;
 		}
 	}
 

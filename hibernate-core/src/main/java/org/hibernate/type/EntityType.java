@@ -374,7 +374,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
-				xid = (Serializable) x;
+				xid = x;
 			}
 		}
 
@@ -388,7 +388,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
-				yid = (Serializable) y;
+				yid = y;
 			}
 		}
 

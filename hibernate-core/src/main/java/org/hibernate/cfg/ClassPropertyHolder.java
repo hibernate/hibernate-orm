@@ -18,6 +18,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -263,7 +264,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	 */
 	private Map<String, Join> getJoinsPerRealTableName() {
 		if ( joinsPerRealTableName == null ) {
-			joinsPerRealTableName = new HashMap<>( joins.size() );
+			joinsPerRealTableName = CollectionHelper.mapOfSize( joins.size() );
 			for (Join join : joins.values()) {
 				joinsPerRealTableName.put( join.getTable().getName(), join );
 			}

@@ -37,6 +37,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -528,7 +529,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 
 			discriminatorValuesByTableName = new LinkedHashMap<>( subclassSpan + 1 );
-			subclassNameByTableName = new HashMap<>( subclassSpan + 1);
+			subclassNameByTableName = CollectionHelper.mapOfSize( subclassSpan + 1);
 			// We need to convert the `discriminatorSQLString` (which is a String read from boot-mapping) into
 			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
 			try {

@@ -18,6 +18,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -99,7 +100,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 
 		this.entityDescriptor = (EntityMappingType) updatingModelPart;
 
-		this.assignmentsByTable = new HashMap<>( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		this.assignmentsByTable = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
 		jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),

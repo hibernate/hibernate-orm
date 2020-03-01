@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -34,7 +35,7 @@ public class StandardSetSemantics extends AbstractSetSemantics<Set<?>> {
 	public Set<?> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return anticipatedSize < 1 ? new HashSet<>() : new HashSet<>( anticipatedSize );
+		return anticipatedSize < 1 ? new HashSet<>() : CollectionHelper.setOfSize( anticipatedSize );
 	}
 
 	@Override

@@ -209,7 +209,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		final int setSize = CollectionHelper.determineProperSizing(
 				jpaEntityTypeMap.size() + jpaMappedSuperclassTypeMap.size() + jpaEmbeddableDescriptorMap.size()
 		);
-		final Set<ManagedType<?>> managedTypes = new HashSet<>( setSize );
+		final Set<ManagedType<?>> managedTypes = CollectionHelper.setOfSize( setSize );
 		managedTypes.addAll( jpaEntityTypeMap.values() );
 		managedTypes.addAll( jpaMappedSuperclassTypeMap.values() );
 		managedTypes.addAll( jpaEmbeddableDescriptorMap.values() );

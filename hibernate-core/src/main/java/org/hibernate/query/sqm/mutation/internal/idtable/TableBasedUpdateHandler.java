@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
@@ -142,7 +143,7 @@ public class TableBasedUpdateHandler
 		// cross-reference the TableReference by alias.  The TableGroup already
 		// cross-references it by name, bu the ColumnReference only has the alias
 
-		final Map<String, TableReference> tableReferenceByAlias = new HashMap<>( updatingTableGroup.getTableReferenceJoins().size() + 1 );
+		final Map<String, TableReference> tableReferenceByAlias = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 		collectTableReference( updatingTableGroup.getPrimaryTableReference(), tableReferenceByAlias::put );
 		for ( int i = 0; i < updatingTableGroup.getTableReferenceJoins().size(); i++ ) {
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );

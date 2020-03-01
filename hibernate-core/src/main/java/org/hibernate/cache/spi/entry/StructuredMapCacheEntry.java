@@ -7,10 +7,10 @@
 package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Structured CacheEntry format for persistent Maps.
@@ -28,7 +28,7 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	public Object structure(Object item) {
 		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
 		final Serializable[] state = entry.getState();
-		final Map map = new HashMap( state.length );
+		final Map map = CollectionHelper.mapOfSize( state.length );
 		int i = 0;
 		while ( i < state.length ) {
 			map.put( state[i++], state[i++] );

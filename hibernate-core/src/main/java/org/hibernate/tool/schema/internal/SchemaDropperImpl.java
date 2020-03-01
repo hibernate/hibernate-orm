@@ -35,6 +35,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -200,7 +201,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 		}
 
-		final Set<String> exportIdentifiers = new HashSet<>( 50 );
+		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
 		// NOTE : init commands are irrelevant for dropping...
 

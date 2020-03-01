@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
@@ -48,7 +49,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	protected AbstractGraph(boolean mutable, GraphImplementor<J> original) {
 		this( original.getGraphedType(), mutable, original.jpaMetamodel() );
 
-		this.attrNodeMap = CollectionHelper.concurrentMap( original.getAttributeNodeList().size() );
+		this.attrNodeMap = new ConcurrentHashMap<>( original.getAttributeNodeList().size() );
 		original.visitAttributeNodes(
 				node -> attrNodeMap.put(
 						node.getAttributeDescriptor(),

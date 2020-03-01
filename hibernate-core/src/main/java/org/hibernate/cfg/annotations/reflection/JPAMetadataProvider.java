@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.ClassLoaderAccessDelegateImpl;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.dom4j.Element;
 
@@ -53,7 +54,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 	private final boolean xmlMappingEnabled;
 
 	private Map<Object, Object> defaults;
-	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<>(100);
+	private Map<AnnotatedElement, AnnotationReader> cache = CollectionHelper.mapOfSize( 100 );
 
 	/**
 	 * @deprecated Use {@link JPAMetadataProvider#JPAMetadataProvider(BootstrapContext)} instead.

@@ -17,6 +17,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -99,7 +100,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap clonedSet = new HashMap( set.size() );
+		final HashMap clonedSet = CollectionHelper.mapOfSize( set.size() );
 		for ( Object aSet : set ) {
 			final Object copied = persister.getElementType().deepCopy( aSet, persister.getFactory() );
 			clonedSet.put( copied, copied );

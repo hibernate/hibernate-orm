@@ -334,7 +334,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = new HashSet<>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
+			querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}

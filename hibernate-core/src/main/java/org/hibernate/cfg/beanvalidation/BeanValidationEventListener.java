@@ -28,6 +28,7 @@ import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -114,7 +115,7 @@ public class BeanValidationEventListener
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
 			if ( constraintViolations.size() > 0 ) {
-				Set<ConstraintViolation<?>> propagatedViolations = new HashSet<>( constraintViolations.size() );
+				Set<ConstraintViolation<?>> propagatedViolations = CollectionHelper.setOfSize( constraintViolations.size() );
 				Set<String> classNames = new HashSet<>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
 					LOG.trace( violation );

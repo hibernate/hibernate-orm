@@ -34,6 +34,7 @@ import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
@@ -216,7 +217,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		final Database database = metadata.getDatabase();
 
-		final Set<String> exportIdentifiers = new HashSet<>( 50 );
+		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {

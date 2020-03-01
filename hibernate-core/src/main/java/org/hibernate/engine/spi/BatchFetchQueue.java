@@ -18,6 +18,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -104,7 +105,7 @@ public class BatchFetchQueue {
 	 */
 	public void addSubselect(EntityKey key, SubselectFetch subquery) {
 		if ( subselectsByEntityKey == null ) {
-			subselectsByEntityKey = new HashMap<>( 12 );
+			subselectsByEntityKey = CollectionHelper.mapOfSize( 12 );
 		}
 		subselectsByEntityKey.put( key, subquery );
 	}
@@ -136,7 +137,7 @@ public class BatchFetchQueue {
 	public void addBatchLoadableEntityKey(EntityKey key) {
 		if ( key.isBatchLoadable() ) {
 			if ( batchLoadableEntityKeys == null ) {
-				batchLoadableEntityKeys = new HashMap<>( 12 );
+				batchLoadableEntityKeys = CollectionHelper.mapOfSize( 12 );
 			}
 			final LinkedHashSet<EntityKey> keysForEntity = batchLoadableEntityKeys.computeIfAbsent(
 					key.getEntityName(),
@@ -255,7 +256,7 @@ public class BatchFetchQueue {
 		final CollectionPersister persister = ce.getLoadedPersister();
 
 		if ( batchLoadableCollections == null ) {
-			batchLoadableCollections = new HashMap<>( 12 );
+			batchLoadableCollections = CollectionHelper.mapOfSize( 12 );
 		}
 
 		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.computeIfAbsent(

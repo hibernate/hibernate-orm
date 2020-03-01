@@ -57,8 +57,21 @@ public final class CollectionHelper {
 	 *
 	 * @return The sized map.
 	 */
-	public static <K, V> Map<K, V> mapOfSize(int size) {
+	public static <K, V> HashMap<K, V> mapOfSize(int size) {
 		return new HashMap<>( determineProperSizing( size ), LOAD_FACTOR );
+	}
+
+	/**
+	 * Build a properly sized set, especially handling load size and load factor to prevent immediate resizing.
+	 * <p/>
+	 * Especially helpful for copy set contents.
+	 *
+	 * @param size The size to make the set.
+	 *
+	 * @return The sized set.
+	 */
+	public static <K> HashSet<K> setOfSize(int size) {
+		return new HashSet<>( determineProperSizing( size ), LOAD_FACTOR );
 	}
 
 	/**
@@ -175,8 +188,7 @@ public final class CollectionHelper {
 	 * @return The created map.
 	 */
 	public static <K, V> ConcurrentHashMap<K, V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
-		final int size = expectedNumberOfElements + 1 + (int) ( expectedNumberOfElements * loadFactor );
-		return new ConcurrentHashMap<>( size, loadFactor );
+		return new ConcurrentHashMap<>( expectedNumberOfElements, loadFactor );
 	}
 
 	public static <T> ArrayList<T> arrayList(int expectedNumberOfElements) {
@@ -189,7 +201,7 @@ public final class CollectionHelper {
 		}
 
 		final int size = source.size();
-		final Set<T> copy = new HashSet<>( size + 1 );
+		final Set<T> copy = CollectionHelper.setOfSize( size + 1 );
 		copy.addAll( source );
 		return copy;
 	}

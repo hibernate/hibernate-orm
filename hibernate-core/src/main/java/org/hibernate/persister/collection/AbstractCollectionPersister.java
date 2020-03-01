@@ -753,7 +753,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	// lazily initialize instance field via 'double-checked locking'
-	// see https://en.wikipedia.org/wiki/Double-checked_locking
+	// see https://en.wikipedia.org/wiki/Double-checked_locking on why 'volatile' and local copy is used
 	protected CollectionLoader getStandardCollectionLoader() {
 		CollectionLoader localCopy = standardCollectionLoader;
 		if ( localCopy == null ) {

@@ -634,7 +634,7 @@ public class ActionQueue {
 	}
 
 	private static String[] convertTimestampSpaces(Set spaces) {
-		return (String[]) spaces.toArray( new String[ spaces.size() ] );
+		return (String[]) spaces.toArray( new String[ 0 ] );
 	}
 
 	/**
@@ -993,7 +993,7 @@ public class ActionQueue {
 
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				session.getFactory().getCache().getTimestampsCache().invalidate(
-						querySpacesToInvalidate.toArray( new String[querySpacesToInvalidate.size()] ),
+						querySpacesToInvalidate.toArray( new String[ 0 ] ),
 						session
 				);
 			}

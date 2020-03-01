@@ -66,7 +66,7 @@ public class ByteBuddyProxyFactory implements ProxyFactory, Serializable {
 			return ArrayHelper.EMPTY_CLASS_ARRAY;
 		}
 
-		return interfaces.toArray( new Class[interfaces.size()] );
+		return interfaces.toArray( new Class[ 0 ] );
 	}
 
 	@Override

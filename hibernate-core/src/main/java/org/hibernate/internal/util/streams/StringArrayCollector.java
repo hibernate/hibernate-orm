@@ -21,11 +21,11 @@ import java.util.stream.Collector;
  *
  * @author Steve Ebersole
  */
-public class StingArrayCollector implements Collector<String, List<String>, String[]> {
+public class StringArrayCollector implements Collector<String, List<String>, String[]> {
 	/**
 	 * Singleton access
 	 */
-	public static final StingArrayCollector INSTANCE = new StingArrayCollector();
+	public static final StringArrayCollector INSTANCE = new StringArrayCollector();
 
 	@Override
 	public Supplier<List<String>> supplier() {
@@ -47,7 +47,7 @@ public class StingArrayCollector implements Collector<String, List<String>, Stri
 
 	@Override
 	public Function<List<String>, String[]> finisher() {
-		return strings -> strings.toArray( new String[strings.size()] );
+		return strings -> strings.toArray( new String[ 0 ] );
 	}
 
 	@Override

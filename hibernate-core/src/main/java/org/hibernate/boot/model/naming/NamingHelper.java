@@ -54,7 +54,7 @@ public class NamingHelper {
 			columnNamesArray = new Identifier[0];
 		}
 		else {
-			columnNamesArray = columnNames.toArray( new Identifier[ columnNames.size() ] );
+			columnNamesArray = columnNames.toArray( new Identifier[ 0 ] );
 		}
 
 		return generateHashedFkName(

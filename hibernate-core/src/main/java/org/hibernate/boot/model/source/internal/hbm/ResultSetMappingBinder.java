@@ -402,7 +402,7 @@ public abstract class ResultSetMappingBinder {
 			Map.Entry entry = (Map.Entry) o;
 			if ( entry.getValue() instanceof ArrayList ) {
 				ArrayList list = (ArrayList) entry.getValue();
-				entry.setValue( list.toArray( new String[list.size()] ) );
+				entry.setValue( list.toArray( new String[ 0 ] ) );
 			}
 		}
 		return results.isEmpty() ? Collections.EMPTY_MAP : results;

@@ -773,7 +773,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 							)
 					);
 				}
-				mapping[index] = classNames.toArray( new String[ classNames.size() ] );
+				mapping[index] = classNames.toArray( new String[ 0 ] );
 				break;
 			}
 		}

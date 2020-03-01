@@ -27,7 +27,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 
 	@SuppressWarnings("unchecked")
 	public JoinedIterator(List<Iterator<T>> wrappedIterators) {
-		this( wrappedIterators.toArray( new Iterator[ wrappedIterators.size() ]) );
+		this( wrappedIterators.toArray( new Iterator[ 0 ]) );
 	}
 
 	public JoinedIterator(Iterator<T>... iteratorsToWrap) {

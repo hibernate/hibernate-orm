@@ -91,7 +91,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		}
 		extractionContext.getJdbcEnvironment().getDialect().augmentRecognizedTableTypes( tableTypesList );
 
-		this.tableTypes = tableTypesList.toArray( new String[ tableTypesList.size() ] );
+		this.tableTypes = tableTypesList.toArray( new String[ 0 ] );
 	}
 
 	protected IdentifierHelper identifierHelper() {

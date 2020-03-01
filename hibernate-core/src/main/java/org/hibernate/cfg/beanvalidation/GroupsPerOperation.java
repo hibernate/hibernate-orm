@@ -83,7 +83,7 @@ public class GroupsPerOperation {
 					}
 				}
 			}
-			return groupsList.toArray( new Class<?>[groupsList.size()] );
+			return groupsList.toArray( new Class<?>[ 0 ] );
 		}
 
 		//null is bad and excluded by instanceof => exception is raised

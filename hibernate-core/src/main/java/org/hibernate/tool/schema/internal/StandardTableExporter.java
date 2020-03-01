@@ -153,7 +153,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		applyInitCommands( table, sqlStrings );
 
-		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
+		return sqlStrings.toArray( new String[ 0 ] );
 	}
 
 	protected void applyComments(Table table, QualifiedName tableName, List<String> sqlStrings) {

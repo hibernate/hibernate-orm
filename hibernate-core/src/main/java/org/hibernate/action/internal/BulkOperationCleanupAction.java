@@ -91,7 +91,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
 

@@ -75,7 +75,7 @@ public final class ArrayHelper {
 	}
 
 	public static String[] toStringArray(Collection coll) {
-		return (String[]) coll.toArray( new String[coll.size()] );
+		return (String[]) coll.toArray( new String[ 0 ] );
 	}
 
 	public static String[][] to2DStringArray(Collection coll) {
@@ -87,7 +87,7 @@ public final class ArrayHelper {
 	}
 
 	public static Type[] toTypeArray(Collection coll) {
-		return (Type[]) coll.toArray( new Type[coll.size()] );
+		return (Type[]) coll.toArray( new Type[ 0 ] );
 	}
 
 	public static int[] toIntArray(Collection coll) {

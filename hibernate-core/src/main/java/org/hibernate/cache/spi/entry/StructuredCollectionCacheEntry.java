@@ -32,7 +32,7 @@ public class StructuredCollectionCacheEntry implements CacheEntryStructure {
 	@Override
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
 		final List list = (List) structured;
-		return new CollectionCacheEntry( list.toArray( new Serializable[list.size()] ) );
+		return new CollectionCacheEntry( list.toArray( new Serializable[ 0 ] ) );
 	}
 
 	private StructuredCollectionCacheEntry() {

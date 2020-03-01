@@ -10,8 +10,8 @@ package org.hibernate.internal.util.streams;
  * @author Steve Ebersole
  */
 public class StreamUtils {
-	public static StingArrayCollector toStringArray() {
-		return StingArrayCollector.INSTANCE;
+	public static StringArrayCollector toStringArray() {
+		return StringArrayCollector.INSTANCE;
 	}
 
 	public static <T> GenericArrayCollector<T> toArray(Class<T> collectedType) {

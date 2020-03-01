@@ -19,7 +19,7 @@ public class NativeSQLQueryConstructorReturn implements NativeSQLQueryReturn {
 
 	public NativeSQLQueryConstructorReturn(Class targetClass, List<NativeSQLQueryScalarReturn> columnReturns) {
 		this.targetClass = targetClass;
-		this.columnReturns = columnReturns.toArray( new NativeSQLQueryScalarReturn[ columnReturns.size() ] );
+		this.columnReturns = columnReturns.toArray( new NativeSQLQueryScalarReturn[ 0 ] );
 	}
 
 	public Class getTargetClass() {

@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.streams.StingArrayCollector;
+import org.hibernate.internal.util.streams.StringArrayCollector;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -141,7 +141,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqm.getQuerySpec().getSelectClause().getSelections()
 						.stream()
 						.map( SqmSelection::getAlias )
-						.collect( StingArrayCollector.INSTANCE ),
+						.collect( StringArrayCollector.INSTANCE ),
 				queryOptions.getTupleTransformer()
 		);
 	}

@@ -36,7 +36,7 @@ public class SingleLineSqlCommandExtractor implements ImportSqlCommandExtractor 
 				}
 				statementList.add( trimmedSql );
 			}
-			return statementList.toArray( new String[statementList.size()] );
+			return statementList.toArray( new String[ 0 ] );
 		}
 		catch ( IOException e ) {
 			throw new ImportScriptException( "Error during import script parsing.", e );

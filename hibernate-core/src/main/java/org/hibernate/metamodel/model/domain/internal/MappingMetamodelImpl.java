@@ -689,7 +689,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			}
 		}
 
-		return results.toArray( new String[results.size()] );
+		return results.toArray( new String[ 0 ] );
 	}
 
 	@Override

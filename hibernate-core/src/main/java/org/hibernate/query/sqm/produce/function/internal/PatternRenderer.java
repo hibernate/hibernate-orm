@@ -97,7 +97,7 @@ public class PatternRenderer {
 		varargParam = vararg;
 		maxParamIndex = max;
 
-		chunks = chunkList.toArray( new String[chunkList.size()] );
+		chunks = chunkList.toArray( new String[ 0 ] );
 		paramIndexes = new int[paramList.size()];
 		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );

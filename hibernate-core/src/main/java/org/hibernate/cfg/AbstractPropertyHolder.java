@@ -434,7 +434,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				for (Map.Entry<String, List<Column>> entry : columnOverrideList.entrySet()) {
 					columnOverride.put(
 						entry.getKey(),
-						entry.getValue().toArray( new Column[entry.getValue().size()] )
+						entry.getValue().toArray( new Column[ 0 ] )
 					);
 				}
 			}

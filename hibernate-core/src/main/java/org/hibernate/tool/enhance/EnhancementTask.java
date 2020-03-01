@@ -184,7 +184,7 @@ public class EnhancementTask extends Task {
 			}
 		}
 
-		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
+		return new URLClassLoader( urls.toArray( new URL[ 0 ] ), Enhancer.class.getClassLoader() );
 	}
 
 	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) throws BuildException {

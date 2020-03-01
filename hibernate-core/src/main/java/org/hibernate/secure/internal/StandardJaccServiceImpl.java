@@ -162,7 +162,7 @@ public class StandardJaccServiceImpl implements JaccService, Configurable {
 		}
 
 		final Set<Principal> principalsSet = caller.getPrincipals();
-		return principalsSet.toArray( new Principal[ principalsSet.size()] );
+		return principalsSet.toArray( new Principal[ 0 ] );
 	}
 
 	private ContextSubjectAccess getContextSubjectAccess() {

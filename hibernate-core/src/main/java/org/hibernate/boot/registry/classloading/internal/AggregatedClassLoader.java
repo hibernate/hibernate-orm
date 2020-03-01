@@ -18,7 +18,7 @@ public class AggregatedClassLoader extends ClassLoader {
 
 	public AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet, TcclLookupPrecedence precedence) {
 		super( null );
-		individualClassLoaders = orderedClassLoaderSet.toArray( new ClassLoader[orderedClassLoaderSet.size()] );
+		individualClassLoaders = orderedClassLoaderSet.toArray( new ClassLoader[ 0 ] );
 		tcclLookupPrecedence = precedence;
 	}
 

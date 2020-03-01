@@ -381,7 +381,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, getEntityListeners( tree, defaults ) );
 				addIfNotNull( annotationList, getConverts( tree, defaults ) );
 
-				this.annotations = annotationList.toArray( new Annotation[annotationList.size()] );
+				this.annotations = annotationList.toArray( new Annotation[ 0 ] );
 				for ( Annotation ann : this.annotations ) {
 					annotationsMap.put( ann.annotationType(), ann );
 				}
@@ -426,7 +426,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 				processEventAnnotations( annotationList, defaults );
 				//FIXME use annotationsMap rather than annotationList this will be faster since the annotation type is usually known at put() time
-				this.annotations = annotationList.toArray( new Annotation[annotationList.size()] );
+				this.annotations = annotationList.toArray( new Annotation[ 0 ] );
 				for ( Annotation ann : this.annotations ) {
 					annotationsMap.put( ann.annotationType(), ann );
 				}
@@ -474,7 +474,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 		if ( !convertAnnotationsMap.isEmpty() ) {
 			final AnnotationDescriptor groupingDescriptor = new AnnotationDescriptor( Converts.class );
-			groupingDescriptor.setValue( "value", convertAnnotationsMap.values().toArray( new Convert[convertAnnotationsMap.size()]) );
+			groupingDescriptor.setValue( "value", convertAnnotationsMap.values().toArray( new Convert[ 0 ]) );
 			return AnnotationFactory.create( groupingDescriptor );
 		}
 
@@ -499,7 +499,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 		if ( !convertAnnotationsMap.isEmpty() ) {
 			final AnnotationDescriptor groupingDescriptor = new AnnotationDescriptor( Converts.class );
-			groupingDescriptor.setValue( "value", convertAnnotationsMap.values().toArray( new Convert[convertAnnotationsMap.size()]) );
+			groupingDescriptor.setValue( "value", convertAnnotationsMap.values().toArray( new Convert[ 0 ]) );
 			return AnnotationFactory.create( groupingDescriptor );
 		}
 
@@ -739,7 +739,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 			}
 			AnnotationDescriptor ad = new AnnotationDescriptor( EntityListeners.class );
-			ad.setValue( "value", entityListenerClasses.toArray( new Class[entityListenerClasses.size()] ) );
+			ad.setValue( "value", entityListenerClasses.toArray( new Class[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else if ( defaults.canUseJavaAnnotations() ) {
@@ -1038,7 +1038,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				joinColumns.add( AnnotationFactory.create( column ) );
 			}
 		}
-		return joinColumns.toArray( new MapKeyJoinColumn[joinColumns.size()] );
+		return joinColumns.toArray( new MapKeyJoinColumn[ 0 ] );
 	}
 
 	private AttributeOverrides getMapKeyAttributeOverrides(Element tree, XMLContext.Default defaults) {
@@ -1318,7 +1318,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			cascades.add( CascadeType.PERSIST );
 		}
 		if ( cascades.size() > 0 ) {
-			ad.setValue( "cascade", cascades.toArray( new CascadeType[cascades.size()] ) );
+			ad.setValue( "cascade", cascades.toArray( new CascadeType[ 0 ] ) );
 		}
 	}
 
@@ -1606,7 +1606,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( columns.size() > 0 ) {
 			AnnotationDescriptor columnsDescr = new AnnotationDescriptor( Columns.class );
-			columnsDescr.setValue( "columns", columns.toArray( new Column[columns.size()] ) );
+			columnsDescr.setValue( "columns", columns.toArray( new Column[ 0 ] ) );
 			return AnnotationFactory.create( columnsDescr );
 		}
 		else {
@@ -1708,7 +1708,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( attributes.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( AssociationOverrides.class );
-			ad.setValue( "value", attributes.toArray( new AssociationOverride[attributes.size()] ) );
+			ad.setValue( "value", attributes.toArray( new AssociationOverride[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -1753,7 +1753,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				joinColumns.add( AnnotationFactory.create( column ) );
 			}
 		}
-		return joinColumns.toArray( new JoinColumn[joinColumns.size()] );
+		return joinColumns.toArray( new JoinColumn[ 0 ] );
 	}
 
 	private void addAssociationOverrideIfNeeded(AssociationOverride annotation, List<AssociationOverride> overrides) {
@@ -1802,7 +1802,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( attributes.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( AttributeOverrides.class );
-			ad.setValue( "value", attributes.toArray( new AttributeOverride[attributes.size()] ) );
+			ad.setValue( "value", attributes.toArray( new AttributeOverride[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -1937,7 +1937,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( results.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( SqlResultSetMappings.class );
-			ad.setValue( "value", results.toArray( new SqlResultSetMapping[results.size()] ) );
+			ad.setValue( "value", results.toArray( new SqlResultSetMapping[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -1996,7 +1996,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			annSubgraphNodes.add( AnnotationFactory.create( annSubgraphNode ) );
 		}
 
-		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
+		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[ 0 ] ) );
 	}
 
 	private static void bindNamedAttributeNodes(Element subElement, AnnotationDescriptor ann) {
@@ -2009,7 +2009,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "key-subgraph", false );
 			annNamedAttributeNodes.add( AnnotationFactory.create( annNamedAttributeNode ) );
 		}
-		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[annNamedAttributeNodes.size()] ) );
+		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[ 0 ] ) );
 	}
 
 	public static List<NamedStoredProcedureQuery> buildNamedStoreProcedureQueries(
@@ -2056,7 +2056,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 			ann.setValue(
 					"parameters",
-					storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
+					storedProcedureParameters.toArray( new StoredProcedureParameter[ 0 ] )
 			);
 
 			elements = subElement.elements( "result-class" );
@@ -2074,7 +2074,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				}
 				returnClasses.add( clazz );
 			}
-			ann.setValue( "resultClasses", returnClasses.toArray( new Class[returnClasses.size()] ) );
+			ann.setValue( "resultClasses", returnClasses.toArray( new Class[ 0 ] ) );
 
 
 			elements = subElement.elements( "result-set-mapping" );
@@ -2082,7 +2082,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			for ( Element resultSetMappingElement : elements ) {
 				resultSetMappings.add( resultSetMappingElement.getTextTrim() );
 			}
-			ann.setValue( "resultSetMappings", resultSetMappings.toArray( new String[resultSetMappings.size()] ) );
+			ann.setValue( "resultSetMappings", resultSetMappings.toArray( new String[ 0 ] ) );
 			elements = subElement.elements( "hint" );
 			buildQueryHints( elements, ann );
 			namedStoredProcedureQueries.add( AnnotationFactory.create( ann ) );
@@ -2163,19 +2163,19 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			if ( entityResultAnnotations != null && !entityResultAnnotations.isEmpty() ) {
 				resultSetMappingAnnotation.setValue(
 						"entities",
-						entityResultAnnotations.toArray( new EntityResult[entityResultAnnotations.size()] )
+						entityResultAnnotations.toArray( new EntityResult[ 0 ] )
 				);
 			}
 			if ( columnResultAnnotations != null && !columnResultAnnotations.isEmpty() ) {
 				resultSetMappingAnnotation.setValue(
 						"columns",
-						columnResultAnnotations.toArray( new ColumnResult[columnResultAnnotations.size()] )
+						columnResultAnnotations.toArray( new ColumnResult[ 0 ] )
 				);
 			}
 			if ( constructorResultAnnotations != null && !constructorResultAnnotations.isEmpty() ) {
 				resultSetMappingAnnotation.setValue(
 						"classes",
-						constructorResultAnnotations.toArray( new ConstructorResult[constructorResultAnnotations.size()] )
+						constructorResultAnnotations.toArray( new ConstructorResult[ 0 ] )
 				);
 			}
 
@@ -2209,7 +2209,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			fieldResultAnnotations.add( AnnotationFactory.create( fieldResultDescriptor ) );
 		}
 		entityResultDescriptor.setValue(
-				"fields", fieldResultAnnotations.toArray( new FieldResult[fieldResultAnnotations.size()] )
+				"fields", fieldResultAnnotations.toArray( new FieldResult[ 0 ] )
 		);
 		return AnnotationFactory.create( entityResultDescriptor );
 	}
@@ -2263,7 +2263,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		constructorResultDescriptor.setValue(
 				"columns",
-				columnResultAnnotations.toArray( new ColumnResult[ columnResultAnnotations.size() ] )
+				columnResultAnnotations.toArray( new ColumnResult[ 0 ] )
 		);
 
 		return AnnotationFactory.create( constructorResultDescriptor );
@@ -2300,7 +2300,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( queries.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( NamedQueries.class );
-			ad.setValue( "value", queries.toArray( new NamedQuery[queries.size()] ) );
+			ad.setValue( "value", queries.toArray( new NamedQuery[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -2338,7 +2338,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( queries.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( NamedEntityGraphs.class );
-			ad.setValue( "value", queries.toArray( new NamedEntityGraph[queries.size()] ) );
+			ad.setValue( "value", queries.toArray( new NamedEntityGraph[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -2377,7 +2377,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( queries.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( NamedStoredProcedureQueries.class );
-			ad.setValue( "value", queries.toArray( new NamedStoredProcedureQuery[queries.size()] ) );
+			ad.setValue( "value", queries.toArray( new NamedStoredProcedureQuery[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -2418,7 +2418,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( queries.size() > 0 ) {
 			AnnotationDescriptor ad = new AnnotationDescriptor( NamedNativeQueries.class );
-			ad.setValue( "value", queries.toArray( new NamedNativeQuery[queries.size()] ) );
+			ad.setValue( "value", queries.toArray( new NamedNativeQuery[ 0 ] ) );
 			return AnnotationFactory.create( ad );
 		}
 		else {
@@ -2458,7 +2458,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			hintDescriptor.setValue( "value", value );
 			queryHints.add( AnnotationFactory.create( hintDescriptor ) );
 		}
-		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+		ann.setValue( "hints", queryHints.toArray( new QueryHint[ 0 ] ) );
 	}
 
 	public static List buildNamedQueries(
@@ -2884,7 +2884,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		if ( secondaryTables.size() > 0 ) {
 			AnnotationDescriptor descriptor = new AnnotationDescriptor( SecondaryTables.class );
-			descriptor.setValue( "value", secondaryTables.toArray( new SecondaryTable[secondaryTables.size()] ) );
+			descriptor.setValue( "value", secondaryTables.toArray( new SecondaryTable[ 0 ] ) );
 			return AnnotationFactory.create( descriptor );
 		}
 		else {

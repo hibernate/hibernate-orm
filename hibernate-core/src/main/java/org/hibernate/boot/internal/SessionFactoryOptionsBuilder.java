@@ -889,7 +889,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
-		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[ sessionFactoryObserverList.size() ] );
+		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[ 0 ] );
 	}
 
 	@Override
@@ -1109,7 +1109,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
-		return entityNameResolvers.toArray( new EntityNameResolver[ entityNameResolvers.size() ] );
+		return entityNameResolvers.toArray( new EntityNameResolver[ 0 ] );
 	}
 
 	@Override

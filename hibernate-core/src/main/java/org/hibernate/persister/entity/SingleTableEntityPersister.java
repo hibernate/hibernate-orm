@@ -653,7 +653,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
-		return values.toArray( new String[values.size()] );
+		return values.toArray( new String[ 0 ] );
 	}
 
 	private String[] fullDiscriminatorValues;
@@ -668,7 +668,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					values.add( queryable.getDiscriminatorSQLValue() );
 				}
 			}
-			fullDiscriminatorValues = values.toArray( new String[values.size()] );
+			fullDiscriminatorValues = values.toArray( new String[ 0 ] );
 		}
 
 		return fullDiscriminatorValues;

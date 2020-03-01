@@ -234,7 +234,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 				}
 			}
 		}
-		return callbacks.toArray( new Callback[callbacks.size()] );
+		return callbacks.toArray( new Callback[ 0 ] );
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
@@ -294,7 +294,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		}
 		while ( currentClazz != null );
 
-		return callbacks.toArray( new Callback[callbacks.size()] );
+		return callbacks.toArray( new Callback[ 0 ] );
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;

@@ -8,16 +8,15 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
-import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityResult;
 
 /**
  * Standard ReturnEntity impl

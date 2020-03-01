@@ -19,7 +19,6 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.exec.spi.JdbcCall;
 
 /**

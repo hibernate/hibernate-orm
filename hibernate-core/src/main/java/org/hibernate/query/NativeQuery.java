@@ -28,7 +28,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
 
 /**
  * Represents a native (SQL) query.

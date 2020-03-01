@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import javax.persistence.metamodel.PluralAttribute;
-
 import org.hibernate.metamodel.CollectionClassification;
 
 /**

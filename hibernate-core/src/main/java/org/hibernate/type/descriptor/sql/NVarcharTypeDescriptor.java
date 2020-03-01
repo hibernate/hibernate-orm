@@ -20,8 +20,6 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.internal.JdbcLiteralFormatterCharacterData;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.sql.JdbcLiteralFormatter.NULL;
-
 /**
  * Descriptor for {@link Types#NVARCHAR NVARCHAR} handling.
  *

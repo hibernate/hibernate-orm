@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 

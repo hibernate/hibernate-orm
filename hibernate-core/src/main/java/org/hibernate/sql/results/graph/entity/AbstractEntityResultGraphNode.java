@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;

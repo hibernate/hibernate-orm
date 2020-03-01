@@ -7,9 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

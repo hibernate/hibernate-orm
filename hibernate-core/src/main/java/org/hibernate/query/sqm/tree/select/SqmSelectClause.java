@@ -17,8 +17,6 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import static java.util.Arrays.asList;
-
 /**
  * The semantic select clause.  Defined as a list of individual selections.
  *

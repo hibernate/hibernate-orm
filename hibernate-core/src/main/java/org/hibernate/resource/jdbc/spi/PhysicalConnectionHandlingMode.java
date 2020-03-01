@@ -10,7 +10,6 @@ import java.util.Locale;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.ConnectionAcquisitionMode.AS_NEEDED;
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;

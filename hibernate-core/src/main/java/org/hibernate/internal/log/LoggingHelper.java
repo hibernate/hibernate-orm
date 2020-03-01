@@ -6,8 +6,6 @@
  */
 package org.hibernate.internal.log;
 
-import java.util.Collection;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;

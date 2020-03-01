@@ -6,7 +6,6 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 
 /**

@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
-import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;

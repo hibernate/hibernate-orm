@@ -15,8 +15,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 
 /**

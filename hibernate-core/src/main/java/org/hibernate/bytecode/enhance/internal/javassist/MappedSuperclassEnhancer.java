@@ -10,7 +10,6 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.ManagedMappedSuperclass;
 

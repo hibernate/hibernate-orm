@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
-
 /**
  * A {@link LimitHandler} for databases like PostgreSQL, H2,
  * and HSQL that support the syntax {@code LIMIT n OFFSET m}.

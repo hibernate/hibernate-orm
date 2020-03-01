@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.CacheMode;

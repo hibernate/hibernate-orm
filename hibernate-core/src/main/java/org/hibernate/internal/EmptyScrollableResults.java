@@ -6,17 +6,7 @@
  */
 package org.hibernate.internal;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.type.Type;
 
 /**
  * @author Andrea Boriero

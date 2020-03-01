@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import org.jboss.logging.Logger;
 

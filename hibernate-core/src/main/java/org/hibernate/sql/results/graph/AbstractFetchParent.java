@@ -9,7 +9,6 @@ package org.hibernate.sql.results.graph;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 

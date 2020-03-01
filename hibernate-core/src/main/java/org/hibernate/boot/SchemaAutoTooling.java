@@ -8,7 +8,6 @@ package org.hibernate.boot;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Defines the possible values for "hbm2ddl_auto"

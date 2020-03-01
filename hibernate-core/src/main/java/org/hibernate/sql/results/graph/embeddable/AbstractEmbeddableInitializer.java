@@ -10,9 +10,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;

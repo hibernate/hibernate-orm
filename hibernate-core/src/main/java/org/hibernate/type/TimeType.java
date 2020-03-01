@@ -8,11 +8,9 @@ package org.hibernate.type;
 
 import java.sql.Time;
 import java.util.Date;
-
 import javax.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;

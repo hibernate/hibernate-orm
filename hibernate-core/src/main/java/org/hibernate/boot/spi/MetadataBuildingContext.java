@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;

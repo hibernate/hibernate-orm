@@ -144,7 +144,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public Set<Entry<K,V>> entrySet() {
-		Set<Entry<K,V>> set = new HashSet<>( map.size() );
+		Set<Entry<K,V>> set = CollectionHelper.setOfSize( map.size() );
 		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
 			set.add( new IdentityMapEntry<>( entry.getKey().key, entry.getValue() ) );
 		}

@@ -1605,7 +1605,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					evictedCopy = singletonMap( evictedEntry.key, evictedEntry.value );
 				}
 				else {
-					evictedCopy = new HashMap<>( evicted.size() );
+					evictedCopy = CollectionHelper.mapOfSize( evicted.size() );
 					for ( HashEntry<K, V> he : evicted ) {
 						evictedCopy.put( he.key, he.value );
 					}

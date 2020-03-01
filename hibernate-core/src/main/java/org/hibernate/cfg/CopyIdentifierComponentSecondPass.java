@@ -16,6 +16,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -67,7 +68,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		Map<String, Ejb3JoinColumn> columnByReferencedName = new HashMap<>(joinColumns.length);
+		Map<String, Ejb3JoinColumn> columnByReferencedName = CollectionHelper.mapOfSize( joinColumns.length);
 		for (Ejb3JoinColumn joinColumn : joinColumns) {
 			final String referencedColumnName = joinColumn.getReferencedColumn();
 			if ( referencedColumnName == null || BinderHelper.isEmptyAnnotationValue( referencedColumnName ) ) {

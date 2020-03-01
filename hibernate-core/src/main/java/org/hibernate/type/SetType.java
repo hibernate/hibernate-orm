@@ -11,6 +11,7 @@ import java.util.HashSet;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -39,7 +40,7 @@ public class SetType extends CollectionType {
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
 				? new HashSet()
-				: new HashSet( anticipatedSize + (int)( anticipatedSize * .75f ), .75f );
+				: CollectionHelper.setOfSize( anticipatedSize );
 	}
 
 }

@@ -5,8 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.transform;
-import java.util.HashMap;
 import java.util.Map;
+
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * {@link ResultTransformer} implementation which builds a map for each "row",
@@ -30,7 +31,7 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 
 	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
-		Map result = new HashMap(tuple.length);
+		Map result = CollectionHelper.mapOfSize( tuple.length );
 		for ( int i=0; i<tuple.length; i++ ) {
 			String alias = aliases[i];
 			if ( alias!=null ) {

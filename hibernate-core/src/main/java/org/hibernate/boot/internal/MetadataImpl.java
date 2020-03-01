@@ -43,6 +43,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -315,10 +316,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public NamedQueryRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {
 		return new NamedQueryRepositoryImpl(
-				new HashMap<>( namedQueryMap.size() ),
-				new HashMap<>( namedNativeQueryMap.size() ),
-				new HashMap<>( namedProcedureCallMap.size() ),
-				new HashMap<>( sqlResultSetMappingMap.size() )
+				CollectionHelper.mapOfSize( namedQueryMap.size() ),
+				CollectionHelper.mapOfSize( namedNativeQueryMap.size() ),
+				CollectionHelper.mapOfSize( namedProcedureCallMap.size() ),
+				CollectionHelper.mapOfSize( sqlResultSetMappingMap.size() )
 		);
 	}
 

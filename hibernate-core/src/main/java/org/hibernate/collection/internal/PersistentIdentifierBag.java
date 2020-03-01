@@ -18,6 +18,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -353,7 +354,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	@Override
 	@SuppressWarnings("unchecked")
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap map = new HashMap( values.size() );
+		final HashMap map = CollectionHelper.mapOfSize( values.size() );
 		final Iterator iter = values.iterator();
 		int i=0;
 		while ( iter.hasNext() ) {

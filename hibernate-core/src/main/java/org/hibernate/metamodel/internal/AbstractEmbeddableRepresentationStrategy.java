@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -37,7 +38,7 @@ public abstract class AbstractEmbeddableRepresentationStrategy implements Embedd
 		this.embeddableJavaTypeDescriptor = embeddableJavaTypeDescriptor;
 
 		this.propertyAccesses = new PropertyAccess[ propertySpan ];
-		this.attributeNameToPositionMap = CollectionHelper.concurrentMap( propertySpan );
+		this.attributeNameToPositionMap = new ConcurrentHashMap<>( propertySpan );
 
 		boolean foundCustomAccessor = false;
 		Iterator itr = bootDescriptor.getPropertyIterator();

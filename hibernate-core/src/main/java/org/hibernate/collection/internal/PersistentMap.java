@@ -18,6 +18,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -94,7 +95,7 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap clonedMap = new HashMap( map.size() );
+		final HashMap clonedMap = CollectionHelper.mapOfSize( map.size() );
 		for ( Object o : map.entrySet() ) {
 			final Entry e = (Entry) o;
 			final Object copy = persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );

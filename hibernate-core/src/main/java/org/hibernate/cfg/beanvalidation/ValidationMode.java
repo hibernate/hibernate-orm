@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Duplicates the javax.validation enum (because javax validation might not be on the runtime classpath)
@@ -30,7 +31,7 @@ public enum ValidationMode {
 	}
 
 	public static Set<ValidationMode> getModes(Object modeProperty) {
-		Set<ValidationMode> modes = new HashSet<>(3);
+		Set<ValidationMode> modes = CollectionHelper.setOfSize( 3);
 		if (modeProperty == null) {
 			modes.add( ValidationMode.AUTO );
 		}

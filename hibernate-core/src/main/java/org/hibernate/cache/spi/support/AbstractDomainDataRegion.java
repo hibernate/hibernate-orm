@@ -25,6 +25,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.Logger;
@@ -127,7 +128,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, EntityDataAccess> accessMap = new HashMap<>( entityCaching.size() );
+		final Map<NavigableRole, EntityDataAccess> accessMap = CollectionHelper.mapOfSize( entityCaching.size() );
 		for ( EntityDataCachingConfig entityAccessConfig : entityCaching ) {
 			accessMap.put(
 					entityAccessConfig.getNavigableRole(),
@@ -144,7 +145,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, NaturalIdDataAccess> accessMap = new HashMap<>( naturalIdCaching.size() );
+		final Map<NavigableRole, NaturalIdDataAccess> accessMap = CollectionHelper.mapOfSize( naturalIdCaching.size() );
 		for ( NaturalIdDataCachingConfig naturalIdAccessConfig : naturalIdCaching ) {
 			accessMap.put(
 					naturalIdAccessConfig.getNavigableRole(),
@@ -162,7 +163,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 			return Collections.emptyMap();
 		}
 
-		final Map<NavigableRole, CollectionDataAccess> accessMap = new HashMap<>( collectionCaching.size() );
+		final Map<NavigableRole, CollectionDataAccess> accessMap = CollectionHelper.mapOfSize( collectionCaching.size() );
 		for ( CollectionDataCachingConfig cachingConfig : collectionCaching ) {
 			accessMap.put(
 					cachingConfig.getNavigableRole(),

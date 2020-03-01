@@ -129,6 +129,7 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -348,7 +349,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				Element tree = xmlContext.getXMLTree( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
-				annotationsMap = new HashMap<>( annotations.length + 5 );
+				annotationsMap = CollectionHelper.mapOfSize( annotations.length + 5 );
 				for ( Annotation annotation : annotations ) {
 					if ( !annotationToXml.containsKey( annotation.annotationType() ) ) {
 						//unknown annotations are left over
@@ -391,7 +392,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				Element tree = xmlContext.getXMLTree( className );
 				Annotation[] annotations = getPhysicalAnnotations();
 				List<Annotation> annotationList = new ArrayList<>( annotations.length + 5 );
-				annotationsMap = new HashMap<>( annotations.length + 5 );
+				annotationsMap = CollectionHelper.mapOfSize( annotations.length + 5 );
 				for ( Annotation annotation : annotations ) {
 					if ( !annotationToXml.containsKey( annotation.annotationType() ) ) {
 						//unknown annotations are left over
@@ -433,7 +434,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			}
 			else {
 				this.annotations = getPhysicalAnnotations();
-				annotationsMap = new HashMap<>( annotations.length + 5 );
+				annotationsMap = CollectionHelper.mapOfSize( annotations.length + 5 );
 				for ( Annotation ann : this.annotations ) {
 					annotationsMap.put( ann.annotationType(), ann );
 				}

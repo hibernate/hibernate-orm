@@ -29,6 +29,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
@@ -160,7 +161,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
-		final Set<String> exportIdentifiers = new HashSet<>( 50 );
+		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
 		final Database database = metadata.getDatabase();
 

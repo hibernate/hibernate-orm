@@ -58,6 +58,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -204,7 +205,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
 		if ( unownedCollections == null ) {
-			unownedCollections = new HashMap<>( INIT_COLL_SIZE );
+			unownedCollections = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		unownedCollections.put( key, collection );
 	}
@@ -319,7 +320,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		else {
 			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
 			if ( entitySnapshotsByKey == null ) {
-				entitySnapshotsByKey = new HashMap<>( INIT_COLL_SIZE );
+				entitySnapshotsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 			}
 			entitySnapshotsByKey.put( key, snapshot == null ? NO_ROW : snapshot );
 			return snapshot;
@@ -392,7 +393,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEntity(EntityKey key, Object entity) {
 		if ( entitiesByKey == null ) {
-			entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
+			entitiesByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		entitiesByKey.put( key, entity );
 		final BatchFetchQueue fetchQueue = this.batchFetchQueue;
@@ -453,7 +454,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEntity(EntityUniqueKey euk, Object entity) {
 		if ( entitiesByUniqueKey == null ) {
-			entitiesByUniqueKey = new HashMap<>( INIT_COLL_SIZE );
+			entitiesByUniqueKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		entitiesByUniqueKey.put( euk, entity );
 	}
@@ -775,7 +776,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
 		if ( entitiesByKey == null ) {
-			entitiesByKey = new HashMap<>( INIT_COLL_SIZE );
+			entitiesByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		entitiesByKey.put( key, entity );
 	}
@@ -1449,7 +1450,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addNullProperty(EntityKey ownerKey, String propertyName) {
 		if ( nullAssociations == null ) {
-			nullAssociations = new HashSet<>( INIT_COLL_SIZE );
+			nullAssociations = CollectionHelper.setOfSize( INIT_COLL_SIZE );
 		}
 		nullAssociations.add( new AssociationKey( ownerKey, propertyName ) );
 	}
@@ -1711,7 +1712,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
-			rtn.entitiesByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitiesByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1721,7 +1722,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			if ( count != 0 ) {
-				rtn.entitiesByUniqueKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+				rtn.entitiesByUniqueKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 				for ( int i = 0; i < count; i++ ) {
 					rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 				}
@@ -1750,7 +1751,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
-			rtn.entitySnapshotsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitySnapshotsByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1761,7 +1762,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
-			rtn.collectionsByKey = new HashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.collectionsByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
 			}
@@ -1907,7 +1908,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection) {
 		if ( collectionsByKey == null ) {
-			collectionsByKey = new HashMap<>( INIT_COLL_SIZE );
+			collectionsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
 		final PersistentCollection old = collectionsByKey.put( collectionKey, persistentCollection );
 		return old;

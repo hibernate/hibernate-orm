@@ -29,6 +29,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -81,7 +82,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
 
 	static {
-		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<>( 5 );
+		LEGACY_CONNECTION_PROVIDER_MAPPING = CollectionHelper.mapOfSize( 5 );
 
 		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
 				"org.hibernate.connection.DatasourceConnectionProvider",

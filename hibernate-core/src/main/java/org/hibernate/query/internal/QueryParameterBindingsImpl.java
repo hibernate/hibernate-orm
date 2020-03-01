@@ -8,6 +8,7 @@ package org.hibernate.query.internal;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
@@ -78,7 +79,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		this.parameterMetadata = parameterMetadata;
 		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 
-		this.parameterBindingMap = CollectionHelper.concurrentMap( parameterMetadata.getParameterCount() );
+		this.parameterBindingMap = new ConcurrentHashMap<>( parameterMetadata.getParameterCount() );
 	}
 
 	@SuppressWarnings({"WeakerAccess", "unchecked"})

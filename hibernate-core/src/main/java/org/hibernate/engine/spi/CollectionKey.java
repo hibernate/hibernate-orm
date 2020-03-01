@@ -131,7 +131,7 @@ public final class CollectionKey implements Serializable {
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new CollectionKey(
 				(String) ois.readObject(),
-				(Serializable) ois.readObject(),
+				ois.readObject(),
 				(Type) ois.readObject(),
 				(session == null ? null : session.getFactory())
 		);

@@ -107,7 +107,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 
 	@Override
 	public Map<Object, Object> getDefaults() {
-		if ( xmlMappingEnabled == false ) {
+		if ( !xmlMappingEnabled ) {
 			return Collections.emptyMap();
 		}
 		else {

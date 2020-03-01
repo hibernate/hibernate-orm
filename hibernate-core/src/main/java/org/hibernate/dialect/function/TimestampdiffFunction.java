@@ -95,8 +95,7 @@ public class TimestampdiffFunction
 			SqlAstNode... sqlAstArguments) {
 		DurationUnit field = (DurationUnit) sqlAstArguments[0];
 		return new SelfRenderingFunctionSqlAstExpression(
-				(sqlAppender, sqlAstArguments1, walker)
-						-> render(sqlAppender, sqlAstArguments1, walker),
+				this::render,
 				asList( sqlAstArguments ),
 				impliedResultType,
 				field.getExpressionType()

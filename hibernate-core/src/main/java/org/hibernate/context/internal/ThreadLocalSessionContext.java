@@ -111,7 +111,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		// try to make sure we don't wrap and already wrapped session
 		if ( Proxy.isProxyClass( session.getClass() ) ) {
 			final InvocationHandler invocationHandler = Proxy.getInvocationHandler( session );
-			if ( invocationHandler != null && TransactionProtectionWrapper.class.isInstance( invocationHandler ) ) {
+			if ( TransactionProtectionWrapper.class.isInstance( invocationHandler ) ) {
 				return false;
 			}
 		}
@@ -352,7 +352,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			}
 			catch ( InvocationTargetException e ) {
 				if (e.getTargetException() instanceof RuntimeException) {
-					throw (RuntimeException)e.getTargetException();
+					throw e.getTargetException();
 				}
 				throw e;
 			}

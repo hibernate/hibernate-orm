@@ -68,15 +68,15 @@ public class LoadedConfig {
 	}
 
 	public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? Collections.<CacheRegionDefinition>emptyList() : cacheRegionDefinitions;
+		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
 	}
 
 	public List<MappingReference> getMappingReferences() {
-		return mappingReferences == null ? Collections.<MappingReference>emptyList() : mappingReferences;
+		return mappingReferences == null ? Collections.emptyList() : mappingReferences;
 	}
 
 	public Map<EventType, Set<String>> getEventListenerMap() {
-		return eventListenerMap == null ? Collections.<EventType, Set<String>>emptyMap() : eventListenerMap;
+		return eventListenerMap == null ? Collections.emptyMap() : eventListenerMap;
 	}
 
 	/**

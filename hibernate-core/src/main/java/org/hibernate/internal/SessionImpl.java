@@ -2753,7 +2753,7 @@ public class SessionImpl
 				setFetchGraphLoadContext( getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() );
 			}
 
-			return loadAccess.load( (Serializable) primaryKey );
+			return loadAccess.load( primaryKey );
 		}
 		catch ( EntityNotFoundException ignored ) {
 			// DefaultLoadEventListener.returnNarrowedProxy may throw ENFE (see HHH-7861 for details),
@@ -2836,7 +2836,7 @@ public class SessionImpl
 		checkOpen();
 
 		try {
-			return byId( entityClass ).getReference( (Serializable) primaryKey );
+			return byId( entityClass ).getReference( primaryKey );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

@@ -687,7 +687,7 @@ public abstract class AbstractEntityPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		this.representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
-				.resolveStrategy( bootDescriptor, this, (RuntimeModelCreationContext) creationContext );
+				.resolveStrategy( bootDescriptor, this, creationContext );
 
 		this.javaTypeDescriptor = representationStrategy.getLoadJavaTypeDescriptor();
 		assert javaTypeDescriptor != null;

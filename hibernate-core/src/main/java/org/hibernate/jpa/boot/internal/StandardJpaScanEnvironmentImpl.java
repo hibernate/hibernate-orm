@@ -29,10 +29,10 @@ public class StandardJpaScanEnvironmentImpl implements ScanEnvironment {
 		this.persistenceUnitDescriptor = persistenceUnitDescriptor;
 
 		this.explicitlyListedClassNames = persistenceUnitDescriptor.getManagedClassNames() == null
-				? Collections.<String>emptyList()
+				? Collections.emptyList()
 				: persistenceUnitDescriptor.getManagedClassNames();
 		this.explicitlyListedMappingFiles = persistenceUnitDescriptor.getMappingFileNames() == null
-				? Collections.<String>emptyList()
+				? Collections.emptyList()
 				: persistenceUnitDescriptor.getMappingFileNames();
 	}
 

@@ -253,7 +253,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				// be created even if a current session and transaction are
 				// open (ex: session.clear() was used).  We must prevent
 				// multiple transactions.
-				( (Session) session ).beginTransaction();
+				session.beginTransaction();
 			}
 
 			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
@@ -273,9 +273,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 				try {
 					if ( !isJTA ) {
-						( (Session) tempSession ).getTransaction().commit();
+						tempSession.getTransaction().commit();
 					}
-					( (Session) tempSession ).close();
+					tempSession.close();
 				}
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
@@ -289,8 +289,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			throwLazyInitializationException( "SessionFactory UUID not known to create temporary Session for loading" );
 		}
 
-		final SessionFactoryImplementor sf = (SessionFactoryImplementor)
-				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
+		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
 		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setFlushMode( FlushMode.MANUAL );

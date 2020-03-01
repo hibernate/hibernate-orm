@@ -73,7 +73,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			key.add( superClass );
 		}
 		if ( interfaces != null ) {
-			key.addAll( Arrays.<Class<?>>asList( interfaces ) );
+			key.addAll( Arrays.asList( interfaces ) );
 		}
 
 		return new TypeCache.SimpleKey( key );

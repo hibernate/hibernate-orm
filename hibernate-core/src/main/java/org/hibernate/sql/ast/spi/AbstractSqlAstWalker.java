@@ -502,7 +502,7 @@ public abstract class AbstractSqlAstWalker
 						castTarget.getPrecision(),
 						castTarget.getScale()
 				)
-		);;
+		);
 	}
 
 	@Override

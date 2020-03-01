@@ -341,7 +341,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		// May need changes in Jaybird for this to work
 		return false;
 	}

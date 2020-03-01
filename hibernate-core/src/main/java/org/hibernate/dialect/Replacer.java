@@ -18,7 +18,7 @@ public class Replacer {
 	private String delimiter;
 	private List<Replacement> replacements = new ArrayList<>();
 
-	class Replacement {
+	static class Replacement {
 		String placeholder;
 		String replacement;
 

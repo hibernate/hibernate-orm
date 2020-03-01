@@ -366,7 +366,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		return false;
 	}
 

@@ -139,7 +139,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		}
 		else if ( positions < 0 ) {
 			// scroll backward
-			for ( int i = 0; i < ( 0 - positions ); i++ ) {
+			for ( int i = 0; i < -positions; i++ ) {
 				more = previous();
 				if ( !more ) {
 					break;

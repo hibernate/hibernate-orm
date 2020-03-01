@@ -70,7 +70,7 @@ class SingularAttributeSourceOneToOneImpl
 
 		if ( StringHelper.isNotEmpty( oneToOneElement.getFormulaAttribute() ) ) {
 			formulaSources = Collections.singletonList(
-					(DerivedValueSource) new FormulaImpl( mappingDocument, logicalTableName, oneToOneElement.getFormulaAttribute() )
+					new FormulaImpl( mappingDocument, logicalTableName, oneToOneElement.getFormulaAttribute() )
 			);
 		}
 		else if ( !oneToOneElement.getFormula().isEmpty() ) {

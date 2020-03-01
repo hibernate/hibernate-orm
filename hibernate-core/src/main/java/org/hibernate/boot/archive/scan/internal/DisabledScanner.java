@@ -25,9 +25,9 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
  */
 public class DisabledScanner implements Scanner {
 	private static final ScanResult emptyScanResult = new ScanResultImpl(
-		Collections.<PackageDescriptor>emptySet(),
-		Collections.<ClassDescriptor>emptySet(),
-		Collections.<MappingFileDescriptor>emptySet()
+		Collections.emptySet(),
+		Collections.emptySet(),
+		Collections.emptySet()
 	);
 
 	@Override

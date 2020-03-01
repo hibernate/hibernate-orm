@@ -196,7 +196,7 @@ public class XMLContext implements Serializable {
 		for ( Element converterElement : converterElements ) {
 			final String className = converterElement.attributeValue( "class" );
 			final String autoApplyAttribute = converterElement.attributeValue( "auto-apply" );
-			final boolean autoApply = autoApplyAttribute != null && Boolean.parseBoolean( autoApplyAttribute );
+			final boolean autoApply = Boolean.parseBoolean( autoApplyAttribute );
 
 			try {
 				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(

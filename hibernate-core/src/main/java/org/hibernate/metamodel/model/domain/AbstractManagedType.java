@@ -77,7 +77,7 @@ public abstract class AbstractManagedType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public void visitAttributes(Consumer<PersistentAttribute<J, ?>> action) {
-		visitDeclaredAttributes( (Consumer) action );
+		visitDeclaredAttributes( action );
 		if ( getSuperType() != null ) {
 			getSuperType().visitAttributes( (Consumer) action );
 		}

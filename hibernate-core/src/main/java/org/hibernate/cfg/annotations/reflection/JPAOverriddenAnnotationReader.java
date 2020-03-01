@@ -607,7 +607,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 					properties.add( Introspector.decapitalize( name.substring( "is".length() ) ) );
 				}
 			}
-			for ( Element subelement : (List<Element>) element.elements() ) {
+			for ( Element subelement : element.elements() ) {
 				String propertyName = subelement.attributeValue( "name" );
 				if ( !properties.contains( propertyName ) ) {
 					LOG.propertyNotFound( StringHelper.qualify( className, propertyName ) );
@@ -724,7 +724,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		Element element = tree != null ? tree.element( "entity-listeners" ) : null;
 		if ( element != null ) {
 			List<Class> entityListenerClasses = new ArrayList<>();
-			for ( Element subelement : (List<Element>) element.elements( "entity-listener" ) ) {
+			for ( Element subelement : element.elements( "entity-listener" ) ) {
 				String className = subelement.attributeValue( "class" );
 				try {
 					entityListenerClasses.add(
@@ -1516,7 +1516,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		Element element = tree != null ? tree.element( "attributes" ) : null;
 		//put entity.attributes elements
 		if ( element != null ) {
-			for ( Element subelement : (List<Element>) element.elements() ) {
+			for ( Element subelement : element.elements() ) {
 				if ( propertyName.equals( subelement.attributeValue( "name" ) ) ) {
 					elementsForProperty.add( subelement );
 				}
@@ -1524,7 +1524,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 		//add pre-* etc from entity and pure entity listener classes
 		if ( tree != null ) {
-			for ( Element subelement : (List<Element>) tree.elements() ) {
+			for ( Element subelement : tree.elements() ) {
 				if ( propertyName.equals( subelement.attributeValue( "method-name" ) ) ) {
 					elementsForProperty.add( subelement );
 				}
@@ -2203,7 +2203,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 		// process the <field-result/> sub-elements
 		List<FieldResult> fieldResultAnnotations = new ArrayList<>();
-		for ( Element fieldResult : (List<Element>) entityResultElement.elements( "field-result" ) ) {
+		for ( Element fieldResult : entityResultElement.elements( "field-result" ) ) {
 			AnnotationDescriptor fieldResultDescriptor = new AnnotationDescriptor( FieldResult.class );
 			copyStringAttribute( fieldResultDescriptor, fieldResult, "name", true );
 			copyStringAttribute( fieldResultDescriptor, fieldResult, "column", true );
@@ -2259,7 +2259,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		constructorResultDescriptor.setValue( "targetClass", entityClass );
 
 		List<ColumnResult> columnResultAnnotations = new ArrayList<>();
-		for ( Element columnResultElement : (List<Element>) constructorResultElement.elements( "column" ) ) {
+		for ( Element columnResultElement : constructorResultElement.elements( "column" ) ) {
 			columnResultAnnotations.add( buildColumnResult( columnResultElement, defaults, classLoaderAccess ) );
 		}
 		constructorResultDescriptor.setValue(
@@ -2849,7 +2849,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	private SecondaryTables getSecondaryTables(Element tree, XMLContext.Default defaults) {
 		List<Element> elements = tree == null ?
 				new ArrayList<>() :
-				(List<Element>) tree.elements( "secondary-table" );
+				tree.elements( "secondary-table" );
 		List<SecondaryTable> secondaryTables = new ArrayList<>( 3 );
 		for ( Element element : elements ) {
 			AnnotationDescriptor annotation = new AnnotationDescriptor( SecondaryTable.class );

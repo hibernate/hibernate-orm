@@ -444,7 +444,7 @@ public final class StringHelper {
 
 	public static String unroot(String qualifiedName) {
 		int loc = qualifiedName.indexOf( '.' );
-		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1, qualifiedName.length() );
+		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String toString(Object[] array) {

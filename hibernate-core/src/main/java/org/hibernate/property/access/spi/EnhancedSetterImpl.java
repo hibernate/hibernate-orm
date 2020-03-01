@@ -46,7 +46,7 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 		// This marks the attribute as initialized, so it doesn't get lazy loaded afterwards
 		if ( target instanceof PersistentAttributeInterceptable ) {
 			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) target ).$$_hibernate_getInterceptor();
-			if ( interceptor != null && interceptor instanceof LazyAttributeLoadingInterceptor ) {
+			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
 				interceptor.attributeInitialized( propertyName );
 			}
 		}

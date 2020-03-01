@@ -30,7 +30,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityCopyAllowedLoggedObserver.class );
 
-	public static final EntityCopyObserverFactory FACTORY_OF_SELF = () -> new EntityCopyAllowedLoggedObserver();
+	public static final EntityCopyObserverFactory FACTORY_OF_SELF = EntityCopyAllowedLoggedObserver::new;
 
 	public static final String SHORT_NAME = "log";
 

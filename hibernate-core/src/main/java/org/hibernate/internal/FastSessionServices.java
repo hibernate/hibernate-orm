@@ -218,11 +218,11 @@ final class FastSessionServices {
 		HashMap<String,Object> p = new HashMap<>();
 
 		//Static defaults:
-		p.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
-		p.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		p.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		p.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		p.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		p.put( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
+		p.put( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		p.put( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		p.put( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		p.put( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {

@@ -688,7 +688,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void addDefaultResultSetMapping(NamedResultSetMappingDefinition definition) {
 		final String name = definition.getRegistrationName();
-		if ( !defaultSqlResultSetMappingNames.contains( name ) && sqlResultSetMappingMap.containsKey( name ) ) {
+		if ( !defaultSqlResultSetMappingNames.contains( name ) ) {
 			sqlResultSetMappingMap.remove( name );
 		}
 		applyResultSetMapping( definition );

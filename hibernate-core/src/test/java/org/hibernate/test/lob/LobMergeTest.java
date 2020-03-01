@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-2680" )
-@RequiresDialectFeature( {DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsLobValueChangePropogation.class} ) // Skip for Sybase. HHH-6807
+@RequiresDialectFeature( {DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsLobValueChangePropagation.class} ) // Skip for Sybase. HHH-6807
 public class LobMergeTest extends BaseCoreFunctionalTestCase {
 	private static final int LOB_SIZE = 10000;
 

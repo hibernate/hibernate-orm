@@ -114,7 +114,6 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 
 		ArrayList<String> dropStrings = new ArrayList<>();
 
-		;
 		for (Iterator<Index> index = table.getIndexIterator(); index.hasNext();) {
 			dropStrings.add( "drop index " + index.next().getName() );
 		}

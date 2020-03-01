@@ -161,7 +161,7 @@ public class UnresolvedEntityInsertActions {
 		for ( Object transientEntity : dependencies.getNonNullableTransientEntities() ) {
 			Set<AbstractEntityInsertAction> dependentActions = dependentActionsByTransientEntity.get( transientEntity );
 			if ( dependentActions == null ) {
-				dependentActions = new IdentitySet();
+				dependentActions = new IdentitySet<>();
 				dependentActionsByTransientEntity.put( transientEntity, dependentActions );
 			}
 			dependentActions.add( insert );
@@ -199,7 +199,7 @@ public class UnresolvedEntityInsertActions {
 			// NOTE EARLY EXIT!
 			return Collections.emptySet();
 		}
-		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
+		final Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet<>(  );
 		if ( traceEnabled  ) {
 			LOG.tracev(
 					"Unresolved inserts before resolving [{0}]: [{1}]",

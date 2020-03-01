@@ -76,7 +76,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		final Object dataSourceConfigValue = serviceRegistry.getService( ConfigurationService.class )
 				.getSettings()
 				.get( AvailableSettings.DATASOURCE );
-		if ( dataSourceConfigValue == null || ! String.class.isInstance( dataSourceConfigValue ) ) {
+		if ( !String.class.isInstance( dataSourceConfigValue ) ) {
 			throw new HibernateException( "Improper set up of DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
 		final String jndiName = (String) dataSourceConfigValue;

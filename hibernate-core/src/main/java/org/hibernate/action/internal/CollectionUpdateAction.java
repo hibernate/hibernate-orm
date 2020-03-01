@@ -28,7 +28,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 	/**
 	 * Constructs a CollectionUpdateAction
-	 *  @param collection The collection to update
+	 * @param collection The collection to update
 	 * @param persister The collection persister
 	 * @param id The collection key
 	 * @param emptySnapshot Indicates if the snapshot is empty

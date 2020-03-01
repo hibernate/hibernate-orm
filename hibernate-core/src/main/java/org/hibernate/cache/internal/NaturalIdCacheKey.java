@@ -69,7 +69,7 @@ public class NaturalIdCacheKey implements Serializable {
 			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
 			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
 			if (type instanceof EntityType && type.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
-				this.naturalIdValues[i] = (Serializable) value;
+				this.naturalIdValues[i] = value;
 			}
 			else {
 				this.naturalIdValues[i] = type.disassemble( value, session, null );

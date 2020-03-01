@@ -71,7 +71,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		// We should immediately return NoCachingRegionFactory if either:
 		//		1) both are explicitly FALSE
 		//		2) USE_SECOND_LEVEL_CACHE is FALSE and USE_QUERY_CACHE is null
-		if ( useSecondLevelCache != null && useSecondLevelCache == FALSE ) {
+		if ( useSecondLevelCache == FALSE ) {
 			if ( useQueryCache == null || useQueryCache == FALSE ) {
 				return NoCachingRegionFactory.INSTANCE;
 			}
@@ -84,8 +84,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 
 		if ( setting == null && implementors.size() != 1 ) {
 			// if either are explicitly defined as TRUE we need a RegionFactory
-			if ( ( useSecondLevelCache != null && useSecondLevelCache == TRUE )
-					|| ( useQueryCache != null && useQueryCache == TRUE ) ) {
+			if ( useSecondLevelCache == TRUE || useQueryCache == TRUE ) {
 				throw new CacheException( "Caching was explicitly requested, but no RegionFactory was defined and there is not a single registered RegionFactory" );
 			}
 		}

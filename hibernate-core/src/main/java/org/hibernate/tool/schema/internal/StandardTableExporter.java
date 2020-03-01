@@ -66,7 +66,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		String pkColName = null;
 		if ( table.hasPrimaryKey() ) {
-			Column pkColumn = (Column) table.getPrimaryKey().getColumns().iterator().next();
+			Column pkColumn = table.getPrimaryKey().getColumns().iterator().next();
 			pkColName = pkColumn.getQuotedName( dialect );
 		}
 

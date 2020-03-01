@@ -156,7 +156,7 @@ abstract public class DialectFeatureChecks {
 	
 	public static class SupportsLobValueChangePropogation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLobValueChangePropogation();
+			return dialect.supportsLobValueChangePropagation();
 		}
 	}
 	

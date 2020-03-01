@@ -690,7 +690,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public QueryStatisticsImpl getQueryStatistics(String queryString) {
 		return queryStatsMap.getOrCompute(
 				queryString,
-				s -> new QueryStatisticsImpl( s )
+				QueryStatisticsImpl::new
 		);
 	}
 

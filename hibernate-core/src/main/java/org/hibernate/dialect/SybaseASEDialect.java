@@ -395,7 +395,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropagation() {
 		return false;
 	}
 

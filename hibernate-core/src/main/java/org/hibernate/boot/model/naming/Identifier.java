@@ -153,7 +153,7 @@ public class Identifier implements Comparable<Identifier> {
 	 */
 	public String render(Dialect dialect) {
 		return isQuoted
-				? String.valueOf( dialect.openQuote() ) + getText() + dialect.closeQuote()
+				? dialect.openQuote() + getText() + dialect.closeQuote()
 				: getText();
 	}
 

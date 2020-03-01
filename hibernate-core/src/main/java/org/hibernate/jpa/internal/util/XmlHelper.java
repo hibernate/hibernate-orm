@@ -142,7 +142,7 @@ public final class XmlHelper {
 		}
 
 		final NodeList children = element.getChildNodes();
-		final StringBuilder result = new StringBuilder("");
+		final StringBuilder result = new StringBuilder();
 		for ( int i = 0; i < children.getLength() ; i++ ) {
 			if ( children.item( i ).getNodeType() == Node.TEXT_NODE
 					|| children.item( i ).getNodeType() == Node.CDATA_SECTION_NODE ) {

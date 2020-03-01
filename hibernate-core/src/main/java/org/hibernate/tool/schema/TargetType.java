@@ -26,5 +26,5 @@ public enum TargetType {
 	/**
 	 * Write to {@link System#out}
 	 */
-	STDOUT;
+	STDOUT
 }

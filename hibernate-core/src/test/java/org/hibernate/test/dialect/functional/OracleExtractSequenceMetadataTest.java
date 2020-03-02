@@ -31,12 +31,12 @@ import org.junit.Test;
  */
 @TestForIssue( jiraKey = "HHH-13322" )
 @RequiresDialect( Oracle8iDialect.class )
-public class OracleExtractSequenceMatadataTest extends BaseCoreFunctionalTestCase {
+public class OracleExtractSequenceMetadataTest extends BaseCoreFunctionalTestCase {
 
 	private static final String SEQUENCE_NAME = SequenceStyleGenerator.DEF_SEQUENCE_NAME;
 	private static final String SEQUENCE_INCREMENT_SIZE = "50";
 
-	private static final String OTHER_SCHEMA_NAME = "C##HHH13322"; // 'C##' is common custom user name prefix in Oracle
+	private static final String OTHER_SCHEMA_NAME = "hibernate_orm_test_2";
 	private static final String SEQUENCE_INCREMENT_SIZE_FROM_OTHER_SCHEMA = "1";
 
 	@Override

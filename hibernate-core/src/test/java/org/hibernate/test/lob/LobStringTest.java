@@ -17,7 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import org.hibernate.dialect.CockroachDBNewDialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.query.Query;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11477")
-@RequiresDialect({ PostgreSQL81Dialect.class, CockroachDBNewDialect.class })
+@RequiresDialect({ PostgreSQL81Dialect.class, CockroachDB192Dialect.class })
 public class LobStringTest extends BaseCoreFunctionalTestCase {
 
 	private static final int LONG_STRING_SIZE = 3999;

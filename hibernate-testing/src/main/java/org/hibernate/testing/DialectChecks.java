@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing;
 
-import org.hibernate.dialect.CockroachDBNewDialect;
+import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -295,7 +295,7 @@ abstract public class DialectChecks {
 				dialect instanceof PostgreSQL81Dialect ||
 				dialect instanceof SybaseDialect ||
 				dialect instanceof MySQLDialect ||
-				dialect instanceof CockroachDBNewDialect
+				dialect instanceof CockroachDB192Dialect
 			);
 		}
 	}

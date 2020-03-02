@@ -18,6 +18,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.CockroachDB201Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
@@ -117,6 +118,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
 	@RequiresDialect(PostgreSQL82Dialect.class)
+	@RequiresDialect(CockroachDB201Dialect.class)
 	public void testCteNativeQueryOrdinalParameter() {
 
 		Node root1 = new Node();

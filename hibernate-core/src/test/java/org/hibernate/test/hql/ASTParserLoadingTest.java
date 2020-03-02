@@ -16,24 +16,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.*;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.internal.ast.QuerySyntaxException;
@@ -3285,6 +3268,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(CockroachDB192Dialect.class)
+	@RequiresDialect(CockroachDB201Dialect.class)
 	public void testStandardFunctions() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

@@ -740,7 +740,6 @@ org.hibernate.test.filter.OneToManyWithDynamicFilterTest
 org.hibernate.test.filter.hql.BasicFilteredBulkManipulationTest
 org.hibernate.test.filter.hql.JoinedFilteredBulkManipulationTest
 org.hibernate.test.flush.NativeCriteriaSyncTest
-org.hibernate.test.flush.NonTransactionalDataAccessTest
 org.hibernate.test.flush.TestAutoFlushBeforeQueryExecution
 org.hibernate.test.flush.TestFlushModeWithIdentitySelfReferenceTest
 org.hibernate.test.flush.TestHibernateFlushModeOnThreadLocalInactiveTransaction
@@ -992,7 +991,6 @@ org.hibernate.test.onetoone.basic.OneToOneSchemaTest
 org.hibernate.test.onetoone.bidirectional.BiDirectionalOneToOneFetchTest
 org.hibernate.test.onetoone.jointable.OneToOneJoinTableTest
 org.hibernate.test.onetoone.lazy.LazyToOneTest
-org.hibernate.test.onetoone.optional.BidirectionalOptionalOneToOneTest
 org.hibernate.test.ops.DeleteTest
 org.hibernate.test.ops.GetLoadTest
 org.hibernate.test.ops.OneToOneMergeTest
@@ -1029,8 +1027,6 @@ org.hibernate.test.queryplan.NativeSQLQueryPlanEqualsTest
 org.hibernate.test.queryplan.NativeSQLQueryReturnEqualsAndHashCodeTest
 org.hibernate.test.quote.ColumnDefinitionQuotingTest
 org.hibernate.test.readonly.ReadOnlyVersionedNodesTest
-org.hibernate.test.reattachment.CollectionReattachmentTest
-org.hibernate.test.reattachment.ProxyReattachmentTest
 org.hibernate.test.refresh.RefreshDetachedInstanceWhenIsAllowedTest
 org.hibernate.test.refresh.RefreshDetachedInstanceWhenIsNotAllowedTest
 org.hibernate.test.refresh.RefreshUsingEntityNameTest

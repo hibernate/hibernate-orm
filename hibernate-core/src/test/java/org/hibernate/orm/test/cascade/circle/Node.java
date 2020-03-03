@@ -4,11 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 //$Id: $
+package org.hibernate.orm.test.cascade.circle;
 
-
-package org.hibernate.test.cascade.circle;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -41,7 +39,7 @@ public class Node {
 //	@ManyToOne(targetEntity=Tour.class, cascade={CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, optional=true, fetch=FetchType.LAZY)
 //	@JoinColumn(name="TOURID", nullable=true, insertable=true, updatable=true)
 	private Tour tour;
-	
+
 //	@Transient
 	private String transientField = "node original value";
 

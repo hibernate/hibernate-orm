@@ -7,7 +7,8 @@
 
 //$Id: $
 
-package org.hibernate.test.cascade.circle;
+package org.hibernate.orm.test.cascade.circle;
+
 import java.util.HashSet;
 import java.util.Set;
 

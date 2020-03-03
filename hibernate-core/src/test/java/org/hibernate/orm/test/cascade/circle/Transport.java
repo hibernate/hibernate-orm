@@ -6,11 +6,7 @@
  */
 
 //$Id: $
-
-
-package org.hibernate.test.cascade.circle;
-
-
+package org.hibernate.orm.test.cascade.circle;
 
 public class Transport {
 	
@@ -34,7 +30,7 @@ public class Transport {
 	private Node deliveryNode = null;
 
 	private Vehicle vehicle;
-	
+
 //	@Transient
 	private String transientField = "transport original value";
 

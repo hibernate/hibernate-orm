@@ -122,7 +122,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					null,
 					jdbcMapping.getJavaTypeDescriptor()
 			);
-		}else {
+		}
+		else {
 			return createDomainResult( collectionPath, tableGroup, creationState );
 		}
 	}

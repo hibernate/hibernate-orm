@@ -979,7 +979,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public final Object internalLoad(
+	public Object internalLoad(
 			String entityName,
 			Object id,
 			boolean eager,

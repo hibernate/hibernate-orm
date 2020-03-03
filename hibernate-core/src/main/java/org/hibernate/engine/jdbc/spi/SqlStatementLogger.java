@@ -7,6 +7,7 @@
 package org.hibernate.engine.jdbc.spi;
 
 import java.sql.Statement;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -134,34 +135,34 @@ public class SqlStatementLogger {
 	 * Log a slow SQL query
 	 *
 	 * @param statement SQL statement.
-	 * @param startTime Start time in milliseconds.
+	 * @param startTimeNanos Start time in nanoseconds.
 	 */
-	public void logSlowQuery(Statement statement, long startTime) {
+	public void logSlowQuery(Statement statement, long startTimeNanos) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
-		logSlowQuery( statement.toString(), startTime );
+		logSlowQuery( statement.toString(), startTimeNanos );
 	}
 
 	/**
 	 * Log a slow SQL query
 	 *
 	 * @param sql The SQL query.
-	 * @param startTime Start time in milliseconds.
+	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	@AllowSysOut
-	public void logSlowQuery(String sql, long startTime) {
+	public void logSlowQuery(String sql, long startTimeNanos) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
-		assert startTime > 0 : "startTime is invalid!";
+		if ( startTimeNanos <= 0 ) {
+			throw new IllegalArgumentException( "startTimeNanos [" + startTimeNanos + "] should be greater than 0!" );
+		}
 
-		long spent = System.currentTimeMillis() - startTime;
+		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
 
-		assert spent >= 0 : "startTime is invalid!";
-
-		if ( spent > logSlowQuery ) {
-			String logData = "SlowQuery: " + spent + " milliseconds. SQL: '" + sql + "'";
+		if ( queryExecutionMillis > logSlowQuery ) {
+			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sql + "'";
 			LOG_SLOW.info( logData );
 			if ( logToStdout ) {
 				System.out.println( logData );

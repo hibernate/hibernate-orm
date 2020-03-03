@@ -182,7 +182,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService ) {
 		this( persistenceUnit, integrationSettings, null, providedClassLoaderService);
 	}
-	
+
 	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
@@ -194,11 +194,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		this.persistenceUnit = persistenceUnit;
 
 		if ( integrationSettings == null ) {
-			integrationSettings = Collections.emptyMap();
+			integrationSettings = new HashMap();
+		}
+
+		Map mergedIntegrationSettings = null;
+		Properties properties = persistenceUnit.getProperties();
+		if ( properties != null ) {
+			// original integratin setting entries take precedence
+			mergedIntegrationSettings = new HashMap( properties );
+			mergedIntegrationSettings.putAll( integrationSettings );
 		}
 
 		// Build the boot-strap service registry, which mainly handles class loader interactions
-		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
+		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry(
+				mergedIntegrationSettings != null ? mergedIntegrationSettings : integrationSettings,
+				providedClassLoader,
+				providedClassLoaderService
+		);
 
 		// merge configuration sources and build the "standard" service registry
 		final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );

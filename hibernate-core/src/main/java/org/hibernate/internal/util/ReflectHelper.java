@@ -347,9 +347,37 @@ public final class ReflectHelper {
 
 	}
 
+	public static <T> Constructor<T> getConstructor(
+			Class<T> clazz,
+			Class... constructorArgs) {
+		Constructor<T> constructor = null;
+		try {
+			constructor = clazz.getDeclaredConstructor( constructorArgs );
+			try {
+				ReflectHelper.ensureAccessibility( constructor );
+			}
+			catch ( SecurityException e ) {
+				constructor = null;
+			}
+		}
+		catch ( NoSuchMethodException ignore ) {
+		}
+
+		return constructor;
+	}
+
 	public static Method getMethod(Class clazz, Method method) {
 		try {
 			return clazz.getMethod( method.getName(), method.getParameterTypes() );
+		}
+		catch (Exception e) {
+			return null;
+		}
+	}
+
+	public static Method getMethod(Class clazz, String methodName, Class... paramTypes) {
+		try {
+			return clazz.getMethod( methodName, paramTypes );
 		}
 		catch (Exception e) {
 			return null;

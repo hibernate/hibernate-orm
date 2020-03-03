@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
@@ -670,6 +668,38 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			.setParameter( "name", "J%" )
 			.getResultList();
 			//end::jpql-api-list-example[]
+		});
+	}
+
+	@Test
+	public void test_jpql_api_stream_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::jpql-api-stream-example[]
+			try(Stream<Person> personStream = entityManager.createQuery(
+				"select p " +
+				"from Person p " +
+				"where p.name like :name", Person.class )
+			.setParameter( "name", "J%" )
+			.getResultStream()) {
+				List<Person> persons = personStream
+					.skip( 5 )
+					.limit( 5 )
+					.collect( Collectors.toList() );
+			}
+			//end::jpql-api-stream-example[]
+
+			// tag::jpql-api-stream-terminal-operation[]
+			List<Person> persons = entityManager.createQuery(
+					"select p " +
+					"from Person p " +
+					"where p.name like :name", Person.class )
+			.setParameter( "name", "J%" )
+			.getResultStream()
+			.skip( 5 )
+			.limit( 5 )
+			.collect( Collectors.toList() );
+
+			//end::jpql-api-stream-terminal-operation[]
 		});
 	}
 

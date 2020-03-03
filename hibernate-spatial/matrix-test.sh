@@ -1,5 +1,8 @@
 #! /bin/bash
 
+## The same effect can be achieved by setting the system properties
+# in ~/.gradle/gradle.properties
+
 TASK=matrix
 if [[ -n $@ ]]; then
   TASK="$@"

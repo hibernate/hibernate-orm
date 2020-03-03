@@ -17,13 +17,13 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  */
-public class StandardStack<T> implements Stack<T> {
+public final class StandardStack<T> implements Stack<T> {
 	@SuppressWarnings("unchecked")
 	private final T nullMarker = (T) new Object();
 
 	private T current;
 
-	private LinkedList<T> internalStack;
+	private final LinkedList<T> internalStack = new LinkedList<>();
 
 	public StandardStack() {
 	}
@@ -39,9 +39,6 @@ public class StandardStack<T> implements Stack<T> {
 		}
 
 		if ( current != null ) {
-			if ( internalStack == null ) {
-				internalStack = new LinkedList<>();
-			}
 			internalStack.addFirst( current );
 		}
 
@@ -51,7 +48,7 @@ public class StandardStack<T> implements Stack<T> {
 	@Override
 	public T pop() {
 		final T popped = this.current;
-		if ( internalStack == null || internalStack.isEmpty() ) {
+		if ( internalStack.isEmpty() ) {
 			this.current = null;
 		}
 		else {
@@ -67,22 +64,11 @@ public class StandardStack<T> implements Stack<T> {
 	}
 
 	@Override
-	public T getPrevious() {
-		if ( current != null && internalStack != null ) {
-			final T previous = internalStack.getFirst();
-			return previous == nullMarker ? null : previous;
-		}
-
-		// otherwise...
-		return null;
-	}
-
-	@Override
 	public int depth() {
 		if ( current == null ) {
 			return 0;
 		}
-		else if ( internalStack == null || internalStack.isEmpty() ) {
+		else if ( internalStack.isEmpty() ) {
 			return 1;
 		}
 		else {
@@ -98,31 +84,17 @@ public class StandardStack<T> implements Stack<T> {
 	@Override
 	public void clear() {
 		current = null;
-		if ( internalStack != null ) {
-			internalStack.clear();
-		}
+		internalStack.clear();
 	}
 
 	@Override
 	public void visitRootFirst(Consumer<T> action) {
-		if ( internalStack != null ) {
-			final int stackSize = internalStack.size();
-			for ( int i = stackSize - 1; i >= 0; i-- ) {
-				action.accept( internalStack.get( i ) );
-			}
+		final int stackSize = internalStack.size();
+		for ( int i = stackSize - 1; i >= 0; i-- ) {
+			action.accept( internalStack.get( i ) );
 		}
 		if ( current != null ) {
 			action.accept( current );
-		}
-	}
-
-	@Override
-	public void visitCurrentFirst(Consumer<T> action) {
-		if ( current != null ) {
-			action.accept( current );
-			if ( internalStack != null ) {
-				internalStack.forEach( action );
-			}
 		}
 	}
 
@@ -137,12 +109,10 @@ public class StandardStack<T> implements Stack<T> {
 				}
 			}
 
-			if ( internalStack != null ) {
-				for ( T t : internalStack ) {
-					final X result = function.apply( t );
-					if ( result != null ) {
-						return result;
-					}
+			for ( T t : internalStack ) {
+				final X result = function.apply( t );
+				if ( result != null ) {
+					return result;
 				}
 			}
 		}

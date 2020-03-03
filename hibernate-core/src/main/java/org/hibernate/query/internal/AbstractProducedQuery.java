@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -70,6 +71,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.StreamDecorator;
 import org.hibernate.transform.ResultTransformer;
 
 import org.jboss.logging.Logger;
@@ -1427,8 +1429,10 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
-		final Stream<R> stream = StreamSupport.stream( spliterator, false );
-		stream.onClose( scrollableResults::close );
+		final Stream<R> stream = new StreamDecorator(
+				StreamSupport.stream( spliterator, false ),
+				scrollableResults::close
+		);
 
 		return stream;
 	}

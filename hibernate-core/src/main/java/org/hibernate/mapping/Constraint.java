@@ -151,7 +151,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 	public Column getColumn(int i) {
 		return  columns.get( i );
 	}
-	
+
 	public Iterator<Column> getColumnIterator() {
 		return columns.iterator();
 	}

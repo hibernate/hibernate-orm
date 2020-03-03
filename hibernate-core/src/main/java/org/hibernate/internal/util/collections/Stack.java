@@ -33,11 +33,6 @@ public interface Stack<T> {
 	T getCurrent();
 
 	/**
-	 * The element previously at the top of the stack before the current one
-	 */
-	T getPrevious();
-
-	/**
 	 * How many elements are currently on the stack?
 	 */
 	int depth();
@@ -56,11 +51,6 @@ public interface Stack<T> {
 	 * Visit all elements in the stack, starting with the root and working "forward"
 	 */
 	void visitRootFirst(Consumer<T> action);
-
-	/**
-	 * Visit all elements in the stack, starting with the current and working back
-	 */
-	void visitCurrentFirst(Consumer<T> action);
 
 	/**
 	 * Find an element on the stack and return a value.  The first non-null element

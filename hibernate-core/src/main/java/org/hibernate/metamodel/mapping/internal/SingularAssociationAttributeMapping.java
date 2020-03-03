@@ -208,33 +208,35 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		// while the getIdentifyingColumnExpressions for this association is PARENT_CHILD.child_id
 		// so we will check if the parentAssociation ForeignKey Target match with the association entity identifier table and columns
 		final ForeignKeyDescriptor associationParentForeignKeyDescriptor = associationParent.getForeignKeyDescriptor();
-		if ( this.foreignKeyDescriptor.getReferringTableExpression().equals( associationParentForeignKeyDescriptor
-																				.getReferringTableExpression() ) ) {
-			final SingleTableEntityPersister entityPersister = (SingleTableEntityPersister) getDeclaringType();
-			if ( associationParentForeignKeyDescriptor.getTargetTableExpression()
-					.equals( entityPersister.getTableName() ) ) {
-				final String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
-				return associationParentForeignKeyDescriptor.visitColumnMapping( (referringTable, referringColumns, targetTable, targetColumns, jdbcMapping) -> {
+		if ( referencedModePart instanceof SingularAssociationAttributeMapping
+				&& ( (SingularAssociationAttributeMapping) referencedModePart ).getDeclaringType() == getPartMappingType() ) {
+			if ( this.foreignKeyDescriptor.getReferringTableExpression()
+					.equals( associationParentForeignKeyDescriptor.getReferringTableExpression() ) ) {
+				final SingleTableEntityPersister entityPersister = (SingleTableEntityPersister) getDeclaringType();
+				if ( associationParentForeignKeyDescriptor.getTargetTableExpression()
+						.equals( entityPersister.getTableName() ) ) {
+					final String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
+					return associationParentForeignKeyDescriptor.visitColumnMapping( (referringTable, referringColumns, targetTable, targetColumns, jdbcMapping) -> {
 //					if ( identifierColumnNames.length == targetColumns.size() ) {
 //						for ( int i = 0; i < identifierColumnNames.length; i++ ) {
 //							if ( !targetColumns.contains( identifierColumnNames[i] ) ) {
 //								return null;
 //							}
 //						}
-					if ( identifierColumnNames.length > 1 ) {
-						throw new NotYetImplementedFor6Exception(
-								"Support for composite foreign -keys not yet 	implemented" );
-					}
-					if ( targetColumns.equals( identifierColumnNames[0] ) ) {
-						return createBiDirectionalFetch( fetchablePath, fetchParent );
-					}
+						if ( identifierColumnNames.length > 1 ) {
+							throw new NotYetImplementedFor6Exception(
+									"Support for composite foreign -keys not yet 	implemented" );
+						}
+						if ( targetColumns.equals( identifierColumnNames[0] ) ) {
+							return createBiDirectionalFetch( fetchablePath, fetchParent );
+						}
 //					}
-					return null;
-				} );
+						return null;
+					} );
+				}
+
 			}
-
 		}
-
 		return null;
 	}
 

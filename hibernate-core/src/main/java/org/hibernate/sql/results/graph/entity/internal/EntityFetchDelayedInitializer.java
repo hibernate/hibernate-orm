@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -63,7 +64,8 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 		}
 		else {
 			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
-			final Object entity = rowProcessingState.getSession().getPersistenceContext().getEntity( entityKey );
+			PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+			final Object entity = persistenceContext.getEntity( entityKey );
 			if ( entity != null ) {
 				entityInstance = entity;
 			}
@@ -74,10 +76,19 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 					entityInstance = loadingEntityLocally.getEntityInstance();
 				}
 				else if ( concreteDescriptor.hasProxy() ) {
-					entityInstance = concreteDescriptor.createProxy(
-							identifier,
-							rowProcessingState.getSession()
-					);
+					final Object proxy = persistenceContext.getProxy( entityKey );
+					if ( proxy != null ) {
+						entityInstance = proxy;
+					}
+					else {
+						entityInstance = concreteDescriptor.createProxy(
+								identifier,
+								rowProcessingState.getSession()
+						);
+						persistenceContext
+								.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+						persistenceContext.addProxy( entityKey, entityInstance );
+					}
 				}
 				else if ( concreteDescriptor
 						.getBytecodeEnhancementMetadata()

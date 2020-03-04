@@ -97,6 +97,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	}
 
+	public FromElementType getElementType() {
+		return elementType;
+	}
+
 	protected void initializeComponentJoin(FromElementType elementType) {
 		fromClause.registerFromElement( this );
 		elementType.applyTreatAsDeclarations( getWalker().getTreatAsDeclarationsByPath( classAlias ) );

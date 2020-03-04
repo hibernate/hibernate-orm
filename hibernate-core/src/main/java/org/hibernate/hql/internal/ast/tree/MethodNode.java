@@ -154,11 +154,13 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 				selectColumns = cpr.toColumns( fromElement.getTableAlias() );
 
 //				setDataType( fromElement.getPropertyType( propertyName, propertyName ) );
-				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
+//				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
+
 			if ( collectionNode instanceof DotNode ) {
 				prepareAnyImplicitJoins( (DotNode) collectionNode );
 			}
+
 			if ( !inSelect ) {
 				fromElement.setText( "" );
 				fromElement.setUseWhereFragment( false );

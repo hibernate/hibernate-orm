@@ -109,6 +109,7 @@ tokens
 	CONSTRUCTOR;
 	CASE2;			// a "simple case statement", whereas CASE represents a "searched case statement"
 	CAST;
+	COLL_PATH;
 	EXPR_LIST;
 	FILTER_ENTITY;		// FROM element injected because of a filter expression (happens during compilation phase 2)
 	IN_LIST;
@@ -124,6 +125,7 @@ tokens
 	RANGE;
 	ROW_STAR;
 	SELECT_FROM;
+	COLL_SIZE;
 	UNARY_MINUS;
 	UNARY_PLUS;
 	VECTOR_EXPR;		// ( x, y, z )
@@ -723,6 +725,7 @@ atom
 primaryExpression
     : { validateSoftKeyword("function") && LA(2) == OPEN && LA(3) == QUOTED_STRING }? jpaFunctionSyntax
     | { validateSoftKeyword("cast") && LA(2) == OPEN }? castFunction
+    | { validateSoftKeyword("size") && LA(2) == OPEN }? collectionSizeFunction
 	| identPrimary ( options {greedy=true;} : DOT^ "class" )?
 	| constant
 	| parameter
@@ -760,6 +763,26 @@ castTargetType
 	//		1) a simple identifier
 	//		2) a simple identifier-(dot-identifier)* sequence
 	: identifier { handleDotIdent(); } ( options { greedy=true; } : DOT^ identifier )*
+	;
+
+collectionSizeFunction!
+	: s:IDENT OPEN p:collectionPath CLOSE {
+		assert #s.getText().equalsIgnoreCase( "size" );
+		#collectionSizeFunction = #( [COLL_SIZE], #p );
+	}
+	;
+
+collectionPath!
+// for now we do not support nested path refs (for embeddables)
+	: simpleRef:identifier {
+		#collectionPath = #( [COLL_PATH], #simpleRef );
+	}
+	| qualifier:collectionPathQualifier DOT propertyName:identifier {
+		#collectionPath = #( [COLL_PATH], #propertyName, #qualifier );
+	};
+
+collectionPathQualifier
+	: identifier ( DOT^ { weakKeywords(); } identifier )*
 	;
 
 parameter

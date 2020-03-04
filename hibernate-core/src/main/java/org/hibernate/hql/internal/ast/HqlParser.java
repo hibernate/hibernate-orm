@@ -109,6 +109,7 @@ public final class HqlParser extends HqlBaseParser {
 		return parseErrorHandler;
 	}
 
+
 	/**
 	 * Overrides the base behavior to retry keywords as identifiers.
 	 *

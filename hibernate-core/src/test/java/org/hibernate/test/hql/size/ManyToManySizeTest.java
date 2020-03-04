@@ -31,7 +31,49 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 public class ManyToManySizeTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	public void testSizeAsSelectExpression() {
+	public void testSizeAsRestriction() {
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
+					final List results = session.createQuery(
+							"select c.id from Company c where size( c.customers ) = 0"
+					).list();
+					assertThat( results.size(), is( 1 ) );
+					assertThat( results.get( 0 ), is( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testSizeAsCompoundSelectExpression() {
+		doInHibernate(
+				this::sessionFactory,
+				session -> {
+					final List results = session.createQuery(
+							"select c.id, c.name, size( c.customers )" +
+									" from Company c" +
+									" group by c.id, c.name" +
+									" order by c.id"
+					).list();
+					assertThat( results.size(), is( 3 ) );
+
+					final Object[] first = (Object[]) results.get( 0 );
+					assertThat( first[ 0 ], is( 0 ) );
+					assertThat( first[ 2 ], is( 0 ) );
+
+					final Object[] second = (Object[]) results.get( 1 );
+					assertThat( second[ 0 ], is( 1 ) );
+					assertThat( second[ 2 ], is( 1 ) );
+
+					final Object[] third = (Object[]) results.get( 2 );
+					assertThat( third[ 0 ], is( 2 ) );
+					assertThat( third[ 2 ], is( 2 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testSizeAsCtorSelectExpression() {
 		doInHibernate(
 				this::sessionFactory,
 				session -> {

@@ -17,6 +17,8 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.SqlGeneratorBase;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
+import org.hibernate.hql.internal.ast.tree.CollectionPathNode;
+import org.hibernate.hql.internal.ast.tree.CollectionSizeNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FunctionNode;
 import org.hibernate.hql.internal.ast.tree.Node;
@@ -32,6 +34,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 
 import antlr.RecognitionException;
+import antlr.SemanticException;
 import antlr.collections.AST;
 
 /**
@@ -425,5 +428,20 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 																			.getDefaultNullPrecedence()
 		);
 		return sessionFactory.getDialect().renderOrderByElement( expression, null, order, nullPrecedence );
+	}
+
+	@Override
+	protected void renderCollectionSize(AST ast) {
+		assert ast instanceof CollectionSizeNode;
+
+		final CollectionSizeNode collectionSizeNode = (CollectionSizeNode) ast;
+
+		// todo : or `#getStringBuilder()` directly?
+		try {
+			writer.clause( collectionSizeNode.toSqlExpression() );
+		}
+		catch (SemanticException e) {
+			throw new QueryException( "Unable to render collection-size node" );
+		}
 	}
 }

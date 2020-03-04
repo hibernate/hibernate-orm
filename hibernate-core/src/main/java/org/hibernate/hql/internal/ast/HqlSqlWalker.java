@@ -34,6 +34,8 @@ import org.hibernate.hql.internal.ast.tree.AggregateNode;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.internal.ast.tree.CastFunctionNode;
 import org.hibernate.hql.internal.ast.tree.CollectionFunction;
+import org.hibernate.hql.internal.ast.tree.CollectionPathNode;
+import org.hibernate.hql.internal.ast.tree.CollectionSizeNode;
 import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
@@ -82,6 +84,7 @@ import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
@@ -637,6 +640,13 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	public JoinType getImpliedJoinType() {
 		return impliedJoinType;
+	}
+
+	@Override
+	protected AST createCollectionSizeFunction(AST collectionPath, boolean inSelect) throws SemanticException {
+		assert collectionPath instanceof CollectionPathNode;
+
+		return new CollectionSizeNode( (CollectionPathNode) collectionPath, this );
 	}
 
 	@Override
@@ -1219,6 +1229,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	protected void processIndex(AST indexOp) throws SemanticException {
 		IndexNode indexNode = (IndexNode) indexOp;
 		indexNode.resolve( true, true );
+	}
+
+	@Override
+	protected AST createCollectionPath(AST qualifier, AST reference) throws SemanticException {
+		return CollectionPathNode.from( qualifier, reference, this );
 	}
 
 	@Override

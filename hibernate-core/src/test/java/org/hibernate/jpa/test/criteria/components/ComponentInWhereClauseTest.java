@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.transaction.TransactionUtil2;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -93,6 +94,18 @@ public class ComponentInWhereClauseTest extends BaseEntityManagerFunctionalTestC
 									 final List<Employee> results = entityManager.createQuery( query ).getResultList();
 									 assertThat( results.size(), is( 1 ) );
 								 }
+		);
+	}
+
+	@Test
+	public void testSizeExpressionForTheOneToManyPropertyOfAComponentHql() {
+		TransactionUtil2.inTransaction(
+				entityManagerFactory(),
+				session -> {
+					final String hql = "from Employee e where size( e.projects.previousProjects ) = 2";
+					final List resultsList = session.createQuery( hql ).list();
+					assertThat( resultsList.size(), is( 1 ) );
+				}
 		);
 	}
 

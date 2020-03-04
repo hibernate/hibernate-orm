@@ -23,6 +23,21 @@ public class ImpliedFromElement extends FromElement {
 	 */
 	private boolean inProjectionList;
 
+	/**
+	 * Here to add debug breakpoints
+	 */
+	@SuppressWarnings("unused")
+	public ImpliedFromElement() {
+		super();
+	}
+
+	/**
+	 * Here to add debug breakpoints
+	 */
+	public ImpliedFromElement(FromClause fromClause, FromElement origin, String alias) {
+		super( fromClause, origin, alias );
+	}
+
 	public boolean isImplied() {
 		return true;
 	}

@@ -16,13 +16,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
 
+import org.jboss.logging.Logger;
+
 /**
  * Enumeration of the recognized types of events, including meta-information about each.
  *
  * @author Steve Ebersole
  */
 public final class EventType<T> {
-
+	private static final Logger LOG = Logger.getLogger( EventType.class );
 	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
@@ -76,6 +78,41 @@ public final class EventType<T> {
 	public static final EventType<PostCollectionRemoveEventListener> POST_COLLECTION_REMOVE = create( "post-collection-remove", PostCollectionRemoveEventListener.class );
 	public static final EventType<PostCollectionUpdateEventListener> POST_COLLECTION_UPDATE = create( "post-collection-update", PostCollectionUpdateEventListener.class );
 
+	/**
+	 * Add a new event type.
+	 *
+	 * @param name - name of the custom event
+	 * @param listenerClass - the base listener class or interface associated with the entity type
+	 * @param <T> - listenerClass
+	 * @return the custom {@link EventType}
+	 */
+	public synchronized static <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
+		if ( name == null || listenerClass == null ) {
+			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
+		}
+		final EventType existingEventType = EVENT_TYPE_BY_NAME_MAP.get( name );
+		if ( existingEventType != null ) {
+			if ( listenerClass.equals( existingEventType.baseListenerInterface ) ) {
+				LOG.warn( "EventType [" + name + "] with listener Class ["
+								  + listenerClass + "] was added more than once." );
+				return existingEventType;
+			}
+			else {
+				throw new HibernateException(
+						"Could not add EventType [" + name + "] with listener Class ["
+								+ "]. An EventType with that name already exists with listener ["
+								+ listenerClass.getName()
+								+ "]."
+				);
+			}
+		}
+		else {
+			final EventType<T> eventType = create( name, listenerClass );
+			EVENT_TYPE_BY_NAME_MAP.put( name, eventType );
+			LOG.info( "Added custom EventType:  [" + name + "], ordinal=[" +eventType.ordinal + "], listener=[" + listenerClass + "]." );
+			return eventType;
+		}
+	}
 
 	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
 		return new EventType<T>( name, listenerClass );

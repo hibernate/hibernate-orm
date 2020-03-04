@@ -9,18 +9,13 @@ package org.hibernate.hql.internal.ast.tree;
 import org.hibernate.AssertionFailure;
 import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
-import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;
-
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * @author Steve Ebersole
@@ -31,13 +26,10 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 	private final CollectionPathNode collectionPathNode;
 	private final CollectionPropertyMapping collectionPropertyMapping;
 
-	private final HqlSqlWalker walker;
 	private String alias;
 
-	public CollectionSizeNode(CollectionPathNode collectionPathNode, HqlSqlWalker walker) {
+	public CollectionSizeNode(CollectionPathNode collectionPathNode) {
 		this.collectionPathNode = collectionPathNode;
-		this.walker = walker;
-
 		this.collectionPropertyMapping = new CollectionPropertyMapping( (QueryableCollection) collectionPathNode.getCollectionDescriptor() );
 
 		setType( HqlSqlTokenTypes.COLL_SIZE );
@@ -45,15 +37,12 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		setText( "collection-size" );
 	}
 
+	@SuppressWarnings("unused")
 	public CollectionPathNode getCollectionPathNode() {
 		return collectionPathNode;
 	}
 
-	public HqlSqlWalker getWalker() {
-		return walker;
-	}
-
-	public String toSqlExpression() throws SemanticException {
+	public String toSqlExpression() {
 		// generate subquery in the form:
 		//
 		// select count( alias_.<collection-size-columns> )
@@ -67,36 +56,10 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		//		<owner-key-column>			=> ???
 
 
-		final FromElement collectionOwnerFromElement = collectionPathNode.getCollectionOwnerRef();
+		final String[] ownerKeyColumns = collectionPathNode.resolveOwnerKeyColumnExpressions();
+
+		final FromElement collectionOwnerFromElement = collectionPathNode.getCollectionOwnerFromElement();
 		final QueryableCollection collectionDescriptor = (QueryableCollection) collectionPathNode.getCollectionDescriptor();
-		final String collectionPropertyName = collectionPathNode.getCollectionPropertyName();
-
-		getWalker().addQuerySpaces( collectionDescriptor.getCollectionSpaces() );
-
-		// silly : need to prime `SessionFactoryHelper#collectionPropertyMappingByRole`
-		walker.getSessionFactoryHelper().requireQueryableCollection( collectionDescriptor.getRole() );
-
-		// owner-key
-		final String[] ownerKeyColumns;
-		final AST ast = walker.getAST();
-		final String ownerTableAlias;
-		if ( ast instanceof DeleteStatement || ast instanceof UpdateStatement ) {
-			ownerTableAlias = collectionOwnerFromElement.getTableName();
-		}
-		else {
-			ownerTableAlias = collectionOwnerFromElement.getTableAlias();
-		}
-
-		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
-		if ( lhsPropertyName == null ) {
-			ownerKeyColumns = StringHelper.qualify(
-					ownerTableAlias,
-					( (Joinable) collectionDescriptor.getOwnerEntityPersister() ).getKeyColumnNames()
-			);
-		}
-		else {
-			ownerKeyColumns = collectionOwnerFromElement.toColumns( ownerTableAlias, lhsPropertyName, true );
-		}
 
 		// collection-key
 		final String collectionTableAlias = collectionOwnerFromElement.getFromClause()
@@ -104,15 +67,10 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 				.createName( collectionPathNode.getCollectionPropertyName() );
 		final String[] collectionKeyColumns = StringHelper.qualify( collectionTableAlias, collectionDescriptor.getKeyColumnNames() );
 
-
 		if ( collectionKeyColumns.length != ownerKeyColumns.length ) {
 			throw new AssertionFailure( "Mismatch between collection key columns" );
 		}
 
-		// PropertyMapping(c).toColumns(customers)
-		// PropertyMapping(c.customers).toColumns(SIZE)
-
-		// size expression (the count function)
 		final String[] sizeColumns = this.collectionPropertyMapping.toColumns(
 				collectionTableAlias,
 				CollectionPropertyNames.COLLECTION_SIZE
@@ -159,13 +117,13 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 	// SelectExpression
 
 	@Override
-	public void setScalarColumnText(int i) throws SemanticException {
+	public void setScalarColumnText(int i) {
 		log.debugf( "setScalarColumnText(%s)", i );
 		scalarName = NameGenerator.scalarName( i, 0 );
 	}
 
 	@Override
-	public void setScalarColumn(int i) throws SemanticException {
+	public void setScalarColumn(int i) {
 		log.debugf( "setScalarColumn(%s)", i );
 		setScalarColumnText( i );
 	}
@@ -186,12 +144,12 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 	}
 
 	@Override
-	public boolean isReturnableEntity() throws SemanticException {
+	public boolean isReturnableEntity() {
 		return false;
 	}
 
 	@Override
-	public boolean isScalar() throws SemanticException {
+	public boolean isScalar() {
 		return false;
 	}
 

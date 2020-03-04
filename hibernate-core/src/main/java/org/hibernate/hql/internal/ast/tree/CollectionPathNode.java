@@ -11,9 +11,11 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.SqlASTFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -38,6 +40,7 @@ public class CollectionPathNode extends SqlNode {
 	private final String collectionPropertyPath;
 	private final String collectionQueryPath;
 
+	private final HqlSqlWalker walker;
 
 
 	/**
@@ -50,12 +53,16 @@ public class CollectionPathNode extends SqlNode {
 			CollectionPersister collectionDescriptor,
 			String collectionPropertyName,
 			String collectionQueryPath,
-			String collectionPropertyPath) {
+			String collectionPropertyPath,
+			HqlSqlWalker walker) {
 		this.ownerFromElement = ownerFromElement;
 		this.collectionDescriptor = collectionDescriptor;
 		this.collectionPropertyName = collectionPropertyName;
 		this.collectionQueryPath = collectionQueryPath;
 		this.collectionPropertyPath = collectionPropertyPath;
+		this.walker = walker;
+
+		walker.addQuerySpaces( collectionDescriptor.getCollectionSpaces() );
 
 		super.setType( SqlASTFactory.COLL_PATH );
 		super.setDataType( collectionDescriptor.getCollectionType() );
@@ -99,7 +106,8 @@ public class CollectionPathNode extends SqlNode {
 						collectionDescriptor,
 						referenceName,
 						referencePath,
-						referenceName
+						referenceName,
+						walker
 				);
 			}
 			else {
@@ -126,7 +134,8 @@ public class CollectionPathNode extends SqlNode {
 							walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 							referenceName,
 							referencePath,
-							referenceName
+							referenceName,
+							walker
 					);
 				}
 				else {
@@ -171,7 +180,8 @@ public class CollectionPathNode extends SqlNode {
 							walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 							referenceName,
 							referencePath,
-							referenceName
+							referenceName,
+							walker
 					);
 				}
 			}
@@ -221,12 +231,13 @@ public class CollectionPathNode extends SqlNode {
 					walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 					referenceName,
 					referencePath,
-					mappedPath
+					mappedPath,
+					walker
 			);
 		}
 	}
 
-	public FromElement getCollectionOwnerRef() {
+	public FromElement getCollectionOwnerFromElement() {
 		return ownerFromElement;
 	}
 
@@ -244,5 +255,27 @@ public class CollectionPathNode extends SqlNode {
 
 	public String getCollectionQueryPath() {
 		return collectionQueryPath;
+	}
+
+	public String[] resolveOwnerKeyColumnExpressions() {
+		final AST ast = walker.getAST();
+		final String ownerTableAlias;
+		if ( ast instanceof DeleteStatement || ast instanceof UpdateStatement ) {
+			ownerTableAlias = ownerFromElement.getTableName();
+		}
+		else {
+			ownerTableAlias = ownerFromElement.getTableAlias();
+		}
+
+		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
+		if ( lhsPropertyName == null ) {
+			return StringHelper.qualify(
+					ownerTableAlias,
+					( (Joinable) collectionDescriptor.getOwnerEntityPersister() ).getKeyColumnNames()
+			);
+		}
+		else {
+			return ownerFromElement.toColumns( ownerTableAlias, lhsPropertyName, true );
+		}
 	}
 }

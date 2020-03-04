@@ -423,9 +423,9 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
 	protected String renderOrderByElement(String expression, String order, String nulls) {
-		final NullPrecedence nullPrecedence = NullPrecedence.parse( nulls,
-																	sessionFactory.getSettings()
-																			.getDefaultNullPrecedence()
+		final NullPrecedence nullPrecedence = NullPrecedence.parse(
+				nulls,
+				sessionFactory.getSettings().getDefaultNullPrecedence()
 		);
 		return sessionFactory.getDialect().renderOrderByElement( expression, null, order, nullPrecedence );
 	}
@@ -436,11 +436,13 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 		final CollectionSizeNode collectionSizeNode = (CollectionSizeNode) ast;
 
-		// todo : or `#getStringBuilder()` directly?
 		try {
 			writer.clause( collectionSizeNode.toSqlExpression() );
 		}
-		catch (SemanticException e) {
+		catch (QueryException qe) {
+			throw qe;
+		}
+		catch (Exception e) {
 			throw new QueryException( "Unable to render collection-size node" );
 		}
 	}

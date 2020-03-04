@@ -84,7 +84,6 @@ import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
@@ -645,8 +644,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	@Override
 	protected AST createCollectionSizeFunction(AST collectionPath, boolean inSelect) throws SemanticException {
 		assert collectionPath instanceof CollectionPathNode;
-
-		return new CollectionSizeNode( (CollectionPathNode) collectionPath, this );
+		return new CollectionSizeNode( (CollectionPathNode) collectionPath );
 	}
 
 	@Override

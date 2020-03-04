@@ -97,7 +97,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final CallbackRegistryImplementor callbackRegistry;
-	private final EventListenerGroupImpl[] registeredEventListeners;
+	private volatile EventListenerGroupImpl[] registeredEventListeners;
 	private CallbackBuilder callbackBuilder;
 
 	/**
@@ -160,9 +160,56 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private synchronized <T> EventListenerGroupImpl<T> getOrCreateEventListenerGroup(EventType<T> eventType) {
+		final int sizeOriginal = this.registeredEventListeners.length;
+		final EventListenerGroupImpl[] registeredEventListenersNew;
+		if ( eventType.ordinal() < sizeOriginal ) {
+			final EventListenerGroupImpl registeredEventListener = registeredEventListeners[ eventType.ordinal() ];
+			if ( registeredEventListener != null ) {
+				// eventType has already been registered;
+				return registeredEventListener; // EARLY RETURN
+			}
+			// eventType has not been registered yet.
+			// Its EventListenerGroupImpl will be created and added to registeredEventListeners below.
+			// There is already space for the new EventType in this.registeredEventListeners.
+			registeredEventListenersNew = this.registeredEventListeners;
+		}
+		else {
+			// eventType is a custom EventType, and there is not enough space in
+			// registeredEventListeners to accommodate it.
+
+			// Allocate a new array to hold listener groups for *all* EventType values that currently exist.
+			// This way an existing, unregistered EventType with a larger ordinal will not require another
+			// allocation when it gets registered in the future.
+			final int sizeNew = Math.max( eventType.ordinal() + 1, EventType.values().size() );
+			registeredEventListenersNew = new EventListenerGroupImpl[sizeNew];
+
+			// First copy the existing listeners to registeredEventListenersNew.
+			System.arraycopy( this.registeredEventListeners, 0, registeredEventListenersNew, 0, sizeOriginal );
+		}
+
+		final EventListenerGroupImpl listenerGroup = new EventListenerGroupImpl(
+				eventType,
+				EventListenerRegistryImpl.this
+		);
+		registeredEventListenersNew[eventType.ordinal()] = listenerGroup;
+
+		// Now update the reference.
+		this.registeredEventListeners = registeredEventListenersNew;
+
+		return listenerGroup;
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroupImpl<T> getEventListenerGroup(EventType<T> eventType) {
-		EventListenerGroupImpl<T> listeners = registeredEventListeners[ eventType.ordinal() ];
+		if ( registeredEventListeners.length < eventType.ordinal() + 1 ) {
+			// eventTpe is a custom EventType that has not been registered.
+			// registeredEventListeners array was not allocated enough space to
+			// accommodate it.
+			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
+		}
+		final EventListenerGroupImpl<T> listeners = registeredEventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}
@@ -218,7 +265,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	@Override
 	@SafeVarargs
 	public final <T> void setListeners(EventType<T> type, T... listeners) {
-		EventListenerGroupImpl<T> registeredListeners = getEventListenerGroup( type );
+		EventListenerGroupImpl<T> registeredListeners = getOrCreateEventListenerGroup( type );
 		registeredListeners.clear();
 		if ( listeners != null ) {
 			for ( T listener : listeners ) {
@@ -236,7 +283,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	@Override
 	@SafeVarargs
 	public final <T> void appendListeners(EventType<T> type, T... listeners) {
-		getEventListenerGroup( type ).appendListeners( listeners );
+		getOrCreateEventListenerGroup( type ).appendListeners( listeners );
 	}
 
 	@Override
@@ -248,7 +295,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	@Override
 	@SafeVarargs
 	public final <T> void prependListeners(EventType<T> type, T... listeners) {
-		getEventListenerGroup( type ).prependListeners( listeners );
+		getOrCreateEventListenerGroup( type ).prependListeners( listeners );
 	}
 
 	private EventListenerGroupImpl[] buildListenerGroups() {

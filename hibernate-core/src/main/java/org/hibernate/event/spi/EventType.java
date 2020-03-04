@@ -10,11 +10,14 @@ import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreLogging;
+
+import org.jboss.logging.Logger;
 
 /**
  * Enumeration of the recognized types of events, including meta-information about each.
@@ -22,7 +25,7 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public final class EventType<T> {
-
+	private static final Logger LOG = CoreLogging.logger( EventType.class );
 	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
@@ -76,6 +79,46 @@ public final class EventType<T> {
 	public static final EventType<PostCollectionRemoveEventListener> POST_COLLECTION_REMOVE = create( "post-collection-remove", PostCollectionRemoveEventListener.class );
 	public static final EventType<PostCollectionUpdateEventListener> POST_COLLECTION_UPDATE = create( "post-collection-update", PostCollectionUpdateEventListener.class );
 
+	/**
+	 * Add a new event type.
+	 *
+	 * @param name - name of the custom event
+	 * @param listenerClass - the base listener class or interface associated with the entity type
+	 * @param <T> - listenerClass
+	 * @return the custom {@link EventType}
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static synchronized <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
+		if ( name == null || listenerClass == null ) {
+			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
+		}
+
+		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.computeIfAbsent(
+				name,
+				( e -> {
+					final EventType eventTypeNew = EventType.create( name, listenerClass );
+					LOG.debugf(
+							"Added custom EventType: [%s], ordinal=[%d], listener=[%s].",
+							name,
+							eventTypeNew.ordinal,
+							listenerClass.toString()
+					);
+					return eventTypeNew;
+				} )
+		);
+		// There's no way to know if there was a pre-existing EventType with
+		// the same name and listener, so ignore that case.
+		// Just check that listener is the same as listenerClass
+		if ( !listenerClass.equals( eventType.baseListenerInterface ) ) {
+				throw new HibernateException(
+						"Could not add EventType [" + name + "] with listener Class ["
+								+ "]. An EventType with that name already exists with listener ["
+								+ listenerClass.getName()
+								+ "]."
+				);
+		}
+		return eventType;
+	}
 
 	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
 		return new EventType<T>( name, listenerClass );
@@ -89,7 +132,7 @@ public final class EventType<T> {
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<String, EventType>();
+					final Map<String, EventType> typeByNameMap = new ConcurrentHashMap<>();
 					for ( Field field : EventType.class.getDeclaredFields() ) {
 						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
 							try {

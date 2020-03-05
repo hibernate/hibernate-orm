@@ -143,6 +143,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			Array.set( array, i, loadingState.get( i ) );
 		}
+		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array, getSession().getFactory() );
 	}
 
 	@SuppressWarnings("UnusedDeclaration")

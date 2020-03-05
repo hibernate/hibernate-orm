@@ -21,7 +21,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @DomainModel(
-		annotatedClasses = { ArrayTests.Employee.class  }
+		annotatedClasses = { ArrayTests.Employee.class }
 )
 @ServiceRegistry
 @SessionFactory
@@ -55,7 +55,7 @@ public class ArrayTests {
 					ArrayTests.Employee employee = new ArrayTests.Employee();
 					employee.setId( 1 );
 					employee.setName( "Koen" );
-					employee.setToDoList( new String[]{ "metro", "boulot", "dodo"}  );
+					employee.setToDoList( new String[] { "metro", "boulot", "dodo" } );
 					session.save( employee );
 				}
 		);
@@ -63,6 +63,10 @@ public class ArrayTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Employee" ).executeUpdate()
+		);
 	}
 
 	@Entity(name = "Employee")
@@ -71,15 +75,32 @@ public class ArrayTests {
 		private Integer id;
 		private String name;
 		private String[] toDoList;
-		@Id public Integer getId() { return id; }
-		public void setId(Integer id) { this.id = id; }
-		public String getName() { return name; }
-		public void setName(String name) { this.name = name; }
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
 		@ElementCollection
 		@OrderColumn
 		public String[] getToDoList() {
 			return toDoList;
 		}
-		public void setToDoList(String[] toDoList) { this.toDoList = toDoList; }
+
+		public void setToDoList(String[] toDoList) {
+			this.toDoList = toDoList;
+		}
 	}
 }

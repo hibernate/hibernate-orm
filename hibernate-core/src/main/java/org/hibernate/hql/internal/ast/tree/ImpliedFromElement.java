@@ -31,13 +31,6 @@ public class ImpliedFromElement extends FromElement {
 		super();
 	}
 
-	/**
-	 * Here to add debug breakpoints
-	 */
-	public ImpliedFromElement(FromClause fromClause, FromElement origin, String alias) {
-		super( fromClause, origin, alias );
-	}
-
 	public boolean isImplied() {
 		return true;
 	}

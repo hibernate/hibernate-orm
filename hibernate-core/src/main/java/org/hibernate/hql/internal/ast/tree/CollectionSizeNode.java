@@ -43,28 +43,23 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 	}
 
 	public String toSqlExpression() {
-		// generate subquery in the form:
-		//
-		// select count( alias_.<collection-size-columns> )
-		// from <collection-table> as alias_
-		// where <owner-key-column> = alias_.<collection-key-column>
-
-		// need:
-		//		<collection-size-columns> 	=> QueryableCollection#getKeyColumnNames
-		//		<collection-key-column>		=> QueryableCollection#getKeyColumnNames
-		//		<collection-table> 			=> QueryableCollection#getTableName
-		//		<owner-key-column>			=> ???
-
-
-		final String[] ownerKeyColumns = collectionPathNode.resolveOwnerKeyColumnExpressions();
-
 		final FromElement collectionOwnerFromElement = collectionPathNode.getCollectionOwnerFromElement();
 		final QueryableCollection collectionDescriptor = (QueryableCollection) collectionPathNode.getCollectionDescriptor();
 
-		// collection-key
+		// generate subquery in the form:
+		//
+		// select count( alias_.<collection-key-column> )
+		// from <collection-table> as alias_
+		// where <owner-key-column> = alias_.<collection-key-column>
+
+		// Note that `collectionPropertyMapping.toColumns(.., COLLECTION_SIZE)` returns the complete `count(...)` SQL
+		// expression, hence he expectation for a single expression regardless of the number of columns in the key.
+
 		final String collectionTableAlias = collectionOwnerFromElement.getFromClause()
 				.getAliasGenerator()
 				.createName( collectionPathNode.getCollectionPropertyName() );
+
+		final String[] ownerKeyColumns = collectionPathNode.resolveOwnerKeyColumnExpressions();
 		final String[] collectionKeyColumns = StringHelper.qualify( collectionTableAlias, collectionDescriptor.getKeyColumnNames() );
 
 		if ( collectionKeyColumns.length != ownerKeyColumns.length ) {
@@ -111,10 +106,11 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		return subQuery;
 	}
 
-	private String scalarName;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SelectExpression
+
+	private String scalarName;
 
 	@Override
 	public void setScalarColumnText(int i) {

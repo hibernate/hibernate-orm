@@ -48,6 +48,7 @@ public class CollectionPathNode extends SqlNode {
 	 *
 	 * @see #from(AST, AST, HqlSqlWalker)
 	 */
+	@SuppressWarnings("WeakerAccess")
 	public CollectionPathNode(
 			FromElement ownerFromElement,
 			CollectionPersister collectionDescriptor,
@@ -81,19 +82,14 @@ public class CollectionPathNode extends SqlNode {
 			HqlSqlWalker walker) {
 
 		final String referenceName = reference.getText();
-		final String qualifierQueryPath = qualifier == null
-				? ""
-				: ( (FromReferenceNode) qualifier ).getPath();
-		final String referencePath = qualifier == null
-				? referenceName
-				: qualifierQueryPath + "." + reference;
+		final String referenceQueryPath;
 
 		if ( qualifier == null ) {
 			// If there is no qualifier it means the argument to `size()` was a simple IDENT node as opposed to a DOT-IDENT
 			// node.  In this case, `reference` could technically be a join alias.  This is not JPA
 			// compliant, but is a Hibernate-specific extension
 
-			// size( cu )
+			referenceQueryPath = referenceName;
 
 			final FromElement byAlias = walker.getCurrentFromClause().getFromElement( referenceName );
 
@@ -105,7 +101,7 @@ public class CollectionPathNode extends SqlNode {
 						ownerRef,
 						collectionDescriptor,
 						referenceName,
-						referencePath,
+						referenceQueryPath,
 						referenceName,
 						walker
 				);
@@ -133,7 +129,7 @@ public class CollectionPathNode extends SqlNode {
 							ownerRef,
 							walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 							referenceName,
-							referencePath,
+							referenceQueryPath,
 							referenceName,
 							walker
 					);
@@ -179,7 +175,7 @@ public class CollectionPathNode extends SqlNode {
 							ownerRef,
 							walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 							referenceName,
-							referencePath,
+							referenceQueryPath,
 							referenceName,
 							walker
 					);
@@ -189,18 +185,22 @@ public class CollectionPathNode extends SqlNode {
 		else {
 			// we have a dot-ident structure
 			final FromReferenceNode qualifierFromReferenceNode = (FromReferenceNode) qualifier;
+
+			final String qualifierQueryPath = ( (FromReferenceNode) qualifier ).getPath();
+			referenceQueryPath = qualifierQueryPath + "." + reference;
+
 			try {
 				qualifierFromReferenceNode.resolve( false, false );
 			}
 			catch (SemanticException e) {
-				throw new QueryException( "Unable to resolve collection-path qualifier : " + qualifier.getText(), e );
+				throw new QueryException( "Unable to resolve collection-path qualifier : " + qualifierQueryPath, e );
 			}
 
 			final Type qualifierType = qualifierFromReferenceNode.getDataType();
 			final FromElement ownerRef = ( (FromReferenceNode) qualifier ).getFromElement();
 
 			final CollectionType collectionType;
-			final String mappedPath;
+			final String referenceMappedPath;
 
 			if ( qualifierType instanceof CompositeType ) {
 				final CompositeType qualifierCompositeType = (CompositeType) qualifierType;
@@ -208,10 +208,10 @@ public class CollectionPathNode extends SqlNode {
 				collectionType = (CollectionType) qualifierCompositeType.getSubtypes()[collectionPropertyIndex];
 
 				if ( ownerRef instanceof ComponentJoin ) {
-					mappedPath = ( (ComponentJoin) ownerRef ).getComponentPath() + "." + referenceName;
+					referenceMappedPath = ( (ComponentJoin) ownerRef ).getComponentPath() + "." + referenceName;
 				}
 				else {
-					mappedPath = qualifierQueryPath.substring( qualifierQueryPath.indexOf( "." ) + 1 );
+					referenceMappedPath = qualifierQueryPath.substring( qualifierQueryPath.indexOf( "." ) + 1 );
 				}
 			}
 			else if ( qualifierType instanceof EntityType ) {
@@ -220,7 +220,7 @@ public class CollectionPathNode extends SqlNode {
 				final EntityPersister entityPersister = walker.getSessionFactoryHelper().findEntityPersisterByName( entityName );
 				final int propertyIndex = entityPersister.getEntityMetamodel().getPropertyIndex( referenceName );
 				collectionType = (CollectionType) entityPersister.getPropertyTypes()[ propertyIndex ];
-				mappedPath = referenceName;
+				referenceMappedPath = referenceName;
 			}
 			else {
 				throw new QueryException( "Unexpected collection-path reference qualifier type : " + qualifier );
@@ -230,33 +230,48 @@ public class CollectionPathNode extends SqlNode {
 					( (FromReferenceNode) qualifier ).getFromElement(),
 					walker.getSessionFactoryHelper().requireQueryableCollection( collectionType.getRole() ),
 					referenceName,
-					referencePath,
-					mappedPath,
+					referenceQueryPath,
+					referenceMappedPath,
 					walker
 			);
 		}
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public FromElement getCollectionOwnerFromElement() {
 		return ownerFromElement;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public CollectionPersister getCollectionDescriptor() {
 		return collectionDescriptor;
 	}
 
+	/**
+	 * The name of the collection property - e.g. `theCollection`
+	 */
 	public String getCollectionPropertyName() {
 		return collectionPropertyName;
 	}
 
+	/**
+	 * The collection property path relative to the "owning entity" in the mapping model - e.g. `theCollection`
+	 * or `someEmbeddable.theCollection`.
+	 */
+	@SuppressWarnings("unused")
 	public String getCollectionPropertyPath() {
 		return collectionPropertyPath;
 	}
 
+	/**
+	 * The "full" path.  E.g. `a.theCollection` or `a.someEmbeddable.theCollection`
+	 */
+	@SuppressWarnings("WeakerAccess")
 	public String getCollectionQueryPath() {
 		return collectionQueryPath;
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public String[] resolveOwnerKeyColumnExpressions() {
 		final AST ast = walker.getAST();
 		final String ownerTableAlias;

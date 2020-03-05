@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
@@ -49,7 +50,11 @@ public class DelayedCollectionAssembler implements DomainResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		return initializer.getCollectionInstance();
+		PersistentCollection collectionInstance = initializer.getCollectionInstance();
+		if ( collectionInstance instanceof PersistentArrayHolder ) {
+			return collectionInstance.getValue();
+		}
+		return collectionInstance;
 	}
 
 	@Override

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -29,7 +31,11 @@ public class EagerCollectionAssembler implements DomainResultAssembler {
 
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		return initializer.getCollectionInstance();
+		PersistentCollection collectionInstance = initializer.getCollectionInstance();
+		if ( collectionInstance instanceof PersistentArrayHolder ) {
+			return collectionInstance.getValue();
+		}
+		return collectionInstance;
 	}
 
 	@Override

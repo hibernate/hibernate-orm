@@ -9,7 +9,6 @@ import javax.persistence.Table;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +27,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory
 public class ArrayTests {
 
-	@FailureExpected
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction(

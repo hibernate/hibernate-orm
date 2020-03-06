@@ -139,9 +139,14 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	@Override
 	public void injectLoadedState(PluralAttributeMapping attributeMapping, List loadingState) {
 		assert isInitializing();
-		array = Array.newInstance( elementClass, loadingState.size() );
-		for ( int i = 0; i < loadingState.size(); i++ ) {
-			Array.set( array, i, loadingState.get( i ) );
+		if ( loadingState == null ) {
+			array = Array.newInstance( elementClass, 0 );
+		}
+		else {
+			array = Array.newInstance( elementClass, loadingState.size() );
+			for ( int i = 0; i < loadingState.size(); i++ ) {
+				Array.set( array, i, loadingState.get( i ) );
+			}
 		}
 		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array, getSession().getFactory() );
 	}

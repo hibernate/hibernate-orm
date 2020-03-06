@@ -1876,4 +1876,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
 	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Instantiating explicit sql logger: %s")
+	void instantiatingExplicitSQLLogger(String providerClassName);
+
 }

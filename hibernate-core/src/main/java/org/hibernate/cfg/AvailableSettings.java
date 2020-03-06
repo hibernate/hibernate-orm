@@ -743,6 +743,17 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String FORMAT_SQL ="hibernate.format_sql";
 
 	/**
+	 * Names the {@link org.hibernate.engine.jdbc.spi.SqlStatementLogger} class to use for customized (slow) SQL logging.
+	 * Can reference:<ul>
+	 *     <li>an instance of SqlStatementLogger</li>
+	 *     <li>a {@code Class<? extends SqlStatementLogger>} reference</li>
+	 *     <li>a {@code Class<? extends SqlStatementLogger>} FQN</li>
+	 * </ul>
+	 * <p/>
+	 */
+	String SQL_LOGGER ="hibernate.sqllogger_class";
+
+	/**
 	 * Add comments to the generated SQL
 	 */
 	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";

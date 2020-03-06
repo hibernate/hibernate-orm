@@ -632,9 +632,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					}
 
 					Queryable actualQueryable = (Queryable) getFactory().getEntityPersister( actualSubClass );
-					if ( !actualQueryable.hasSubclasses() ) {
-						values.add( actualQueryable.getDiscriminatorSQLValue() );
-					}
+					values.add( actualQueryable.getDiscriminatorSQLValue() );
 				}
 			}
 		}

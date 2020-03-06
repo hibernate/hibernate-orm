@@ -8,6 +8,7 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -25,11 +26,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = { ArrayTests.Employee.class }
 )
 @ServiceRegistry
-@SessionFactory
+@SessionFactory(generateStatistics = true)
 public class ArrayTests {
 
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<Employee> query = session.createQuery(
@@ -37,6 +40,7 @@ public class ArrayTests {
 							Employee.class
 					);
 					final Employee result = query.uniqueResult();
+					assertThat( statistics.getPrepareStatementCount(), is(2L) );
 					assertThat( result, notNullValue() );
 					assertThat( result.getName(), is( "Koen" ) );
 					String[] todo = result.getToDoList();
@@ -57,6 +61,8 @@ public class ArrayTests {
 				}
 		);
 
+		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<Employee> query = session.createQuery(
@@ -64,6 +70,7 @@ public class ArrayTests {
 							Employee.class
 					);
 					final Employee result = query.setParameter( "id", 2 ).uniqueResult();
+					assertThat( statistics.getPrepareStatementCount(), is(2L) );
 
 					assertThat( result, notNullValue() );
 					assertThat( result.getName(), is( "Andrea" ) );
@@ -72,6 +79,7 @@ public class ArrayTests {
 				}
 		);
 
+		statistics.clear();
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<Employee> query = session.createQuery(
@@ -79,6 +87,7 @@ public class ArrayTests {
 							Employee.class
 					);
 					final List<Employee> results = query.list();
+					assertThat( statistics.getPrepareStatementCount(), is(3L) );
 
 					assertThat( results.size(), is( 2 ) );
 					results.forEach( employee -> {

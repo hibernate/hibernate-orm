@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.metamodel.mapping.array;
 
+import java.util.List;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -47,14 +48,11 @@ public class ArrayTests {
 		);
 	}
 
-
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					ArrayTests.Employee employee = new ArrayTests.Employee();
-					employee.setId( 1 );
-					employee.setName( "Koen" );
+					ArrayTests.Employee employee = new ArrayTests.Employee( 1, "Koen" );
 					employee.setToDoList( new String[] { "metro", "boulot", "dodo" } );
 					session.save( employee );
 				}
@@ -75,6 +73,14 @@ public class ArrayTests {
 		private Integer id;
 		private String name;
 		private String[] toDoList;
+
+		public Employee() {
+		}
+
+		public Employee(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 
 		@Id
 		public Integer getId() {

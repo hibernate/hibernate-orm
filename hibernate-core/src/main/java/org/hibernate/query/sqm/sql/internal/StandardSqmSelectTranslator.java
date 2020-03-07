@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -20,8 +19,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -64,11 +61,13 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.EntityGraphNavigator;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
+import org.hibernate.sql.results.internal.StandardEntityGraphNavigatorImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -86,7 +85,7 @@ public class StandardSqmSelectTranslator
 	// prepare for 10 root selections to avoid list growth in most cases
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
 
-	private GraphImplementor<?> currentJpaGraphNode;
+	private final EntityGraphNavigator entityGraphNavigator;
 
 	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
@@ -97,10 +96,13 @@ public class StandardSqmSelectTranslator
 		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
 		this.fetchInfluencers = fetchInfluencers;
 
-		if ( fetchInfluencers != null ) {
-			if ( fetchInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
-				currentJpaGraphNode = fetchInfluencers.getEffectiveEntityGraph().getGraph();
-			}
+		if ( fetchInfluencers != null
+				&& fetchInfluencers.getEffectiveEntityGraph() != null
+				&& fetchInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
+			this.entityGraphNavigator = new StandardEntityGraphNavigatorImpl( fetchInfluencers.getEffectiveEntityGraph() );
+		}
+		else {
+			this.entityGraphNavigator = null;
 		}
 	}
 
@@ -234,10 +236,7 @@ public class StandardSqmSelectTranslator
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
 
-		//noinspection Convert2Lambda
-		final Consumer<Fetchable> fetchableConsumer = new Consumer<Fetchable>() {
-			@Override
-			public void accept(Fetchable fetchable) {
+		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
 				final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
 
 				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
@@ -253,7 +252,7 @@ public class StandardSqmSelectTranslator
 
 				try {
 					fetchDepth++;
-					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable );
+					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, isKeyFetchable );
 
 					if ( fetch != null ) {
 						fetches.add( fetch );
@@ -262,31 +261,30 @@ public class StandardSqmSelectTranslator
 				finally {
 					fetchDepth--;
 				}
-			}
 		};
 
 // todo (6.0) : determine how to best handle TREAT
-//		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableConsumer, treatTargetType );
-//		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableConsumer, treatTargetType );
-		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableConsumer, null );
-		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableConsumer, null );
+//		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableBiConsumer, treatTargetType );
+//		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableBiConsumer, treatTargetType );
+		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, true ), null );
+		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, false ), null );
 
 		return fetches;
 	}
 
-	private Fetch buildFetch(NavigablePath fetchablePath, FetchParent fetchParent, Fetchable fetchable) {
+	private Fetch buildFetch(NavigablePath fetchablePath, FetchParent fetchParent, Fetchable fetchable, boolean isKeyFetchable) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
 		// we could sever the parent -> fetch link ... it would not be "seen" while walking
 		// but it would still have access to its parent info - and be able to access its
 		// "initializing" state as part of AfterLoadAction
 
-		final GraphImplementor<?> previousGraphNode = currentJpaGraphNode;
-
 		final String alias;
 		LockMode lockMode = LockMode.READ;
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 		boolean joined = false;
+
+		EntityGraphNavigator.NavigateResult navigateResult = null;
 
 		final SqmAttributeJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
 
@@ -308,13 +306,11 @@ public class StandardSqmSelectTranslator
 			// there was not an explicit fetch in the SQM
 			alias = null;
 
-			// see if we have any "influencer" in effect that indicates
-			if ( this.currentJpaGraphNode != null && appliesTo( this.currentJpaGraphNode, fetchParent ) ) {
-				final AttributeNodeImplementor<?> attributeNode = this.currentJpaGraphNode.findAttributeNode( fetchable.getFetchableName() );
-				// todo (6.0) : need to account for `org.hibernate.graph.GraphSemantic` here as well
-				if ( attributeNode != null ) {
-					fetchTiming = FetchTiming.IMMEDIATE;
-					joined = true;
+			if ( entityGraphNavigator != null ) {
+				navigateResult = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
+				if ( navigateResult != null ) {
+					fetchTiming = navigateResult.getFetchStrategy();
+					joined = navigateResult.isJoined();
 				}
 			}
 			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
@@ -422,22 +418,10 @@ public class StandardSqmSelectTranslator
 			);
 		}
 		finally {
-			currentJpaGraphNode = previousGraphNode;
+			if ( entityGraphNavigator != null && navigateResult != null ) {
+				entityGraphNavigator.backtrack( navigateResult.getPreviousContext() );
+			}
 		}
-	}
-
-	private static boolean appliesTo(GraphImplementor<?> graphNode, FetchParent fetchParent) {
-		if ( ! ( fetchParent instanceof EntityResultGraphNode ) ) {
-			return false;
-		}
-
-		final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-		final EntityMappingType entityFetchParentMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-
-		assert graphNode.getGraphedType() instanceof EntityDomainType;
-		final EntityDomainType entityDomainType = (EntityDomainType) graphNode.getGraphedType();
-
-		return entityDomainType.getHibernateEntityName().equals( entityFetchParentMappingType.getEntityName() );
 	}
 
 	@Override

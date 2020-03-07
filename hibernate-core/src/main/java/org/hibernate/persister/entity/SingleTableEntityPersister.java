@@ -622,8 +622,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( !queryable.isAbstract() ) {
 				values.add( queryable.getDiscriminatorSQLValue() );
 			}
-			else if ( queryable.hasSubclasses() ) {
-				// if the treat is an abstract class, add the concrete implementations to values if any
+			if ( queryable.hasSubclasses() ) {
+				// add the concrete implementations to values if any
 				Set<String> actualSubClasses = queryable.getEntityMetamodel().getSubclassEntityNames();
 
 				for ( String actualSubClass : actualSubClasses ) {

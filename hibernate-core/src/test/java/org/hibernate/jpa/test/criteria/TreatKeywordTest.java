@@ -38,7 +38,7 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
 				Animal.class, Elephant.class, Human.class, Thing.class, ThingWithQuantity.class,
-				TreatAnimal.class, Dog.class, Dachshund.class, Greyhound.class
+				TreatAnimal.class, Dog.class, Dachshund.class, Greyhound.class, Veicle.class, Car.class, Boat.class, SUV.class
 		};
 	}
 
@@ -175,6 +175,39 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 		criteria.select( builder.treat( root, Human.class ) );
 		List<Human> humans = em.createQuery( criteria ).getResultList();
 		Assert.assertEquals( 1, humans.size() );
+
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13765" )
+	public void treatRootSingleTableInheritance() {
+		EntityManager em = getOrCreateEntityManager();
+
+		em.getTransaction().begin();
+		Veicle veicle = new Veicle();
+		veicle.setId(100L);
+		veicle.setName("Veicle");
+		em.persist(veicle);
+		Car car = new Car();
+		car.setId(200L);
+		car.setName("Car");
+		em.persist(car);
+		SUV suv = new SUV();
+		suv.setId(300L);
+		suv.setName("SUV");
+		em.persist(suv);
+		em.getTransaction().commit();
+
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Veicle> criteria = builder.createQuery( Veicle.class );
+		Root<Veicle> root = criteria.from( Veicle.class );
+		criteria.select( root );
+		criteria.where( builder.isNotNull( builder.treat( root, Car.class ).get( "name" ) ) );
+		
+		List<Veicle> veicles = em.createQuery( criteria ).getResultList();
+		Assert.assertEquals( 2, veicles.size() );
+
 
 		em.close();
 	}

@@ -173,8 +173,8 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Integer.class.isInstance( value ) ) {
-			return (Integer) value;
+		if ( Number.class.isInstance( value ) ) {
+			return ( (Number) value ).intValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Integer.parseInt( (String) value );
@@ -198,8 +198,8 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Integer.class.isInstance( value ) ) {
-			return (Integer) value;
+		if ( Number.class.isInstance( value ) ) {
+			return ( (Number) value ).intValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			//empty values are ignored
@@ -220,8 +220,8 @@ public final class ConfigurationHelper {
 		if ( value == null ) {
 			return defaultValue;
 		}
-		if ( Long.class.isInstance( value ) ) {
-			return (Long) value;
+		if ( Number.class.isInstance( value ) ) {
+			return ( (Number) value ).longValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Long.parseLong( (String) value );

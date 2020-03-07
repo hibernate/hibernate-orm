@@ -12,18 +12,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -49,12 +52,15 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.EntityGraphNavigator;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.internal.StandardEntityGraphNavigatorImpl;
 
 import org.jboss.logging.Logger;
 
@@ -64,12 +70,13 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  * Builder for SQL AST trees used by {@link Loader} implementations.
  *
  * @author Steve Ebersole
+ * @author Nahtan Xu
  */
 public class LoaderSelectBuilder {
 	private static final Logger log = Logger.getLogger( LoaderSelectBuilder.class );
 
 	/**
-	 * Create a SQL AST select-statement based on matching one-or-more keys
+	 * Create an SQL AST select-statement based on matching one-or-more keys
 	 *
 	 * @param loadable The root Loadable
 	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
@@ -107,7 +114,7 @@ public class LoaderSelectBuilder {
 	}
 
 	/**
-	 * Create a SQL AST select-statement used for subselect-based CollectionLoader
+	 * Create an SQL AST select-statement used for subselect-based CollectionLoader
 	 *
 	 * @see CollectionLoaderSubSelectFetch
 	 *
@@ -151,7 +158,10 @@ public class LoaderSelectBuilder {
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
+	private final EntityGraphNavigator entityGraphNavigator;
 
+	private int fetchDepth;
+	private Map<OrderByFragment, TableGroup> orderByFragments;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -170,6 +180,14 @@ public class LoaderSelectBuilder {
 		this.cachedDomainResult = cachedDomainResult;
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
+		if ( loadQueryInfluencers != null
+				&& loadQueryInfluencers.getEffectiveEntityGraph() != null
+				&& loadQueryInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
+			this.entityGraphNavigator = new StandardEntityGraphNavigatorImpl( loadQueryInfluencers.getEffectiveEntityGraph() );
+		}
+		else {
+			this.entityGraphNavigator = null;
+		}
 		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
@@ -208,7 +226,7 @@ public class LoaderSelectBuilder {
 		}
 
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
-			domainResults = new ArrayList<>();
+			domainResults = new ArrayList<>( partsToSelect.size() );
 			for ( ModelPart part : partsToSelect ) {
 				final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
 				domainResults.add(
@@ -339,7 +357,7 @@ public class LoaderSelectBuilder {
 			final InListPredicate predicate = new InListPredicate( tuple );
 
 			for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
-				final List<JdbcParameter> tupleParams = new ArrayList<>(  );
+				final List<JdbcParameter> tupleParams = new ArrayList<>( numberOfKeyColumns );
 				for ( int j = 0; j < numberOfKeyColumns; j++ ) {
 					final ColumnReference columnReference = columnReferences.get( j );
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( columnReference.getJdbcMapping() );
@@ -354,8 +372,6 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private Map<OrderByFragment,TableGroup> orderByFragments;
-
 	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
 		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
 			applyOrdering( tableGroup, pluralAttributeMapping.getOrderByFragment() );
@@ -366,36 +382,33 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private void applyOrdering(
-			TableGroup tableGroup,
-			OrderByFragment orderByFragment) {
+	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
 		if ( orderByFragments == null ) {
 			orderByFragments = new LinkedHashMap<>();
 		}
 		orderByFragments.put( orderByFragment, tableGroup );
 	}
 
-	private int fetchDepth = 0;
-
 	private List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
 		log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
 
 		final List<Fetch> fetches = new ArrayList<>();
 
-		final Consumer<Fetchable> processor = createFetchableConsumer( fetchParent, querySpec, creationState, fetches );
+		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
-		referencedMappingContainer.visitKeyFetchables( processor, null );
-		referencedMappingContainer.visitFetchables( processor, null );
+		referencedMappingContainer.visitKeyFetchables( fetchable -> processor.accept( fetchable, true ), null );
+		referencedMappingContainer.visitFetchables( fetchable -> processor.accept( fetchable, false ), null );
 
 		return fetches;
 	}
 
-	private Consumer<Fetchable> createFetchableConsumer(
+	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
 			FetchParent fetchParent,
 			QuerySpec querySpec,
-			LoaderSqlAstCreationState creationState, List<Fetch> fetches) {
-		return fetchable -> {
+			LoaderSqlAstCreationState creationState,
+			List<Fetch> fetches) {
+		return (fetchable, isKeyFetchable) -> {
 
 			final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
 
@@ -410,9 +423,36 @@ public class LoaderSelectBuilder {
 				return;
 			}
 
-			LockMode lockMode = LockMode.READ;
+			final LockMode lockMode = LockMode.READ;
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+
+			EntityGraphNavigator.NavigateResult navigateResult = null;
+
+			// 'entity graph' takes precedence over 'fetch profile'
+			if ( entityGraphNavigator != null) {
+				navigateResult = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
+				if ( navigateResult != null ) {
+					fetchTiming = navigateResult.getFetchStrategy();
+					joined = navigateResult.isJoined();
+				}
+			}
+			else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
+				if ( fetchParent instanceof EntityResultGraphNode ) {
+					final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
+					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
+					final String fetchParentEntityName = entityMappingType.getEntityName();
+					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
+
+					for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+						final FetchProfile enabledFetchProfile = creationContext.getSessionFactory().getFetchProfile( enabledFetchProfileName );
+						final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
+
+						fetchTiming = FetchTiming.IMMEDIATE;
+						joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+					}
+				}
+			}
 
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 
@@ -429,7 +469,7 @@ public class LoaderSelectBuilder {
 				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
 					fetchDepth++;
 				}
-				Fetch fetch = fetchable.generateFetch(
+				final Fetch fetch = fetchable.generateFetch(
 						fetchParent,
 						fetchablePath,
 						fetchTiming,
@@ -452,6 +492,9 @@ public class LoaderSelectBuilder {
 			finally {
 				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
 					fetchDepth--;
+				}
+				if ( entityGraphNavigator != null && navigateResult != null ) {
+					entityGraphNavigator.backtrack( navigateResult.getPreviousContext() );
 				}
 			}
 		};
@@ -512,7 +555,7 @@ public class LoaderSelectBuilder {
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
 
 		// NOTE : no need to check - we are explicitly processing a plural-attribute
-		applyOrdering( rootTableGroup, (PluralAttributeMapping) loadable );
+		applyOrdering( rootTableGroup, attributeMapping );
 
 		// generate and apply the restriction
 		applySubSelectRestriction(
@@ -577,7 +620,7 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			fkDescriptor.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
+					(containingTableExpression, columnExpression, jdbcMapping) ->
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 										createColumnReferenceKey( containingTableExpression, columnExpression ),
@@ -588,8 +631,7 @@ public class LoaderSelectBuilder {
 												this.creationContext.getSessionFactory()
 										)
 								)
-						);
-					}
+						)
 			);
 
 			fkExpression = new SqlTuple( columnReferences, fkDescriptor );

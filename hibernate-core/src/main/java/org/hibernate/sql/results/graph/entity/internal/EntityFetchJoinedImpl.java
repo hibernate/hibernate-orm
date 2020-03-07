@@ -73,4 +73,11 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		return true;
 	}
 
+	public EntityResultImpl getEntityResult() {
+		return entityResult;
+	}
+
+	public LockMode getLockMode() {
+		return lockMode;
+	}
 }

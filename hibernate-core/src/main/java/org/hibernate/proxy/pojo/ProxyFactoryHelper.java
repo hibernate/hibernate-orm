@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -84,14 +85,21 @@ public final class ProxyFactoryHelper {
 		Class clazz = persistentClass.getMappedClass();
 		while ( properties.hasNext() ) {
 			Property property = (Property) properties.next();
-			Method method = property.getGetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.gettersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
-			}
-			method = property.getSetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.settersOfLazyClassesCannotBeFinal( persistentClass.getEntityName(), property.getName() );
-			}
+			validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
+			validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
+		}
+	}
+
+	public static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {
+		if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
+			throw new HibernateException(
+					String.format(
+							"%s methods of lazy classes cannot be final: %s#%s",
+							getterOrSetter,
+							method.getDeclaringClass().getName(),
+							method.getName()
+					)
+			);
 		}
 	}
 

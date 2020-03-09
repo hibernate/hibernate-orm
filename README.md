@@ -11,8 +11,18 @@ This is the repository of its source code: see [Hibernate.org](http://hibernate.
 [![Build Status](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-master-h2-main/)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java)
 
+
+Continuous Integration
+======================
+
+Hibernate uses both [Jenkins](http://jenkins-ci.org) and [TravisCI](https://travis-ci.org/) for its CI needs.  See
+
+* [Jenkins Jobs](http://ci.hibernate.org/view/ORM/)
+* [TravisCI Jobs](https://travis-ci.org/hibernate/hibernate-orm)
+
+
 Building from sources
-=========
+=====================
 
 The build requires a Java 8 JDK as JAVA_HOME.
 
@@ -29,16 +39,8 @@ See the guides for setting up [IntelliJ](https://developer.jboss.org/wiki/Contri
 Check out the _Getting Started_ section in CONTRIBUTING.md for getting started working on Hibernate source.
 
 
-Continuous Integration
-=========
-
-Hibernate makes use of [Jenkins](http://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
-push to the upstream repository.   Overall there are a few different jobs, all of which can be seen at 
-[http://ci.hibernate.org/view/ORM/](http://ci.hibernate.org/view/ORM/)
-
-
-Gradle primer
-=========
+Gradle Primer
+============
 
 This section describes some of the basics developers and contributors new to Gradle might 
 need to know to get productive quickly.  The Gradle documentation is very well done; 2 in 

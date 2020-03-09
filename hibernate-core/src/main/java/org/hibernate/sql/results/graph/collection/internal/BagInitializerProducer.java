@@ -25,17 +25,14 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class BagInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping bagDescriptor;
-	private final boolean selected;
 	private final Fetch collectionIdFetch;
 	private final Fetch elementFetch;
 
 	public BagInitializerProducer(
 			PluralAttributeMapping bagDescriptor,
-			boolean selected,
 			Fetch collectionIdFetch,
 			Fetch elementFetch) {
 		this.bagDescriptor = bagDescriptor;
-		this.selected = selected;
 
 		if ( bagDescriptor.getIdentifierDescriptor() != null ) {
 			assert collectionIdFetch != null;
@@ -82,7 +79,6 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 				bagDescriptor,
 				parentAccess,
 				navigablePath,
-				selected,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,

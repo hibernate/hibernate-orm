@@ -24,6 +24,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -40,50 +41,40 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	private final LockMode lockMode;
 
 	// per-row state
-	private PersistentCollection collectionInstance;
 	private LoadingCollectionEntryImpl responsibility;
-	private boolean responsible;
+
+	/**
+	 * refers to the collection's container value - which collection-key?
+	 */
+	private final DomainResultAssembler keyContainerAssembler;
+
+	/**
+	 * refers to the rows entry in the collection.  null indicates that the collection is empty
+	 */
+	private final DomainResultAssembler keyCollectionAssembler;
+
+
+	// per-row state
+	private Object keyContainerValue;
+	private Object keyCollectionValue;
 
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
 			FetchParentAccess parentAccess,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler) {
-		super( collectionPath, collectionAttributeMapping, parentAccess, selected, keyContainerAssembler, keyCollectionAssembler );
+		super( collectionPath, collectionAttributeMapping, parentAccess );
+		this.keyContainerAssembler = keyContainerAssembler;
+		this.keyCollectionAssembler = keyCollectionAssembler;
 		this.lockMode = lockMode;
-	}
-
-	@Override
-	public PersistentCollection getCollectionInstance() {
-		return collectionInstance;
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( collectionInstance != null ) {
 			return;
-		}
-
-		final PluralAttributeMapping collectionAttributeMapping = getCollectionAttributeMapping();
-		final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-
-		final CollectionKey collectionKey = resolveCollectionKey( rowProcessingState );
-
-		if ( collectionKey == null ) {
-			collectionInstance = collectionSemantics.instantiateWrapper(
-					null,
-					collectionDescriptor,
-					session
-			);
-			collectionInstance.initializeEmptyCollection( collectionDescriptor );
-			persistenceContext.addNonLazyCollection( collectionInstance );
 		}
 
 		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
@@ -99,6 +90,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// First, look for a LoadingCollectionEntry
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		final LoadingCollectionEntry existingLoadingEntry = persistenceContext
 				.getLoadContexts()
@@ -159,7 +152,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					return;
 				}
 				else {
-					assert isSelected();
 					takeResponsibility( rowProcessingState, collectionKey );
 				}
 			}
@@ -185,24 +177,15 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 						return;
 					}
 					else {
-						assert isSelected();
 						takeResponsibility( rowProcessingState, collectionKey );
 					}
 				}
 			}
-
-			if ( ! isSelected() ) {
-				collectionInstance = collectionSemantics.instantiateWrapper(
-						collectionKey.getKey(),
-						collectionDescriptor,
-						session
-				);
-				persistenceContext.addNonLazyCollection( collectionInstance );
-
-				// EARLY EXIT!!!
-				return;
-			}
 		}
+
+		final PluralAttributeMapping collectionAttributeMapping = getCollectionAttributeMapping();
+		final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
+		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
 		if ( collectionInstance == null && collectionKey != null ) {
 			collectionInstance = collectionSemantics.instantiateWrapper(
@@ -240,10 +223,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 						owner -> collectionInstance.setOwner( owner )
 				);
 			}
-
-//			if ( getCollectionDescriptor().getSemantics().getCollectionClassification() == CollectionClassification.ARRAY ) {
-//				persistenceContext.addCollectionHolder( collectionInstance );
-//			}
 		}
 	}
 
@@ -258,6 +237,93 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				collectionKey,
 				responsibility
 		);
+	}
+
+	@Override
+	public void resolveKey(RowProcessingState rowProcessingState) {
+		if ( collectionKey != null ) {
+			// already resolved
+			return;
+		}
+
+		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
+		if ( loadingKey != null ) {
+			collectionKey = loadingKey;
+			return;
+		}
+
+		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getProcessingOptions();
+
+		keyContainerValue = keyContainerAssembler.assemble(
+				rowProcessingState,
+				processingOptions
+		);
+
+		if ( keyCollectionAssembler == null || keyContainerAssembler == keyCollectionAssembler ) {
+			keyCollectionValue = keyContainerValue;
+		}
+		else {
+			keyCollectionValue = keyCollectionAssembler.assemble(
+					rowProcessingState,
+					processingOptions
+			);
+		}
+
+		Object keyContainerValue = getKeyContainerValue();
+		if ( keyContainerValue != null ) {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					keyContainerValue
+			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						StringHelper.collapse( this.getClass().getName() ),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
+		}
+		else if ( keyCollectionValue != null ) {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					keyCollectionValue
+			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						StringHelper.collapse( this.getClass().getName() ),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
+		}
+		else {
+			this.collectionKey = new CollectionKey(
+					collectionAttributeMapping.getCollectionDescriptor(),
+					parentAccess.getParentKey()
+			);
+		}
+	}
+
+	/**
+	 * The value of the container/owner side of the collection key (FK).  Identifies the
+	 * owner of the collection
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected Object getKeyContainerValue() {
+		return keyContainerValue;
+	}
+
+	/**
+	 * The value of the collection side of the collection key (FK).  Identifies
+	 * inclusion in the collection.  Can be null to indicate that the current row
+	 * does not contain any collection values
+	 */
+	@SuppressWarnings("WeakerAccess")
+	protected Object getKeyCollectionValue() {
+		return keyCollectionValue;
 	}
 
 	@Override
@@ -295,6 +361,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		super.finishUpRow( rowProcessingState );
 
+		keyContainerValue = null;
+		keyCollectionValue = null;
 		collectionInstance = null;
 		responsibility = null;
 	}

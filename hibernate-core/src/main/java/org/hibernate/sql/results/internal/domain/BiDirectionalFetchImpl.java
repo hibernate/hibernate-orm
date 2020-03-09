@@ -89,11 +89,6 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public boolean isNullable() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,

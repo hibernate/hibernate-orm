@@ -90,7 +90,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	private void handlePotentiallyEmptyCollection(
 			PersistentCollection collection,
 			SessionImplementor source,
-			CollectionEntry ce, CollectionPersister ceLoadedPersister) {
+			CollectionEntry ce,
+			CollectionPersister ceLoadedPersister) {
 		if ( !collection.wasInitialized() ) {
 			collection.initializeEmptyCollection( ceLoadedPersister );
 			org.hibernate.sql.results.internal.Helper.finalizeCollectionLoading(

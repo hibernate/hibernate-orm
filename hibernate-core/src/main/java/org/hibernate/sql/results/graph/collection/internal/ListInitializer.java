@@ -33,13 +33,12 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			DomainResultAssembler listIndexAssembler,
 			DomainResultAssembler elementAssembler) {
-		super( navigablePath, attributeMapping, parentAccess, selected, lockMode, keyContainerAssembler, keyCollectionAssembler );
+		super( navigablePath, attributeMapping, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.listIndexAssembler = listIndexAssembler;
 		this.elementAssembler = elementAssembler;
 

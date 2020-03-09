@@ -20,11 +20,11 @@ import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
+public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
 
-	public DelayedCollectionInitializer(
+	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess) {
@@ -74,6 +74,8 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 					key
 			);
 
+			persistenceContext.addNonLazyCollection( collectionInstance );
+
 			if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY ) {
 				session.getPersistenceContext().addCollectionHolder( collectionInstance );
 			}
@@ -86,7 +88,7 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 
 	@Override
 	public String toString() {
-		return "DelayedCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "SelectEagerCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
 	@Override

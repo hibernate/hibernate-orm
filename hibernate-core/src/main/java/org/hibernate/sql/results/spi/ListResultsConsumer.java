@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -47,7 +48,8 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
 		try {
-			session.getPersistenceContext().getLoadContexts().register( jdbcValuesSourceProcessingState );
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 
 			boolean uniqueRows = false;
 			final Class<R> resultJavaType = rowReader.getResultJavaType();
@@ -76,6 +78,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 				rowProcessingState.finishRowProcessing();
 			}
+			persistenceContext.initializeNonLazyCollections();
 			return results;
 		}
 		catch (SQLException e) {

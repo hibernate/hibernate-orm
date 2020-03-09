@@ -24,17 +24,14 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class ArrayInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping arrayDescriptor;
-	private final boolean joined;
 	private final Fetch listIndexFetch;
 	private final Fetch elementFetch;
 
 	public ArrayInitializerProducer(
 			PluralAttributeMapping arrayDescriptor,
-			boolean joined,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
 		this.arrayDescriptor = arrayDescriptor;
-		this.joined = joined;
 		this.listIndexFetch = listIndexFetch;
 		this.elementFetch = elementFetch;
 	}
@@ -53,7 +50,6 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
-				joined,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,

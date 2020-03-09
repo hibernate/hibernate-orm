@@ -78,12 +78,8 @@ public class StandardListSemantics implements CollectionSemantics<List> {
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
 		return new ListInitializerProducer(
 				attributeMapping,
-				selected,
 				attributeMapping.getIndexDescriptor().generateFetch(
 						fetchParent,
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),

@@ -33,13 +33,12 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping bagDescriptor,
 			FetchParentAccess parentAccess,
 			NavigablePath navigablePath,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			DomainResultAssembler elementAssembler,
 			DomainResultAssembler collectionIdAssembler) {
-		super( navigablePath, bagDescriptor, parentAccess, selected, lockMode, keyContainerAssembler, keyCollectionAssembler );
+		super( navigablePath, bagDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.elementAssembler = elementAssembler;
 		this.collectionIdAssembler = collectionIdAssembler;
 	}

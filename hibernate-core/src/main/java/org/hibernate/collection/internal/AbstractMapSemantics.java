@@ -86,12 +86,8 @@ public abstract class AbstractMapSemantics<M extends Map<?,?>> implements MapSem
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
 		return new MapInitializerProducer(
 				attributeMapping,
-				selected,
 				attributeMapping.getIndexDescriptor().generateFetch(
 						fetchParent,
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),

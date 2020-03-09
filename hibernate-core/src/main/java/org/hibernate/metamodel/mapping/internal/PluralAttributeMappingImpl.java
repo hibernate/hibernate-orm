@@ -56,6 +56,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.jboss.logging.Logger;
@@ -364,45 +365,55 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
-		if ( fetchTiming == FetchTiming.IMMEDIATE || selected || getCollectionDescriptor().getCollectionType().hasHolder() ) {
-			final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
-					fetchablePath,
-					p -> {
-						final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() );
-						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-								fetchablePath,
-								lhsTableGroup,
-								null,
-								SqlAstJoinType.LEFT,
-								lockMode,
-								creationState.getSqlAliasBaseManager(),
-								creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-								creationState.getSqlAstCreationState().getCreationContext()
-						);
+		if ( fetchTiming == FetchTiming.IMMEDIATE) {
+			if ( selected ) {
+				final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
+						fetchablePath,
+						p -> {
+							final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+									fetchParent.getNavigablePath() );
+							final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+									fetchablePath,
+									lhsTableGroup,
+									null,
+									SqlAstJoinType.LEFT,
+									lockMode,
+									creationState.getSqlAliasBaseManager(),
+									creationState.getSqlAstCreationState().getSqlExpressionResolver(),
+									creationState.getSqlAstCreationState().getCreationContext()
+							);
 
-						lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+							lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
-						sqlAstCreationState.getFromClauseAccess().registerTableGroup( fetchablePath, tableGroupJoin.getJoinedGroup() );
+							sqlAstCreationState.getFromClauseAccess().registerTableGroup(
+									fetchablePath,
+									tableGroupJoin.getJoinedGroup()
+							);
 
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
+							return tableGroupJoin.getJoinedGroup();
+						}
+				);
 
-			return new EagerCollectionFetch(
-					fetchablePath,
-					this,
-					collectionTableGroup,
-					getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
-					fetchParent,
-					creationState
-			);
+				return new EagerCollectionFetch(
+						fetchablePath,
+						this,
+						collectionTableGroup,
+						fetchParent,
+						creationState
+				);
+			}
+			else {
+				return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
+			}
 		}
 
+		if ( getCollectionDescriptor().getCollectionType().hasHolder() ) {
+			return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
+		}
 
 		return new DelayedCollectionFetch(
 				fetchablePath,
 				this,
-				true,
 				fetchParent
 		);
 	}

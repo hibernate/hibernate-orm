@@ -49,10 +49,9 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			TableGroup collectionTableGroup,
-			boolean nullable,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		super( fetchedPath, fetchedAttribute, nullable, fetchParent );
+		super( fetchedPath, fetchedAttribute, fetchParent );
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		final NavigablePath parentPath = fetchedPath.getParent();
@@ -91,7 +90,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				fetchedPath,
 				fetchedAttribute,
 				fetchParent,
-				nullable,
+				true,
 				null,
 				// todo (6.0) : we need to propagate these lock modes
 				LockMode.READ,

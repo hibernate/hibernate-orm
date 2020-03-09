@@ -24,16 +24,13 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class SetInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping setDescriptor;
-	private final boolean isSelected;
 	private final Fetch elementFetch;
 
 	public SetInitializerProducer(
 			PluralAttributeMapping setDescriptor,
-			boolean isSelected,
 			Fetch elementFetch) {
 		this.setDescriptor = setDescriptor;
 		this.elementFetch = elementFetch;
-		this.isSelected = isSelected;
 	}
 
 	@Override
@@ -56,7 +53,6 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 				navigablePath,
 				setDescriptor,
 				parentAccess,
-				isSelected,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,

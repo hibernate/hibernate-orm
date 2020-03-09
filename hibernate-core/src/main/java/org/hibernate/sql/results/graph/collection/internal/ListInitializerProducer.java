@@ -24,17 +24,14 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class ListInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping attributeMapping;
-	private final boolean joined;
 	private final Fetch listIndexFetch;
 	private final Fetch elementFetch;
 
 	public ListInitializerProducer(
 			PluralAttributeMapping attributeMapping,
-			boolean joined,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
 		this.attributeMapping = attributeMapping;
-		this.joined = joined;
 		this.listIndexFetch = listIndexFetch;
 		this.elementFetch = elementFetch;
 	}
@@ -53,7 +50,6 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 				navigablePath,
 				attributeMapping,
 				parentAccess,
-				joined,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,

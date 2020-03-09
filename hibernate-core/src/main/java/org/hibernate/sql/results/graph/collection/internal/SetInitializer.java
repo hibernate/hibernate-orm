@@ -28,12 +28,11 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			NavigablePath navigablePath,
 			PluralAttributeMapping setDescriptor,
 			FetchParentAccess parentAccess,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			DomainResultAssembler elementAssembler) {
-		super( navigablePath, setDescriptor, parentAccess, selected, lockMode, keyContainerAssembler, keyCollectionAssembler );
+		super( navigablePath, setDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.elementAssembler = elementAssembler;
 	}
 

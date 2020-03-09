@@ -104,12 +104,8 @@ public class StandardArraySemantics implements CollectionSemantics<Object[]> {
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
 		return new ArrayInitializerProducer(
 				attributeMapping,
-				selected,
 				attributeMapping.getIndexDescriptor().generateFetch(
 						fetchParent,
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),

@@ -55,11 +55,6 @@ public class EntityFetchDelayedImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public boolean isNullable() {
-		return nullable;
-	}
-
-	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,

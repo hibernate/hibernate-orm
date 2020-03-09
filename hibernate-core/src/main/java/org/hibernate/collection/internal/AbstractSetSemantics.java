@@ -58,7 +58,6 @@ public abstract class AbstractSetSemantics<S extends Set<?>> implements Collecti
 			DomainResultCreationState creationState) {
 		return new SetInitializerProducer(
 				attributeMapping,
-				selected,
 				attributeMapping.getElementDescriptor().generateFetch(
 						fetchParent,
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),

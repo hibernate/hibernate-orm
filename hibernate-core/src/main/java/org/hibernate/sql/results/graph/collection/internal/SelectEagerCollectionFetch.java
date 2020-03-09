@@ -19,28 +19,14 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class DelayedCollectionFetch extends CollectionFetch {
-	public DelayedCollectionFetch(
+public class SelectEagerCollectionFetch extends CollectionFetch {
+	public SelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
-	}
-
-	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
-			AssemblerCreationState creationState) {
-		return new DelayedCollectionAssembler(
-				getNavigablePath(),
-				getFetchedMapping(),
-				parentAccess,
-				collector,
-				creationState
-		);
 	}
 
 	@Override
@@ -51,6 +37,18 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	@Override
 	public boolean hasTableGroup() {
 		return false;
+	}
+
+	@Override
+	public DomainResultAssembler createAssembler(
+			FetchParentAccess parentAccess, Consumer<Initializer> collector, AssemblerCreationState creationState) {
+		return new SelectEagerCollectionAssembler(
+				getNavigablePath(),
+				getFetchedMapping(),
+				parentAccess,
+				collector,
+				creationState
+		);
 	}
 
 	@Override

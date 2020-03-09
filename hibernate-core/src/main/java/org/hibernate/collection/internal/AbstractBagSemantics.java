@@ -73,12 +73,8 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements C
 			String resultVariable,
 			LockMode lockMode,
 			DomainResultCreationState creationState) {
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.getTableGroup( navigablePath );
 		return new BagInitializerProducer(
 				attributeMapping,
-				selected,
 				attributeMapping.getIdentifierDescriptor() == null ? null : attributeMapping.getIdentifierDescriptor().generateFetch(
 						fetchParent,
 						navigablePath.append( CollectionPart.Nature.ID.getName() ),

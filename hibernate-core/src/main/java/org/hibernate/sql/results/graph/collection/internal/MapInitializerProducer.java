@@ -24,17 +24,14 @@ import org.hibernate.sql.results.graph.Initializer;
  */
 public class MapInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping mapDescriptor;
-	private final boolean isJoined;
 	private final Fetch mapKeyFetch;
 	private final Fetch mapValueFetch;
 
 	public MapInitializerProducer(
 			PluralAttributeMapping mapDescriptor,
-			boolean isJoined,
 			Fetch mapKeyFetch,
 			Fetch mapValueFetch) {
 		this.mapDescriptor = mapDescriptor;
-		this.isJoined = isJoined;
 		this.mapKeyFetch = mapKeyFetch;
 		this.mapValueFetch = mapValueFetch;
 	}
@@ -65,7 +62,6 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 				navigablePath,
 				mapDescriptor,
 				parentAccess,
-				isJoined,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,

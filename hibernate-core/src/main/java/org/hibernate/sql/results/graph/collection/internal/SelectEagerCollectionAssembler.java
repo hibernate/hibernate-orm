@@ -15,16 +15,17 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 
 /**
- * @author Steve Ebersole
+ * @author Andrea Boriero
  */
-public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
-	public DelayedCollectionAssembler(
+public class SelectEagerCollectionAssembler extends AbstractCollectionAssembler {
+
+	public SelectEagerCollectionAssembler(
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		super( fetchedMapping, new DelayedCollectionInitializer( fetchPath, fetchedMapping, parentAccess ) );
+		super( fetchedMapping, new SelectEagerCollectionInitializer( fetchPath, fetchedMapping, parentAccess ) );
 		collector.accept( initializer );
 	}
 }

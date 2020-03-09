@@ -34,13 +34,12 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
 			DomainResultAssembler mapKeyAssembler,
 			DomainResultAssembler mapValueAssembler) {
-		super( navigablePath, attributeMapping, parentAccess, selected, lockMode, keyContainerAssembler, keyCollectionAssembler );
+		super( navigablePath, attributeMapping, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.mapKeyAssembler = mapKeyAssembler;
 		this.mapValueAssembler = mapValueAssembler;
 	}

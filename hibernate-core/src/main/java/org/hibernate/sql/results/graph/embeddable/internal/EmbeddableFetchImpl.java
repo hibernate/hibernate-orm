@@ -111,11 +111,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	}
 
 	@Override
-	public boolean isNullable() {
-		return nullable;
-	}
-
-	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,

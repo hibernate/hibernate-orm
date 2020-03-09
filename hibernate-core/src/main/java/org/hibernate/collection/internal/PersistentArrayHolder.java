@@ -133,6 +133,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert array == null;
 		array = Array.newInstance( persister.getElementClass(), 0 );
+		persister.getAttributeMapping().getPropertyAccess().getSetter().set( getOwner(), array, getSession().getFactory() );
 		endRead();
 	}
 

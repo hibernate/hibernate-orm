@@ -31,7 +31,6 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			NavigablePath navigablePath,
 			PluralAttributeMapping arrayDescriptor,
 			FetchParentAccess parentAccess,
-			boolean selected,
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
@@ -41,7 +40,6 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
-				selected,
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler

@@ -18,19 +18,15 @@ public abstract class CollectionFetch implements Fetch {
 	private final NavigablePath fetchedPath;
 	private final PluralAttributeMapping fetchedAttribute;
 
-	private final boolean nullable;
-
 	private final FetchParent fetchParent;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
-			boolean nullable,
 			FetchParent fetchParent) {
 		this.fetchedPath = fetchedPath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchParent = fetchParent;
-		this.nullable = nullable;
 	}
 
 	@Override
@@ -46,10 +42,5 @@ public abstract class CollectionFetch implements Fetch {
 	@Override
 	public NavigablePath getNavigablePath() {
 		return fetchedPath;
-	}
-
-	@Override
-	public boolean isNullable() {
-		return nullable;
 	}
 }

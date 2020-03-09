@@ -57,11 +57,6 @@ public interface Fetch extends DomainResultGraphNode {
 	boolean hasTableGroup();
 
 	/**
-	 * Is this fetch nullable?  Meaning is it mapped as being optional?
-	 */
-	boolean isNullable();
-
-	/**
 	 * Create the assembler for this fetch
 	 */
 	DomainResultAssembler createAssembler(

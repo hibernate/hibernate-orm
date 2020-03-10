@@ -191,6 +191,7 @@ class StatementPreparerImpl implements StatementPreparer {
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
 			jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
+			jdbcCoordinator.getResourceRegistry().setStatementSql( preparedStatement, sql );
 //			logicalConnection().notifyObserversStatementPrepared();
 		}
 

@@ -3268,8 +3268,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(CockroachDB192Dialect.class)
-	@RequiresDialect(CockroachDB201Dialect.class)
+	@SkipForDialect(value = CockroachDB192Dialect.class, strictMatching = true)
 	public void testStandardFunctions() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

@@ -117,8 +117,7 @@ public class NativeQueryOrdinalParametersTest extends BaseEntityManagerFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
-	@RequiresDialect(PostgreSQL82Dialect.class)
-	@RequiresDialect(CockroachDB201Dialect.class)
+	@RequiresDialect({ PostgreSQL82Dialect.class, CockroachDB201Dialect.class })
 	public void testCteNativeQueryOrdinalParameter() {
 
 		Node root1 = new Node();

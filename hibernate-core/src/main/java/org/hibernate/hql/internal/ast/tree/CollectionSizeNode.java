@@ -74,7 +74,7 @@ public class CollectionSizeNode extends SqlNode implements SelectExpression {
 		final String sizeColumn = sizeColumns[0];
 
 		final StringBuilder buffer = new StringBuilder( "(select " ).append( sizeColumn );
-		buffer.append( " from " ).append( collectionDescriptor.getTableName() ).append( " as " ).append( collectionTableAlias );
+		buffer.append( " from " ).append( collectionDescriptor.getTableName() ).append( " " ).append( collectionTableAlias );
 		buffer.append( " where " );
 
 		boolean firstPass = true;

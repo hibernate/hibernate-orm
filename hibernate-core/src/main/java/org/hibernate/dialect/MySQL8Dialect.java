@@ -30,6 +30,7 @@ public class MySQL8Dialect extends MySQL57Dialect {
 		registerKeyword("LEAD");
 		registerKeyword("NTH_VALUE");
 		registerKeyword("NTILE");
+		registerKeyword("OVER");
 		registerKeyword("PERSIST");
 		registerKeyword("PERCENT_RANK");
 		registerKeyword("PERSIST_ONLY");
@@ -118,6 +119,11 @@ public class MySQL8Dialect extends MySQL57Dialect {
 	}
 
 	public boolean supportsNoWait() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsPartitionBy() {
 		return true;
 	}
 }

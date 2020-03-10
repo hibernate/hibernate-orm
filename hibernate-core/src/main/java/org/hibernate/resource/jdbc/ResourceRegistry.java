@@ -37,19 +37,20 @@ public interface ResourceRegistry {
 	void register(Statement statement, boolean cancelable);
 
 	/**
-	 * Set the provided SQL {@link String} value to the given {@link Statement} that was registered previously
+	 * Set the provided SQL string value to the given {@link Statement} that was previously registered.
 	 *
 	 * @param statement JDBC Statement
-	 * @param sql SQL {@link String} value
+	 * @param sql SQL string value
 	 */
 	void setStatementSql(Statement statement, String sql);
 
 	/**
-	 * Get the SQL {@link String} value associated with the {@link Statement}, if any
+	 * Get the SQL string value associated with the given {@link Statement} or null if
+	 * the statement did not have the SQL string value registered as well.
 	 *
 	 * @param statement JDBC Statement
 	 *
-	 * @return SQL {@link String} value
+	 * @return SQL string value
 	 */
 	String getStatementSql(Statement statement);
 

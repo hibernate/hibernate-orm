@@ -82,7 +82,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
-		StatementRegistryEntry previousValue = xref.putIfAbsent( statement, new StatementRegistryEntry(EMPTY) );
+		StatementRegistryEntry previousValue = xref.putIfAbsent( statement, new StatementRegistryEntry( EMPTY ) );
 		if ( previousValue != null ) {
 			throw new HibernateException( "JDBC Statement already registered" );
 		}
@@ -111,7 +111,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		log.tracev( "Releasing statement [{0}]", statement );
 
 		final StatementRegistryEntry statementRegistryEntry = xref.remove( statement );
-		if ( statementRegistryEntry != null && statementRegistryEntry.resultSets != null) {
+		if ( statementRegistryEntry != null && statementRegistryEntry.resultSets != null ) {
 			closeAll( statementRegistryEntry.resultSets );
 		}
 		else {
@@ -141,7 +141,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 		if ( statement != null ) {
 			final StatementRegistryEntry statementRegistryEntry = xref.remove( statement );
-			if ( statementRegistryEntry == null || statementRegistryEntry.resultSets == null) {
+			if ( statementRegistryEntry == null || statementRegistryEntry.resultSets == null ) {
 				log.unregisteredStatement();
 			}
 			else {
@@ -234,17 +234,17 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 		if ( statement != null ) {
 			final StatementRegistryEntry statementRegistryEntry = xref.remove( statement );
-			HashMap<ResultSet,Object> resultSets = statementRegistryEntry != null ?
+			HashMap<ResultSet, Object> resultSets = statementRegistryEntry != null ?
 					statementRegistryEntry.resultSets : null;
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( resultSets == null) {
+			if ( resultSets == null ) {
 				log.debug( "ResultSet statement was not registered (on register)" );
 			}
 
 			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<ResultSet,Object>();
+				resultSets = new HashMap<ResultSet, Object>();
 				xref.put( statement, new StatementRegistryEntry( resultSets ) );
 			}
 			resultSets.put( resultSet, PRESENT );
@@ -386,10 +386,14 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private boolean hasRegistered(final ArrayList resource) {
 		return resource != null && !resource.isEmpty();
 	}
-	
-	private class StatementRegistryEntry {
+
+	/**
+	 * This class encapsulate the Statement-related info that's being kept in the
+	 * registry for a given Statement.
+	 */
+	private static class StatementRegistryEntry {
 		private String sql;
-		private final HashMap<ResultSet,Object> resultSets;
+		private final HashMap<ResultSet, Object> resultSets;
 
 		StatementRegistryEntry(HashMap<ResultSet, Object> resultSets) {
 			this.resultSets = resultSets;

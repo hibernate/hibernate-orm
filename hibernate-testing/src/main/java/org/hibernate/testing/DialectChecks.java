@@ -280,11 +280,15 @@ abstract public class DialectChecks {
 	}
 
 	public static class SupportsMixedTypeArithmetic implements DialectCheck {
-		public boolean isMatch(Dialect dialect) { return dialect.supportsMixedTypeArithmetic(); }
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsMixedTypeArithmetic();
+		}
 	}
 
 	public static class SupportsLoFunctions implements DialectCheck {
-		public boolean isMatch(Dialect dialect) { return  dialect.supportsLoFunctions(); }
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsLoFunctions();
+		}
 	}
 
 	public static class SupportsNClob implements DialectCheck {

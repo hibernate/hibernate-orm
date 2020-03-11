@@ -228,7 +228,7 @@ public class HqlEntityGraphTest {
 					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.LOAD, session );
 
 					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "favorites" );
+					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
 				}
 		);
 	}
@@ -243,13 +243,13 @@ public class HqlEntityGraphTest {
 					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.FETCH, session );
 
 					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "favorites" );
+					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
 				}
 		);
 	}
 
 	@Test
-	void testEmbeddedCollectionLoadSubgraph(SessionFactoryScope scope) {
+	void testEmbeddedCollectionLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					final RootGraphImplementor<HqlEntityGraphTest.ExpressCompany> eg = session.createEntityGraph( HqlEntityGraphTest.ExpressCompany.class );
@@ -263,7 +263,39 @@ public class HqlEntityGraphTest {
 					);
 
 					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses" );
+					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
+						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+						final TableGroup compositeTableGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+						assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+						final TableGroup countryTableGroup = compositeTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+						assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
+
+						assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
+					} );
+
+				}
+		);
+	}
+
+	@Test
+	void testEmbeddedCollectionFetchGraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.ExpressCompany> eg = session.createEntityGraph( HqlEntityGraphTest.ExpressCompany.class );
+					eg.addAttributeNodes( "shipAddresses" );
+
+					final SelectStatement sqlAst = buildSqlSelectAst(
+							HqlEntityGraphTest.ExpressCompany.class,
+							"select company from ExpressCompany as company",
+							eg, GraphSemantic.FETCH,
+							session
+					);
+
+					// Check the from-clause
+					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> assertThat( tableGroup.getTableGroupJoins(), isEmpty() ) );
 
 				}
 		);
@@ -287,15 +319,14 @@ public class HqlEntityGraphTest {
 		assertThat( rootTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
 		final TableGroup joinedGroup = rootTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedAttributeName ) );
+		assertThat( joinedGroup.getModelPart().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EntityValuedModelPart.class ) );
 
-		final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) joinedGroup.getModelPart();
-		assertThat( entityValuedModelPart.getPartName(), is( expectedAttributeName ) );
-		assertThat( entityValuedModelPart.getEntityMappingType().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedEntityJpaClass ) );
 		tableGroupConsumer.accept( joinedGroup );
 	}
 
-	private void assertPluralAttributeJoinedGroup(SelectStatement sqlAst, String expectedPluralAttributeName) {
+	private void assertPluralAttributeJoinedGroup(SelectStatement sqlAst, String expectedPluralAttributeName, Consumer<TableGroup> tableGroupConsumer) {
 		final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
 		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
@@ -303,24 +334,18 @@ public class HqlEntityGraphTest {
 		assertThat( root.getTableGroupJoins(), hasSize( 1 ) );
 
 		final TableGroup joinedGroup = root.getTableGroupJoins().iterator().next().getJoinedGroup();
+		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedPluralAttributeName ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( PluralAttributeMapping.class ) );
-
-		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) joinedGroup.getModelPart();
-		assertThat( pluralAttributeMapping.getAttributeName(), is( expectedPluralAttributeName ) );
-		assertThat( joinedGroup.getTableGroupJoins(), isEmpty() );
+		tableGroupConsumer.accept( joinedGroup );
 	}
 
 	private void assertPersonHomeAddressJoinedGroup(TableGroup tableGroup) {
 		assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroupJoin tableGroupJoin = tableGroup.getTableGroupJoins().iterator().next();
-		assertThat( tableGroupJoin.getJoinedGroup(), instanceOf( CompositeTableGroup.class ) );
-
-		final CompositeTableGroup compositeTableGroup = (CompositeTableGroup) tableGroupJoin.getJoinedGroup();
-		assertThat( compositeTableGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
-
-		final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) compositeTableGroup.getModelPart();
-		assertThat( embeddedAttributeMapping.getPartName(), is( "homeAddress" ) );
+		final TableGroup joinedGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+		assertThat( joinedGroup.getModelPart().getPartName(), is( "homeAddress" ) );
+		assertThat( joinedGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
+		assertThat( joinedGroup, instanceOf( CompositeTableGroup.class ) );
 	}
 
 	// util methods for verifying 'domain-result' graph ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,7 +440,7 @@ public class HqlEntityGraphTest {
 
 	@Embeddable
 	public static class Address {
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.EAGER)
 		Country country;
 	}
 

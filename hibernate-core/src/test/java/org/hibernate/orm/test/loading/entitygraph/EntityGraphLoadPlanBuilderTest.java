@@ -74,6 +74,7 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
+@TestForIssue( jiraKey = "HHH-13756" )
 public class EntityGraphLoadPlanBuilderTest {
 
 	@Test
@@ -96,7 +97,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testFetchLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -115,7 +115,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testFetchLoadPlanBuildingWithDeepSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -187,7 +186,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testLoadLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -218,7 +216,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testBasicElementCollectionsLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -234,7 +231,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testBasicElementCollectionsFetchGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -250,7 +246,6 @@ public class EntityGraphLoadPlanBuilderTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13756" )
 	void testEmbeddedCollectionLoadSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {

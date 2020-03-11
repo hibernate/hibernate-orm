@@ -47,7 +47,7 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 	}
 
 	@Override
-	public NavigateResult navigateIfApplicable(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
+	public Navigation navigateIfApplicable(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		final GraphImplementor previousContextRoot = currentGraphContext;
 		FetchTiming fetchTiming = null;
 		boolean joined = false;
@@ -97,7 +97,7 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 				joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 			}
 		}
-		return new NavigateResult( previousContextRoot, fetchTiming, joined );
+		return new Navigation( previousContextRoot, fetchTiming, joined );
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {

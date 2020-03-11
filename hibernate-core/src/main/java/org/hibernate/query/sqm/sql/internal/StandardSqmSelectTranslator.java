@@ -87,6 +87,8 @@ public class StandardSqmSelectTranslator
 
 	private final EntityGraphNavigator entityGraphNavigator;
 
+	private int fetchDepth;
+
 	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
@@ -230,8 +232,6 @@ public class StandardSqmSelectTranslator
 		return getFromClauseIndex().findTableGroup( navigablePath ).getModelPart();
 	}
 
-	private int fetchDepth = 0;
-
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
@@ -284,7 +284,7 @@ public class StandardSqmSelectTranslator
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 		boolean joined = false;
 
-		EntityGraphNavigator.NavigateResult navigateResult = null;
+		EntityGraphNavigator.Navigation navigation = null;
 
 		final SqmAttributeJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
 
@@ -307,10 +307,10 @@ public class StandardSqmSelectTranslator
 			alias = null;
 
 			if ( entityGraphNavigator != null ) {
-				navigateResult = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
-				if ( navigateResult != null ) {
-					fetchTiming = navigateResult.getFetchStrategy();
-					joined = navigateResult.isJoined();
+				navigation = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
+				if ( navigation != null ) {
+					fetchTiming = navigation.getFetchStrategy();
+					joined = navigation.isJoined();
 				}
 			}
 			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
@@ -418,8 +418,8 @@ public class StandardSqmSelectTranslator
 			);
 		}
 		finally {
-			if ( entityGraphNavigator != null && navigateResult != null ) {
-				entityGraphNavigator.backtrack( navigateResult.getPreviousContext() );
+			if ( entityGraphNavigator != null && navigation != null ) {
+				entityGraphNavigator.backtrack( navigation.getPreviousContext() );
 			}
 		}
 	}

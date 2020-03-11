@@ -22,13 +22,13 @@ public interface EntityGraphNavigator {
 	 *     <li>whether the new graph node fetching is joined</li>
 	 * </ul>
 	 */
-	class NavigateResult {
+	class Navigation {
 
 		private GraphImplementor previousContext;
 		private FetchTiming fetchTiming;
 		private boolean joined;
 
-		public NavigateResult(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
+		public Navigation(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
 			this.previousContext = previousContext;
 			this.fetchTiming = fetchTiming;
 			this.joined = joined;
@@ -64,7 +64,7 @@ public interface EntityGraphNavigator {
 	 * @param parent The FetchParent
 	 * @param fetchable The Fetchable
 	 * @param exploreKeySubgraph true if only key sub graph is explored; false if key sub graph is excluded
-	 * @return {@link NavigateResult} if applicable; null otherwise
+	 * @return {@link Navigation} if applicable; null otherwise
 	 */
-	NavigateResult navigateIfApplicable(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	Navigation navigateIfApplicable(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
 }

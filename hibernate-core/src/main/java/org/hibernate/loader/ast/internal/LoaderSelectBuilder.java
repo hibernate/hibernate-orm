@@ -427,14 +427,14 @@ public class LoaderSelectBuilder {
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 
-			EntityGraphNavigator.NavigateResult navigateResult = null;
+			EntityGraphNavigator.Navigation navigation = null;
 
 			// 'entity graph' takes precedence over 'fetch profile'
 			if ( entityGraphNavigator != null) {
-				navigateResult = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
-				if ( navigateResult != null ) {
-					fetchTiming = navigateResult.getFetchStrategy();
-					joined = navigateResult.isJoined();
+				navigation = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
+				if ( navigation != null ) {
+					fetchTiming = navigation.getFetchStrategy();
+					joined = navigation.isJoined();
 				}
 			}
 			else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
@@ -493,8 +493,8 @@ public class LoaderSelectBuilder {
 				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
 					fetchDepth--;
 				}
-				if ( entityGraphNavigator != null && navigateResult != null ) {
-					entityGraphNavigator.backtrack( navigateResult.getPreviousContext() );
+				if ( entityGraphNavigator != null && navigation != null ) {
+					entityGraphNavigator.backtrack( navigation.getPreviousContext() );
 				}
 			}
 		};

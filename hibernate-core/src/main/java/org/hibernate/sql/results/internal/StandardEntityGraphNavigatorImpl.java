@@ -16,8 +16,10 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.sql.results.graph.EntityGraphNavigator;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -69,11 +71,11 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 
 					if ( exploreKeySubgraph ) {
 						subgraphMap = attributeNode.getKeySubGraphMap();
-						subgraphMapKey = pluralAttributeMapping.getIndexDescriptor().getClass();
+						subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
 					}
 					else {
 						subgraphMap = attributeNode.getSubGraphMap();
-						subgraphMapKey = pluralAttributeMapping.getElementDescriptor().getClass();
+						subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
 					}
 				}
 				else {
@@ -81,7 +83,12 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 					subgraphMap = attributeNode.getSubGraphMap();
 					subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaType();
 				}
-				currentGraphContext = subgraphMap == null ? null : subgraphMap.get( subgraphMapKey );
+				if ( subgraphMap == null || subgraphMapKey == null ) {
+					currentGraphContext = null;
+				}
+				else {
+					currentGraphContext = subgraphMap.get( subgraphMapKey );
+				}
 			}
 			else {
 				currentGraphContext = null;
@@ -98,6 +105,16 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 			}
 		}
 		return new Navigation( previousContextRoot, fetchTiming, joined );
+	}
+
+	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
+		if ( collectionPart instanceof EntityCollectionPart ) {
+			EntityCollectionPart entityCollectionPart = (EntityCollectionPart) collectionPart;
+			return entityCollectionPart.getEntityMappingType().getJavaTypeDescriptor().getJavaType();
+		}
+		else {
+			return null;
+		}
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {

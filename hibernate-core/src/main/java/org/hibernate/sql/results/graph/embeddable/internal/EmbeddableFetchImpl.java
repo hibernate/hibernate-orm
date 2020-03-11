@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -54,11 +55,12 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
 				np -> {
+					final TableGroup lhsTableGroup = creationState.getSqlAstCreationState()
+							.getFromClauseAccess()
+							.findTableGroup( fetchParent.getNavigablePath() );
 					final TableGroupJoin tableGroupJoin = getReferencedMappingContainer().createTableGroupJoin(
 							getNavigablePath(),
-							creationState.getSqlAstCreationState()
-									.getFromClauseAccess()
-									.findTableGroup( fetchParent.getNavigablePath() ),
+							lhsTableGroup,
 							null,
 							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
 							LockMode.NONE,
@@ -66,7 +68,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
 							creationState.getSqlAstCreationState().getCreationContext()
 					);
-
+					lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 

@@ -6,8 +6,11 @@
  */
 package org.hibernate.orm.test.query.hql.entitygraph;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -34,15 +37,20 @@ import org.hibernate.query.sqm.sql.internal.StandardSqmSelectTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -50,6 +58,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hibernate.testing.hamcrest.AssignableMatcher.assignableTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
@@ -68,6 +77,7 @@ import static org.junit.Assert.assertThat;
 		}
 )
 @SessionFactory
+@TestForIssue( jiraKey = "HHH-13756" )
 public class HqlEntityGraphTest {
 
 	@Test
@@ -82,9 +92,179 @@ public class HqlEntityGraphTest {
 					assertEmptyJoinedGroup( sqlAst );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", EntityGraphLoadPlanBuilderTest.Person.class,
+					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", Person.class,
 										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) )
 					);
+				}
+		);
+	}
+
+	@Test
+	void testFetchSemanticsWithSubgraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
+
+					// Check the from-clause
+					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, this::assertPersonHomeAddressJoinedGroup );
+
+					// Check the domain-result graph
+					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {} );
+				}
+		);
+	}
+
+	@Test
+	void testFetchSemanticsWithDeepSubgraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class ).addSubgraph( "company", HqlEntityGraphTest.ExpressCompany.class );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
+
+					// Check the from-clause
+					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, tableGroup -> {
+						Set<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+						Map<String, Class<? extends TableGroup>> tableGroupByName = tableGroupJoins.stream()
+								.map( TableGroupJoin::getJoinedGroup )
+								.collect( Collectors.toMap(
+										tg -> tg.getModelPart().getPartName(),
+										TableGroup::getClass
+								) );
+						Map<String, Class<? extends TableGroup> > expectedTableGroupByName = new HashMap<>();
+						expectedTableGroupByName.put( "homeAddress", CompositeTableGroup.class );
+						expectedTableGroupByName.put( "company", StandardTableGroup.class );
+						assertThat( tableGroupByName, is( expectedTableGroupByName ) );
+					} );
+
+					// Check the domain-result graph
+					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {
+						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
+						final EntityResult ownerEntityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
+						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = ownerEntityResult.getFetches()
+								.stream().collect( Collectors.toMap(
+										fetch -> fetch.getFetchedMapping().getPartName(),
+										Fetch::getClass
+								) );
+						final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
+						expectedFetchClassByAttributeName.put( "homeAddress", EmbeddableFetchImpl.class );
+						expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
+						expectedFetchClassByAttributeName.put( "company", EntityFetchJoinedImpl.class );
+						assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
+
+						final Fetch companyFetch = ownerEntityResult.findFetch( "company" );
+						assertThat( companyFetch, notNullValue() );
+
+						final EntityResult companyEntityResult = ( (EntityFetchJoinedImpl) companyFetch).getEntityResult();
+						assertThat( companyEntityResult.getFetches(), hasSize( 1 ) );
+
+						final Fetch shipAddressesFetch = companyEntityResult.getFetches().get( 0 );
+						assertThat( shipAddressesFetch.getFetchedMapping().getPartName(), is( "shipAddresses" ) );
+						assertThat( shipAddressesFetch, instanceOf( DelayedCollectionFetch.class ) );
+					} );
+				}
+		);
+	}
+
+	@Test
+	void testBasicLoadSemantics(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
+
+					// Check the from-clause
+					assertEmptyJoinedGroup( sqlAst );
+
+					// Check the domain-result graph
+					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class,
+										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) ) );
+				}
+		);
+	}
+
+	@Test
+	void testLoadLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
+
+					// Check the from-clause
+					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, this::assertPersonHomeAddressJoinedGroup );
+
+					// Check the domain-result graph
+					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {
+						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
+						final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
+						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
+								fetch -> fetch.getFetchedMapping().getPartName(),
+								Fetch::getClass
+						) );
+						final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
+						expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
+						expectedFetchClassByAttributeName.put( "homeAddress", EmbeddableFetchImpl.class );
+						expectedFetchClassByAttributeName.put( "company", EntityFetchDelayedImpl.class );
+						assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
+					} );
+				}
+		);
+	}
+
+	@Test
+	void testBasicElementCollectionsLoadGraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Dog> eg = session.createEntityGraph( HqlEntityGraphTest.Dog.class );
+					eg.addAttributeNodes( "favorites" );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.LOAD, session );
+
+					// Check the from-clause
+					assertPluralAttributeJoinedGroup( sqlAst, "favorites" );
+				}
+		);
+	}
+
+	@Test
+	void testBasicElementCollectionsFetchGraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.Dog> eg = session.createEntityGraph( HqlEntityGraphTest.Dog.class );
+					eg.addAttributeNodes( "favorites" );
+
+					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.FETCH, session );
+
+					// Check the from-clause
+					assertPluralAttributeJoinedGroup( sqlAst, "favorites" );
+				}
+		);
+	}
+
+	@Test
+	void testEmbeddedCollectionLoadSubgraph(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final RootGraphImplementor<HqlEntityGraphTest.ExpressCompany> eg = session.createEntityGraph( HqlEntityGraphTest.ExpressCompany.class );
+					eg.addAttributeNodes( "shipAddresses" );
+
+					final SelectStatement sqlAst = buildSqlSelectAst(
+							HqlEntityGraphTest.ExpressCompany.class,
+							"select company from ExpressCompany as company",
+							eg, GraphSemantic.LOAD,
+							session
+					);
+
+					// Check the from-clause
+					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses" );
+
 				}
 		);
 	}
@@ -200,7 +380,7 @@ public class HqlEntityGraphTest {
 		return sqmInterpretation.getSqlAst();
 	}
 
-	@Entity
+	@Entity(name = "Dog")
 	public static class Dog {
 		@Id
 		String name;
@@ -209,46 +389,46 @@ public class HqlEntityGraphTest {
 		Set<String> favorites;
 	}
 
-	@Entity
+	@Entity(name = "Cat")
 	public static class Cat {
 		@Id
 		String name;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		EntityGraphLoadPlanBuilderTest.Person owner;
+		Person owner;
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	public static class Person {
 		@Id
 		String name;
 
 		@OneToMany(mappedBy = "owner")
-		Set<EntityGraphLoadPlanBuilderTest.Cat> pets;
+		Set<Cat> pets;
 
 		@Embedded
-		EntityGraphLoadPlanBuilderTest.Address homeAddress;
+		Address homeAddress;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		EntityGraphLoadPlanBuilderTest.ExpressCompany company;
+		ExpressCompany company;
 	}
 
 	@Embeddable
 	public static class Address {
 		@ManyToOne
-		EntityGraphLoadPlanBuilderTest.Country country;
+		Country country;
 	}
 
-	@Entity
+	@Entity(name = "ExpressCompany")
 	public static class ExpressCompany {
 		@Id
 		String name;
 
 		@ElementCollection
-		Set<EntityGraphLoadPlanBuilderTest.Address> shipAddresses;
+		Set<Address> shipAddresses;
 	}
 
-	@Entity
+	@Entity(name = "Country")
 	public static class Country {
 		@Id
 		String name;

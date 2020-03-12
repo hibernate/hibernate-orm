@@ -291,9 +291,13 @@ public class EntityGraphLoadPlanBuilderTest {
 					);
 
 					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup ->
-						assertThat( tableGroup.getTableGroupJoins(), isEmpty() )
-					);
+					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
+						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+						final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
+						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+						assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
+					} );
 
 				}
 		);

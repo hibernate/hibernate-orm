@@ -50,6 +50,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.CollectionUtils;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -262,11 +263,11 @@ public class EntityGraphLoadPlanBuilderTest {
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
 						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-						final TableGroup compositeTableGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+						final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
 						assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-						final TableGroup countryTableGroup = compositeTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+						final TableGroup countryTableGroup = CollectionUtils.getOnlyElement( compositeTableGroup.getTableGroupJoins() ).getJoinedGroup();
 						assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
 
 						assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
@@ -315,7 +316,7 @@ public class EntityGraphLoadPlanBuilderTest {
 		final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
 		assertThat( rootTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroup joinedGroup = rootTableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+		final TableGroup joinedGroup = CollectionUtils.getOnlyElement( rootTableGroup.getTableGroupJoins() ).getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedAttributeName ) );
 		assertThat( joinedGroup.getModelPart().getJavaTypeDescriptor().getJavaType(), assignableTo( expectedEntityJpaClass ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EntityValuedModelPart.class ) );
@@ -330,7 +331,7 @@ public class EntityGraphLoadPlanBuilderTest {
 		final TableGroup root = fromClause.getRoots().get( 0 );
 		assertThat( root.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroup joinedGroup = root.getTableGroupJoins().iterator().next().getJoinedGroup();
+		final TableGroup joinedGroup = CollectionUtils.getOnlyElement( root.getTableGroupJoins() ).getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( expectedPluralAttributeName ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( PluralAttributeMapping.class ) );
 		tableGroupConsumer.accept( joinedGroup );
@@ -339,7 +340,7 @@ public class EntityGraphLoadPlanBuilderTest {
 	private void assertPersonHomeAddressJoinedGroup(TableGroup tableGroup) {
 		assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-		final TableGroup joinedGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
+		final TableGroup joinedGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( "homeAddress" ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
 		assertThat( joinedGroup, instanceOf( CompositeTableGroup.class ) );

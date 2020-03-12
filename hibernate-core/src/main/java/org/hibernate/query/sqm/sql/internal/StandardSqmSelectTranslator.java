@@ -307,11 +307,9 @@ public class StandardSqmSelectTranslator
 			alias = null;
 
 			if ( entityGraphNavigator != null ) {
-				navigation = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
-				if ( navigation != null ) {
-					fetchTiming = navigation.getFetchStrategy();
-					joined = navigation.isJoined();
-				}
+				navigation = entityGraphNavigator.navigate( fetchParent, fetchable, isKeyFetchable );
+				fetchTiming = navigation.getFetchStrategy();
+				joined = navigation.isJoined();
 			}
 			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
 				if ( fetchParent instanceof EntityResultGraphNode ) {

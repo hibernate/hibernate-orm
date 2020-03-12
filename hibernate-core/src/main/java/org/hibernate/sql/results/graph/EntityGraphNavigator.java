@@ -52,19 +52,18 @@ public interface EntityGraphNavigator {
 	 * Mainly reset the current context entity graph node to the passed method parameter.
 	 *
 	 * @param previousContext The stored previous invocation result; should not be null
-	 * @see #navigateIfApplicable(FetchParent, Fetchable, boolean)
+	 * @see #navigate(FetchParent, Fetchable, boolean)
 	 */
 	void backtrack(GraphImplementor previousContext);
 
 	/**
-	 * Tries to navigate from parent to child node within entity graph and returns non-null {@code NavigateResult}
-	 * if applicable. Returns null value if not applicable.
+	 * Tries to navigate from parent to child node within entity graph and returns non-null {@code NavigateResult}.
 	 *
 	 * @apiNote If applicable, internal state will be mutated. Not thread safe and should be used within single thread.
 	 * @param parent The FetchParent
 	 * @param fetchable The Fetchable
 	 * @param exploreKeySubgraph true if only key sub graph is explored; false if key sub graph is excluded
-	 * @return {@link Navigation} if applicable; null otherwise
+	 * @return resulting {@link Navigation}; never null
 	 */
-	Navigation navigateIfApplicable(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	Navigation navigate(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
 }

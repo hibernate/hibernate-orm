@@ -54,6 +54,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.CollectionUtils;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -294,7 +295,13 @@ public class HqlEntityGraphTest {
 					);
 
 					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> assertThat( tableGroup.getTableGroupJoins(), isEmpty() ) );
+					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
+						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+						final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
+						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+						assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
+					} );
 
 				}
 		);
@@ -390,7 +397,7 @@ public class HqlEntityGraphTest {
 		);
 		final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
 
-		final SqmSelectStatement<T> sqmStatement = (SqmSelectStatement<T>) hqlQuery.getSqmStatement();
+		final SqmSelectStatement sqmStatement = (SqmSelectStatement) hqlQuery.getSqmStatement();
 
 		final StandardSqmSelectTranslator sqmConverter = new StandardSqmSelectTranslator(
 				hqlQuery.getQueryOptions(),

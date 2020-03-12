@@ -49,7 +49,7 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 	}
 
 	@Override
-	public Navigation navigateIfApplicable(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
+	public Navigation navigate(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		final GraphImplementor previousContextRoot = currentGraphContext;
 		FetchTiming fetchTiming = null;
 		boolean joined = false;
@@ -65,7 +65,6 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 				if ( fetchable instanceof PluralAttributeMapping ) {
 					PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-					// avoid '^' bitwise operator to improve code readability
 					assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
 							|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
 
@@ -83,16 +82,19 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 					subgraphMap = attributeNode.getSubGraphMap();
 					subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaType();
 				}
-				if ( subgraphMap == null || subgraphMapKey == null ) {
-					currentGraphContext = null;
+				if ( subgraphMap != null && subgraphMapKey != null ) {
+					currentGraphContext = subgraphMap.get( subgraphMapKey );
 				}
 				else {
-					currentGraphContext = subgraphMap.get( subgraphMapKey );
+					currentGraphContext = null;
 				}
 			}
 			else {
 				currentGraphContext = null;
 			}
+		}
+		else {
+			currentGraphContext = null;
 		}
 		if ( fetchTiming == null ) {
 			if ( graphSemantic == GraphSemantic.FETCH ) {

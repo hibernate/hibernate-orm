@@ -28,7 +28,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.orm.test.loading.entitygraph.EntityGraphLoadPlanBuilderTest;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -440,7 +439,7 @@ public class HqlEntityGraphTest {
 
 	@Embeddable
 	public static class Address {
-		@ManyToOne(fetch = FetchType.EAGER)
+		@ManyToOne
 		Country country;
 	}
 

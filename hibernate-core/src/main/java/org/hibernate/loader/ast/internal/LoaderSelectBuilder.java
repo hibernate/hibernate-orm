@@ -431,11 +431,9 @@ public class LoaderSelectBuilder {
 
 			// 'entity graph' takes precedence over 'fetch profile'
 			if ( entityGraphNavigator != null) {
-				navigation = entityGraphNavigator.navigateIfApplicable( fetchParent, fetchable, isKeyFetchable );
-				if ( navigation != null ) {
-					fetchTiming = navigation.getFetchStrategy();
-					joined = navigation.isJoined();
-				}
+				navigation = entityGraphNavigator.navigate( fetchParent, fetchable, isKeyFetchable );
+				fetchTiming = navigation.getFetchStrategy();
+				joined = navigation.isJoined();
 			}
 			else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 				if ( fetchParent instanceof EntityResultGraphNode ) {
@@ -493,7 +491,7 @@ public class LoaderSelectBuilder {
 				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
 					fetchDepth--;
 				}
-				if ( entityGraphNavigator != null && navigation != null ) {
+				if ( entityGraphNavigator != null ) {
 					entityGraphNavigator.backtrack( navigation.getPreviousContext() );
 				}
 			}

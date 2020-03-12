@@ -207,12 +207,14 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 		final TableGroup tableGroup = new CompositeTableGroup( navigablePath, this, lhs );
 
-		return new TableGroupJoin(
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				tableGroup,
 				null
 		);
+		lhs.addTableGroupJoin( tableGroupJoin );
+		return tableGroupJoin;
 	}
 
 	@Override

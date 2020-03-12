@@ -217,6 +217,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -1229,14 +1230,6 @@ public abstract class AbstractEntityPersister
 			DomainResultCreationState creationState) {
 		//noinspection unchecked
 		return new EntityResultImpl( navigablePath, this, resultVariable, creationState );
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
@@ -6442,7 +6435,27 @@ public abstract class AbstractEntityPersister
 		collectAttributeDefinitions();
 	}
 
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action,
+			Clause clause,
+			TypeConfiguration typeConfiguration) {
+		getAttributeMappings().forEach(
+				attributeMapping -> attributeMapping.visitJdbcTypes( action, clause, typeConfiguration )
+		);
+	}
 
+	@Override
+	public void visitJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer consumer,
+			SharedSessionContractImplementor session) {
+		getAttributeMappings().forEach(
+				attributeMapping ->
+						attributeMapping.visitJdbcValues( value, clause, consumer, session )
+		);
+	}
 
 	@Override
 	public EntityIdentifierDefinition getEntityKeyDefinition() {

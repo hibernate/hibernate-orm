@@ -19,7 +19,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	private final FetchableContainer fetchContainer;
 	private final NavigablePath navigablePath;
 
-	private List<Fetch> fetches;
+	protected List<Fetch> fetches;
 
 	public AbstractFetchParent(FetchableContainer fetchContainer, NavigablePath navigablePath) {
 		this.fetchContainer = fetchContainer;

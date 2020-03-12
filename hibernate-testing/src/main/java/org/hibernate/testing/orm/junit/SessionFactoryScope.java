@@ -12,6 +12,7 @@ import java.util.function.Function;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
  * @author Steve Ebersole
@@ -30,4 +31,6 @@ public interface SessionFactoryScope {
 	<T> T fromTransaction(SessionImplementor session, Function<SessionImplementor, T> action);
 
 	MetadataImplementor getMetadataImplementor();
+
+	StatementInspector getStatementInspector();
 }

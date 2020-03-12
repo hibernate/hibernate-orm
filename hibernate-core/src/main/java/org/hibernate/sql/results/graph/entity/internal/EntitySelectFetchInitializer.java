@@ -22,7 +22,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 /**
  * @author Andrea Boriero
  */
-public class EntityInitializerSelectFetch extends AbstractFetchParentAccess implements EntityInitializer {
+public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 	private final NavigablePath navigablePath;
 	private final EntityPersister concreteDescriptor;
 	private final DomainResultAssembler identifierAssembler;
@@ -31,7 +31,7 @@ public class EntityInitializerSelectFetch extends AbstractFetchParentAccess impl
 
 	private Object entityInstance;
 
-	protected EntityInitializerSelectFetch(
+	protected EntitySelectFetchInitializer(
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
@@ -75,7 +75,7 @@ public class EntityInitializerSelectFetch extends AbstractFetchParentAccess impl
 		entityInstance = session.internalLoad(
 				entityName,
 				id,
-				false,
+				true,
 				nullable
 		);
 

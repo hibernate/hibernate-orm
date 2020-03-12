@@ -20,8 +20,9 @@ import org.hibernate.sql.results.graph.Initializer;
 /**
  * @author Andrea Boriero
  */
-public class EntityInitializerJoinedFetch extends AbstractEntityInitializer {
-	protected EntityInitializerJoinedFetch(
+public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
+
+	protected EntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
 			LockMode lockMode,

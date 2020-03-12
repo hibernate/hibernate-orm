@@ -318,16 +318,18 @@ public class EmbeddableMappingType implements ManagedMappingType {
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
 
-	@Override
-	public void visitDisassembledJdbcValues(
-			Object value,
-			Clause clause,
-			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		Object[] result = new Object[attributeMappings.size()];
+		int i = 0;
+		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
+		while ( iterator.hasNext() ) {
+			AttributeMapping mapping = iterator.next();
+			Object o = mapping.getPropertyAccess().getGetter().get( value );
+			result[i] = mapping.disassemble( o, session );
+			i++;
+		}
+		return result;
 	}
 
 	@Override
@@ -342,6 +344,23 @@ public class EmbeddableMappingType implements ManagedMappingType {
 					attributeMapping.visitJdbcValues( o, clause, consumer, session );
 				}
 		);
+	}
+
+	@Override
+	public void visitDisassembledJdbcValues(
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		final Collection<AttributeMapping> attributeMappings = getAttributeMappings();
+		final Iterator<AttributeMapping> iterator = attributeMappings.iterator();
+		final Object[] values = (Object[]) value;
+		int i = 0;
+		while ( iterator.hasNext() ) {
+			AttributeMapping mapping = iterator.next();
+			mapping.visitDisassembledJdbcValues( values[i], clause, valuesConsumer, session );
+			i++;
+		}
 	}
 
 	public void visitColumns(ColumnConsumer consumer) {

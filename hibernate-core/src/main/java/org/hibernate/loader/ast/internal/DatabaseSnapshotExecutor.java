@@ -98,7 +98,6 @@ class DatabaseSnapshotExecutor {
 		);
 		final List<DomainResult> domainResults = new ArrayList<>();
 
-		final NavigablePath idPath = rootPath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		entityDescriptor.getIdentifierMapping().visitColumns(
 				(tab, col, jdbcMapping) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );

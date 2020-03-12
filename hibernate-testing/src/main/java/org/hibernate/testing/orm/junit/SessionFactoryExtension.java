@@ -406,5 +406,10 @@ public class SessionFactoryExtension
 		public MetadataImplementor getMetadataImplementor() {
 			return modelScope.getDomainModel();
 		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+		}
 	}
 }

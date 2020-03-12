@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.ManyToOne;
@@ -180,7 +179,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		}
 
 		final FetchParent associationFetchParent = fetchParent.resolveContainingAssociationParent();
-		if(associationFetchParent == null){
+		if ( associationFetchParent == null ) {
 			return null;
 		}
 		final ModelPart referencedModePart = associationFetchParent.getReferencedModePart();
@@ -188,7 +187,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 		final Association associationParent = (Association) referencedModePart;
 
-		if (foreignKeyDescriptor.equals( associationParent.getForeignKeyDescriptor() ) ) {
+		if ( foreignKeyDescriptor.equals( associationParent.getForeignKeyDescriptor() ) ) {
 			// we need to determine the NavigablePath referring to the entity that the bi-dir
 			// fetch will "return" for its Assembler.  so we walk "up" the FetchParent graph
 			// to find the "referenced entity" reference
@@ -216,23 +215,10 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				if ( associationParentForeignKeyDescriptor.getTargetTableExpression()
 						.equals( entityPersister.getTableName() ) ) {
 					final String[] identifierColumnNames = entityPersister.getIdentifierColumnNames();
-					return associationParentForeignKeyDescriptor.visitColumnMapping( (referringTable, referringColumns, targetTable, targetColumns, jdbcMapping) -> {
-//					if ( identifierColumnNames.length == targetColumns.size() ) {
-//						for ( int i = 0; i < identifierColumnNames.length; i++ ) {
-//							if ( !targetColumns.contains( identifierColumnNames[i] ) ) {
-//								return null;
-//							}
-//						}
-						if ( identifierColumnNames.length > 1 ) {
-							throw new NotYetImplementedFor6Exception(
-									"Support for composite foreign -keys not yet 	implemented" );
-						}
-						if ( targetColumns.equals( identifierColumnNames[0] ) ) {
-							return createBiDirectionalFetch( fetchablePath, fetchParent );
-						}
-//					}
-						return null;
-					} );
+					if ( associationParentForeignKeyDescriptor.areTargetColumnNamesEqualsTo( identifierColumnNames ) ) {
+						return createBiDirectionalFetch( fetchablePath, fetchParent );
+					}
+					return null;
 				}
 
 			}

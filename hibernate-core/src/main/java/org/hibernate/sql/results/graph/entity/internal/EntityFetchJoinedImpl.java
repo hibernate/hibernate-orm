@@ -51,7 +51,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		return new EntityInitializerJoinedFetch(
+		return new EntityJoinedFetchInitializer(
 				entityResult,
 				getNavigablePath(),
 				lockMode,

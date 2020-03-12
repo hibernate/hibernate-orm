@@ -19,6 +19,7 @@ import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -245,7 +246,10 @@ public class Column implements Selectable, Serializable, Cloneable {
 					&& size.getScale() == null && size.getPrecision() == null ) {
 				if ( type instanceof EntityType ) {
 					//ManyToOneType doesn't implement JdbcMapping
-					type = mapping.getIdentifierType( ((EntityType) type).getAssociatedEntityName() );
+					type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
+					if ( type instanceof ComponentType ) {
+						type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+					}
 				}
 				if ( type instanceof JdbcMapping ) {
 					size = dialect.getDefaultSizeStrategy().resolveDefaultSize(

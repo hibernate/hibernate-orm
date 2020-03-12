@@ -28,6 +28,7 @@ import org.jboss.shrinkwrap.descriptor.api.Descriptors;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceDescriptor;
 import org.jboss.shrinkwrap.descriptor.api.persistence21.PersistenceUnitTransactionType;
 import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +36,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Chris Cranford
  */
-@RunWith(Arquillian.class)
+// todo (6.0) : re-enable the test when envers is fixed
+
+//@RunWith(Arquillian.class)
 public class HibernateEnversOnWildflyTest {
 
 	private static final String ORM_VERSION = Session.class.getPackage().getImplementationVersion();
@@ -70,7 +73,7 @@ public class HibernateEnversOnWildflyTest {
 	@Inject
 	private UserTransaction userTransaction;
 
-	@Test
+//	@Test
 	public void testEnversCompatibility() throws Exception {
 		// revision 1
 		userTransaction.begin();

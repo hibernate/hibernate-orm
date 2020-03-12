@@ -34,6 +34,7 @@ ext {
 	// "10" for WildFly 10.x, "11" for 11.x, etc
 	wildFlyMajorVersion = project.wildflyVersion.split( '\\.' )[0]
 	bytebuddyVersion = project.byteBuddyVersion
+	antlrVersion = project.antlrVersion
 	artifactClassifier = "wildfly-${wildFlyMajorVersion}-dist"
 	wildFlyInstallDir = "$rootProject.buildDir/wildfly"
 	fpackStagingDir = file( "target/featurepack" ) //Target build directory for the Feature Pack
@@ -73,7 +74,8 @@ featurepack {
 	variables['slot'] = rootProject.ormVersion.fullName
 	// Just the minor ORM version, e.g. "5.3"; Is used as an alias for the exact version
 	variables['minorSlot'] = rootProject.ormVersion.family
-	variables['bytebuddySlot'] = bytebuddyVersion
+	variables['bytebuddySlot'] = antlrVersion
+	variables['antlrSlot'] = '4.7.1'
 	variables['infinispan2lcSlot'] = 'for-orm-' + rootProject.ormVersion.family
 	//Dependency on another Feature Pack:
 	dependency "org.wildfly:wildfly-feature-pack:${project.wildflyVersion}" // It will assume it is "zip" by default
@@ -106,6 +108,9 @@ dependencies {
 	testCompile project( ":hibernate-core" )
 	testCompile project( ":hibernate-envers" )
 	testCompile libraries.junit
+	testCompile 'org.antlr:antlr4-runtime:4.7.1'
+
+	testCompile libraries.antlr
 	testCompile libraries.arquillian_junit_container
 	testCompile libraries.arquillian_protocol_servlet
 	testCompile libraries.shrinkwrap_descriptors_api_javaee
@@ -113,9 +118,11 @@ dependencies {
 	testCompile libraries.wildfly_arquillian_container_managed
 
 	featurePack libraries.byteBuddy
+	featurePack libraries.antlr
 	featurePack project( ":hibernate-core" )
 	featurePack project( ":hibernate-envers" )
 	featurePack "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
+	featurePack "org.antlr:antlr4-runtime:4.7.1"
 }
 
 publishing {

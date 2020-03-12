@@ -51,12 +51,14 @@ ext {
     //GraalVM
     graalvmVersion = '19.3.1'
 
+    antlrVersion = '4.7.1'
+
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
 
             // Antlr
-            antlr:          'org.antlr:antlr4:4.7.1',
+            antlr:          "org.antlr:antlr4:${antlrVersion}",
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",

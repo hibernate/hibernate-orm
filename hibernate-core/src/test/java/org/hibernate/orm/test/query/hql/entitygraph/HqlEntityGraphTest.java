@@ -84,15 +84,15 @@ public class HqlEntityGraphTest {
 	void testBasicFetchSemantics(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+					final RootGraphImplementor<Cat> eg = session.createEntityGraph( Cat.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat c", eg, GraphSemantic.FETCH, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, "select c from Cat c", eg, GraphSemantic.FETCH, session );
 
 					// Check the from-clause
 					assertEmptyJoinedGroup( sqlAst );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", Person.class,
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
 										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) )
 					);
 				}
@@ -103,16 +103,16 @@ public class HqlEntityGraphTest {
 	void testFetchSemanticsWithSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
-					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class );
+					final RootGraphImplementor<Cat> eg = session.createEntityGraph( Cat.class );
+					eg.addSubgraph( "owner", Person.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
 
 					// Check the from-clause
-					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, this::assertPersonHomeAddressJoinedGroup );
+					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {} );
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {} );
 				}
 		);
 	}
@@ -121,13 +121,13 @@ public class HqlEntityGraphTest {
 	void testFetchSemanticsWithDeepSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
-					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class ).addSubgraph( "company", HqlEntityGraphTest.ExpressCompany.class );
+					final RootGraphImplementor<Cat> eg = session.createEntityGraph( Cat.class );
+					eg.addSubgraph( "owner", Person.class ).addSubgraph( "company", ExpressCompany.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, "select c from Cat as c", eg, GraphSemantic.FETCH, session );
 
 					// Check the from-clause
-					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, tableGroup -> {
+					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, tableGroup -> {
 						Set<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
 						Map<String, Class<? extends TableGroup>> tableGroupByName = tableGroupJoins.stream()
 								.map( TableGroupJoin::getJoinedGroup )
@@ -142,7 +142,7 @@ public class HqlEntityGraphTest {
 					} );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
 						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 						final EntityResult ownerEntityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = ownerEntityResult.getFetches()
@@ -174,15 +174,15 @@ public class HqlEntityGraphTest {
 	void testBasicLoadSemantics(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
+					final RootGraphImplementor<Cat> eg = session.createEntityGraph( Cat.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
 
 					// Check the from-clause
 					assertEmptyJoinedGroup( sqlAst );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class,
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
 										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) ) );
 				}
 		);
@@ -192,16 +192,16 @@ public class HqlEntityGraphTest {
 	void testLoadLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Cat> eg = session.createEntityGraph( HqlEntityGraphTest.Cat.class );
-					eg.addSubgraph( "owner", HqlEntityGraphTest.Person.class );
+					final RootGraphImplementor<Cat> eg = session.createEntityGraph( Cat.class );
+					eg.addSubgraph( "owner", Person.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, "select c from Cat as c", eg, GraphSemantic.LOAD, session );
 
 					// Check the from-clause
-					assertEntityValuedJoinedGroup( sqlAst, "owner", HqlEntityGraphTest.Person.class, this::assertPersonHomeAddressJoinedGroup );
+					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, HqlEntityGraphTest.Cat.class, "owner", HqlEntityGraphTest.Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
 						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 						final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
@@ -222,10 +222,10 @@ public class HqlEntityGraphTest {
 	void testBasicElementCollectionsLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Dog> eg = session.createEntityGraph( HqlEntityGraphTest.Dog.class );
+					final RootGraphImplementor<Dog> eg = session.createEntityGraph( Dog.class );
 					eg.addAttributeNodes( "favorites" );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.LOAD, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Dog.class, "select d from Dog as d", eg, GraphSemantic.LOAD, session );
 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
@@ -237,10 +237,10 @@ public class HqlEntityGraphTest {
 	void testBasicElementCollectionsFetchGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.Dog> eg = session.createEntityGraph( HqlEntityGraphTest.Dog.class );
+					final RootGraphImplementor<Dog> eg = session.createEntityGraph( Dog.class );
 					eg.addAttributeNodes( "favorites" );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( HqlEntityGraphTest.Dog.class, "select d from Dog as d", eg, GraphSemantic.FETCH, session );
+					final SelectStatement sqlAst = buildSqlSelectAst( Dog.class, "select d from Dog as d", eg, GraphSemantic.FETCH, session );
 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
@@ -252,11 +252,11 @@ public class HqlEntityGraphTest {
 	void testEmbeddedCollectionLoadGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.ExpressCompany> eg = session.createEntityGraph( HqlEntityGraphTest.ExpressCompany.class );
+					final RootGraphImplementor<ExpressCompany> eg = session.createEntityGraph( ExpressCompany.class );
 					eg.addAttributeNodes( "shipAddresses" );
 
 					final SelectStatement sqlAst = buildSqlSelectAst(
-							HqlEntityGraphTest.ExpressCompany.class,
+							ExpressCompany.class,
 							"select company from ExpressCompany as company",
 							eg, GraphSemantic.LOAD,
 							session
@@ -284,11 +284,11 @@ public class HqlEntityGraphTest {
 	void testEmbeddedCollectionFetchGraph(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final RootGraphImplementor<HqlEntityGraphTest.ExpressCompany> eg = session.createEntityGraph( HqlEntityGraphTest.ExpressCompany.class );
+					final RootGraphImplementor<ExpressCompany> eg = session.createEntityGraph( ExpressCompany.class );
 					eg.addAttributeNodes( "shipAddresses" );
 
 					final SelectStatement sqlAst = buildSqlSelectAst(
-							HqlEntityGraphTest.ExpressCompany.class,
+							ExpressCompany.class,
 							"select company from ExpressCompany as company",
 							eg, GraphSemantic.FETCH,
 							session

@@ -57,7 +57,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 			FetchParentAccess parentAccess,
 			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		final EntityInitializerSelectFetch initializer = new EntityInitializerSelectFetch(
+		final EntitySelectFetchInitializer initializer = new EntitySelectFetchInitializer(
 				getNavigablePath(),
 				getReferencedMappingContainer().getEntityPersister(),
 				result.createResultAssembler( collector, creationState ),

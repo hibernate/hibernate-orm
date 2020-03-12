@@ -68,7 +68,7 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			Consumer<JdbcMapping> action,
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
-		getEntityMappingType().getJdbcTypeCount( typeConfiguration );
+		getEntityMappingType().visitJdbcTypes( action, clause, typeConfiguration );
 	}
 
 	@Override

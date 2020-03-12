@@ -85,7 +85,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public DomainResult createCollectionFecthDomainResult(
+	public DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
@@ -140,14 +140,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								tableReference,
 								keyColumnExpression
 						),
-						s -> {
-							return new ColumnReference(
+						s ->
+							new ColumnReference(
 									identificationVariable,
 									keyColumnExpression,
 									jdbcMapping,
 									creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-							);
-						}
+							)
 				),
 				jdbcMapping.getJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
@@ -314,25 +313,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public <T> T visitColumnMapping(FkColumnMappingFunction<T> function) {
-		return function.apply(
-				keyColumnContainingTable,
-				keyColumnExpression ,
-				targetColumnContainingTable,
-				targetColumnExpression ,
-				jdbcMapping
-		);
-	}
-
-	@Override
-	public void visitColumnMappings(FkColumnMappingConsumer consumer) {
-		consumer.consume(
-				keyColumnContainingTable,
-				keyColumnExpression,
-				targetColumnContainingTable,
-				targetColumnExpression,
-				jdbcMapping
-		);
+	public boolean areTargetColumnNamesEqualsTo(String[] columnNames) {
+		if ( columnNames.length != 1 ) {
+			return false;
+		}
+		return targetColumnExpression.equals( columnNames[0] );
 	}
 
 	@Override

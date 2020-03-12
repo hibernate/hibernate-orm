@@ -59,7 +59,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping, EmbeddableValuedFetchable {
+public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping,  EmbeddableValuedFetchable {
 	private final NavigableRole navigableRole;
 	private final EntityMappingType entityMapping;
 	private final String name;
@@ -161,11 +161,27 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 
 	@Override
 	public void visitJdbcValues(
-			Object value, Clause clause, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().visitJdbcValues( value, clause, valuesConsumer, session );
+			Object value,
+			Clause clause,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().getAttributeMappings().forEach(
+				attributeMapping -> {
+					final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+					if ( attributeMapping instanceof SingularAssociationAttributeMapping ) {
+						final EntityMappingType associatedEntityMappingType =
+								( (SingularAssociationAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
+						final EntityIdentifierMapping identifierMapping =
+								associatedEntityMappingType.getIdentifierMapping();
+						final Object identifier = identifierMapping.getIdentifier( o, session );
+						identifierMapping.visitJdbcValues( identifier, clause, valuesConsumer, session );
+					}
+					else {
+						attributeMapping.visitJdbcValues( o, clause, valuesConsumer, session );
+					}
+				}
+		);
 	}
-
-
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(
@@ -218,7 +234,6 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		);
 
 		return new SqlTuple( columnReferences, this );
-
 	}
 
 	@Override
@@ -237,13 +252,10 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 				lhs
 		);
 
-		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, SqlAstJoinType.INNER, compositeTableGroup, null ) );
+		final TableGroupJoin join = new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, compositeTableGroup, null );
+		lhs.addTableGroupJoin( join );
 
-		return new TableGroupJoin(
-				navigablePath,
-				sqlAstJoinType,
-				compositeTableGroup
-		);
+		return join;
 	}
 
 	@Override
@@ -258,7 +270,8 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 
 	@Override
 	public void visitSubParts(
-			Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+			Consumer<ModelPart> consumer,
+			EntityMappingType treatTargetType) {
 		getMappedTypeDescriptor().visitSubParts( consumer, treatTargetType );
 	}
 
@@ -297,8 +310,19 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 
+	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		getEmbeddableTypeDescriptor().visitColumns( consumer );
+		getAttributes().forEach(
+				attribute -> {
+					if ( attribute instanceof SingularAssociationAttributeMapping ) {
+						SingularAssociationAttributeMapping associationAttributeMapping = (SingularAssociationAttributeMapping) attribute;
+						associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns( consumer );
+					}
+					else {
+						attribute.visitColumns( consumer );
+					}
+				}
+		);
 	}
 
 	@Override
@@ -317,8 +341,4 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
 	}
 
-	@Override
-	public PropertyAccess getPropertyAccess() {
-		return propertyAccess;
-	}
 }

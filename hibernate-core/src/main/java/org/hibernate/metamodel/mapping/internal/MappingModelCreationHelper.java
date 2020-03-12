@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -49,6 +50,7 @@ import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -229,7 +231,10 @@ public class MappingModelCreationHelper {
 					.getDomainModel()
 					.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getRelationalSqlTypeDescriptor() );
+					.resolve(
+							valueConverter.getRelationalJavaDescriptor(),
+							resolution.getRelationalSqlTypeDescriptor()
+					);
 
 
 			return new BasicValuedSingularAttributeMapping(
@@ -474,15 +479,6 @@ public class MappingModelCreationHelper {
 		final CollectionMappingType<?> collectionMappingType;
 		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
 
-		final ForeignKeyDescriptor keyDescriptor = interpretKeyDescriptor(
-				bootProperty,
-				bootValueMapping,
-				collectionDescriptor,
-				declaringType,
-				dialect,
-				creationProcess
-		);
-
 		final CollectionPart elementDescriptor = interpretElement(
 				bootValueMapping,
 				tableExpression,
@@ -662,7 +658,6 @@ public class MappingModelCreationHelper {
 				entityMappingType -> contributorMetadata,
 				collectionMappingType,
 				stateArrayPosition,
-				keyDescriptor,
 				elementDescriptor,
 				indexDescriptor,
 				identifierDescriptor,
@@ -678,6 +673,7 @@ public class MappingModelCreationHelper {
 				declaringType,
 				collectionDescriptor
 		);
+
 		creationProcess.registerInitializationCallback(
 				() -> {
 					try {
@@ -693,11 +689,25 @@ public class MappingModelCreationHelper {
 				}
 		);
 
+		creationProcess.registerForeignKeyPostInitCallbacks(
+				() -> {
+					interpretKeyDescriptor(
+							pluralAttributeMapping,
+							bootValueMapping,
+							collectionDescriptor,
+							declaringType,
+							dialect,
+							creationProcess
+					);
+					return true;
+				}
+		);
+
 		return pluralAttributeMapping;
 	}
 
-	private static ForeignKeyDescriptor interpretKeyDescriptor(
-			Property bootProperty,
+	private static void interpretKeyDescriptor(
+			PluralAttributeMappingImpl attributeMapping,
 			Collection bootValueMapping,
 			CollectionPersister collectionDescriptor,
 			ManagedMappingType declaringType,
@@ -720,19 +730,53 @@ public class MappingModelCreationHelper {
 			assert fkTarget instanceof BasicValuedModelPart;
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
 
-			return new SimpleForeignKeyDescriptor(
-					( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
-					getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess ),
-					bootValueMappingKey.getColumnIterator().next().getText( dialect ),
-					simpleFkTarget.getContainingTableExpression(),
-					simpleFkTarget.getMappedColumnExpression(),
-					(JdbcMapping) keyType
+			attributeMapping.setForeignKeyDescriptor(
+					new SimpleForeignKeyDescriptor(
+							( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
+							getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess ),
+							bootValueMappingKey.getColumnIterator().next().getText( dialect ),
+							simpleFkTarget.getContainingTableExpression(),
+							simpleFkTarget.getMappedColumnExpression(),
+							(JdbcMapping) keyType
+					)
 			);
 		}
+		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart embeddedFkTarget = (EmbeddableValuedModelPart) fkTarget;
+			List<JdbcMapping> jdbcMappings = new ArrayList<>();
+			embeddedFkTarget.visitJdbcTypes(
+					jdbcMapping -> {
+						jdbcMappings.add( jdbcMapping );
+					},
+					null,
+					creationProcess.getCreationContext().getTypeConfiguration()
+			);
+			List<String> keyColumnExpressions = new ArrayList<>();
+			bootValueMapping.getColumnIterator().forEachRemaining( column -> keyColumnExpressions.add( column.getText(
+					dialect ) ) );
+			List<String> targetColumnExpressions = new ArrayList<>();
+			fkTarget.visitColumns(
+					(table, column, mapping) ->
+							targetColumnExpressions.add( column ) );
+			EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = new EmbeddedForeignKeyDescriptor(
+					attributeMapping.getAttributeName(),
+					(EmbeddedIdentifierMappingImpl) fkTarget,
+					getStateArrayContributorMetadataAccess(attributeMapping.getPropertyAccess()),
+					( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
+					getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess ),
+					keyColumnExpressions,
+					embeddedFkTarget.getContainingTableExpression(),
+					targetColumnExpressions,
 
-		throw new NotYetImplementedFor6Exception(
-				"Support for composite foreign-keys not yet implemented: " + bootValueMapping.getRole()
-		);
+					creationProcess
+			);
+			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+		}else {
+
+			throw new NotYetImplementedFor6Exception(
+					"Support for composite foreign-keys not yet implemented: " + bootValueMapping.getRole()
+			);
+		}
 	}
 
 	public static void interpretKeyDescriptor(
@@ -781,7 +825,6 @@ public class MappingModelCreationHelper {
 
 				);
 				attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
-
 			}
 			else {
 				SingularAssociationAttributeMapping subPart = (SingularAssociationAttributeMapping) referencedEntityDescriptor
@@ -803,11 +846,43 @@ public class MappingModelCreationHelper {
 							creationProcess
 					);
 					attributeMapping.setForeignKeyDescriptor( subPart.getForeignKeyDescriptor() );
-
 				}
 				else {
 					attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 				}
+			}
+		}
+		else if ( fkTarget instanceof EmbeddableValuedModelPart ) {
+			if ( bootValueMapping.isReferenceToPrimaryKey() ) {
+				final EmbeddableValuedModelPart embeddedFkTarget = (EmbeddableValuedModelPart) fkTarget;
+				final List<String> keyColumnExpressions = new ArrayList<>();
+				bootValueMapping.getColumnIterator().forEachRemaining(
+						column ->
+								keyColumnExpressions.add( column.getText( dialect ) )
+				);
+
+				final List<String> targetColumnExpressions = new ArrayList<>();
+				embeddedFkTarget.getMappedColumnExpressions().forEach(
+						column ->
+								targetColumnExpressions.add( column )
+				);
+
+				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = new EmbeddedForeignKeyDescriptor(
+						attributeMapping.getAttributeName(),
+						(EmbeddedIdentifierMappingImpl) fkTarget,
+						getStateArrayContributorMetadataAccess(attributeMapping.getPropertyAccess()),
+						( (AssociationType) bootValueMapping.getType() ).getForeignKeyDirection(),
+						getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess ),
+						keyColumnExpressions,
+						embeddedFkTarget.getContainingTableExpression(),
+						targetColumnExpressions,
+
+						creationProcess
+				);
+				attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
+			}
+			else{
+				throw new NotYetImplementedFor6Exception();
 			}
 		}
 		else {
@@ -1091,7 +1166,7 @@ public class MappingModelCreationHelper {
 					propertyAccess
 			);
 
-			creationProcess.registerInitializationCallback(
+			creationProcess.registerForeignKeyPostInitCallbacks(
 					() -> {
 						final Dialect dialect = creationProcess.getCreationContext()
 								.getSessionFactory()

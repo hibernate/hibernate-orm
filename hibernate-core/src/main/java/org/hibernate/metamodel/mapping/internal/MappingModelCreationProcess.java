@@ -37,6 +37,9 @@ public class MappingModelCreationProcess {
 
 	private String currentlyProcessingRole;
 
+	private List<PostInitCallback> postInitCallbacks;
+	private List<PostInitCallback> foreignKeyPostInitCallbacks;
+
 	private MappingModelCreationProcess(
 			Map<String,EntityPersister> entityPersisterMap,
 			RuntimeModelCreationContext creationContext) {
@@ -66,7 +69,13 @@ public class MappingModelCreationProcess {
 			entityPersister.prepareMappingModel( this );
 		}
 
-		while ( postInitCallbacks != null && ! postInitCallbacks.isEmpty() ) {
+		executePostInitCallbakcs( postInitCallbacks );
+
+		executePostInitCallbakcs( foreignKeyPostInitCallbacks );
+	}
+
+	private void executePostInitCallbakcs(List<PostInitCallback> postInitCallbacks) {
+		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
 			// copy to avoid CCME
 			final ArrayList<PostInitCallback> copy = new ArrayList<>( new ArrayList<>( postInitCallbacks ) );
 
@@ -100,13 +109,18 @@ public class MappingModelCreationProcess {
 		}
 	}
 
-	private List<PostInitCallback> postInitCallbacks;
-
 	public void registerInitializationCallback(PostInitCallback callback) {
 		if ( postInitCallbacks == null ) {
 			postInitCallbacks = new ArrayList<>();
 		}
 		postInitCallbacks.add( callback );
+	}
+
+	public void registerForeignKeyPostInitCallbacks(PostInitCallback callback) {
+		if ( foreignKeyPostInitCallbacks == null ) {
+			foreignKeyPostInitCallbacks = new ArrayList<>();
+		}
+		foreignKeyPostInitCallbacks.add( callback );
 	}
 
 	@FunctionalInterface

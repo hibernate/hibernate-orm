@@ -60,13 +60,13 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
 		if ( parentTableGroup != null ) {
 			// join fetch
-			keyContainerResult = keyDescriptor.createCollectionFecthDomainResult( fetchedPath, parentTableGroup, creationState );
+			keyContainerResult = keyDescriptor.createCollectionFetchDomainResult( fetchedPath, parentTableGroup, creationState );
 			keyCollectionResult = keyDescriptor.createDomainResult( fetchedPath, collectionTableGroup, creationState );
 		}
 		else {
 			// select fetch
 			// todo (6.0) : we could potentially leverage batch fetching for performance
-			keyContainerResult = keyDescriptor.createCollectionFecthDomainResult( fetchedPath, collectionTableGroup, creationState );
+			keyContainerResult = keyDescriptor.createCollectionFetchDomainResult( fetchedPath, collectionTableGroup, creationState );
 
 			// use null for `keyCollectionResult`... the initializer will see that as trigger to use
 			// the assembled container-key value as the collection-key value.

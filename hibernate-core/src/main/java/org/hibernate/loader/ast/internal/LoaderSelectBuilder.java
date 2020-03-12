@@ -28,6 +28,7 @@ import org.hibernate.internal.FilterHelper.TransformResult;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -477,8 +478,11 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			List<Fetch> fetches) {
 		return (fetchable, isKeyFetchable) -> {
-
-			final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
+			NavigablePath navigablePath = fetchParent.getNavigablePath();
+			if ( isKeyFetchable ) {
+				navigablePath = navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+			}
+			final NavigablePath fetchablePath = navigablePath.append( fetchable.getFetchableName() );
 
 			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 					fetchablePath,

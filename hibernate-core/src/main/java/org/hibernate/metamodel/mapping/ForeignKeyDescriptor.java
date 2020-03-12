@@ -25,7 +25,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	ForeignKeyDirection getDirection();
 
-	DomainResult createCollectionFecthDomainResult(
+	DomainResult createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState);
@@ -54,6 +54,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 		return PART_NAME;
 	}
 
+	String getReferringTableExpression();
+
+	String getTargetTableExpression();
+
 	/**
 	 * Visits the FK "referring" columns
 	 */
@@ -62,36 +66,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 		visitReferringColumns( consumer );
 	}
 
-	String getReferringTableExpression();
-
 	void visitReferringColumns(ColumnConsumer consumer);
-
-	String getTargetTableExpression();
 
 	void visitTargetColumns(ColumnConsumer consumer);
 
-	void visitColumnMappings(FkColumnMappingConsumer consumer);
 
-	<T> T visitColumnMapping(FkColumnMappingFunction<T> function);
-
-	// todo (6.0): the 2 interfaces does not take into account composite keys, referringColumn
-	// 	and targetColumn should be collections
-	interface FkColumnMappingConsumer {
-		void consume(
-				String referringTable,
-				String referringColumn,
-				String targetTable,
-				String targetColumn,
-				JdbcMapping jdbcMapping);
-	}
-
-	interface FkColumnMappingFunction<T> {
-		T apply(
-				String referringTable,
-				String referringColumn,
-				String targetTable,
-				String targetColumn,
-				JdbcMapping jdbcMapping);
-	}
-
+	boolean areTargetColumnNamesEqualsTo(String[] columnNames);
 }

@@ -49,7 +49,10 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.platform.commons.util.CollectionUtils;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -76,15 +79,23 @@ import static org.junit.Assert.assertThat;
 )
 @SessionFactory
 @TestForIssue( jiraKey = "HHH-13756" )
-public class EntityGraphLoadPlanBuilderTest {
+public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware {
 
-	@Test
-	void testBasicFetchLoadPlanBuilding(SessionFactoryScope scope) {
+	private SessionFactoryScope scope;
+
+	@Override
+	public void injectSessionFactoryScope(SessionFactoryScope scope) {
+		this.scope = scope;
+	}
+
+	@ParameterizedTest
+	@EnumSource( GraphSemantic.class )
+	void testBasicLoadPlanBuilding(GraphSemantic graphSemantic) {
 		scope.inTransaction(
 				em -> {
 					final RootGraphImplementor<Cat> eg = em.createEntityGraph( Cat.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, GraphSemantic.FETCH, scope );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, graphSemantic, scope );
 
 					// Check the from-clause
 					assertEmptyJoinedGroup( sqlAst );
@@ -97,26 +108,41 @@ public class EntityGraphLoadPlanBuilderTest {
 		);
 	}
 
-	@Test
-	void testFetchLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@EnumSource( GraphSemantic.class )
+	void testLoadPlanBuildingWithSubgraph(GraphSemantic graphSemantic) {
 		scope.inTransaction(
 				em -> {
 					final RootGraphImplementor<Cat> eg = em.createEntityGraph( Cat.class );
 					eg.addSubgraph( "owner", Person.class );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, GraphSemantic.FETCH, scope );
+					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, graphSemantic, scope );
 
 					// Check the from-clause
 					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {} );
+					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
+						if ( graphSemantic == GraphSemantic.LOAD ) {
+							assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
+							final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
+							final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
+									fetch -> fetch.getFetchedMapping().getPartName(),
+									Fetch::getClass
+							) );
+							final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
+							expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
+							expectedFetchClassByAttributeName.put( "homeAddress", EmbeddableFetchImpl.class );
+							expectedFetchClassByAttributeName.put( "company", EntityFetchDelayedImpl.class );
+							assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
+						}
+					} );
 				}
 		);
 	}
 
 	@Test
-	void testFetchLoadPlanBuildingWithDeepSubgraph(SessionFactoryScope scope) {
+	void testFetchLoadPlanBuildingWithDeepSubgraph() {
 		scope.inTransaction(
 				em -> {
 					final RootGraphImplementor<Cat> eg = em.createEntityGraph( Cat.class );
@@ -168,62 +194,15 @@ public class EntityGraphLoadPlanBuilderTest {
 		);
 	}
 
-	@Test
-	void testBasicLoadLoadPlanBuilding(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					final RootGraphImplementor<Cat> eg = em.createEntityGraph( Cat.class );
-
-					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, GraphSemantic.LOAD, scope );
-
-					// Check the from-clause
-					assertEmptyJoinedGroup( sqlAst );
-
-					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
-										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) ) );
-				}
-		);
-	}
-
-	@Test
-	void testLoadLoadPlanBuildingWithSubgraph(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					final RootGraphImplementor<Cat> eg = em.createEntityGraph( Cat.class );
-					eg.addSubgraph( "owner", Person.class );
-
-					final SelectStatement sqlAst = buildSqlSelectAst( Cat.class, eg, GraphSemantic.LOAD, scope );
-
-					// Check the from-clause
-					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
-
-					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
-						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
-						final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
-						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
-								fetch -> fetch.getFetchedMapping().getPartName(),
-								Fetch::getClass
-						) );
-						final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
-						expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
-						expectedFetchClassByAttributeName.put( "homeAddress", EmbeddableFetchImpl.class );
-						expectedFetchClassByAttributeName.put( "company", EntityFetchDelayedImpl.class );
-						assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
-					} );
-				}
-		);
-	}
-
-	@Test
-	void testBasicElementCollectionsLoadGraph(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@EnumSource( GraphSemantic.class )
+	void testBasicElementCollections(GraphSemantic graphSemantic) {
 		scope.inTransaction(
 				em -> {
 					final RootGraphImplementor<Dog> eg = em.createEntityGraph( Dog.class );
 					eg.addAttributeNodes( "favorites" );
 
-					final SelectStatement sqlAst = buildSqlSelectAst( Dog.class, eg, GraphSemantic.LOAD, scope );
+					final SelectStatement sqlAst = buildSqlSelectAst( Dog.class, eg, graphSemantic, scope );
 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
@@ -231,23 +210,9 @@ public class EntityGraphLoadPlanBuilderTest {
 		);
 	}
 
-	@Test
-	void testBasicElementCollectionsFetchGraph(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					final RootGraphImplementor<Dog> eg = em.createEntityGraph( Dog.class );
-					eg.addAttributeNodes( "favorites" );
-
-					final SelectStatement sqlAst = buildSqlSelectAst( Dog.class, eg, GraphSemantic.FETCH, scope );
-
-					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "favorites", tableGroup -> {} );
-				}
-		);
-	}
-
-	@Test
-	void testEmbeddedCollectionLoadGraph(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@EnumSource( GraphSemantic.class )
+	void testEmbeddedCollectionLoadGraph(GraphSemantic graphSemantic) {
 		scope.inTransaction(
 				em -> {
 					final RootGraphImplementor<ExpressCompany> eg = em.createEntityGraph( ExpressCompany.class );
@@ -255,48 +220,33 @@ public class EntityGraphLoadPlanBuilderTest {
 
 					final SelectStatement sqlAst = buildSqlSelectAst(
 							ExpressCompany.class,
-							eg, GraphSemantic.LOAD,
+							eg, graphSemantic,
 							scope
 					);
 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
-						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+						if ( graphSemantic == GraphSemantic.LOAD ) {
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-						final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
-						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
-						assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() )
+									.getJoinedGroup();
+							assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-						final TableGroup countryTableGroup = CollectionUtils.getOnlyElement( compositeTableGroup.getTableGroupJoins() ).getJoinedGroup();
-						assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
+							final TableGroup countryTableGroup = CollectionUtils.getOnlyElement( compositeTableGroup.getTableGroupJoins() )
+									.getJoinedGroup();
+							assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
 
-						assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
-					} );
+							assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
+						}
+						else {
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
 
-				}
-		);
-	}
-
-	@Test
-	void testEmbeddedCollectionFetchGraph(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					final RootGraphImplementor<ExpressCompany> eg = em.createEntityGraph( ExpressCompany.class );
-					eg.addAttributeNodes( "shipAddresses" );
-
-					final SelectStatement sqlAst = buildSqlSelectAst(
-							ExpressCompany.class,
-							eg, GraphSemantic.FETCH,
-							scope
-					);
-
-					// Check the from-clause
-					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
-						assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
-
-						final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
-						assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
-						assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
+							assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
+						}
 					} );
 
 				}

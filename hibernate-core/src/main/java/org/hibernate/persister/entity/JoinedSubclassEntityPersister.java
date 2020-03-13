@@ -107,7 +107,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
-	private final Map subclassesByDiscriminatorValue = new HashMap();
+	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
 	private final String[] notNullColumnNames;
 	private final int[] notNullColumnTableNumbers;
@@ -300,9 +300,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String tableName = determineTableName( tab, jdbcEnvironment );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
-			Iterator cItr = tab.getPrimaryKey().getColumnIterator();
+			Iterator<Column> cItr = tab.getPrimaryKey().getColumnIterator();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = ( (Column) cItr.next() ).getQuotedName( factory.getDialect() );
+				key[k] = cItr.next().getQuotedName( factory.getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -322,9 +322,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String joinTableName = determineTableName( joinTable, jdbcEnvironment );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
-			Iterator citer = joinTable.getPrimaryKey().getColumnIterator();
+			Iterator<Column>  citer = joinTable.getPrimaryKey().getColumnIterator();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
-				key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+				key[k] = citer.next().getQuotedName( factory.getDialect() );
 			}
 			keyColumns.add( key );
 		}
@@ -456,9 +456,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		//TODO: code duplication with SingleTableEntityPersister
 
-		ArrayList columnTableNumbers = new ArrayList();
-		ArrayList formulaTableNumbers = new ArrayList();
-		ArrayList propTableNumbers = new ArrayList();
+		ArrayList<Integer> columnTableNumbers = new ArrayList<>();
+		ArrayList<Integer> formulaTableNumbers = new ArrayList<>();
+		ArrayList<Integer> propTableNumbers = new ArrayList<>();
 
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
@@ -804,7 +804,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassesByDiscriminatorValue.get( value );
+		return subclassesByDiscriminatorValue.get( value );
 	}
 
 	@Override

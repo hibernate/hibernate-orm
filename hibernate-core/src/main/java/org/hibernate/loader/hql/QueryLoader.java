@@ -112,7 +112,7 @@ public class QueryLoader extends BasicLoader {
 
 	private void initialize(SelectClause selectClause) {
 
-		List fromElementList = selectClause.getFromElementsForLoad();
+		List<FromElement> fromElementList = selectClause.getFromElementsForLoad();
 
 		hasScalars = selectClause.isScalarSelect();
 		scalarColumnNames = selectClause.getColumnNames();
@@ -122,7 +122,7 @@ public class QueryLoader extends BasicLoader {
 		aggregatedSelectExpression = selectClause.getAggregatedSelectExpression();
 		queryReturnAliases = selectClause.getQueryReturnAliases();
 
-		List collectionFromElements = selectClause.getCollectionFromElements();
+		List<FromElement> collectionFromElements = selectClause.getCollectionFromElements();
 		if ( collectionFromElements != null && collectionFromElements.size() != 0 ) {
 			int length = collectionFromElements.size();
 			collectionPersisters = new QueryableCollection[length];

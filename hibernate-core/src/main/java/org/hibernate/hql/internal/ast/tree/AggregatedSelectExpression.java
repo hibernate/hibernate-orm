@@ -9,6 +9,7 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.List;
 
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.Type;
 
 /**
  * Contract for a select expression which aggregates other select expressions together into a single return
@@ -21,7 +22,7 @@ public interface AggregatedSelectExpression extends SelectExpression {
 	 *
 	 * @return The list of types.
 	 */
-	public List getAggregatedSelectionTypeList();
+	public List<Type> getAggregatedSelectionTypeList();
 
 	/**
 	 * Retrieve the aliases for the columns aggregated here.

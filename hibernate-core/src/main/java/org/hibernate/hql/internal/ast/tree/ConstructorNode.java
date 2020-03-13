@@ -202,12 +202,12 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 		return constructor;
 	}
 
-	public List getConstructorArgumentTypeList() {
+	public List<Type> getConstructorArgumentTypeList() {
 		return Arrays.asList( constructorArgumentTypes );
 	}
 
 	@Override
-	public List getAggregatedSelectionTypeList() {
+	public List<Type> getAggregatedSelectionTypeList() {
 		return getConstructorArgumentTypeList();
 	}
 

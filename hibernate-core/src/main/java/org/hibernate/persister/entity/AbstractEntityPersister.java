@@ -245,8 +245,8 @@ public abstract class AbstractEntityPersister
 
 	private final Set<String> affectingFetchProfileNames = new HashSet<>();
 
-	private final Map uniqueKeyLoaders = new HashMap();
-	private final Map lockers = new HashMap();
+	private final Map<String, EntityLoader> uniqueKeyLoaders = new HashMap<>();
+	private final Map<LockMode, LockingStrategy> lockers = new HashMap<>();
 	private UniqueEntityLoader noneLockLoader;
 	private UniqueEntityLoader readLockLoader;
 	private final Map<Object, UniqueEntityLoader> loaders = new ConcurrentHashMap<>();
@@ -287,8 +287,8 @@ public abstract class AbstractEntityPersister
 
 	private UniqueEntityLoader queryLoader;
 
-	private final Map subclassPropertyAliases = new HashMap();
-	private final Map subclassPropertyColumnNames = new HashMap();
+	private final Map<String, String[]> subclassPropertyAliases = new HashMap<>();
+	private final Map<String, String[]> subclassPropertyColumnNames = new HashMap<>();
 
 	/**
 	 * Warning:
@@ -685,12 +685,12 @@ public abstract class AbstractEntityPersister
 		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
-		HashSet thisClassProperties = new HashSet();
+		HashSet<Property> thisClassProperties = new HashSet<>();
 
-		ArrayList lazyNames = new ArrayList();
-		ArrayList lazyNumbers = new ArrayList();
-		ArrayList lazyTypes = new ArrayList();
-		ArrayList lazyColAliases = new ArrayList();
+		ArrayList<String> lazyNames = new ArrayList<>();
+		ArrayList<Integer> lazyNumbers = new ArrayList<>();
+		ArrayList<Type> lazyTypes = new ArrayList<>();
+		ArrayList<String[]> lazyColAliases = new ArrayList<>();
 
 		iter = persistentClass.getPropertyClosureIterator();
 		i = 0;
@@ -766,28 +766,28 @@ public abstract class AbstractEntityPersister
 
 		// SUBCLASS PROPERTY CLOSURE
 
-		ArrayList columns = new ArrayList();
-		ArrayList columnsLazy = new ArrayList();
-		ArrayList columnReaderTemplates = new ArrayList();
-		ArrayList aliases = new ArrayList();
-		ArrayList formulas = new ArrayList();
-		ArrayList formulaAliases = new ArrayList();
-		ArrayList formulaTemplates = new ArrayList();
-		ArrayList formulasLazy = new ArrayList();
-		ArrayList types = new ArrayList();
-		ArrayList names = new ArrayList();
-		ArrayList classes = new ArrayList();
-		ArrayList templates = new ArrayList();
-		ArrayList propColumns = new ArrayList();
-		ArrayList propColumnReaders = new ArrayList();
-		ArrayList propColumnReaderTemplates = new ArrayList();
-		ArrayList joinedFetchesList = new ArrayList();
-		ArrayList cascades = new ArrayList();
-		ArrayList definedBySubclass = new ArrayList();
-		ArrayList propColumnNumbers = new ArrayList();
-		ArrayList propFormulaNumbers = new ArrayList();
-		ArrayList columnSelectables = new ArrayList();
-		ArrayList propNullables = new ArrayList();
+		ArrayList<String> columns = new ArrayList<>();
+		ArrayList<Boolean> columnsLazy = new ArrayList<>();
+		ArrayList<String> columnReaderTemplates = new ArrayList<>();
+		ArrayList<String> aliases = new ArrayList<String>();
+		ArrayList<String> formulas = new ArrayList<>();
+		ArrayList<String> formulaAliases = new ArrayList<>();
+		ArrayList<String> formulaTemplates = new ArrayList<>();
+		ArrayList<Boolean> formulasLazy = new ArrayList<>();
+		ArrayList<Type> types = new ArrayList<>();
+		ArrayList<String> names = new ArrayList<>();
+		ArrayList<String> classes = new ArrayList<>();
+		ArrayList<String[]> templates = new ArrayList<>();
+		ArrayList<String[]> propColumns = new ArrayList<>();
+		ArrayList<String[]> propColumnReaders = new ArrayList<>();
+		ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
+		ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
+		ArrayList<CascadeStyle> cascades = new ArrayList<>();
+		ArrayList<Boolean> definedBySubclass = new ArrayList<>();
+		ArrayList<int[]> propColumnNumbers = new ArrayList<>();
+		ArrayList<int[]> propFormulaNumbers = new ArrayList<>();
+		ArrayList<Boolean> columnSelectables = new ArrayList<>();
+		ArrayList<Boolean> propNullables = new ArrayList<>();
 
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
@@ -1033,9 +1033,9 @@ public abstract class AbstractEntityPersister
 
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 		for ( String groupName : lazyAttributesMetadata.getFetchGroupNames() ) {
-			HashSet tableNumbers = new HashSet();
-			ArrayList columnNumbers = new ArrayList();
-			ArrayList formulaNumbers = new ArrayList();
+			HashSet<Integer> tableNumbers = new HashSet<>();
+			ArrayList<Integer> columnNumbers = new ArrayList<>();
+			ArrayList<Integer> formulaNumbers = new ArrayList<>();
 
 			for ( LazyAttributeDescriptor lazyAttributeDescriptor :
 					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( groupName ) ) {
@@ -1966,7 +1966,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private LockingStrategy getLocker(LockMode lockMode) {
-		return (LockingStrategy) lockers.get( lockMode );
+		return lockers.get( lockMode );
 	}
 
 	public void lock(
@@ -2291,7 +2291,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		String[] rawAliases = (String[]) subclassPropertyAliases.get( propertyName );
+		String[] rawAliases = subclassPropertyAliases.get( propertyName );
 
 		if ( rawAliases == null ) {
 			return null;
@@ -2306,7 +2306,7 @@ public abstract class AbstractEntityPersister
 
 	public String[] getSubclassPropertyColumnNames(String propertyName) {
 		//TODO: should we allow suffixes on these ?
-		return (String[]) subclassPropertyColumnNames.get( propertyName );
+		return subclassPropertyColumnNames.get( propertyName );
 	}
 
 
@@ -2419,7 +2419,7 @@ public abstract class AbstractEntityPersister
 				&& propertyName.indexOf( '.' ) < 0; //ugly little workaround for fact that createUniqueKeyLoaders() does not handle component properties
 
 		if ( useStaticLoader ) {
-			return (EntityLoader) uniqueKeyLoaders.get( propertyName );
+			return uniqueKeyLoaders.get( propertyName );
 		}
 		else {
 			return createUniqueKeyLoader(
@@ -4282,7 +4282,7 @@ public abstract class AbstractEntityPersister
 	 * @deprecated Because there are better patterns for this
 	 */
 	@Deprecated
-	protected Map getLoaders() {
+	protected Map<Object, UniqueEntityLoader> getLoaders() {
 		return loaders;
 	}
 
@@ -4722,8 +4722,8 @@ public abstract class AbstractEntityPersister
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
-	public VersionType getVersionType() {
-		return (VersionType) locateVersionType();
+	public VersionType<Object> getVersionType() {
+		return (VersionType<Object>) locateVersionType();
 	}
 
 	private Type locateVersionType() {

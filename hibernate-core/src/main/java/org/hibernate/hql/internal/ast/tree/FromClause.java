@@ -43,7 +43,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	 * All of the implicit FROM xxx JOIN yyy elements that are the destination of a collection.  These are created from
 	 * index operators on collection property references.
 	 */
-	private Map collectionJoinFromElementsByPath = new HashMap();
+	private Map<String,FromElement> collectionJoinFromElementsByPath = new HashMap<>();
 	/**
 	 * Pointer to the parent FROM clause, if there is one.
 	 */
@@ -59,7 +59,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	/**
 	 * Implied FROM elements to add onto the end of the FROM clause.
 	 */
-	private List impliedElements = new LinkedList();
+	private List<FromElement> impliedElements = new LinkedList<>();
 
 	private List<EntityJoinFromElement> entityJoinFromElements;
 
@@ -262,7 +262,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	};
 
 	FromElement findCollectionJoin(String path) {
-		return (FromElement) collectionJoinFromElementsByPath.get( path );
+		return collectionJoinFromElementsByPath.get( path );
 	}
 
 	/**

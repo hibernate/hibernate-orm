@@ -1468,7 +1468,7 @@ public class ModelBinder {
 
 		// bind the collection type info
 		String typeName = source.getTypeInformation().getName();
-		Map typeParameters = new HashMap();
+		Map<String, String> typeParameters = new HashMap<>();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
 			final TypeDefinition typeDef = mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
@@ -2365,7 +2365,7 @@ public class ModelBinder {
 						.getTypeResolver()
 						.heuristicType( discriminatorTypeResolution.typeName );
 
-				final HashMap anyValueBindingMap = new HashMap();
+				final HashMap<Object, String> anyValueBindingMap = new HashMap<>();
 				for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
 					try {
 						final Object discriminatorValue = metaType.stringToObject( discriminatorValueMappings.getKey() );
@@ -2546,9 +2546,9 @@ public class ModelBinder {
 					.append( "Mapped property: " )
 					.append( propertySource.getName() )
 					.append( " -> [" );
-			final Iterator itr = property.getValue().getColumnIterator();
+			final Iterator<Selectable> itr = property.getValue().getColumnIterator();
 			while ( itr.hasNext() ) {
-				message.append( ( (Selectable) itr.next() ).getText() );
+				message.append( itr.next().getText() );
 				if ( itr.hasNext() ) {
 					message.append( ", " );
 				}
@@ -3736,9 +3736,9 @@ public class ModelBinder {
 			super.createBackReferences();
 
 			boolean indexIsFormula = false;
-			Iterator itr = getCollectionBinding().getIndex().getColumnIterator();
+			Iterator<Selectable> itr = getCollectionBinding().getIndex().getColumnIterator();
 			while ( itr.hasNext() ) {
-				if ( ( (Selectable) itr.next() ).isFormula() ) {
+				if ( itr.next().isFormula() ) {
 					indexIsFormula = true;
 				}
 			}

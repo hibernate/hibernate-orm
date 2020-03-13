@@ -71,9 +71,9 @@ public class Set extends Collection {
 		if ( !isOneToMany() ) {
 			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey().getColumnIterator() );
-			Iterator iter = getElement().getColumnIterator();
+			Iterator<Selectable> iter = getElement().getColumnIterator();
 			while ( iter.hasNext() ) {
-				Object selectable = iter.next();
+				Selectable selectable = iter.next();
 				if ( selectable instanceof Column ) {
 					Column col = (Column) selectable;
 					if ( !col.isNullable() ) {

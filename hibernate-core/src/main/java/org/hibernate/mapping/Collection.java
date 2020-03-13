@@ -324,7 +324,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		checkColumnDuplication();
 	}
 
-	private void checkColumnDuplication(java.util.Set distinctColumns, Value value)
+	private void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
 			throws MappingException {
 		final boolean[] insertability = value.getColumnInsertability();
 		final boolean[] updatability = value.getColumnUpdateability();
@@ -350,7 +350,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	private void checkColumnDuplication() throws MappingException {
-		HashSet cols = new HashSet();
+		HashSet<String> cols = new HashSet<>();
 		checkColumnDuplication( cols, getKey() );
 		if ( isIndexed() ) {
 			checkColumnDuplication(

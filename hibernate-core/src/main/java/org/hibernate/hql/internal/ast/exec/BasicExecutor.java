@@ -33,7 +33,7 @@ import antlr.RecognitionException;
 public class BasicExecutor implements StatementExecutor {
 	private final Queryable persister;
 	private final String sql;
-	private final List parameterSpecifications;
+	private final List<ParameterSpecification> parameterSpecifications;
 
 	public BasicExecutor(HqlSqlWalker walker, Queryable persister) {
 		this.persister = persister;
@@ -70,7 +70,7 @@ public class BasicExecutor implements StatementExecutor {
 	}
 	
 	protected int doExecute(QueryParameters parameters, SharedSessionContractImplementor session, String sql,
-			List parameterSpecifications) throws HibernateException {
+			List<ParameterSpecification> parameterSpecifications) throws HibernateException {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, persister );
 		if ( session.isEventSource() ) {
 			( (EventSource) session ).getActionQueue().addAction( action );
@@ -85,10 +85,10 @@ public class BasicExecutor implements StatementExecutor {
 		try {
 			try {
 				st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-				Iterator paramSpecItr = parameterSpecifications.iterator();
+				Iterator<ParameterSpecification> paramSpecItr = parameterSpecifications.iterator();
 				int pos = 1;
 				while ( paramSpecItr.hasNext() ) {
-					final ParameterSpecification paramSpec = (ParameterSpecification) paramSpecItr.next();
+					final ParameterSpecification paramSpec = paramSpecItr.next();
 					pos += paramSpec.bind( st, parameters, session, pos );
 				}
 				if ( selection != null ) {

@@ -696,12 +696,11 @@ public class BinderHelper {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
 			}
 			//checkIfMatchingGenerator(gen, generatorType, generatorName);
-			for ( Object o : gen.getParameters().entrySet() ) {
-				Map.Entry elt = (Map.Entry) o;
+			for ( Map.Entry<String, String> elt : gen.getParameters().entrySet() ) {
 				if ( elt.getKey() == null ) {
 					continue;
 				}
-				params.setProperty( (String) elt.getKey(), (String) elt.getValue() );
+				params.setProperty( elt.getKey(), elt.getValue() );
 			}
 		}
 		if ( "assigned".equals( generatorType ) ) {

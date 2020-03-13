@@ -126,7 +126,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( getMappedColumnExpression(), getContainingTableExpression(), getJdbcMapping() );
+		consumer.accept( getContainingTableExpression(), getMappedColumnExpression(), getJdbcMapping() );
 	}
 
 	@Override

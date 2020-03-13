@@ -225,7 +225,7 @@ public class StandardSqmUpdateTranslator
 
 					// create one JdbcParameter for each column in the assigned path
 					assignedPathInterpretation.getExpressionType().visitColumns(
-							(columnExpression, containingTableExpression, jdbcMapping) -> {
+							(containingTableExpression, columnExpression, jdbcMapping) -> {
 								final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 								jdbcParametersForSqm.add( jdbcParameter );
 								assignments.add(

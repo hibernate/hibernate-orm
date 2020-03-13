@@ -83,7 +83,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
 			identifierMapping.visitColumns(
-					(columnExpression, containingTableExpression, jdbcMapping) -> {
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
 						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, jdbcMapping, sessionFactory ) );
 						jdbcMappings.add( jdbcMapping );
 					}

@@ -232,6 +232,6 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( mappedColumnExpression, tableExpression, jdbcMapping );
+		consumer.accept( tableExpression, mappedColumnExpression, jdbcMapping );
 	}
 }

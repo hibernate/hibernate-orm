@@ -236,7 +236,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
-				(columnExpression, containingTableExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					assert containingTableExpression.equals( tableExpression );
 					keyColumnCollector.apply(
 							new ColumnReference(

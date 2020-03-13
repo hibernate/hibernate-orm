@@ -319,7 +319,7 @@ public class LoaderSelectBuilder {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberOfKeyColumns );
 
 			keyPart.visitColumns(
-					(columnExpression, containingTableExpression, jdbcMapping) -> {
+					(containingTableExpression, columnExpression, jdbcMapping) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(

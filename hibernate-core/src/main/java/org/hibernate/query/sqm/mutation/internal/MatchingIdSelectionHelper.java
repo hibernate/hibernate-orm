@@ -75,7 +75,7 @@ public class MatchingIdSelectionHelper {
 		final List<DomainResult> domainResults = new ArrayList<>();
 		final AtomicInteger i = new AtomicInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(columnExpression, containingTableExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -132,7 +132,7 @@ public class MatchingIdSelectionHelper {
 
 		final AtomicInteger i = new AtomicInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(columnExpression, containingTableExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(

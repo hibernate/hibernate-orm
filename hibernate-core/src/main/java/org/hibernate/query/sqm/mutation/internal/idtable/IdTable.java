@@ -34,7 +34,7 @@ public class IdTable implements Exportable {
 		);
 
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(columnExpression, containingTableExpression, jdbcMapping) -> columns.add(
+				(containingTableExpression, columnExpression, jdbcMapping) -> columns.add(
 						new IdTableColumn(
 								this,
 								columnExpression,

@@ -89,7 +89,7 @@ public final class ExecuteWithIdTableHelper {
 		final AtomicInteger positionWrapper = new AtomicInteger();
 
 		mutatingEntityDescriptor.getIdentifierMapping().visitColumns(
-				(columnExpression, containingTableExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					final int jdbcPosition = positionWrapper.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					matchingIdSelection.getSelectClause().addSqlSelection(

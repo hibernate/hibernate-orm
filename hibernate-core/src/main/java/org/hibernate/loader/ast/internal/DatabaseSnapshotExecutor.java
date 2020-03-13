@@ -100,7 +100,7 @@ class DatabaseSnapshotExecutor {
 
 		final NavigablePath idPath = rootPath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(col, tab, jdbcMapping) -> {
+				(tab, col, jdbcMapping) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );
 
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
@@ -146,7 +146,7 @@ class DatabaseSnapshotExecutor {
 				contributorMapping -> {
 					rootPath.append( contributorMapping.getAttributeName() );
 					contributorMapping.visitColumns(
-							(columnExpression, containingTableExpression, jdbcMapping) -> {
+							(containingTableExpression, columnExpression, jdbcMapping) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
 										containingTableExpression );
 

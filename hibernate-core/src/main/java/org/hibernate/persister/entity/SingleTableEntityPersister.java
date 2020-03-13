@@ -949,7 +949,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> {
 						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
 						for ( String column : keyColumnNames ) {
-							columnConsumer.accept( column, tableName, null );
+							columnConsumer.accept( tableName, column, null );
 						}
 					}
 			);

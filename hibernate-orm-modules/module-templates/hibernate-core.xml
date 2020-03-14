@@ -20,8 +20,7 @@
         <module name="javax.transaction.api"/>
         <module name="javax.validation.api"/>
         <module name="javax.xml.bind.api"/>
-        <module name="org.antlr" slot="${antlrSlot}"/>
-        <module name="org.antlr-runtime" slot="${antlrSlot}"/>
+        <module name="org.antlr.antlr4-runtime" slot="${antlrSlot}"/>
         <module name="org.dom4j"/>
         <module name="org.jboss.as.jpa.spi"/>
         <module name="org.jboss.jandex"/>

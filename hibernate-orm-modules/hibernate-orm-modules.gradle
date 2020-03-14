@@ -22,8 +22,8 @@ apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
-project.tasks.jar.enabled = false
-project.tasks.javadoc.enabled = false
+//project.tasks.jar.enabled = false
+//project.tasks.javadoc.enabled = false
 
 evaluationDependsOn( ':hibernate-core' )
 evaluationDependsOn( ':hibernate-envers' )
@@ -118,7 +118,7 @@ dependencies {
 	testCompile libraries.wildfly_arquillian_container_managed
 
 	featurePack libraries.byteBuddy
-	featurePack libraries.antlr
+	featurePack libraries.antlr4_runtime
 	featurePack project( ":hibernate-core" )
 	featurePack project( ":hibernate-envers" )
 	featurePack "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
@@ -152,7 +152,7 @@ test {
 
 
 test.dependsOn prepareWildFlyForTests
-test.ignoreFailures = true
+//test.ignoreFailures = true
 
 processTestResources {
 	expand(

@@ -61,13 +61,13 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.EntityGraphNavigator;
+import org.hibernate.sql.results.graph.EntityGraphSemanticTraverser;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
-import org.hibernate.sql.results.internal.StandardEntityGraphNavigatorImpl;
+import org.hibernate.sql.results.internal.StandardEntityGraphSemanticTraverserImpl;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -85,7 +85,7 @@ public class StandardSqmSelectTranslator
 	// prepare for 10 root selections to avoid list growth in most cases
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
 
-	private final EntityGraphNavigator entityGraphNavigator;
+	private final EntityGraphSemanticTraverser entityGraphSemanticTraverser;
 
 	private int fetchDepth;
 
@@ -101,10 +101,10 @@ public class StandardSqmSelectTranslator
 		if ( fetchInfluencers != null
 				&& fetchInfluencers.getEffectiveEntityGraph() != null
 				&& fetchInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
-			this.entityGraphNavigator = new StandardEntityGraphNavigatorImpl( fetchInfluencers.getEffectiveEntityGraph() );
+			this.entityGraphSemanticTraverser = new StandardEntityGraphSemanticTraverserImpl( fetchInfluencers.getEffectiveEntityGraph() );
 		}
 		else {
-			this.entityGraphNavigator = null;
+			this.entityGraphSemanticTraverser = null;
 		}
 	}
 
@@ -284,7 +284,7 @@ public class StandardSqmSelectTranslator
 		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 		boolean joined = false;
 
-		EntityGraphNavigator.Navigation navigation = null;
+		EntityGraphSemanticTraverser.Result result = null;
 
 		final SqmAttributeJoin fetchedJoin = getFromClauseIndex().findFetchedJoinByPath( fetchablePath );
 
@@ -306,10 +306,10 @@ public class StandardSqmSelectTranslator
 			// there was not an explicit fetch in the SQM
 			alias = null;
 
-			if ( entityGraphNavigator != null ) {
-				navigation = entityGraphNavigator.navigate( fetchParent, fetchable, isKeyFetchable );
-				fetchTiming = navigation.getFetchStrategy();
-				joined = navigation.isJoined();
+			if ( entityGraphSemanticTraverser != null ) {
+				result = entityGraphSemanticTraverser.traverse( fetchParent, fetchable, isKeyFetchable );
+				fetchTiming = result.getFetchStrategy();
+				joined = result.isJoined();
 			}
 			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
 				if ( fetchParent instanceof EntityResultGraphNode ) {
@@ -416,8 +416,8 @@ public class StandardSqmSelectTranslator
 			);
 		}
 		finally {
-			if ( entityGraphNavigator != null && navigation != null ) {
-				entityGraphNavigator.backtrack( navigation.getPreviousContext() );
+			if ( entityGraphSemanticTraverser != null && result != null ) {
+				entityGraphSemanticTraverser.backtrack( result.getPreviousContext() );
 			}
 		}
 	}

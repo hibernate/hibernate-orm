@@ -12,23 +12,23 @@ import org.hibernate.graph.spi.GraphImplementor;
 /**
  * @author Nathan Xu
  */
-public interface EntityGraphNavigator {
+public interface EntityGraphSemanticTraverser {
 
 	/**
-	 * Pojo class to store the result of applied entity graph navigation, including
+	 * POJO class to store the result of applied entity graph traversal, including
 	 * <ul>
-	 *     <li>previous entity graph node so later on navigator can backtrack to it</li>
+	 *     <li>previous entity graph node so later on traverser can backtrack to it</li>
 	 *     <li>whether the new graph node should be eagerly loaded or not</li>
 	 *     <li>whether the new graph node fetching is joined</li>
 	 * </ul>
 	 */
-	class Navigation {
+	class Result {
 
 		private GraphImplementor previousContext;
 		private FetchTiming fetchTiming;
 		private boolean joined;
 
-		public Navigation(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
+		public Result(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
 			this.previousContext = previousContext;
 			this.fetchTiming = fetchTiming;
 			this.joined = joined;
@@ -48,22 +48,21 @@ public interface EntityGraphNavigator {
 	}
 
 	/**
-	 * Backtrack to previous entity graph status after the current children navigating has been done.
+	 * Backtrack to previous entity graph status before last travrsal.
 	 * Mainly reset the current context entity graph node to the passed method parameter.
 	 *
-	 * @param previousContext The stored previous invocation result; should not be null
-	 * @see #navigate(FetchParent, Fetchable, boolean)
+	 * @param previousContext The previous entity graph context node; should not be null
+	 * @see #traverse(FetchParent, Fetchable, boolean)
 	 */
 	void backtrack(GraphImplementor previousContext);
 
 	/**
-	 * Tries to navigate from parent to child node within entity graph and returns non-null {@code NavigateResult}.
+	 * Tries to traverse from parent to child node within entity graph and returns non-null {@code Result}.
 	 *
-	 * @apiNote If applicable, internal state will be mutated. Not thread safe and should be used within single thread.
-	 * @param parent The FetchParent
-	 * @param fetchable The Fetchable
+	 * @param parent The FetchParent or traversal source node
+	 * @param fetchable The Fetchable or traversal destination node
 	 * @param exploreKeySubgraph true if only key sub graph is explored; false if key sub graph is excluded
-	 * @return resulting {@link Navigation}; never null
+	 * @return traversal result; never be null
 	 */
-	Navigation navigate(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	Result traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
 }

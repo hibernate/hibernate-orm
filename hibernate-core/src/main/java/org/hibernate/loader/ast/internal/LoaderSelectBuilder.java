@@ -52,7 +52,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.EntityGraphNavigator;
+import org.hibernate.sql.results.graph.EntityGraphSemanticTraverser;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -60,7 +60,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.internal.StandardEntityGraphNavigatorImpl;
+import org.hibernate.sql.results.internal.StandardEntityGraphSemanticTraverserImpl;
 
 import org.jboss.logging.Logger;
 
@@ -158,7 +158,7 @@ public class LoaderSelectBuilder {
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LockOptions lockOptions;
 	private final Consumer<JdbcParameter> jdbcParameterConsumer;
-	private final EntityGraphNavigator entityGraphNavigator;
+	private final EntityGraphSemanticTraverser entityGraphSemanticTraverser;
 
 	private int fetchDepth;
 	private Map<OrderByFragment, TableGroup> orderByFragments;
@@ -183,10 +183,10 @@ public class LoaderSelectBuilder {
 		if ( loadQueryInfluencers != null
 				&& loadQueryInfluencers.getEffectiveEntityGraph() != null
 				&& loadQueryInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
-			this.entityGraphNavigator = new StandardEntityGraphNavigatorImpl( loadQueryInfluencers.getEffectiveEntityGraph() );
+			this.entityGraphSemanticTraverser = new StandardEntityGraphSemanticTraverserImpl( loadQueryInfluencers.getEffectiveEntityGraph() );
 		}
 		else {
-			this.entityGraphNavigator = null;
+			this.entityGraphSemanticTraverser = null;
 		}
 		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
@@ -427,13 +427,13 @@ public class LoaderSelectBuilder {
 			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
 			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 
-			EntityGraphNavigator.Navigation navigation = null;
+			EntityGraphSemanticTraverser.Result result = null;
 
 			// 'entity graph' takes precedence over 'fetch profile'
-			if ( entityGraphNavigator != null) {
-				navigation = entityGraphNavigator.navigate( fetchParent, fetchable, isKeyFetchable );
-				fetchTiming = navigation.getFetchStrategy();
-				joined = navigation.isJoined();
+			if ( entityGraphSemanticTraverser != null) {
+				result = entityGraphSemanticTraverser.traverse( fetchParent, fetchable, isKeyFetchable );
+				fetchTiming = result.getFetchStrategy();
+				joined = result.isJoined();
 			}
 			else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 				if ( fetchParent instanceof EntityResultGraphNode ) {
@@ -491,8 +491,8 @@ public class LoaderSelectBuilder {
 				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
 					fetchDepth--;
 				}
-				if ( entityGraphNavigator != null ) {
-					entityGraphNavigator.backtrack( navigation.getPreviousContext() );
+				if ( entityGraphSemanticTraverser != null ) {
+					entityGraphSemanticTraverser.backtrack( result.getPreviousContext() );
 				}
 			}
 		};

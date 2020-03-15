@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.sql.results.graph.EntityGraphNavigator;
+import org.hibernate.sql.results.graph.EntityGraphSemanticTraverser;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
@@ -29,12 +29,12 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 /**
  * @author Nathan Xu
  */
-public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
+public class StandardEntityGraphSemanticTraverserImpl implements EntityGraphSemanticTraverser {
 
 	private final GraphSemantic graphSemantic;
 	private GraphImplementor currentGraphContext;
 
-	public StandardEntityGraphNavigatorImpl(EffectiveEntityGraph effectiveEntityGraph) {
+	public StandardEntityGraphSemanticTraverserImpl(EffectiveEntityGraph effectiveEntityGraph) {
 		assert effectiveEntityGraph != null;
 		if ( effectiveEntityGraph.getSemantic() == null ) {
 			throw new IllegalArgumentException( "The graph has not defined semantic: " + effectiveEntityGraph );
@@ -49,52 +49,47 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 	}
 
 	@Override
-	public Navigation navigate(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
+	public Result traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		final GraphImplementor previousContextRoot = currentGraphContext;
+		AttributeNodeImplementor attributeNode = null;
+		if ( appliesTo( fetchParent ) ) {
+			attributeNode = currentGraphContext.findAttributeNode( fetchable.getFetchableName() );
+		}
+
+		currentGraphContext = null;
 		FetchTiming fetchTiming = null;
 		boolean joined = false;
-		if ( appliesTo( fetchParent ) ) {
-			final AttributeNodeImplementor attributeNode = currentGraphContext.findAttributeNode( fetchable.getFetchableName() );
-			if ( attributeNode != null ) {
-				fetchTiming = FetchTiming.IMMEDIATE;
-				joined = true;
 
-				final Map<Class<?>, SubGraphImplementor> subgraphMap;
-				final Class<?> subgraphMapKey;
+		if ( attributeNode != null ) {
+			fetchTiming = FetchTiming.IMMEDIATE;
+			joined = true;
 
-				if ( fetchable instanceof PluralAttributeMapping ) {
-					PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+			final Map<Class<?>, SubGraphImplementor> subgraphMap;
+			final Class<?> subgraphMapKey;
 
-					assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
-							|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
+			if ( fetchable instanceof PluralAttributeMapping ) {
+				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-					if ( exploreKeySubgraph ) {
-						subgraphMap = attributeNode.getKeySubGraphMap();
-						subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
-					}
-					else {
-						subgraphMap = attributeNode.getSubGraphMap();
-						subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
-					}
+				assert exploreKeySubgraph && isJpaMapCollectionType( pluralAttributeMapping )
+						|| !exploreKeySubgraph && !isJpaMapCollectionType( pluralAttributeMapping );
+
+				if ( exploreKeySubgraph ) {
+					subgraphMap = attributeNode.getKeySubGraphMap();
+					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
 				}
 				else {
-					assert !exploreKeySubgraph;
 					subgraphMap = attributeNode.getSubGraphMap();
-					subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaType();
-				}
-				if ( subgraphMap != null && subgraphMapKey != null ) {
-					currentGraphContext = subgraphMap.get( subgraphMapKey );
-				}
-				else {
-					currentGraphContext = null;
+					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
 				}
 			}
 			else {
-				currentGraphContext = null;
+				assert !exploreKeySubgraph;
+				subgraphMap = attributeNode.getSubGraphMap();
+				subgraphMapKey = fetchable.getJavaTypeDescriptor().getJavaType();
 			}
-		}
-		else {
-			currentGraphContext = null;
+			if ( subgraphMap != null && subgraphMapKey != null ) {
+				currentGraphContext = subgraphMap.get( subgraphMapKey );
+			}
 		}
 		if ( fetchTiming == null ) {
 			if ( graphSemantic == GraphSemantic.FETCH ) {
@@ -106,7 +101,7 @@ public class StandardEntityGraphNavigatorImpl implements EntityGraphNavigator {
 				joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 			}
 		}
-		return new Navigation( previousContextRoot, fetchTiming, joined );
+		return new Result( previousContextRoot, fetchTiming, joined );
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

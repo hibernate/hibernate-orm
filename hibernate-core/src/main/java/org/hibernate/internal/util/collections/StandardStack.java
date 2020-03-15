@@ -7,8 +7,6 @@
 package org.hibernate.internal.util.collections;
 
 import java.util.LinkedList;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * A general-purpose stack impl.

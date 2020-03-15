@@ -11,19 +11,14 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.resource.common.SynchronizationCollectorImpl;
 import org.hibernate.test.resource.common.SynchronizationErrorImpl;
 import org.junit.Test;
-
-import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;

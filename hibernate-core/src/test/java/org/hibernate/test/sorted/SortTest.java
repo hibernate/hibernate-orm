@@ -27,7 +27,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 

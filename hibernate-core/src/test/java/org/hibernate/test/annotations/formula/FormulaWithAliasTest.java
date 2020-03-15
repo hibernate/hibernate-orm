@@ -18,16 +18,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.Formula;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.Query;
 import org.hibernate.test.annotations.formula.FormulaWithColumnTypesTest.ExtendedDialect;
-import org.hibernate.test.locking.A;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

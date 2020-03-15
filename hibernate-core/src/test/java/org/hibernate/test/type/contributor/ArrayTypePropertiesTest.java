@@ -8,19 +8,11 @@ package org.hibernate.test.type.contributor;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.transaction.Transactional;
-
-import org.hibernate.Session;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.hibernate.boot.spi.MetadataBuilderContributor;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;

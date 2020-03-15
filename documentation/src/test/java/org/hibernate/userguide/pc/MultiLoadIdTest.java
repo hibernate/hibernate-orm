@@ -8,7 +8,6 @@ package org.hibernate.userguide.pc;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -17,7 +16,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;

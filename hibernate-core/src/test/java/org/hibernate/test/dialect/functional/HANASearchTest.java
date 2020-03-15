@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;

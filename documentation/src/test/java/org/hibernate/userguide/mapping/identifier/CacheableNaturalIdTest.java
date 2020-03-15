@@ -9,7 +9,6 @@ package org.hibernate.userguide.mapping.identifier;
 import java.util.Map;
 import javax.cache.configuration.MutableConfiguration;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.Id;
 
 import org.hibernate.Session;

@@ -11,7 +11,6 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
@@ -22,9 +21,7 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Vlad Mihalcea

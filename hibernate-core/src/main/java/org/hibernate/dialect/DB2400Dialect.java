@@ -8,10 +8,6 @@ package org.hibernate.dialect;
 
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitHelper;
-import org.hibernate.engine.spi.RowSelection;
 
 /**
  * An SQL dialect for DB2/400.  This class provides support for DB2 Universal Database for iSeries,

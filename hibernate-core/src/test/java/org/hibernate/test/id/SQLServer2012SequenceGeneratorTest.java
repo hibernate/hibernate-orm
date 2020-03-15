@@ -6,19 +6,11 @@
  */
 package org.hibernate.test.id;
 
-import java.util.List;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;

@@ -13,8 +13,6 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 

@@ -8,7 +8,6 @@ package org.hibernate.test.jpa.compliance.tck2_2.mapkeycolumn;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;

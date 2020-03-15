@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.ManyToOneType;

@@ -18,8 +18,6 @@ import org.hibernate.userguide.collections.type.CommaDelimitedStringsType;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**

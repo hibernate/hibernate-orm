@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.id.IdentifierGeneratorHelper;

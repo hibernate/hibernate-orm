@@ -6,15 +6,6 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
-
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;

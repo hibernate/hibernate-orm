@@ -7,7 +7,6 @@
 package org.hibernate.test.nonpkassociation;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

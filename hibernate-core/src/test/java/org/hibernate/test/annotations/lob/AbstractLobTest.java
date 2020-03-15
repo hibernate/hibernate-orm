@@ -6,12 +6,8 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.dialect.*;
 import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

@@ -6,8 +6,6 @@
  */
 package org.hibernate.tool.schema;
 
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * The allowable actions in terms of schema tooling.  Covers the unified JPA and HBM2DDL
  * cases.

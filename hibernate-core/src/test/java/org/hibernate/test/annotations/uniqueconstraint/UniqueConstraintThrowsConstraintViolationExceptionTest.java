@@ -15,8 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 import javax.persistence.Table;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.TestForIssue;

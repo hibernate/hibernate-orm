@@ -8,9 +8,6 @@ package org.hibernate.test.cdi.general.mixed;
 
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
-import javax.enterprise.inject.spi.BeanManager;
-
-import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 
 /**
  * @author Steve Ebersole

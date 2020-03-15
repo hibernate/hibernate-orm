@@ -7,9 +7,6 @@
 package org.hibernate.serialization;
 
 
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-
 import org.junit.Test;
 
 import org.hibernate.SessionFactory;

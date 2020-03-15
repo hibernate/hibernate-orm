@@ -9,7 +9,6 @@ package org.hibernate.test.bytecode.enhancement.pk;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

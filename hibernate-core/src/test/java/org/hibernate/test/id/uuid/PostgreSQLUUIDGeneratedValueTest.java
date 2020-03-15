@@ -16,8 +16,6 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.type.PostgresUUIDType;
-import org.hibernate.type.UUIDBinaryType;
-
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 

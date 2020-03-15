@@ -21,8 +21,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertTrue;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

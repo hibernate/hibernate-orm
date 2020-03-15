@@ -12,7 +12,6 @@ import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.AbstractEntityDataAccess;
-import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

@@ -20,8 +20,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import org.hibernate.CacheMode;
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;

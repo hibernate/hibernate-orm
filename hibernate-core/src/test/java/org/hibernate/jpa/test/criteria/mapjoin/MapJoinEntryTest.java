@@ -8,8 +8,6 @@ package org.hibernate.jpa.test.criteria.mapjoin;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
 import java.util.Map;
 

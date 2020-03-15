@@ -15,7 +15,6 @@ import javax.persistence.IdClass;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

@@ -9,8 +9,6 @@ package org.hibernate.userguide.mapping.identifier;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 /**
  * @author Vlad Mihalcea
  */

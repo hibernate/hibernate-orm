@@ -8,7 +8,6 @@ package org.hibernate.jpamodelgen.test.embeddable.generics;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 

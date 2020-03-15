@@ -34,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.test.bytecode.enhancement.merge.MergeEnhancedEntityTest;
-
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;

@@ -12,7 +12,6 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;

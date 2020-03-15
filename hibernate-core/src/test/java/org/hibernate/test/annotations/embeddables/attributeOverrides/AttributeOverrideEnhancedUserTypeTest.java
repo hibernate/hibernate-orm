@@ -1,7 +1,6 @@
 package org.hibernate.test.annotations.embeddables.attributeOverrides;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;

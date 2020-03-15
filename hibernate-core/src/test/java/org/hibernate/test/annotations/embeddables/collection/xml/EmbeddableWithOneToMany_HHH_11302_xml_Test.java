@@ -6,14 +6,10 @@
  */
 package org.hibernate.test.annotations.embeddables.collection.xml;
 
-import java.util.Map;
-
 import org.hibernate.AnnotationException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

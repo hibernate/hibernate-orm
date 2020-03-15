@@ -20,7 +20,6 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;

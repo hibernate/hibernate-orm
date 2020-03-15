@@ -8,7 +8,6 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
-import org.hibernate.event.internal.DefaultFlushEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;

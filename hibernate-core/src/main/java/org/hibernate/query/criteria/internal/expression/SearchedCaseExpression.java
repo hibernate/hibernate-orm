@@ -9,7 +9,6 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.Expression;
 

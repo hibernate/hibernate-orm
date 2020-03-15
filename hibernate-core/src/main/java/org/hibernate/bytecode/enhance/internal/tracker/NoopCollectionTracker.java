@@ -8,8 +8,6 @@ package org.hibernate.bytecode.enhance.internal.tracker;
 
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 
-import java.util.Arrays;
-
 /**
  * small low memory class to keep track of the number of elements in a collection
  *

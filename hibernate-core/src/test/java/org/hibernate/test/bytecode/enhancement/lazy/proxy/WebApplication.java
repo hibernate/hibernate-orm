@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Basic;

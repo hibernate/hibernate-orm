@@ -13,12 +13,8 @@ import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-
 import java.lang.reflect.Field;
 import java.util.Properties;
 

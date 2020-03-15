@@ -21,7 +21,6 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.

@@ -10,8 +10,6 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.criteria.LiteralHandlingMode;
-
 import org.hibernate.testing.RequiresDialect;
 
 /**

@@ -23,7 +23,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;

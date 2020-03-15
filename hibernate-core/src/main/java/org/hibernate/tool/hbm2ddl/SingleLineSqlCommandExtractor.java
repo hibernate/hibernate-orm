@@ -12,8 +12,6 @@ import java.io.Reader;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
  * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.

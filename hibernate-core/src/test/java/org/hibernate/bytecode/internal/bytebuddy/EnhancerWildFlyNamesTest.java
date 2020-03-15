@@ -13,10 +13,7 @@ import java.io.InputStream;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.bytecode.Bean;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -8,7 +8,6 @@
 //$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

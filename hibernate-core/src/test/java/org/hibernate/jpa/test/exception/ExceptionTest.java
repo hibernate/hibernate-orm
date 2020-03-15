@@ -12,7 +12,6 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
-import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;

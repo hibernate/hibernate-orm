@@ -9,8 +9,6 @@ package org.hibernate.engine.internal;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.function.Supplier;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;

@@ -16,7 +16,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.cfg.Configuration;
@@ -24,7 +23,6 @@ import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

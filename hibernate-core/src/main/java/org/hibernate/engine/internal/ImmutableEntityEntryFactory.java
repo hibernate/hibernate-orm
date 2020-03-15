@@ -8,8 +8,6 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Set;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;

@@ -14,8 +14,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

@@ -23,7 +23,6 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;

@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.loading.internal;
 
-import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.IdentityHashMap;

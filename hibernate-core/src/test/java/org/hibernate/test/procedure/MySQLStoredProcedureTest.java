@@ -7,7 +7,6 @@
 package org.hibernate.test.procedure;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -23,7 +22,6 @@ import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.result.Output;

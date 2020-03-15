@@ -16,15 +16,12 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.SqlGeneratorBase;
-import org.hibernate.hql.internal.antlr.SqlTokenTypes;
-import org.hibernate.hql.internal.ast.tree.CollectionPathNode;
 import org.hibernate.hql.internal.ast.tree.CollectionSizeNode;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FunctionNode;
 import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -34,7 +31,6 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 
 import antlr.RecognitionException;
-import antlr.SemanticException;
 import antlr.collections.AST;
 
 /**

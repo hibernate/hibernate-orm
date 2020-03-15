@@ -10,7 +10,6 @@ import java.util.Collection;
 
 import org.hibernate.boot.AttributeConverterInfo;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.cfg.AttributeConverterDefinition;
 
 /**
  * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}

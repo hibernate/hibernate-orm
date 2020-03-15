@@ -6,24 +6,13 @@
  */
 package org.hibernate.test.namingstrategy;
 
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Basic;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.MapKeyColumn;
-
-import org.hibernate.test.namingstrategy.Item;
 
 @Entity
 public class Category {

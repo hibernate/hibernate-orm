@@ -24,7 +24,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**

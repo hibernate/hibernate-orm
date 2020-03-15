@@ -22,8 +22,6 @@ import org.hibernate.test.annotations.id.entities.PointyTooth;
 import org.hibernate.test.annotations.id.entities.TwinkleToes;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertTrue;
 
 /**

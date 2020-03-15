@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.resulttransformer;
 
-import java.sql.ResultSet;
 import java.util.List;
 
 import org.junit.Test;

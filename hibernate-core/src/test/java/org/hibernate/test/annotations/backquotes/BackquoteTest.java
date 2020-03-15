@@ -11,7 +11,6 @@ package org.hibernate.test.annotations.backquotes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

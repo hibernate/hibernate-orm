@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;

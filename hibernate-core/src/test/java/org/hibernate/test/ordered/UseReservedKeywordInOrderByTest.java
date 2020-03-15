@@ -11,8 +11,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.persistence.Version;
-
 import org.hibernate.Session;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

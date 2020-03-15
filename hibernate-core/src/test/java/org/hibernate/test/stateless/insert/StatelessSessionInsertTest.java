@@ -10,7 +10,6 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.jboss.logging.Logger;
 import org.junit.Test;
 
 /**

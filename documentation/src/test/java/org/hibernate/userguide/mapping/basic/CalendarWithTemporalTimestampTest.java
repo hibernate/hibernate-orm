@@ -17,7 +17,6 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

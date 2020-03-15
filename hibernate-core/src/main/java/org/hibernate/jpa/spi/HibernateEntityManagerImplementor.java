@@ -9,12 +9,9 @@ package org.hibernate.jpa.spi;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.StaleStateException;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.Query;

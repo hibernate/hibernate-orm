@@ -10,9 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
-import org.hibernate.bytecode.internal.bytebuddy.ProxyFactoryFactoryImpl;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;

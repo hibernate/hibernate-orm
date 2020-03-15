@@ -9,7 +9,6 @@ package org.hibernate.userguide.mapping.dynamic;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

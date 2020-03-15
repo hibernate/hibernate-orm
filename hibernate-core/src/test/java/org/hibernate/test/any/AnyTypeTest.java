@@ -6,9 +6,6 @@
  */
 package org.hibernate.test.any;
 
-import javax.persistence.PersistenceException;
-
-import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;

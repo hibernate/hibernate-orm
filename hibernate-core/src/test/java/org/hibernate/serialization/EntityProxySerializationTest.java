@@ -8,7 +8,6 @@ package org.hibernate.serialization;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

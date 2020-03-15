@@ -19,8 +19,6 @@ import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.hibernate.test.where.hbm.File;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 

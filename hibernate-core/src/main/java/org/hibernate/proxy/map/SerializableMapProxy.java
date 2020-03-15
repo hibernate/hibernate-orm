@@ -7,13 +7,7 @@
 package org.hibernate.proxy.map;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
-
 import org.hibernate.proxy.AbstractSerializableProxy;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor;
-import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
-import org.hibernate.type.CompositeType;
 
 public final class SerializableMapProxy extends AbstractSerializableProxy {
 

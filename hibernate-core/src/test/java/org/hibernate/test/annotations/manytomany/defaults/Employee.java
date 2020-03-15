@@ -8,8 +8,6 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany.defaults;
 import java.io.Serializable;
-import java.util.Collection;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -17,9 +15,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.ManyToMany;
-
-import org.hibernate.annotations.Cascade;
 
 /**
  * Employee in an Employer-Employee relationship

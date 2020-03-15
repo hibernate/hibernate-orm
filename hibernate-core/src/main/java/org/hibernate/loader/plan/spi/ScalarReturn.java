@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**

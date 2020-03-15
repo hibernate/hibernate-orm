@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.test.integration.inheritance.tableperclass.abstractparent;
 
-import java.util.Iterator;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

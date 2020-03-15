@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import javax.persistence.AttributeConverter;
 import javax.persistence.SharedCacheMode;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;

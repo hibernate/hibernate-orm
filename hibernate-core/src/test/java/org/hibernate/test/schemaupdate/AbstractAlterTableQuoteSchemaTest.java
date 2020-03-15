@@ -7,12 +7,6 @@
 package org.hibernate.test.schemaupdate;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

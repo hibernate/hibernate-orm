@@ -17,12 +17,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -37,9 +35,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12770")
 public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {

@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 
 import org.hibernate.boot.MappingException;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -23,8 +22,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.Assert.fail;
 

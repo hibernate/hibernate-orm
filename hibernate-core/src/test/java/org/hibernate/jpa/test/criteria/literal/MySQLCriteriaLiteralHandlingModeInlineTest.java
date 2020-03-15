@@ -9,7 +9,6 @@ package org.hibernate.jpa.test.criteria.literal;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 

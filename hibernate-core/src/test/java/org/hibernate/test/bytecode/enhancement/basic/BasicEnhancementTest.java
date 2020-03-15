@@ -20,8 +20,6 @@ import javax.persistence.Id;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;

@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.converter;
 
-import java.util.Arrays;
-import java.util.List;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
@@ -15,14 +13,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Tuple;
 
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 

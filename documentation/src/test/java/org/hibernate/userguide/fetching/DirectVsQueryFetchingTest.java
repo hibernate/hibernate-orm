@@ -18,8 +18,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**

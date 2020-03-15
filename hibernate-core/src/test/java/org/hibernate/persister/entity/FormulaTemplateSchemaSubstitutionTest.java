@@ -12,12 +12,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @RequiresDialect(H2Dialect.class)
 public class FormulaTemplateSchemaSubstitutionTest extends AbstractSchemaSubstitutionFormulaTest {

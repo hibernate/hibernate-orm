@@ -15,8 +15,6 @@ import org.hibernate.test.annotations.id.entities.Planet;
 import org.hibernate.test.annotations.id.entities.PlanetCheatSheet;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 

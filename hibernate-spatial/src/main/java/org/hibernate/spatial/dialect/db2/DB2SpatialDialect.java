@@ -29,8 +29,6 @@ import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
-import static java.lang.String.format;
-
 /**
  * @author David Adler, Adtech Geospatial
  * creation-date: 5/22/2014

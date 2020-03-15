@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;

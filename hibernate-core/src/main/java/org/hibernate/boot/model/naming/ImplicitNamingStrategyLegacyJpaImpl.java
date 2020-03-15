@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.dialect.Dialect;
-
 /**
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
  * naming rules initially implemented by Hibernate for JPA 1.0, prior to many

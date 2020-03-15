@@ -12,7 +12,6 @@ import antlr.ASTFactory;
 import antlr.collections.AST;
 import org.junit.Test;
 
-import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlParser;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTParentsFirstIterator;

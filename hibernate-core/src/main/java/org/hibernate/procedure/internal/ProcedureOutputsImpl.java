@@ -8,9 +8,6 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureOutputs;

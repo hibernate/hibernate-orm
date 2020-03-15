@@ -7,8 +7,6 @@
 package org.hibernate.service.internal;
 
 import java.util.List;
-import java.util.ListIterator;
-
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

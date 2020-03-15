@@ -7,8 +7,6 @@
 package org.hibernate.cache.ehcache.internal;
 
 
-import org.hibernate.cache.ehcache.ConfigSettings;
-import org.hibernate.cache.ehcache.MissingCacheStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;

@@ -9,8 +9,6 @@ package org.hibernate.test.cascade;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.TransactionException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

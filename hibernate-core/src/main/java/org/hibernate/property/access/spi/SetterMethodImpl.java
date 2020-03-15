@@ -6,7 +6,6 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

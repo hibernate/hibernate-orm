@@ -24,7 +24,6 @@
 package org.hibernate.test.collection.dereferenced;
 
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

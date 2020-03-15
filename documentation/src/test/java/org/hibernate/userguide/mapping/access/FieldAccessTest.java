@@ -9,14 +9,11 @@ package org.hibernate.userguide.mapping.access;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea

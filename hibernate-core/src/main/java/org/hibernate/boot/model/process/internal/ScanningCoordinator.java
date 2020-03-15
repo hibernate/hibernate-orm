@@ -32,7 +32,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.service.ServiceRegistry;

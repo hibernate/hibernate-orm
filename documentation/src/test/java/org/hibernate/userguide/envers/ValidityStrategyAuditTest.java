@@ -21,7 +21,6 @@ import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;

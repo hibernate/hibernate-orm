@@ -8,8 +8,6 @@ package org.hibernate.query.criteria.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
-
 /**
  * All nodes in a criteria query tree will generally need access to the {@link CriteriaBuilderImpl} from which they
  * come.  This base class provides convenient, consistent support for that.

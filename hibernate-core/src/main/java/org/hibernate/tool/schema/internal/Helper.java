@@ -33,8 +33,6 @@ import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import org.jboss.logging.Logger;
-
 /**
  * Helper methods.
  *

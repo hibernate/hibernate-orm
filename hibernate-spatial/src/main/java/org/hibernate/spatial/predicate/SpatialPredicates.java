@@ -15,7 +15,6 @@ import org.hibernate.spatial.criterion.SpatialRestrictions;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Polygon;
 
 /**
  * A factory for spatial JPA Criteria API {@link Predicate}s.

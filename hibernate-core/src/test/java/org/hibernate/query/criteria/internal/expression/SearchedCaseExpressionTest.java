@@ -20,8 +20,6 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;

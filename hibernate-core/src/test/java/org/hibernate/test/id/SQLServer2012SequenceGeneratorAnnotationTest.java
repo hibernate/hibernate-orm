@@ -12,8 +12,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServer2012Dialect;
 
 import org.hibernate.testing.RequiresDialect;

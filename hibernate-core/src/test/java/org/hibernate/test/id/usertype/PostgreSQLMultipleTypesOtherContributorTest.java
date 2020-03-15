@@ -15,7 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 import javax.persistence.Table;
 
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.PostgreSQL82Dialect;
@@ -25,17 +24,14 @@ import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.hibernate.test.id.usertype.inet.Event;
 import org.hibernate.test.id.usertype.inet.Inet;
 import org.hibernate.test.id.usertype.inet.InetType;
-import org.hibernate.test.id.usertype.inet.PostgreSQLInetTypesOtherTest;
 import org.hibernate.test.id.usertype.json.Json;
 import org.hibernate.test.id.usertype.json.JsonType;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea

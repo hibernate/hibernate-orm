@@ -10,9 +10,6 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.StringUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Hardy Ferentschik
  */

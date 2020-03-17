@@ -162,11 +162,13 @@ public class EnumType<T extends Enum>
 			this.enumValueConverter = interpretParameters( parameters );
 		}
 
-		LOG.debugf(
-				"Using %s-based conversion for Enum %s",
-				isOrdinal() ? "ORDINAL" : "NAMED",
-				enumClass.getName()
-		);
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Using %s-based conversion for Enum %s",
+					isOrdinal() ? "ORDINAL" : "NAMED",
+					enumClass.getName()
+			);
+		}
 	}
 
 	private BasicJavaDescriptor<?> resolveRelationalJavaTypeDescriptor(

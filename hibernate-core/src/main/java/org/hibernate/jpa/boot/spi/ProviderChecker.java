@@ -82,11 +82,13 @@ public final class ProviderChecker {
 
 		final String persistenceUnitRequestedProvider = extractProviderName( persistenceUnit );
 		if ( persistenceUnitRequestedProvider != null ) {
-			log.debugf(
-					"Persistence-unit [%s] requested PersistenceProvider [%s]",
-					persistenceUnit.getName(),
-					persistenceUnitRequestedProvider
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Persistence-unit [%s] requested PersistenceProvider [%s]",
+						persistenceUnit.getName(),
+						persistenceUnitRequestedProvider
+				);
+			}
 			return persistenceUnitRequestedProvider;
 		}
 

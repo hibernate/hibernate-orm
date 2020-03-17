@@ -70,7 +70,9 @@ public class StrategySelectorBuilder {
 	public <T> void addExplicitStrategyRegistration(StrategyRegistration<T> strategyRegistration) {
 		if ( !strategyRegistration.getStrategyRole().isInterface() ) {
 			// not good form...
-			log.debug( "Registering non-interface strategy : " + strategyRegistration.getStrategyRole().getName()  );
+			if ( log.isDebugEnabled() ) {
+				log.debugf( "Registering non-interface strategy : %s", strategyRegistration.getStrategyRole().getName() );
+			}
 		}
 
 		if ( ! strategyRegistration.getStrategyRole().isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {

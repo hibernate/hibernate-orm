@@ -95,7 +95,7 @@ public class AttributeFactory {
 			LOG.tracef( "Skipping synthetic property %s(%s)", ownerType.getTypeName(), property.getName() );
 			return null;
 		}
-		LOG.trace( "Building attribute [" + ownerType.getTypeName() + "." + property.getName() + "]" );
+		LOG.tracef( "Building attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X, Y> attributeMetadata = determineAttributeMetadata(
 				attributeContext,
@@ -149,7 +149,7 @@ public class AttributeFactory {
 	public <X, Y> SingularPersistentAttribute<X, Y> buildIdAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
-		LOG.trace( "Building identifier attribute [" + ownerType.getTypeName() + "." + property.getName() + "]" );
+		LOG.tracef( "Building identifier attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
 		// ownerType = Entity(Person)
 		// MetadataContext#containerRoleStack -> Person
@@ -185,7 +185,7 @@ public class AttributeFactory {
 	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
-		LOG.trace( "Building version attribute [" + ownerType.getTypeName() + "." + property.getName() + "]" );
+		LOG.tracef( "Building version attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
 		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata<X, Y>) determineAttributeMetadata(
 				wrap( ownerType, property ),
@@ -354,14 +354,14 @@ public class AttributeFactory {
 		final Property propertyMapping = attributeContext.getPropertyMapping();
 		final String propertyName = propertyMapping.getName();
 
-		LOG.trace( "Starting attribute metadata determination [" + propertyName + "]" );
+		LOG.tracef( "Starting attribute metadata determination [%s]", propertyName );
 
 		final Member member = memberResolver.resolveMember( attributeContext, context );
-		LOG.trace( "    Determined member [" + member + "]" );
+		LOG.tracef( "    Determined member [%s]", member );
 
 		final Value value = propertyMapping.getValue();
 		final org.hibernate.type.Type type = value.getType();
-		LOG.trace( "    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]" );
+		LOG.tracef( "    Determined type [name=%s, class=%s]", type.getName(), type.getClass().getName() );
 
 		if ( type.isAnyType() ) {
 			return new SingularAttributeMetadataImpl<>(

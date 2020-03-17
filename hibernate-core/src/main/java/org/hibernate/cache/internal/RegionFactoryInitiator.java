@@ -114,10 +114,12 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			return registeredFactory;
 		}
 		else {
-			LOG.debugf(
-					"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
-					implementors
-			);
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Cannot default RegionFactory based on registered strategies as `%s` RegionFactory strategies were registered",
+						implementors
+				);
+			}
 		}
 
 		return NoCachingRegionFactory.INSTANCE;

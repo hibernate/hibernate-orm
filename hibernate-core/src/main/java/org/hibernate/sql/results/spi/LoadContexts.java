@@ -80,7 +80,7 @@ public class LoadContexts {
 	 */
 	public void cleanup() {
 		if ( ! jdbcValuesSourceProcessingStateStack.isEmpty() ) {
-			log.debugf( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
+			log.debug( "LoadContexts still contained JdbcValuesSourceProcessingState registrations on cleanup" );
 		}
 		jdbcValuesSourceProcessingStateStack.clear();
 	}

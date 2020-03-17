@@ -132,11 +132,13 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 		hierarchy_loop : for ( EntityHierarchySourceImpl entityHierarchy : entityHierarchies ) {
 			for ( String entityName : entityHierarchy.getContainedEntityNames() ) {
 				if ( processedEntityNames.contains( entityName ) ) {
-					log.debugf(
-							"Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed",
-							entityHierarchy.getRoot().getEntityNamingSource().getEntityName(),
-							entityName
-					);
+					if ( log.isDebugEnabled() ) {
+						log.debugf(
+								"Skipping HBM processing of entity hierarchy [%s], as at least one entity [%s] has been processed",
+								entityHierarchy.getRoot().getEntityNamingSource().getEntityName(),
+								entityName
+						);
+					}
 					continue hierarchy_loop;
 				}
 			}

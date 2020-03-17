@@ -76,13 +76,15 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					log.debugf(
-							"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
-							field.getType().asErasure(),
-							field.getName(),
-							field.getName(),
-							name
-					);
+					if ( log.isDebugEnabled() ) {
+						log.debugf(
+								"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
+								field.getType().asErasure(),
+								field.getName(),
+								field.getName(),
+								name
+						);
+					}
 
 					switch ( opcode ) {
 						case Opcodes.GETFIELD:

@@ -50,7 +50,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
 		fetches = new ArrayList<>();
-		MutableInteger index = new MutableInteger( 0 );
+		MutableInteger index = new MutableInteger();
 
 		embeddableValuedModelPart.visitFetchables(
 				fetchable -> {

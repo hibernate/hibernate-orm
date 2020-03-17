@@ -190,7 +190,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		}
 
 		if ( this.column == incomingColumn ) {
-			log.debugf( "Skipping column re-registration: " + getTable().getName() + "." + column.getText() );
+			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
 			return;
 		}
 
@@ -364,7 +364,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		final TypeDefinition autoAppliedTypeDef = getBuildingContext().getTypeDefinitionRegistry()
 				.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null ) {
-			log.debugf( "BasicValue resolution matched auto-applied type-definition" );
+			log.debug( "BasicValue resolution matched auto-applied type-definition" );
 			return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext() );
 		}
 

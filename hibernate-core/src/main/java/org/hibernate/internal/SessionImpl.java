@@ -2959,12 +2959,12 @@ public class SessionImpl
 		checkOpen();
 
 		if ( !( value instanceof Serializable ) ) {
-			log.warnf( "Property '" + propertyName + "' is not serializable, value won't be set." );
+			log.warnf( "Property '%s' is not serializable, value won't be set.", propertyName );
 			return;
 		}
 
 		if ( propertyName == null ) {
-			log.warnf( "Property having key null is illegal; value won't be set." );
+			log.warn( "Property having key null is illegal; value won't be set." );
 			return;
 		}
 

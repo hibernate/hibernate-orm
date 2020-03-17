@@ -37,11 +37,13 @@ public class TypeDefinitionBinder {
 				context.getMetadataCollector().getTypeConfiguration()
 		);
 
-		log.debugf(
-				"Processed type-definition : %s -> %s",
-				definition.getName(),
-				definition.getTypeImplementorClass().getName()
-		);
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Processed type-definition : %s -> %s",
+					definition.getName(),
+					definition.getTypeImplementorClass().getName()
+			);
+		}
 
 		context.getTypeDefinitionRegistry().register( definition );
 	}

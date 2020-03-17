@@ -94,7 +94,13 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		}
 
 		CtField[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new CtField[0] ) );
-		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ) );
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Persistent fields for entity %s: %s",
+					managedCtClass.getName(),
+					Arrays.toString( orderedFields )
+			);
+		}
 		return orderedFields;
 	}
 

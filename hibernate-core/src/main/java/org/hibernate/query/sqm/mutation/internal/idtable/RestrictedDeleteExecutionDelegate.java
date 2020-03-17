@@ -254,7 +254,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
 		assert targetTableReference != null;
-		log.trace( "deleteFromNonRootTable - " + targetTableReference.getTableExpression() );
+		log.tracef( "deleteFromNonRootTable - %s", targetTableReference.getTableExpression() );
 
 		/*
 		 * delete from sub_table
@@ -432,7 +432,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Supplier<Consumer<ColumnConsumer>> tableKeyColumnVisitationSupplier,
 			QuerySpec idTableSubQuery,
 			ExecutionContext executionContext) {
-		log.trace( "deleteFromTableUsingIdTable - " + tableExpression );
+		log.tracef( "deleteFromTableUsingIdTable - %s", tableExpression );
 
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 

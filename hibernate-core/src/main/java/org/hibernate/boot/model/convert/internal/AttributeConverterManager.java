@@ -96,15 +96,17 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		List<ConverterDescriptor> matches = new ArrayList<>();
 
 		for ( ConverterDescriptor descriptor : converterDescriptors() ) {
-			log.debugf(
-					"Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)",
-					descriptor.getAttributeConverterClass().getName(),
-					descriptor.getDomainValueResolvedType().getSignature(),
-					conversionSite.getSiteDescriptor(),
-					xProperty.getDeclaringClass().getName(),
-					xProperty.getName(),
-					xProperty.getType().getName()
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)",
+						descriptor.getAttributeConverterClass().getName(),
+						descriptor.getDomainValueResolvedType().getSignature(),
+						conversionSite.getSiteDescriptor(),
+						xProperty.getDeclaringClass().getName(),
+						xProperty.getName(),
+						xProperty.getType().getName()
+				);
+			}
 
 			final ConverterDescriptor match = matcher.apply( descriptor.getAutoApplyDescriptor() );
 

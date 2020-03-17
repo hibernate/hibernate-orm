@@ -744,7 +744,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( "Could not resolve parameter by position - " + position, e );
 		}
 
-		LOGGER.debugf( "Checking whether positional  parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
+		LOGGER.debugf( "Checking whether positional parameter [%s] is bound : %s", (Integer) position, (Boolean) binding.isBound() );
 		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + position );
 		}

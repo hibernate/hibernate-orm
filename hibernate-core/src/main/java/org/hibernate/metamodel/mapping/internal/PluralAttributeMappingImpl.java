@@ -293,11 +293,13 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			};
 
 			if ( hasOrder ) {
-				log.debugf(
-						"Translating order-by fragment [%s] for collection role : %s",
-						bootDescriptor.getOrderBy(),
-						collectionDescriptor.getRole()
-				);
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							"Translating order-by fragment [%s] for collection role : %s",
+							bootDescriptor.getOrderBy(),
+							collectionDescriptor.getRole()
+					);
+				}
 				orderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getOrderBy(),
 						this,
@@ -306,11 +308,13 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			}
 
 			if ( hasManyToManyOrder ) {
-				log.debugf(
-						"Translating many-to-many order-by fragment [%s] for collection role : %s",
-						bootDescriptor.getOrderBy(),
-						collectionDescriptor.getRole()
-				);
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							"Translating many-to-many order-by fragment [%s] for collection role : %s",
+							bootDescriptor.getOrderBy(),
+							collectionDescriptor.getRole()
+					);
+				}
 				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
 						bootDescriptor.getManyToManyOrdering(),
 						this,

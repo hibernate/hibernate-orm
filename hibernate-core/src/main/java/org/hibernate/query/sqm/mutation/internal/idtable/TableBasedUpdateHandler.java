@@ -100,7 +100,12 @@ public class TableBasedUpdateHandler
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		log.tracef( "Starting multi-table update execution - %s", getSqmDeleteOrUpdateStatement().getRoot().getModel().getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
+					"Starting multi-table update execution - %s",
+					getSqmDeleteOrUpdateStatement().getRoot().getModel().getName()
+			);
+		}
 
 		return resolveDelegate( executionContext ).execute( executionContext );
 	}

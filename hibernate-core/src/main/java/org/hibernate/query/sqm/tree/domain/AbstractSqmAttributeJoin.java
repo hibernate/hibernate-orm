@@ -81,11 +81,13 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	public void setJoinPredicate(SqmPredicate predicate) {
-		log.tracef(
-				"Setting join predicate [%s] (was [%s])",
-				predicate.toString(),
-				this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()
-		);
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
+					"Setting join predicate [%s] (was [%s])",
+					predicate.toString(),
+					this.onClausePredicate == null ? "<null>" : this.onClausePredicate.toString()
+			);
+		}
 
 		this.onClausePredicate = predicate;
 	}

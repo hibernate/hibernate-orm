@@ -81,11 +81,11 @@ public class FlushModeTypeHelper {
 		}
 
 		try {
-			log.debug( "Attempting to interpret external setting [" + externalName + "] as FlushMode name" );
+			log.debugf( "Attempting to interpret external setting [%s] as FlushMode name", externalName );
 			return FlushMode.valueOf( externalName.toUpperCase( Locale.ROOT) );
 		}
 		catch ( IllegalArgumentException e ) {
-			log.debug( "Attempting to interpret external setting [" + externalName + "] as FlushModeType name" );
+			log.debugf( "Attempting to interpret external setting [%s] as FlushModeType name", externalName );
 		}
 
 		try {

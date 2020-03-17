@@ -193,7 +193,9 @@ class DatabaseSnapshotExecutor {
 	}
 
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-		log.tracef( "Getting current persistent state for `%s#%s`", entityDescriptor.getEntityName(), id );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Getting current persistent state for `%s#%s`", entityDescriptor.getEntityName(), id );
+		}
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(
 				entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() )

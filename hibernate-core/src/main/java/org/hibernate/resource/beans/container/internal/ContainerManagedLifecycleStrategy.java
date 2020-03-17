@@ -96,7 +96,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean - using fallback" );
+				log.debug( "Error resolving CDI bean - using fallback" );
 				this.beanInstance = produceFallbackInstance();
 				this.instance = null;
 			}

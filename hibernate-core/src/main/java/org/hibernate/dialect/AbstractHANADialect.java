@@ -1329,7 +1329,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	private long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
 		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
 		long timeoutInSeconds = duration.getSeconds();
-		if ( duration.getNano() != 0 ) {
+		if ( duration.getNano() != 0 && LOG.isInfoEnabled() ) {
 			LOG.info( "Changing the query timeout from " + timeoutInMilliseconds + " ms to " + timeoutInSeconds
 					+ " s, because HANA requires the timeout in seconds" );
 		}

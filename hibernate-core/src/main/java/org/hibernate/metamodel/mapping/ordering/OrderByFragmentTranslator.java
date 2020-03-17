@@ -52,7 +52,13 @@ public class OrderByFragmentTranslator {
 			String fragment,
 			PluralAttributeMapping pluralAttributeMapping,
 			TranslationContext context) {
-		LOG.tracef( "Beginning parsing of order-by fragment [%s] : %s", pluralAttributeMapping.getCollectionDescriptor().getRole(), fragment );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
+					"Beginning parsing of order-by fragment [%s] : %s",
+					pluralAttributeMapping.getCollectionDescriptor().getRole(),
+					fragment
+			);
+		}
 
 		final OrderingParser.OrderByFragmentContext parseTree = buildParseTree( context, fragment );
 

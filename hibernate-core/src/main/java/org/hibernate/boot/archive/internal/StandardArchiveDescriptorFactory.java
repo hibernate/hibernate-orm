@@ -130,12 +130,14 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			}
 			catch (MalformedURLException e) {
 				// allow to pass through to return the original URL
-				log.debugf(
-						e,
-						"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
-						filePart,
-						rootUrlFile.getAbsolutePath()
-				);
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							e,
+							"Unable to adjust relative <jar-file/> URL [%s] relative to root URL [%s]",
+							filePart,
+							rootUrlFile.getAbsolutePath()
+					);
+				}
 			}
 
 			return url;

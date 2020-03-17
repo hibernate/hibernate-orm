@@ -2142,7 +2142,9 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				else {
 					// most likely the <result-class/> this code used to handle.  I have left the code here,
 					// but commented it out for now.  I'll just log a warning for now.
-					LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
+					}
 
 //					String clazzName = subelement.attributeValue( "result-class" );
 //					if ( StringHelper.isNotEmpty( clazzName ) ) {

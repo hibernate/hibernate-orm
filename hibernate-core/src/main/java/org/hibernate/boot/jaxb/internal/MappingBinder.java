@@ -57,7 +57,9 @@ public class MappingBinder extends AbstractBinder {
 			Origin origin) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
-			log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
+			if ( log.isDebugEnabled() ) {
+				log.debugf( "Performing JAXB binding of hbm.xml document : %s", origin.toString() );
+			}
 
 			XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
 			JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, MappingXsdSupport.INSTANCE.hbmXsd().getSchema(), hbmJaxbContext(), origin );

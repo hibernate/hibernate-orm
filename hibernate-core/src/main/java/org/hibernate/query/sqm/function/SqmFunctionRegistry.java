@@ -32,7 +32,7 @@ public class SqmFunctionRegistry {
 	private final Map<String,String> alternateKeyMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
 
 	public SqmFunctionRegistry() {
-		log.tracef( "SqmFunctionRegistry created" );
+		log.trace( "SqmFunctionRegistry created" );
 	}
 
 	public Map<String, SqmFunctionDescriptor> getFunctions() {

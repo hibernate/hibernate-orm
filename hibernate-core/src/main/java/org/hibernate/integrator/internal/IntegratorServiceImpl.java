@@ -43,7 +43,9 @@ public class IntegratorServiceImpl implements IntegratorService {
 	}
 
 	private void addIntegrator(Integrator integrator) {
-		LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
+		}
 		integrators.add( integrator );
 	}
 

@@ -515,8 +515,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				if ( keyString.startsWith( JACC_PREFIX ) ) {
 					if( !JACC_CONTEXT_ID.equals( keyString ) && !JACC_ENABLED.equals( keyString )) {
 						if ( jaccContextId == null ) {
-							LOG.debug(
-									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
+							LOG.debugf(
+									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring",
+									keyString
 							);
 						}
 						else {
@@ -677,7 +678,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			LOG.debugf( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 

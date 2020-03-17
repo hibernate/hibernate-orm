@@ -425,7 +425,9 @@ public class LoaderSelectBuilder {
 	}
 
 	private List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState) {
-		log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Starting visitation of FetchParent's Fetchables : %s", fetchParent.getNavigablePath() );
+		}
 
 		final List<Fetch> fetches = new ArrayList<>();
 

@@ -48,11 +48,13 @@ public class Namespace {
 						.toPhysicalSchemaName( name.getSchema(), jdbcEnvironment )
 		);
 
-		log.debugf(
-				"Created database namespace [logicalName=%s, physicalName=%s]",
-				name.toString(),
-				physicalName.toString()
-		);
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Created database namespace [logicalName=%s, physicalName=%s]",
+					name.toString(),
+					physicalName.toString()
+			);
+		}
 	}
 
 	public Name getName() {

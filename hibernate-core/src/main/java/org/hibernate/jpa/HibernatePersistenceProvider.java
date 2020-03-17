@@ -93,12 +93,14 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		}
 
 		for ( ParsedPersistenceXmlDescriptor persistenceUnit : units ) {
-			log.debugf(
-					"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
-					persistenceUnit.getName(),
-					persistenceUnit.getProviderClassName(),
-					persistenceUnitName
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
+						persistenceUnit.getName(),
+						persistenceUnit.getProviderClassName(),
+						persistenceUnitName
+				);
+			}
 
 			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
@@ -136,14 +138,18 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	 */
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Starting createContainerEntityManagerFactory : %s", info.getPersistenceUnitName() );
+		}
 
 		return getEntityManagerFactoryBuilder( info, properties ).build();
 	}
 
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
-		log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
+		}
 
 		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder( info, map );
 		builder.generateSchema();

@@ -65,7 +65,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 		if ( List.class.equals( getTargetJavaTypeDescriptor().getJavaType() ) ) {
 			// really should not have an alias...
-			if ( alias != null ) {
+			if ( alias != null && log.isDebugEnabled() ) {
 				log.debugf(
 						"Argument [%s] for dynamic List instantiation declared an 'injection alias' [%s] " +
 								"but such aliases are ignored for dynamic List instantiations",

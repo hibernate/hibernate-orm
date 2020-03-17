@@ -268,11 +268,13 @@ public class ScanningCoordinator {
 				continue;
 			}
 
-			log.debugf(
-					"Unable to resolve class [%s] named in persistence unit [%s]",
-					unresolvedListedClassName,
-					scanEnvironment.getRootUrl()
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Unable to resolve class [%s] named in persistence unit [%s]",
+						unresolvedListedClassName,
+						scanEnvironment.getRootUrl()
+				);
+			}
 		}
 	}
 }

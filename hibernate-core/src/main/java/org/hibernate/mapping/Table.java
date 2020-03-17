@@ -260,11 +260,13 @@ public class Table implements RelationalModel, Serializable, Exportable {
 				for ( Column c : primaryKey.getColumns() ) {
 					if ( c.getCanonicalName().equals( column.getCanonicalName() ) ) {
 						column.setNullable( false );
-						log.debugf(
-								"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
-								column.getCanonicalName(),
-								getNameIdentifier().getCanonicalName()
-						);
+						if ( log.isDebugEnabled() ) {
+							log.debugf(
+									"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
+									column.getCanonicalName(),
+									getNameIdentifier().getCanonicalName()
+							);
+						}
 					}
 				}
 			}

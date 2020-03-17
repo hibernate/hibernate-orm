@@ -90,7 +90,13 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		log.debugf( "Persistent fields for entity %s: %s", managedCtClass.getName(), Arrays.toString( orderedFields ) );
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Persistent fields for entity %s: %s",
+					managedCtClass.getName(),
+					Arrays.toString( orderedFields )
+			);
+		}
 		return new PersistentAttributeTransformer( managedCtClass, enhancementContext, classPool, orderedFields );
 	}
 

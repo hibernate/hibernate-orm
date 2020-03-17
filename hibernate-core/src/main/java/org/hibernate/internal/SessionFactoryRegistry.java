@@ -196,7 +196,9 @@ public class SessionFactoryRegistry {
 	private final NamespaceChangeListener listener = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
-			LOG.debugf( "A factory was successfully bound to name: %s", evt.getNewBinding().getName() );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf( "A factory was successfully bound to name: %s", evt.getNewBinding().getName() );
+			}
 		}
 
 		@Override

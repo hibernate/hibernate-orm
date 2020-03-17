@@ -65,7 +65,12 @@ public class TableBasedDeleteHandler
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
-		log.tracef( "Starting multi-table delete execution - %s", getSqmDeleteOrUpdateStatement().getRoot().getModel().getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
+					"Starting multi-table delete execution - %s",
+					getSqmDeleteOrUpdateStatement().getRoot().getModel().getName()
+			);
+		}
 		return resolveDelegate( executionContext ).execute( executionContext );
 	}
 

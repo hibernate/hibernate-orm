@@ -526,7 +526,9 @@ public class PersistenceXmlParser {
 		}
 
 		public void warning(SAXParseException warn) {
-			LOG.trace( extractInfo( warn ) );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( extractInfo( warn ) );
+			}
 		}
 	}
 

@@ -93,7 +93,7 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.trace( "JAR URL from URL Entry: " + url + " >> " + jarUrl );
+		log.tracef( "JAR URL from URL Entry: %s >> %s", url, jarUrl );
 		return jarUrl;
 	}
 

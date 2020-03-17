@@ -65,7 +65,12 @@ public class MatchingIdSelectionHelper {
 			MultiTableSqmMutationConverter sqmConverter,
 			SessionFactoryImplementor sessionFactory) {
 		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
-		log.tracef( "Starting generation of entity-id SQM selection - %s", entityDomainType.getHibernateEntityName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
+					"Starting generation of entity-id SQM selection - %s",
+					entityDomainType.getHibernateEntityName()
+			);
+		}
 
 		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
 
@@ -122,8 +127,12 @@ public class MatchingIdSelectionHelper {
 			MultiTableSqmMutationConverter sqmConverter,
 			SessionFactoryImplementor sessionFactory) {
 		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
-		log.tracef( "Starting generation of entity-id SQM selection - %s", entityDomainType.getHibernateEntityName() );
-
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
+					"Starting generation of entity-id SQM selection - %s",
+					entityDomainType.getHibernateEntityName()
+			);
+		}
 
 		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
 

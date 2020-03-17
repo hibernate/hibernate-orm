@@ -1501,7 +1501,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * @throws IOException Can be thrown by the stream
 	 */
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		LOG.debugf( "Serializing: %s", getUuid() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Serializing: %s", getUuid() );
+		}
 		out.defaultWriteObject();
 		LOG.trace( "Serialized" );
 	}
@@ -1517,7 +1519,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		LOG.trace( "Deserializing" );
 		in.defaultReadObject();
-		LOG.debugf( "Deserialized: %s", getUuid() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Deserialized: %s", getUuid() );
+		}
 	}
 
 	/**

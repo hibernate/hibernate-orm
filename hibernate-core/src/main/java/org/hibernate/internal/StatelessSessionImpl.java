@@ -313,7 +313,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					if ( entityMetamodel.hasSubclasses() ) {
 						// entities with subclasses that define a ProxyFactory can create
 						// a HibernateProxy.
-						LOG.debugf( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
+						LOG.debug( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
 						return createProxy( entityKey );
 					}
 					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );

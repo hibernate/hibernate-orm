@@ -51,7 +51,7 @@ public class RegistryHelper {
 		// find the first "assignable" match
 		for ( Map.Entry<Class, JavaTypeDescriptor> entry : descriptorsByClass.entrySet() ) {
 			if ( entry.getKey().isAssignableFrom( cls ) ) {
-				log.debugf( "Using  cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
+				log.debugf( "Using cached JavaTypeDescriptor instance for Java class [%s]", cls.getName() );
 				return entry.getValue();
 			}
 		}

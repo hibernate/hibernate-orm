@@ -25,7 +25,7 @@ public class CdiBeanContainerImmediateAccessImpl extends AbstractCdiBeanContaine
 	private final BeanManager beanManager;
 
 	private CdiBeanContainerImmediateAccessImpl(BeanManager beanManager) {
-		log.debugf( "Standard access requested to CDI BeanManager : " + beanManager );
+		log.debugf( "Standard access requested to CDI BeanManager : %s", beanManager );
 		this.beanManager = beanManager;
 	}
 

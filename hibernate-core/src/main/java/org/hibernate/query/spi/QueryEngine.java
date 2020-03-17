@@ -121,7 +121,7 @@ public class QueryEngine {
 				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
 				false
 		);
-		if ( showSQLFunctions ) {
+		if ( showSQLFunctions && LOG_HQL_FUNCTIONS.isInfoEnabled() ) {
 			sqmFunctionRegistry.getFunctionsByName().forEach(
 					entry -> LOG_HQL_FUNCTIONS.info( entry.getValue().getSignature( entry.getKey() ) )
 			);

@@ -101,7 +101,9 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 			Object[] ids,
 			SharedSessionContractImplementor session,
 			MultiLoadOptions loadOptions) {
-		log.tracef( "#performOrderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "#performOrderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
+		}
 
 		assert loadOptions.isOrderReturnEnabled();
 
@@ -235,7 +237,9 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 
 		final int numberOfIdsInBatch = idsInBatch.size();
 
-		log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", entityDescriptor.getEntityName(), numberOfIdsInBatch );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", entityDescriptor.getEntityName(), numberOfIdsInBatch );
+		}
 
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>( numberOfIdsInBatch * idJdbcTypeCount);
 
@@ -378,7 +382,9 @@ public class MultiIdEntityLoaderStandardImpl<T> implements MultiIdEntityLoader<T
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 
-		log.tracef( "#performUnorderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "#performUnorderedMultiLoad(`%s`, ..)", entityDescriptor.getEntityName() );
+		}
 
 		final List<T> result = CollectionHelper.arrayList( ids.length );
 

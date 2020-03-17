@@ -257,11 +257,13 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 					// this part handles an odd case in the Hibernate test suite where we map an interface
 					// as the class and the proxy.  I cannot think of a real life use case for that
 					// specific test, but..
-					log.debugf(
-							"Entity [%s] mapped same interface [%s] as class and proxy",
-							cp.getEntityName(),
-							cp.getMappedClass()
-					);
+					if ( log.isDebugEnabled() ) {
+						log.debugf(
+								"Entity [%s] mapped same interface [%s] as class and proxy",
+								cp.getEntityName(),
+								cp.getMappedClass()
+						);
+					}
 				}
 				else {
 					final String old = entityProxyInterfaceMap.put( cp.getConcreteProxyClass(), cp.getEntityName() );

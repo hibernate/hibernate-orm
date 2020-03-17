@@ -3288,11 +3288,13 @@ public class ModelBinder {
 				prop.setValue( collectionBinding.getKey() );
 				referenced.addProperty( prop );
 
-				log.debugf(
-						"Added virtual backref property [%s] : %s",
-						prop.getName(),
-						pluralAttributeSource.getAttributeRole().getFullPath()
-				);
+				if ( log.isDebugEnabled() ) {
+					log.debugf(
+							"Added virtual backref property [%s] : %s",
+							prop.getName(),
+							pluralAttributeSource.getAttributeRole().getFullPath()
+					);
+				}
 			}
 		}
 
@@ -3388,11 +3390,13 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionElement() {
-			log.debugf(
-					"Binding [%s] element type for a [%s]",
-					getPluralAttributeSource().getElementSource().getNature(),
-					getPluralAttributeSource().getNature()
-			);
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Binding [%s] element type for a [%s]",
+						getPluralAttributeSource().getElementSource().getNature(),
+						getPluralAttributeSource().getNature()
+				);
+			}
 			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic ) {
 				final PluralAttributeElementSourceBasic elementSource =
 						(PluralAttributeElementSourceBasic) getPluralAttributeSource().getElementSource();
@@ -3580,10 +3584,12 @@ public class ModelBinder {
 
 				for ( FilterSource filterSource : elementSource.getFilterSources() ) {
 					if ( filterSource.getName() == null ) {
-						log.debugf(
-								"Encountered filter with no name associated with many-to-many [%s]; skipping",
-								getPluralAttributeSource().getAttributeRole().getFullPath()
-						);
+						if ( log.isDebugEnabled() ) {
+							log.debugf(
+									"Encountered filter with no name associated with many-to-many [%s]; skipping",
+									getPluralAttributeSource().getAttributeRole().getFullPath()
+							);
+						}
 						continue;
 					}
 
@@ -4224,7 +4230,7 @@ public class ModelBinder {
 
 		@Override
 		public void process() {
-			log.debugf( "Binding natural-id UniqueKey for entity : " + entityBinding.getEntityName() );
+			log.debugf( "Binding natural-id UniqueKey for entity : %s", entityBinding.getEntityName() );
 
 			final List<Identifier> columnNames = new ArrayList<>();
 

@@ -82,7 +82,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			}
 		}
 		else {
-			log.debugf(
+			log.debug(
 					"javax.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
 							"(although Hibernate also adapts this support to its proxies); " +
 							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"

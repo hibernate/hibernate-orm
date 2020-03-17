@@ -257,13 +257,13 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void commit() {
 			try {
 				if ( rollbackOnly ) {
-					log.debugf( "On commit, transaction was marked for roll-back only, rolling back" );
+					log.debug( "On commit, transaction was marked for roll-back only, rolling back" );
 
 					try {
 						rollback();
 
 						if ( jpaCompliance.isJpaTransactionComplianceEnabled() ) {
-							log.debugf( "Throwing RollbackException on roll-back of transaction marked rollback-only on commit" );
+							log.debug( "Throwing RollbackException on roll-back of transaction marked rollback-only on commit" );
 							throw new RollbackException( "Transaction was marked for rollback-only" );
 						}
 

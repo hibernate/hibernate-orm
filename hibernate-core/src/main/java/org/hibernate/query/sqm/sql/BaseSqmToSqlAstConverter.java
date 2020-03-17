@@ -570,7 +570,9 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	protected void consumeExplicitJoins(SqmFrom<?,?> sqmFrom, TableGroup lhsTableGroup) {
-		log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
+		}
 
 		sqmFrom.visitSqmJoins(
 				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup )
@@ -783,11 +785,15 @@ public abstract class BaseSqmToSqlAstConverter
 	}
 
 	private void consumeImplicitJoins(SqmPath<?> sqmPath, TableGroup tableGroup) {
-		log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
+		}
 
 		sqmPath.visitImplicitJoinPaths(
 				joinedPath -> {
-					log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
+					if ( log.isTraceEnabled() ) {
+						log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
+					}
 
 					assert getFromClauseAccess().findTableGroup( joinedPath.getLhs().getNavigablePath() ) == tableGroup;
 

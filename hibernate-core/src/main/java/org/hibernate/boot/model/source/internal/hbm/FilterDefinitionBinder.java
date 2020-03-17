@@ -43,7 +43,7 @@ class FilterDefinitionBinder {
 			if ( content instanceof String ) {
 				final String contentString = content.toString().trim();
 				if ( StringHelper.isNotEmpty( contentString ) ) {
-					if ( condition != null ) {
+					if ( condition != null && log.isDebugEnabled() ) {
 						log.debugf(
 								"filter-def [name=%s, origin=%s] defined multiple conditions, accepting arbitrary one",
 								jaxbFilterDefinitionMapping.getName(),

@@ -43,14 +43,14 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		final SqlTypeDescriptor previous = descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
 		if ( previous != null && previous != sqlTypeDescriptor ) {
-			log.debugf( "addDescriptor(%s) replaced previous registration", sqlTypeDescriptor, previous );
+			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", sqlTypeDescriptor, previous );
 		}
 	}
 
 	public void addDescriptor(int typeCode, SqlTypeDescriptor sqlTypeDescriptor) {
 		final SqlTypeDescriptor previous = descriptorMap.put( typeCode, sqlTypeDescriptor );
 		if ( previous != null && previous != sqlTypeDescriptor ) {
-			log.debugf( "addDescriptor(%i, %s) replaced previous registration", typeCode, sqlTypeDescriptor, previous );
+			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, sqlTypeDescriptor, previous );
 		}
 	}
 

@@ -80,7 +80,7 @@ public class DefaultIdentifierGeneratorFactory
 	public void register(String strategy, Class generatorClass) {
 		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = generatorStrategyToClassNameMap.put( strategy, generatorClass );
-		if ( previous != null ) {
+		if ( previous != null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "    - overriding [%s]", previous.getName() );
 		}
 	}

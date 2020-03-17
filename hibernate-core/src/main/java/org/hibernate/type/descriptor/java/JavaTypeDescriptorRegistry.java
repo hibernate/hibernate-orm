@@ -127,9 +127,8 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 
 					if ( !AttributeConverter.class.isAssignableFrom( cls ) ) {
 						log.debugf(
-								"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
-										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
-										"",
+								"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback. " +
+										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type.",
 								cls.getName()
 						);
 						checkEqualsAndHashCode( cls );

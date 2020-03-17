@@ -494,13 +494,7 @@ public class EntityEntryContext {
 			final Method deserializeMethod = entityEntryClass.getDeclaredMethod( "deserialize", ObjectInputStream.class,	PersistenceContext.class );
 			entry = (EntityEntry) deserializeMethod.invoke( null, ois, rtn );
 		}
-		catch (NoSuchMethodException e) {
-			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
-		}
-		catch (InvocationTargetException e) {
-			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
-		}
-		catch (IllegalAccessException e) {
+		catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
 			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );
 		}
 

@@ -715,7 +715,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		log.tracev( "Import: {0} -> {1}", importName, entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {
-			log.debug( "import name [" + importName + "] overrode previous [{" + old + "}]" );
+			log.debugf( "import name [%s] overrode previous [{%s}]", importName, old );
 		}
 	}
 

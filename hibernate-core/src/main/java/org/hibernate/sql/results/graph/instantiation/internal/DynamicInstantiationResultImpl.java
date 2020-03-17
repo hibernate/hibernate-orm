@@ -146,12 +146,14 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 							argumentReader.getAssembledJavaTypeDescriptor()
 					);
 					if ( !assignmentCompatible ) {
-						log.debugf(
-								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-								i,
-								constructor.getParameterTypes()[i].getName(),
-								argumentTypeDescriptor.getJavaType().getName()
-						);
+						if ( log.isDebugEnabled() ) {
+							log.debugf(
+									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
+									i,
+									constructor.getParameterTypes()[i].getName(),
+									argumentTypeDescriptor.getJavaType().getName()
+							);
+						}
 						continue constructor_loop;
 					}
 				}
@@ -164,11 +166,12 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				);
 			}
 
-			log.debugf(
-					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-					javaTypeDescriptor.getJavaType().getName()
-			);
-
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
+						javaTypeDescriptor.getJavaType().getName()
+				);
+			}
 
 			if ( ! areAllArgumentsAliased ) {
 				throw new IllegalStateException(

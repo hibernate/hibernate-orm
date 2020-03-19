@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.fileimport;
+package org.hibernate.orm.test.sqlimportfile;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -33,6 +33,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -68,7 +69,7 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 				.applySetting( Environment.DIALECT, CommentGenerationTest.SupportCommentDialect.class.getName() )
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES,
-						"/org/hibernate/test/fileimport/statements-without-terminal-chars.sql"
+						"/org/hibernate/orm/test/sqlimportfile/statements-without-terminal-chars.sql"
 				).applySetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" )
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,

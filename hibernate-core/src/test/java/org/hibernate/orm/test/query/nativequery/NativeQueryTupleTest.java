@@ -1,4 +1,4 @@
-package org.hibernate.jpa.test.query;
+package org.hibernate.orm.test.query.nativequery;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @RequiresDialect(H2Dialect.class)
-public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
+public class NativeQueryTupleTest extends BaseEntityManagerFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {
         return new Class[]{User.class};

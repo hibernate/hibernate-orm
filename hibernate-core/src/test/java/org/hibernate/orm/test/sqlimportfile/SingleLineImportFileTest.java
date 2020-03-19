@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.fileimport;
+package org.hibernate.orm.test.sqlimportfile;
 
 import java.util.List;
 
@@ -14,6 +14,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -26,16 +28,13 @@ public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty(
 				Environment.HBM2DDL_IMPORT_FILES,
-				"/org/hibernate/test/fileimport/humans.sql,/org/hibernate/test/fileimport/dogs.sql"
+				"/org/hibernate/orm/test/sqlimportfile/dogs.sql"
 		);
 	}
 
 	@Override
-	public String[] getMappings() {
-		return new String[] {
-				"fileimport/Human.hbm.xml",
-				"fileimport/Dog.hbm.xml"
-		};
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Dog.class, Human.class };
 	}
 
 	@Test

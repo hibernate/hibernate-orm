@@ -4,9 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.fileimport;
+package org.hibernate.orm.test.sqlimportfile;
 
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,6 +19,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
 import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -39,7 +39,9 @@ import static org.junit.Assert.assertNull;
 public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/fileimport/multi-line-statements.sql" );
+		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES,
+						 "/org/hibernate/orm/test/sqlimportfile/multi-line-statements.sql"
+		);
 		cfg.setProperty(
 				Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
 				MultipleLinesSqlCommandExtractor.class.getName()

@@ -35,16 +35,16 @@ subQuery
 	: querySpec
 	;
 
-rootEntity
+dmlTarget
 	: entityName identificationVariableDef?
 	;
 
 deleteStatement
-	: DELETE FROM? rootEntity whereClause?
+	: DELETE FROM? dmlTarget whereClause?
 	;
 
 updateStatement
-	: UPDATE rootEntity setClause whereClause?
+	: UPDATE dmlTarget setClause whereClause?
 	;
 
 setClause
@@ -56,7 +56,7 @@ assignment
 	;
 
 insertStatement
-	: INSERT INTO? rootEntity targetFieldsSpec (querySpec | valuesList)
+	: INSERT INTO? dmlTarget targetFieldsSpec (querySpec | valuesList)
 	;
 
 targetFieldsSpec

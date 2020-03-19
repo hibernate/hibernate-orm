@@ -309,8 +309,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	public SqmInsertStatement visitInsertStatement(HqlParser.InsertStatementContext ctx) {
 
 		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.rootEntity().entityName() ),
-				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
+				visitEntityName( ctx.dmlTarget().entityName() ),
+				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 
@@ -379,8 +379,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmUpdateStatement visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
 		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.rootEntity().entityName() ),
-				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
+				visitEntityName( ctx.dmlTarget().entityName() ),
+				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 
@@ -413,8 +413,8 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 	@Override
 	public SqmDeleteStatement visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
 		final SqmRoot<?> root = new SqmRoot<>(
-				visitEntityName( ctx.rootEntity().entityName() ),
-				visitIdentificationVariableDef( ctx.rootEntity().identificationVariableDef() ),
+				visitEntityName( ctx.dmlTarget().entityName() ),
+				visitIdentificationVariableDef( ctx.dmlTarget().identificationVariableDef() ),
 				creationContext.getNodeBuilder()
 		);
 

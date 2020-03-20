@@ -12,23 +12,23 @@ import org.hibernate.graph.spi.GraphImplementor;
 /**
  * @author Nathan Xu
  */
-public interface EntityGraphSemanticTraverser {
+public interface EntityGraphTraversalState {
 
 	/**
 	 * POJO class to store the result of applied entity graph traversal, including
 	 * <ul>
-	 *     <li>previous entity graph node so later on traverser can backtrack to it</li>
+	 *     <li>previous entity graph node so later on {@link EntityGraphTraversalState} object can backtrack to it</li>
 	 *     <li>whether the new graph node should be eagerly loaded or not</li>
 	 *     <li>whether the new graph node fetching is joined</li>
 	 * </ul>
 	 */
-	class Result {
+	class TraversalResult {
 
 		private GraphImplementor previousContext;
 		private FetchTiming fetchTiming;
 		private boolean joined;
 
-		public Result(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
+		public TraversalResult(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
 			this.previousContext = previousContext;
 			this.fetchTiming = fetchTiming;
 			this.joined = joined;
@@ -64,5 +64,5 @@ public interface EntityGraphSemanticTraverser {
 	 * @param exploreKeySubgraph true if only key sub graph is explored; false if key sub graph is excluded
 	 * @return traversal result; never be null
 	 */
-	Result traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	TraversalResult traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
 }

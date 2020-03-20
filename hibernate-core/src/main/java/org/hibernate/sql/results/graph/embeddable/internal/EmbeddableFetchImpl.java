@@ -68,7 +68,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
 							creationState.getSqlAstCreationState().getCreationContext()
 					);
-					lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 

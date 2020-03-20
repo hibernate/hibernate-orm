@@ -90,7 +90,7 @@ task createCoreFeaturePackZip( type: Zip, dependsOn: [featurepack] ) {
 
 provision {
 	dependsOn( createCoreFeaturePackZip )
-	dependsOn( ":hibernate-envers:jar")
+//	dependsOn( ":hibernate-envers:jar")
 	dependsOn( ":hibernate-core:jar")
 	configuration = file( 'wildfly-server-provisioning.xml' )
 	destinationDir = file( "$project.wildFlyInstallDir" )

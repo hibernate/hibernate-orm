@@ -9,12 +9,10 @@ package org.hibernate.wildfly.model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Audited;
-
 /**
  * @author Chris Cranford
  */
-@Audited
+//@Audited
 @Entity
 public class AuditedEntity {
 	@Id

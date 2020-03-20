@@ -345,28 +345,6 @@ public class H2Dialect extends Dialect {
 		return false;
 	}
 	
-	// Do not drop constraints explicitly, just do this by cascading instead.
-	@Override
-	public boolean dropConstraints() {
-		return false;
-	}
-
-	@Override
-	public String getCascadeConstraintsString() {
-		return " CASCADE ";
-	}
-
-	// CASCADE has to be AFTER IF EXISTS in case it's after the tablename
-	@Override
-	public boolean supportsIfExistsAfterTableName() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new H2IdentityColumnSupport();

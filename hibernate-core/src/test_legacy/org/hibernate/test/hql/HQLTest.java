@@ -33,6 +33,7 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ReturnMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
@@ -59,6 +60,7 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import antlr.RecognitionException;
@@ -157,20 +159,20 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	@FailureExpected( jiraKey = "N/A", message = "Lacking ClassicQueryTranslatorFactory support" )
-    public void testRowValueConstructorSyntaxInInList2() {
-        assertTranslation( "from LineItem l where l.id in (:idList)" );
+	public void testRowValueConstructorSyntaxInInList2() {
+		assertTranslation( "from LineItem l where l.id in (:idList)" );
 		assertTranslation( "from LineItem l where l.id in :idList" );
-    }
+	}
 
 	@Test
 	@SkipForDialect( value = {
-		Oracle8iDialect.class,
-		AbstractHANADialect.class,
-		PostgreSQL81Dialect.class,
-		MySQLDialect.class
+			Oracle8iDialect.class,
+			AbstractHANADialect.class,
+			PostgreSQL81Dialect.class,
+			MySQLDialect.class
 	} )
 
-    public void testRowValueConstructorSyntaxInInListBeingTranslated() {
+	public void testRowValueConstructorSyntaxInInListBeingTranslated() {
 		QueryTranslatorImpl translator = createNewQueryTranslator( "from LineItem l where l.id in (?1)" );
 		assertInExist( "'in' should be translated to 'and'", false, translator );
 		translator = createNewQueryTranslator("from LineItem l where l.id in ?1" );
@@ -183,11 +185,11 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertInExist( "only translated tuple has 'in' syntax", true, translator );
 		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)" );
 		assertInExist( "do not translate sub-queries", true, translator );
-    }
+	}
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck.class )
-    public void testRowValueConstructorSyntaxInInList() {
+	public void testRowValueConstructorSyntaxInInList() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?1)" );
 		assertInExist( " 'in' should be kept, since the dialect supports this syntax", true, translator );
 		translator = createNewQueryTranslator("from LineItem l where l.id in ?1" );
@@ -200,7 +202,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertInExist( "only translated tuple has 'in' syntax", true, translator );
 		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)" );
 		assertInExist( "do not translate sub-queries", true, translator );
-    }
+	}
 
 	private void assertInExist( String message, boolean expected, QueryTranslatorImpl translator ) {
 		AST ast = translator.getSqlAST().getWalker().getAST();
@@ -240,7 +242,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testCollectionMemberDeclarations(){
 		// both these two query translators throw exeptions for this HQL since
 		// IN asks an alias, but the difference is that the error message from AST
-		// contains the error token location (by lines and columns), which is hardly 
+		// contains the error token location (by lines and columns), which is hardly
 		// to get from Classic query translator --stliu
 		assertTranslation( "from Customer c, in(c.orders)" );
 	}
@@ -254,24 +256,24 @@ public class HQLTest extends QueryTranslatorTestCase {
 		// is not a correlated subquery.  HHH-1248
 		assertTranslation(
 				"select a.id, a.description" +
-				" from Animal a" +
-				"       left join a.offspring" +
-				" where a in (" +
-				"       select a1 from Animal a1" +
-				"           left join a1.offspring o" +
-				"       where a1.id=1" +
-		        ")"
+						" from Animal a" +
+						"       left join a.offspring" +
+						" where a in (" +
+						"       select a1 from Animal a1" +
+						"           left join a1.offspring o" +
+						"       where a1.id=1" +
+						")"
 		);
 		assertTranslation(
 				"select h.id, h.description" +
-		        " from Human h" +
-				"      left join h.friends" +
-				" where h in (" +
-				"      select h1" +
-				"      from Human h1" +
-				"          left join h1.friends f" +
-				"      where h1.id=1" +
-				")"
+						" from Human h" +
+						"      left join h.friends" +
+						" where h in (" +
+						"      select h1" +
+						"      from Human h1" +
+						"          left join h1.friends f" +
+						"      where h1.id=1" +
+						")"
 		);
 	}
 
@@ -320,8 +322,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	private void check(
 			ReturnMetadata returnMetadata,
-	        boolean expectingEmptyTypes,
-	        boolean expectingEmptyAliases) {
+			boolean expectingEmptyTypes,
+			boolean expectingEmptyAliases) {
 		assertNotNull( "null return metadata", returnMetadata );
 		assertNotNull( "null return metadata - types", returnMetadata );
 		assertEquals( "unexpected return size", 1, returnMetadata.getReturnTypes().length );
@@ -381,7 +383,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation("from Animal where abs(:x - :y) < 2.0" );
 		assertTranslation("from Animal where lower(upper(:foo)) like 'f%'" );
 		if ( ! ( getDialect() instanceof SybaseDialect ) &&  ! ( getDialect() instanceof Sybase11Dialect ) &&  ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SQLServerDialect ) && ! ( getDialect() instanceof TeradataDialect ) ) {
-			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len; 
+			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len;
 			// classic translator does not consider that *when nested*;
 			// SybaseAnywhereDialect supports the length function
 
@@ -505,10 +507,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-719" )
-    public void testHHH719() throws Exception {
-        assertTranslation("from Baz b order by org.bazco.SpecialFunction(b.id)");
-        assertTranslation("from Baz b order by anypackage.anyFunction(b.id)");
-    }
+	public void testHHH719() throws Exception {
+		assertTranslation("from Baz b order by org.bazco.SpecialFunction(b.id)");
+		assertTranslation("from Baz b order by anypackage.anyFunction(b.id)");
+	}
 
 	@Test
 	public void testParameterListExpansion() {
@@ -530,22 +532,22 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@TestForIssue( jiraKey = "HHH-557" )
 	public void testExplicitJoinsInSubquery() {
 		assertTranslation(
-		        "from org.hibernate.test.hql.Animal as animal " +
-		        "where animal.id in (" +
-		        "        select a.id " +
-		        "        from org.hibernate.test.hql.Animal as a " +
-		        "               left join a.mother as mo" +
-		        ")"
+				"from org.hibernate.test.hql.Animal as animal " +
+						"where animal.id in (" +
+						"        select a.id " +
+						"        from org.hibernate.test.hql.Animal as a " +
+						"               left join a.mother as mo" +
+						")"
 		);
 	}
 
 	@Test
 	public void testImplicitJoinsInGroupBy() {
 		assertTranslation(
-		        "select o.mother.bodyWeight, count(distinct o) " +
-		        "from Animal an " +
-		        "   join an.offspring as o " +
-		        "group by o.mother.bodyWeight"
+				"select o.mother.bodyWeight, count(distinct o) " +
+						"from Animal an " +
+						"   join an.offspring as o " +
+						"group by o.mother.bodyWeight"
 		);
 	}
 
@@ -570,6 +572,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
+	@Ignore( "Old parser generated incorrect SQL for `size()`")
 	public void testSizeFunctionAndProperty() {
 		assertTranslation("from Animal a where a.offspring.size > 0");
 		assertTranslation("from Animal a join a.offspring where a.offspring.size > 1");
@@ -624,15 +627,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
-	public void testCollectionOfValuesSize() throws Exception {
-		//SQL *was* missing a comma
-		assertTranslation( "select size(baz.stringDateMap) from org.hibernate.test.legacy.Baz baz" );
-	}
-
-	@Test
 	public void testCollectionFunctions() throws Exception {
 		//these are both broken, a join that belongs in the subselect finds its way into the main query
-		assertTranslation( "from Zoo zoo where size(zoo.animals) > 100" );
 		assertTranslation( "from Zoo zoo where maxindex(zoo.mammals) = 'dog'" );
 	}
 
@@ -650,8 +646,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	@Test
-	public void testCollectionSize() throws Exception {
+	@Ignore( "The old parser generated incorrect SQL for selection of size functions" )
+	public void testCollectionSizeSelection() throws Exception {
 		assertTranslation( "select size(zoo.animals) from Zoo zoo" );
+		assertTranslation( "select size(baz.stringDateMap) from org.hibernate.test.legacy.Baz baz" );
 	}
 
 	@Test
@@ -1016,9 +1014,9 @@ public class HQLTest extends QueryTranslatorTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-559" )
-    public void testMultibyteCharacterConstant() throws Exception {
-        assertTranslation( "from Zoo zoo join zoo.animals an where an.description like '%\u4e2d%'" );
-    }
+	public void testMultibyteCharacterConstant() throws Exception {
+		assertTranslation( "from Zoo zoo join zoo.animals an where an.description like '%\u4e2d%'" );
+	}
 
 	@Test
 	public void testImplicitJoins() throws Exception {

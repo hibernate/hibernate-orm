@@ -45,6 +45,12 @@ _dynamic_ (sometimes referred to as runtime)::
     HQL / JPQL::: both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
     entity graphs::: starting in Hibernate 4.2 (JPA 2.1), this is also an option.
 
+[NOTE]
+====
+`fetch profile` and `entity graph` are mutually exclusive. When both are present, `entity graph` would take effect
+and `fetch profile` would be ignored.
+====
+
 [[fetching-direct-vs-query]]
 === Direct fetching vs. entity queries
 
@@ -77,7 +83,7 @@ include::{extrasdir}/fetching-direct-vs-query-direct-fetching-example.sql[]
 ----
 ====
 
-The `LEFT JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
+The `LEFT OUTER JOIN` clause is added to the generated SQL query because this association is required to be fetched eagerly.
 
 On the other hand, if you are using an entity query that does not contain a `JOIN FETCH` directive to the `Department` association:
 
@@ -101,7 +107,7 @@ so Hibernate requires a secondary select to ensure that the EAGER association is
 [IMPORTANT]
 ====
 If you forget to JOIN FETCH all EAGER associations, Hibernate is going to issue a secondary select for each and every one of those
-which, in turn, can lead to N+1 query issues.
+which, in turn, can lead to N + 1 query issue.
 
 For this reason, you should prefer LAZY associations.
 ====
@@ -109,7 +115,7 @@ For this reason, you should prefer LAZY associations.
 [[fetching-strategies]]
 === Applying fetch strategies
 
-Let's consider these topics as it relates to a simple domain model and a few use cases.
+Let's consider these topics as it relates to a sample domain model and a few use cases.
 
 [[fetching-strategies-domain-model-example]]
 .Sample domain model
@@ -188,8 +194,15 @@ In both cases, this resolves to exactly one database query to get all that infor
 [[fetching-strategies-dynamic-fetching-entity-graph]]
 === Dynamic fetching via JPA entity graph
 
-JPA 2.1 introduced entity graphs so the application developer has more control over fetch plans.
+JPA 2.1 introduced ``entity graph`` so the application developer has more control over fetch plans. It has two modes to choose from:
 
+fetch graph:::
+In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, and all attributes not specified will *ALWAYS* be treated as FetchType.LAZY.
+
+load graph:::
+In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, but attributes not specified use their static mapping specification.
+
+Below is an `fetch graph` dynamic fetching example:
 [[fetching-strategies-dynamic-fetching-entity-graph-example]]
 .Fetch graph example
 ====
@@ -202,14 +215,6 @@ include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fet
 ----
 include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
 ----
-====
-
-[NOTE]
-====
-When executing a JPQL query, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly,
-which can lead to N+1 query issues.
-
-For this reason, it's better to use LAZY associations, and only fetch them eagerly on a per-query basis.
 ====
 
 An EntityGraph is the root of a "load plan" and must correspond to an EntityType.
@@ -432,10 +437,10 @@ As you can see in the example above, there are only two SQL statements used to f
 
 [TIP]
 ====
-Without `@BatchSize`, you'd run into a N+1 query issue, so,
+Without `@BatchSize`, you'd run into a N + 1 query issue, so,
 instead of 2 SQL statements, there would be 10 queries needed for fetching the `Employee` child entities.
 
-However, although `@BatchSize` is better than running into an N+1 query issue,
+However, although `@BatchSize` is better than running into an N + 1 query issue,
 most of the time, a DTO projection or a `JOIN FETCH` is a much better alternative since
 it allows you to fetch all the required data with a single query.
 ====
@@ -447,12 +452,11 @@ Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
 you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following ``FetchMode``s:
 
 SELECT::
-	The association is going to be fetched lazily using a secondary select for each individual entity,
-	collection, or join load.
-	It's equivalent to JPA `FetchType.LAZY` fetching strategy.
+	The association is going to be fetched using a secondary select for each individual entity,
+	collection, or join load. This mode can be used for either `FetchType.EAGER` or `FetchType.LAZY`.
 JOIN::
-	Use an outer join to load the related entities, collections or joins when using direct fetching.
-	It's equivalent to JPA `FetchType.EAGER` fetching strategy.
+	Use an outer join to load the related entities, collections or joins when using direct fetching. This mode
+	can only be used for `FetchType.EAGER`.
 SUBSELECT::
 	Available for collections only. When accessing a non-initialized collection,
 	this fetch mode will trigger loading all elements of all collections of the same role for all owners associated
@@ -491,7 +495,7 @@ include::{extrasdir}/fetching-strategies-fetch-mode-select-example.sql[]
 ====
 
 The more `Department` entities are fetched by the first query, the more secondary `SELECT` statements are executed to initialize the `employees` collections.
-Therefore, `FetchMode.SELECT` can lead to N+1 query issues.
+Therefore, `FetchMode.SELECT` can lead to N + 1 query issue.
 
 [[fetching-fetchmode-subselect]]
 === `FetchMode.SUBSELECT`
@@ -511,7 +515,7 @@ include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-
 Now, we are going to fetch all `Department` entities that match a given filtering predicate
 and then navigate their `employees` collections.
 
-Hibernate is going to avoid the N+1 query issue by generating a single SQL statement to initialize all `employees` collections
+Hibernate is going to avoid the N + 1 query issue by generating a single SQL statement to initialize all `employees` collections
 for all `Department` entities that were previously fetched.
 Instead of using passing all entity identifiers, Hibernate simply reruns the previous query that fetched the `Department` entities.
 
@@ -643,5 +647,5 @@ include::{extrasdir}/fetching-LazyCollection-select-example.sql[]
 ====
 Therefore, the child entities were fetched one after the other without triggering a full collection initialization.
 
-For this reason, caution is advised since accessing all elements using `LazyCollectionOption.EXTRA` can lead to N+1 query issues.
+For this reason, caution is advised since accessing all elements using `LazyCollectionOption.EXTRA` can lead to N + 1 query issue.
 ====

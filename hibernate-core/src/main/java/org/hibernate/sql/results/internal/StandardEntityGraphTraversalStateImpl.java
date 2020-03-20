@@ -21,7 +21,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.sql.results.graph.EntityGraphSemanticTraverser;
+import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
@@ -29,12 +29,12 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 /**
  * @author Nathan Xu
  */
-public class StandardEntityGraphSemanticTraverserImpl implements EntityGraphSemanticTraverser {
+public class StandardEntityGraphTraversalStateImpl implements EntityGraphTraversalState {
 
 	private final GraphSemantic graphSemantic;
 	private GraphImplementor currentGraphContext;
 
-	public StandardEntityGraphSemanticTraverserImpl(EffectiveEntityGraph effectiveEntityGraph) {
+	public StandardEntityGraphTraversalStateImpl(EffectiveEntityGraph effectiveEntityGraph) {
 		assert effectiveEntityGraph != null;
 		if ( effectiveEntityGraph.getSemantic() == null ) {
 			throw new IllegalArgumentException( "The graph has not defined semantic: " + effectiveEntityGraph );
@@ -49,7 +49,7 @@ public class StandardEntityGraphSemanticTraverserImpl implements EntityGraphSema
 	}
 
 	@Override
-	public Result traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
+	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		final GraphImplementor previousContextRoot = currentGraphContext;
 		AttributeNodeImplementor attributeNode = null;
 		if ( appliesTo( fetchParent ) ) {
@@ -101,7 +101,7 @@ public class StandardEntityGraphSemanticTraverserImpl implements EntityGraphSema
 				joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
 			}
 		}
-		return new Result( previousContextRoot, fetchTiming, joined );
+		return new TraversalResult( previousContextRoot, fetchTiming, joined );
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

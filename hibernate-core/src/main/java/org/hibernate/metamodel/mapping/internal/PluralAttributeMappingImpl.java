@@ -382,14 +382,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 									creationState.getSqlAstCreationState().getSqlExpressionResolver(),
 									creationState.getSqlAstCreationState().getCreationContext()
 							);
-
-							lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
-							sqlAstCreationState.getFromClauseAccess().registerTableGroup(
-									fetchablePath,
-									tableGroupJoin.getJoinedGroup()
-							);
-
 							return tableGroupJoin.getJoinedGroup();
 						}
 				);

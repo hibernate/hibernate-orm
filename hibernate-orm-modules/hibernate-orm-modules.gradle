@@ -26,7 +26,7 @@ apply plugin: 'project-report'
 //project.tasks.javadoc.enabled = false
 
 evaluationDependsOn( ':hibernate-core' )
-evaluationDependsOn( ':hibernate-envers' )
+//evaluationDependsOn( ':hibernate-envers' )
 
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...
@@ -106,7 +106,7 @@ provision {
 
 dependencies {
 	testCompile project( ":hibernate-core" )
-	testCompile project( ":hibernate-envers" )
+//	testCompile project( ":hibernate-envers" )
 	testCompile libraries.junit
 	testCompile 'org.antlr:antlr4-runtime:4.7.1'
 
@@ -120,7 +120,7 @@ dependencies {
 	featurePack libraries.byteBuddy
 	featurePack libraries.antlr4_runtime
 	featurePack project( ":hibernate-core" )
-	featurePack project( ":hibernate-envers" )
+//	featurePack project( ":hibernate-envers" )
 	featurePack "org.wildfly:jipijapa-hibernate5:${wildflyVersion}"
 	featurePack "org.antlr:antlr4-runtime:4.7.1"
 }

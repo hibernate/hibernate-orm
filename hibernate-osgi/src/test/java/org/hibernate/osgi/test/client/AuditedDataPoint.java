@@ -10,13 +10,11 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.envers.Audited;
-
 /**
  * @author Chris Cranford
  */
 @Entity
-@Audited
+//@Audited
 public class AuditedDataPoint {
 	@Id
 	@GeneratedValue

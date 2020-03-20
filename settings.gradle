@@ -11,7 +11,8 @@ if ( !JavaVersion.current().java8Compatible ) {
 include 'hibernate-core'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'
-include 'hibernate-envers'
+// todo (6.0): re-enable hibernate-envers
+//include 'hibernate-envers'
 // todo (6.0): re-enable hibernate-spatial
 //include 'hibernate-spatial'
 

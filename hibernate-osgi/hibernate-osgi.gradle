@@ -122,18 +122,18 @@ karaf {
 			// Most Hibernate modules declare OSGi metadata through blueprints, so we need this feature
 			feature 'aries-blueprint'
 		}
-		// NOTE : would like to include spatial as well, but we need to wait for
-		//		it to not define dependency on postgresql driver
-		feature {
-			name = 'hibernate-envers'
-			description = 'Feature for easily adding Envers support to hibernate-orm'
-			includeProject = false
-			configurations 'hibernateEnvers'
-			feature('hibernate-orm') {
-				version = project.version
-			}
-		}
-		// The hibernate-infinispan feature is now provided by the Infinispan project.
+//		// NOTE : would like to include spatial as well, but we need to wait for
+//		//		it to not define dependency on postgresql driver
+//		feature {
+//			name = 'hibernate-envers'
+//			description = 'Feature for easily adding Envers support to hibernate-orm'
+//			includeProject = false
+//			configurations 'hibernateEnvers'
+//			feature('hibernate-orm') {
+//				version = project.version
+//			}
+//		}
+//		// The hibernate-infinispan feature is now provided by the Infinispan project.
 	}
 }
 

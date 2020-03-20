@@ -15,7 +15,6 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -120,14 +119,6 @@ public final class FetchStrategyHelper {
 			FetchStyle style,
 			AssociationType type,
 			SessionFactoryImplementor sessionFactory) {
-		if ( type instanceof ToOne ) {
-			if ( ( (ToOne) type ).isLazy() ) {
-				return FetchTiming.DELAYED;
-			}
-			else {
-				return FetchTiming.IMMEDIATE;
-			}
-		}
 		switch ( style ) {
 			case JOIN: {
 				return FetchTiming.IMMEDIATE;

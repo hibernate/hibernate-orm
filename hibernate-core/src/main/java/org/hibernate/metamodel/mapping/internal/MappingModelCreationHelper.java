@@ -34,6 +34,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -1041,59 +1042,72 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		ToOne value = (ToOne) bootProperty.getValue();
-		final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
+		if ( bootProperty.getValue() instanceof ToOne ) {
+			final ToOne value = (ToOne) bootProperty.getValue();
+			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
+			final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess = getStateArrayContributorMetadataAccess(
+					bootProperty,
+					attrType,
+					propertyAccess,
+					cascadeStyle,
+					creationProcess
+			);
+			SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
-		final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess = getStateArrayContributorMetadataAccess(
-				bootProperty,
-				attrType,
-				propertyAccess,
-				cascadeStyle,
-				creationProcess
-		);
-		SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-
-		final AssociationType type = (AssociationType) bootProperty.getType();
-		final FetchStyle fetchStyle = FetchStrategyHelper
-				.determineFetchStyleByMetadata(
-						bootProperty.getValue().getFetchMode(),
-						type,
-						sessionFactory
-				);
-
-		final FetchTiming fetchTiming = FetchStrategyHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
-
-		final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
-
-		final SingularAssociationAttributeMapping attributeMapping = new SingularAssociationAttributeMapping(
-				attrName,
-				stateArrayPosition,
-				(ToOne) bootProperty.getValue(),
-				stateArrayContributorMetadataAccess,
-				fetchStrategy,
-				entityPersister,
-				declaringType,
-				propertyAccess
-		);
-		creationProcess.registerInitializationCallback(
-				() -> {
-					final Dialect dialect = creationProcess.getCreationContext()
-							.getSessionFactory()
-							.getJdbcServices()
-							.getDialect();
-
-					MappingModelCreationHelper.interpretKeyDescriptor(
-							attributeMapping,
-							bootProperty,
-							(ToOne) bootProperty.getValue(),
-							declaringType.findContainingEntityMapping(),
-							dialect,
-							creationProcess
+			final AssociationType type = (AssociationType) bootProperty.getType();
+			final FetchStyle fetchStyle = FetchStrategyHelper
+					.determineFetchStyleByMetadata(
+							bootProperty.getValue().getFetchMode(),
+							type,
+							sessionFactory
 					);
-					return true;
-				}
-		);
-		return attributeMapping;
-	}
 
+			final FetchTiming fetchTiming;
+
+			if ( fetchStyle == fetchStyle.JOIN
+					|| ( value instanceof OneToOne && value.isNullable() )
+					|| !( value ).isLazy() ) {
+				fetchTiming = FetchTiming.IMMEDIATE;
+			}
+			else {
+				fetchTiming = FetchStrategyHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+			}
+
+			final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
+
+			final SingularAssociationAttributeMapping attributeMapping = new SingularAssociationAttributeMapping(
+					attrName,
+					stateArrayPosition,
+					(ToOne) bootProperty.getValue(),
+					stateArrayContributorMetadataAccess,
+					fetchStrategy,
+					entityPersister,
+					declaringType,
+					propertyAccess
+			);
+
+			creationProcess.registerInitializationCallback(
+					() -> {
+						final Dialect dialect = creationProcess.getCreationContext()
+								.getSessionFactory()
+								.getJdbcServices()
+								.getDialect();
+
+						MappingModelCreationHelper.interpretKeyDescriptor(
+								attributeMapping,
+								bootProperty,
+								(ToOne) bootProperty.getValue(),
+								declaringType.findContainingEntityMapping(),
+								dialect,
+								creationProcess
+						);
+						return true;
+					}
+			);
+			return attributeMapping;
+		}
+		else {
+			throw new NotYetImplementedFor6Exception( "AnyType support has not yet been implemented" );
+		}
+	}
 }

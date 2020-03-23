@@ -19,7 +19,7 @@ public interface SingleUniqueKeyEntityLoader<T> extends SingleEntityLoader {
 	 * Load by unique key value
 	 */
 	@Override
-	T load(Object ukValue, LockOptions lockOptions, SharedSessionContractImplementor session);
+	T load(Object ukValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session);
 
 	/**
 	 * Resolve the matching id

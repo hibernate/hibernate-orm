@@ -18,6 +18,7 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -73,14 +74,23 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	T load(
 			Object restrictedValue,
 			LockOptions lockOptions,
+			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		return load( restrictedValue, lockOptions, null, session );
+		return load( restrictedValue, lockOptions, null, readOnly, session );
+	}
+
+	T load(
+			Object restrictedValue,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		return load( restrictedValue, lockOptions, null, null, session );
 	}
 
 	T load(
 			Object restrictedValue,
 			LockOptions lockOptions,
 			Object entityInstance,
+			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -145,7 +155,12 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 					@Override
 					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
+						return new QueryOptionsAdapter() {
+							@Override
+							public Boolean isReadOnly() {
+								return readOnly;
+							}
+						};
 					}
 
 					@Override

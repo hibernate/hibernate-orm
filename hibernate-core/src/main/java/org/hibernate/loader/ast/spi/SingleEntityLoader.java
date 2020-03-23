@@ -22,5 +22,9 @@ public interface SingleEntityLoader<T> extends Loader {
 	/**
 	 * Load an entity by a primary or unique key value.
 	 */
-	T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session);
+	T load(Object key, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session);
+
+	default T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		return load( key, lockOptions, session );
+	}
 }

@@ -19,6 +19,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -78,7 +79,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),
-				ListResultsConsumer.instance(uniqueFilter)
+				ListResultsConsumer.instance( uniqueFilter )
 		);
 	}
 
@@ -124,6 +125,37 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private <T, R> T executeQuery(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			Function<String, PreparedStatement> statementCreator,
+			ResultsConsumer<T, R> resultsConsumer) {
+		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
+		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+		Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
+		if ( readOnly != null ) {
+			// The read-only/modifiable mode for the query was explicitly set.
+			// Temporarily set the default read-only/modifiable setting to the query's setting.
+			persistenceContext.setDefaultReadOnly( readOnly );
+		}
+		try {
+			return doExecuteQuery(
+					jdbcSelect,
+					jdbcParameterBindings,
+					executionContext,
+					rowTransformer,
+					statementCreator,
+					resultsConsumer
+			);
+		}
+		finally {
+			if ( readOnly != null ) {
+				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
+			}
+		}
+	}
+	private <T, R> T doExecuteQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
@@ -202,7 +234,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			// todo (6.0) : see notes on
 			afterLoadAction.afterLoad( executionContext.getSession(), null, null );
 		}
-
 
 		return result;
 	}

@@ -51,8 +51,10 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -178,15 +180,35 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor producer) {
 		super( producer );
 
-		if ( resultType != null ) {
-			if ( sqmStatement instanceof SqmSelectStatement ) {
-				//noinspection unchecked
+		if ( sqmStatement instanceof SqmSelectStatement ) {
+			final SqmSelectStatement sqmSelectStatement = (SqmSelectStatement) sqmStatement;
+			final SqmQuerySpec sqmQuerySpec = sqmSelectStatement.getQuerySpec();
+			final List<SqmSelection> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
+
+			// make sure there is at least one root
+			final List<SqmRoot> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+				throw new IllegalArgumentException( "Criteria did not define any query roots" );
+			}
+
+			if ( sqmSelections == null || sqmSelections.isEmpty() ) {
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					final SqmRoot sqmRoot = sqmRoots.get( 0 );
+					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
+				}
+				else {
+					throw new IllegalArgumentException(  );
+				}
+			}
+
+			if ( resultType != null ) {
 				checkQueryReturnType( (SqmSelectStatement<R>) sqmStatement, resultType, producer.getFactory() );
 			}
-			else {
-				assert sqmStatement instanceof SqmDmlStatement;
-				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
-			}
+		}
+		else {
+			assert sqmStatement instanceof SqmDmlStatement;
+			throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 		}
 
 		this.hqlString = "<criteria>";

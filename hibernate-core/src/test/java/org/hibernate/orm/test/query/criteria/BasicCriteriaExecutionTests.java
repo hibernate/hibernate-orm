@@ -16,6 +16,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.IrrelevantEntity;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
@@ -48,6 +49,18 @@ public class BasicCriteriaExecutionTests extends BaseNonConfigCoreFunctionalTest
 
 		inSession(
 				session -> session.createQuery( criteria ).list()
+		);
+	}
+
+	@Test
+	public void testIt() {
+		inSession(
+				session -> {
+					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+					CriteriaQuery<BasicEntity> criteria = criteriaBuilder.createQuery( BasicEntity.class );
+					criteria.from( BasicEntity.class );
+					List<BasicEntity> results = session.createQuery( criteria ).list();
+				}
 		);
 	}
 

@@ -185,8 +185,6 @@ public class SessionImpl
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
-	
-	private transient GraphImplementor fetchGraphLoadContext;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
@@ -2748,10 +2746,6 @@ public class SessionImpl
 				lockOptions = buildLockOptions( lockModeType, properties );
 				loadAccess.with( lockOptions );
 			}
-			
-			if ( getLoadQueryInfluencers().getEffectiveEntityGraph().getSemantic() == GraphSemantic.FETCH ) {
-				setFetchGraphLoadContext( getLoadQueryInfluencers().getEffectiveEntityGraph().getGraph() );
-			}
 
 			return loadAccess.load( primaryKey );
 		}
@@ -2797,7 +2791,6 @@ public class SessionImpl
 		finally {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
 			getLoadQueryInfluencers().setReadOnly( null );
-			setFetchGraphLoadContext( null );
 		}
 	}
 
@@ -3160,16 +3153,6 @@ public class SessionImpl
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		checkOpen();
 		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
-	}
-	
-	@Override
-	public GraphImplementor getFetchGraphLoadContext() {
-		return this.fetchGraphLoadContext;
-	}
-	
-	@Override
-	public void setFetchGraphLoadContext(GraphImplementor fetchGraphLoadContext) {
-		this.fetchGraphLoadContext = fetchGraphLoadContext;
 	}
 
 	/**

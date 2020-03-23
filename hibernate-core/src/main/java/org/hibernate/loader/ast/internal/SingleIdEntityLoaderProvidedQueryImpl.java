@@ -57,7 +57,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 	}
 
 	@Override
-	public T load(Object pkValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
 		//noinspection unchecked
 		final QueryImplementor<T> query = namedQueryMemento.toQuery(
 				session,
@@ -74,11 +74,12 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 			Object pkValue,
 			Object entityInstance,
 			LockOptions lockOptions,
+			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( entityInstance != null ) {
 			throw new UnsupportedOperationException(  );
 		}
-		return load( pkValue, lockOptions, session );
+		return load( pkValue, lockOptions, readOnly, session );
 	}
 
 	@Override

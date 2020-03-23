@@ -2617,7 +2617,15 @@ public abstract class AbstractEntityPersister
 			String propertyName,
 			Object uniqueKey,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.READ, session );
+		return loadByUniqueKey( propertyName, uniqueKey, null, session );
+	}
+
+	public Object loadByUniqueKey(
+			String propertyName,
+			Object uniqueKey,
+			Boolean readOnly,
+			SharedSessionContractImplementor session) throws HibernateException {
+		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.READ, readOnly, session );
 	}
 
 	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
@@ -4459,25 +4467,25 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
-		return doLoad( id, optionalObject, lockOptions, session, null );
+		return doLoad( id, optionalObject, lockOptions, null, session );
 	}
 
 	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
 			throws HibernateException {
-		return doLoad( id, optionalObject, lockOptions, session, readOnly );
+		return doLoad( id, optionalObject, lockOptions, readOnly, session );
 	}
 
-	private Object doLoad(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
+	private Object doLoad(Object id, Object optionalObject, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 		}
 
 		if ( optionalObject == null ) {
-			return singleIdEntityLoader.load( id, lockOptions, session );
+			return singleIdEntityLoader.load( id, lockOptions, readOnly, session );
 		}
 		else {
-			return singleIdEntityLoader.load( id, optionalObject, lockOptions, session );
+			return singleIdEntityLoader.load( id, optionalObject, lockOptions, readOnly, session );
 		}
 	}
 

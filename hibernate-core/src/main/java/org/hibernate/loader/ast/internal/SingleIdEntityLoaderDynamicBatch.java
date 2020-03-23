@@ -21,6 +21,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -55,7 +56,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 	}
 
 	@Override
-	public T load(Object pkValue, LockOptions lockOptions, SharedSessionContractImplementor session) {
+	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
 		final Object[] batchIds = session.getPersistenceContextInternal()
 				.getBatchFetchQueue()
 				.getBatchLoadableEntityIds( getLoadable(), pkValue, maxBatchSize );
@@ -64,7 +65,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		if ( numberOfIds <= 1 ) {
 			initializeSingleIdLoaderIfNeeded( session );
 
-			final T result = singleIdLoader.load( pkValue, lockOptions, session );
+			final T result = singleIdLoader.load( pkValue, lockOptions, readOnly, session );
 			if ( result == null ) {
 				// There was no entity with the specified ID. Make sure the EntityKey does not remain
 				// in the batch to avoid including it in future batches that get executed.
@@ -147,7 +148,12 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 
 					@Override
 					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
+						return new QueryOptionsAdapter() {
+							@Override
+							public Boolean isReadOnly() {
+								return readOnly;
+							}
+						};
 					}
 
 					@Override
@@ -181,9 +187,10 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 			Object pkValue,
 			Object entityInstance,
 			LockOptions lockOptions,
+			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		initializeSingleIdLoaderIfNeeded( session );
-		return singleIdLoader.load( pkValue, entityInstance, lockOptions, session );
+		return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
 	}
 
 	private void initializeSingleIdLoaderIfNeeded(SharedSessionContractImplementor session) {

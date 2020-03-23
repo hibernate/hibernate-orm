@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -57,6 +58,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 	public T load(
 			Object ukValue,
 			LockOptions lockOptions,
+			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
@@ -117,7 +119,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 					@Override
 					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
+						return new QueryOptionsAdapter() {
+							@Override
+							public Boolean isReadOnly() {
+								return readOnly;
+							}
+						};
 					}
 
 					@Override

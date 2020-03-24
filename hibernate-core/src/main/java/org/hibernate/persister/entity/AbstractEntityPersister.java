@@ -4740,6 +4740,10 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isVersioned();
 	}
 
+	public boolean keepReference(){
+		return entityMetamodel.keepReference();
+	}
+
 	public boolean isIdentifierAssignedByInsert() {
 		return entityMetamodel.getIdentifierProperty().isIdentifierAssignedByInsert();
 	}

@@ -393,8 +393,8 @@ class Antlr4GenerationTask extends DefaultTask {
     List<GrammarDescriptor> grammarDescriptors = [
             new GrammarDescriptor( HQL_PCKG, 'HqlLexer' ),
             new GrammarDescriptor( HQL_PCKG, 'HqlParser' ),
-            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementLexer' ),
-            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlStatementParser' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlScriptLexer' ),
+            new GrammarDescriptor( IMPORT_SQL_PCKG, 'SqlScriptParser' ),
             new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageLexer' ),
             new GrammarDescriptor( GRAPH_PCKG, 'GraphLanguageParser' ),
             new GrammarDescriptor( ORDER_PCKG, 'OrderingLexer' ),

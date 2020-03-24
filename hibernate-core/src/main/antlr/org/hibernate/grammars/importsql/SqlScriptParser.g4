@@ -1,7 +1,7 @@
-parser grammar SqlStatementParser;
+parser grammar SqlScriptParser;
 
 options {
-	tokenVocab=SqlStatementLexer;
+	tokenVocab=SqlScriptLexer;
 }
 
 @header {
@@ -14,16 +14,15 @@ options {
 package org.hibernate.grammars.importsql;
 }
 
-
-statements
-    :   (statement)*
-    ;
-
-statement
-	: (text)* STMT_END
+script
+	: commandBlock+ EOF
 	;
 
-text :
- 	WORD | QUOTED_TEXT
+commandBlock
+	: command STMT_END
+	;
+
+command
+	: NOT_STMT_END*
 	;
 

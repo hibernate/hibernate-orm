@@ -9,19 +9,18 @@ package org.hibernate.tool.hbm2ddl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.grammars.importsql.SqlStatementParser;
-import org.hibernate.grammars.importsql.SqlStatementParserBaseListener;
+import org.hibernate.grammars.importsql.SqlScriptParser;
+import org.hibernate.grammars.importsql.SqlScriptParserBaseListener;
 
 /**
  * @author Andrea Boriero
  */
-public class SqlStatementParserListenerImpl extends SqlStatementParserBaseListener {
+public class SqlStatementParserListenerImpl extends SqlScriptParserBaseListener {
 	private final List<String> statements = new ArrayList<>();
 
 	@Override
-	public void exitStatement(SqlStatementParser.StatementContext ctx) {
-		super.exitStatement( ctx );
-		statements.add( ctx.getText().replace( System.lineSeparator(), " " ).trim() );
+	public void exitCommand(SqlScriptParser.CommandContext ctx) {
+		statements.add( ctx.getText() );
 	}
 
 	public List<String> getStatements(){

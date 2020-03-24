@@ -70,6 +70,7 @@ import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
@@ -1033,7 +1034,13 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		throw new NotYetImplementedFor6Exception();
+		if ( filterPredicate.getFilterFragment() != null ) {
+			appendSql( filterPredicate.getFilterFragment() );
+			for (JdbcParameter jdbcParameter : filterPredicate.getJdbcParameters()) {
+				parameterBinders.add( (AbstractJdbcParameter) jdbcParameter );
+				jdbcParameters.addParameter( jdbcParameter );
+			}
+		}
 	}
 
 	@Override

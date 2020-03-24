@@ -6,7 +6,13 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 
 /**
  * Represents a filter applied to an entity/collection.
@@ -16,7 +22,18 @@ import org.hibernate.sql.ast.SqlAstWalker;
  * @author Steve Ebersole
  */
 public class FilterPredicate implements Predicate {
-	// todo : need to "carry forward" the FilterConfiguration information into the ImprovedEntityPersister so we have access to the alias injections
+	private final String filterFragment;
+	private final List<JdbcParameter> jdbcParameters;
+	private final List<FilterHelper.TypedValue> jdbcParameterTypedValues;
+
+	public FilterPredicate(String filterFragment, List<FilterHelper.TypedValue> jdbcParameterTypedValues) {
+		this.filterFragment = filterFragment;
+		jdbcParameters = new ArrayList<>( jdbcParameterTypedValues.size() );
+		this.jdbcParameterTypedValues = jdbcParameterTypedValues;
+		for (int i = 0; i < jdbcParameterTypedValues.size(); i++) {
+			jdbcParameters.add( new JdbcParameterImpl( null ) );
+		}
+	}
 
 	@Override
 	public boolean isEmpty() {
@@ -26,5 +43,17 @@ public class FilterPredicate implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitFilterPredicate( this );
+	}
+
+	public String getFilterFragment() {
+		return filterFragment;
+	}
+
+	public List<JdbcParameter> getJdbcParameters() {
+		return jdbcParameters;
+	}
+
+	public List<FilterHelper.TypedValue> getJdbcParameterTypedValues() {
+		return jdbcParameterTypedValues;
 	}
 }

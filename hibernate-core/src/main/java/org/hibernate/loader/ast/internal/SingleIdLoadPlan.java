@@ -122,6 +122,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			);
 		}
 
+		sqlAst.getQuerySpec().bindFilterPredicateParameters( jdbcParameterBindings );
+
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,

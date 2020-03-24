@@ -526,7 +526,12 @@ public class SqlTreePrinter implements SqlAstWalker {
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		throw new NotYetImplementedFor6Exception();
+		logNode(
+				"filter-predicate",
+				() -> {
+					logNode( filterPredicate.getFilterFragment() );
+				}
+		);
 	}
 
 	@Override

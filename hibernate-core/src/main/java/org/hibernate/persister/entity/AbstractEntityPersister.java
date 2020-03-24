@@ -33,6 +33,7 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -152,6 +153,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -201,6 +203,7 @@ import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AnyType;
@@ -4568,8 +4571,29 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
-		return loadQueryInfluencers.hasEnabledFilters()
-				&& filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() );
+		if ( loadQueryInfluencers.hasEnabledFilters() ) {
+			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
+				return true;
+			}
+			// we still need to verify collection fields to be eagerly loaded by 'join'
+			final NonIdentifierAttribute[] attributes = entityMetamodel.getProperties();
+			for ( NonIdentifierAttribute attribute : attributes ) {
+				if ( attribute instanceof EntityBasedAssociationAttribute ) {
+					final AssociationType associationType = ( (EntityBasedAssociationAttribute) attribute ).getType();
+					if ( associationType instanceof CollectionType ) {
+						final Joinable joinable = associationType.getAssociatedJoinable( getFactory() );
+						if ( joinable.isCollection() ) {
+							final QueryableCollection collectionPersister = (QueryableCollection) joinable;
+							if ( collectionPersister.getFetchMode() == FetchMode.JOIN
+									&& collectionPersister.isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	public final boolean isAllNull(Object[] array, int tableNumber) {

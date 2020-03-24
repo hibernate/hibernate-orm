@@ -975,7 +975,7 @@ public abstract class CollectionBinder {
 		FilterJoinTable simpleFilterJoinTable = property.getAnnotation( FilterJoinTable.class );
 		if ( simpleFilterJoinTable != null ) {
 			if ( hasAssociationTable ) {
-				collection.addFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(),
+				collection.addManyToManyFilter(simpleFilterJoinTable.name(), simpleFilterJoinTable.condition(),
 						simpleFilterJoinTable.deduceAliasInjectionPoints(),
 						toAliasTableMap(simpleFilterJoinTable.aliases()), toAliasEntityMap(simpleFilterJoinTable.aliases()));
 					}
@@ -990,7 +990,7 @@ public abstract class CollectionBinder {
 		if ( filterJoinTables != null ) {
 			for (FilterJoinTable filter : filterJoinTables.value()) {
 				if ( hasAssociationTable ) {
-					collection.addFilter(filter.name(), filter.condition(),
+					collection.addManyToManyFilter(filter.name(), filter.condition(),
 							filter.deduceAliasInjectionPoints(),
 							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}

@@ -7,13 +7,11 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
@@ -26,28 +24,23 @@ public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
 
-	protected abstract Reader reader();
-
-	@Override
-	public void prepare() {
-		log.executingImportScript( getScriptDescription() );
-	}
-
 	protected abstract String getScriptDescription();
 
-	@Override
-	public List<String> read(ImportSqlCommandExtractor commandExtractor) {
-		final String[] commands = commandExtractor.extractCommands( reader() );
-		if ( commands == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Arrays.asList( commands );
-		}
-	}
+	protected abstract Reader prepareReader();
+
+	protected abstract void releaseReader(Reader reader);
 
 	@Override
-	public void release() {
-		// by default there is nothing to do
+	public List<String> extract(Function<Reader, List<String>> extracter) {
+		log.executingImportScript( getScriptDescription() );
+
+		final Reader inputReader = prepareReader();
+
+		try {
+			return extracter.apply( inputReader );
+		}
+		finally {
+			releaseReader( inputReader );
+		}
 	}
 }

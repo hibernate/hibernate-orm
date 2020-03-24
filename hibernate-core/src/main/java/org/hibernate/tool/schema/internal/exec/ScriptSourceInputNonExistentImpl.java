@@ -6,10 +6,11 @@
  */
 package org.hibernate.tool.schema.internal.exec;
 
+import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
@@ -24,15 +25,7 @@ public class ScriptSourceInputNonExistentImpl implements ScriptSourceInput {
 	public static final ScriptSourceInputNonExistentImpl INSTANCE = new ScriptSourceInputNonExistentImpl();
 
 	@Override
-	public void prepare() {
-	}
-
-	@Override
-	public List<String> read(ImportSqlCommandExtractor commandExtractor) {
+	public List<String> extract(Function<Reader, List<String>> extracter) {
 		return Collections.emptyList();
-	}
-
-	@Override
-	public void release() {
 	}
 }

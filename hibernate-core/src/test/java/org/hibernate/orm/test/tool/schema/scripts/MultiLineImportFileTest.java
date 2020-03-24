@@ -4,9 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.fileimport;
+package org.hibernate.orm.test.tool.schema.scripts;
 
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -39,59 +38,43 @@ import static org.junit.Assert.assertNull;
 public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/fileimport/multi-line-statements.sql" );
+		cfg.setProperty(
+				Environment.HBM2DDL_IMPORT_FILES,
+				"/org/hibernate/orm/test/tool/schema/scripts/multi-line-statements.sql"
+		);
 		cfg.setProperty(
 				Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
 				MultipleLinesSqlCommandExtractor.class.getName()
 		);
 	}
 
+
+	@Override
+	protected String getBaseForMappings() {
+		return "";
+	}
+
 	@Override
 	public String[] getMappings() {
-		return NO_MAPPINGS;
+		return new String[] {
+				"/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml"
+		};
 	}
 
 	@Test
 	public void testImportFile() throws Exception {
-		Session s = openSession();
-		final Transaction tx = s.beginTransaction();
-
-		Long count = (Long) s.createNativeQuery( "SELECT COUNT(*) FROM test_data" ).uniqueResult();
-		assertEquals( "Incorrect row number", 3L, count.longValue() );
-
-		final String multiLineText = (String) s.createNativeQuery( "SELECT text FROM test_data WHERE id = 2" )
-				.uniqueResult();
-		//  "Multi-line comment line 1\n-- line 2'\n/* line 3 */"
-		final String expected = String.format( "Multi-line comment line 1%n-- line 2'%n/* line 3 */" );
-		assertEquals( "Multi-line string inserted incorrectly", expected, multiLineText );
-
-		String empty = (String) s.createNativeQuery( "SELECT text FROM test_data WHERE id = 3" ).uniqueResult();
-		assertNull( "NULL value inserted incorrectly", empty );
-
-		tx.commit();
-		s.close();
+		inTransaction(
+				session -> {
+					final Long count = session.createQuery( "select count(h.id) from Human h", Long.class ).uniqueResult();
+					assertEquals( "Incorrect row count", 3L, count.longValue() );
+				}
+		);
 	}
 
 	@AfterClassOnce
 	public void tearDown() {
-		final Session session = openSession();
-		session.getTransaction().begin();
-		session.doWork( new Work() {
-			@Override
-			public void execute(Connection connection) throws SQLException {
-				PreparedStatement statement = null;
-				try {
-					statement = connection.prepareStatement( "DROP TABLE test_data" );
-					statement.execute();
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			}
-		} );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> session.createQuery( "delete Human" ).executeUpdate()
+		);
 	}
 }

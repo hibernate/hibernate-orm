@@ -11,7 +11,7 @@ import java.io.Reader;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
- * ScriptSourceInput implementation for explicitly given Readers.  The readers are not released by this class.
+ * ScriptSourceInput implementation for explicitly given Readers.
  *
  * @author Steve Ebersole
  */
@@ -28,13 +28,18 @@ public class ScriptSourceInputFromReader extends AbstractScriptSourceInput imple
 	}
 
 	@Override
-	protected Reader reader() {
+	protected String getScriptDescription() {
+		return "[injected ScriptSourceInputFromReader script]";
+	}
+
+	@Override
+	protected Reader prepareReader() {
 		return reader;
 	}
 
 	@Override
-	protected String getScriptDescription() {
-		return "[injected ScriptSourceInputFromReader script]";
+	protected void releaseReader(Reader reader) {
+		// nothing to do
 	}
 
 	@Override

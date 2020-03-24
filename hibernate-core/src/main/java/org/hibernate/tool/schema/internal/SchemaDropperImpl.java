@@ -41,7 +41,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
@@ -56,6 +55,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
@@ -144,40 +144,38 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Dialect dialect,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		final ImportSqlCommandExtractor commandExtractor = tool.getServiceRegistry().getService( ImportSqlCommandExtractor.class );
+		final SqlScriptCommandExtractor commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
 		if ( sourceDescriptor.getSourceType() == SourceType.SCRIPT ) {
-			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA ) {
 			dropFromMetadata( metadata, options, dialect, formatter, targets );
 		}
 		else if ( sourceDescriptor.getSourceType() == SourceType.METADATA_THEN_SCRIPT ) {
 			dropFromMetadata( metadata, options, dialect, formatter, targets );
-			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 		}
 		else {
-			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+			dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 			dropFromMetadata( metadata, options, dialect, formatter, targets );
 		}
 	}
 
 	private void dropFromScript(
 			ScriptSourceInput scriptSourceInput,
-			ImportSqlCommandExtractor commandExtractor,
+			SqlScriptCommandExtractor commandExtractor,
 			Formatter formatter,
+			Dialect dialect,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		scriptSourceInput.prepare();
-		try {
-			for ( String command : scriptSourceInput.read( commandExtractor ) ) {
-				applySqlString( command, formatter, options, targets );
-			}
-		}
-		finally {
-			scriptSourceInput.release();
+		final List<String> commands = scriptSourceInput.extract(
+				reader -> commandExtractor.extractCommands( reader, dialect )
+		);
+		for ( int i = 0; i < commands.size(); i++ ) {
+			applySqlString( commands.get( i ), formatter, options, targets );
 		}
 	}
 

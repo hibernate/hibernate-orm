@@ -42,7 +42,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
@@ -57,6 +56,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
@@ -153,14 +153,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			ExecutionOptions options,
 			SourceDescriptor sourceDescriptor,
 			GenerationTarget... targets) {
-		final ImportSqlCommandExtractor commandExtractor = tool.getServiceRegistry().getService( ImportSqlCommandExtractor.class );
+		final SqlScriptCommandExtractor commandExtractor = tool.getServiceRegistry().getService( SqlScriptCommandExtractor.class );
 
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
 
 		switch ( sourceDescriptor.getSourceType() ) {
 			case SCRIPT: {
-				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 				break;
 			}
 			case METADATA: {
@@ -169,32 +169,31 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			}
 			case METADATA_THEN_SCRIPT: {
 				createFromMetadata( metadata, options, dialect, formatter, targets );
-				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 				break;
 			}
 			case SCRIPT_THEN_METADATA: {
-				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, options, targets );
+				createFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
 				createFromMetadata( metadata, options, dialect, formatter, targets );
 			}
 		}
 
-		applyImportSources( options, commandExtractor, format, targets );
+		applyImportSources( options, commandExtractor, format, dialect, targets );
 	}
 
 	public void createFromScript(
 			ScriptSourceInput scriptSourceInput,
-			ImportSqlCommandExtractor commandExtractor,
+			SqlScriptCommandExtractor commandExtractor,
 			Formatter formatter,
+			Dialect dialect,
 			ExecutionOptions options,
 			GenerationTarget... targets) {
-		scriptSourceInput.prepare();
-		try {
-			for ( String command : scriptSourceInput.read( commandExtractor ) ) {
-				applySqlString( command, formatter, options, targets );
-			}
-		}
-		finally {
-			scriptSourceInput.release();
+		final List<String> commands = scriptSourceInput.extract(
+				reader -> commandExtractor.extractCommands( reader, dialect )
+		);
+
+		for ( int i = 0; i < commands.size(); i++ ) {
+			applySqlString( commands.get( i ), formatter, options, targets );
 		}
 	}
 
@@ -447,8 +446,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 	private void applyImportSources(
 			ExecutionOptions options,
-			ImportSqlCommandExtractor commandExtractor,
+			SqlScriptCommandExtractor commandExtractor,
 			boolean format,
+			Dialect dialect,
 			GenerationTarget... targets) {
 		final ServiceRegistry serviceRegistry = tool.getServiceRegistry();
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
@@ -463,14 +463,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 		if ( importScriptSetting != null ) {
 			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
-			importScriptInput.prepare();
-			try {
-				for ( String command : importScriptInput.read( commandExtractor ) ) {
-					applySqlString( command, formatter, options, targets );
-				}
-			}
-			finally {
-				importScriptInput.release();
+			final List<String> commands = importScriptInput.extract(
+					reader -> commandExtractor.extractCommands( reader, dialect )
+			);
+			for ( int i = 0; i < commands.size(); i++ ) {
+				applySqlString( commands.get( i ), formatter, options, targets );
 			}
 		}
 
@@ -487,14 +484,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				continue;
 			}
 			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
-			importScriptInput.prepare();
-			try {
-				for ( String command : importScriptInput.read( commandExtractor ) ) {
-					applySqlString( command, formatter, options, targets );
-				}
-			}
-			finally {
-				importScriptInput.release();
+			final List<String> commands = importScriptInput.extract(
+					reader -> commandExtractor.extractCommands( reader, dialect )
+			);
+			for ( int i = 0; i < commands.size(); i++ ) {
+				applySqlString( commands.get( i ), formatter, options, targets );
 			}
 		}
 	}

@@ -6,9 +6,9 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import java.io.Reader;
 import java.util.List;
-
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import java.util.function.Function;
 
 /**
  * Contract for hiding the differences between a passed Reader, File or URL in terms of how we read input
@@ -17,23 +17,8 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
  * @author Steve Ebersole
  */
 public interface ScriptSourceInput {
-
 	/**
-	 * Prepare source for use, and log that this script is about to be imported.
+	 * Allows managed access to the input's Reader, returning a result
 	 */
-	void prepare();
-
-	/**
-	 * Read the abstracted script, using the given extractor to split up the input into individual commands.
-	 *
-	 * @param commandExtractor The extractor for individual commands within the input.
-	 *
-	 * @return The scripted commands
-	 */
-	List<String> read(ImportSqlCommandExtractor commandExtractor);
-
-	/**
-	 * Release this input.
-	 */
-	void release();
+	List<String> extract(Function<Reader,List<String>> extracter);
 }

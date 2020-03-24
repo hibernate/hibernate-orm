@@ -6,24 +6,13 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import java.io.Reader;
-
-import org.hibernate.service.Service;
+import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 
 /**
- * Contract for extracting statements from source/import/init scripts.
+ * @see SqlScriptCommandExtractor
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
- *
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE
+ * @deprecated Use {@link SqlScriptCommandExtractor} instead.
  */
-public interface ImportSqlCommandExtractor extends Service {
-	/**
-	 * @param reader Character stream reader of SQL script.
-	 * @return List of single SQL statements. Each command may or may not contain semicolon at the end.
-	 */
-	String[] extractCommands(Reader reader);
+@Deprecated
+public interface ImportSqlCommandExtractor extends SqlScriptCommandExtractor {
 }

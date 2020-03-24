@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.fileimport;
+package org.hibernate.orm.test.tool.schema.scripts;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -19,12 +19,11 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.tool.hbm2ddl.ImportScriptException;
-import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
+import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaCreator;
@@ -44,8 +43,6 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -56,49 +53,48 @@ import static org.junit.Assert.fail;
 		comment = "Only running the tests against H2, because the sql statements in the import file are not generic. " +
 				"This test should actually not test directly against the db")
 public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCase implements ExecutionOptions {
-
-
 	private StandardServiceRegistry ssr;
-	private static final String EXPECTED_ERROR_MESSAGE = "Import script Sql statements must terminate with a ';' char";
+
+	// NOTE regarding `HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR` setting:
+	//		the original test tried to use the "no terminal chars" sql script along with the multi-line parser
+	//		and expected the fact that the lines did not end with a `;` to throw a `SqlScriptException`.
+	//
+	//		but I don't think its reasonable to expect this situation to lead to a "SqlScriptException":
+	//			1. The default is the single-line version, so the multi-line one is an explicit override.
+	//			2. The script does not comply with the format expected by the explicit multi-line parser.
+	//
+	// 		the script is perfectly valid in terms of being a multi-line script, although it is invalid when
+	// 		interpreted that way
 
 	@Before
 	public void setUp() {
+		// NOTE : the
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.applySetting( Environment.DIALECT, CommentGenerationTest.SupportCommentDialect.class.getName() )
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES,
-						"/org/hibernate/test/fileimport/statements-without-terminal-chars.sql"
+						"/org/hibernate/orm/test/tool/schema/scripts/statements-without-terminal-chars.sql"
 				).applySetting( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" )
+				// NOTE (cont) : so here we will use the single-line variety.  we could also not
+				//		specify anything as single-line is the default
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
-						MultipleLinesSqlCommandExtractor.class.getName()
+						SingleLineSqlScriptExtractor.INSTANCE
 				)
 				.build();
 	}
 
 	@Test
 	public void testImportFile() {
-		try {
-			final SchemaCreator schemaCreator = new SchemaCreatorImpl( ssr );
+		final SchemaCreator schemaCreator = new SchemaCreatorImpl( ssr );
 
-			schemaCreator.doCreation(
-					buildMappings( ssr ),
-					this,
-					SourceDescriptorImpl.INSTANCE,
-					TargetDescriptorImpl.INSTANCE
-			);
-
-			fail( "ImportScriptException expected" );
-		}
-		catch (ImportScriptException e) {
-			final Throwable cause = e.getCause();
-
-			// todo (6.0) : fix it
-//			assertThat( cause, instanceOf( SqlStatementParser.StatementParserException.class ) );
-
-			assertThat( cause.getMessage(), is( EXPECTED_ERROR_MESSAGE ) );
-		}
+		schemaCreator.doCreation(
+				buildMappings( ssr ),
+				this,
+				SourceDescriptorImpl.INSTANCE,
+				TargetDescriptorImpl.INSTANCE
+		);
 	}
 
 	@After

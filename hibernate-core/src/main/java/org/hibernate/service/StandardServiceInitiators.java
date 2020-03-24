@@ -38,6 +38,7 @@ import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilder
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
+import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -60,7 +61,7 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
 		serviceInitiators.add( PropertyAccessStrategyResolverInitiator.INSTANCE );
 
-		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );
+		serviceInitiators.add( SqlScriptExtractorInitiator.INSTANCE );
 		serviceInitiators.add( SchemaManagementToolInitiator.INSTANCE );
 
 		serviceInitiators.add( JdbcEnvironmentInitiator.INSTANCE );

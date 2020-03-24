@@ -916,7 +916,7 @@ public final class AnnotationBinder {
 			final boolean generateDiscriminatorColumn;
 			if ( discriminatorColumnAnnotation != null ) {
 				if ( context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance() ) {
-					LOG.debugf( "Ignoring explicit DiscriminatorColumn annotation on ", clazzToProcess.getName() );
+					LOG.debugf( "Ignoring explicit DiscriminatorColumn annotation on: %s", clazzToProcess.getName() );
 					generateDiscriminatorColumn = false;
 				}
 				else {

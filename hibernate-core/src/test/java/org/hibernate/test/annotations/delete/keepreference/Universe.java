@@ -12,14 +12,14 @@ import javax.persistence.OneToOne;
 @Where(clause = "deleted = false")
 public class Universe extends BaseEntity {
 
-    @OneToOne(optional = true, fetch = FetchType.EAGER, mappedBy = "universe")
-    DeathStar deathStar;
+	@OneToOne(optional = true, fetch = FetchType.EAGER, mappedBy = "universe")
+	DeathStar deathStar;
 
-    public DeathStar getDeathStar() {
-        return deathStar;
-    }
+	public DeathStar getDeathStar() {
+		return deathStar;
+	}
 
-    public void setDeathStar(DeathStar deathStar) {
-        this.deathStar = deathStar;
-    }
+	public void setDeathStar(DeathStar deathStar) {
+		this.deathStar = deathStar;
+	}
 }

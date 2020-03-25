@@ -21,13 +21,13 @@ import java.util.Set;
 @Where(clause = "deleted = false")
 public class DeathStar extends BaseEntity {
 
-    @NotNull
+	@NotNull
 	@OneToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Vader vader;
 	@OneToMany(cascade = CascadeType.MERGE, orphanRemoval = true, mappedBy = "deathStar",fetch = FetchType.EAGER)
 	private Set<Trooper> troppers;
-    @NotNull
-    @OneToOne(optional = false, fetch = FetchType.EAGER)
+	@NotNull
+	@OneToOne(optional = false, fetch = FetchType.EAGER)
 	private Universe universe;
 
 	public Vader getVader() {
@@ -46,11 +46,11 @@ public class DeathStar extends BaseEntity {
 		this.troppers = troppers;
 	}
 
-    public Universe getUniverse() {
-        return universe;
-    }
+	public Universe getUniverse() {
+		return universe;
+	}
 
-    public void setUniverse(Universe universe) {
-        this.universe = universe;
-    }
+	public void setUniverse(Universe universe) {
+		this.universe = universe;
+	}
 }

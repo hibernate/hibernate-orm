@@ -635,17 +635,7 @@ public class CockroachDB192Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsMixedTypeArithmetic() {
-		return false;
-	}
-
-	@Override
 	public boolean canCreateSchema() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLoFunctions() {
 		return false;
 	}
 }

@@ -961,7 +961,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsMixedTypeArithmetic.class)
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2934,7 +2934,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsMixedTypeArithmetic.class)
+	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
 	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
@@ -3829,7 +3829,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDB192Dialect ) {
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
 		}
 		else {
@@ -3838,7 +3839,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session.createQuery(hql).list();
 		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof HSQLDialect ) {
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof CockroachDB192Dialect ) {
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		}
 		else {

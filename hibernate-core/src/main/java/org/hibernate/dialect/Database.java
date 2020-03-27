@@ -66,7 +66,6 @@ public enum Database {
 				}
 			}
 
-
 			if ( databaseName.startsWith( "DB2/" ) ) {
 				return new DB2Dialect();
 			}
@@ -176,9 +175,13 @@ public enum Database {
 		@Override
 		public Dialect resolveDialect(DialectResolutionInfo info) {
 			final String databaseName = info.getDatabaseName();
+			int databaseMajorVersion = info.getDatabaseMajorVersion();
 
 			if ( "HDB".equals( databaseName ) ) {
 				// SAP recommends defaulting to column store.
+				if ( databaseMajorVersion >= 4 ) {
+					return new HANACloudColumnStoreDialect();
+				}
 				return latestDialectInstance( this );
 			}
 
@@ -358,7 +361,7 @@ public enum Database {
 						return new MySQL57Dialect();
 					}
 				}
-				else if ( majorVersion < 8) {
+				else if ( majorVersion < 8 ) {
 					// There is no MySQL 6 or 7.
 					// Adding this just in case.
 					return new MySQL57Dialect();

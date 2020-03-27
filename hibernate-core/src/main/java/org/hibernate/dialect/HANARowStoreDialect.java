@@ -46,4 +46,14 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 			}
 		}, AfterUseAction.CLEAN );
 	}
+
+	@Override
+	protected boolean supportsAsciiStringTypes() {
+		return true;
+	}
+
+	@Override
+	protected Boolean useUnicodeStringTypesDefault() {
+		return Boolean.FALSE;
+	}
 }

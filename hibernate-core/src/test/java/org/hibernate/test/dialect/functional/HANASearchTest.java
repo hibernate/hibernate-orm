@@ -14,10 +14,11 @@ import java.sql.PreparedStatement;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
+import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -28,6 +29,7 @@ import org.junit.Test;
  * @author Jonathan Bregler
  */
 @RequiresDialect(value = { HANAColumnStoreDialect.class })
+@SkipForDialect(value = HANACloudColumnStoreDialect.class)
 public class HANASearchTest extends BaseCoreFunctionalTestCase {
 
 	private static final String ENTITY_NAME = "SearchEntity";
@@ -136,7 +138,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			entity.c = "TEST STRING";
 
 			s.persist( entity );
-			
+
 			s.getTransaction().commit();
 			s.beginTransaction();
 
@@ -171,7 +173,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.persist( entity );
 
 			s.flush();
-			
+
 			s.getTransaction().commit();
 			s.beginTransaction();
 
@@ -208,7 +210,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.persist( entity );
 
 			s.flush();
-			
+
 			s.getTransaction().commit();
 			s.beginTransaction();
 

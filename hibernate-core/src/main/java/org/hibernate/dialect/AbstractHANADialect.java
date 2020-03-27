@@ -709,18 +709,17 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static final int MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE = 1024;
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
-	private static final Boolean USE_UNICODE_STRING_TYPES_DEFAULT_VALUE = Boolean.FALSE;
 	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
 
 	private HANANClobTypeDescriptor nClobTypeDescriptor = new HANANClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
 	private HANABlobTypeDescriptor blobTypeDescriptor = new HANABlobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 
-	private HANAClobTypeDescriptor clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
-			USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue() );
+	private HANAClobTypeDescriptor clobTypeDescriptor;
 
 	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
-	private boolean useUnicodeStringTypes = USE_UNICODE_STRING_TYPES_DEFAULT_VALUE.booleanValue();
+	private boolean useUnicodeStringTypes;
+
 	private boolean treatDoubleTypedFieldsAsDecimal = TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE.booleanValue();
 
 	/*
@@ -766,6 +765,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	public AbstractHANADialect() {
 		super();
 
+		this.useUnicodeStringTypes = useUnicodeStringTypesDefault().booleanValue();
+		this.clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
+				useUnicodeStringTypesDefault().booleanValue() );
+
 		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
 		registerColumnType( Types.DOUBLE, "double" );
@@ -804,7 +807,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerHibernateType( Types.NCLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
 		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_CLOB.getName() );
 		registerHibernateType( Types.BLOB, StandardBasicTypes.MATERIALIZED_BLOB.getName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.STRING.getName() );
+		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getName() );
 
 		registerFunction( "to_date", new StandardSQLFunction( "to_date", StandardBasicTypes.DATE ) );
 		registerFunction( "to_seconddate", new StandardSQLFunction( "to_seconddate", StandardBasicTypes.TIMESTAMP ) );
@@ -1143,9 +1146,9 @@ public abstract class AbstractHANADialect extends Dialect {
 			case Types.BOOLEAN:
 				return this.useLegacyBooleanType ? BitTypeDescriptor.INSTANCE : BooleanTypeDescriptor.INSTANCE;
 			case Types.VARCHAR:
-				return this.useUnicodeStringTypes ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
+				return this.isUseUnicodeStringTypes() ? NVarcharTypeDescriptor.INSTANCE : VarcharTypeDescriptor.INSTANCE;
 			case Types.CHAR:
-				return this.useUnicodeStringTypes ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
+				return this.isUseUnicodeStringTypes() ? NCharTypeDescriptor.INSTANCE : CharTypeDescriptor.INSTANCE;
 			case Types.DOUBLE:
 				return this.treatDoubleTypedFieldsAsDecimal ? DecimalTypeDescriptor.INSTANCE : DoubleTypeDescriptor.INSTANCE;
 			default:
@@ -1572,23 +1575,25 @@ public abstract class AbstractHANADialect extends Dialect {
 			this.blobTypeDescriptor = new HANABlobTypeDescriptor( maxLobPrefetchSize );
 		}
 
-		this.useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_UNICODE_STRING_TYPES_DEFAULT_VALUE ).booleanValue();
+		if ( supportsAsciiStringTypes() ) {
+			this.useUnicodeStringTypes = configurationService.getSetting( USE_UNICODE_STRING_TYPES_PARAMETER_NAME, StandardConverters.BOOLEAN,
+					useUnicodeStringTypesDefault() ).booleanValue();
 
-		if ( this.useUnicodeStringTypes ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
-			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
+			if ( this.isUseUnicodeStringTypes() ) {
+				registerColumnType( Types.CHAR, "nvarchar(1)" );
+				registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
+				registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
 
-			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
-			registerColumnType( Types.VARCHAR, "nclob" );
-			registerColumnType( Types.CLOB, "nclob" );
-		}
+				// for longer values map to clob/nclob
+				registerColumnType( Types.LONGVARCHAR, "nclob" );
+				registerColumnType( Types.VARCHAR, "nclob" );
+				registerColumnType( Types.CLOB, "nclob" );
+			}
 
-		if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
-				|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.useUnicodeStringTypes ) {
-			this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, this.useUnicodeStringTypes );
+			if ( this.clobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize
+					|| this.clobTypeDescriptor.isUseUnicodeStringTypes() != this.isUseUnicodeStringTypes() ) {
+				this.clobTypeDescriptor = new HANAClobTypeDescriptor( maxLobPrefetchSize, this.isUseUnicodeStringTypes() );
+			}
 		}
 
 		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
@@ -1660,7 +1665,16 @@ public abstract class AbstractHANADialect extends Dialect {
 		return false;
 	}
 
+	@Override
 	public boolean supportsNoColumnsInsert() {
 		return false;
 	}
+
+	public boolean isUseUnicodeStringTypes() {
+		return this.useUnicodeStringTypes;
+	}
+
+	protected abstract boolean supportsAsciiStringTypes();
+
+	protected abstract Boolean useUnicodeStringTypesDefault();
 }

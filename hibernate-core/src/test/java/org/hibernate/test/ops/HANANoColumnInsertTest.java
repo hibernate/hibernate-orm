@@ -24,8 +24,8 @@ import static org.junit.Assert.fail;
 public class HANANoColumnInsertTest extends BaseCoreFunctionalTestCase {
 
 	public String[] getMappings() {
-		return new String[] {
-			"ops/Competition.hbm.xml"
+		return new String[]{
+				"ops/Competition.hbm.xml"
 		};
 	}
 
@@ -34,10 +34,12 @@ public class HANANoColumnInsertTest extends BaseCoreFunctionalTestCase {
 		try {
 			super.buildSessionFactory();
 
-			fail("Should have thrown MappingException!");
+			fail( "Should have thrown MappingException!" );
 		}
 		catch (MappingException e) {
-			assertEquals("The INSERT statement for table [Competition] contains no column, and this is not supported by [org.hibernate.dialect.HANAColumnStoreDialect]", e.getMessage());
+			assertEquals(
+					"The INSERT statement for table [Competition] contains no column, and this is not supported by [" + getDialect().getClass().getName() + "]",
+					e.getMessage() );
 		}
 	}
 
@@ -45,4 +47,3 @@ public class HANANoColumnInsertTest extends BaseCoreFunctionalTestCase {
 	public void test() throws Exception {
 	}
 }
-

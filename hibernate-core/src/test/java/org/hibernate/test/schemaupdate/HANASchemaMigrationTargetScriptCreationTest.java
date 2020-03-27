@@ -44,6 +44,8 @@ import static org.junit.Assert.fail;
 public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalTestCase {
 
 	private File output;
+	private String varcharType;
+	private String clobType;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -58,14 +60,16 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	@Override
 	protected void configure(Configuration configuration) {
 		try {
-			output = File.createTempFile( "update_script", ".sql" );
+			this.output = File.createTempFile( "update_script", ".sql" );
 		}
 		catch (IOException e) {
 			fail( e.getMessage() );
 		}
-		output.deleteOnExit();
+		this.output.deleteOnExit();
 		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_ACTION, "create" );
-		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_CREATE_TARGET, output.getAbsolutePath() );
+		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_CREATE_TARGET, this.output.getAbsolutePath() );
+		this.varcharType = ( (AbstractHANADialect) getDialect() ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
+		this.clobType = ( (AbstractHANADialect) getDialect() ).isUseUnicodeStringTypes() ? "nclob" : "clob";
 	}
 
 	@After
@@ -88,8 +92,9 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	@TestForIssue(jiraKey = "HHH-12302")
 	public void testTargetScriptIsCreatedStringTypeDefault() throws Exception {
 		this.rebuildSessionFactory();
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field varchar.+, b boolean.+, c varchar.+, lob clob.+" );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+		Pattern fileContentPattern = Pattern
+				.compile( "create( (column|row))? table test_entity \\(field " + this.varcharType + ".+, b boolean.+, c " + this.varcharType + ".+, lob " + this.clobType + ".+" );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
@@ -103,7 +108,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "true" );
 		} );
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
 		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field nvarchar.+, b boolean.+, c nvarchar.+, lob nclob" );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
@@ -116,23 +121,23 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	@TestForIssue(jiraKey = "HHH-12302")
 	public void testTargetScriptIsCreatedStringTypeVarchar() throws Exception {
 		this.rebuildSessionFactory( config -> {
-			config.setProperty( "hibernate.dialect.hana.use_nvarchar_string_type", "false" );
+			config.setProperty( "hibernate.dialect.hana.use_unicode_string_types", "false" );
 		} );
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field varchar.+, b boolean.+, c varchar.+, lob clob" );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field " + this.varcharType + ".+, b boolean.+, c " + this.varcharType + ".+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
 				fileContentMatcher.find(),
 				is( true ) );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-12132")
 	public void testTargetScriptIsCreatedBooleanTypeDefault() throws Exception {
 		this.rebuildSessionFactory();
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field varchar.+, b boolean.+, c varchar.+, lob clob" );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field " + this.varcharType + ".+, b boolean.+, c " + this.varcharType + ".+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
@@ -146,8 +151,8 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "true" );
 		} );
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field varchar.+, b tinyint.+, c varchar.+, lob clob" );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field " + this.varcharType + ".+, b tinyint.+, c " + this.varcharType + ".+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
@@ -161,8 +166,8 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 		this.rebuildSessionFactory( config -> {
 			config.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", "false" );
 		} );
-		String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field varchar.+, b boolean.+, c varchar.+, lob clob" );
+		String fileContent = new String( Files.readAllBytes( this.output.toPath() ) );
+		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table test_entity \\(field " + this.varcharType + ".+, b boolean.+, c " + this.varcharType + ".+, lob " + this.clobType );
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"Script file : " + fileContent.toLowerCase(),
@@ -181,7 +186,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 
 		@Lob
 		private String lob;
-		
+
 		private boolean b;
 	}
 }

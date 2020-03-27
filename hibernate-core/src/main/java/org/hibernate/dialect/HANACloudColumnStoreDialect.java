@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
@@ -16,31 +18,70 @@ import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * An SQL dialect for the SAP HANA column store.
+ * An SQL dialect for the SAP HANA Cloud column store.
  * <p>
- * For more information on interacting with the SAP HANA database, refer to the
- * <a href="https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/">SAP HANA SQL and System Views Reference</a>
+ * For more information on interacting with the SAP HANA Cloud database, refer to the
+ * <a href="https://help.sap.com/viewer/c1d3f60099654ecfb3fe36ac93c121bb/cloud/">SAP HANA Cloud SQL Reference Guide</a>
  * and the <a href=
  * "https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/latest/en-US/434e2962074540e18c802fd478de86d6.html">SAP
  * HANA Client Interface Programming Reference</a>.
  * <p>
  * Column tables are created by this dialect when using the auto-ddl feature.
  * 
- * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
-public class HANAColumnStoreDialect extends AbstractHANADialect {
-	
-	public HANAColumnStoreDialect() {
+public class HANACloudColumnStoreDialect extends AbstractHANADialect {
+
+	public HANACloudColumnStoreDialect() {
 		super();
+
+		registerColumnType( Types.CHAR, "nvarchar(1)" );
+		registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
+
+		// for longer values map to clob/nclob
+		registerColumnType( Types.LONGVARCHAR, "nclob" );
+		registerColumnType( Types.VARCHAR, "nclob" );
+		registerColumnType( Types.CLOB, "nclob" );
+
+		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
+		registerHibernateType( Types.NCHAR, StandardBasicTypes.NSTRING.getName() );
+		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.CHAR, 5000, StandardBasicTypes.NSTRING.getName() );
+		registerHibernateType( Types.VARCHAR, StandardBasicTypes.NSTRING.getName() );
+		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.NTEXT.getName() );
+
+		// register additional keywords
+		registerHanaCloudKeywords();
 
 		// full-text search functions
 		registerFunction( "score", new StandardSQLFunction( "score", StandardBasicTypes.DOUBLE ) );
-		registerFunction( "snippets", new StandardSQLFunction( "snippets" ) );
-		registerFunction( "highlighted", new StandardSQLFunction( "highlighted" ) );
 		registerFunction( "contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "contains(", ",", ") /*" ) );
 		registerFunction( "contains_rhs", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "*/" ) );
 		registerFunction( "not_contains", new VarArgsSQLFunction( StandardBasicTypes.BOOLEAN, "not contains(", ",", ") /*" ) );
+	}
+
+	private void registerHanaCloudKeywords() {
+		registerKeyword( "array" );
+		registerKeyword( "at" );
+		registerKeyword( "authorization" );
+		registerKeyword( "between" );
+		registerKeyword( "by" );
+		registerKeyword( "collate" );
+		registerKeyword( "empty" );
+		registerKeyword( "filter" );
+		registerKeyword( "grouping" );
+		registerKeyword( "no" );
+		registerKeyword( "not" );
+		registerKeyword( "of" );
+		registerKeyword( "over" );
+		registerKeyword( "recursive" );
+		registerKeyword( "row" );
+		registerKeyword( "table" );
+		registerKeyword( "to" );
+		registerKeyword( "window" );
+		registerKeyword( "within" );
 	}
 
 	@Override
@@ -67,11 +108,16 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
-		return true;
+		return false;
 	}
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
-		return Boolean.FALSE;
+		return Boolean.TRUE;
+	}
+
+	@Override
+	public boolean isUseUnicodeStringTypes() {
+		return true;
 	}
 }

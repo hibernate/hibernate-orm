@@ -66,12 +66,6 @@ import static org.hibernate.query.TemporalUnit.*;
  */
 public class OracleDialect extends Dialect {
 
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public OracleDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -97,8 +91,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	public OracleDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		registerCharacterTypeMappings();
 		registerNumericTypeMappings();

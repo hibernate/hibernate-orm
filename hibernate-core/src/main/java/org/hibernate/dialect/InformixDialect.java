@@ -45,12 +45,6 @@ import java.sql.Types;
  */
 public class InformixDialect extends Dialect {
 
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -67,8 +61,7 @@ public class InformixDialect extends Dialect {
 	 * Informix type mappings.
 	 */
 	public InformixDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		// Informix doesn't have a bit type
 		registerColumnType( Types.BIT, 1, "boolean" );

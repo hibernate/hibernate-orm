@@ -35,9 +35,9 @@ import java.util.Map;
  * @author Gavin King
  */
 abstract class AbstractTransactSQLDialect extends Dialect {
-	public AbstractTransactSQLDialect() {
-		super();
 
+	public AbstractTransactSQLDialect(Integer version) {
+		super( version );
 		registerColumnType( Types.BOOLEAN, "bit" );
 
 		//SQL Server/Sybase 'bit' type is always exactly one bit

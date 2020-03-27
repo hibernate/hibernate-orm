@@ -32,12 +32,6 @@ import java.util.Map;
  */
 public class SybaseASEDialect extends SybaseDialect {
 
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -47,8 +41,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	public SybaseASEDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		//On Sybase ASE, the 'bit' type cannot be null,
 		//and cannot have indexes (while we don't use

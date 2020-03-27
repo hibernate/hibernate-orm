@@ -27,7 +27,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
 	public SybaseDialect() {
-		super();
+		this( null );
+	}
+
+	public SybaseDialect(Integer version) {
+		super( version );
 
 		//Sybase ASE didn't introduce bigint until version 15.0
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );

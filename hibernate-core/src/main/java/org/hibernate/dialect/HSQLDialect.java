@@ -62,7 +62,7 @@ import static org.hibernate.query.CastType.LONG;
 
 /**
  * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
- *
+ * Version is 180 for 1.8.0 or 200 for 2.0.0
  * @author Christoph Sturm
  * @author Phillip Baird
  * @author Fred Toussi
@@ -73,17 +73,8 @@ public class HSQLDialect extends Dialect {
 			HSQLDialect.class.getName()
 	);
 
-	/**
-	 * version is 180 for 1.8.0 or 200 for 2.0.0
-	 */
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public HSQLDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public HSQLDialect() {
@@ -91,13 +82,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public HSQLDialect(int version) {
-		super();
-
-		if ( version == 180 ) {
-			version = reflectedVersion(version);
-		}
-
-		this.version = version;
+		super( version == 100 ? reflectedVersion(version) : version );
 
 		//Note that all floating point types are synonyms for 'double'
 
@@ -111,7 +96,7 @@ public class HSQLDialect extends Dialect {
 		//(See HHH-10364)
 		registerColumnType( Types.NCLOB, "clob" );
 
-		if ( this.version < 200 ) {
+		if ( getVersion() < 200 ) {
 			//Older versions of HSQL did not accept
 			//precision for the 'numeric' type
 			registerColumnType( Types.NUMERIC, "numeric" );
@@ -121,7 +106,7 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "longvarchar" );
 		}
 
-		if ( this.version >= 250 ) {
+		if ( getVersion() >= 250 ) {
 			registerKeyword( "period" );
 		}
 
@@ -191,13 +176,13 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 
-		if ( version >= 200 ) {
+		if ( getVersion() >= 200 ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
 			CommonFunctionFactory.sysdate( queryEngine );
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
-		if ( version > 219 ) {
+		if ( getVersion() > 219 ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
 	}
@@ -272,7 +257,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		if ( version >= 200 ) {
+		if ( getVersion() >= 200 ) {
 			return " for update";
 		}
 		else {
@@ -282,8 +267,8 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return version < 200 ? LegacyHSQLLimitHandler.INSTANCE
-			: version < 250 ? LimitOffsetLimitHandler.INSTANCE
+		return getVersion() < 200 ? LegacyHSQLLimitHandler.INSTANCE
+			: getVersion() < 250 ? LimitOffsetLimitHandler.INSTANCE
 			: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -302,7 +287,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return version >= 200;
+		return getVersion() >= 200;
 	}
 
 	@Override
@@ -328,7 +313,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return version < 200 ? EXTRACTER_18 : EXTRACTER_20;
+		return getVersion() < 200 ? EXTRACTER_18 : EXTRACTER_20;
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER_18 = new TemplatedViolatedConstraintNameExtracter() {
@@ -461,7 +446,7 @@ public class HSQLDialect extends Dialect {
 		// the definition and data is private to the session and table declaration
 		// can happen in the middle of a transaction
 
-		if ( version < 200 ) {
+		if ( getVersion() < 200 ) {
 			return new GlobalTemporaryTableStrategy(
 					new IdTable( rootEntityDescriptor, name -> "HT_" + name ),
 					() -> new TempIdTableExporter( false, this::getTypeName ),
@@ -534,7 +519,7 @@ public class HSQLDialect extends Dialect {
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		if ( version < 200 ) {
+		if ( getVersion() < 200 ) {
 			return new ReadUncommittedLockingStrategy( lockable, lockMode );
 		}
 		else {
@@ -559,7 +544,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return version >= 200;
+		return getVersion() >= 200;
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -576,12 +561,12 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return version >= 200;
+		return getVersion() >= 200;
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return version >= 200;
+		return getVersion() >= 200;
 	}
 
 	@Override
@@ -597,12 +582,12 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
-		return version >= 229;
+		return getVersion() >= 229;
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.version);
+		return new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	@Override

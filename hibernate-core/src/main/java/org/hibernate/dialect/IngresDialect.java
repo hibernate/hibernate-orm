@@ -60,13 +60,7 @@ public class IngresDialect extends Dialect {
 
 	private final LimitHandler limitHandler;
 
-	private final int version;
-
 	private final SequenceSupport sequenceSupport;
-
-	int getVersion() {
-		return version;
-	}
 
 	public IngresDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
@@ -80,8 +74,7 @@ public class IngresDialect extends Dialect {
 	 * Constructs a IngresDialect
 	 */
 	public IngresDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		if ( getVersion() < 1000 ) {
 			registerColumnType( Types.BIT, 1, "tinyint" );

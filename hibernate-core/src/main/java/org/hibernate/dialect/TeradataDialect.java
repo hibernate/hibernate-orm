@@ -53,12 +53,6 @@ import java.util.Map;
  */
 public class TeradataDialect extends Dialect {
 
-	private int version;
-
-	int getVersion() {
-		return version;
-	}
-	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
@@ -70,8 +64,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	public TeradataDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		registerColumnType( Types.BOOLEAN, "byteint" );
 		registerColumnType( Types.BIT, 1, "byteint" );

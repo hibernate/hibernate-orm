@@ -69,12 +69,6 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	private final LimitHandler limitHandler;
 
 	public DerbyDialect(DialectResolutionInfo info) {
@@ -86,8 +80,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	public DerbyDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		registerColumnType( Types.BIT, "smallint" ); //no bit

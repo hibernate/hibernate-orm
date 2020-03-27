@@ -24,10 +24,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
  */
 public class DB2390Dialect extends DB2Dialect {
 
-	private final int version;
-
 	int get390Version() {
-		return version;
+		return getVersion();
 	}
 
 	public DB2390Dialect(DialectResolutionInfo info) {
@@ -39,8 +37,7 @@ public class DB2390Dialect extends DB2Dialect {
 	}
 
 	public DB2390Dialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 	}
 
 	@Override

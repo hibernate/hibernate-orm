@@ -65,12 +65,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithM
  */
 public class FirebirdDialect extends Dialect {
 
-	private final int version;
-
-	public int getVersion() {
-		return version;
-	}
-
 	public FirebirdDialect() {
 		this(250);
 	}
@@ -88,8 +82,7 @@ public class FirebirdDialect extends Dialect {
 	//   cast (not even when wrapped in a function call)
 
 	public FirebirdDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		registerColumnType( Types.BIT, 1, "smallint" );
 		registerColumnType( Types.BIT, "smallint" );

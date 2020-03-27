@@ -17,7 +17,7 @@ package org.hibernate.dialect;
 public class DB297Dialect extends DB2Dialect {
 
 	@Override
-	int getVersion() {
+	public Integer getVersion() {
 		return 970;
 	}
 

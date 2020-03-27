@@ -42,12 +42,6 @@ import static org.hibernate.query.TemporalUnit.NANOSECOND;
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
-	private final int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public SQLServerDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -57,8 +51,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		//there is no 'double' type in SQL server
 		//but 'float' is double precision by default

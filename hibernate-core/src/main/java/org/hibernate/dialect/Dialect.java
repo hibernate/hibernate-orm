@@ -23,6 +23,7 @@ import org.hibernate.dialect.unique.DefaultUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 import org.hibernate.engine.jdbc.env.spi.*;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -135,10 +136,12 @@ public abstract class Dialect implements ConversionContext {
 
 	private DefaultSizeStrategy defaultSizeStrategy;
 
+	private final Integer version;
+
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	protected Dialect() {
+	protected Dialect(Integer version) {
 
 		registerColumnType( Types.BIT, 1, "bit" );
 		registerColumnType( Types.BIT, "bit($l)" );
@@ -225,6 +228,19 @@ public abstract class Dialect implements ConversionContext {
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		defaultSizeStrategy = new DefaultSizeStrategyImpl();
+		this.version = version;
+	}
+
+	protected Dialect() {
+		this( null );
+	}
+
+	protected Dialect(int majorVersion, int minorVersion) {
+		this( majorVersion * 100 + minorVersion * 10 );
+	}
+
+	public Integer getVersion() {
+		return version;
 	}
 
 	/**

@@ -58,13 +58,7 @@ public class DB2Dialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final int version;
-
 	private LimitHandler limitHandler;
-
-	int getVersion() {
-		return version;
-	}
 
 	private final UniqueDelegate uniqueDelegate;
 
@@ -77,8 +71,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect(int version) {
-		super();
-		this.version = version;
+		super(version);
 
 		registerColumnType( Types.BIT, 1, "boolean" ); //no bit
 		registerColumnType( Types.BIT, "smallint" ); //no bit

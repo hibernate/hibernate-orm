@@ -57,12 +57,6 @@ public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private MySQLStorageEngine storageEngine;
-	private int version;
-
-	int getVersion() {
-		return version;
-	}
-
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -72,8 +66,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(int version) {
-		super();
-		this.version = version;
+		super( version );
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
 		if (storageEngine == null) {

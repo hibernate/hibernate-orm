@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.16.Final (March 27th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31822/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13184] - Oracle dialect detection does not return latest dialect in the default case
+    * [HHH-13891] - ProxyFactory should not be built if any ID or property getter/setter methods are final
+    * [HHH-13910] - MySQL57Dialect selected by automatic dialect resolution when using MySQL 8.0 database
+
+** Task
+    * [HHH-13822] - OSGi integration tests need to be able to download dependencies from Maven Central using HTTPS
+
+** Improvement
+    * [HHH-12977] - Update latest dialect for MySQL
+    * [HHH-13851] - Rework initialization of ProxyFactoryFactory to move responsibility out of PojoEntityTuplizer
+
 Changes in 5.3.15.Final (January 7th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -349,6 +349,14 @@ public enum Database {
 						return new MySQL57Dialect();
 					}
 				}
+				else if ( majorVersion < 8) {
+					// There is no MySQL 6 or 7.
+					// Adding this just in case.
+					return new MySQL57Dialect();
+				}
+				else if ( majorVersion == 8 ) {
+					return new MySQL8Dialect();
+				}
 
 				return latestDialectInstance( this );
 			}

@@ -53,8 +53,7 @@ public class ASTReferencedTablesPrinter extends ASTPrinter {
 		}
 		if ( node instanceof SelectClause ) {
 			SelectClause sc = (SelectClause) node;
-			for ( Object element : sc.getFromElementsForLoad() ) {
-				FromElement fromElement = (FromElement) element;
+			for ( FromElement fromElement : sc.getFromElementsForLoad() ) {
 				EntityPersister entityPersister = fromElement.getEntityPersister();
 				if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
 					AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;

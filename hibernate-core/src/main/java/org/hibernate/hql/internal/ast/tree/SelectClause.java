@@ -31,12 +31,12 @@ public class SelectClause extends SelectExpressionList {
 	private boolean prepared;
 	private boolean scalarSelect;
 
-	private List fromElementsForLoad = new ArrayList();
-	private List alreadyRenderedIdentifiers = new ArrayList();
+	private List<FromElement> fromElementsForLoad = new ArrayList<>();
+	private List<String> alreadyRenderedIdentifiers = new ArrayList<>();
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 	private String[][] columnNames;
-	private List collectionFromElements;
+	private List<FromElement> collectionFromElements;
 	private String[] aliases;
 	private int[] columnNamesStartPositions;
 
@@ -61,7 +61,7 @@ public class SelectClause extends SelectExpressionList {
 	 *
 	 * @return List of appropriate FromElements.
 	 */
-	public List getFromElementsForLoad() {
+	public List<FromElement> getFromElementsForLoad() {
 		return fromElementsForLoad;
 	}
 
@@ -119,7 +119,7 @@ public class SelectClause extends SelectExpressionList {
 
 		//explicit = true;	// This is an explict Select.
 		//ArrayList sqlResultTypeList = new ArrayList();
-		ArrayList queryReturnTypeList = new ArrayList();
+		ArrayList<Type> queryReturnTypeList = new ArrayList<>();
 
 		// First, collect all of the select expressions.
 		// NOTE: This must be done *before* invoking setScalarColumnText() because setScalarColumnText()
@@ -255,7 +255,7 @@ public class SelectClause extends SelectExpressionList {
 		finishInitialization( /*sqlResultTypeList,*/ queryReturnTypeList );
 	}
 
-	private void finishInitialization(ArrayList queryReturnTypeList) {
+	private void finishInitialization(ArrayList<Type> queryReturnTypeList) {
 		queryReturnTypes = (Type[]) queryReturnTypeList.toArray( new Type[queryReturnTypeList.size()] );
 		initializeColumnNames();
 		prepared = true;
@@ -298,7 +298,7 @@ public class SelectClause extends SelectExpressionList {
 
 		ASTAppender appender = new ASTAppender( getASTFactory(), this );    // Get ready to start adding nodes.
 		int size = fromElements.size();
-		ArrayList queryReturnTypeList = new ArrayList( size );
+		ArrayList<Type> queryReturnTypeList = new ArrayList<>( size );
 
 		Iterator iterator = fromElements.iterator();
 		for ( int k = 0; iterator.hasNext(); k++ ) {
@@ -348,7 +348,7 @@ public class SelectClause extends SelectExpressionList {
 			if ( fromElement.getQueryableCollection() != null ) {
 				String suffix;
 				if ( collectionFromElements == null ) {
-					collectionFromElements = new ArrayList();
+					collectionFromElements = new ArrayList<>();
 					suffix = VERSION2_SQL ? "__" : "0__";
 				}
 				else {
@@ -515,7 +515,7 @@ public class SelectClause extends SelectExpressionList {
 		}
 	}
 
-	public List getCollectionFromElements() {
+	public List<FromElement> getCollectionFromElements() {
 		return collectionFromElements;
 	}
 }

@@ -543,9 +543,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 
 		FromElement owner = null;
-		for ( Object o : query.getSelectClause().getFromElementsForLoad() ) {
+		for ( FromElement fromElement : query.getSelectClause().getFromElementsForLoad() ) {
 			// should be the first, but just to be safe...
-			final FromElement fromElement = (FromElement) o;
 			if ( fromElement.getOrigin() == null ) {
 				owner = fromElement;
 				break;

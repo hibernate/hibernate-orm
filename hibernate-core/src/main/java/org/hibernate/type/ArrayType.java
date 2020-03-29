@@ -81,7 +81,7 @@ public class ArrayType extends CollectionType {
 			return "null";
 		}
 		int length = Array.getLength(value);
-		List list = new ArrayList(length);
+		List<String> list = new ArrayList<>(length);
 		Type elemType = getElementType(factory);
 		for ( int i=0; i<length; i++ ) {
 			Object element = Array.get(value, i);

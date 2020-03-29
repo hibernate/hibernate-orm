@@ -360,7 +360,7 @@ public final class ASTUtil {
 
 	private static class CollectingNodeVisitor implements NodeTraverser.VisitationStrategy {
 		private final FilterPredicate predicate;
-		private final List collectedNodes = new ArrayList();
+		private final List<AST> collectedNodes = new ArrayList<>();
 
 		public CollectingNodeVisitor(FilterPredicate predicate) {
 			this.predicate = predicate;
@@ -373,11 +373,11 @@ public final class ASTUtil {
 			}
 		}
 
-		public List getCollectedNodes() {
+		public List<AST> getCollectedNodes() {
 			return collectedNodes;
 		}
 
-		public List collect(AST root) {
+		public List<AST> collect(AST root) {
 			NodeTraverser traverser = new NodeTraverser( this );
 			traverser.traverseDepthFirst( root );
 			return collectedNodes;

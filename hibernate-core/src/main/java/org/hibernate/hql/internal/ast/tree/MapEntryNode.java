@@ -229,10 +229,10 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return true;
 	}
 
-	private List types = new ArrayList( 4 ); // size=4 to prevent resizing
+	private List<Type> types = new ArrayList( 4 ); // size=4 to prevent resizing
 
 	@Override
-	public List getAggregatedSelectionTypeList() {
+	public List<Type> getAggregatedSelectionTypeList() {
 		return types;
 	}
 

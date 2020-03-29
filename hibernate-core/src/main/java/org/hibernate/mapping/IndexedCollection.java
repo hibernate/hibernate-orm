@@ -64,9 +64,9 @@ public abstract class IndexedCollection extends Collection {
 
 			// index should be last column listed
 			boolean isFormula = false;
-			Iterator iter = getIndex().getColumnIterator();
+			Iterator<Selectable> iter = getIndex().getColumnIterator();
 			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) {
+				if ( iter.next().isFormula() ) {
 					isFormula=true;
 				}
 			}

@@ -151,8 +151,7 @@ public class JoinProcessor implements SqlTokenTypes {
 
 		// Find tables referenced by fromElementsForLoad
 		if ( query.getSelectClause() != null ) {
-			for ( Object element : query.getSelectClause().getFromElementsForLoad() ) {
-				FromElement fromElement = (FromElement) element;
+			for ( FromElement fromElement : query.getSelectClause().getFromElementsForLoad() ) {
 				EntityPersister entityPersister = fromElement.getEntityPersister();
 				if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
 					AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;

@@ -19,6 +19,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.loader.custom.Return;
 import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
@@ -43,7 +44,7 @@ public class SQLCustomQuery implements CustomQuery, Serializable {
 
 	private final List<ParameterBinder> paramValueBinders;
 
-	private final List customQueryReturns = new ArrayList();
+	private final List<Return> customQueryReturns = new ArrayList<>();
 
 
 	public String getSQL() {

@@ -172,9 +172,9 @@ public class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean hasFormula() {
-		Iterator iter = getColumnIterator();
+		Iterator<Selectable> iter = getColumnIterator();
 		while ( iter.hasNext() ) {
-			Object o = iter.next();
+			Selectable o = iter.next();
 			if (o instanceof Formula) {
 				return true;
 			}
@@ -429,9 +429,9 @@ public class SimpleValue implements KeyValue {
 	}
 
 	public boolean isNullable() {
-		Iterator itr = getColumnIterator();
+		Iterator<Selectable> itr = getColumnIterator();
 		while ( itr.hasNext() ) {
-			final Object selectable = itr.next();
+			final Selectable selectable = itr.next();
 			if ( selectable instanceof Formula ) {
 				// if there are *any* formulas, then the Value overall is
 				// considered nullable

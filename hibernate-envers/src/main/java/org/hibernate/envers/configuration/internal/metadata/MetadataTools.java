@@ -297,13 +297,13 @@ public final class MetadataTools {
 		return joinMapping;
 	}
 
-	public static void addColumns(Element anyMapping, Iterator<?> selectables, Metadata metadata) {
+	public static void addColumns(Element anyMapping, Iterator<? extends Selectable> selectables, Metadata metadata) {
 		addColumns( anyMapping, selectables, metadata, metadata.getDatabase().getDialect() );
 	}
 
-	public static void addColumns(Element anyMapping, Iterator<?> selectables, Mapping mapping, Dialect dialect) {
+	public static void addColumns(Element anyMapping, Iterator<? extends Selectable> selectables, Mapping mapping, Dialect dialect) {
 		while ( selectables.hasNext() ) {
-			final Selectable selectable = (Selectable) selectables.next();
+			final Selectable selectable = selectables.next();
 			if ( selectable.isFormula() ) {
 				throw new FormulaNotSupportedException();
 			}
@@ -359,7 +359,6 @@ public final class MetadataTools {
 		return columnDefinition;
 	}
 
-	@SuppressWarnings({"unchecked"})
 	private static void changeNamesInColumnElement(Element element, ColumnNameIterator columnNameIterator) {
 		final Iterator<Element> properties = element.elementIterator();
 		while ( properties.hasNext() ) {
@@ -374,7 +373,6 @@ public final class MetadataTools {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
 	public static void prefixNamesInPropertyElement(
 			Element element,
 			String prefix,

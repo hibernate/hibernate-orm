@@ -61,7 +61,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassSpaces;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
-	private final Map subclassByDiscriminatorValue = new HashMap();
+	private final Map<Integer, String> subclassByDiscriminatorValue = new HashMap<>();
 
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
@@ -165,7 +165,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			spaces[i] = (String) iter.next();
 		}
 
-		HashSet subclassTables = new HashSet();
+		HashSet<String> subclassTables = new HashSet<>();
 		iter = persistentClass.getSubclassTableClosureIterator();
 		while ( iter.hasNext() ) {
 			final Table table = (Table) iter.next();
@@ -177,8 +177,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( isMultiTable() ) {
 			int idColumnSpan = getIdentifierColumnSpan();
-			ArrayList tableNames = new ArrayList();
-			ArrayList keyColumns = new ArrayList();
+			ArrayList<String> tableNames = new ArrayList<>();
+			ArrayList<String[]> keyColumns = new ArrayList<>();
 			if ( !isAbstract() ) {
 				tableNames.add( tableName );
 				keyColumns.add( getIdentifierColumnNames() );
@@ -190,9 +190,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					final String tableName = determineTableName( tab, jdbcEnvironment );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
-					Iterator citer = tab.getPrimaryKey().getColumnIterator();
+					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
-						key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+						key[k] = citer.next().getQuotedName( factory.getDialect() );
 					}
 					keyColumns.add( key );
 				}

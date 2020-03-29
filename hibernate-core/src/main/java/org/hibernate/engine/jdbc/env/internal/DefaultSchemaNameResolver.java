@@ -61,8 +61,8 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 		}
 		catch (Exception ignore) {
 			log.debugf(
-					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: "
-							+ ignore.getMessage() );
+					"Unable to use Java 1.7 Connection#getSchema : An error occurred trying to resolve the connection default schema resolver: %s",
+					ignore.getMessage() );
 			return SchemaNameResolverFallbackDelegate.INSTANCE;
 		}
 	}

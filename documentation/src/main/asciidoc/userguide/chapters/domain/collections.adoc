@@ -502,7 +502,7 @@ According to the `SortedSet` contract, all elements must implement the `Comparab
 [[collections-unidirectional-sorted-set]]
 ===== Unidirectional sorted sets
 
-A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic must be annotated with the `@SortNatural` Hibernate annotation.
+A `SortedSet` that relies on the natural sorting order given by the child element `Comparable` implementation logic might be annotated with the `@SortNatural` Hibernate annotation.
 
 [[collections-unidirectional-sorted-set-natural-comparator-example]]
 .Unidirectional natural sorted set
@@ -540,6 +540,12 @@ include::{sourcedir}/BidirectionalSortedSetTest.java[tags=collections-bidirectio
 
 include::{sourcedir}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,indent=0]
 ----
+====
+
+[NOTE]
+====
+Before v6, `@SortNatural` must be used if collection element's natural ordering is relied upon for sorting.
+Starting from v6, we can omit `@SortNatural` as it will take effect by default.
 ====
 
 [[collections-map]]

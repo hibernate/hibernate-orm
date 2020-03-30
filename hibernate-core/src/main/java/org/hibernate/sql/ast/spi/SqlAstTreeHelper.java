@@ -49,6 +49,7 @@ public class SqlAstTreeHelper {
 		}
 		else {
 			combinedPredicate = new Junction( Junction.Nature.CONJUNCTION );
+			combinedPredicate.add( baseRestriction );
 		}
 
 		combinedPredicate.add( incomingRestriction );

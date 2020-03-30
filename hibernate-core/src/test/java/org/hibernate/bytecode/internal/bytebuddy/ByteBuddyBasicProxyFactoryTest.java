@@ -14,15 +14,20 @@ import static org.junit.Assert.assertTrue;
 
 import org.hibernate.bytecode.internal.bytebuddy.BasicProxyFactoryImpl;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-@TestForIssue(jiraKey = "HHH-12786")
 public class ByteBuddyBasicProxyFactoryTest {
 
-	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, new Class[0], new ByteBuddyState() );
+	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl(
+			Entity.class,
+			new Class[0],
+			new ByteBuddyState()
+	);
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12786")
 	public void testEqualsHashCode() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
@@ -34,6 +39,7 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12786")
 	public void testToString() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
@@ -41,6 +47,7 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12786")
 	public void testGetterSetter() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
@@ -54,10 +61,21 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-12786")
 	public void testNonGetterSetterMethod() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
 		assertNull( entityProxy.otherMethod() );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13915")
+	public void testProxiesDoNotShareState() {
+		Entity entityAProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		entityAProxy.setString( "John Irving" );
+
+		Entity entityBProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		assertNull( entityBProxy.getString() );
 	}
 
 	public static class Entity {

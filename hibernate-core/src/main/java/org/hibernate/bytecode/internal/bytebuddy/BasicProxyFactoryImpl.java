@@ -24,10 +24,11 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private static final Class[] NO_INTERFACES = new Class[0];
-	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
+	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ?
+			"HibernateBasicProxy$" :
+			"HibernateBasicProxy";
 
 	private final Class proxyClass;
-	private final ProxyConfiguration.Interceptor interceptor;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState byteBuddyState) {
@@ -39,23 +40,35 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		final TypeCache.SimpleKey cacheKey = getCacheKey( superClass, interfaces );
 
 		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, cacheKey, byteBuddy -> byteBuddy
-				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
-				.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
+				.with( new NamingStrategy.SuffixingRandom(
+						PROXY_NAMING_SUFFIX,
+						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() )
+				) )
+				.subclass(
+						superClass == null ? Object.class : superClass,
+						ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR
+				)
 				.implement( interfaces == null ? NO_INTERFACES : interfaces )
-				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
+				.defineField(
+						ProxyConfiguration.INTERCEPTOR_FIELD_NAME,
+						ProxyConfiguration.Interceptor.class,
+						Visibility.PRIVATE
+				)
 				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
+				.intercept( byteBuddyState.getProxyDefinitionHelpers()
+									.getDelegateToInterceptorDispatcherMethodDelegation() )
 				.implement( ProxyConfiguration.class )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
+				.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 		);
-		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
 	}
 
 	@Override
 	public Object getProxy() {
 		try {
 			final ProxyConfiguration proxy = (ProxyConfiguration) proxyClass.newInstance();
-			proxy.$$_hibernate_set_interceptor( this.interceptor );
+			// Create a dedicated interceptor for the proxy. This is required as the interceptor is stateful.
+			final ProxyConfiguration.Interceptor interceptor = new PassThroughInterceptor( proxyClass.getName() );
+			proxy.$$_hibernate_set_interceptor( interceptor );
 			return proxy;
 		}
 		catch (Throwable t) {

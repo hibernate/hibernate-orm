@@ -24,7 +24,7 @@ buildscript {
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.16'
+	id 'com.gradle.build-scan' version '2.0.2'
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'
 }
@@ -94,14 +94,14 @@ task ciBuild {
 
 
 wrapper {
-	gradleVersion = '4.10.3'
+	gradleVersion = '5.2.1'
 	distributionType = Wrapper.DistributionType.ALL
 }
 
 
 buildScan {
-	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-	licenseAgree = 'yes'
+	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+	termsOfServiceAgree = 'yes'
 }
 
 buildScanRecipes {

@@ -1,0 +1,21 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+/*
+ * Build script fragment for modules which want to use Hibernate's "JPA static metamodel generator"
+ * as part of its test sourceSet
+ */
+
+//apply from: rootProject.file( 'gradle/java-module.gradle' )
+
+dependencies {
+	testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
+}
+
+compileTestJava {
+	options.annotationProcessorPath = configurations.testAnnotationProcessor
+}

@@ -35,13 +35,13 @@ jar {
 		// auto-generation with instructions, classesDir and classpath
 		// need to be here (temporarily).
 
-		if ( project.pluginManager.hasPlugin( 'groovy' ) ) {
-			classesDir = sourceSets.main.groovy.outputDir
-		}
-		else {
-			classesDir = sourceSets.main.output.classesDir
-		}
-		classpath = configurations.runtime
+//		if ( project.pluginManager.hasPlugin( 'groovy' ) ) {
+//			classesDir = sourceSets.main.groovy.outputDir
+//		}
+//		else {
+//			classesDir = sourceSets.main.output.classesDir
+//		}
+//		classpath = configurations.runtime
 
 
 		// Java 9 module name

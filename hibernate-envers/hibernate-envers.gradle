@@ -6,6 +6,7 @@
  */
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/testable-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
 description = 'Hibernate\'s entity version (audit/history) support'
@@ -17,7 +18,6 @@ dependencies {
     }
 
     provided( libraries.ant )
-    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile( project( ':hibernate-testing' ) )
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )

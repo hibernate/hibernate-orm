@@ -32,8 +32,6 @@ dependencies {
     compile( 'javax.money:money-api:1.0.1' )
     compile( 'org.javamoney:moneta:1.1' )
 
-    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
-
     testRuntime( libraries.h2 )
     testRuntime( libraries.log4j )
 }

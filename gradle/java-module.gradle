@@ -71,15 +71,14 @@ configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
 
 dependencies {
-	compile libraries.logging
-
-	provided libraries.logging_annotations
+	// logging
+	compile( libraries.logging )
+	compile( libraries.logging_annotations )
 
 	annotationProcessor( libraries.logging_processor )
 	annotationProcessor( libraries.logging )
-	annotationProcessor( libraries.logging_annotations )
 
-
+	testRuntime( libraries.log4j )
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5
@@ -88,14 +87,15 @@ dependencies {
 	testCompile( libraries.junit5_api )
 	testRuntime( libraries.junit5_jupiter )
 	testCompile( libraries.junit5_params )
-	testCompile( libraries.junit )
 	testRuntime( libraries.junit5_vintage )
+
+	// We still also use JUnit 4 for existing tests
+	testCompile( libraries.junit )
 
 	testCompile( libraries.byteman )
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )
 
-	testRuntime( libraries.log4j )
 	testRuntime( libraries.javassist )
 	testRuntime( libraries.byteBuddy )
 
@@ -140,6 +140,10 @@ task compile(dependsOn: [compileJava, processResources, compileTestJava, process
 
 sourceSets.main {
 	compileClasspath += configurations.provided
+}
+
+tasks.compileJava {
+	options.annotationProcessorPath = configurations.annotationProcessor
 }
 
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->

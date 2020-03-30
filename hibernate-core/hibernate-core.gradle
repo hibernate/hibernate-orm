@@ -11,6 +11,8 @@ plugins {
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/testable-java-module.gradle' )
+
 apply plugin: Antlr4Plugin
 apply plugin: 'hibernate-matrix-testing'
 
@@ -125,8 +127,6 @@ dependencies {
     testRuntime( libraries.atomikos )
     testRuntime( libraries.atomikos_jta )
     testRuntime(libraries.wildfly_transaction_client)
-
-    testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet
@@ -445,7 +445,7 @@ class Antlr4GenerationTask extends DefaultTask {
 //Create the task that runs the integration tests found from the
 //configured source directory and uses the correct classpath.
 task testJavassist(type: Test) {
-    testClassesDirs = sourceSets.testJavassist.output.classesDirs
+    testClassesDirs = sourceSets.testJavassist.classesDirs
     classpath = sourceSets.testJavassist.runtimeClasspath
     //If you want to ensure that integration tests are run every time when you invoke
     //this task, uncomment the following line.

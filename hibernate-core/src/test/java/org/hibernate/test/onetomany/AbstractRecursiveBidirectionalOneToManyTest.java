@@ -8,6 +8,7 @@ package org.hibernate.test.onetomany;
 
 import java.util.ArrayList;
 
+import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.CacheMode;
@@ -15,6 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -88,6 +90,13 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseCo
 
 		tx.commit();
 		s.close();
+	}
+
+	@After
+	public void deleteData() {
+		doInHibernate( this::sessionFactory, s -> {
+			s.createQuery( "delete from org.hibernate.test.onetomany.Node" ).executeUpdate();
+		});
 	}
 
 	void transformMove() {

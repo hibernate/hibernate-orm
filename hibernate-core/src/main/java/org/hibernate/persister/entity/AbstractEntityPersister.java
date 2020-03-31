@@ -4848,10 +4848,20 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
+
+			// We don't care about the cached value here; we only want to know
+			// if the entity exists in the cache. If it does, then we know it is
+			// detached.
+
 			final EntityDataAccess cache = getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
-			if ( ce != null ) {
+
+			// IMPLEMENTATION NOTE: When Infinispan is the cache provider,
+			// CacheHelper#fromSharedCache will create a pending-put for the entity
+			// if it is not already cached. Avoid creating a pending-put by using
+			// cache.contains( ck ) instead. See HHH-13916.
+
+			if( cache.contains( ck ) ) {
 				return Boolean.FALSE;
 			}
 		}

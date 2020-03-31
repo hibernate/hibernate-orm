@@ -22,8 +22,6 @@
 
     <module name="TreeWalker">
 
-        <module name="FileContentsHolder"/>
-
         <!--
             High-priority warnings : fail the build...
         -->

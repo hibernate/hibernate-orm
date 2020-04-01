@@ -116,6 +116,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										fail( "Expecting a failure" );
 									}
 									catch ( LockTimeoutException | PessimisticLockException expected ) {
+										secondSession.getTransaction().setRollbackOnly();
 										// expected outcome
 									}
 								}
@@ -157,6 +158,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										fail( "Expecting a failure" );
 									}
 									catch ( LockTimeoutException | PessimisticLockException expected ) {
+										secondSession.getTransaction().setRollbackOnly();
 										// expected outcome
 									}
 								}

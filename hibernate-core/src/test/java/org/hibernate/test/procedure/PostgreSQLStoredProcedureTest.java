@@ -29,6 +29,7 @@ import org.hibernate.type.StringType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,82 +55,6 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-
-			session.doWork( connection -> {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP FUNCTION sp_count_phones(bigint)" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			} );
-		} );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-
-			session.doWork( connection -> {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP FUNCTION fn_phones(bigint)" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			} );
-		} );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-
-			session.doWork( connection -> {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP FUNCTION singleRefCursor(bigint)" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			} );
-		} );
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-
-			session.doWork( connection -> {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate( "DROP FUNCTION sp_is_null()" );
-				}
-				catch (SQLException ignore) {
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			} );
-		} );
-
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 
@@ -222,6 +147,85 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 			phone2.setId( 2L );
 
 			person1.addPhone( phone2 );
+		} );
+	}
+
+	@After
+	public void tearDown(){
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+
+			session.doWork( connection -> {
+				Statement statement = null;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate( "DROP FUNCTION sp_count_phones(bigint)" );
+				}
+				catch (SQLException ignore) {
+				}
+				finally {
+					if ( statement != null ) {
+						statement.close();
+					}
+				}
+			} );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+
+			session.doWork( connection -> {
+				Statement statement = null;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate( "DROP FUNCTION fn_phones(bigint)" );
+				}
+				catch (SQLException ignore) {
+				}
+				finally {
+					if ( statement != null ) {
+						statement.close();
+					}
+				}
+			} );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+
+			session.doWork( connection -> {
+				Statement statement = null;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate( "DROP FUNCTION singleRefCursor()" );
+				}
+				catch (SQLException ignore) {
+				}
+				finally {
+					if ( statement != null ) {
+						statement.close();
+					}
+				}
+			} );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
+
+			session.doWork( connection -> {
+				Statement statement = null;
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate( "DROP FUNCTION sp_is_null(varchar)" );
+				}
+				catch (SQLException ignore) {
+				}
+				finally {
+					if ( statement != null ) {
+						statement.close();
+					}
+				}
+			} );
 		} );
 	}
 

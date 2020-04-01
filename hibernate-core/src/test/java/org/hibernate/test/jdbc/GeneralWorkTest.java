@@ -98,7 +98,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		catch ( JDBCException expected ) {
 			// expected outcome
 		}
-		session.getTransaction().commit();
+		session.getTransaction().rollback();
 		session.close();
 	}
 

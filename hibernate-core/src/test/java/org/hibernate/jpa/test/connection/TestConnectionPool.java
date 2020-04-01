@@ -18,6 +18,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

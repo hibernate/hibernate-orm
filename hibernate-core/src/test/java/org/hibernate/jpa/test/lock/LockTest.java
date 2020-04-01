@@ -110,13 +110,16 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					fail( "Exception should be thrown" );
 				}
 				catch (LockTimeoutException lte) {
+					entityManager.getTransaction().setRollbackOnly();
 					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
 					lte.getCause();
 				}
 				catch (PessimisticLockException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 				}
 				catch (PersistenceException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					log.info(
 							"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
 									"This is likely a consequence of " + getDialect().getClass()
@@ -157,13 +160,16 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					fail( "Exception should be thrown" );
 				}
 				catch (LockTimeoutException lte) {
+					entityManager.getTransaction().setRollbackOnly();
 					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
 					lte.getCause();
 				}
 				catch (PessimisticLockException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 				}
 				catch (PersistenceException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					log.info("EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
 									 "This is likely a consequence of " + getDialect().getClass().getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
 									 "See HHH-7251 for an example of one such situation.", pe);
@@ -201,13 +207,16 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					fail( "Exception should be thrown" );
 				}
 				catch (LockTimeoutException lte) {
+					entityManager.getTransaction().setRollbackOnly();
 					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
 					lte.getCause();
 				}
 				catch (PessimisticLockException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 				}
 				catch (PersistenceException pe) {
+					entityManager.getTransaction().setRollbackOnly();
 					log.info(
 						"EntityManager.find() for PESSIMISTIC_WRITE with timeout of 0 threw a PersistenceException.\n" +
 								"This is likely a consequence of " + getDialect().getClass()
@@ -247,9 +256,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				catch (LockTimeoutException lte) {
 					// Proper exception thrown for dialect supporting lock timeouts when an immediate timeout is set.
 					lte.getCause();
+					entityManager.getTransaction().setRollbackOnly();
 				}
 				catch (PessimisticLockException pe) {
 					fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+					entityManager.getTransaction().setRollbackOnly();
 				}
 				catch (PersistenceException pe) {
 					log.info(
@@ -258,6 +269,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 									.getName() + " not properly mapping SQL errors into the correct HibernateException subtypes.\n" +
 									"See HHH-7251 for an example of one such situation.", pe
 					);
+					entityManager.getTransaction().setRollbackOnly();
+
 					fail( "EntityManager should be throwing LockTimeoutException." );
 				}
 			} );
@@ -856,11 +869,15 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
 							catch ( LockTimeoutException e ) {
+								_entityManager.getTransaction().setRollbackOnly();
+
 								// success
 								log.info( "testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception" );
 								timedOut.set( true );
 							}
 							catch ( Throwable e ) {
+								_entityManager.getTransaction().setRollbackOnly();
+
 								log.info( "Expected LockTimeoutException but got unexpected exception", e );
 							}
 						} );
@@ -898,9 +915,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 				}
 				catch (InterruptedException e) {
+					em.getTransaction().setRollbackOnly();
 					Thread.interrupted();
 				}
 				catch (ExecutionException e) {
+					em.getTransaction().setRollbackOnly();
 					fail(e.getMessage());
 				}
 			} );

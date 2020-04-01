@@ -87,6 +87,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 					fail( "Exception should be thrown" );
 				}
 				catch (Exception lte) {
+					em2.getTransaction().setRollbackOnly();
 					if( !ExceptionUtil.isSqlLockTimeout( lte )) {
 						fail("Should have thrown a Lock timeout exception");
 					}

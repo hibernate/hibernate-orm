@@ -273,7 +273,13 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		public void add(Connection conn) throws SQLException {
-			conn.setAutoCommit( true );
+			try {
+				conn.setAutoCommit( true );
+			}
+			catch (Exception e) {
+				conn.rollback();
+				conn.setAutoCommit( true );
+			}
 			conn.clearWarnings();
 			availableConnections.offer( conn );
 		}

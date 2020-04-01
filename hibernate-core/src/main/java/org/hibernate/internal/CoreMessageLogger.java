@@ -333,12 +333,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Found mapping document in jar: %s", id = 109)
 	void foundMappingDocument(String name);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "Getters of lazy classes cannot be final: %s.%s", id = 112)
-	void gettersOfLazyClassesCannotBeFinal(
-			String entityName,
-			String name);
-
 	@LogMessage(level = WARN)
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
@@ -762,12 +756,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Sessions opened: %s", id = 242)
 	void sessionsOpened(long sessionOpenCount);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Setters of lazy classes cannot be final: %s.%s", id = 243)
-	void settersOfLazyClassesCannotBeFinal(
-			String entityName,
-			String name);
 
 	@LogMessage(level = WARN)
 	@Message(value = "@Sort not allowed for an indexed collection, annotation ignored.", id = 244)

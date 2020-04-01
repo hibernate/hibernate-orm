@@ -28,7 +28,7 @@ apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
-apply plugin: 'osgi'
+apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'

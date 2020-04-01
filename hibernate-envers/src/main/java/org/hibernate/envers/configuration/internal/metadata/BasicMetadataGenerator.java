@@ -116,7 +116,7 @@ public final class BasicMetadataGenerator {
 				key
 		);
 
-		MetadataTools.addColumns( propMapping, value.getColumnIterator(), metadata );
+		MetadataTools.addColumns( propMapping, value.getColumnIterator() );
 
 		return propMapping;
 	}

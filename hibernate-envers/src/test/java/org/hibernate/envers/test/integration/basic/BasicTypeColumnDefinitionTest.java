@@ -18,6 +18,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Table;
+import org.junit.ComparisonFailure;
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
@@ -54,7 +55,9 @@ public class BasicTypeColumnDefinitionTest extends BaseEnversJPAFunctionalTestCa
 		return new Class<?>[] { BasicTypeContainer.class };
 	}
 
-	@Test
+	// By reverting changes for HHH-10844 to restore columnDefinition original behavior, this implies this test will
+	// now fail because the expected sql-type will once again be identical to the base table mapping.
+	@Test(expected = ComparisonFailure.class)
 	@Priority(10)
 	public void testMetadataBindings() {
 		final Table auditTable = metadata().getEntityBinding( BasicTypeContainer.class.getName() + "_AUD" ).getTable();

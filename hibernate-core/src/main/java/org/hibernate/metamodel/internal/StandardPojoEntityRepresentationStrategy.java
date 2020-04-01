@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +46,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -189,14 +189,8 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		Class clazz = bootDescriptor.getMappedClass();
 		while ( properties.hasNext() ) {
 			Property property = (Property) properties.next();
-			Method method = property.getGetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.gettersOfLazyClassesCannotBeFinal( bootDescriptor.getEntityName(), property.getName() );
-			}
-			method = property.getSetter( clazz ).getMethod();
-			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				LOG.settersOfLazyClassesCannotBeFinal( bootDescriptor.getEntityName(), property.getName() );
-			}
+			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
+			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
 		}
 
 		final Method idGetterMethod = identifierPropertyAccess == null ? null : identifierPropertyAccess.getGetter().getMethod();

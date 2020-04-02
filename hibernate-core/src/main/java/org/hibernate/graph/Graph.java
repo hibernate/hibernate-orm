@@ -15,7 +15,7 @@ import javax.persistence.metamodel.ManagedType;
  *
  * Acts as a "bridge" between JPA's {@link javax.persistence.EntityGraph} and {@link javax.persistence.Subgraph}
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
  * @author Andrea Boriero
  */

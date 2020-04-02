@@ -29,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Piotr Krauzowicz <p.krauzowicz@visiona.pl>
+ * @author <a href="mailto:p.krauzowicz@visiona.pl">Piotr Krauzowicz</a>
  * @author Gail Badner
  */
 @SkipForDialect(value = MySQL5Dialect.class, comment = "BLOB/TEXT column 'id' used in key specification without a key length")

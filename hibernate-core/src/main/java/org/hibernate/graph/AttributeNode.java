@@ -13,7 +13,7 @@ import javax.persistence.metamodel.Attribute;
 /**
  * Hibernate extension to the JPA entity-graph AttributeNode contract.
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
  * @author Andrea Boriero
  */

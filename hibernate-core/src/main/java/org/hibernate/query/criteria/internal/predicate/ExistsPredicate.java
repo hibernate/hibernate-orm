@@ -15,7 +15,7 @@ import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
- * Models an <tt>EXISTS(<subquery>)</tt> predicate
+ * Models an {@code EXISTS(<subquery>)} predicate
  *
  * @author Steve Ebersole
  */

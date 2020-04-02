@@ -304,7 +304,7 @@ public final class StringHelper {
 	/**
 	 * Collapses a name.  Mainly intended for use with classnames, where an example might serve best to explain.
 	 * Imagine you have a class named <samp>'org.hibernate.internal.util.StringHelper'</samp>; calling collapse on that
-	 * classname will result in <samp>'o.h.u.StringHelper'<samp>.
+	 * classname will result in <samp>'o.h.u.StringHelper'</samp>.
 	 *
 	 * @param name The name to collapse.
 	 *

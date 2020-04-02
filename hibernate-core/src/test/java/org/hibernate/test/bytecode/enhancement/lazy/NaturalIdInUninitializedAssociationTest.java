@@ -39,7 +39,7 @@ import static org.junit.Assert.assertFalse;
 @SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-13607" )
 @RunWith( BytecodeEnhancerRunner.class )
-@EnhancementOptions( lazyLoading = true )
+@EnhancementOptions( lazyLoading = true, extendedEnhancement = true )
 public class NaturalIdInUninitializedAssociationTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test

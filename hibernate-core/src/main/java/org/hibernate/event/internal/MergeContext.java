@@ -73,7 +73,7 @@ import org.jboss.logging.Logger;
  * The following method is intended to be used by a merge event listener (and other
  * classes) in the same package to indicate whether the merge operation is being
  * performed on a merge entity already in the MergeContext:
- * {@link MergeContext#setOperatedOn(Object mergeEntity, boolean isOperatedOn)
+ * {@link MergeContext#setOperatedOn(Object mergeEntity, boolean isOperatedOn)}
  *
  * @author Gail Badner
  */
@@ -149,7 +149,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext.
 	 * @return an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Set entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
@@ -180,7 +180,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge entities contained in this MergeContext
 	 * @return an unmodifiable set view of the merge entities contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Set keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
@@ -319,7 +319,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable Set view of managed entities contained in this MergeContext.
 	 * @return an unmodifiable Set view of managed entities contained in this MergeContext
 	 *
-	 * @see {@link Collections#unmodifiableSet(java.util.Set)}
+	 * @see Collections#unmodifiableSet(java.util.Set)
 	 */
 	public Collection values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
@@ -367,7 +367,7 @@ public class MergeContext implements Map {
 	 *
 	 * @return an unmodifiable map view of the managed-to-merge entity cross-references.
 	 *
-	 * @see {@link Collections#unmodifiableMap(java.util.Map)}
+	 * @see Collections#unmodifiableMap(java.util.Map)
 	 */
 	public Map invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );

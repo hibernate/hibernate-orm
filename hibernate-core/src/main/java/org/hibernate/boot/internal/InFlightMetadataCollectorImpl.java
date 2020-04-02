@@ -1776,7 +1776,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * <p/>
 	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
 	 *
-	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready
+	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready
 	 * for processing.
 	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
 	 * @param startTable Table name to start recursive algorithm.

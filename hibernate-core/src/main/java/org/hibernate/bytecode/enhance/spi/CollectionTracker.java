@@ -7,7 +7,7 @@
 package org.hibernate.bytecode.enhance.spi;
 
 /**
- * Interface to be implemented by collection trackers that hold the expected size od collections, a simplified Map<String, int>.
+ * Interface to be implemented by collection trackers that hold the expected size od collections, a simplified {@code Map<String, int>}.
  *
  * @author <a href="mailto:lbarreiro@redhat.com">Luis Barreiro</a>
  */

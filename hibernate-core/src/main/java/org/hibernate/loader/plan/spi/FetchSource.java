@@ -55,7 +55,7 @@ public interface FetchSource {
 	 *
 	 *  @return the "current" EntityReference or null if none.
 	 * .
-	 * @see org.hibernate.loader.plan.spi.Fetch#getSource().
+	 * @see org.hibernate.loader.plan.spi.Fetch#getSource()
 	 */
 	public EntityReference resolveEntityReference();
 }

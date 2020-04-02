@@ -22,7 +22,6 @@ buildscript {
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '2.4.2'
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 	id 'org.hibernate.build.maven-repo-auth' version '3.0.2' apply false

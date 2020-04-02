@@ -117,8 +117,8 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  * <p>
  * Note: This dialect is configured to create foreign keys with {@code on update cascade}.
  *
- * @author Andrew Clemons <andrew.clemons@sap.com>
- * @author Jonathan Bregler <jonathan.bregler@sap.com>
+ * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
+ * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public abstract class AbstractHANADialect extends Dialect {
 

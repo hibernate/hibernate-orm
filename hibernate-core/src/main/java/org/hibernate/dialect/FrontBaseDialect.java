@@ -32,7 +32,7 @@ import org.hibernate.persister.entity.Lockable;
  * 2.3.1, you can work-around this problem by setting the following in your
  * <tt>hibernate.properties</tt> file: <tt>hibernate.jdbc.batch_size=15</tt>
  *
- * @author Ron Lussier <tt>rlussier@lenscraft.com</tt>
+ * @author <a href="mailto:rlussier@lenscraft.com</tt">Ron Lussier</a>
  */
 public class FrontBaseDialect extends Dialect {
 

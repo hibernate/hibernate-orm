@@ -15,7 +15,7 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 
 /**
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
 @Entity
 @Persister( impl = SingleTableEntityPersister.class)

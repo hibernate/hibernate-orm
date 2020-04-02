@@ -9,7 +9,7 @@ package org.hibernate.test.criteria;
 import javax.persistence.MappedSuperclass;
 
 /**
-* @author Strong Liu <stliu@hibernate.org>
+* @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
 */
 @MappedSuperclass
 abstract class VersionedRecord implements java.io.Serializable {

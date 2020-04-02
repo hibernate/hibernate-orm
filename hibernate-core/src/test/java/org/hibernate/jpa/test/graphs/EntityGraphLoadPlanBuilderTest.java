@@ -43,7 +43,7 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	@Override

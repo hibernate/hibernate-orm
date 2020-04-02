@@ -7,7 +7,7 @@
 package org.hibernate.test.pagination;
 
 /**
- * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+ * @author <a href="mailto:piotr.findeisen@gmail.com">Piotr Findeisen</a>
  */
 public class DataMetaPoint {
 	private long id;

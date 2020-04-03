@@ -131,9 +131,7 @@ javadoc {
 			options.source = project.baselineJavaVersion
 		}
 
-		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
-		}
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
 
 		doFirst {
 			// ordering problems if we try to do this during config phase :(

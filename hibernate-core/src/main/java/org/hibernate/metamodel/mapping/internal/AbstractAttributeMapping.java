@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -50,5 +51,8 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	@Override
 	public ManagedMappingType getDeclaringType() {
 		return declaringType;
+	}
+
+	void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){
 	}
 }

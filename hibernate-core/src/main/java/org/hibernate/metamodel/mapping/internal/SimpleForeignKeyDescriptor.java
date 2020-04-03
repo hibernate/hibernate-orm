@@ -44,7 +44,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -57,34 +56,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private final String targetColumnContainingTable;
 	private final String targetColumnExpression;
 	private final JdbcMapping jdbcMapping;
-	private final ForeignKeyDirection fKeyDirection;
-	private final int hasCode;
 
 	public SimpleForeignKeyDescriptor(
-			ForeignKeyDirection fKeyDirection,
 			String keyColumnContainingTable,
 			String keyColumnExpression,
 			String targetColumnContainingTable,
 			String targetColumnExpression,
 			JdbcMapping jdbcMapping) {
-		this.fKeyDirection = fKeyDirection;
 		this.keyColumnContainingTable = keyColumnContainingTable;
 		this.keyColumnExpression = keyColumnExpression;
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpression = targetColumnExpression;
 		this.jdbcMapping = jdbcMapping;
-
-		this.hasCode = Objects.hash(
-				keyColumnContainingTable,
-				keyColumnExpression,
-				targetColumnContainingTable,
-				targetColumnExpression
-		);
-	}
-
-	@Override
-	public ForeignKeyDirection getDirection() {
-		return fKeyDirection;
 	}
 
 	@Override
@@ -103,14 +86,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 									tableReference,
 									targetColumnExpression
 							),
-							s -> {
-								return new ColumnReference(
-										identificationVariable,
-										targetColumnExpression,
-										jdbcMapping,
-										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-								);
-							}
+							s ->
+									new ColumnReference(
+											identificationVariable,
+											targetColumnExpression,
+											jdbcMapping,
+											creationState.getSqlAstCreationState()
+													.getCreationContext()
+													.getSessionFactory()
+									)
 					),
 					jdbcMapping.getJavaTypeDescriptor(),
 					sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
@@ -409,25 +393,5 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	public String getTargetColumnExpression() {
 		return targetColumnExpression;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		SimpleForeignKeyDescriptor that = (SimpleForeignKeyDescriptor) o;
-		return Objects.equals( keyColumnContainingTable, that.keyColumnContainingTable ) &&
-				Objects.equals( targetColumnContainingTable, that.targetColumnContainingTable ) &&
-				Objects.equals( keyColumnExpression, that.keyColumnExpression ) &&
-				Objects.equals( targetColumnExpression, that.targetColumnExpression );
-	}
-
-	@Override
-	public int hashCode() {
-		return this.hasCode;
 	}
 }

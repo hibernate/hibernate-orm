@@ -80,6 +80,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 				session -> {
 					System system = session.get( System.class, 1 );
 					assertThat( system, is( notNullValue() ) );
+					assertThat( system.getId() , is(1) );
 
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 					assertTrue( Hibernate.isInitialized( system.getUser().getPk().subsystem ) );

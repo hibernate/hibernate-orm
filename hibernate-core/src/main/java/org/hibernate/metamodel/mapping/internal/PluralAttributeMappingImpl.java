@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -58,13 +59,10 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
 
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -148,7 +146,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				else {
 					baseIndex = -1;
 				}
-
 			}
 
 			@Override
@@ -206,47 +203,27 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 							fkBootDescriptorSource = ( (IndexedCollection) bootDescriptor ).getIndex();
 						}
 
+						final Dialect dialect = creationProcess.getCreationContext()
+								.getSessionFactory()
+								.getJdbcServices()
+								.getDialect();
 						if ( fkTargetPart instanceof BasicValuedModelPart ) {
 							final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
 							final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
 							manyToManyFkDescriptor = new SimpleForeignKeyDescriptor(
-									ForeignKeyDirection.TO_PARENT,
 									collectionDescriptorAsJoinable.getTableName(),
-									fkBootDescriptorSource.getColumnIterator()
-											.next()
-											.getText( creationProcess.getCreationContext()
-															  .getSessionFactory()
-															  .getJdbcServices()
-															  .getDialect() ),
+									fkBootDescriptorSource.getColumnIterator().next().getText( dialect ),
 									basicFkTargetPart.getContainingTableExpression(),
 									basicFkTargetPart.getMappedColumnExpression(),
 									basicFkTargetPart.getJdbcMapping()
 							);
 						}
 						else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
-							final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
-
-							java.util.List<String> keyColumnExpressions = new ArrayList<>();
-							fkBootDescriptorSource.getColumnIterator()
-									.forEachRemaining( column -> keyColumnExpressions.add(
-											column.getText( creationProcess.getCreationContext()
-																	.getSessionFactory()
-																	.getJdbcServices()
-																	.getDialect() ) ) );
-							java.util.List<String> targetColumnExpressions = new ArrayList<>();
-							fkTargetPart.visitColumns(
-									(table, column, mapping) ->
-											targetColumnExpressions.add( column ) );
-
-							manyToManyFkDescriptor = new EmbeddedForeignKeyDescriptor(
-									getAttributeName(),
-									(EmbeddedIdentifierMappingImpl) fkTargetPart,
-									stateArrayContributorMetadataAccess,
-									( (AssociationType) bootDescriptor.getType() ).getForeignKeyDirection(),
-									collectionDescriptorAsJoinable.getTableName(),
-									keyColumnExpressions,
-									( (EmbeddableValuedModelPart) fkTargetPart ).getContainingTableExpression(),
-									targetColumnExpressions,
+							manyToManyFkDescriptor = MappingModelCreationHelper.buildEmbeddedForeignKeyDescriptor(
+									(EmbeddableValuedModelPart) fkTargetPart,
+									this,
+									fkBootDescriptorSource,
+									dialect,
 									creationProcess
 							);
 						}
@@ -258,7 +235,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 						return true;
 					}
 			);
-
 		}
 
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;

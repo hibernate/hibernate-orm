@@ -75,6 +75,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final Cardinality cardinality;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
+	private ForeignKeyDirection foreignKeyDirection;
 	private String identifyingColumnsTableExpression;
 
 	public SingularAssociationAttributeMapping(
@@ -127,16 +128,14 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
+	}
 
-		final String identifyingColumnsTableExpression;
-		if ( foreignKeyDescriptor.getDirection() == ForeignKeyDirection.FROM_PARENT && !referringPrimaryKey ) {
-			identifyingColumnsTableExpression = foreignKeyDescriptor.getTargetTableExpression();
-		}
-		else {
-			identifyingColumnsTableExpression = foreignKeyDescriptor.getReferringTableExpression();
-		}
+	public void setIdentifyingColumnsTableExpression(String tableExpression) {
+		identifyingColumnsTableExpression = tableExpression;
+	}
 
-		this.identifyingColumnsTableExpression = identifyingColumnsTableExpression;
+	public void setForeignKeyDirection(ForeignKeyDirection direction) {
+		foreignKeyDirection = direction;
 	}
 
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {

@@ -148,6 +148,7 @@ public class OneToOneSecondPass implements SecondPass {
 			}
 		}
 		else {
+			value.setMappedByProperty( mappedBy );
 			PersistentClass otherSide = (PersistentClass) persistentClasses.get( value.getReferencedEntityName() );
 			Property otherSideProperty;
 			try {

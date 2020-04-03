@@ -8,41 +8,25 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -50,49 +34,34 @@ import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableForeignKeyResultImpl;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Andrea Boriero
  */
-public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, EmbeddableValuedFetchable {
+public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, ModelPart {
 
-	private String name;
-	private StateArrayContributorMetadataAccess attributeMetadataAccess;
 	private final String keyColumnContainingTable;
 	private final List<String> keyColumnExpressions;
 	private final String targetColumnContainingTable;
 	private final List<String> targetColumnExpressions;
 	private final EmbeddableValuedModelPart mappingType;
 	private final List<JdbcMapping> jdbcMappings;
-	private final ForeignKeyDirection fKeyDirection;
-	private final int hasCode;
 
 	public EmbeddedForeignKeyDescriptor(
-			String attributeName,
 			EmbeddedIdentifierMappingImpl mappingType,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			ForeignKeyDirection fKeyDirection,
 			String keyColumnContainingTable,
 			List<String> keyColumnExpressions,
 			String targetColumnContainingTable,
 			List<String> targetColumnExpressions,
 			MappingModelCreationProcess creationProcess) {
-		name = attributeName;
-		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.keyColumnContainingTable = keyColumnContainingTable;
 		this.keyColumnExpressions = keyColumnExpressions;
 		this.targetColumnContainingTable = targetColumnContainingTable;
 		this.targetColumnExpressions = targetColumnExpressions;
 		this.mappingType = mappingType;
-		this.fKeyDirection = fKeyDirection;
 		jdbcMappings = new ArrayList<>();
 		mappingType.getAttributes().forEach(
 				attribute -> {
@@ -122,18 +91,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Embed
 					}
 				}
 		);
-
-		this.hasCode = Objects.hash(
-				keyColumnContainingTable,
-				keyColumnExpressions,
-				targetColumnContainingTable,
-				targetColumnExpressions
-		);
-	}
-
-	@Override
-	public ForeignKeyDirection getDirection() {
-		return fKeyDirection;
 	}
 
 	@Override
@@ -410,162 +367,4 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Embed
 		throw new UnsupportedOperationException();
 	}
 
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		EmbeddedForeignKeyDescriptor that = (EmbeddedForeignKeyDescriptor) o;
-		return keyColumnContainingTable.equals( that.keyColumnContainingTable ) &&
-				keyColumnExpressions.equals( that.keyColumnExpressions ) &&
-				targetColumnContainingTable.equals( that.targetColumnContainingTable ) &&
-				targetColumnExpressions.equals( that.targetColumnExpressions );
-	}
-
-	@Override
-	public int hashCode() {
-		return hasCode;
-	}
-
-	@Override
-	public TableGroupJoin createTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
-			LockMode lockMode,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
-				navigablePath,
-				this,
-				lhs
-		);
-
-		lhs.addTableGroupJoin( new TableGroupJoin( navigablePath, SqlAstJoinType.INNER, compositeTableGroup, null ) );
-
-		return new TableGroupJoin(
-				navigablePath,
-				sqlAstJoinType,
-				compositeTableGroup
-		);
-	}
-
-	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
-		return (EmbeddableMappingType) mappingType;
-	}
-
-	@Override
-	public String getContainingTableExpression() {
-		return keyColumnContainingTable;
-	}
-
-	@Override
-	public List<String> getMappedColumnExpressions() {
-		return keyColumnExpressions;
-	}
-
-	@Override
-	public SingularAttributeMapping getParentInjectionAttributeMapping() {
-		return null;
-	}
-
-	@Override
-	public Expression toSqlExpression(
-			TableGroup tableGroup,
-			Clause clause,
-			SqmToSqlAstConverter walker,
-			SqlAstCreationState sqlAstCreationState) {
-		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( keyColumnExpressions.size() );
-		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
-		getEmbeddableTypeDescriptor().visitJdbcTypes(
-				new Consumer<JdbcMapping>() {
-					private int index = 0;
-
-					@Override
-					public void accept(JdbcMapping jdbcMapping) {
-						final String attrColumnExpr = keyColumnExpressions.get( index++ );
-
-						final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-								SqlExpressionResolver.createColumnReferenceKey(
-										tableReference,
-										attrColumnExpr
-								),
-								sqlAstProcessingState -> new ColumnReference(
-										tableReference.getIdentificationVariable(),
-										attrColumnExpr,
-										jdbcMapping,
-										sqlAstCreationState.getCreationContext().getSessionFactory()
-								)
-						);
-
-						columnReferences.add( (ColumnReference) columnReference );
-					}
-				},
-				clause,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
-		);
-
-		return new SqlTuple( columnReferences, this );
-
-	}
-
-
-	@Override
-	public String getSqlAliasStem() {
-		return name;
-	}
-
-	@Override
-	public ModelPart findSubPart(
-			String name, EntityMappingType treatTargetType) {
-		return mappingType.findSubPart( name, treatTargetType );
-	}
-
-	@Override
-	public void visitSubParts(
-			Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		mappingType.visitSubParts( consumer, treatTargetType );
-	}
-
-	@Override
-	public String getFetchableName() {
-		return name;
-	}
-
-	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return null;
-	}
-
-	@Override
-	public Fetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			LockMode lockMode,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return new EmbeddableFetchImpl(
-				fetchablePath,
-				this,
-				fetchParent,
-				fetchTiming,
-				selected,
-				attributeMetadataAccess.resolveAttributeMetadata( null ).isNullable(),
-				creationState
-		);
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
 }

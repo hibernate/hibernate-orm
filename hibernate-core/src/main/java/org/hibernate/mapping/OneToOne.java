@@ -28,6 +28,7 @@ public class OneToOne extends ToOne {
 	private KeyValue identifier;
 	private String propertyName;
 	private String entityName;
+	private String mappedByProperty;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
@@ -166,5 +167,12 @@ public class OneToOne extends ToOne {
 				&& Objects.equals( entityName, other.entityName )
 				&& constrained == other.constrained;
 	}
-	
+
+	public String getMappedByProperty() {
+		return mappedByProperty;
+	}
+
+	public void setMappedByProperty(String mappedByProperty) {
+		this.mappedByProperty = mappedByProperty;
+	}
 }

@@ -315,7 +315,7 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		getAttributes().forEach(
 				attribute -> {
 					if ( attribute instanceof SingularAssociationAttributeMapping ) {
-						SingularAssociationAttributeMapping associationAttributeMapping = (SingularAssociationAttributeMapping) attribute;
+						final SingularAssociationAttributeMapping associationAttributeMapping = (SingularAssociationAttributeMapping) attribute;
 						associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns( consumer );
 					}
 					else {

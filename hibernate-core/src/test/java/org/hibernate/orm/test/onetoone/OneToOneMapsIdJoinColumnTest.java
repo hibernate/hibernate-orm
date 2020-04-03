@@ -6,14 +6,21 @@
  */
 package org.hibernate.orm.test.onetoone;
 
+import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 
 import org.junit.jupiter.api.Test;
@@ -25,6 +32,12 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunctionalTest {
 
+
+	@Override
+	protected void applySettings(Map<Object, Object> settings) {
+		settings.put( AvailableSettings.STATEMENT_INSPECTOR, SQLStatementInspector.class );
+	}
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
@@ -35,7 +48,12 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 
 	@Test
 	public void testLifecycle() {
+		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+		SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
+		SQLStatementInspector statementInspector = (SQLStatementInspector) sessionFactory.getSessionFactoryOptions().getStatementInspector();
+
 		Person _person = doInJPA( this::entityManagerFactory, entityManager -> {
+
 			Person person = new Person( "ABC-123" );
 
 			PersonDetails details = new PersonDetails();
@@ -46,11 +64,16 @@ public class OneToOneMapsIdJoinColumnTest extends EntityManagerFactoryBasedFunct
 
 			return person;
 		} );
-
+		statementInspector.clear();
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person = entityManager.find( Person.class, _person.getId() );
+			statementInspector.assertExecutedCount( 1 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+
+			statementInspector.clear();
 
 			PersonDetails details = entityManager.find( PersonDetails.class, _person.getId() );
+			statementInspector.assertExecutedCount( 0 );
 		} );
 	}
 

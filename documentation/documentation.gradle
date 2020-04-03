@@ -140,9 +140,7 @@ task aggregateJavadocs(type: Javadoc) {
 			options.source = project.baselineJavaVersion
 		}
 
-		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
-		}
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
 	}
 
     // process each project, building up:

@@ -6,8 +6,6 @@
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
-import static org.hibernate.internal.CoreLogging.messageLogger;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -15,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
@@ -24,11 +23,15 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyConfiguration;
 
+import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.TypeCache;
 import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.SuperMethodCall;
+
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 public class ByteBuddyProxyHelper implements Serializable {
 
@@ -51,7 +54,21 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey(key), byteBuddy -> byteBuddy
+		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey(key), proxyBuilder(persistentClass, interfaces) );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public DynamicType.Unloaded<?> buildUnloadedProxy(
+			final Class persistentClass,
+			final Class[] interfaces) {
+		return byteBuddyState.make( proxyBuilder( persistentClass, interfaces ) );
+	}
+
+	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(
+			Class persistentClass,
+			Class[] interfaces
+	) {
+		return byteBuddy -> byteBuddy
 				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
 				.subclass( interfaces.length == 1 ? persistentClass : Object.class, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
@@ -62,8 +79,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 						.intercept( SuperMethodCall.INSTANCE )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.implement( ProxyConfiguration.class )
-						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
-		);
+						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() );
 	}
 
 	public HibernateProxy deserializeProxy(SerializableProxy serializableProxy) {

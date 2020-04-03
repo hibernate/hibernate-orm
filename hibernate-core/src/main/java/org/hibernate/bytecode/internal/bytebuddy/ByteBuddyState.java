@@ -181,6 +181,10 @@ public final class ByteBuddyState {
 				cache );
 	}
 
+	public Unloaded<?> make(Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
+		return make(makeProxyFunction.apply( byteBuddy ));
+	}
+
 	private Unloaded<?> make(DynamicType.Builder<?> builder) {
 		return make( null, builder );
 	}

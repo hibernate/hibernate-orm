@@ -9,17 +9,21 @@ package org.hibernate.boot.model.convert.internal;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.java.JavaXMember;
+import org.hibernate.annotations.common.reflection.java.generics.TypeEnvironment;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.HCANNHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -33,6 +37,7 @@ import com.fasterxml.classmate.members.ResolvedMethod;
  * @author Steve Ebersole
  */
 public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplicableConverterDescriptor {
+
 	private final ConverterDescriptor linkedConverterDescriptor;
 
 	public AutoApplicableConverterDescriptorStandardImpl(ConverterDescriptor linkedConverterDescriptor) {
@@ -100,9 +105,23 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
 		final ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
 
-		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve(
-				reflectionManager.toClass( xProperty.getDeclaringClass() )
-		);
+		final ResolvedType declaringClassType;
+
+		Class<?> declaringClass = reflectionManager.toClass( xProperty.getDeclaringClass() );
+		if ( xProperty instanceof JavaXMember ) {
+			final JavaXMember javaXMember = (JavaXMember) xProperty;
+			final Type[] declaredGenericsTypes = declaringClass.getTypeParameters();
+			final TypeEnvironment typeEnvironment = getTypeEnvironment( javaXMember );
+			final Type[] boundGenericsTypes = new Type[ declaredGenericsTypes.length ];
+			for ( int i = 0; i < declaredGenericsTypes.length; i++ ) {
+				boundGenericsTypes[i] = typeEnvironment.bind( declaredGenericsTypes[i] );
+			}
+			declaringClassType = classmateContext.getTypeResolver().resolve( declaringClass, boundGenericsTypes );
+		}
+		else {
+			declaringClassType = classmateContext.getTypeResolver().resolve( declaringClass );
+		}
+
 		final ResolvedTypeWithMembers declaringClassWithMembers = classmateContext.getMemberResolver().resolve(
 				declaringClassType,
 				null,
@@ -133,6 +152,15 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		);
 	}
 
+	private static TypeEnvironment getTypeEnvironment(JavaXMember xMember) {
+		final Field typeEnvironmentField = ReflectHelper.findField( JavaXMember.class, "env" );
+		try {
+			return (TypeEnvironment) typeEnvironmentField.get( xMember );
+		}
+		catch (IllegalAccessException e) {
+			throw new HibernateException( "Could not access 'env' field for JavaXMember object: " + xMember );
+		}
+	}
 
 	private static Member toMember(XProperty xProperty) {
 		try {
@@ -180,4 +208,5 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 
 		return true;
 	}
+
 }

@@ -34,6 +34,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -141,6 +142,8 @@ public interface SessionFactoryOptions {
 	}
 
 	StatementInspector getStatementInspector();
+
+	StatementExecutionListener getStatementExecutionListener();
 
 	SessionFactoryObserver[] getSessionFactoryObservers();
 

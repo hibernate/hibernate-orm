@@ -1653,6 +1653,18 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
+	/**
+	 * Names a {@link org.hibernate.resource.jdbc.spi.StatementExecutionListener} implementation to be applied to
+	 * the {@link org.hibernate.SessionFactory}.  Can reference<ul>
+	 *     <li>StatementExecutionListener instance</li>
+	 *     <li>StatementExecutionListener implementation {@link Class} reference</li>
+	 *     <li>StatementExecutionListener implementation class name (FQN)</li>
+	 * </ul>
+	 *
+	 * @since 5.4.14
+	 */
+	String STATEMENT_EXECUTION_LISTENER = "hibernate.session_factory.statement_execution_listener";
+
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";

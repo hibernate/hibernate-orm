@@ -57,6 +57,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -112,6 +113,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
 import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_EXECUTION_LISTENER;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
@@ -174,6 +176,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Class<? extends Interceptor> statelessInterceptorClass;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
+	private StatementExecutionListener statementExecutionListener;
 	private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 	private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
@@ -302,6 +305,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.statementInspector = strategySelector.resolveStrategy(
 				StatementInspector.class,
 				configurationSettings.get( STATEMENT_INSPECTOR )
+		);
+		this.statementExecutionListener = strategySelector.resolveStrategy(
+				StatementExecutionListener.class,
+				configurationSettings.get( STATEMENT_EXECUTION_LISTENER )
 		);
 
 		// todo : expose this from builder?
@@ -761,6 +768,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public StatementExecutionListener getStatementExecutionListener() {
+		return statementExecutionListener;
+	}
+
+	@Override
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
 		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[ sessionFactoryObserverList.size() ] );
 	}
@@ -1128,6 +1140,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyStatementInspector(StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
+	}
+
+	public void applyStatementExecutionListener(StatementExecutionListener statementExecutionListener) {
+		this.statementExecutionListener= statementExecutionListener;
 	}
 
 	public void applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {

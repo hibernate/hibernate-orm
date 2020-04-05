@@ -9,6 +9,8 @@ package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.spi.LoadState;
+import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.DynamicUpdate;
@@ -16,6 +18,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -37,6 +40,9 @@ import static org.junit.Assert.assertTrue;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true,inlineDirtyChecking = true)
 public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	private final PersistenceUtilHelper.MetadataCache metadataCache = new PersistenceUtilHelper.MetadataCache();
+
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
@@ -74,8 +80,10 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 					assertEquals( "female", animal.getSex() );
 					assertTrue( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 					assertEquals( 3, animal.getAge() );
 					animal.setSex( "other" );
 				}
@@ -85,6 +93,7 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					Animal animal = session.get( Animal.class, "animal" );
 					assertTrue( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "name", metadataCache ) );
 					assertEquals( "other", animal.getSex() );
 					assertEquals( 3, animal.getAge() );
 					assertEquals( "green", animal.getColor() );
@@ -109,10 +118,12 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 					animal.setSex( "other" );
 					// Setting the attribute value should not initialize animal
 					// with dirty-checking and dynamic-update.
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "sex", metadataCache ) );
 				}
 		);
 
@@ -157,8 +168,10 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					session.merge( animalInitialized );
 					assertTrue( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					assertEquals( 4, animal.getAge() );
 					assertEquals( "other", animal.getSex() );
 				}
@@ -239,6 +252,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
+					assertFalse( Hibernate.isInitialized( animal ) ); //checking again against side effects of using PersistenceUtilHelper
 					return animal;
 				}
 		);
@@ -247,7 +262,10 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
 					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					session.merge( animalUninitialized );
+					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					assertFalse( Hibernate.isInitialized( animal ) );
 				}
 		);
@@ -278,6 +296,8 @@ public class ProxyInitializeAndUpdateInlineDirtyTrackingDynamicUpdateTest extend
 				this::sessionFactory,
 				session -> {
 					final Animal animal = session.load( Animal.class, "animal" );
+					assertFalse( Hibernate.isInitialized( animal ) );
+					assertEquals( LoadState.NOT_LOADED , PersistenceUtilHelper.isLoadedWithoutReference( animal, "age", metadataCache ) );
 					assertFalse( Hibernate.isInitialized( animal ) );
 					return animal;
 				}

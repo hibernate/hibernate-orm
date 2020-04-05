@@ -45,29 +45,25 @@ public class ByteBuddyProxyHelper implements Serializable {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Class buildProxy(
-			final Class persistentClass,
-			final Class[] interfaces) {
+	public Class buildProxy(final Class persistentClass, final Class[] interfaces) {
 		Set<Class<?>> key = new HashSet<Class<?>>();
 		if ( interfaces.length == 1 ) {
 			key.add( persistentClass );
 		}
 		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
 
-		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey(key), proxyBuilder(persistentClass, interfaces) );
+		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey( key ), proxyBuilder( persistentClass, interfaces ) );
 	}
 
+	/**
+	 * Do not remove: used by Quarkus
+	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public DynamicType.Unloaded<?> buildUnloadedProxy(
-			final Class persistentClass,
-			final Class[] interfaces) {
+	public DynamicType.Unloaded<?> buildUnloadedProxy(final Class persistentClass, final Class[] interfaces) {
 		return byteBuddyState.make( proxyBuilder( persistentClass, interfaces ) );
 	}
 
-	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(
-			Class persistentClass,
-			Class[] interfaces
-	) {
+	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(Class persistentClass, Class[] interfaces) {
 		return byteBuddy -> byteBuddy
 				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )

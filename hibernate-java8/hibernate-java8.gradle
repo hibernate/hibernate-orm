@@ -1,7 +1,7 @@
+description = '(deprecated - use hibernate-core instead) Support for Java8-specific features - mainly Java8 Date/Time (JSR 310)'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
-description = '(deprecated - use hibernate-core instead) Support for Java8-specific features - mainly Java8 Date/Time (JSR 310)'
 
 dependencies {
     compile( project( ':hibernate-core' ) )

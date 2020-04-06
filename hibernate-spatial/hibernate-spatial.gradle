@@ -7,10 +7,11 @@ import org.apache.tools.ant.filters.ReplaceTokens
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
-description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
 dependencies {
     compile( project(':hibernate-core') )

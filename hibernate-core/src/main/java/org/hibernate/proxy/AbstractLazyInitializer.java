@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -179,6 +180,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				target = session.immediateLoad( entityName, id );
 				initialized = true;
 				checkTargetState(session);
+				if(session instanceof SessionImpl) {
+					((SessionImpl)session).afterOperation( true );
+				}
 			}
 		}
 		else {

@@ -255,6 +255,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				( (Session) session ).beginTransaction();
 			}
 
+			
 			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
 					session.getFactory().getCollectionPersister( getRole() ),
 					this

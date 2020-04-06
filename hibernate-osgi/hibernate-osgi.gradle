@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+description = 'Support for running Hibernate O/RM in OSGi environments'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'com.github.lburgazzoli.karaf'
 
-description = 'Support for running Hibernate O/RM in OSGi environments'
 
 ext {
 	osgiCoreVersion = '6.0.0'

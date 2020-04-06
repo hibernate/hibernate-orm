@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 apply plugin: 'org.hibernate.build.gradle.xjc'
 
-description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 ext {
 	xjcTargetDir = file( "${buildDir}/generated-src/xjc/main" )

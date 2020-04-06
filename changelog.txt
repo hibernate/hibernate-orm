@@ -3,6 +3,27 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.14.Final (April 6, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31836/tab/release-report-done
+
+** Bug
+    * [HHH-13886] - ColumnDefinition broken for audit mappings
+    * [HHH-13889] - Case Select in Criteria API does not bind literals using parameters
+    * [HHH-13929] - ClassCastException on use of PersistenceUtilHelper when entities use Enhanced Proxies
+
+** Task
+    * [HHH-13685] - Upgrade to Gradle 5
+    * [HHH-13689] - Replace uses of the deprecated osgi plugin with the biz.aQute.bnd plugin
+    * [HHH-13925] - Upgrade to Gradle 6.3
+
+** Improvement
+    * [HHH-13930] - Improve ByteBuddyProxyHelper to allow defining proxy classes without actually loading the class
+    * [HHH-13934] - GraalVM native-image metadata needs to register class metadata antlr.CommonToken
+    * [HHH-13935] - Allow subclasses of StandardServiceRegistryBuilder to initialize a custom list of StandardServiceInitiator(s)
+
+
 Changes in 5.4.13.Final (March 26, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

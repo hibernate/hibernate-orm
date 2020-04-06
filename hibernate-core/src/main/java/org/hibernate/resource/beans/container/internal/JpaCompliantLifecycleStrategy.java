@@ -125,7 +125,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback" );
+				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType );
 				this.beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {

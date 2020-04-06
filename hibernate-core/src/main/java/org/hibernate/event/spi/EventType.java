@@ -93,8 +93,9 @@ public final class EventType<T> {
 		final EventType existingEventType = EVENT_TYPE_BY_NAME_MAP.get( name );
 		if ( existingEventType != null ) {
 			if ( listenerClass.equals( existingEventType.baseListenerInterface ) ) {
-				LOG.warn( "EventType [" + name + "] with listener Class ["
-								  + listenerClass + "] was added more than once." );
+				LOG.warn(
+						"EventType [" + name + "] with listener Class ["  + listenerClass + "] was added more than once"
+				);
 				return existingEventType;
 			}
 			else {

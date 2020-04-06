@@ -94,6 +94,7 @@ dependencies {
     testCompile( libraries.mockito_inline )
     testCompile( libraries.jodaTime )
     testCompile( libraries.assertj )
+	testCompile( libraries.h2)
 
     testCompile( libraries.cdi ) {
         // we need to force it to make sure we influence the one coming from arquillian

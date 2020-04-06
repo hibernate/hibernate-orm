@@ -49,6 +49,7 @@ final class StaticClassLists {
 				org.hibernate.sql.ordering.antlr.SortKey.class,
 
 				//ANTLR tokens:
+				antlr.CommonToken.class,
 				org.hibernate.hql.internal.ast.tree.SelectClause.class,
 				org.hibernate.hql.internal.ast.tree.HqlSqlWalkerNode.class,
 				org.hibernate.hql.internal.ast.tree.MethodNode.class,

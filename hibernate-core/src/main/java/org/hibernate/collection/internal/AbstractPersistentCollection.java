@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -260,8 +261,14 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 			);
 		}
 
+		boolean success = false;
 		try {
-			return lazyInitializationWork.doWork();
+			T workResult;
+			
+			workResult = lazyInitializationWork.doWork();
+			success = true;
+			
+			return workResult;
 		}
 		finally {
 			if ( tempSession != null ) {
@@ -278,6 +285,9 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
 				}
+			}
+			else if ( session instanceof SessionImpl ) {
+				( (SessionImpl) session ).afterOperation( success );
 			}
 		}
 	}

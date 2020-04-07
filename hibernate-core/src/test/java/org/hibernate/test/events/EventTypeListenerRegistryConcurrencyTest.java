@@ -89,26 +89,21 @@ public class EventTypeListenerRegistryConcurrencyTest {
 			final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
 			final Runnable createAndRegisterEventTypes = () -> {
-				try {
-					for ( int i = START_VALUE.getAndIncrement();
-							i < NUMBER_OF_EVENT_TYPES_NEW;
-							i += NUMBER_OF_THREADS ) {
-						final EventType eventType = EventType.addCustomEventType(
-								"event" + i,
-								DummyListener.class
-						);
+				for ( int i = START_VALUE.getAndIncrement();
+						i < NUMBER_OF_EVENT_TYPES_NEW;
+						i += NUMBER_OF_THREADS ) {
+					final EventType eventType = EventType.addCustomEventType(
+							"event" + i,
+							DummyListener.class
+					);
+					try {
 						eventListenerRegistry.setListeners( eventType, new DummyListener() );
-						try {
-							eventListenerRegistry.getEventListenerGroup( eventType );
-						}
-						catch (Exception ex) {
-							exceptions.add( ex );
-						}
+						eventListenerRegistry.getEventListenerGroup( eventType );
 					}
-				}
-				catch (Exception ex) {
-					LOG.info( ex );
-					exceptions.add( ex );
+					catch (Exception ex) {
+						LOG.info( ex );
+						exceptions.add( ex );
+					}
 				}
 			};
 

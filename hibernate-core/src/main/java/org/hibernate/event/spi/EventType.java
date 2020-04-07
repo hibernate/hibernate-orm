@@ -10,8 +10,8 @@ import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
@@ -86,33 +86,36 @@ public final class EventType<T> {
 	 * @param <T> - listenerClass
 	 * @return the custom {@link EventType}
 	 */
-	public synchronized static <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
 		if ( name == null || listenerClass == null ) {
 			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
 		}
-		final EventType existingEventType = EVENT_TYPE_BY_NAME_MAP.get( name );
-		if ( existingEventType != null ) {
-			if ( listenerClass.equals( existingEventType.baseListenerInterface ) ) {
-				LOG.warn(
-						"EventType [" + name + "] with listener Class ["  + listenerClass + "] was added more than once"
-				);
-				return existingEventType;
-			}
-			else {
+
+		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.computeIfAbsent(
+				name,
+				( e -> {
+					final EventType eventTypeNew = EventType.create( name, listenerClass );
+					LOG.debug(
+							"Added custom EventType:  [" + name
+									+ "], ordinal=[" +eventTypeNew.ordinal
+									+ "], listener=[" + listenerClass + "]."
+					);
+					return eventTypeNew;
+				} )
+		);
+		// There's no way to know if there was a pre-existing EventType with
+		// the same name and listener, so ignore that case.
+		// Just check that listener is the same as listenerClass
+		if ( !listenerClass.equals( eventType.baseListenerInterface ) ) {
 				throw new HibernateException(
 						"Could not add EventType [" + name + "] with listener Class ["
 								+ "]. An EventType with that name already exists with listener ["
 								+ listenerClass.getName()
 								+ "]."
 				);
-			}
 		}
-		else {
-			final EventType<T> eventType = create( name, listenerClass );
-			EVENT_TYPE_BY_NAME_MAP.put( name, eventType );
-			LOG.info( "Added custom EventType:  [" + name + "], ordinal=[" +eventType.ordinal + "], listener=[" + listenerClass + "]." );
-			return eventType;
-		}
+		return eventType;
 	}
 
 	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
@@ -127,7 +130,7 @@ public final class EventType<T> {
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new HashMap<String, EventType>();
+					final Map<String, EventType> typeByNameMap = new ConcurrentHashMap<>();
 					for ( Field field : EventType.class.getDeclaredFields() ) {
 						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
 							try {

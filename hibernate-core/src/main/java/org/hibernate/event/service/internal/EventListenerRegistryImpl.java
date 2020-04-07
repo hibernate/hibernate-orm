@@ -97,7 +97,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final CallbackRegistryImplementor callbackRegistry;
-	private EventListenerGroupImpl[] registeredEventListeners;
+	private volatile EventListenerGroupImpl[] registeredEventListeners;
 	private CallbackBuilder callbackBuilder;
 
 	/**
@@ -179,7 +179,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			// Allocate a new array to hold listener groups for *all* EventType values that currently exist.
 			// This way an existing, unregistered EventType with a larger ordinal will not require another
 			// allocation when it gets registered in the future.
-			final int sizeNew = EventType.values().size();
+			final int sizeNew = Math.max( eventType.ordinal() + 1, EventType.values().size() );
 			final EventListenerGroupImpl[] registeredEventListenersNew = new EventListenerGroupImpl[sizeNew];
 
 			// First copy the existing listeners to registeredEventListenersNew.

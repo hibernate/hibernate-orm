@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreLogging;
 
 import org.jboss.logging.Logger;
 
@@ -24,7 +25,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public final class EventType<T> {
-	private static final Logger LOG = Logger.getLogger( EventType.class );
+	private static final Logger LOG = CoreLogging.logger( EventType.class );
 	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
@@ -87,7 +88,7 @@ public final class EventType<T> {
 	 * @return the custom {@link EventType}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
+	public static synchronized <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
 		if ( name == null || listenerClass == null ) {
 			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
 		}
@@ -96,11 +97,12 @@ public final class EventType<T> {
 				name,
 				( e -> {
 					final EventType eventTypeNew = EventType.create( name, listenerClass );
-					LOG.debug(
-							"Added custom EventType:  [" + name
-									+ "], ordinal=[" +eventTypeNew.ordinal
-									+ "], listener=[" + listenerClass + "]."
-					);
+					LOG.debug( String.format(
+							"Added custom EventType: [%s], ordinal=[%d], listener=[%s].",
+							name,
+							eventTypeNew.ordinal,
+							listenerClass.toString()
+					) );
 					return eventTypeNew;
 				} )
 		);

@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,6 +28,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 @TestForIssue( jiraKey = "HHH-13890")
 public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestCase {
@@ -44,35 +46,47 @@ public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestC
 
 	@Test
 	public void testSetListenerClasses() {
-		testIt( theIntegrator.eventTypeForSetListenerClasses(), UsesSetClasses.class );
+		testNormalUsage( theIntegrator.eventTypeForSetListenerClasses(), UsesSetClasses.class );
 	}
 
 	@Test
 	public void testSetListenerObjects() {
-		testIt( theIntegrator.eventTypeForSetListenerObjects(), UsesSetObjects.class );
+		testNormalUsage( theIntegrator.eventTypeForSetListenerObjects(), UsesSetObjects.class );
 	}
 
 	@Test
 	public void testAppendListenerClasses() {
-		testIt( theIntegrator.eventTypeForAppendListenerClasses(), UsesAppendClasses.class );
+		testNormalUsage( theIntegrator.eventTypeForAppendListenerClasses(), UsesAppendClasses.class );
 	}
 
 	@Test
 	public void testAppendListenerObjects() {
-		testIt( theIntegrator.eventTypeForAppendListenerObjects(), UsesAppendObjects.class );
+		testNormalUsage( theIntegrator.eventTypeForAppendListenerObjects(), UsesAppendObjects.class );
 	}
 
 	@Test
 	public void testPrependListenerClasses() {
-		testIt( theIntegrator.eventTypeForPrependListenerClasses(), UsesPrependClasses.class );
+		testNormalUsage( theIntegrator.eventTypeForPrependListenerClasses(), UsesPrependClasses.class );
 	}
 
 	@Test
 	public void testPrependListenerObjects() {
-		testIt( theIntegrator.eventTypeForPrependListenerObjects(), UsesPrependObjects.class );
+		testNormalUsage( theIntegrator.eventTypeForPrependListenerObjects(), UsesPrependObjects.class );
 	}
 
-	private <T extends Listener> void testIt(EventType<T> eventType, Class<T> baseListenerClass) {
+	@Test
+	public void testUnregisteredEventType() {
+		final EventListenerRegistry eventListenerRegistry =
+				sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		try {
+			eventListenerRegistry.getEventListenerGroup( theIntegrator.eventTypeUnregistered() );
+			fail( "HibernateException should have been thrown." );
+		}
+		catch (HibernateException expected) {
+		}
+	}
+
+	private <T extends Listener> void testNormalUsage(EventType<T> eventType, Class<T> baseListenerClass) {
 		final Item clothing = new Item( Category.CLOTHING );
 		final Item furniture = new Item( Category.FURNITURE );
 		final Item other = new Item();
@@ -154,6 +168,8 @@ public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestC
 	public interface UsesPrependClasses extends Listener {
 	}
 	public interface UsesPrependObjects extends Listener {
+	}
+	public interface Unregistered {
 	}
 
 	public static abstract class AbstractItemNameGeneratorListener implements ItemNameGeneratorListener {
@@ -282,6 +298,8 @@ public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestC
 		private EventType<UsesAppendClasses> eventTypeForAppendListenerClasses;
 		private EventType<UsesAppendObjects> eventTypeForAppendListenerObjects;
 
+		private EventType<Unregistered> eventTypeUnregistered;
+
 		@Override
 		public void integrate(
 				Metadata metadata,
@@ -337,6 +355,9 @@ public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestC
 					new FurnitureGeneratorListenerAppendObjects(),
 					new OtherGeneratorListenerAppendObjects()
 			);
+
+			// add an EventType that does not get registered
+			eventTypeUnregistered = EventType.addCustomEventType( "unregistered", Unregistered.class );
 		}
 
 		@Override
@@ -366,6 +387,10 @@ public class CustomEventTypeRegisterListenerTest extends BaseCoreFunctionalTestC
 
 		public EventType<UsesAppendObjects> eventTypeForAppendListenerObjects() {
 			return eventTypeForAppendListenerObjects;
+		}
+
+		public EventType<Unregistered> eventTypeUnregistered() {
+			return eventTypeUnregistered;
 		}
 	}
 }

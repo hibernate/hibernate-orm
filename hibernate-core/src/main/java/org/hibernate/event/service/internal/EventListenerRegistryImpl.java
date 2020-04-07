@@ -199,7 +199,13 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> EventListenerGroupImpl<T> getEventListenerGroup(EventType<T> eventType) {
-		EventListenerGroupImpl<T> listeners = registeredEventListeners[ eventType.ordinal() ];
+		if ( registeredEventListeners.length < eventType.ordinal() + 1 ) {
+			// eventTpe is a custom EventType that has not been registered.
+			// registeredEventListeners array was not allocated enough space to
+			// accommodate it.
+			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
+		}
+		final EventListenerGroupImpl<T> listeners = registeredEventListeners[ eventType.ordinal() ];
 		if ( listeners == null ) {
 			throw new HibernateException( "Unable to find listeners for type [" + eventType.eventName() + "]" );
 		}

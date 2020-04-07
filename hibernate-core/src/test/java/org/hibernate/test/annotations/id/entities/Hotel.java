@@ -12,7 +12,7 @@ import javax.persistence.Id;
 /**
  * Entity with assigned identity
  *
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
 @Entity
 public class Hotel {

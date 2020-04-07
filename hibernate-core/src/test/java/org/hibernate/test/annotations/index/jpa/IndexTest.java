@@ -7,7 +7,7 @@
 package org.hibernate.test.annotations.index.jpa;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public class IndexTest extends AbstractJPAIndexTest {
 	@Override

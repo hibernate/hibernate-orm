@@ -10,7 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 
 /**
- * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
+ * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
  */
 @MappedSuperclass
 public class Building {

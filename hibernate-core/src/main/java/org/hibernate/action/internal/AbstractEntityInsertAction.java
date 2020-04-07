@@ -68,7 +68,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *       entity state.
 	 * @return the entity state.
 	 *
-	 * @see {@link #nullifyTransientReferencesIfNotAlready}
+	 * @see #nullifyTransientReferencesIfNotAlready
 	 */
 	public Object[] getState() {
 		return state;
@@ -107,7 +107,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * called for a this object, so it can safely be called both when
 	 * the entity is made "managed" and when this action is executed.
 	 *
-	 * @see {@link #makeEntityManaged() }
+	 * @see #makeEntityManaged()
 	 */
 	protected final void nullifyTransientReferencesIfNotAlready() {
 		if ( ! areTransientReferencesNullified ) {

@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 /**
  * Integration version of the AttributeNode contract
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {

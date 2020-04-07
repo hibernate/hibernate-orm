@@ -12,7 +12,7 @@ import org.hibernate.graph.GraphNode;
  * Integration version of the GraphNode contract
  *
  * @author Steve Ebersole
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public interface GraphNodeImplementor<J> extends GraphNode<J> {
 	@Override

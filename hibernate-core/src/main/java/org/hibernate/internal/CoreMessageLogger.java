@@ -1838,7 +1838,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Using @AttributeOverride or @AttributeOverrides in conjunction with entity inheritance is not supported: %s. The overriding definitions are ignored.", id = 499)
 	void unsupportedAttributeOverrideWithEntityInheritance(String entityName);
 
-	/** 6.0 message loggers
+	/* 6.0 message loggers
 	 @LogMessage(level = WARN)
 	 @Message(value = "The bytecode provider class [%s] could not be loaded", id = 500)
 	 void bytecodeProviderClassNotFound(String className);

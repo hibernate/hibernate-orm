@@ -1459,8 +1459,8 @@ public final class SessionImpl
 	}
 
 	private void doFlush() {
-		checkTransactionNeededForUpdateOperation();
 		pulseTransactionCoordinator();
+		checkTransactionNeededForUpdateOperation();
 
 		try {
 			if ( persistenceContext.getCascadeLevel() > 0 ) {

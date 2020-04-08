@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -48,11 +49,12 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 			DomainResultCreationState creationState) {
 		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
 		this.resultVariable = resultVariable;
-		AtomicInteger atomicInteger = new AtomicInteger( 0 );
 		fetches = new ArrayList<>();
+		MutableInteger index = new MutableInteger( 0 );
+
 		embeddableValuedModelPart.visitFetchables(
 				fetchable -> {
-					generateFetches( sqlSelections, navigablePath, creationState, atomicInteger, fetchable );
+					generateFetches( sqlSelections, navigablePath, creationState, index, fetchable );
 				},
 				null
 		);
@@ -62,7 +64,7 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 			List<SqlSelection> sqlSelections,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState,
-			AtomicInteger atomicInteger,
+			MutableInteger atomicInteger,
 			Fetchable fetchable) {
 		if ( fetchable instanceof SingularAssociationAttributeMapping ) {
 			final SingularAssociationAttributeMapping singularAssociationAttributeMapping = (SingularAssociationAttributeMapping) fetchable;

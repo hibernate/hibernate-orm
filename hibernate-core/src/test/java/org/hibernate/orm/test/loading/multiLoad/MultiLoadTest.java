@@ -144,9 +144,19 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					assertEquals( 5, list.size() );
 					assertSame( list.get( 1 ), list.get( 3 ) );
 					assertSame( list.get( 1 ), list.get( 4 ) );
+				}
+		);
+	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-10617")
+	public void testDuplicatedRequestedIdswithDisableOrderedReturn(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					// un-ordered multiLoad
-					list = session.byMultipleIds( SimpleEntity.class ).enableOrderedReturn( false ).multiLoad( 1, 2, 3, 2, 2 );
+					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class )
+							.enableOrderedReturn( false )
+							.multiLoad( 1, 2, 3, 2, 2 );
 					assertEquals( 3, list.size() );
 				}
 		);

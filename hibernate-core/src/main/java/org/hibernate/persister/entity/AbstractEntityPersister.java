@@ -166,6 +166,7 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -196,6 +197,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.internal.RootEntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
@@ -1229,6 +1231,9 @@ public abstract class AbstractEntityPersister
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		//noinspection unchecked
+		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection()) {
+			return new RootEntityResultImpl( navigablePath, this, resultVariable, creationState );
+		}
 		return new EntityResultImpl( navigablePath, this, resultVariable, creationState );
 	}
 
@@ -6358,7 +6363,6 @@ public abstract class AbstractEntityPersister
 			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
 			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
 		}
-
 		// otherwise, nothing to do
 	}
 

@@ -20,6 +20,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
  * @author Steve Ebersole
  */
 public interface DomainResultCreationState {
+
+	default boolean forceIdentifierSelection(){
+		return true;
+	}
+
 	SqlAstCreationState getSqlAstCreationState();
 
 	default SqlAliasBaseManager getSqlAliasBaseManager() {

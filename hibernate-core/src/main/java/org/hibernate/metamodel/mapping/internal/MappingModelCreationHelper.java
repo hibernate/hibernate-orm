@@ -768,7 +768,7 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			throw new NotYetImplementedFor6Exception(
-					"Support for composite foreign-keys not yet implemented: " + bootValueMapping.getRole()
+					"Support for composite foreign keys not yet implemented: " + bootValueMapping.getRole()
 			);
 		}
 	}
@@ -865,13 +865,14 @@ public class MappingModelCreationHelper {
 			Value bootValueMapping,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		final List<String> keyColumnExpressions = new ArrayList<>();
+		final List<String> keyColumnExpressions = new ArrayList<>(bootValueMapping.getColumnSpan());
 		bootValueMapping.getColumnIterator().forEachRemaining(
 				column ->
 						keyColumnExpressions.add( column.getText( dialect ) ) );
 
-		final List<String> targetColumnExpressions = new ArrayList<>();
-		fkTarget.getMappedColumnExpressions().forEach(
+		final List<String> mappedColumnExpressions = fkTarget.getMappedColumnExpressions();
+		final List<String> targetColumnExpressions = new ArrayList<>( mappedColumnExpressions.size() );
+		mappedColumnExpressions.forEach(
 				column ->
 						targetColumnExpressions.add( column ) );
 

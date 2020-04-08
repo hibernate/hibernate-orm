@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -114,8 +113,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public DomainResult createDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		return createDomainResult( navigablePath, tableGroup, null, creationState );
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -128,12 +136,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								keyColumnExpression
 						),
 						s ->
-							new ColumnReference(
-									identificationVariable,
-									keyColumnExpression,
-									jdbcMapping,
-									creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
-							)
+								new ColumnReference(
+										identificationVariable,
+										keyColumnExpression,
+										jdbcMapping,
+										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+								)
 				),
 				jdbcMapping.getJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()

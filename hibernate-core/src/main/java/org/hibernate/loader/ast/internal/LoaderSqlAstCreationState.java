@@ -48,6 +48,7 @@ public class LoaderSqlAstCreationState
 
 	private final QuerySpec querySpec;
 	private final SqlAliasBaseManager sqlAliasBaseManager;
+	private boolean forceIdentifierSelection;
 	private final SqlAstCreationContext sf;
 	private final SqlAstQuerySpecProcessingStateImpl processingState;
 	private final FromClauseAccess fromClauseAccess;
@@ -60,12 +61,14 @@ public class LoaderSqlAstCreationState
 			FromClauseAccess fromClauseAccess,
 			LockOptions lockOptions,
 			FetchProcessor fetchProcessor,
+			boolean forceIdentifierSelection,
 			SqlAstCreationContext sf) {
 		this.querySpec = querySpec;
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
 		this.fromClauseAccess = fromClauseAccess;
 		this.lockOptions = lockOptions;
 		this.fetchProcessor = fetchProcessor;
+		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.sf = sf;
 		processingState = new SqlAstQuerySpecProcessingStateImpl(
 				querySpec,
@@ -74,7 +77,6 @@ public class LoaderSqlAstCreationState
 				() -> Clause.IRRELEVANT
 		);
 	}
-
 
 	public LoaderSqlAstCreationState(
 			QuerySpec querySpec,
@@ -87,6 +89,7 @@ public class LoaderSqlAstCreationState
 				new FromClauseIndex(),
 				lockOptions,
 				(fetchParent, ast, state) -> Collections.emptyList(),
+				true,
 				sf
 		);
 	}
@@ -128,6 +131,11 @@ public class LoaderSqlAstCreationState
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		return fetchProcessor.visitFetches( fetchParent, getQuerySpec(), this );
+	}
+
+	@Override
+	public boolean forceIdentifierSelection() {
+		return forceIdentifierSelection;
 	}
 
 	@Override

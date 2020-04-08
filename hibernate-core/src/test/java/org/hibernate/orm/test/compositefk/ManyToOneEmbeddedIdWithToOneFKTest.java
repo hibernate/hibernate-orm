@@ -83,7 +83,13 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					assertThat( system.getId() , is(1) );
 
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
-					assertTrue( Hibernate.isInitialized( system.getUser().getPk().subsystem ) );
+
+					PK pk = system.getUser().getPk();
+					assertTrue( Hibernate.isInitialized( pk.subsystem ) );
+
+					assertThat( pk.username, is( "Fab"));
+					assertThat( pk.subsystem.id, is( 2));
+					assertThat( pk.subsystem.getDescription(), is( "sub1"));
 
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
@@ -141,10 +147,13 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
-					assertTrue( Hibernate.isInitialized( system.getUser().getPk().subsystem ) );
 
-					assertThat( system.getUser().getPk().subsystem.getDescription(),is("Fab"));
+					final PK pk = system.getUser().getPk();
+					assertTrue( Hibernate.isInitialized( pk.subsystem ) );
 
+					assertThat( pk.username, is( "Fab"));
+					assertThat( pk.subsystem.id, is( 2));
+					assertThat( pk.subsystem.getDescription(), is( "sub1"));
 
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
@@ -297,14 +306,14 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 		@EmbeddedId
 		private PK pk;
 
-		private String name;
+//		private String name;
 
 		public SystemUser() {
 		}
 
 		public SystemUser(PK pk, String name) {
 			this.pk = pk;
-			this.name = name;
+//			this.name = name;
 		}
 
 		public PK getPk() {
@@ -315,13 +324,13 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 			this.pk = pk;
 		}
 
-		public String getName() {
-			return name;
-		}
+//		public String getName() {
+//			return name;
+//		}
 
-		public void setName(String name) {
-			this.name = name;
-		}
+//		public void setName(String name) {
+//			this.name = name;
+//		}
 	}
 
 	@Embeddable

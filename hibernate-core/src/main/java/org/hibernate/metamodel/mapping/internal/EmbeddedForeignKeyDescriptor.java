@@ -82,9 +82,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 					}
 					else {
 						attribute.visitJdbcTypes(
-								jdbcMapping -> {
-									jdbcMappings.add( jdbcMapping );
-								},
+								jdbcMappings::add,
 								null,
 								typeConfiguration
 						);

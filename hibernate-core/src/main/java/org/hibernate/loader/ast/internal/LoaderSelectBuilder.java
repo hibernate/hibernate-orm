@@ -212,6 +212,7 @@ public class LoaderSelectBuilder {
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,
+				numberOfKeysToLoad > 1,
 				creationContext
 		);
 
@@ -466,7 +467,9 @@ public class LoaderSelectBuilder {
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
-		referencedMappingContainer.visitKeyFetchables( fetchable -> processor.accept( fetchable, true ), null );
+		if ( fetchParent.getNavigablePath().getParent() != null ) {
+			referencedMappingContainer.visitKeyFetchables( fetchable -> processor.accept( fetchable, true ), null );
+		}
 		referencedMappingContainer.visitFetchables( fetchable -> processor.accept( fetchable, false ), null );
 
 		return fetches;
@@ -605,6 +608,7 @@ public class LoaderSelectBuilder {
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,
+				numberOfKeysToLoad > 1,
 				creationContext
 		);
 

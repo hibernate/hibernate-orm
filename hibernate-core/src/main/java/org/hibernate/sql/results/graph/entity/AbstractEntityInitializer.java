@@ -45,6 +45,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.TypeHelper;
 
@@ -109,10 +110,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		this.navigablePath = navigablePath;
 		this.lockMode = lockMode;
 
-		this.identifierAssembler = identifierResult.createResultAssembler(
-				identifierInitializers::add,
-				creationState
-		);
+		if ( identifierResult != null ) {
+			this.identifierAssembler = identifierResult.createResultAssembler(
+					identifierInitializers::add,
+					creationState
+			);
+		}
+		else {
+			this.identifierAssembler = null;
+		}
 
 		if ( discriminatorResult != null ) {
 			discriminatorAssembler = discriminatorResult.createResultAssembler(
@@ -308,17 +314,27 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
-		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
+		final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
+		final SharedSessionContractImplementor session = jdbcValuesSourceProcessingState.getSession();
 
+		Object id;
 		//		1) resolve the hydrated identifier value(s) into its identifier representation
-		final Object id  = identifierAssembler.assemble( rowProcessingState, rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions() );
+		if ( identifierAssembler == null ) {
+			id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
+		}
+		else {
+			id = identifierAssembler.assemble(
+					rowProcessingState,
+					jdbcValuesSourceProcessingState
+							.getProcessingOptions()
+			);
+		}
 
 		if ( id == null ) {
 			missing = true;
 			// EARLY EXIT!!!
 			return;
 		}
-
 		//		2) build the EntityKey
 		this.entityKey = new EntityKey( id, concreteDescriptor );
 

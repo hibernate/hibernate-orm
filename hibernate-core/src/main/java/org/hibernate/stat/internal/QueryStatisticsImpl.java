@@ -73,7 +73,7 @@ public class QueryStatisticsImpl implements QueryStatistics {
 	/**
 	 * Number of lines returned by all the executions of this query (from DB)
 	 * For now, {@link org.hibernate.Query#iterate()}
-	 * and {@link org.hibernate.Query#scroll()()} do not fill this statistic
+	 * and {@link org.hibernate.Query#scroll()} do not fill this statistic
 	 *
 	 * @return The number of rows cumulatively returned by the given query; iterate
 	 *         and scroll queries do not effect this total as their number of returned rows

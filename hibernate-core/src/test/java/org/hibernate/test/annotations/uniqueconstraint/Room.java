@@ -11,7 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
+ * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
  */
 @Entity
 public class Room {

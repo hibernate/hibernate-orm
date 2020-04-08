@@ -13,7 +13,7 @@ import org.hibernate.persister.collection.SQLLoadableCollection;
 
 /**
  * CollectionAliases that uses column names instead of generated aliases.
- * Aliases can still be overwritten via <return-property>
+ * Aliases can still be overwritten via {@code <return-property>}
  *
  * @author Max Rydahl Andersen
  */

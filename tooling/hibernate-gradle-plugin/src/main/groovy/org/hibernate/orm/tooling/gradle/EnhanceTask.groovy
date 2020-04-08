@@ -7,6 +7,8 @@
 package org.hibernate.orm.tooling.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.ConfigureUtil
@@ -16,7 +18,9 @@ import org.gradle.util.ConfigureUtil
  */
 @SuppressWarnings("unused")
 class EnhanceTask extends DefaultTask {
+	@Input
 	EnhanceExtension options
+	@InputFiles
 	SourceSet[] sourceSets
 
 	@TaskAction

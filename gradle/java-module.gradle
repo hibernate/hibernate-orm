@@ -26,7 +26,7 @@ apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
-apply plugin: 'osgi'
+apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
@@ -42,10 +42,8 @@ ext {
 sourceCompatibility = project.baselineJavaVersion
 targetCompatibility = project.baselineJavaVersion
 
-afterEvaluate {
-	if ( !project.description ) {
-		project.description = "The Hibernate ORM $project.name module"
-	}
+if ( !project.description ) {
+	project.description = "The Hibernate ORM $project.name module"
 }
 
 

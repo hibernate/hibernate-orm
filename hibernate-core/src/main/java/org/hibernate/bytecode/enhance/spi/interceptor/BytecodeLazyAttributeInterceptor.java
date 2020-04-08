@@ -36,5 +36,8 @@ public interface BytecodeLazyAttributeInterceptor extends SessionAssociableInter
 	 */
 	void attributeInitialized(String name);
 
+	boolean isAttributeLoaded(String fieldName);
+
+	boolean hasAnyUninitializedAttributes();
 
 }

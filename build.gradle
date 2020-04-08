@@ -11,20 +11,20 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
-		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.1.1'
+		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
 		classpath 'de.thetaphi:forbiddenapis:2.5'
+		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:4.2.0'
 	}
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.16'
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'org.hibernate.build.xjc' version '2.0.1' apply false
+	id 'org.hibernate.build.maven-repo-auth' version '3.0.2' apply false
 }
 
 allprojects {
@@ -84,14 +84,15 @@ task ciBuild {
 
 
 wrapper {
-	gradleVersion = '4.10.3'
+	// To upgrade the version of gradle used in the wrapper, run:
+	//     ./gradlew wrapper --gradle-version NEW_VERSION
 	distributionType = Wrapper.DistributionType.ALL
 }
 
 
 buildScan {
-	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-	licenseAgree = 'yes'
+	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+	termsOfServiceAgree = 'yes'
 }
 
 buildScanRecipes {

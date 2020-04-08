@@ -77,7 +77,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * API so that only some methods need to be overridden
  * (Used by Hibernate Search).
  *
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {

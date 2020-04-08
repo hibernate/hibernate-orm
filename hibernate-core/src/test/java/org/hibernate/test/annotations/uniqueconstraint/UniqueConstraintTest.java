@@ -18,7 +18,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
 /**
- * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
+ * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
  * @author Brett Meyer
  */
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {

@@ -3,6 +3,59 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.14.Final (April 6, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31836/tab/release-report-done
+
+** Bug
+    * [HHH-13886] - ColumnDefinition broken for audit mappings
+    * [HHH-13889] - Case Select in Criteria API does not bind literals using parameters
+    * [HHH-13929] - ClassCastException on use of PersistenceUtilHelper when entities use Enhanced Proxies
+
+** Task
+    * [HHH-13685] - Upgrade to Gradle 5
+    * [HHH-13689] - Replace uses of the deprecated osgi plugin with the biz.aQute.bnd plugin
+    * [HHH-13925] - Upgrade to Gradle 6.3
+
+** Improvement
+    * [HHH-13930] - Improve ByteBuddyProxyHelper to allow defining proxy classes without actually loading the class
+    * [HHH-13934] - GraalVM native-image metadata needs to register class metadata antlr.CommonToken
+    * [HHH-13935] - Allow subclasses of StandardServiceRegistryBuilder to initialize a custom list of StandardServiceInitiator(s)
+
+
+Changes in 5.4.13.Final (March 26, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31829/tab/release-report-done
+
+** Bug
+    *  [HHH-13322] - Sequence increment is not correctly determined
+    *  [HHH-13619] - size() does not work properly as select expression
+    *  [HHH-13711] - H2 dialect not accurate for drop table since version 1.4.200
+    *  [HHH-13870] - Gradle plugin causes compile task to be always out of date
+    *  [HHH-13875] - Optional one-to-one does not always join the associated entity table when querying
+    *  [HHH-13876] - Fix an obvious bug in StandardStack implementation
+    *  [HHH-13891] - ProxyFactory should not be built if any ID or property getter/setter methods are final
+    *  [HHH-13910] - MySQL57Dialect selected by automatic dialect resolution when using MySQL 8.0 database
+
+** New Feature
+    *  [HHH-13799] - JPA Criteria API support for Hibernate Spatial
+
+** Task
+    *  [HHH-13874] - Deprecate relevant methods that are supposed to be removed in v6.0
+
+** Improvement
+    *  [HHH-13103] - Allow Hibernate Types to get access to the current configuration properties using constructor injection
+    *  [HHH-13853] - Pass the merged Integration settings and Persistence Unit properties to buildBootstrapServiceRegistry
+    *  [HHH-13855] - Remove unnecessary declaration of JtaManager in HibernatePersistenceProviderAdaptor
+    *  [HHH-13872] - Make the Java Stream close the underlying ScrollableResultsIterator upon calling a terminal operation
+    *  [HHH-13873] - IdTableHelper can skip opening a connection when there's no statements to execute
+    *  [HHH-13878] - Increase the scope of some methods to make them accessible outside of Hibernate ORM
+    *  [HHH-13879] - Slow query log should use System#nanoTime not System#currentTimeMillis
+    *  [HHH-13897] - ResultSetProcessingContextImpl: no need to clear collections before discarding the reference to them
+
+
 Changes in 5.4.12.Final (February 13, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

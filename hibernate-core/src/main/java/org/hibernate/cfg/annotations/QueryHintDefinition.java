@@ -24,7 +24,7 @@ import org.hibernate.annotations.QueryHints;
 import org.hibernate.internal.util.LockModeConverter;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public class QueryHintDefinition {
 	private final Map<String, Object> hintsMap;

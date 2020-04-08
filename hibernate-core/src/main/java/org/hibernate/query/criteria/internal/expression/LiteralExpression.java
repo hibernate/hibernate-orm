@@ -8,6 +8,7 @@ package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -118,7 +119,7 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		}
 
 		if ( ValueHandlerFactory.isCharacter( literal ) ) {
-			return '\'' + handler.render( literal ) + '\'';
+			return renderingContext.getDialect().inlineLiteral( handler.render( literal ) );
 		}
 		else {
 			return handler.render( literal );

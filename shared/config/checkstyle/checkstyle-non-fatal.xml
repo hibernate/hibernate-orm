@@ -10,9 +10,6 @@
 
     <module name="TreeWalker">
 
-        <module name="FileContentsHolder"/>
-
-
         <module name="AvoidStarImport">
             <property name="severity" value="warning" />
         </module>
@@ -150,6 +147,24 @@
             <property name="severity" value="warning" />
         </module>
 
+        <!--
+            Source code comment-based suppressions
+        -->
+        <module name="SuppressionCommentFilter">
+            <!--
+                Allow a finalize() method within these comments.  DriverManagerConnectionProviderImpl e.g.
+                uses a finalizer to make sure we release all of its cached connections.
+            -->
+            <property name="offCommentFormat" value="CHECKSTYLE:START_ALLOW_FINALIZER"/>
+            <property name="onCommentFormat" value="CHECKSTYLE:END_ALLOW_FINALIZER"/>
+            <property name="checkFormat" value="NoFinalizer"/>
+        </module>
+
+        <module name="SuppressWithNearbyCommentFilter">
+            <property name="commentFormat" value="noinspection StatementWithEmptyBody"/>
+            <property name="checkFormat" value="EmptyStatement"/>
+            <property name="influenceFormat" value="1"/>
+        </module>
     </module>
 
     <module name="JavadocPackage">
@@ -168,23 +183,4 @@
         </module>
     </module>
 
-
-    <!--
-        Source code comment-based suppressions
-    -->
-    <module name="SuppressionCommentFilter">
-        <!--
-            Allow a finalize() method within these comments.  DriverManagerConnectionProviderImpl e.g.
-            uses a finalizer to make sure we release all of its cached connections.
-        -->
-        <property name="offCommentFormat" value="CHECKSTYLE:START_ALLOW_FINALIZER"/>
-        <property name="onCommentFormat" value="CHECKSTYLE:END_ALLOW_FINALIZER"/>
-        <property name="checkFormat" value="NoFinalizer"/>
-    </module>
-
-    <module name="SuppressWithNearbyCommentFilter">
-        <property name="commentFormat" value="noinspection StatementWithEmptyBody"/>
-        <property name="checkFormat" value="EmptyStatement"/>
-        <property name="influenceFormat" value="1"/>
-    </module>
 </module>

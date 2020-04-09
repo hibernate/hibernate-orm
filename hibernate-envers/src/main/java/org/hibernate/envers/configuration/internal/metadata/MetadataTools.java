@@ -23,19 +23,12 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public final class MetadataTools {
-
-	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
-			EnversMessageLogger.class,
-			MetadataTools.class.getName()
-	);
 
 	private MetadataTools() {
 	}
@@ -298,17 +291,13 @@ public final class MetadataTools {
 		return joinMapping;
 	}
 
-	public static void addColumns(Element anyMapping, Iterator<?> selectables, Metadata metadata) {
-		addColumns( anyMapping, selectables, metadata, metadata.getDatabase().getDialect() );
-	}
-
-	public static void addColumns(Element anyMapping, Iterator<?> selectables, Mapping mapping, Dialect dialect) {
+	public static void addColumns(Element anyMapping, Iterator<?> selectables) {
 		while ( selectables.hasNext() ) {
 			final Selectable selectable = (Selectable) selectables.next();
 			if ( selectable.isFormula() ) {
 				throw new FormulaNotSupportedException();
 			}
-			addColumn( anyMapping, (Column) selectable, mapping, dialect );
+			addColumn( anyMapping, (Column) selectable );
 		}
 	}
 
@@ -327,41 +316,19 @@ public final class MetadataTools {
 	 *
 	 * @param anyMapping parent element
 	 * @param column column descriptor
-	 * @param mapping the metadata mapping
-	 * @param dialect the dialect
 	 */
-	public static void addColumn(Element anyMapping, Column column, Mapping mapping, Dialect dialect) {
+	public static void addColumn(Element anyMapping, Column column) {
 		addColumn(
 				anyMapping,
 				column.getName(),
 				column.getLength(),
 				column.getScale(),
 				column.getPrecision(),
-				resolveSqlType( column, mapping, dialect ),
+				column.getSqlType(),
 				column.getCustomRead(),
 				column.getCustomWrite(),
 				column.isQuoted()
 		);
-	}
-
-	private static String resolveSqlType(Column column, Mapping mapping, Dialect dialect) {
-		String columnDefinition = column.getSqlType();
-		if ( !StringTools.isEmpty( columnDefinition ) ) {
-			final int sqlTypeCode = column.getSqlTypeCode( mapping );
-			final Size size = new Size()
-					.setLength( column.getLength() )
-					.setPrecision( column.getPrecision() )
-					.setScale( column.getScale() );
-			final String sqlType = dialect.getTypeName( sqlTypeCode, size );
-			LOG.infof(
-					"Column [%s] uses a column-definition of [%s], resolved sql-type as [%s].",
-					column.getName(),
-					columnDefinition,
-					sqlType
-			);
-			columnDefinition = sqlType;
-		}
-		return columnDefinition;
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -439,13 +406,12 @@ public final class MetadataTools {
 	 * @param element Parent element.
 	 * @param columnIterator Iterator pointing at {@link org.hibernate.mapping.Column} and/or
 	 * {@link org.hibernate.mapping.Formula} objects.
-	 * @param metadata The boot-time entity model metadata
 	 */
-	public static void addColumnsOrFormulas(Element element, Iterator columnIterator, Metadata metadata) {
+	public static void addColumnsOrFormulas(Element element, Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {
 			final Object o = columnIterator.next();
 			if ( o instanceof Column ) {
-				addColumn( element, (Column) o, metadata, metadata.getDatabase().getDialect() );
+				addColumn( element, (Column) o );
 			}
 			else if ( o instanceof Formula ) {
 				addFormula( element, (Formula) o );

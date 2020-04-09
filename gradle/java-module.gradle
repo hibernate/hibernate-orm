@@ -51,10 +51,8 @@ ext {
 sourceCompatibility = project.baselineJavaVersion
 targetCompatibility = project.baselineJavaVersion
 
-afterEvaluate {
-	if ( !project.description ) {
-		project.description = "The Hibernate ORM $project.name module"
-	}
+if ( !project.description ) {
+	project.description = "The Hibernate ORM $project.name module"
 }
 
 

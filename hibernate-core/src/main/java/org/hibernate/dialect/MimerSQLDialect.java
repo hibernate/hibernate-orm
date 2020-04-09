@@ -29,7 +29,7 @@ import static org.hibernate.query.CastType.BOOLEAN;
 /**
  * A dialect for Mimer SQL 11.
  *
- * @author Fredrik lund <fredrik.alund@mimer.se>
+ * @author <a href="mailto:fredrik.alund@mimer.se">Fredrik lund</a>
  * @author Gavin King
  */
 public class MimerSQLDialect extends Dialect {

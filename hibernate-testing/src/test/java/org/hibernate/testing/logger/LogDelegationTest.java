@@ -21,7 +21,7 @@ import org.junit.Test;
  * Verifies the Logger interception capabilities which we might use in other tests
  * are working as expected.
  *
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2015 Red Hat Inc.
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
  */
 @TestForIssue(jiraKey = "HHH-9658")
 public class LogDelegationTest {

@@ -91,7 +91,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 	}
 
 	/**
-	 *  * @deprecated {@link #AbstractPersistentCollection(SharedSessionContractImplementor)} should be used instead.
+	 * @deprecated {@link #AbstractPersistentCollection(SharedSessionContractImplementor)} should be used instead.
 	 */
 	@Deprecated
 	protected AbstractPersistentCollection(SessionImplementor session) {

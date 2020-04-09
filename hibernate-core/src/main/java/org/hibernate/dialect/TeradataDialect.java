@@ -58,7 +58,7 @@ public class TeradataDialect extends Dialect {
 	int getVersion() {
 		return version;
 	}
-	
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
@@ -224,7 +224,7 @@ public class TeradataDialect extends Dialect {
 	/**
 	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax?
 	 *
-	 * @return empty string ... Teradata does not support <tt>FOR UPDATE<tt> syntax
+	 * @return empty string ... Teradata does not support <tt>FOR UPDATE</tt> syntax
 	 */
 	@Override
 	public String getForUpdateString() {

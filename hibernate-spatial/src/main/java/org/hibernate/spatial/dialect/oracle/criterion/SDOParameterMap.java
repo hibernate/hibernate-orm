@@ -250,7 +250,7 @@ public class SDOParameterMap {
 
 	/**
 	 * Returns all parameters contained in this instance as a quoted String containing
-	 * the <parameter name>=<parameter value> pairs separated by spaces.
+	 * the {@code <parameter name>=<parameter value>} pairs separated by spaces.
 	 * <p>
 	 * The return format is as expected by the various SDO_GEOMETRY spatial functions.
 	 *

@@ -24,7 +24,7 @@ import org.hibernate.internal.util.LockModeConverter;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public class QueryHintDefinition {
 	private final String queryName;

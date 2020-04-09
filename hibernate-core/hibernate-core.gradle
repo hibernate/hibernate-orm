@@ -10,11 +10,11 @@ plugins {
  */
 import org.apache.tools.ant.filters.ReplaceTokens
 
+description = 'Hibernate\'s core ORM functionality'
+
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: Antlr4Plugin
 apply plugin: 'hibernate-matrix-testing'
-
-description = 'Hibernate\'s core ORM functionality'
 
 ext {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )

@@ -62,7 +62,7 @@ package org.hibernate.dialect;
  * For example, in Hibernate 3.2, typical entries in hibernate.properties would have the following
  * "name=value" pairs:
  * <p/>
- * <table cols=3 border cellpadding=5 cellspacing=0>
+ * <table cols=3 border="" cellpadding=5 cellspacing=0>
  * <tr>
  * <th>Property Name</th>
  * <th>Property Value</th>

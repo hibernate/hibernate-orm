@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
  * A {@code Logger} implementation which delegates to Log4J but makes it possible
  * to test for events being logged (not logged).
  *
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2015 Red Hat Inc.
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2015 Red Hat Inc.
  */
 public final class Log4DelegatingLogger extends Logger {
 

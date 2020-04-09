@@ -25,8 +25,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
  * <p>
  * Row tables are created by this dialect when using the auto-ddl feature.
  *
- * @author Andrew Clemons <andrew.clemons@sap.com>
- * @author Jonathan Bregler <jonathan.bregler@sap.com>
+ * @author <a href="mailto:andrew.clemons@sap.com">Andrew Clemons</a>
+ * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANARowStoreDialect extends AbstractHANADialect {
 

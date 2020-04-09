@@ -57,7 +57,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
  * <li>{@link #buildAttribute normal attributes}</li>
  * <li>{@link #buildIdAttribute id attributes}</li>
  * <li>{@link #buildVersionAttribute version attributes}</li>
- * <ol>
+ * </ol>
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard

@@ -7,7 +7,7 @@
 package org.hibernate.test.criteria;
 
 /**
-* @author Strong Liu <stliu@hibernate.org>
+* @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
 */
 public enum Code {
 	ADM, CEN, RPA, RPP, PRJ, HUB, RQS, OAD, ORP, ORQ

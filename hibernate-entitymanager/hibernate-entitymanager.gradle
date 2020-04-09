@@ -1,7 +1,6 @@
+description = '(deprecated - use hibernate-core instead) Hibernate O/RM implementation of the JPA specification'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
-description = '(deprecated - use hibernate-core instead) Hibernate O/RM implementation of the JPA specification'
 
 dependencies {
 	compile( project( ':hibernate-core' ) )

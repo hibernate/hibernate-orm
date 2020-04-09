@@ -270,6 +270,28 @@ public class HqlParserTest {
 				+ "order by account.type.sortOrder, account.accountNumber, payment.dueDate" );
 	}
 
+        @Test public void testJoinNoQuotePackageStartswithINThrowsException() throws Exception {
+                String query = "select t.firstName, t.lastName, e.numberOfClassesPending \n" +
+                                 "from in.musicmaster.db.Models.TutorData as t \n" + 
+                                 "join in.musicmaster.db.Models.EnrollmentData as e on e.tutorId = t.tutorId";
+		HqlParser parser = HqlParser.getInstance( query );
+		parser.setFilter( false );
+		parser.statement();
+		assertEquals( "Invalid Token in", 1, parser.getParseErrorHandler().getErrorCount() );
+        }
+
+        @Test public void testJoinQuotedPackageStartswithIN() throws Exception {
+                parse("select t.firstName, t.lastName, e.numberOfClassesPending \n" +
+                         "from in.musicmaster.db.Models.TutorData as t \n" + 
+                         "join 'in.musicmaster.db.Models.EnrollmentData' as e on e.tutorId = t.tutorId");
+        }
+
+        @Test public void testJoin() throws Exception {
+                parse("select t.firstName, t.lastName, e.numberOfClassesPending \n" +
+                         "from TutorData as t \n" + 
+                         "join EnrollmentData as e on e.tutorId = t.tutorId");
+        }
+
 	@Test public void testExamples1() throws Exception {
 		parse( "select new org.hibernate.test.S(s.count, s.address)\n"
 				+ "from s in class Simple" );

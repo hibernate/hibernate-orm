@@ -88,10 +88,7 @@ dependencies {
     provided( libraries.ant )
 	provided( libraries.cdi )
 
-	runtime( libraries.junit5_vintage )
-	runtime( libraries.junit5_jupiter )
-
-    testCompile( project(':hibernate-testing') )
+	testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.jacc )
@@ -124,7 +121,9 @@ dependencies {
     testRuntime( libraries.weld )
     testRuntime( libraries.atomikos )
     testRuntime( libraries.atomikos_jta )
-    testRuntime(libraries.wildfly_transaction_client)
+    testRuntime( libraries.wildfly_transaction_client )
+    testRuntime( libraries.junit5_vintage )
+    testRuntime( libraries.junit5_jupiter )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *
  * [source, JAVA, indent=0]
  * ----
- * @TestDomain( ... )
+ * @TestDomain ( ... )
  * class MyTest implements TestDomainAware {
  *
  * 		@Test
@@ -55,8 +55,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *
  * [source, JAVA, indent=0]
  * ----
- * @ServiceRegistry( ... )
- * @TestDomain( ... )
+ * @ServiceRegistry ( ... )
+ * @TestDomain ( ... )
  * class MyTest implements TestDomainAware {
  *
  * 		@Test

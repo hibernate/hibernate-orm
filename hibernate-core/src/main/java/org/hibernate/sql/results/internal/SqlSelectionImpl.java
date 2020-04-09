@@ -18,19 +18,19 @@ import java.util.Objects;
 /**
  * @asciidoc
  *
- * ````
+ * ```
  * @Entity
  * class MyEntity {
  *     ...
- *     @Column( name = "the_column", ... )
+ *     @Column ( name = "the_column", ... )
  *     public String getTheColumn() { ... }
  *
- *     @Convert( ... )
- *     @Column( name = "the_column", ... )
+ *     @Convert ( ... )
+ *     @Column ( name = "the_column", ... )
  *     ConvertedType getTheConvertedColumn() { ... }
  *
  * }
- * ````
+ * ```
  *
  * @author Steve Ebersole
  */

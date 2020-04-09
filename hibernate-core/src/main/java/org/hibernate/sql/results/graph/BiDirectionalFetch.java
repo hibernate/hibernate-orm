@@ -17,11 +17,12 @@ import org.hibernate.query.NavigablePath;
  * The following query is used throughout the javadocs for these impls
  * to help describe what it going on and why certain methods do certain things.
  *
- * ````
+ *
+ * ```
  * @Entity
  * class Person {
  *     ...
- *     @ManyToOne(mappedBy="owner")
+ *     @ManyToOne (mappedBy="owner")
  *     Address getAddress() {...}
  * }
  *
@@ -36,7 +37,8 @@ import org.hibernate.query.NavigablePath;
  * 		join fetch p.address a
  * 		join fetch a.owner o
  * 		join fetch o.address oa
- * ````
+ * ```
+ *
  *
  * Here we have one root result and 3 fetches.  2 of the fetches are bi-directional:
  *

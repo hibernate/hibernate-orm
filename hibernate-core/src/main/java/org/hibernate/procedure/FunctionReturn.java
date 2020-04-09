@@ -10,7 +10,7 @@ import org.hibernate.query.procedure.ProcedureParameter;
 
 /**
  * Describes the function return for ProcedureCalls that represent calls to
- * a function ({@code "{? = call ...} syntax) rather that a proc ({@code {call ...} syntax)
+ * a function ({@code "{? = call ...}} syntax) rather that a proc ({@code {call ...}} syntax)
  *
  * @author Steve Ebersole
  */

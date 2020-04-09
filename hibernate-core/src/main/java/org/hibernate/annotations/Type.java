@@ -29,7 +29,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Type {
 	/**
 	 * The Hibernate type name.  This should be one of: <ul>
-	 *     <li>Registration key for a basic type (see {@link org.hibernate.type.BasicTypeRegistry)}</li>
+	 *     <li>Registration key for a basic type (see {@link org.hibernate.type.BasicTypeRegistry})</li>
 	 *     <li>Type-definition name (see {@link TypeDef#name()})</li>
 	 *     <li>FQN for a {@link org.hibernate.type.Type} implementation class</li>
 	 *     <li>FQN for a {@link org.hibernate.usertype.UserType} implementation class</li>

@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 
 public class LimitWithExpreesionAndFetchJoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	/**
-	 * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+	 * @author Piotr Findeisen
 	 */
 	@Test
 	@TestForIssue( jiraKey = "HHH-951" )

@@ -23,7 +23,7 @@ import org.hibernate.service.spi.ServiceContributor;
  *
  * [source, JAVA, indent=0]
  * ----
- * @ServiceRegistry( ... )
+ * @ServiceRegistry ( ... )
  * class MyTest extends ServiceRegistryAware {
  * 		@Test
  * 		public void doTheTest() {
@@ -48,8 +48,8 @@ import org.hibernate.service.spi.ServiceContributor;
  *
  * [source, JAVA, indent=0]
  * ----
- * @ServiceRegistry( ... )
- * @TestDomain( ... )
+ * @ServiceRegistry ( ... )
+ * @TestDomain ( ... )
  * class MyTest ... {
  * }
  * ----

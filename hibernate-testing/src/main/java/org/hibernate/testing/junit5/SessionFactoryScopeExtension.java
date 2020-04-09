@@ -27,13 +27,13 @@ import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
  *
  * [code]
  * .Annotation-driven example
- * ````
+ * ```
  *
- * @FunctionalSessionFactoryTesting(
- * 		model = @ModelToTest(
+ * @FunctionalSessionFactoryTesting (
+ * 		model = @ModelToTest (
  * 			true, // export
  * 			standardModels = {
- * 				@DomainModel( AvailableDomainModel.CONTACTS )
+ * 				@DomainModel ( AvailableDomainModel.CONTACTS )
  *  		},
  *  		annotatedClasses = {
  *  			SomeAdditionalClass.class
@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
  *
  * }
  *
- * ````
+ * ```
  *
  *
  * @see SessionFactoryScope

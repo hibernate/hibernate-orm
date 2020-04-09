@@ -39,7 +39,8 @@ public interface DomainResultCreationState {
 	 *
 	 * We walk fetches via the SqlAstCreationContext because each "context"
 	 * will define differently what should be fetched (HQL versus load)
-	 *
+	 */
+ 	/*
 	 * todo (6.0) : centralize the implementation of this
 	 * 		most of the logic in the impls of this is identical.  variations include:
 	 * 				1) given a Fetchable, determine the FetchTiming and `selected`[1].  Tricky as functional
@@ -63,6 +64,6 @@ public interface DomainResultCreationState {
 	 * todo (6.0) : wrt the "trickiness" of `selected[1]`, that may no longer be an issue given how TableGroups
 	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
 	 * 		along FetchStyle?
-	 */
+ 	 */
 	List<Fetch> visitFetches(FetchParent fetchParent);
 }

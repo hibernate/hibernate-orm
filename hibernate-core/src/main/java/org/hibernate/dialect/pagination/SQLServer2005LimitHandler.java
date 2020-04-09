@@ -135,7 +135,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	/**
 	 * Add any missing aliases to the given {@code select} list, and return
 	 * comma-separated list of all aliases in the list, unless the given list
-	 * contains {@literal *} or {@literal {table.*}, in which case {@literal *}
+	 * contains {@literal *} or {@literal {table.*}}, in which case {@literal *}
 	 * is returned.
 	 *
 	 * @param sql the whole query
@@ -144,6 +144,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @param result a string builder for inserting missing aliases
 	 *
 	 * @return a comma-separated list of aliases, or {@literal *}
+	 *
 	 */
 	private String selectAliases(String sql, int afterSelectOffset, int fromOffset, StringBuilder result) {
 		final List<String> aliases = new LinkedList<>();

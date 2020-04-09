@@ -266,7 +266,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	/**
 	 * @implNote Notice that this returns a JPA parameter not the SqmParameter
-	 * @see JpaParameterExpression#
+	 * @see JpaParameterExpression
 	 *
 	 */
 	@Override

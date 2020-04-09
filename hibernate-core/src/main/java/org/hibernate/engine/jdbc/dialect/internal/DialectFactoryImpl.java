@@ -106,7 +106,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 									);
 								}
 							}
-							catch (NoSuchMethodException nsme) {}
+							catch (NoSuchMethodException nsme) {
+
+							}
 							return dialectClass.newInstance();
 						}
 						catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {

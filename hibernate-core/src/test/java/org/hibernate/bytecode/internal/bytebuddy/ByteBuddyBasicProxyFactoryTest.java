@@ -12,8 +12,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.hibernate.bytecode.internal.bytebuddy.BasicProxyFactoryImpl;
-import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 

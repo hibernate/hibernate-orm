@@ -58,8 +58,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import org.jboss.logging.Logger;
-
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 

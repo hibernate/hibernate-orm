@@ -14,8 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 

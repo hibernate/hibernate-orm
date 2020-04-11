@@ -25,8 +25,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 /**
  * Test harness for ANN-742.
  *

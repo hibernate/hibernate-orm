@@ -8,7 +8,6 @@ package org.hibernate.test.procedure;
 
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -28,7 +27,6 @@ import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.result.Output;
@@ -36,10 +34,8 @@ import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.NumericBooleanType;
 import org.hibernate.type.YesNoType;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +44,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**

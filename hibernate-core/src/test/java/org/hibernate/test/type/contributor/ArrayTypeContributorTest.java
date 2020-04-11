@@ -6,14 +6,11 @@
  */
 package org.hibernate.test.type.contributor;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -25,7 +22,6 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**

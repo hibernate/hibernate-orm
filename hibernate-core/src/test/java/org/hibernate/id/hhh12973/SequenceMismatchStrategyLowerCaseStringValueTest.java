@@ -8,8 +8,6 @@ package org.hibernate.id.hhh12973;
 
 import org.hibernate.id.SequenceMismatchStrategy;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;

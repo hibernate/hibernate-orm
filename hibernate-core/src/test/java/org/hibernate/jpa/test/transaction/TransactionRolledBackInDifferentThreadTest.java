@@ -16,7 +16,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;

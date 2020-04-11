@@ -6,11 +6,8 @@
  */
 package org.hibernate.result.internal;
 
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.function.Supplier;
-
-import javax.enterprise.inject.spi.Producer;
 
 import org.hibernate.result.ResultSetOutput;
 

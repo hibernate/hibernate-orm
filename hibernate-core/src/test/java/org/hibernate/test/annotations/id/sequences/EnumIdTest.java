@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.annotations.id.sequences;
 
-import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.Session;

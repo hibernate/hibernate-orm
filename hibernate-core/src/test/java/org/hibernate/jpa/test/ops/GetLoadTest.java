@@ -8,8 +8,6 @@ package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
@@ -17,7 +15,6 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;

@@ -7,8 +7,6 @@
 package org.hibernate.hikaricp.internal;
 
 import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;

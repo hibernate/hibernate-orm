@@ -13,16 +13,9 @@ import java.util.Map;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.SpatialRelation;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * The <code>SpatialDialect</code> for Microsoft SQL Server (2008).

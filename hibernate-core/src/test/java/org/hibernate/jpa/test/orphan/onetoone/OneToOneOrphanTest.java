@@ -11,7 +11,6 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.fail;

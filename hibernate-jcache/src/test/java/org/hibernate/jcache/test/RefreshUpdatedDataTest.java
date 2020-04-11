@@ -24,8 +24,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jcache.test.TestHelper;
-import org.hibernate.mapping.Collection;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 

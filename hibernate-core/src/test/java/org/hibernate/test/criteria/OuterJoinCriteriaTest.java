@@ -13,9 +13,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
 import org.hibernate.Session;
-import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;

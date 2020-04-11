@@ -20,8 +20,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.AttributeConverterDefinition;
 
 /**
  * @author Steve Ebersole

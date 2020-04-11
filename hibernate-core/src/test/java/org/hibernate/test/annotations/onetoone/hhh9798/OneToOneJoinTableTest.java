@@ -11,8 +11,6 @@ import javax.persistence.PersistenceException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.id.IdentifierGenerationException;
-
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;

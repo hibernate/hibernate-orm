@@ -28,8 +28,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
  * identical entity, but using the synonym name.

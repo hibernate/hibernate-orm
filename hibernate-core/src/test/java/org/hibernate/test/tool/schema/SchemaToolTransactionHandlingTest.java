@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.tool.schema;
 
-import java.sql.SQLSyntaxErrorException;
 import java.util.Collections;
 import java.util.EnumSet;
 import javax.persistence.Entity;

@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateException;
 
 /**
  * Indicates an internal attempt to mark a column as non-nullable (because its part

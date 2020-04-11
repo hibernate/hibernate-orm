@@ -21,7 +21,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.ehcache.ConfigSettings.EHCACHE_CONFIGURATION_RESOURCE_NAME;
-import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.overwriteCacheManagerIfConfigured;
 import static org.hibernate.cache.ehcache.internal.HibernateEhcacheUtils.setCacheManagerNameIfNeeded;
 
 /**

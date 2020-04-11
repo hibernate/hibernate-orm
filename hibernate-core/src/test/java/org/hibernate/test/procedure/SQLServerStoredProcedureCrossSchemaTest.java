@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.procedure;
 
-import java.sql.SQLException;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
 

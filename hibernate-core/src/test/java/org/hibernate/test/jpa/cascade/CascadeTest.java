@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.jpa.cascade;
 
-import org.jboss.logging.Logger;
 import org.junit.Test;
 
 import org.hibernate.Session;

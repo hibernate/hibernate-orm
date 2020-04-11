@@ -15,7 +15,6 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTAppender;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.type.Type;
 

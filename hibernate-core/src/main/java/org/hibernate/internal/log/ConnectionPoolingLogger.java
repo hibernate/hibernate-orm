@@ -9,8 +9,6 @@ package org.hibernate.internal.log;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;

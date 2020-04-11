@@ -10,7 +10,6 @@ import javax.transaction.Synchronization;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.CoreLogging;

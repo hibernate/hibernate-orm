@@ -13,7 +13,6 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import static javax.persistence.CascadeType.ALL;

@@ -9,8 +9,6 @@ package org.hibernate.jpa.internal.util;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * @author Steve Ebersole
  */

@@ -10,21 +10,13 @@ import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.Formula;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL91Dialect;
-import org.hibernate.dialect.SQLServer2005Dialect;
-
-import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;

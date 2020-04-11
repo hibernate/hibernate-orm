@@ -23,7 +23,6 @@ import org.hibernate.jpa.test.metamodel.MapEntity_;
 import org.hibernate.jpa.test.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 

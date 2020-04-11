@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;

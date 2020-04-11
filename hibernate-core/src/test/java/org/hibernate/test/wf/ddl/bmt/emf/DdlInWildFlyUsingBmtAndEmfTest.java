@@ -8,13 +8,10 @@ package org.hibernate.test.wf.ddl.bmt.emf;
 
 import java.net.URL;
 import java.util.Collections;
-import javax.annotation.Resource;
 import javax.naming.InitialContext;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;

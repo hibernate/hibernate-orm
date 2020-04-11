@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.testing.TestForIssue;

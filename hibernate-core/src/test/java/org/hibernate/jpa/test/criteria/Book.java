@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Entity;

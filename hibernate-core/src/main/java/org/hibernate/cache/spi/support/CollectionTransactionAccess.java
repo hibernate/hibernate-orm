@@ -11,7 +11,6 @@ import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.support.AbstractCollectionDataAccess;
-import org.hibernate.cache.spi.support.DomainDataStorageAccess;
 
 /**
  * @author Steve Ebersole

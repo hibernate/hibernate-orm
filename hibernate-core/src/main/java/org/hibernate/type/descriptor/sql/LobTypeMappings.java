@@ -8,8 +8,6 @@ package org.hibernate.type.descriptor.sql;
 
 import java.sql.Types;
 import java.util.Locale;
-import java.util.Map;
-
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 /**

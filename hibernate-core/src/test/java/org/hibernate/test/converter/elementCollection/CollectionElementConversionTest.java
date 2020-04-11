@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.AttributeConverter;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.Converter;
 import javax.persistence.ElementCollection;

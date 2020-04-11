@@ -27,8 +27,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.hql.spi.QueryTranslator.ERROR_LEGACY_ORDINAL_PARAMS_NO_LONGER_SUPPORTED;
-
 /**
  * Parses the where clause of a hibernate query and translates it to an
  * SQL where clause.

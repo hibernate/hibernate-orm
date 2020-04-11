@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.env.spi;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;

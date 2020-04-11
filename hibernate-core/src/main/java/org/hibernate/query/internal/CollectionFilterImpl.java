@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryParameterBindings;

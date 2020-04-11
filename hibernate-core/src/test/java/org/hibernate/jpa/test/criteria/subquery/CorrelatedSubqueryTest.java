@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;

@@ -10,7 +10,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
-import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 

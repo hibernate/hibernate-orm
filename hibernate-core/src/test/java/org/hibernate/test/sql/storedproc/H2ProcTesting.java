@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.sql.storedproc;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;

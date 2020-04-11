@@ -25,8 +25,6 @@ import org.hibernate.userguide.model.Phone;
 
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 

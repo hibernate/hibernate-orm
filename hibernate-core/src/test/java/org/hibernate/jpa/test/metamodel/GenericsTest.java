@@ -12,10 +12,6 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
-
 import static org.junit.Assert.*;
 
 /**

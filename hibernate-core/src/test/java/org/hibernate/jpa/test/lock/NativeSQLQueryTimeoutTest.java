@@ -6,15 +6,12 @@
  */
 package org.hibernate.jpa.test.lock;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.hibernate.type.IntegerType;
 import org.junit.Test;
 
 import java.util.Map;

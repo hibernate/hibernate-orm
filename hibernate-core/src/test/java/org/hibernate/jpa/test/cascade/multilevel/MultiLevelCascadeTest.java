@@ -6,9 +6,6 @@
  */
 package org.hibernate.jpa.test.cascade.multilevel;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

@@ -9,7 +9,6 @@ package org.hibernate.test.ecid;
 import java.io.Serializable;
 import java.util.Iterator;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;

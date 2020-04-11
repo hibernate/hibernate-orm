@@ -6,15 +6,9 @@
  */
 package org.hibernate.test.loadplans.process;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
@@ -24,7 +18,6 @@ import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.param.ParameterBinder;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

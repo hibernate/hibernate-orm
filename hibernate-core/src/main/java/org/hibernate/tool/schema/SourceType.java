@@ -7,7 +7,6 @@
 package org.hibernate.tool.schema;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Enumeration of the various types of sources understood by various SchemaManagementTooling

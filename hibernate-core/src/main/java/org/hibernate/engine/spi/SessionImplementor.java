@@ -16,7 +16,6 @@ import javax.persistence.criteria.Selection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.persister.entity.EntityPersister;

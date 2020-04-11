@@ -14,7 +14,6 @@ import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.sql.JoinType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 

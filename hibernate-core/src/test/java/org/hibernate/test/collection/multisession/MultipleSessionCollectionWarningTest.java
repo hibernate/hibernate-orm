@@ -26,7 +26,6 @@ package org.hibernate.test.collection.multisession;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -37,8 +36,6 @@ import javax.persistence.Table;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.internal.PersistentSet;

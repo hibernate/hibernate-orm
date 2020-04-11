@@ -8,7 +8,6 @@ package org.hibernate.sql.ordering.antlr;
 
 import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.TokenPrinters;
 import org.hibernate.internal.util.StringHelper;
 

@@ -18,7 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.SQLQuery;

@@ -10,7 +10,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.spatial.dialect.postgis.PostgisDialect;
 import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
 import org.hibernate.testing.RequiresDialect;

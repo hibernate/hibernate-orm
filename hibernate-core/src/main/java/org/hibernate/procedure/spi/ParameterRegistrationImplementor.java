@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
 
 /**

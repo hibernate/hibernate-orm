@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;

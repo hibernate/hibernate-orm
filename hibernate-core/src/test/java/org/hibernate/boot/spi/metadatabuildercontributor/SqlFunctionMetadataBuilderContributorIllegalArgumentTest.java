@@ -8,7 +8,6 @@ package org.hibernate.boot.spi.metadatabuildercontributor;
 
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 

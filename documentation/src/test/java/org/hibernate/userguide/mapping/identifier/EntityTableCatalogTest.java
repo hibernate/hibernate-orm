@@ -13,13 +13,8 @@ import javax.persistence.Table;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea

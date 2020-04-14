@@ -31,6 +31,7 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 
 /**
@@ -74,15 +75,28 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 					null,
 					associatedEntityMappingType.getIdentifierMapping().getJavaTypeDescriptor()
 			);
-			Fetch fetch = new EntityFetchSelectImpl(
-					this,
-					singularAssociationAttributeMapping,
-					null,
-					false,
-					navigablePath.append( fetchable.getFetchableName() ),
-					domainResult,
-					creationState
-			);
+			Fetch fetch;
+			if ( singularAssociationAttributeMapping.getMappedFetchStrategy().getTiming() == FetchTiming.DELAYED ) {
+				fetch = new EntityFetchDelayedImpl(
+						this,
+						singularAssociationAttributeMapping,
+						null,
+						false,
+						navigablePath.append( fetchable.getFetchableName() ),
+						domainResult
+				);
+			}
+			else {
+				fetch = new EntityFetchSelectImpl(
+						this,
+						singularAssociationAttributeMapping,
+						null,
+						false,
+						navigablePath.append( fetchable.getFetchableName() ),
+						domainResult,
+						creationState
+				);
+			}
 			fetches.add( fetch );
 		}
 		else {

@@ -318,9 +318,6 @@ public class SqmUtil {
 
 		// assume we have (or can create) a mapping for the parameter's Java type
 		BasicType basicType = typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
-		if ( basicType == null ) {
-			return StandardBasicTypes.SERIALIZABLE;
-		}
 		return basicType;
 	}
 }

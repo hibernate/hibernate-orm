@@ -11,6 +11,7 @@ import java.util.Objects;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -18,7 +19,6 @@ import org.hibernate.Hibernate;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -35,13 +36,13 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				ManyToOneEmbeddedIdWithToOneFKTest.System.class,
-				ManyToOneEmbeddedIdWithToOneFKTest.SystemUser.class,
-				ManyToOneEmbeddedIdWithToOneFKTest.Subsystem.class
+				ManyToOneEmbeddedIdWithLazyToOneFKTest.System.class,
+				ManyToOneEmbeddedIdWithLazyToOneFKTest.SystemUser.class,
+				ManyToOneEmbeddedIdWithLazyToOneFKTest.Subsystem.class
 		}
 )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-public class ManyToOneEmbeddedIdWithToOneFKTest {
+public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -80,22 +81,28 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 				session -> {
 					System system = session.get( System.class, 1 );
 					assertThat( system, is( notNullValue() ) );
-					assertThat( system.getId() , is(1) );
+					assertThat( system.getId(), is( 1 ) );
 
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					PK pk = system.getUser().getPk();
-					assertTrue( Hibernate.isInitialized( pk.subsystem ) );
-
-					assertThat( pk.username, is( "Fab"));
-					assertThat( pk.subsystem.id, is( 2));
-					assertThat( pk.subsystem.getDescription(), is( "sub1"));
+					assertFalse( Hibernate.isInitialized( pk.subsystem ) );
 
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+
+					statementInspector.clear();
+					assertThat( pk.username, is( "Fab" ) );
+
+					Subsystem subsystem = pk.getSubsystem();
+					assertThat( subsystem.getId(), is( 2 ) );
+					assertThat( subsystem.getDescription(), is( "sub1" ) );
+
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 				}
 		);
 	}
@@ -105,37 +112,30 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
 		/*
-		select
-			s1_0.id_,
-			s1_0.name as name2_1_,
-			s1_0.user_subsystem_id ,
-			s1_0.user_username_
-		from
-			System s1_0
-		where
-			s1_0.id=?
+			select
+				s1_0.id,
+				s1_0.name,
+				s1_0.user_subsystem_id,
+				s1_0.user_username
+			from
+				System as s1_0
+			where
+				s1_0.id = ?
 
-		 select
-			s2_0.id,
-			s2_0.description_
-		from
-			Subsystem s2_0
-		where
-			s2_0.id=?
-
-		select
-			s1_0.subsystem_id,
-			s1_0.username
-		from
-			SystemUser as s1_0
-		where
-			(
-				s1_0.subsystem_id, s1_0.username
-			) in (
+			select
+				s1_0.subsystem_id,
+				s1_0.username,
+				s1_0.name
+			from
+				SystemUser as s1_0
+			where
 				(
-					?, ?
+					s1_0.subsystem_id, s1_0.username
+				) in (
+					(
+						?, ?
+					)
 				)
-			)
 		 */
 		scope.inTransaction(
 				session -> {
@@ -144,24 +144,24 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 					assertThat( system, is( notNullValue() ) );
 
-					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertExecutedCount( 2 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
-
 
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					final PK pk = system.getUser().getPk();
-					assertTrue( Hibernate.isInitialized( pk.subsystem ) );
+					assertFalse( Hibernate.isInitialized( pk.subsystem ) );
 
-					assertThat( pk.username, is( "Fab"));
-					assertThat( pk.subsystem.id, is( 2));
-					assertThat( pk.subsystem.getDescription(), is( "sub1"));
+					statementInspector.clear();
+					assertThat( pk.username, is( "Fab" ) );
 
-					SystemUser user = system.getUser();
-					assertThat( user, is( notNullValue() ) );
-					statementInspector.assertExecutedCount( 3 );
+					Subsystem subsystem = pk.getSubsystem();
+					assertThat( subsystem.getId(), is( 2 ) );
+					assertThat( subsystem.getDescription(), is( "sub1" ) );
+
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 				}
 		);
 	}
@@ -174,13 +174,28 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 				session -> {
 					System system = session.createQuery( "from System e join e.user where e.id = :id", System.class )
 							.setParameter( "id", 1 ).uniqueResult();
-					statementInspector.assertExecutedCount( 3 );
+
+					statementInspector.assertExecutedCount( 2 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+
 					assertThat( system, is( notNullValue() ) );
+
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
+
+					assertTrue( Hibernate.isInitialized( system.getUser() ) );
+					assertFalse( Hibernate.isInitialized( system.getUser().getPk().subsystem ) );
+					statementInspector.clear();
+					PK pk = system.getUser().getPk();
+
+					assertThat( pk.username, is( "Fab" ) );
+
+					Subsystem subsystem = pk.getSubsystem();
+					assertThat( subsystem.getId(), is( 2 ) );
+					assertThat( subsystem.getDescription(), is( "sub1" ) );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 				}
 		);
 	}
@@ -194,73 +209,29 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					System system = session.createQuery(
 							"from System e join fetch e.user where e.id = :id",
 							System.class
-					)
-							.setParameter( "id", 1 ).uniqueResult();
-					statementInspector.assertExecutedCount( 2 );
+					).setParameter( "id", 1 ).uniqueResult();
+
+					statementInspector.assertExecutedCount( 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
+
 					assertThat( system, is( notNullValue() ) );
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
-				}
-		);
-	}
 
-	@Test
-	@FailureExpected(reason = "Embedded parameters has not yet been implemented ")
-	public void testEmbeddedIdParameter(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Subsystem subsystem = new Subsystem( 2, "sub1" );
+					statementInspector.clear();
+					PK pk = system.getUser().getPk();
 
-					PK superUserKey = new PK( subsystem, "Fab" );
+					assertThat( pk.username, is( "Fab" ) );
 
-					System system = session.createQuery(
-							"from System e join fetch e.user u where u.id = :id",
-							System.class
-					).setParameter( "id", superUserKey ).uniqueResult();
-
-					assertThat( system, is( notNullValue() ) );
-				}
-		);
-	}
-
-	@Test
-	public void testHql2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
-		statementInspector.clear();
-		/*
-		  select
-			s1_0.subsystem_id,
-			s1_0.username,
-			s1_0.name
-		from
-			SystemUser as s1_0
-
-        select
-			s1_0.id,
-			s1_0.description
-		from
-			Subsystem s1_0
-		where
-			s1_0.id=?
-		 */
-		scope.inTransaction(
-				session -> {
-					SystemUser system = (SystemUser) session.createQuery( "from SystemUser " )
-							.uniqueResult();
-					assertThat( system, is( notNullValue() ) );
-
-					statementInspector.assertExecutedCount( 2 );
+					Subsystem subsystem = pk.getSubsystem();
+					assertThat( subsystem.getId(), is( 2 ) );
+					assertThat( subsystem.getDescription(), is( "sub1" ) );
+					statementInspector.assertExecutedCount( 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-
-					assertTrue( Hibernate.isInitialized( system.getPk().subsystem ) );
 
 				}
 		);
 	}
-
 
 	@Entity(name = "System")
 	public static class System {
@@ -310,14 +281,14 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 		@EmbeddedId
 		private PK pk;
 
-//		private String name;
+		private String name;
 
 		public SystemUser() {
 		}
 
 		public SystemUser(PK pk, String name) {
 			this.pk = pk;
-//			this.name = name;
+			this.name = name;
 		}
 
 		public PK getPk() {
@@ -328,19 +299,19 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 			this.pk = pk;
 		}
 
-//		public String getName() {
-//			return name;
-//		}
+		public String getName() {
+			return name;
+		}
 
-//		public void setName(String name) {
-//			this.name = name;
-//		}
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Embeddable
 	public static class PK implements Serializable {
 
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		private Subsystem subsystem;
 
 		private String username;
@@ -351,6 +322,22 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 		}
 
 		private PK() {
+		}
+
+		public Subsystem getSubsystem() {
+			return subsystem;
+		}
+
+		public void setSubsystem(Subsystem subsystem) {
+			this.subsystem = subsystem;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
 		}
 
 		@Override
@@ -396,8 +383,8 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 			this.description = description;
 		}
 
-//		public Integer getId() {
-//			return id;
-//		}
+		public Integer getId() {
+			return id;
+		}
 	}
 }

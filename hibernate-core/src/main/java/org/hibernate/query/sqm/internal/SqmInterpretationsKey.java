@@ -45,6 +45,11 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	private static boolean isCacheable(QuerySqmImpl<?> query) {
 		assert query.getQueryOptions().getAppliedGraph() != null;
 
+		if ( query.getSession().getLoadQueryInfluencers().hasEnabledFilters() ) {
+			// At the moment we cannot cache query plan if there is filter enabled.
+			return false;
+		}
+
 		if ( query.getQueryOptions().getAppliedGraph().getSemantic() != null ) {
 			// At the moment we cannot cache query plan if there is an
 			// EntityGraph enabled.

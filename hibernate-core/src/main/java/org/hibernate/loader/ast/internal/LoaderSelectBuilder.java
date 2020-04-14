@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.FilterHelper.TransformResult;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -48,13 +47,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -229,7 +226,7 @@ public class LoaderSelectBuilder {
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
 
 		if ( loadable instanceof PluralAttributeMapping ) {
-			applyFiltering( rootQuerySpec, loadQueryInfluencers, (PluralAttributeMapping) loadable );
+			applyFiltering( rootQuerySpec, rootTableGroup, (PluralAttributeMapping) loadable );
 			applyOrdering( rootTableGroup, (PluralAttributeMapping) loadable );
 		}
 
@@ -380,62 +377,22 @@ public class LoaderSelectBuilder {
 		}
 	}
 
-	private void applyFiltering(
-			QuerySpec querySpec,
-			LoadQueryInfluencers loadQueryInfluencers,
-			PluralAttributeMapping pluralAttributeMapping) {
+	private void applyFiltering(QuerySpec querySpec, TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
 		if ( loadQueryInfluencers.hasEnabledFilters() ) {
 			final Joinable joinable = pluralAttributeMapping
 					.getCollectionDescriptor()
 					.getCollectionType()
 					.getAssociatedJoinable( creationContext.getSessionFactory() );
 			assert joinable instanceof AbstractCollectionPersister;
-			final AbstractCollectionPersister collectionPersister = (AbstractCollectionPersister) joinable;
-			querySpec.getFromClause().getRoots().forEach( tableGroup -> consumeTableAliasByTableExpression(
-						tableGroup,
-						joinable.getTableName(),
-						alias -> {
-							final boolean isManyToMany = collectionPersister.isManyToMany();
-							String filterFragment;
-							if ( isManyToMany ) {
-								filterFragment = collectionPersister.getManyToManyFilterFragment(
-										alias,
-										loadQueryInfluencers.getEnabledFilters()
-								);
-							}
-							else {
-								filterFragment = collectionPersister.filterFragment(
-										alias,
-										loadQueryInfluencers.getEnabledFilters()
-								);
-							}
-							final TransformResult transformResult = FilterHelper.transformToPositionalParameters(
-									filterFragment, loadQueryInfluencers.getEnabledFilters()
-							);
-							filterFragment = transformResult.getTransformedFilterFragment();
-							final FilterPredicate filterPredicate = new FilterPredicate(
-									filterFragment, transformResult.getParameters()
-							);
-							querySpec.applyPredicate( filterPredicate );
-							querySpec.addFilterPredicate( filterPredicate );
-						}
-					)
+			final String tableExpression = joinable.getTableName();
+			final String tableAlias = tableGroup.resolveTableReference( tableExpression ).getIdentificationVariable();
+			final Predicate filterPredicate = FilterHelper.createFilterPredicate(
+					loadQueryInfluencers,
+					joinable,
+					tableAlias
 			);
-		}
-	}
-
-	private void consumeTableAliasByTableExpression(TableGroup tableGroup, String tableExpression, Consumer<String> aliasConsumer) {
-		if ( tableExpression.equals( tableGroup.getPrimaryTableReference().getTableExpression() ) ) {
-			aliasConsumer.accept( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
-		}
-		else {
-			for ( TableReferenceJoin referenceJoin : tableGroup.getTableReferenceJoins() ) {
-				if ( tableExpression.equals( referenceJoin.getJoinedTableReference().getTableExpression() ) ) {
-					aliasConsumer.accept( referenceJoin.getJoinedTableReference().getIdentificationVariable() );
-				}
-			}
-			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
-				consumeTableAliasByTableExpression( tableGroupJoin.getJoinedGroup(), tableExpression, aliasConsumer );
+			if ( filterPredicate != null ) {
+				querySpec.applyPredicate( filterPredicate );
 			}
 		}
 	}
@@ -547,7 +504,11 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 
 				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE && joined ) {
-					applyFiltering( querySpec, loadQueryInfluencers, (PluralAttributeMapping) fetchable );
+					applyFiltering(
+							querySpec,
+							creationState.getFromClauseAccess().getTableGroup( fetchablePath ),
+							( (PluralAttributeMapping) fetchable )
+					);
 					applyOrdering(
 							querySpec,
 							fetchablePath,
@@ -622,7 +583,7 @@ public class LoaderSelectBuilder {
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
 
 		// NOTE : no need to check - we are explicitly processing a plural-attribute
-		applyFiltering( rootQuerySpec, loadQueryInfluencers, (PluralAttributeMapping) loadable );
+		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping );
 		applyOrdering( rootTableGroup, attributeMapping );
 
 		// generate and apply the restriction

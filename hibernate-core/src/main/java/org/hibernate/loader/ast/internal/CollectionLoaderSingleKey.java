@@ -99,6 +99,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
+		jdbcSelect.registerFilterJdbcParameterBindings( jdbcParameterBindings );
 
 		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 
@@ -126,8 +127,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				session
 		);
 		assert !paramItr.hasNext();
-
-		sqlAst.getQuerySpec().bindFilterPredicateParameters( jdbcParameterBindings );
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,

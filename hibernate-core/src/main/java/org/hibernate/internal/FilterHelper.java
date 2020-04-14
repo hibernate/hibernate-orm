@@ -13,13 +13,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
-import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.type.Type;
 
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
@@ -31,7 +40,7 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  */
 public class FilterHelper {
 
-	private static Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\w+)\\.(\\w+)" );
+	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\w+)\\.(\\w+)" );
 
 	private final String[] filterNames;
 	private final String[] filterConditions;
@@ -141,49 +150,30 @@ public class FilterHelper {
 		}
 	}
 
-	public static class TypedValue {
-		private final Type type;
-		private final Object value;
-
-		public TypedValue(Type type, Object value) {
-			this.type = type;
-			this.value = value;
+	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable, String alias) {
+		if ( loadQueryInfluencers.hasEnabledFilters() ) {
+			final String filterFragment;
+			if ( joinable instanceof AbstractCollectionPersister && ( (AbstractCollectionPersister) joinable ).isManyToMany() ) {
+				filterFragment = ( (AbstractCollectionPersister) joinable ).getManyToManyFilterFragment(
+						alias,
+						loadQueryInfluencers.getEnabledFilters()
+				);
+			}
+			else {
+				filterFragment = joinable.filterFragment( alias, loadQueryInfluencers.getEnabledFilters() );
+			}
+			if ( ! StringHelper.isEmptyOrWhiteSpace( filterFragment ) ) {
+				return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
+			}
 		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public Object getValue() {
-			return value;
-		}
+		return null;
 	}
 
-	public static class TransformResult {
-		private final String transformedFilterFragment;
-		private final List<TypedValue> parameters;
-
-		public TransformResult(
-				String transformedFilterFragment,
-				List<TypedValue> parameters) {
-			this.transformedFilterFragment = transformedFilterFragment;
-			this.parameters = parameters;
-		}
-
-		public String getTransformedFilterFragment() {
-			return transformedFilterFragment;
-		}
-
-		public List<TypedValue> getParameters() {
-			return parameters;
-		}
-	}
-
-	public static TransformResult transformToPositionalParameters(String filterFragment, Map<String, Filter> enabledFilters) {
+	private static FilterPredicate doCreateFilterPredicate(String filterFragment, Map<String, Filter> enabledFilters) {
 		final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterFragment );
 		final StringBuilder sb = new StringBuilder();
 		int pos = 0;
-		final List<TypedValue> parameters = new ArrayList<>( matcher.groupCount() );
+		final List<FilterJdbcParameter> parameters = new ArrayList<>( matcher.groupCount() );
 		while( matcher.find() ) {
 			sb.append( filterFragment, pos, matcher.start() );
 			pos = matcher.end();
@@ -192,16 +182,19 @@ public class FilterHelper {
 			final String parameterName = matcher.group( 2 );
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
 			if ( enabledFilter == null ) {
-				throw new HibernateException( String.format( "unknown filter [%s]", filterName ) );
+				throw new MappingException( String.format( "unknown filter [%s]", filterName ) );
 			}
 			final Type parameterType = enabledFilter.getFilterDefinition().getParameterType( parameterName );
+			if ( ! (parameterType instanceof JdbcMapping ) ) {
+				throw new MappingException( String.format( "parameter [%s] for filter [%s] is not of JdbcMapping type", parameterName, filterName ) );
+			}
 			final Object parameterValue = enabledFilter.getParameter( parameterName );
 			if ( parameterValue == null ) {
-				throw new HibernateException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
+				throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
 			}
-			parameters.add( new TypedValue( parameterType, parameterValue ) );
+			parameters.add( new FilterJdbcParameter( (JdbcMapping) parameterType, parameterValue ) );
 		}
 		sb.append( filterFragment, pos, filterFragment.length() );
-		return new TransformResult( sb.toString(), parameters );
+		return new FilterPredicate( sb.toString(), parameters );
 	}
 }

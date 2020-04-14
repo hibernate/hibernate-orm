@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -19,15 +20,19 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -57,6 +62,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -88,6 +94,8 @@ public class StandardSqmSelectTranslator
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
+
+	private List<FilterPredicate> collectionFieldFilterPredicates;
 
 	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
@@ -187,6 +195,24 @@ public class StandardSqmSelectTranslator
 
 	@Override
 	protected void postProcessQuerySpec(QuerySpec sqlQuerySpec) {
+		final List<TableGroup> roots = sqlQuerySpec.getFromClause().getRoots();
+		if ( roots != null && roots.size() == 1 ) {
+			final TableGroup root = roots.get( 0 );
+			final ModelPartContainer modelPartContainer = root.getModelPart();
+			final EntityPersister entityPersister = modelPartContainer.findContainingEntityMapping().getEntityPersister();
+			assert entityPersister instanceof AbstractEntityPersister;
+			final String primaryTableAlias = root.getPrimaryTableReference().getIdentificationVariable();
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					fetchInfluencers, (AbstractEntityPersister) entityPersister, primaryTableAlias
+			);
+			if ( filterPredicate != null ) {
+				sqlQuerySpec.applyPredicate( filterPredicate );
+			}
+			if ( !CollectionHelper.isEmpty( collectionFieldFilterPredicates ) ) {
+				collectionFieldFilterPredicates.forEach( sqlQuerySpec::applyPredicate );
+			}
+		}
+
 		try {
 			final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
 			if ( orderByFragmentConsumer != null ) {
@@ -384,10 +410,32 @@ public class StandardSqmSelectTranslator
 					StandardSqmSelectTranslator.this
 			);
 
-			final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
-			if ( orderByFragmentConsumer != null ) {
-				if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+			if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+
+				String tableAlias = alias;
+				if ( tableAlias == null ) {
+					tableAlias = getFromClauseAccess().getTableGroup( fetchablePath ).getPrimaryTableReference().getIdentificationVariable();
+				}
+				final Joinable joinable = pluralAttributeMapping
+						.getCollectionDescriptor()
+						.getCollectionType()
+						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+				final FilterPredicate collectionFieldFilterPredicate = FilterHelper.createFilterPredicate(
+						fetchInfluencers,
+						joinable,
+						tableAlias
+				);
+				if ( collectionFieldFilterPredicate != null ) {
+					if ( collectionFieldFilterPredicates == null ) {
+						collectionFieldFilterPredicates = new ArrayList<>();
+					}
+					collectionFieldFilterPredicates.add( collectionFieldFilterPredicate );
+				}
+
+				final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
+				if ( orderByFragmentConsumer != null ) {
+
 					final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
 					assert tableGroup.getModelPart() == pluralAttributeMapping;
 

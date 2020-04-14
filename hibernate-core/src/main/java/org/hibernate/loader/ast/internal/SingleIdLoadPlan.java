@@ -93,6 +93,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
+		jdbcSelect.registerFilterJdbcParameterBindings( jdbcParameterBindings );
 
 		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 
@@ -121,8 +122,6 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					session
 			);
 		}
-
-		sqlAst.getQuerySpec().bindFilterPredicateParameters( jdbcParameterBindings );
 
 		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,

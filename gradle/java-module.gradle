@@ -215,6 +215,15 @@ test {
 	systemProperty 'file.encoding', 'UTF-8'
 }
 
+// Enable the experimental features of ByteBuddy with JDK 15+
+test {
+	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {
+		logger.warn( "The version of java that will be tested is not supported by Bytebuddy by default. " +
+				 " Setting 'net.bytebuddy.experimental=true'." )
+		systemProperty 'net.bytebuddy.experimental', true
+	}
+}
+
 test {
 	if ( project.findProperty( 'log-test-progress' )?.toString()?.toBoolean() ) {
 		// Log a statement for each test.

@@ -17,7 +17,7 @@ See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more informa
 ====
 
 The flushing strategy is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
-Although JPA defines only two flushing strategies (https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#AUTO[`AUTO`] and https://javaee.github.io/javaee-spec/javadocs/javax/persistence/FlushModeType.html#COMMIT[`COMMIT`]),
+Although JPA defines only two flushing strategies ({jpaJavadocUrlPrefix}FlushModeType.html#AUTO[`AUTO`] and {jpaJavadocUrlPrefix}FlushModeType.html#COMMIT[`COMMIT`]),
 Hibernate has a much broader spectrum of flush types:
 
 ALWAYS:: Flushes the `Session` before every query.

@@ -29,6 +29,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
@@ -113,6 +114,9 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		if ( entity instanceof HibernateProxy ) {
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		}
 		return propertyAccess.getGetter().get( entity );
 	}
 

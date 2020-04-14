@@ -88,9 +88,6 @@ dependencies {
     provided( libraries.ant )
 	provided( libraries.cdi )
 
-	runtime( libraries.junit5_vintage )
-	runtime( libraries.junit5_jupiter )
-
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )

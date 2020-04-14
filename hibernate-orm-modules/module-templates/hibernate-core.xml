@@ -11,7 +11,7 @@
     </resources>
 
     <dependencies>
-        <module name="org.hibernate.envers" slot="${slot}" services="import" optional="true"/>
+<!--        <module name="org.hibernate.envers" slot="${slot}" services="import" optional="true"/>-->
         <module name="com.fasterxml.classmate"/>
         <module name="javax.api"/>
         <module name="javax.annotation.api"/>

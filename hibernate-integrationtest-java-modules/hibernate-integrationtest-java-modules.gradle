@@ -34,7 +34,7 @@ checkstyleMain.exclude '**/module-info.java'
 
 dependencies {
 	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-envers' ) )
+//	compile( project( ':hibernate-envers' ) )
 	compile( libraries.jpa )
 }
 

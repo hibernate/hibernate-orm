@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
@@ -33,12 +34,12 @@ public class TestTypeContributor implements TypeContributor {
 	public static class TestType implements UserType {
 		@Override
 		public int[] sqlTypes() {
-			return new int[0];
+			return new int[] { Types.INTEGER };
 		}
 
 		@Override
 		public Class returnedClass() {
-			return null;
+			return String.class;
 		}
 
 		@Override

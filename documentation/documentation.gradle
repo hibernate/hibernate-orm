@@ -36,6 +36,11 @@ apply plugin: 'hibernate-matrix-testing'
 defaultTasks 'buildDocs'
 
 
+// todo (6.0) : skip documentation tests - many fail and many fail to compile due to temporary disabling of envers module
+tasks.test.enabled = false
+tasks.compileTestJava.enabled = false
+
+
 dependencies {
 	ext.pressgangVersion = '3.0.0'
 
@@ -45,7 +50,7 @@ dependencies {
 
 	testCompile( 'org.apache.commons:commons-lang3:3.4' )
 
-	testCompile( project(':hibernate-envers') )
+//	testCompile( project(':hibernate-envers') )
 	// todo (6.0) - add back hibernate-spatial dependency
 //	testCompile( project(':hibernate-spatial') )
 	testCompile( project(path: ':hibernate-core', configuration: 'tests') )

@@ -163,8 +163,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount * smallBatchLength );
-
-			sqlAst.getQuerySpec().bindFilterPredicateParameters( jdbcParameterBindings );
+			jdbcSelect.registerFilterJdbcParameterBindings( jdbcParameterBindings );
 
 			final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 

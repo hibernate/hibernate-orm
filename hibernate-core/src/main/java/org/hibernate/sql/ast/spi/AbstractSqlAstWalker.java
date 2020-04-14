@@ -14,6 +14,8 @@ import org.hibernate.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -70,11 +72,10 @@ import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
@@ -98,9 +99,11 @@ public abstract class AbstractSqlAstWalker
 
 	// In-flight state
 	private final StringBuilder sqlBuffer = new StringBuilder();
-	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 
+	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 	private final JdbcParametersImpl jdbcParameters = new JdbcParametersImpl();
+
+	protected final List<FilterJdbcParameter> filterJdbcParameters = new ArrayList<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 
@@ -1034,12 +1037,12 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		if ( filterPredicate.getFilterFragment() != null ) {
-			appendSql( filterPredicate.getFilterFragment() );
-			for (JdbcParameter jdbcParameter : filterPredicate.getJdbcParameters()) {
-				parameterBinders.add( (AbstractJdbcParameter) jdbcParameter );
-				jdbcParameters.addParameter( jdbcParameter );
-			}
+		assert StringHelper.isNotEmpty( filterPredicate.getFilterFragment() );
+		appendSql( filterPredicate.getFilterFragment() );
+		for ( FilterJdbcParameter filterJdbcParameter : filterPredicate.getFilterJdbcParameters() ) {
+			parameterBinders.add( filterJdbcParameter.getBinder() );
+			jdbcParameters.addParameter( filterJdbcParameter.getParameter() );
+			filterJdbcParameters.add( filterJdbcParameter );
 		}
 	}
 

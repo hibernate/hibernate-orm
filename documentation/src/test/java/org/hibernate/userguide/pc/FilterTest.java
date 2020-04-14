@@ -18,11 +18,13 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.NoResultException;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Where;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -56,7 +58,8 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             //tag::pc-filter-persistence-example[]
             Client client = new Client()
             .setId( 1L )
-            .setName( "John Doe" );
+            .setName( "John Doe" )
+            .setType( AccountType.DEBIT );
 
             client.addAccount(
                 new Account()
@@ -186,7 +189,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
             Client client = entityManager.find( Client.class, 1L );
 
-            assertEquals( 2, client.getAccounts().size() );
+            assertEquals( 1, client.getAccounts().size() );
             //end::pc-filter-collection-query-example[]
         } );
     }
@@ -198,6 +201,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
     //tag::pc-filter-Client-example[]
     @Entity(name = "Client")
+    @Table(name = "client")
     public static class Client {
 
         @Id
@@ -205,13 +209,19 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
         private String name;
 
+        private AccountType type;
+
         @OneToMany(
             mappedBy = "client",
             cascade = CascadeType.ALL
         )
         @Filter(
             name="activeAccount",
-            condition="active_status = :active"
+            condition="{a}.active_status = :active and {a}.type = {c}.type",
+            aliases = {
+                    @SqlFragmentAlias( alias = "a", table= "account"),
+                    @SqlFragmentAlias( alias = "c", table= "client"),
+            }
         )
         private List<Account> accounts = new ArrayList<>( );
 
@@ -235,6 +245,15 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             return this;
         }
 
+        public AccountType getType() {
+            return type;
+        }
+
+        public Client setType(AccountType type) {
+            this.type = type;
+            return this;
+        }
+
         public List<Account> getAccounts() {
             return accounts;
         }
@@ -249,6 +268,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
     //tag::pc-filter-Account-example[]
     @Entity(name = "Account")
+    @Table(name = "account")
     @FilterDef(
         name="activeAccount",
         parameters = @ParamDef(

@@ -74,7 +74,8 @@ public class StandardSqlAstSelectTranslator
 						querySpec.getSelectClause().getSqlSelections(),
 						Collections.emptyList()
 				),
-				getAffectedTableNames()
+				getAffectedTableNames(),
+				filterJdbcParameters
 		);
 	}
 
@@ -93,7 +94,8 @@ public class StandardSqlAstSelectTranslator
 						sqlAstSelect.getQuerySpec().getSelectClause().getSqlSelections(),
 						sqlAstSelect.getDomainResultDescriptors()
 				),
-				getAffectedTableNames()
+				getAffectedTableNames(),
+				filterJdbcParameters
 		);
 	}
 

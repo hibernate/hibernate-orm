@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.HibernateException;
-import org.hibernate.internal.FilterHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -22,13 +19,9 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteConsumer;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
-import org.hibernate.sql.exec.spi.JdbcParameterBinding;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -45,7 +38,6 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	private final SelectClause selectClause = new SelectClause();
 
 	private Predicate whereClauseRestrictions;
-	private List<FilterPredicate> filterPredicates;
 	private List<SortSpecification> sortSpecifications;
 	private Expression limitClauseExpression;
 	private Expression offsetClauseExpression;
@@ -83,13 +75,6 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 	@Override
 	public void applyPredicate(Predicate predicate) {
 		this.whereClauseRestrictions = SqlAstTreeHelper.combinePredicates( this.whereClauseRestrictions, predicate );
-	}
-
-	public void addFilterPredicate(FilterPredicate filterPredicate) {
-		if ( filterPredicates == null ) {
-			filterPredicates = new ArrayList<>();
-		}
-		filterPredicates.add( filterPredicate );
 	}
 
 	public List<SortSpecification> getSortSpecifications() {
@@ -169,33 +154,5 @@ public class QuerySpec implements SqlAstNode, PredicateContainer, Expression, Ct
 				resultVariable,
 				descriptor
 		);
-	}
-
-	public void bindFilterPredicateParameters(JdbcParameterBindings jdbcParameterBindings) {
-		if ( filterPredicates != null && !filterPredicates.isEmpty() ) {
-			for ( FilterPredicate filterPredicate : filterPredicates ) {
-				for ( int i = 0; i < filterPredicate.getJdbcParameters().size(); i++ ) {
-					final JdbcParameter parameter = filterPredicate.getJdbcParameters().get( i );
-					final FilterHelper.TypedValue parameterTypedValue = filterPredicate.getJdbcParameterTypedValues().get( i );
-					if ( !(parameterTypedValue.getType() instanceof JdbcMapping ) ) {
-						throw new HibernateException( String.format( "Filter parameter type [%s] did not implement JdbcMapping", parameterTypedValue.getType() ) );
-					}
-					jdbcParameterBindings.addBinding(
-							parameter,
-							new JdbcParameterBinding() {
-								@Override
-								public JdbcMapping getBindType() {
-									return (JdbcMapping) parameterTypedValue.getType();
-								}
-
-								@Override
-								public Object getBindValue() {
-									return parameterTypedValue.getValue();
-								}
-							}
-					);
-				}
-			}
-		}
 	}
 }

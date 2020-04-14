@@ -18,15 +18,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -117,10 +114,6 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
             name="maxOrderId",
             type="int"
         )
-    )
-    @Filter(
-        name="firstAccounts",
-        condition="order_id <= :maxOrderId"
     )
     public static class Client {
 

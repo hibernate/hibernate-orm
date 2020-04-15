@@ -97,12 +97,12 @@ public final class EventType<T> {
 				name,
 				( e -> {
 					final EventType eventTypeNew = EventType.create( name, listenerClass );
-					LOG.debug( String.format(
+					LOG.debugf(
 							"Added custom EventType: [%s], ordinal=[%d], listener=[%s].",
 							name,
 							eventTypeNew.ordinal,
 							listenerClass.toString()
-					) );
+					);
 					return eventTypeNew;
 				} )
 		);

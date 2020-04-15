@@ -163,6 +163,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private synchronized <T> EventListenerGroupImpl<T> getOrCreateEventListenerGroup(EventType<T> eventType) {
 		final int sizeOriginal = this.registeredEventListeners.length;
+		final EventListenerGroupImpl[] registeredEventListenersNew;
 		if ( eventType.ordinal() < sizeOriginal ) {
 			final EventListenerGroupImpl registeredEventListener = registeredEventListeners[ eventType.ordinal() ];
 			if ( registeredEventListener != null ) {
@@ -171,6 +172,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			}
 			// eventType has not been registered yet.
 			// Its EventListenerGroupImpl will be created and added to registeredEventListeners below.
+			// There is already space for the new EventType in this.registeredEventListeners.
+			registeredEventListenersNew = this.registeredEventListeners;
 		}
 		else {
 			// eventType is a custom EventType, and there is not enough space in
@@ -180,20 +183,21 @@ public class EventListenerRegistryImpl implements EventListenerRegistry, Stoppab
 			// This way an existing, unregistered EventType with a larger ordinal will not require another
 			// allocation when it gets registered in the future.
 			final int sizeNew = Math.max( eventType.ordinal() + 1, EventType.values().size() );
-			final EventListenerGroupImpl[] registeredEventListenersNew = new EventListenerGroupImpl[sizeNew];
+			registeredEventListenersNew = new EventListenerGroupImpl[sizeNew];
 
 			// First copy the existing listeners to registeredEventListenersNew.
 			System.arraycopy( this.registeredEventListeners, 0, registeredEventListenersNew, 0, sizeOriginal );
-
-			// Now update the reference.
-			this.registeredEventListeners = registeredEventListenersNew;
 		}
 
 		final EventListenerGroupImpl listenerGroup = new EventListenerGroupImpl(
 				eventType,
 				EventListenerRegistryImpl.this
 		);
-		registeredEventListeners[eventType.ordinal()] = listenerGroup;
+		registeredEventListenersNew[eventType.ordinal()] = listenerGroup;
+
+		// Now update the reference.
+		this.registeredEventListeners = registeredEventListenersNew;
+
 		return listenerGroup;
 	}
 

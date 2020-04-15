@@ -44,7 +44,7 @@ public class InferredBasicValueResolver<J> {
 		if ( resolution == null ) {
 			final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( relationalJtd, relationalStd );
 
-			//noinspection unchecked
+			//noinspection unchecked,rawtypes
 			resolution = new InferredBasicValueResolution(
 					basicType,
 					domainJtd,

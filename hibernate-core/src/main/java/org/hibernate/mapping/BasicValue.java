@@ -78,9 +78,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 
 	private Function<TypeConfiguration,BasicJavaDescriptor> explicitJavaTypeAccess;
 	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration,MutabilityPlan> explicitMutabilityPlanAccess;
 	private Function<TypeConfiguration,Class> implicitJavaTypeAccess;
-
-	private MutabilityPlan explicitMutabilityPlan;
 
 	private boolean isNationalized;
 	private boolean isLob;
@@ -169,8 +168,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		this.explicitSqlTypeAccess = sqlTypeAccess;
 	}
 
-	public void setExplicitMutabilityPlan(MutabilityPlan explicitMutabilityPlan) {
-		this.explicitMutabilityPlan = explicitMutabilityPlan;
+	public void setExplicitMutabilityPlanAccess(Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess) {
+		this.explicitMutabilityPlanAccess = explicitMutabilityPlanAccess;
 	}
 
 	public void setImplicitJavaTypeAccess(Function<TypeConfiguration, Class> implicitJavaTypeAccess) {
@@ -295,8 +294,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					implicitJavaTypeAccess,
 					explicitJavaTypeAccess,
 					explicitSqlTypeAccess,
+					explicitMutabilityPlanAccess,
 					attributeConverterDescriptor,
-					explicitMutabilityPlan,
 					explicitLocalTypeParams,
 					this,
 					typeConfiguration,
@@ -333,7 +332,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					attributeConverterDescriptor,
 					explicitJavaTypeAccess,
 					explicitSqlTypeAccess,
-					explicitMutabilityPlan,
+					explicitMutabilityPlanAccess,
 					this,
 					converterCreationContext,
 					getBuildingContext()
@@ -389,8 +388,8 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			Function<TypeConfiguration, Class> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
-			MutabilityPlan explicitMutabilityPlan,
 			Map localTypeParams,
 			SqlTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
@@ -424,9 +423,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					name,
 					explicitJtdAccess,
 					explicitStdAccess,
-					converterCreationContext,
-					explicitMutabilityPlan,
+					explicitMutabilityPlanAccess,
 					stdIndicators,
+					converterCreationContext,
 					context
 			);
 		}
@@ -493,7 +492,7 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					domainJtd,
 					basicTypeByName,
 					valueConverter,
-					explicitMutabilityPlan,
+					explicitMutabilityPlanAccess,
 					context
 			);
 		}
@@ -505,7 +504,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					explicitJtdAccess.apply( typeConfiguration ),
 					explicitStdAccess.apply( typeConfiguration ),
 					localTypeParams,
-					explicitMutabilityPlan,
+					explicitMutabilityPlanAccess != null
+							? explicitMutabilityPlanAccess.apply( typeConfiguration )
+							: null,
 					context
 			);
 		}
@@ -531,7 +532,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 						explicitJtdAccess != null ? explicitJtdAccess.apply( typeConfiguration ) : null,
 						explicitStdAccess != null ? explicitStdAccess.apply( typeConfiguration ) : null,
 						null,
-						explicitMutabilityPlan,
+						explicitMutabilityPlanAccess != null
+								? explicitMutabilityPlanAccess.apply( typeConfiguration )
+								: null,
 						context
 				);
 			}
@@ -541,7 +544,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					typeNamedClass,
 					explicitJtdAccess.apply( typeConfiguration ),
 					explicitStdAccess.apply( typeConfiguration ),
-					explicitMutabilityPlan,
+					explicitMutabilityPlanAccess != null
+							? explicitMutabilityPlanAccess.apply( typeConfiguration )
+							: null,
 					localTypeParams,
 					context
 			);

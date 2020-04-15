@@ -11,6 +11,7 @@ import java.lang.annotation.Retention;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -33,7 +34,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface SqlType {
-	Class<? extends org.hibernate.type.descriptor.sql.SqlTypeDescriptor> value();
-
-	String columnName() default "";
+	Class<? extends SqlTypeDescriptor> value();
 }

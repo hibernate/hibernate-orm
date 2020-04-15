@@ -23,10 +23,13 @@ import javax.persistence.Version;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
-import org.hibernate.annotations.MapKeySqlTypeCode;
+import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeySqlType;
+import org.hibernate.annotations.MapKeySqlTypeCode;
 import org.hibernate.annotations.MapKeyType;
+import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SqlType;
@@ -50,6 +53,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -92,6 +97,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 	private Function<TypeConfiguration,SqlTypeDescriptor> explicitSqlTypeAccess;
 	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess;
+	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, Class> implicitJavaTypeAccess;
 
 	private AccessType accessType;
@@ -501,7 +507,25 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 			return null;
 		};
+
+		explicitJtdAccess = typeConfiguration -> {
+			final MapKeyJavaType mapKeyJtdAnn = attributeXProperty.getAnnotation( MapKeyJavaType.class );
+			if ( mapKeyJtdAnn == null ) {
+				return null;
+			}
+
+			final JavaType jtdAnn = mapKeyJtdAnn.value();
+			final Class<? extends BasicJavaDescriptor<?>> jtdJavaType = jtdAnn.value();
+			try {
+				return jtdJavaType.newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				throw new MappingException( "Could not instantiate explicit JavaTypeDescriptor - " + jtdJavaType.getName(), e );
+			}
+		};
 	}
+
+
 	private void normalSupplementalDetails(
 			XProperty attributeXProperty,
 			MetadataBuildingContext buildingContext) {
@@ -537,6 +561,28 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 				catch (InstantiationException | IllegalAccessException e) {
 					throw new MappingException( "Could not instantiate explicit JavaTypeDescriptor - " + jtdImplJavaType.getName(), e );
 				}
+			}
+
+			return null;
+		};
+
+		explicitMutabilityAccess = typeConfiguration -> {
+			final Mutability mutabilityAnn = attributeXProperty.getAnnotation( Mutability.class );
+
+			if ( mutabilityAnn != null ) {
+				final Class<? extends MutabilityPlan<?>> planJavaType = mutabilityAnn.value();
+
+				try {
+					return planJavaType.newInstance();
+				}
+				catch (InstantiationException | IllegalAccessException e) {
+					throw new MappingException( "Could not instantiate explicit MutabilityPlan - " + planJavaType.getName(), e );
+				}
+			}
+
+			final Immutable immutableAnn = attributeXProperty.getAnnotation( Immutable.class );
+			if ( immutableAnn != null ) {
+				return ImmutableMutabilityPlan.instance();
 			}
 
 			return null;
@@ -727,6 +773,7 @@ public class BasicValueBinder<T> implements SqlTypeDescriptorIndicators {
 
 		basicValue.setImplicitJavaTypeAccess( implicitJavaTypeAccess );
 		basicValue.setExplicitJavaTypeAccess( explicitJtdAccess );
+		basicValue.setExplicitMutabilityPlanAccess( explicitMutabilityAccess );
 		basicValue.setExplicitSqlTypeAccess( explicitSqlTypeAccess );
 
 		if ( enumType != null ) {

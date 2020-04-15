@@ -9,10 +9,17 @@ package org.hibernate.type.descriptor.java;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
+import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link String} handling.
@@ -32,6 +39,23 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 
 	public String fromString(String string) {
 		return string;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators stdIndicators) {
+		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
+		final SqlTypeDescriptorRegistry stdRegistry = typeConfiguration.getSqlTypeDescriptorRegistry();
+
+		if ( stdIndicators.isLob() ) {
+			return stdIndicators.isNationalized()
+					? stdRegistry.getDescriptor( Types.NCLOB )
+					: stdRegistry.getDescriptor( Types.CLOB );
+		}
+		else if ( stdIndicators.isNationalized() ) {
+			return stdRegistry.getDescriptor( Types.NVARCHAR );
+		}
+
+		return super.getJdbcRecommendedSqlType( stdIndicators );
 	}
 
 	@SuppressWarnings({ "unchecked" })

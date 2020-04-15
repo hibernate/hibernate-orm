@@ -38,14 +38,14 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			ConverterDescriptor converterDescriptor,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
-			MutabilityPlan explicitMutabilityPlan,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			SqlTypeDescriptorIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
 		return fromInternal(
 				explicitJtdAccess,
 				explicitStdAccess,
-				explicitMutabilityPlan,
+				explicitMutabilityPlanAccess,
 				converterDescriptor.createJpaAttributeConverter( converterCreationContext ),
 				sqlTypeIndicators,
 				context
@@ -56,9 +56,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			String name,
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
-			JpaAttributeConverterCreationContext converterCreationContext,
-			MutabilityPlan explicitMutabilityPlan,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			SqlTypeDescriptorIndicators sqlTypeIndicators,
+			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
@@ -75,7 +75,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		return fromInternal(
 				explicitJtdAccess,
 				explicitStdAccess,
-				explicitMutabilityPlan,
+				explicitMutabilityPlanAccess,
 				converterDescriptor.createJpaAttributeConverter( converterCreationContext ),
 				sqlTypeIndicators,
 				context
@@ -85,23 +85,29 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	private static NamedConverterResolution fromInternal(
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, SqlTypeDescriptor> explicitStdAccess,
-			MutabilityPlan explicitMutabilityPlan,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JpaAttributeConverter converter, SqlTypeDescriptorIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+
 		final JavaTypeDescriptor explicitJtd = explicitJtdAccess != null
-				? explicitJtdAccess.apply( context.getBootstrapContext().getTypeConfiguration() )
+				? explicitJtdAccess.apply( typeConfiguration )
 				: null;
 		final JavaTypeDescriptor domainJtd = explicitJtd != null
 				? explicitJtd
 				: converter.getDomainJavaDescriptor();
 
 		final SqlTypeDescriptor explicitStd = explicitStdAccess != null
-				? explicitStdAccess.apply( context.getBootstrapContext().getTypeConfiguration() )
+				? explicitStdAccess.apply( typeConfiguration )
 				: null;
 		final JavaTypeDescriptor relationalJtd = converter.getRelationalJavaDescriptor();
 		final SqlTypeDescriptor relationalStd = explicitStd != null
 				? explicitStd
 				: relationalJtd.getJdbcRecommendedSqlType( sqlTypeIndicators );
+
+		final MutabilityPlan explicitMutabilityPlan = explicitMutabilityPlanAccess != null
+				? explicitMutabilityPlanAccess.apply( typeConfiguration )
+				: null;
 
 		return new NamedConverterResolution(
 				domainJtd,

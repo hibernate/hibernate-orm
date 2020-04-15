@@ -33,4 +33,6 @@ public @interface SqlTypeRegistration {
 	 * The descriptor to use
 	 */
 	Class<? extends SqlTypeDescriptor> value();
+
+	int registrationCode() default Integer.MIN_VALUE;
 }

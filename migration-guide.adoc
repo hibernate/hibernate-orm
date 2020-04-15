@@ -11,8 +11,13 @@ earlier versions, see any other pertinent migration guides as well.
 
 === Type system / custom types
 
-* General read-by-position
-* Other
+==== Influencing SqlTypeDescriptor to use
+
+Discuss `@SqlTypeCode`, `@SqlType`, `@SqlTypeRegistration`
+
+==== Influencing JavaTypeDescriptor to use
+
+Discuss `@JavaType`, `@JavaTypeRegistration`
 
 
 === SQM

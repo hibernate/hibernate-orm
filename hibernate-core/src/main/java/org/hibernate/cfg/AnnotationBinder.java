@@ -135,6 +135,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.HCANNHelper;
@@ -143,7 +144,6 @@ import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
-import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -2397,10 +2397,10 @@ public final class AnnotationBinder {
 	}
 
 	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
-		propertyBinder.getSimpleValueBinder().setVersion( true );
+		propertyBinder.getBasicValueBinder().setVersion( true );
 		if(property.isAnnotationPresent( Source.class )) {
 			Source source = property.getAnnotation( Source.class );
-			propertyBinder.getSimpleValueBinder().setTimestampVersionType( source.value().typeName() );
+			propertyBinder.getBasicValueBinder().setTimestampVersionType( source.value().typeName() );
 		}
 	}
 
@@ -2914,12 +2914,11 @@ public final class AnnotationBinder {
 			for ( Ejb3Column column : columns ) {
 				column.forceNotNull(); //this is an id
 			}
-			SimpleValueBinder value = new SimpleValueBinder();
+			final BasicValueBinder value = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
 			value.setPropertyName( propertyName );
 			value.setReturnedClassName( inferredData.getTypeName() );
 			value.setColumns( columns );
 			value.setPersistentClassName( persistentClassName );
-			value.setBuildingContext( buildingContext );
 			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName, null );
 			value.setAccessType( propertyAccessor );
 			id = value.make();

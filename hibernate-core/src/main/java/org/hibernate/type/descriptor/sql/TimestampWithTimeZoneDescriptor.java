@@ -40,6 +40,16 @@ public class TimestampWithTimeZoneDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "TIMESTAMP_WITH_TIMEZONE";
+	}
+
+	@Override
+	public String toString() {
+		return "TimestampWithTimeZoneDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

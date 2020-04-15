@@ -74,6 +74,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -105,7 +106,6 @@ import org.hibernate.sql.Update;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -255,8 +255,8 @@ public abstract class AbstractCollectionPersister
 	private final BasicValueConverter indexConverter;
 
 	// temprary
-	private final BasicType convertedElementType;
-	private final BasicType convertedIndexType;
+	private final JdbcMapping convertedElementType;
+	private final JdbcMapping convertedIndexType;
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
@@ -631,7 +631,7 @@ public abstract class AbstractCollectionPersister
 		if ( elementBootDescriptor instanceof BasicValue ) {
 			final BasicValue.Resolution<?> basicTypeResolution = ( (BasicValue) elementBootDescriptor ).resolve();
 			this.elementConverter = basicTypeResolution.getValueConverter();
-			this.convertedElementType = basicTypeResolution.getResolvedBasicType();
+			this.convertedElementType = basicTypeResolution.getJdbcMapping();
 		}
 		else {
 			this.elementConverter = null;
@@ -641,7 +641,7 @@ public abstract class AbstractCollectionPersister
 		if ( indexBootDescriptor instanceof BasicValue ) {
 			final BasicValue.Resolution<?> basicTypeResolution = ( (BasicValue) indexBootDescriptor ).resolve();
 			this.indexConverter = basicTypeResolution.getValueConverter();
-			this.convertedIndexType = basicTypeResolution.getResolvedBasicType();
+			this.convertedIndexType = basicTypeResolution.getJdbcMapping();
 		}
 		else {
 			this.indexConverter = null;
@@ -1012,14 +1012,16 @@ public abstract class AbstractCollectionPersister
 	 */
 	protected int writeElement(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		if ( elementConverter != null ) {
-			//noinspection unchecked
-			final Object converted = elementConverter.toRelationalValue( elt );
-			convertedElementType.getJdbcValueBinder().bind( st, converted, i, session );
-		}
-		else {
-			getElementType().nullSafeSet( st, elt, i, elementColumnIsSettable, session );
-		}
+//		if ( elementConverter != null ) {
+//			//noinspection unchecked
+//			final Object converted = elementConverter.toRelationalValue( elt );
+//			convertedElementType.getJdbcValueBinder().bind( st, converted, i, session );
+//		}
+//		else {
+//			getElementType().nullSafeSet( st, elt, i, elementColumnIsSettable, session );
+//		}
+		getElementType().nullSafeSet( st, elt, i, elementColumnIsSettable, session );
+
 		return i + ArrayHelper.countTrue( elementColumnIsSettable );
 
 	}

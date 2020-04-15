@@ -47,6 +47,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantBasicValue;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.ManyToOne;
@@ -300,8 +301,7 @@ public class MapBinder extends CollectionBinder {
 					mapValue.setIndex( component );
 				}
 				else {
-					SimpleValueBinder elementBinder = new SimpleValueBinder();
-					elementBinder.setBuildingContext( buildingContext );
+					final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
 					elementBinder.setReturnedClassName( mapKeyType );
 
 					Ejb3Column[] elementColumns = mapKeyColumns;
@@ -325,7 +325,6 @@ public class MapBinder extends CollectionBinder {
 					elementBinder.setColumns( elementColumns );
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
-					elementBinder.setKey(true);
 					elementBinder.setType(
 							property,
 							keyXClass,
@@ -412,48 +411,13 @@ public class MapBinder extends CollectionBinder {
 			PersistentClass associatedClass,
 			PersistentClass targetPropertyPersistentClass,
 			MetadataBuildingContext buildingContext) {
-		Value element = collection.getElement();
-		String fromAndWhere = null;
-		if ( !( element instanceof OneToMany ) ) {
-			String referencedPropertyName = null;
-			if ( element instanceof ToOne ) {
-				referencedPropertyName = ( (ToOne) element ).getReferencedPropertyName();
-			}
-			else if ( element instanceof DependantValue ) {
-				//TODO this never happen I think
-				if ( propertyName != null ) {
-					referencedPropertyName = collection.getReferencedPropertyName();
-				}
-				else {
-					throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
-				}
-			}
-			Iterator<Selectable> referencedEntityColumns;
-			if ( referencedPropertyName == null ) {
-				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
-			}
-			else {
-				Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
-				referencedEntityColumns = referencedProperty.getColumnIterator();
-			}
-			fromAndWhere = getFromAndWhereFormula(
-					associatedClass.getTable().getQualifiedTableName().toString(),
-					element.getColumnIterator(),
-					referencedEntityColumns
-			);
-		}
-		else {
-			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
-			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
-				fromAndWhere = getFromAndWhereFormula(
-						targetPropertyPersistentClass.getTable()
-								.getQualifiedTableName()
-								.toString(),
-						element.getColumnIterator(),
-						associatedClass.getIdentifier().getColumnIterator()
-				);
-			}
-		}
+		final Value element = collection.getElement();
+		final String fromAndWhere = resolveFromAndWhere(
+				collection,
+				associatedClass,
+				targetPropertyPersistentClass,
+				element
+		);
 
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
@@ -483,6 +447,40 @@ public class MapBinder extends CollectionBinder {
 				indexComponent.addProperty( newProperty );
 			}
 			return indexComponent;
+		}
+		else if ( value instanceof BasicValue ) {
+			final BasicValue sourceValue = (BasicValue) value;
+			final DependantBasicValue dependantBasicValue = new DependantBasicValue(
+					getBuildingContext(),
+					collection.getTable(),
+					sourceValue,
+					false,
+					false
+			);
+
+			String formulaString;
+
+			final Selectable sourceValueColumn = sourceValue.getColumn();
+			if ( sourceValueColumn instanceof Column ) {
+				formulaString = ( (Column) sourceValueColumn ).getQuotedName();
+			}
+			else if ( sourceValueColumn instanceof Formula ) {
+				formulaString = ( (Formula) sourceValueColumn ).getFormula();
+			}
+			else {
+				throw new AssertionFailure( "Unknown element column type : " + sourceValueColumn.getClass() );
+			}
+
+			if ( fromAndWhere != null ) {
+				formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", new HSQLDialect() );
+				formulaString = "(select " + formulaString + fromAndWhere + ")";
+				formulaString = StringHelper.replace( formulaString, "$alias$", "a987" );
+			}
+
+			final Formula formula = new Formula( formulaString );
+			dependantBasicValue.addFormula( formula );
+
+			return dependantBasicValue;
 		}
 		else if ( value instanceof SimpleValue ) {
 			SimpleValue sourceValue = (SimpleValue) value;
@@ -533,6 +531,55 @@ public class MapBinder extends CollectionBinder {
 		else {
 			throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
 		}
+	}
+
+	private String resolveFromAndWhere(
+			Collection collection,
+			PersistentClass associatedClass,
+			PersistentClass targetPropertyPersistentClass,
+			Value element) {
+		if ( ! OneToMany.class.isInstance( element ) ) {
+			String referencedPropertyName = null;
+			if ( element instanceof ToOne ) {
+				referencedPropertyName = ( (ToOne) element ).getReferencedPropertyName();
+			}
+			else if ( element instanceof DependantValue ) {
+				//TODO this never happen I think
+				if ( propertyName != null ) {
+					referencedPropertyName = collection.getReferencedPropertyName();
+				}
+				else {
+					throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
+				}
+			}
+			Iterator<Selectable> referencedEntityColumns;
+			if ( referencedPropertyName == null ) {
+				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
+			}
+			else {
+				Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
+				referencedEntityColumns = referencedProperty.getColumnIterator();
+			}
+			return getFromAndWhereFormula(
+					associatedClass.getTable().getQualifiedTableName().toString(),
+					element.getColumnIterator(),
+					referencedEntityColumns
+			);
+		}
+		else {
+			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
+			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
+				return getFromAndWhereFormula(
+						targetPropertyPersistentClass.getTable()
+								.getQualifiedTableName()
+								.toString(),
+						element.getColumnIterator(),
+						associatedClass.getIdentifier().getColumnIterator()
+				);
+			}
+		}
+
+		return null;
 	}
 
 	private String getFromAndWhereFormula(

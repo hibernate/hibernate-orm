@@ -41,6 +41,16 @@ public class BitTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "BIT";
+	}
+
+	@Override
+	public String toString() {
+		return "BitTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

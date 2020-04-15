@@ -852,8 +852,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void typeDefinedNoRegistrationKeys(BasicType type);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Type registration [%s] overrides previous : %s", id = 270)
-	void typeRegistrationOverridesPrevious(
+	@Message(value = "Type registration key [%s] overrode previous key : %s", id = 270)
+	void typeRegistrationKeyOverridesPrevious(
 			String key,
 			Type old);
 

@@ -38,6 +38,16 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "BLOB";
+	}
+
+	@Override
+	public String toString() {
+		return "BlobTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}
@@ -77,6 +87,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final BlobTypeDescriptor DEFAULT = new BlobTypeDescriptor() {
 		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(DEFAULT)";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -112,6 +127,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING = new BlobTypeDescriptor() {
 		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(PRIMITIVE_ARRAY_BINDING)";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -131,6 +151,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final BlobTypeDescriptor BLOB_BINDING = new BlobTypeDescriptor() {
 		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(BLOB_BINDING)";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -149,6 +174,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 	};
 
 	public static final BlobTypeDescriptor STREAM_BINDING = new BlobTypeDescriptor() {
+		@Override
+		public String toString() {
+			return "BlobTypeDescriptor(STREAM_BINDING)";
+		}
+
 		@Override
 		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {

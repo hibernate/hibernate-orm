@@ -69,6 +69,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private final String sqlAliasStem;
 	private final boolean isNullable;
 	private final boolean unwrapProxy;
+	private final EntityMappingType entityMappingType;
 
 	private final String referencedPropertyName;
 	private final boolean referringPrimaryKey;
@@ -84,7 +85,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			ToOne bootValue,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
-			EntityMappingType type,
+			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
 		super(
@@ -92,7 +93,6 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 				stateArrayPosition,
 				attributeMetadataAccess,
 				mappedFetchStrategy,
-				type,
 				declaringType,
 				propertyAccess
 		);
@@ -101,6 +101,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		this.referencedPropertyName = bootValue.getReferencedPropertyName();
 		this.referringPrimaryKey = bootValue.isReferenceToPrimaryKey();
 		this.unwrapProxy = bootValue.isUnwrapProxy();
+		this.entityMappingType = entityMappingType;
 
 		if ( referringPrimaryKey ) {
 			assert referencedPropertyName == null;
@@ -150,12 +151,12 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	@Override
 	public EntityMappingType getMappedTypeDescriptor() {
-		return (EntityMappingType) super.getMappedTypeDescriptor();
+		return getEntityMappingType();
 	}
 
 	@Override
 	public EntityMappingType getEntityMappingType() {
-		return getMappedTypeDescriptor();
+		return entityMappingType;
 	}
 
 	@Override
@@ -326,6 +327,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			);
 		}
 
+		//noinspection rawtypes
 		final DomainResult keyResult;
 
 		if ( referringPrimaryKey ) {

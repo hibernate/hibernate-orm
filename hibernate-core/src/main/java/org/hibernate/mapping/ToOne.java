@@ -30,14 +30,6 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	protected boolean unwrapProxy;
 	protected boolean referenceToPrimaryKey = true;
 
-	/**
-	 * @deprecated Use {@link ToOne#ToOne(MetadataBuildingContext, Table)} instead.
-	 */
-	@Deprecated
-	protected ToOne(MetadataImplementor metadata, Table table) {
-		super( metadata, table );
-	}
-
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
 	}

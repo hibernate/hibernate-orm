@@ -8,8 +8,10 @@ package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -35,7 +37,11 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 
 		this.basicType = basicType;
 
-		this.valueConverter = valueConverter;
+		// named type cannot have converter applied
+		this.valueConverter = null;
+		// todo (6.0) : does it even make sense to allow a combo of explicit Type and a converter?
+//		this.valueConverter = valueConverter;
+
 		if ( mutabilityPlan == null ) {
 			this.mutabilityPlan = domainJtd.getMutabilityPlan();
 		}
@@ -45,7 +51,12 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public BasicType getResolvedBasicType() {
+	public JdbcMapping getJdbcMapping() {
+		return basicType;
+	}
+
+	@Override
+	public BasicType getLegacyResolvedBasicType() {
 		return basicType;
 	}
 

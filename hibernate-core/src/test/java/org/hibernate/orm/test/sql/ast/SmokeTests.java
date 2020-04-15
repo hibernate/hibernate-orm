@@ -10,6 +10,8 @@ import java.sql.Types;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.NavigablePath;
@@ -35,6 +37,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -173,14 +176,10 @@ public class SmokeTests {
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
 					final MappingModelExpressable selectedExpressable = selectedExpression.getExpressionType();
-					//assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
-//					assertThat( basicType.getJavaTypeDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
-//					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.INTEGER ) );
-					assertThat( selectedExpressable, instanceOf( CustomType.class ) );
-					final CustomType basicType = (CustomType) selectedExpressable;
-					final EnumType enumType = (EnumType) basicType.getUserType();
-					assertThat( enumType.getEnumValueConverter().getRelationalJavaDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat( enumType.sqlTypes()[0], is( Types.TINYINT ) );
+					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
+					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
+					assertThat( basicType.getJavaTypeDescriptor().getJavaType(), AssignableMatcher.assignableTo( Integer.class ) );
+					assertThat( basicType.getSqlTypeDescriptor().getSqlType(), is( Types.TINYINT ) );
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
@@ -189,9 +188,8 @@ public class SmokeTests {
 					final BasicResult scalarDomainResult = (BasicResult) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
 					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
-//					assertThat( assembler.getValueConverter(), notNullValue() );
-//					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
-					assertThat( assembler.getValueConverter(), nullValue() );
+					assertThat( assembler.getValueConverter(), notNullValue() );
+					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final NavigablePath expectedSelectedPath = new NavigablePath(
 							org.hibernate.orm.test.metamodel.mapping.SmokeTests.SimpleEntity.class.getName(),
@@ -208,10 +206,9 @@ public class SmokeTests {
 					);
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
-//					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
-//					assertThat( valueConverter, notNullValue() );
-//					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
-					assertThat( ( (BasicResultAssembler) resultAssembler ).getValueConverter(), nullValue() );
+					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
+					assertThat( valueConverter, notNullValue() );
+					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final JdbcSelect jdbcSelectOperation = new StandardSqlAstSelectTranslator( session.getSessionFactory() )
 							.translate( sqlAst );

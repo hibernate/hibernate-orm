@@ -254,7 +254,21 @@ public class Column implements Selectable, Serializable, Cloneable {
 					);
 				}
 			}
-			sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), size );
+
+			try {
+				sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), size );
+			}
+			catch (HibernateException cause) {
+				throw new HibernateException(
+						String.format(
+								Locale.ROOT,
+								"Unable to resolve JDBC type code for column `%s.%s`",
+								getValue().getTable().getName(),
+								getName()
+						),
+						cause
+				);
+			}
 		}
 		return sqlType;
 	}

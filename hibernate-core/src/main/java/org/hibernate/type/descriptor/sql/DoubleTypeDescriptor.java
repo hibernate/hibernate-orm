@@ -37,6 +37,16 @@ public class DoubleTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "DOUBLE";
+	}
+
+	@Override
+	public String toString() {
+		return "DoubleTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

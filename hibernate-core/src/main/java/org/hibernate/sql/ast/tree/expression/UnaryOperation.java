@@ -58,7 +58,7 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 			DomainResultCreationState creationState) {
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
-				type.getBasicType().getJavaTypeDescriptor(),
+				type.getJdbcMapping().getJavaTypeDescriptor(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
@@ -66,7 +66,7 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				type.getBasicType().getJavaTypeDescriptor()
+				type.getJdbcMapping().getJavaTypeDescriptor()
 		);
 	}
 

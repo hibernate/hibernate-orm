@@ -20,6 +20,11 @@ public class NumericTypeDescriptor extends DecimalTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "NumericTypeDescriptor";
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.NUMERIC;
 	}

@@ -35,6 +35,11 @@ public class JsonSqlTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "OTHER (json)";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

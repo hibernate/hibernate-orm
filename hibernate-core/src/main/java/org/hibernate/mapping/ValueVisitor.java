@@ -55,6 +55,11 @@ public interface ValueVisitor {
 	 * @param value
 	 */
 	Object accept(SimpleValue value);
+
+	default Object accept(BasicValue value) {
+		return null;
+	}
+
 	Object accept(DependantValue value);
 	
 	Object accept(Component component);

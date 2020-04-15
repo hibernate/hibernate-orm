@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -229,5 +230,18 @@ public final class CollectionHelper {
 		final HashSet<T> set = new HashSet<>( determineProperSizing( values.length ) );
 		Collections.addAll( set, values );
 		return set;
+	}
+
+	public static Properties asProperties(Map<?,?> map) {
+		if ( map instanceof Properties ) {
+			return ( (Properties) map );
+		}
+
+		final Properties properties = new Properties();
+		if ( isNotEmpty( map ) ) {
+			properties.putAll( map );
+		}
+
+		return properties;
 	}
 }

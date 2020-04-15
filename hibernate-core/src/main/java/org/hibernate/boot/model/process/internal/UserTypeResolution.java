@@ -7,9 +7,11 @@
 package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -56,7 +58,12 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public BasicType getResolvedBasicType() {
+	public BasicType getLegacyResolvedBasicType() {
+		return userTypeAdapter;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
 		return userTypeAdapter;
 	}
 }

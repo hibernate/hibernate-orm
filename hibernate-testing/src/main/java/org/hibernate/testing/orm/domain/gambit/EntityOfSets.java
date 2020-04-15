@@ -34,22 +34,71 @@ import org.hibernate.annotations.SortNatural;
 @Entity
 @Table(name = "entity_containing_sets")
 public class EntityOfSets {
+	@Id
 	private Integer id;
 	private String name;
 
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_basics")
 	private Set<String> setOfBasics;
-	private SortedSet<String> sortedSetOfBasics;
-	private SortedSet<String> sortedSetOfBasicsWithComparator;
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Sorted
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasicsWithSortNaturalByDefault")
 	private SortedSet<String> sortedSetOfBasicsWithSortNaturalByDefault;
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasics")
+	@SortNatural
+	private SortedSet<String> sortedSetOfBasics;
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_sortedBasicsWithComparator")
+	@SortComparator( SimpleBasicSortComparator.class )
+	private SortedSet<String> sortedSetOfBasicsWithComparator;
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Ordered
+
+	@ElementCollection()
+	@CollectionTable( name = "EntityOfSet_orderedSetOfBasics")
+	@OrderBy( "" )
 	private Set<String> orderedSetOfBasics;
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Enum elements
+
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
 	private Set<EnumValue> setOfEnums;
+
+	@ElementCollection
+	@Convert(converter = EnumValueConverter.class)
 	private Set<EnumValue> setOfConvertedEnums;
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Embeddables
+
+	@ElementCollection
+	@CollectionTable( name = "EntityOfSet_components")
 	private Set<SimpleComponent> setOfComponents;
+
+	@ElementCollection
+	@LazyCollection( LazyCollectionOption.EXTRA )
+	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
 	private Set<SimpleComponent> extraLazySetOfComponents;
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Entity associations
+
+	@OneToMany
+	@CollectionTable( name = "EntityOfSet_oneToMany")
 	private Set<SimpleEntity> setOfOneToMany;
+
+	@ManyToMany
+	@CollectionTable( name = "EntityOfSet_manyToMany")
 	private Set<SimpleEntity> setOfManyToMany;
 
 
@@ -61,7 +110,6 @@ public class EntityOfSets {
 		this.name = name;
 	}
 
-	@Id
 	public Integer getId() {
 		return id;
 	}
@@ -82,8 +130,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfBasics
 
-	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_basics")
 	public Set<String> getSetOfBasics() {
 		return setOfBasics;
 	}
@@ -103,9 +149,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// orderedSetOfBasics
 
-	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_orderedSetOfBasics")
-	@OrderBy( "" )
 	public Set<String> getOrderedSetOfBasics() {
 		return orderedSetOfBasics;
 	}
@@ -125,9 +168,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// sortedSetOfBasics
 
-	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasics")
-	@SortNatural
 	public SortedSet<String> getSortedSetOfBasics() {
 		return sortedSetOfBasics;
 	}
@@ -146,9 +186,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// sortedSetOfBasicsWithComparator
 
-	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasicsWithComparator")
-	@SortComparator( SimpleBasicSortComparator.class )
 	public SortedSet<String> getSortedSetOfBasicsWithComparator() {
 		return sortedSetOfBasicsWithComparator;
 	}
@@ -167,8 +204,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// sortedSetOfBasicsWithSortNaturalByDefault
 
-	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasicsWithSortNaturalByDefault")
 	public SortedSet<String> getSortedSetOfBasicsWithSortNaturalByDefault() {
 		return sortedSetOfBasicsWithSortNaturalByDefault;
 	}
@@ -187,8 +222,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfConvertedEnums
 
-	@ElementCollection
-	@Convert(converter = EnumValueConverter.class)
 	public Set<EnumValue> getSetOfConvertedEnums() {
 		return setOfConvertedEnums;
 	}
@@ -208,8 +241,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfEnums
 
-	@ElementCollection
-	@Enumerated(EnumType.STRING)
 	public Set<EnumValue> getSetOfEnums() {
 		return setOfEnums;
 	}
@@ -229,8 +260,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfComponents
 
-	@ElementCollection
-	@CollectionTable( name = "EntityOfSet_components")
 	public Set<SimpleComponent> getSetOfComponents() {
 		return setOfComponents;
 	}
@@ -250,9 +279,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfExtraLazyComponents
 
-	@ElementCollection
-	@LazyCollection( LazyCollectionOption.EXTRA )
-	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
 	public Set<SimpleComponent> getExtraLazySetOfComponents() {
 		return extraLazySetOfComponents;
 	}
@@ -272,8 +298,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfOneToMany
 
-	@OneToMany
-	@CollectionTable( name = "EntityOfSet_oneToMany")
 	public Set<SimpleEntity> getSetOfOneToMany() {
 		return setOfOneToMany;
 	}
@@ -293,8 +317,6 @@ public class EntityOfSets {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// setOfManyToMany
 
-	@ManyToMany
-	@CollectionTable( name = "EntityOfSet_manyToMany")
 	public Set<SimpleEntity> getSetOfManyToMany() {
 		return setOfManyToMany;
 	}

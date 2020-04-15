@@ -29,16 +29,6 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
-	/**
-	 * @deprecated Use {@link OneToOne#OneToOne(MetadataBuildingContext, Table, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public OneToOne(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata, table );
-		this.identifier = owner.getKey();
-		this.entityName = owner.getEntityName();
-	}
-
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
 		this.identifier = owner.getKey();

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.metamodel.mapping;
 
 import java.sql.Statement;
+import java.sql.Types;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -77,12 +80,15 @@ public class SmokeTests {
 			final BasicValuedSingularAttributeMapping genderAttrMapping = (BasicValuedSingularAttributeMapping) genderPart;
 			assert "mapping_simple_entity".equals( genderAttrMapping.getContainingTableExpression() );
 			assert "gender".equals( genderAttrMapping.getMappedColumnExpression() );
-			assert genderAttrMapping.getMappedTypeDescriptor() instanceof CustomType;
-			final UserType userType = ( (CustomType) genderAttrMapping.getMappedTypeDescriptor() ).getUserType();
-			assert userType instanceof org.hibernate.type.EnumType;
-			final EnumValueConverter converter = ( (org.hibernate.type.EnumType) userType ).getEnumValueConverter();
-			assert converter != null;
-			assert converter instanceof OrdinalEnumValueConverter;
+
+			assertThat( genderAttrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+
+			final BasicValueConverter valueConverter = genderAttrMapping.getValueConverter();
+			assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
+			assertThat( valueConverter.getDomainJavaDescriptor(), is( genderAttrMapping.getJavaTypeDescriptor() ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( Integer.class ) );
+
+			assertThat( genderAttrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
 		}
 
 		{
@@ -92,12 +98,14 @@ public class SmokeTests {
 			assert "mapping_simple_entity".equals( attrMapping.getContainingTableExpression() );
 			assert "gender2".equals( attrMapping.getMappedColumnExpression() );
 
-			assert attrMapping.getMappedTypeDescriptor() instanceof CustomType;
-			final UserType userType = ( (CustomType) attrMapping.getMappedTypeDescriptor() ).getUserType();
-			assert userType instanceof org.hibernate.type.EnumType;
-			final EnumValueConverter converter = ( (org.hibernate.type.EnumType) userType ).getEnumValueConverter();
-			assert converter != null;
-			assert converter instanceof NamedEnumValueConverter;
+			assertThat( attrMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Gender.class ) );
+
+			final BasicValueConverter valueConverter = attrMapping.getValueConverter();
+			assertThat( valueConverter, instanceOf( NamedEnumValueConverter.class ) );
+			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
+			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaType(), equalTo( String.class ) );
+
+			assertThat( attrMapping.getJdbcMapping().getSqlTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
 		}
 
 		{

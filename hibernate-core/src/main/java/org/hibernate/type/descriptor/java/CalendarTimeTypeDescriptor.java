@@ -11,20 +11,54 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link java.util.Calendar} handling, but just for the time portion.
  *
  * @author Steve Ebersole
  */
-public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar> {
+public class CalendarTimeTypeDescriptor extends AbstractTemporalTypeDescriptor<Calendar> {
 	public static final CalendarTimeTypeDescriptor INSTANCE = new CalendarTimeTypeDescriptor();
 
 	protected CalendarTimeTypeDescriptor() {
 		super( Calendar.class, CalendarTypeDescriptor.CalendarMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIME;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimeTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) CalendarTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) CalendarDateTypeDescriptor.INSTANCE;
 	}
 
 	public String toString(Calendar value) {

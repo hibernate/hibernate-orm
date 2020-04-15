@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -27,10 +26,9 @@ public abstract class AbstractSingularAttributeMapping
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
-			MappingType type,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( name, type, attributeMetadataAccess, mappedFetchStrategy, stateArrayPosition, declaringType );
+		super( name, attributeMetadataAccess, mappedFetchStrategy, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
 	}
 

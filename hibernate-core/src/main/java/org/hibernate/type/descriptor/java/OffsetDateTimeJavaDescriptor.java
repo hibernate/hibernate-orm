@@ -16,15 +16,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimestampWithTimeZoneDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
  *
  * @author Steve Ebersole
  */
-public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetDateTime> {
+public class OffsetDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<OffsetDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -33,6 +42,38 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTypeDescriptor<OffsetD
 	@SuppressWarnings("unchecked")
 	public OffsetDateTimeJavaDescriptor() {
 		super( OffsetDateTime.class, ImmutableMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators stdIndicators) {
+		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
+
+		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
+			return TimestampWithTimeZoneDescriptor.INSTANCE;
+		}
+
+		switch ( temporalPrecision ) {
+			case TIME: {
+				return TimeTypeDescriptor.INSTANCE;
+			}
+			case DATE: {
+				return DateTypeDescriptor.INSTANCE;
+			}
+			default: {
+				throw new IllegalArgumentException( "Unexpected javax.persistence.TemporalType : " + temporalPrecision );
+			}
+		}
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override

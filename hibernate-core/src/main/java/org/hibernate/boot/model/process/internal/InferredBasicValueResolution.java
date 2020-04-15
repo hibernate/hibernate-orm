@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -17,23 +18,27 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  */
 public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J> {
-	private final BasicType<J> basicType;
-
 	private JavaTypeDescriptor<J> domainJtd;
 	private JavaTypeDescriptor<J> relationalJtd;
 	private SqlTypeDescriptor relationalStd;
 
-	private BasicValueConverter valueConverter;
 	private MutabilityPlan mutabilityPlan;
 
+	private JdbcMapping jdbcMapping;
+	private BasicValueConverter valueConverter;
+
+	private final BasicType<J> legacyType;
+
 	public InferredBasicValueResolution(
-			BasicType<J> basicType,
+			JdbcMapping jdbcMapping,
 			JavaTypeDescriptor<J> domainJtd,
 			JavaTypeDescriptor<J> relationalJtd,
 			SqlTypeDescriptor relationalStd,
 			BasicValueConverter valueConverter,
+			BasicType<J> legacyType,
 			MutabilityPlan mutabilityPlan) {
-		this.basicType = basicType;
+		this.jdbcMapping = jdbcMapping;
+		this.legacyType = legacyType;
 		this.domainJtd = domainJtd;
 		this.relationalJtd = relationalJtd;
 		this.relationalStd = relationalStd;
@@ -42,8 +47,13 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public BasicType getResolvedBasicType() {
-		return basicType;
+	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	@Override
+	public BasicType getLegacyResolvedBasicType() {
+		return legacyType;
 	}
 
 	@Override

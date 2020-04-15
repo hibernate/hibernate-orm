@@ -20,6 +20,11 @@ public class LongVarcharTypeDescriptor extends VarcharTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "LongVarcharTypeDescriptor";
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.LONGVARCHAR;
 	}

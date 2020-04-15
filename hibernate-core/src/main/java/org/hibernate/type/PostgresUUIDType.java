@@ -57,6 +57,16 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		}
 
 		@Override
+		public String getFriendlyName() {
+			return "OTHER (pg-uuid)";
+		}
+
+		@Override
+		public String toString() {
+			return "PostgresUUIDSqlTypeDescriptor";
+		}
+
+		@Override
 		public boolean canBeRemapped() {
 			return true;
 		}

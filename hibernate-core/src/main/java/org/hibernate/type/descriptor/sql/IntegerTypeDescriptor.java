@@ -37,6 +37,16 @@ public class IntegerTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "INTEGER";
+	}
+
+	@Override
+	public String toString() {
+		return "IntegerTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

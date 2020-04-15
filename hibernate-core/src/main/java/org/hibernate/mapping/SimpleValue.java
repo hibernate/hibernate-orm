@@ -89,26 +89,9 @@ public abstract class SimpleValue implements KeyValue {
 	private ConverterDescriptor attributeConverterDescriptor;
 	private Type type;
 
-	/**
-	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext)} instead.
-	 */
-	@Deprecated
-	public SimpleValue(MetadataImplementor metadata) {
-		this.metadata = metadata;
-	}
-
-	/**
-	 * @deprecated Use {@link SimpleValue#SimpleValue(MetadataBuildingContext, Table)} instead.
-	 */
-	@Deprecated
-	public SimpleValue(MetadataImplementor metadata, Table table) {
-		this( metadata );
-		this.table = table;
-	}
-
 	public SimpleValue(MetadataBuildingContext buildingContext) {
-		this(buildingContext.getMetadataCollector());
 		this.buildingContext = buildingContext;
+		this.metadata = buildingContext.getMetadataCollector();
 	}
 
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
@@ -137,7 +120,7 @@ public abstract class SimpleValue implements KeyValue {
 	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
-	
+
 	public void addColumn(Column column) {
 		addColumn( column, true, true );
 	}
@@ -285,31 +268,29 @@ public abstract class SimpleValue implements KeyValue {
 		if ( defaultCatalog!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
 		}
-		
-		//pass the entity-name, if not a collection-id
-		if (rootClass!=null) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
-			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-		}
-		
+
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
 		String tableName = getTable().getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
-		
+
 		//pass the column name (a generated id almost always has a single column)
 		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName(dialect);
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
-		
+
+		//pass the entity-name, if not a collection-id
 		if (rootClass!=null) {
-			StringBuilder tables = new StringBuilder();
-			Iterator iter = rootClass.getIdentityTables().iterator();
-			while ( iter.hasNext() ) {
-				Table table= (Table) iter.next();
-				tables.append( table.getQuotedName(dialect) );
-				if ( iter.hasNext() ) {
-					tables.append(", ");
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
+			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
+
+			final StringBuilder tables = new StringBuilder();
+			final Iterator<Table> itr = rootClass.getIdentityTables().iterator();
+			while ( itr.hasNext() ) {
+				final Table table = itr.next();
+				tables.append( table.getQuotedName( dialect ) );
+				if ( itr.hasNext() ) {
+					tables.append( ", " );
 				}
 			}
 			params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
@@ -318,7 +299,7 @@ public abstract class SimpleValue implements KeyValue {
 			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
 		}
 
-		if (identifierGeneratorProperties!=null) {
+		if ( identifierGeneratorProperties != null ) {
 			params.putAll(identifierGeneratorProperties);
 		}
 

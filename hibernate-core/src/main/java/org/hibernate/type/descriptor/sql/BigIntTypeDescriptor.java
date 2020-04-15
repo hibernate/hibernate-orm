@@ -88,4 +88,14 @@ public class BigIntTypeDescriptor implements SqlTypeDescriptor {
 			}
 		};
 	}
+
+	@Override
+	public String getFriendlyName() {
+		return "BIGINT";
+	}
+
+	@Override
+	public String toString() {
+		return "BigIntTypeDescriptor(" + getFriendlyName() + ")";
+	}
 }

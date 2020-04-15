@@ -19,15 +19,21 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Java type descriptor for the LocalDateTime type.
  *
  * @author Steve Ebersole
  */
-public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
+public class LocalTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<LocalTime> {
 	/**
 	 * Singleton access
 	 */
@@ -36,6 +42,22 @@ public class LocalTimeJavaDescriptor extends AbstractTypeDescriptor<LocalTime> {
 	@SuppressWarnings("unchecked")
 	public LocalTimeJavaDescriptor() {
 		super( LocalTime.class, ImmutableMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIME;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimestampTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override

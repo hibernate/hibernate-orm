@@ -23,7 +23,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -106,17 +105,12 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public MappingType getPartMappingType() {
-		return getBasicType();
+		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
 	@Override
 	public MappingType getMappedTypeDescriptor() {
-		return getBasicType();
-	}
-
-	@Override
-	public BasicType getBasicType() {
-		return (BasicType) entityPersister.getIdentifierType();
+		return getJdbcMapping()::getJavaTypeDescriptor;
 	}
 
 	@Override
@@ -241,11 +235,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public String getContainingTableExpression() {
 		return rootTable;
-	}
-
-	@Override
-	public BasicValueConverter getConverter() {
-		return null;
 	}
 
 	@Override

@@ -5,19 +5,19 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
+
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.annotations.SimpleValueBinder;
+import org.hibernate.cfg.annotations.BasicValueBinder;
 
 /**
  * @author Sharath Reddy
  */
-public class SetSimpleValueTypeSecondPass implements SecondPass {
+public class SetBasicValueTypeSecondPass implements SecondPass {
+	private final BasicValueBinder binder;
 
-	SimpleValueBinder binder;
-
-	public SetSimpleValueTypeSecondPass(SimpleValueBinder val) {
+	public SetBasicValueTypeSecondPass(BasicValueBinder val) {
 		binder = val;
 	}
 

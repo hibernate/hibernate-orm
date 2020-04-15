@@ -37,6 +37,16 @@ public class VarcharTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "VARCHAR";
+	}
+
+	@Override
+	public String toString() {
+		return "VarcharTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

@@ -52,6 +52,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -151,6 +152,7 @@ public class MappingModelCreationHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Non-identifier attributes
 
+	@SuppressWarnings("rawtypes")
 	public static BasicValuedSingularAttributeMapping buildBasicAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
@@ -163,6 +165,7 @@ public class MappingModelCreationHelper {
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) bootProperty.getValue() ).resolve();
+
 		final BasicValueConverter valueConverter = resolution.getValueConverter();
 
 		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
@@ -237,7 +240,6 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					attrColumnName,
 					valueConverter,
-					mappingBasicType,
 					mappingBasicType.getJdbcMapping(),
 					declaringType,
 					propertyAccess
@@ -252,7 +254,6 @@ public class MappingModelCreationHelper {
 					tableExpression,
 					attrColumnName,
 					null,
-					attrType,
 					attrType,
 					declaringType,
 					propertyAccess
@@ -301,6 +302,7 @@ public class MappingModelCreationHelper {
 		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
 			Property bootProperty,
 			Type attrType,
@@ -391,6 +393,7 @@ public class MappingModelCreationHelper {
 		};
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
 			PropertyAccess propertyAccess) {
 		return entityMappingType -> new StateArrayContributorMetadata() {
@@ -443,6 +446,7 @@ public class MappingModelCreationHelper {
 		};
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static PluralAttributeMapping buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
@@ -722,7 +726,7 @@ public class MappingModelCreationHelper {
 					bootValueMappingKey.getColumnIterator().next().getText( dialect ),
 					simpleFkTarget.getContainingTableExpression(),
 					simpleFkTarget.getMappedColumnExpression(),
-					(BasicType) keyType
+					(JdbcMapping) keyType
 			);
 		}
 
@@ -842,7 +846,7 @@ public class MappingModelCreationHelper {
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.INDEX,
-					basicValue.resolve().getResolvedBasicType(),
+					basicValue.resolve().getJdbcMapping(),
 					basicValue.resolve().getValueConverter(),
 					tableExpression,
 					basicValue.getColumnIterator().next().getText( dialect )
@@ -933,7 +937,7 @@ public class MappingModelCreationHelper {
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
 					CollectionPart.Nature.ELEMENT,
-					basicElement.resolve().getResolvedBasicType(),
+					basicElement.resolve().getJdbcMapping(),
 					basicElement.resolve().getValueConverter(),
 					tableExpression,
 					basicElement.getColumnIterator().next().getText( dialect )
@@ -1010,6 +1014,7 @@ public class MappingModelCreationHelper {
 		);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private static class CollectionMappingTypeImpl implements CollectionMappingType {
 		private final JavaTypeDescriptor collectionJtd;
 		private final CollectionSemantics semantics;
@@ -1064,7 +1069,7 @@ public class MappingModelCreationHelper {
 
 			final FetchTiming fetchTiming;
 
-			if ( fetchStyle == fetchStyle.JOIN
+			if ( fetchStyle == FetchStyle.JOIN
 					|| ( value instanceof OneToOne && value.isNullable() )
 					|| !( value ).isLazy() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;

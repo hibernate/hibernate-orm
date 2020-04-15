@@ -31,6 +31,16 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 	public VarbinaryTypeDescriptor() {
 	}
 
+	@Override
+	public String getFriendlyName() {
+		return "VARBINARY";
+	}
+
+	@Override
+	public String toString() {
+		return "VarbinaryTypeDescriptor)";
+	}
+
 	public int getSqlType() {
 		return Types.VARBINARY;
 	}

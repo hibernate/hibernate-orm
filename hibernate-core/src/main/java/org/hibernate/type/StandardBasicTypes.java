@@ -29,7 +29,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
@@ -40,12 +39,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Centralizes access to the standard set of basic {@link Type types}.
  * <p/>
- * Type mappings can be adjusted per {@link org.hibernate.SessionFactory}.  These adjusted mappings can be accessed
- * from the {@link org.hibernate.TypeHelper} instance obtained via {@link org.hibernate.SessionFactory#getTypeHelper()}
+ * Type mappings can be adjusted per {@link org.hibernate.SessionFactory}.
  *
  * @see BasicTypeRegistry
- * @see org.hibernate.TypeHelper
- * @see org.hibernate.SessionFactory#getTypeHelper()
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -247,7 +243,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final StandardBasicTypeImpl<String> MATERIALIZED_CLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
 			PrimitiveCharacterArrayTypeDescriptor.INSTANCE,
 			ClobTypeDescriptor.CLOB_BINDING
@@ -260,7 +256,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final StandardBasicTypeImpl<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
 			CharacterArrayTypeDescriptor.INSTANCE,
 			ClobTypeDescriptor.CLOB_BINDING
@@ -273,7 +269,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_NCLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final StandardBasicTypeImpl<String> MATERIALIZED_NCLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
 			PrimitiveCharacterArrayTypeDescriptor.INSTANCE,
 			NClobTypeDescriptor.NCLOB_BINDING
@@ -286,7 +282,7 @@ public final class StandardBasicTypes {
 	 * @see #NCLOB
 	 * @see #CHAR_ARRAY
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static final StandardBasicTypeImpl<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
 			CharacterArrayTypeDescriptor.INSTANCE,
 			NClobTypeDescriptor.NCLOB_BINDING
@@ -435,6 +431,7 @@ public final class StandardBasicTypes {
 	 *
 	 * @see SerializableType
 	 */
+	@SuppressWarnings("rawtypes")
 	public static final SerializableType SERIALIZABLE = SerializableType.INSTANCE;
 
 	public static final JavaObjectType OBJECT_TYPE = JavaObjectType.INSTANCE;
@@ -976,18 +973,13 @@ public final class StandardBasicTypes {
 		basicTypeRegistry.primed();
 	}
 
+	@SuppressWarnings("rawtypes")
 	private static void handle(
 			BasicType type,
 			String legacyTypeClassName,
 			BasicTypeRegistry basicTypeRegistry,
 			String... registrationKeys) {
-
-		// we add these
-		if ( StringHelper.isNotEmpty( legacyTypeClassName ) ) {
-			basicTypeRegistry.register( type, legacyTypeClassName );
-		}
-
-		basicTypeRegistry.register( type, registrationKeys );
+		basicTypeRegistry.addPrimeEntry( type, legacyTypeClassName, registrationKeys );
 	}
 
 }

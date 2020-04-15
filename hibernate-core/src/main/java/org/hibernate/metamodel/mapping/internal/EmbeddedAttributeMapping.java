@@ -61,6 +61,7 @@ public class EmbeddedAttributeMapping
 
 	private final String tableExpression;
 	private final String[] attrColumnNames;
+	private final EmbeddableMappingType embeddableMappingType;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
@@ -71,7 +72,7 @@ public class EmbeddedAttributeMapping
 			String[] attrColumnNames,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
-			EmbeddableMappingType valueMapping,
+			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
 		super(
@@ -79,23 +80,23 @@ public class EmbeddedAttributeMapping
 				stateArrayPosition,
 				attributeMetadataAccess,
 				mappedFetchStrategy,
-				valueMapping,
 				declaringType,
 				propertyAccess
 		);
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.attrColumnNames = attrColumnNames;
+		this.embeddableMappingType = embeddableMappingType;
 	}
 
 	@Override
 	public EmbeddableMappingType getMappedTypeDescriptor() {
-		return (EmbeddableMappingType) super.getMappedTypeDescriptor();
+		return getEmbeddableTypeDescriptor();
 	}
 
 	@Override
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
-		return getMappedTypeDescriptor();
+		return embeddableMappingType;
 	}
 	@Override
 	public SingularAttributeMapping getParentInjectionAttributeMapping() {

@@ -73,10 +73,10 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 		addDescriptorInternal( ZonedDateTimeJavaDescriptor.INSTANCE );
 
 		addDescriptorInternal( CalendarTypeDescriptor.INSTANCE );
-		addDescriptorInternal( DateTypeDescriptor.INSTANCE );
+		descriptorsByClass.put( java.util.Date.class, JdbcTimestampTypeDescriptor.INSTANCE );
+		descriptorsByClass.put( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
 		descriptorsByClass.put( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
 		descriptorsByClass.put( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
-		descriptorsByClass.put( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
 		addDescriptorInternal( TimeZoneTypeDescriptor.INSTANCE );
 
 		addDescriptorInternal( ClassTypeDescriptor.INSTANCE );

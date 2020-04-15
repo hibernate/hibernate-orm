@@ -6137,7 +6137,7 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getRootTableName(),
 				versionColumnName,
-				basicTypeResolution.getResolvedBasicType(),
+				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister
 		);
 	}

@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -77,17 +76,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping {
 	}
 
 	@Override
-	public BasicValueConverter getConverter() {
-		return null;
-	}
-
-	@Override
 	public MappingType getPartMappingType() {
-		return versionBasicType;
-	}
-
-	@Override
-	public BasicType getBasicType() {
 		return versionBasicType;
 	}
 

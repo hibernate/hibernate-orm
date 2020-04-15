@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
@@ -22,7 +21,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -43,7 +41,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -349,11 +346,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public BasicType getBasicType() {
-		throw new HibernateException( "Unexpected call to SimpleForeignKeyDescriptor#getBasicType" );
-	}
-
-	@Override
 	public void visitJdbcTypes(
 			Consumer<JdbcMapping> action,
 			Clause clause,
@@ -379,11 +371,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public String getMappedColumnExpression() {
 		return keyColumnExpression;
-	}
-
-	@Override
-	public BasicValueConverter getConverter() {
-		return null;
 	}
 
 	@Override

@@ -168,4 +168,5 @@ publishing {
 task ciBuild( dependsOn: [test, publish] )
 
 task release( dependsOn: [test, bintrayUpload] )
+bintrayUpload.mustRunAfter test
 

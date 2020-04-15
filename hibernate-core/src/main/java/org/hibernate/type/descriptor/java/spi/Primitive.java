@@ -8,14 +8,14 @@ package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 
 /**
  * Additional contract for primitive / primitive wrapper Java types.
  *
  * @author Steve Ebersole
  */
-public interface Primitive<J extends Serializable> extends JavaTypeDescriptor<J> {
+public interface Primitive<J extends Serializable> extends BasicJavaDescriptor<J> {
 	/**
 	 * Retrieve the primitive counterpart to the wrapper type identified by
 	 * this descriptor

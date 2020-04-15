@@ -26,14 +26,6 @@ public class ManyToOne extends ToOne {
 
 	private Type resolvedType;
 
-	/**
-	 * @deprecated Use {@link ManyToOne#ManyToOne(MetadataBuildingContext, Table)} instead.
-	 */
-	@Deprecated
-	public ManyToOne(MetadataImplementor metadata, Table table) {
-		super( metadata, table );
-	}
-
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
 	}

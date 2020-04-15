@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.DuplicateMappingException;
@@ -291,6 +292,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 */
 	@Deprecated
 	ClassmateContext getClassmateContext();
+
+	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

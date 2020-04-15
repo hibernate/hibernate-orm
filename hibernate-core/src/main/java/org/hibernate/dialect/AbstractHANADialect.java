@@ -282,6 +282,16 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
+		public String getFriendlyName() {
+			return "BLOB (hana-stream)";
+		}
+
+		@Override
+		public String toString() {
+			return "HANAStreamBlobTypeDescriptor";
+		}
+
+		@Override
 		public int getSqlType() {
 			return Types.BLOB;
 		}
@@ -366,6 +376,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	// see test case LobLocatorTest
 
 	private static class HANAClobTypeDescriptor extends ClobTypeDescriptor {
+		@Override
+		public String toString() {
+			return "HANAClobTypeDescriptor";
+		}
 
 		/** serial version uid. */
 		private static final long serialVersionUID = -379042275442752102L;
@@ -473,6 +487,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
+		public String toString() {
+			return "HANANClobTypeDescriptor";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 
@@ -560,6 +579,16 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public int getSqlType() {
 			return Types.BLOB;
+		}
+
+		@Override
+		public String getFriendlyName() {
+			return "BLOB (hana)";
+		}
+
+		@Override
+		public String toString() {
+			return "HANABlobTypeDescriptor";
 		}
 
 		@Override

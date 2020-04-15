@@ -14,16 +14,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Time} handling.
  *
  * @author Steve Ebersole
  */
-public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
+public class JdbcTimeTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 	public static final JdbcTimeTypeDescriptor INSTANCE = new JdbcTimeTypeDescriptor();
 
 	@SuppressWarnings("WeakerAccess")
@@ -54,6 +60,22 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	@SuppressWarnings("WeakerAccess")
 	public JdbcTimeTypeDescriptor() {
 		super( Date.class, TimeMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIME;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimeTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override

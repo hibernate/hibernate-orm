@@ -14,16 +14,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Timestamp} handling.
  *
  * @author Steve Ebersole
  */
-public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
+public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
 
 	@SuppressWarnings("WeakerAccess")
@@ -66,6 +72,22 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	@SuppressWarnings("WeakerAccess")
 	public JdbcTimestampTypeDescriptor() {
 		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimestampTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override

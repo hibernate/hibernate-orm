@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 
@@ -26,12 +25,11 @@ public abstract class AbstractStateArrayContributorMapping
 
 	public AbstractStateArrayContributorMapping(
 			String name,
-			MappingType type,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
-		super( name, type, declaringType );
+		super( name, declaringType );
 		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.mappedFetchStrategy = mappedFetchStrategy;
 		this.stateArrayPosition = stateArrayPosition;

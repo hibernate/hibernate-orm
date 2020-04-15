@@ -36,6 +36,16 @@ public class BooleanTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "BOOLEAN";
+	}
+
+	@Override
+	public String toString() {
+		return "BooleanTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

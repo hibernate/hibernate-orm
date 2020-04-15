@@ -6,6 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
@@ -59,11 +63,8 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.jboss.logging.Logger;
 
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -76,6 +77,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
 	}
 
+	@SuppressWarnings("rawtypes")
+	private final CollectionMappingType collectionMappingType;
 	private final int stateArrayPosition;
 	private final PropertyAccess propertyAccess;
 	private final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess;
@@ -100,7 +103,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private OrderByFragment orderByFragment;
 	private OrderByFragment manyToManyOrderByFragment;
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings({"WeakerAccess", "rawtypes"})
 	public PluralAttributeMappingImpl(
 			String attributeName,
 			Collection bootDescriptor,
@@ -116,9 +119,10 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
-		super( attributeName, collectionMappingType, declaringType );
+		super( attributeName, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.stateArrayContributorMetadataAccess = stateArrayContributorMetadataAccess;
+		this.collectionMappingType = collectionMappingType;
 		this.stateArrayPosition = stateArrayPosition;
 		this.fkDescriptor = fkDescriptor;
 		this.elementDescriptor = elementDescriptor;
@@ -174,6 +178,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		}
 	}
 
+	@SuppressWarnings("unused")
 	public void finishInitialization(
 			Property bootProperty,
 			Collection bootDescriptor,
@@ -259,8 +264,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
+	@SuppressWarnings("rawtypes")
 	public CollectionMappingType getMappedTypeDescriptor() {
-		return (CollectionMappingType) super.getMappedTypeDescriptor();
+		return collectionMappingType;
 	}
 
 	@Override
@@ -451,6 +457,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			);
 		}
 	}
+	@SuppressWarnings("unused")
 	private TableGroupJoin createOneToManyTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -531,6 +538,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		);
 	}
 
+	@SuppressWarnings("unused")
 	private TableGroupJoin createCollectionTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,

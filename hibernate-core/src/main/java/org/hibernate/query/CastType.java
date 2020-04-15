@@ -6,6 +6,7 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.SqmExpressable;
 
 import java.math.BigDecimal;
@@ -88,10 +89,10 @@ public enum CastType {
 		return OTHER;
 	}
 
-	public static CastType from(SqmExpressable type) {
+	public static CastType from(JdbcMapping jdbcMapping) {
 		//TODO: I really don't like using the Java type
 		//      here. Is there some way to base this
 		//      off of the mapped SQL type?
-		return type == null ? NULL : from( type.getExpressableJavaTypeDescriptor().getJavaType() );
+		return jdbcMapping == null ? NULL : from( jdbcMapping.getJavaTypeDescriptor().getJavaType() );
 	}
 }

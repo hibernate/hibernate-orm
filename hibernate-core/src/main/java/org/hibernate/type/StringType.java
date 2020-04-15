@@ -7,6 +7,7 @@
 package org.hibernate.type;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
@@ -17,7 +18,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  */
 public class StringType
 		extends AbstractSingleColumnStandardBasicType<String>
-		implements DiscriminatorType<String> {
+		implements DiscriminatorType<String>, SqlTypeDescriptorIndicatorCapable<String> {
 
 	public static final StringType INSTANCE = new StringType();
 
@@ -44,5 +45,16 @@ public class StringType
 
 	public String toString(String value) {
 		return value;
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	@Override
+	public BasicType resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		if ( indicators.isLob() ) {
+			return indicators.isNationalized() ? MaterializedNClobType.INSTANCE : MaterializedClobType.INSTANCE;
+		}
+		else {
+			return indicators.isNationalized() ? StringNVarcharType.INSTANCE : this;
+		}
 	}
 }

@@ -11,6 +11,7 @@ import java.io.Serializable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#BOOLEAN BOOLEAN} and {@link Boolean}
@@ -20,7 +21,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class BooleanType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, SqlTypeDescriptorIndicatorCapable<Boolean> {
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
@@ -55,5 +56,21 @@ public class BooleanType
 	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) {
 		return dialect.toBooleanValueString( value );
+	}
+
+	@Override
+	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		if ( indicators.getPreferredSqlTypeCodeForBoolean() != getSqlTypeDescriptor().getJdbcTypeCode() ) {
+			final SqlTypeDescriptor sqlTypeDescriptor = indicators.getTypeConfiguration()
+					.getSqlTypeDescriptorRegistry()
+					.getDescriptor( indicators.getPreferredSqlTypeCodeForBoolean() );
+			//noinspection unchecked
+			return (BasicType<X>) indicators.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( getJavaTypeDescriptor(), sqlTypeDescriptor );
+		}
+
+		//noinspection unchecked
+		return (BasicType<X>) this;
 	}
 }

@@ -1,0 +1,66 @@
+[[jdbc-mapping]]
+=== JDBC Mappings
+
+Historically Hibernate's BasicType / UserType system is based on a static binding between a Java type
+(`JavaTypeDescriptor`) and a SQL/JDBC type (`SqlTypeDescriptor`).  6.0 introduces the ability to influence
+the `JavaTypeDescriptor` and `SqlTypeDescriptor` independently.  Under this new approach, the resolution of a
+basic value mapping comes down to:
+
+* `JavaTypeDescriptor` to use
+* `SqlTypeDescriptor` to use
+* `BasicValueConverter` to use (if one)
+* `MutabilityPlan` to use
+
+Each of these pieces can be influenced independently.
+
+==== JavaTypeDescriptor
+
+`@JavaType` can be used to explicitly specify the `JavaTypeDescriptor` to use for a particular mapping.
+
+`@JavaTypeRegistration` can be used to replace the default `Class` -> `JavaTypeDescriptor` mapping as part
+of the `JavaTypeDescriptorRegistry`.
+
+`@Temporal` hints at the `JavaTypeDescriptor` to use in certain cases.  E.g. `java.util.Date` can represent a
+`java.sql.Date`, `java.sql.Time` or `java.sql.Timestamp` - the `TemporalType` specified by the `@Temporal`
+indicates which specific `JavaTypeDescriptor` to use...
+
+An `AttributeConverter` can also influence the `JavaTypeDescriptor` used in certain cases.
+
+
+==== SqlTypeDescriptor
+
+`@SqlType` can be used to explicitly specify the `SqlTypeDescriptor` to use for a particular mapping.
+
+`@SqlTypeCode` can be used to indicate the `SqlTypeDescriptorRegistry` entry to use.  `@SqlTypeRegistration` can
+be used to register a `SqlTypeDescriptor` with the `SqlTypeDescriptorRegistry`.
+
+`@MapKeySqlType` and `@MapKeySqlTypeCode` work the same as `@SqlType` and `@SqlTypeCode`, respectively, except
+describing the `SqlTypeDescriptor` to use for the map's key.  In which case, `@SqlType` and `@SqlTypeCode` refer
+to the map's values.
+
+For character and binary data, the JPA `@Lob` annotation can be used to indicate that a JDBC BLOB, CLOB, NCLOB should
+be used.
+
+For character data, `@Nationalized` can be used to indicate that the JDBC nationalized variant should be used.
+E.g. `Types.CLOB` -> `Types.CLOB`, `Types.VARCHAR` -> `Types.NVARCHAR`, etc
+
+`@Enumerated` influences the `SqlTypeDescriptor` to use by the `EnumType` specified.  `EnumType#ORDINAL` implies
+that `Types.TINYINT` should be used.  `EnumType#STRING` implies that `Types.VARCHAR` should be used.
+
+`@Temporal` can also influence the `SqlTypeDescriptor` used.
+
+An `AttributeConverter` can also influence the `SqlTypeDescriptor` to use by the Java type it reports for its
+"relational type"
+
+
+==== BasicValueConverter
+
+At the moment the only ways to apply a `BasicValueConverter` are by using `@Enumerated` and by applying a JPA
+`AttributeConverter`.
+
+
+==== MutabilityPlan
+
+`MutabilityPlan` can be influenced by either `@Immutable` or `@Mutability`.
+
+By default, `JavaTypeDescriptor#getMutabilityPlan` is used

@@ -13,15 +13,21 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link java.sql.Date} handling.
  *
  * @author Steve Ebersole
  */
-public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
+public class JdbcDateTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 	public static final JdbcDateTypeDescriptor INSTANCE = new JdbcDateTypeDescriptor();
 
 	@SuppressWarnings("WeakerAccess")
@@ -58,6 +64,22 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	@SuppressWarnings("WeakerAccess")
 	public JdbcDateTypeDescriptor() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.DATE;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return DateTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override

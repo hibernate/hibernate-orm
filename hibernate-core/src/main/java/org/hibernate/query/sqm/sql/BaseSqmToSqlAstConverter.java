@@ -1721,9 +1721,9 @@ public abstract class BaseSqmToSqlAstConverter
 				if (type instanceof SqmExpressable) {
 					adjustedTimestampType = (SqmExpressable) type;
 				}
-				else if (type instanceof BasicValuedMapping) {
-					adjustedTimestampType = ((BasicValuedMapping) type).getBasicType();
-				}
+//				else if (type instanceof BasicValuedMapping) {
+//					adjustedTimestampType = ((BasicValuedMapping) type).getBasicType();
+//				}
 				else {
 					// else we know it has not been transformed
 					adjustedTimestampType = expression.getLeftHandOperand().getNodeType();

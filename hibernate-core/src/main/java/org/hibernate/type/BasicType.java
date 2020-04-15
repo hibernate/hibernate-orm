@@ -33,11 +33,6 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	String[] getRegistrationKeys();
 
 	@Override
-	default BasicType getBasicType() {
-		return this;
-	}
-
-	@Override
 	default MappingType getMappedTypeDescriptor() {
 		return this;
 	}

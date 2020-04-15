@@ -16,15 +16,21 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Java type descriptor for the LocalDateTime type.
  *
  * @author Steve Ebersole
  */
-public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
+public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instant> {
 	/**
 	 * Singleton access
 	 */
@@ -33,6 +39,35 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 	@SuppressWarnings("unchecked")
 	public InstantJavaDescriptor() {
 		super( Instant.class, ImmutableMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		// todo (6.0) : resolve against the type registry instead?
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) JdbcDateTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) JdbcTimeTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimestampTypeDescriptor.INSTANCE;
 	}
 
 	@Override
@@ -106,11 +141,11 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 			return null;
 		}
 
-		if ( Instant.class.isInstance( value ) ) {
+		if ( value instanceof Instant ) {
 			return (Instant) value;
 		}
 
-		if ( Timestamp.class.isInstance( value ) ) {
+		if ( value instanceof Timestamp ) {
 			final Timestamp ts = (Timestamp) value;
 			/*
 			 * This works around two bugs:
@@ -130,16 +165,16 @@ public class InstantJavaDescriptor extends AbstractTypeDescriptor<Instant> {
 			}
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if ( value instanceof Long ) {
 			return Instant.ofEpochMilli( (Long) value );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if ( value instanceof Calendar ) {
 			final Calendar calendar = (Calendar) value;
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toInstant();
 		}
 
-		if ( java.util.Date.class.isInstance( value ) ) {
+		if ( value instanceof Date ) {
 			return ( (java.util.Date) value ).toInstant();
 		}
 

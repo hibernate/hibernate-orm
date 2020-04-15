@@ -15,7 +15,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 @Incubating
-public interface TemporalJavaTypeDescriptor<T> extends JavaTypeDescriptor<T> {
+public interface TemporalJavaTypeDescriptor<T> extends BasicJavaDescriptor<T> {
 	/**
 	 * The precision represented by this type
 	 */

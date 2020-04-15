@@ -34,6 +34,5 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressable {
 		return Collections.singletonList( getJdbcMapping() );
 	}
 
-	BasicType getBasicType();
-
+	JdbcMapping getJdbcMapping();
 }

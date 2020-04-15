@@ -20,6 +20,11 @@ public class LongNVarcharTypeDescriptor extends NVarcharTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "LongNVarcharTypeDescriptor";
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.LONGNVARCHAR;
 	}

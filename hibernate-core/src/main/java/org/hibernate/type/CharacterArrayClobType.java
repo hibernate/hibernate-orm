@@ -5,8 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Character Character[]}
@@ -16,7 +18,9 @@ import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class CharacterArrayClobType extends AbstractSingleColumnStandardBasicType<Character[]> {
+public class CharacterArrayClobType
+		extends AbstractSingleColumnStandardBasicType<Character[]>
+		implements SqlTypeDescriptorIndicatorCapable<Character[]> {
 	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
 
 	public CharacterArrayClobType() {
@@ -28,4 +32,9 @@ public class CharacterArrayClobType extends AbstractSingleColumnStandardBasicTyp
 		return null;
 	}
 
+	@Override
+	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		//noinspection unchecked
+		return (BasicType<X>) ( indicators.isNationalized() ? CharacterArrayNClobType.INSTANCE : this );
+	}
 }

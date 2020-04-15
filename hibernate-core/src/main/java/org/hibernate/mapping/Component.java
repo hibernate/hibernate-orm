@@ -9,8 +9,8 @@ package org.hibernate.mapping;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
@@ -19,7 +19,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -54,47 +53,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	// cache the status of the type
 	private volatile Type type;
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, PersistentClass owner) throws MappingException {
-		this( metadata, owner.getTable(), owner );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Component)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Component component) throws MappingException {
-		this( metadata, component.getTable(), component.getOwner() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Join)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Join join) throws MappingException {
-		this( metadata, join.getTable(), join.getPersistentClass() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Collection)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Collection collection) throws MappingException {
-		this( metadata, collection.getCollectionTable(), collection.getOwner() );
-	}
-
-	/**
-	 * @deprecated User {@link Component#Component(MetadataBuildingContext, Table, PersistentClass)} instead.
-	 */
-	@Deprecated
-	public Component(MetadataImplementor metadata, Table table, PersistentClass owner) throws MappingException {
-		super( metadata, table );
-		this.owner = owner;
-	}
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );

@@ -12,15 +12,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Date} handling.
  *
  * @author Steve Ebersole
  */
-public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
+public class DateTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 	public static final DateTypeDescriptor INSTANCE = new DateTypeDescriptor();
 	public static final String DATE_FORMAT = "dd MMMM yyyy";
 
@@ -35,6 +42,42 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public DateTypeDescriptor() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	public int getDefaultSqlPrecision(Dialect dialect) {
+		return dialect.getDefaultTimestampPrecision();
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimestampTypeDescriptor.INSTANCE;
+//
+//		return org.hibernate.type.descriptor.sql.DateTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) JdbcTimestampTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) JdbcTimeTypeDescriptor.INSTANCE;
+	}
+
 	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( DATE_FORMAT ).format( value );

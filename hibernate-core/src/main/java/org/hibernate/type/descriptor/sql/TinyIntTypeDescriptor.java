@@ -40,6 +40,16 @@ public class TinyIntTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "TINYINT";
+	}
+
+	@Override
+	public String toString() {
+		return "TinyIntTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

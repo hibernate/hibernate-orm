@@ -24,6 +24,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface SqlTypeDescriptor extends Serializable {
 	/**
+	 * A "friendly" name for use in logging
+	 */
+	default String getFriendlyName() {
+		return Integer.toString( getSqlType() );
+	}
+
+	/**
 	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
 	 *
 	 * @apiNote Prefer {@link #getJdbcTypeCode}

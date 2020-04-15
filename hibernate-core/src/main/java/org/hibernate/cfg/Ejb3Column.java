@@ -364,11 +364,11 @@ public class Ejb3Column {
 			value.addFormula( formula );
 		}
 		else {
+			table = value.getTable();
 			getMappingColumn().setValue( value );
 			value.addColumn( getMappingColumn(), insertable, updatable );
-			value.getTable().addColumn( getMappingColumn() );
+			table.addColumn( getMappingColumn() );
 			addColumnBinding( value );
-			table = value.getTable();
 		}
 	}
 

@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -74,7 +75,6 @@ import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.SecondaryTableSecondPass;
-import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
@@ -162,6 +162,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
 	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
+	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
@@ -375,6 +376,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public ClassmateContext getClassmateContext() {
 		return bootstrapContext.getClassmateContext();
+	}
+
+	@Override
+	public void registerValueMappingResolver(Function<MetadataBuildingContext, Boolean> resolver) {
+		if ( valueResolvers == null ) {
+			valueResolvers = new ArrayList<>();
+		}
+		valueResolvers.add( resolver );
 	}
 
 
@@ -1490,7 +1499,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
-	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
 	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
@@ -1512,9 +1520,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
 			addPkDrivenByDefaultMapsIdSecondPass( (PkDrivenByDefaultMapsIdSecondPass) secondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof SetSimpleValueTypeSecondPass ) {
-			addSetSimpleValueTypeSecondPass( (SetSimpleValueTypeSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
 			addCopyIdentifierComponentSecondPass( (CopyIdentifierComponentSecondPass) secondPass, onTopOfTheQueue );
@@ -1559,13 +1564,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		else {
 			secondPassList.add( secondPass );
 		}
-	}
-
-	private void addSetSimpleValueTypeSecondPass(SetSimpleValueTypeSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( setSimpleValueTypeSecondPassList == null ) {
-			setSimpleValueTypeSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, setSimpleValueTypeSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1633,7 +1631,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
-			processSecondPasses( setSimpleValueTypeSecondPassList );
 
 			processCopyIdentifierSecondPassesInOrder();
 
@@ -1655,9 +1652,28 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			processNaturalIdUniqueKeyBinders();
 
 			processCachingOverrides();
+
+			processValueResolvers( buildingContext );
 		}
 		finally {
 			inSecondPass = false;
+		}
+	}
+
+	private void processValueResolvers(MetadataBuildingContext buildingContext) {
+		if ( valueResolvers == null ) {
+			return;
+		}
+
+
+		while ( ! valueResolvers.isEmpty() ) {
+			final boolean anyRemoved = valueResolvers.removeIf(
+					resolver -> resolver.apply( buildingContext )
+			);
+
+			if ( ! anyRemoved ) {
+				throw new MappingException( "Unable to complete initialization of boot meta-model" );
+			}
 		}
 	}
 

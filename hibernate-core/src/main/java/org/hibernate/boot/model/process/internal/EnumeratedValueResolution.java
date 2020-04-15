@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
@@ -36,12 +36,16 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 		this.domainJtd = domainJtd;
 		this.jdbcJtd = jdbcJtd;
 		this.std = std;
-//		this.valueConverter = valueConverter;
-		this.valueConverter = null;
+		this.valueConverter = valueConverter;
 	}
 
 	@Override
-	public BasicType getResolvedBasicType() {
+	public JdbcMapping getJdbcMapping() {
+		return enumTypeMapping;
+	}
+
+	@Override
+	public BasicType getLegacyResolvedBasicType() {
 		return enumTypeMapping;
 	}
 
@@ -61,7 +65,7 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
+	public EnumValueConverter getValueConverter() {
 		return valueConverter;
 	}
 

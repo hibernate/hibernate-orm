@@ -8,10 +8,13 @@ package org.hibernate.type.descriptor.java;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * Descriptor for {@link Double} handling.
@@ -24,6 +27,12 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> impleme
 	public DoubleTypeDescriptor() {
 		super( Double.class );
 	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
+		return indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor( Types.REAL );
+	}
+
 	@Override
 	public String toString(Double value) {
 		return value == null ? null : value.toString();
@@ -85,6 +94,7 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> impleme
 		throw unknownWrap( value.getClass() );
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class getPrimitiveClass() {
 		return double.class;
@@ -109,4 +119,6 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> impleme
 		//in a double-precision FP number
 		return dialect.getDoublePrecision();
 	}
+
+
 }

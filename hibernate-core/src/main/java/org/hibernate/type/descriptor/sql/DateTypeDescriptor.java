@@ -41,6 +41,16 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "DATE";
+	}
+
+	@Override
+	public String toString() {
+		return "DateTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

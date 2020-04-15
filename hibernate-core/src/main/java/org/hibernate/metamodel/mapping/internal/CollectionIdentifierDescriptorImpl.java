@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
@@ -69,11 +68,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public String getMappedColumnExpression() {
 		return columnName;
-	}
-
-	@Override
-	public BasicValueConverter getConverter() {
-		return null;
 	}
 
 	@Override
@@ -157,7 +151,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchablePath,
 				this,
 				! selected,
-				getConverter(),
+				null,
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
@@ -201,10 +195,5 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(" + collectionDescriptor.getRole() + ")";
-	}
-
-	@Override
-	public BasicType getBasicType() {
-		return type;
 	}
 }

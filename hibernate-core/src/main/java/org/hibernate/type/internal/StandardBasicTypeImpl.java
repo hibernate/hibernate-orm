@@ -7,16 +7,23 @@
 package org.hibernate.type.internal;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardBasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType {
+@SuppressWarnings("rawtypes")
+public class StandardBasicTypeImpl<J>
+		extends AbstractSingleColumnStandardBasicType
+		implements SqlTypeDescriptorIndicatorCapable {
 	public static final String[] NO_REG_KEYS = new String[0];
 
 	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, SqlTypeDescriptor std) {
+		//noinspection unchecked
 		super( std, jtd );
 	}
 
@@ -30,5 +37,17 @@ public class StandardBasicTypeImpl<J> extends AbstractSingleColumnStandardBasicT
 	public String getName() {
 		// again, irrelevant
 		return null;
+	}
+
+	@Override
+	public BasicType resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		final SqlTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getJdbcRecommendedSqlType( indicators );
+		if ( recommendedSqlType == getSqlTypeDescriptor() ) {
+			return this;
+		}
+
+		return indicators.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( getJavaTypeDescriptor(), recommendedSqlType );
 	}
 }

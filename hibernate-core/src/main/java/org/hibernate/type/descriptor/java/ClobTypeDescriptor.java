@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Clob;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
@@ -20,6 +21,9 @@ import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.spi.SqlTypeDescriptorRegistry;
 
 /**
  * Descriptor for {@link Clob} handling.
@@ -32,28 +36,18 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 	public static final ClobTypeDescriptor INSTANCE = new ClobTypeDescriptor();
 
-	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {
-		public static final ClobMutabilityPlan INSTANCE = new ClobMutabilityPlan();
-
-		public boolean isMutable() {
-			return false;
-		}
-
-		public Clob deepCopy(Clob value) {
-			return value;
-		}
-
-		public Serializable disassemble(Clob value) {
-			throw new UnsupportedOperationException( "Clobs are not cacheable" );
-		}
-
-		public Clob assemble(Serializable cached) {
-			throw new UnsupportedOperationException( "Clobs are not cacheable" );
-		}
-	}
-
 	public ClobTypeDescriptor() {
 		super( Clob.class, ClobMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
+		if ( indicators.isNationalized() ) {
+			final SqlTypeDescriptorRegistry stdRegistry = indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry();
+			return stdRegistry.getDescriptor( Types.NCLOB );
+		}
+
+		return super.getJdbcRecommendedSqlType( indicators );
 	}
 
 	@Override
@@ -150,5 +144,28 @@ public class ClobTypeDescriptor extends AbstractTypeDescriptor<Clob> {
 	@Override
 	public long getDefaultSqlLength(Dialect dialect) {
 		return dialect.getDefaultLobLength();
+	}
+
+	/**
+	 * MutabilityPlan for Clob values
+	 */
+	public static class ClobMutabilityPlan implements MutabilityPlan<Clob> {
+		public static final ClobMutabilityPlan INSTANCE = new ClobMutabilityPlan();
+
+		public boolean isMutable() {
+			return false;
+		}
+
+		public Clob deepCopy(Clob value) {
+			return value;
+		}
+
+		public Serializable disassemble(Clob value) {
+			throw new UnsupportedOperationException( "Clobs are not cacheable" );
+		}
+
+		public Clob assemble(Serializable cached) {
+			throw new UnsupportedOperationException( "Clobs are not cacheable" );
+		}
 	}
 }

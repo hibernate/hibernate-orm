@@ -41,6 +41,16 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "TIMESTAMP";
+	}
+
+	@Override
+	public String toString() {
+		return "TimestampTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

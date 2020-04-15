@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface JdbcMapping {
+public interface JdbcMapping extends MappingType {
 	/**
 	 * The descriptor for the Java type represented by this
 	 * expressable type
@@ -41,4 +41,9 @@ public interface JdbcMapping {
 	 * type to JDBC PreparedStatements, CallableStatements, etc
 	 */
 	ValueBinder getJdbcValueBinder();
+
+	@Override
+	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
 }

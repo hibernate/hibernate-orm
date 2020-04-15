@@ -37,6 +37,16 @@ public class SmallIntTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "SMALLINT";
+	}
+
+	@Override
+	public String toString() {
+		return "SmallIntTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

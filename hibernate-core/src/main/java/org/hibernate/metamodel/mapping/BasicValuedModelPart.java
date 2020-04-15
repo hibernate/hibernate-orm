@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -25,13 +24,8 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fet
 	 */
 	String getMappedColumnExpression();
 
-	/**
-	 * Get the value converter applied to this model part if any
-	 */
-	BasicValueConverter getConverter();
-
 	@Override
 	default MappingType getPartMappingType() {
-		return getBasicType();
+		return this::getJavaTypeDescriptor;
 	}
 }

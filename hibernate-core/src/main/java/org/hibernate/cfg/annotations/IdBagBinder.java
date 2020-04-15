@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -24,16 +25,19 @@ import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.WrappedInferredData;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
 /**
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
+	public IdBagBinder() {
+	}
+
 	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.IdentifierBag( getBuildingContext(), persistentClass );
 	}
@@ -56,77 +60,114 @@ public class IdBagBinder extends BagBinder {
 				persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns, isEmbedded,
 				property, unique, associationTableBinder, ignoreNotFound, getBuildingContext()
 		);
-		CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
-		if ( collectionIdAnn != null ) {
-			SimpleValueBinder simpleValue = new SimpleValueBinder();
 
-			PropertyData propertyData = new WrappedInferredData(
-					new PropertyInferredData(
-							null,
-							property,
-							null, //default access should not be useful
-							buildingContext.getBootstrapContext().getReflectionManager()
-					),
-					"id"
-			);
-			Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
-					collectionIdAnn.columns(),
-					null,
-					Nullability.FORCED_NOT_NULL,
-					propertyHolder,
-					propertyData,
-					Collections.EMPTY_MAP,
-					buildingContext
-			);
-			//we need to make sure all id columns must be not-null.
-			for(Ejb3Column idColumn:idColumns){
-				idColumn.setNullable(false);
-			}
-			Table table = collection.getCollectionTable();
-			simpleValue.setTable( table );
-			simpleValue.setColumns( idColumns );
-			Type typeAnn = collectionIdAnn.type();
-			if ( typeAnn != null && !BinderHelper.isEmptyAnnotationValue( typeAnn.type() ) ) {
-				simpleValue.setExplicitType( typeAnn );
-			}
-			else {
-				throw new AnnotationException( "@CollectionId is missing type: "
-						+ StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
-			}
-			simpleValue.setBuildingContext( getBuildingContext() );
-			SimpleValue id = simpleValue.make();
-			( (IdentifierCollection) collection ).setIdentifier( id );
-			String generator = collectionIdAnn.generator();
-			String generatorType;
-			if ( "identity".equals( generator ) || "assigned".equals( generator )
-					|| "sequence".equals( generator ) || "native".equals( generator ) ) {
-				generatorType = generator;
-				generator = "";
-			}
-			else {
-				generatorType = null;
-			}
+		final CollectionId collectionIdAnn = property.getAnnotation( CollectionId.class );
+		if ( collectionIdAnn == null ) {
+			throw new MappingException( "idbag mapping missing @CollectionId" );
+		}
 
-			if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-				SecondPass secondPass = new IdGeneratorResolverSecondPass(
-						id,
+		final PropertyData propertyData = new WrappedInferredData(
+				new PropertyInferredData(
+						null,
 						property,
-						generatorType,
-						generator,
-						getBuildingContext()
-				);
-				buildingContext.getMetadataCollector().addSecondPass( secondPass );
-			}
-			else {
-				BinderHelper.makeIdGenerator(
-						id,
-						property,
-						generatorType,
-						generator,
-						getBuildingContext(),
-						localGenerators
-				);
-			}
+						//default access should not be useful
+						null,
+						buildingContext.getBootstrapContext().getReflectionManager()
+				),
+				"id"
+		);
+
+		final Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
+				collectionIdAnn.columns(),
+				null,
+				Nullability.FORCED_NOT_NULL,
+				propertyHolder,
+				propertyData,
+				Collections.EMPTY_MAP,
+				buildingContext
+		);
+
+		//we need to make sure all id columns must be not-null.
+		for ( Ejb3Column idColumn:idColumns ) {
+			idColumn.setNullable( false );
+		}
+
+		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ID, buildingContext );
+
+		final Table table = collection.getCollectionTable();
+		valueBinder.setTable( table );
+		valueBinder.setColumns( idColumns );
+
+		final Type typeAnn = collectionIdAnn.type();
+		if ( ! BinderHelper.isEmptyAnnotationValue( typeAnn.type() ) ) {
+			valueBinder.setExplicitType( typeAnn );
+		}
+		else {
+			throw new AnnotationException( "@CollectionId is missing type: "
+					+ StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
+		}
+
+		valueBinder.setType(
+				property,
+				collType,
+				null,
+				null
+		);
+
+		final BasicValue id = valueBinder.make();
+		( (IdentifierCollection) collection ).setIdentifier( id );
+
+		final String namedGenerator = collectionIdAnn.generator();
+
+		if ( "identity".equals( namedGenerator ) ) {
+			throw new MappingException( "IDENTITY generation not supported for CollectionId" );
+		}
+
+		if ( "assigned".equals( namedGenerator ) ) {
+			throw new MappingException( "Assigned generation not supported for CollectionId" );
+		}
+
+		if ( "native".equals( namedGenerator ) ) {
+			throw new MappingException( "Native generation not supported for CollectionId" );
+		}
+
+		final String generatorName;
+		final String generatorType;
+
+		if ( "sequence".equals( namedGenerator ) ) {
+			generatorType = namedGenerator;
+			generatorName = "";
+		}
+		else if ( "increment".equals( namedGenerator ) ) {
+			generatorType = namedGenerator;
+			generatorName = "";
+		}
+		else {
+			generatorType = namedGenerator;
+			generatorName = namedGenerator;
+		}
+
+		id.setIdentifierGeneratorStrategy( generatorType );
+
+		if ( buildingContext.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+			SecondPass secondPass = new IdGeneratorResolverSecondPass(
+					id,
+					property,
+					generatorType,
+					generatorName,
+					getBuildingContext()
+			);
+			buildingContext.getMetadataCollector().addSecondPass( secondPass );
+		}
+		else {
+			BinderHelper.makeIdGenerator(
+					id,
+					property,
+					generatorType,
+					generatorName,
+					getBuildingContext(),
+					localGenerators
+			);
 		}
 		return result;
 	}

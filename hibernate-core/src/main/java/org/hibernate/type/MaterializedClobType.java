@@ -7,6 +7,7 @@
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link String}
@@ -15,7 +16,9 @@ import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class MaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
+public class MaterializedClobType
+		extends AbstractSingleColumnStandardBasicType<String>
+		implements SqlTypeDescriptorIndicatorCapable<String> {
 	public static final MaterializedClobType INSTANCE = new MaterializedClobType();
 
 	public MaterializedClobType() {
@@ -24,5 +27,16 @@ public class MaterializedClobType extends AbstractSingleColumnStandardBasicType<
 
 	public String getName() {
 		return "materialized_clob";
+	}
+
+	@Override
+	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		if ( indicators.isNationalized() ) {
+			//noinspection unchecked
+			return (BasicType<X>) MaterializedNClobType.INSTANCE;
+		}
+
+		//noinspection unchecked
+		return (BasicType<X>) this;
 	}
 }

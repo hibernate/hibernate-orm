@@ -32,6 +32,16 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "NCLOB";
+	}
+
+	@Override
+	public String toString() {
+		return "NClobTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}
@@ -68,6 +78,11 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final NClobTypeDescriptor DEFAULT = new NClobTypeDescriptor() {
 		@Override
+		public String toString() {
+			return "NClobTypeDescriptor(DEFAULT)";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -97,6 +112,11 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final NClobTypeDescriptor NCLOB_BINDING = new NClobTypeDescriptor() {
 		@Override
+		public String toString() {
+			return "NClobTypeDescriptor(NCLOB_BINDING)";
+		}
+
+		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
@@ -115,6 +135,11 @@ public abstract class NClobTypeDescriptor implements SqlTypeDescriptor {
 	};
 
 	public static final NClobTypeDescriptor STREAM_BINDING = new NClobTypeDescriptor() {
+		@Override
+		public String toString() {
+			return "NClobTypeDescriptor(STREAM_BINDING)";
+		}
+
 		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {

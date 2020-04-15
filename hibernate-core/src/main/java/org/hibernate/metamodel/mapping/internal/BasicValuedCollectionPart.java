@@ -14,6 +14,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -41,11 +42,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class BasicValuedCollectionPart implements CollectionPart, BasicValuedModelPart {
+public class BasicValuedCollectionPart implements CollectionPart, BasicValuedModelPart, ConvertibleModelPart {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final BasicType mapper;
+	private final JdbcMapping mapper;
 	private final BasicValueConverter valueConverter;
 
 	private final String tableExpression;
@@ -54,7 +55,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	public BasicValuedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
-			BasicType mapper,
+			JdbcMapping mapper,
 			BasicValueConverter valueConverter,
 			String tableExpression,
 			String columnExpression) {
@@ -74,7 +75,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 
 	@Override
 	public MappingType getPartMappingType() {
-		return mapper;
+		return mapper::getJavaTypeDescriptor;
 	}
 
 	@Override
@@ -88,13 +89,13 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	}
 
 	@Override
-	public BasicValueConverter getConverter() {
+	public BasicValueConverter getValueConverter() {
 		return valueConverter;
 	}
 
 	@Override
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
-		return mapper.getMappedJavaTypeDescriptor();
+		return mapper.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -156,7 +157,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 
 	@Override
 	public MappingType getMappedTypeDescriptor() {
-		return mapper;
+		return this::getJavaTypeDescriptor;
 	}
 
 	@Override
@@ -211,8 +212,9 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 		return Collections.singletonList( getJdbcMapping() );
 	}
 
-	@Override
-	public BasicType getBasicType() {
-		return mapper;
-	}
+//
+//	@Override
+//	public BasicType getBasicType() {
+//		return mapper;
+//	}
 }

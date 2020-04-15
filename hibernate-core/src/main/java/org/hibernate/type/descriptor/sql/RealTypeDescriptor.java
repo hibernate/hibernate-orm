@@ -37,6 +37,16 @@ public class RealTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "REAL";
+	}
+
+	@Override
+	public String toString() {
+		return "RealTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

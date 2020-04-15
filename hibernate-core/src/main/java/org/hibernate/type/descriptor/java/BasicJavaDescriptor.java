@@ -23,13 +23,13 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).
 	 *
-	 * @param context Contextual information
+	 * @param indicators Contextual information
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	default SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+	default SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators indicators) {
 		// match legacy behavior
-		return context.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
+		return indicators.getTypeConfiguration().getSqlTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaType() )
 		);
 	}

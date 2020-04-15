@@ -8,6 +8,7 @@ package org.hibernate.boot.model;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,11 +19,13 @@ import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -95,7 +98,7 @@ public class TypeDefinition implements Serializable {
 	public BasicValue.Resolution<?> resolve(
 			JavaTypeDescriptor<?> explicitJtd,
 			SqlTypeDescriptor explicitStd,
-			Properties localConfigParameters,
+			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
 			MetadataBuildingContext context) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
@@ -142,7 +145,7 @@ public class TypeDefinition implements Serializable {
 		}
 	}
 
-	private static Properties mergeParameters(Properties parameters, Properties localConfigParameters) {
+	private static Properties mergeParameters(Properties parameters, Map localConfigParameters) {
 		final Properties mergedParameters = new Properties();
 
 		if ( parameters != null ) {
@@ -179,7 +182,12 @@ public class TypeDefinition implements Serializable {
 			final BasicType resolvedBasicType = (BasicType) namedTypeInstance;
 			return new BasicValue.Resolution<Object>() {
 				@Override
-				public BasicType getResolvedBasicType() {
+				public JdbcMapping getJdbcMapping() {
+					return resolvedBasicType;
+				}
+
+				@Override
+				public BasicType getLegacyResolvedBasicType() {
 					return resolvedBasicType;
 				}
 
@@ -221,7 +229,7 @@ public class TypeDefinition implements Serializable {
 			JavaTypeDescriptor<?> explicitJtd,
 			SqlTypeDescriptor explicitStd,
 			MutabilityPlan explicitMutabilityPlan,
-			Properties localTypeParams,
+			Map localTypeParams,
 			MetadataBuildingContext buildingContext) {
 		name = name + ':' + nameCounter.getAndIncrement();
 
@@ -232,7 +240,7 @@ public class TypeDefinition implements Serializable {
 
 		final Object typeInstance = typeBean.getBeanInstance();
 
-		injectParameters( typeInstance, () -> localTypeParams );
+		injectParameters( typeInstance, () -> CollectionHelper.asProperties( localTypeParams ) );
 
 		return createResolution(
 				name,
@@ -261,7 +269,12 @@ public class TypeDefinition implements Serializable {
 			final BasicType resolvedBasicType = (BasicType) namedTypeInstance;
 			return new BasicValue.Resolution<Object>() {
 				@Override
-				public BasicType getResolvedBasicType() {
+				public JdbcMapping getJdbcMapping() {
+					return resolvedBasicType;
+				}
+
+				@Override
+				public BasicType getLegacyResolvedBasicType() {
 					return resolvedBasicType;
 				}
 

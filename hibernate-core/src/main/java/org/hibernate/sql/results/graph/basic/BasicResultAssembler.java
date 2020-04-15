@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.results.graph.basic;
 
+import java.util.Locale;
+
+import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -53,17 +56,27 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	public J assemble(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
-		Object jdbcValue = extractRawValue( rowProcessingState );
+		final Object jdbcValue = extractRawValue( rowProcessingState );
 
 		ResultsLogger.INSTANCE.debugf( "Extracted JDBC value [%d] - [%s]", valuesArrayPosition, jdbcValue );
 
 		if ( valueConverter != null ) {
-			// the raw value type should be the converter's relational-JTD
-			assert ( jdbcValue == null || valueConverter.getRelationalJavaDescriptor().getJavaType().isInstance( jdbcValue ) )
-					: "Expecting raw JDBC value of type [" + valueConverter.getRelationalJavaDescriptor().getJavaType().getName()
-					+ "] but found [" + jdbcValue + ']';
+			if ( jdbcValue != null ) {
+				// the raw value type should be the converter's relational-JTD
+				if ( ! valueConverter.getRelationalJavaDescriptor().getJavaType().isInstance( jdbcValue ) ) {
+					throw new HibernateException(
+							String.format(
+									Locale.ROOT,
+									"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
+									valueConverter.getRelationalJavaDescriptor().getJavaType().getName(),
+									jdbcValue.getClass().getName(),
+									jdbcValue
+							)
+					);
+				}
+			}
 
-			//noinspection unchecked
+			//noinspection unchecked,rawtypes
 			return (J) ( (BasicValueConverter) valueConverter ).toDomainValue( jdbcValue );
 		}
 

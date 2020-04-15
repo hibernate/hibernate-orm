@@ -14,6 +14,8 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
@@ -33,21 +35,10 @@ public class BasicTypeRegistry implements Serializable {
 	private final Map<SqlTypeDescriptor,Map<JavaTypeDescriptor<?>,BasicType<?>>> registryValues = new ConcurrentHashMap<>();
 	private boolean primed;
 
-	/**
-	 * TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
-	 */
-	private Map<String, BasicType> typesByName = new ConcurrentHashMap<>( 100, .75f, 1 );
+	private Map<String, BasicType> typesByName = new ConcurrentHashMap<>();
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
 		this.typeConfiguration = typeConfiguration;
-	}
-
-	public boolean isPrimed() {
-		return primed;
-	}
-
-	public void primed() {
-		this.primed = true;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +58,11 @@ public class BasicTypeRegistry implements Serializable {
 	 */
 	public BasicType<?> resolve(JavaTypeDescriptor<?> jtdToUse, SqlTypeDescriptor stdToUse) {
 		//noinspection unchecked
-		return resolve( jtdToUse, stdToUse, () -> new StandardBasicTypeImpl( jtdToUse, stdToUse ) );
+		return resolve(
+				jtdToUse,
+				stdToUse,
+				() -> new StandardBasicTypeImpl( jtdToUse, stdToUse )
+		);
 	}
 
 	/**
@@ -96,15 +91,113 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public void register(BasicType type, String... keys) {
+		if ( ! isPrimed() ) {
+			throw new IllegalStateException( "BasicTypeRegistry not yet primed.  Calls to `#register` not valid until after primed" );
+		}
+
 		if ( type == null ) {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-		if ( keys == null || keys.length == 0 ) {
+		applyOrOverwriteEntry( type );
+
+		// explicit registration keys
+		if ( CollectionHelper.isEmpty( keys ) ) {
 			LOG.typeDefinedNoRegistrationKeys( type );
-			return;
+		}
+		else {
+			applyRegistrationKeys( type, keys );
+		}
+	}
+
+	private void applyOrOverwriteEntry(BasicType type) {
+		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
+				type.getSqlTypeDescriptor(),
+				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+		);
+
+		final BasicType<?> existing = mappingsForStdToUse.put( type.getMappedJavaTypeDescriptor(), type );
+		if ( existing != null ) {
+			LOG.debugf(
+					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
+					type.getSqlTypeDescriptor().getFriendlyName(),
+					type.getJavaTypeDescriptor(),
+					existing
+			);
+		}
+	}
+
+	public void register(UserType type, String... keys) {
+		register( new CustomType( type, keys, typeConfiguration ) );
+	}
+
+	public void unregister(String... keys) {
+		for ( String key : keys ) {
+			final BasicType removed = typesByName.remove( key );
+
+
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// priming
+
+	public boolean isPrimed() {
+		return primed;
+	}
+
+	public void primed() {
+		this.primed = true;
+	}
+
+	public void addPrimeEntry(BasicType type, String legacyTypeClassName, String[] registrationKeys) {
+		if ( primed ) {
+			throw new IllegalStateException( "BasicTypeRegistry already primed" );
 		}
 
+		if ( type == null ) {
+			throw new HibernateException( "Type to register cannot be null" );
+		}
+
+		primeRegistryEntry( type );
+
+		// Legacy name registration
+		if ( StringHelper.isNotEmpty( legacyTypeClassName ) ) {
+			typesByName.put( legacyTypeClassName, type );
+		}
+
+		// explicit registration keys
+		if ( registrationKeys == null || registrationKeys.length == 0 ) {
+			LOG.typeDefinedNoRegistrationKeys( type );
+		}
+		else {
+			applyRegistrationKeys( type, registrationKeys );
+		}
+	}
+
+	private void primeRegistryEntry(BasicType type) {
+		final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
+				type.getSqlTypeDescriptor(),
+				sqlTypeDescriptor -> new ConcurrentHashMap<>()
+		);
+
+		final BasicType<?> existing = mappingsForStdToUse.get( type.getMappedJavaTypeDescriptor() );
+
+		if ( existing != null ) {
+			LOG.debugf(
+					"Skipping registration of BasicType (%s + %s); still priming.  existing = %s",
+					type.getSqlTypeDescriptor().getFriendlyName(),
+					type.getJavaTypeDescriptor(),
+					existing
+			);
+		}
+		else {
+			mappingsForStdToUse.put( type.getMappedJavaTypeDescriptor(), type );
+		}
+	}
+
+	private void applyRegistrationKeys(BasicType type, String[] keys) {
 		for ( String key : keys ) {
 			// be safe...
 			if ( key == null ) {
@@ -120,35 +213,12 @@ public class BasicTypeRegistry implements Serializable {
 
 			final Type old = typesByName.put( key, type );
 			if ( old != null && old != type ) {
-				LOG.typeRegistrationOverridesPrevious( key, old );
+				LOG.debugf(
+						"Type registration key [%s] overrode previous entry : `%s`",
+						key,
+						old
+				);
 			}
-
-			final Map<JavaTypeDescriptor<?>, BasicType<?>> mappingsForStdToUse = registryValues.computeIfAbsent(
-					type.getSqlTypeDescriptor(),
-					sqlTypeDescriptor -> new ConcurrentHashMap<>()
-			);
-
-			//noinspection unchecked
-			mappingsForStdToUse.computeIfAbsent(
-					type.getMappedJavaTypeDescriptor(),
-					javaDescriptor -> new StandardBasicTypeImpl(
-							javaDescriptor,
-							type.getSqlTypeDescriptor()
-					)
-			);
-
-		}
-	}
-
-	public void register(UserType type, String... keys) {
-		register( new CustomType( type, keys, typeConfiguration ) );
-	}
-
-	public void unregister(String... keys) {
-		for ( String key : keys ) {
-			final BasicType removed = typesByName.remove( key );
-
-
 		}
 	}
 }

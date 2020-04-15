@@ -21,7 +21,7 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 
 	@Override
 	default MappingType getPartMappingType() {
-		return getBasicType();
+		return this::getJavaTypeDescriptor;
 	}
 
 	@Override

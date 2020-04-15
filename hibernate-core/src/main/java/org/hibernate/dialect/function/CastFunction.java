@@ -6,8 +6,11 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.List;
+
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.query.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -18,8 +21,6 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
-
-import java.util.List;
 
 /**
  * @author Gavin King
@@ -39,14 +40,15 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstWalker walker) {
-		CastTarget targetType = (CastTarget) arguments.get(1);
-		Expression arg = (Expression) arguments.get(0);
+		final Expression source = (Expression) arguments.get( 0 );
+		final JdbcMapping sourceMapping = ( (SqlExpressable) source.getExpressionType() ).getJdbcMapping();
+		final CastType sourceType = CastType.from( sourceMapping );
 
-		CastType to = CastType.from( targetType.getExpressionType().getBasicType() );
-		//TODO: generalize this to things which aren't BasicValuedMappings
-		CastType from = CastType.from( ( (BasicValuedMapping) arg.getExpressionType() ).getBasicType() );
+		final CastTarget castTarget = (CastTarget) arguments.get( 1 );
+		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getJdbcMapping();
+		final CastType targetType = CastType.from( targetJdbcMapping );
 
-		String cast = dialect.castPattern( from, to );
+		String cast = dialect.castPattern( sourceType, targetType );
 
 		new PatternRenderer( cast ).render( sqlAppender, arguments, walker );
 	}

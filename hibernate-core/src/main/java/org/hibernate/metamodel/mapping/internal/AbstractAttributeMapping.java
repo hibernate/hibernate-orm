@@ -17,19 +17,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public abstract class AbstractAttributeMapping implements AttributeMapping {
 	private final String name;
 
-	private final MappingType type;
 	private final ManagedMappingType declaringType;
 
 	@SuppressWarnings("WeakerAccess")
-	public AbstractAttributeMapping(String name, MappingType type, ManagedMappingType declaringType) {
+	public AbstractAttributeMapping(String name, ManagedMappingType declaringType) {
 		this.name = name;
-		this.type = type;
 		this.declaringType = declaringType;
 	}
 
 	@Override
-	public MappingType getPartMappingType() {
-		return type;
+	public ManagedMappingType getDeclaringType() {
+		return declaringType;
 	}
 
 	@Override
@@ -38,17 +36,13 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	}
 
 	@Override
-	public MappingType getMappedTypeDescriptor() {
-		return type;
+	public MappingType getPartMappingType() {
+		return getMappedTypeDescriptor();
 	}
 
 	@Override
+	@SuppressWarnings("rawtypes")
 	public JavaTypeDescriptor getJavaTypeDescriptor() {
 		return getMappedTypeDescriptor().getMappedJavaTypeDescriptor();
-	}
-
-	@Override
-	public ManagedMappingType getDeclaringType() {
-		return declaringType;
 	}
 }

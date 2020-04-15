@@ -38,6 +38,16 @@ public class DecimalTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "DECIMAL";
+	}
+
+	@Override
+	public String toString() {
+		return "DecimalTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

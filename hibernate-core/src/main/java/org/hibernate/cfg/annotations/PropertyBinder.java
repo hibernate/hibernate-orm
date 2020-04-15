@@ -67,7 +67,7 @@ public class PropertyBinder {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String cascade;
-	private SimpleValueBinder simpleValueBinder;
+	private BasicValueBinder basicValueBinder;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
 	private boolean embedded;
@@ -176,21 +176,20 @@ public class PropertyBinder {
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( property );
 
-		simpleValueBinder = new SimpleValueBinder();
-		simpleValueBinder.setBuildingContext( buildingContext );
-		simpleValueBinder.setPropertyName( name );
-		simpleValueBinder.setReturnedClassName( returnedClassName );
-		simpleValueBinder.setColumns( columns );
-		simpleValueBinder.setPersistentClassName( containerClassName );
-		simpleValueBinder.setType(
+		basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
+		basicValueBinder.setPropertyName( name );
+		basicValueBinder.setReturnedClassName( returnedClassName );
+		basicValueBinder.setColumns( columns );
+		basicValueBinder.setPersistentClassName( containerClassName );
+		basicValueBinder.setType(
 				property,
 				returnedClass,
 				containerClassName,
 				holder.resolveAttributeConverterDescriptor( property )
 		);
-		simpleValueBinder.setReferencedEntityName( referencedEntityName );
-		simpleValueBinder.setAccessType( accessType );
-		SimpleValue propertyValue = simpleValueBinder.make();
+		basicValueBinder.setReferencedEntityName( referencedEntityName );
+		basicValueBinder.setAccessType( accessType );
+		SimpleValue propertyValue = basicValueBinder.make();
 		setValue( propertyValue );
 		return makeProperty();
 	}
@@ -483,8 +482,8 @@ public class PropertyBinder {
 		this.returnedClass = returnedClass;
 	}
 
-	public SimpleValueBinder getSimpleValueBinder() {
-		return simpleValueBinder;
+	public BasicValueBinder getBasicValueBinder() {
+		return basicValueBinder;
 	}
 
 	public Value getValue() {

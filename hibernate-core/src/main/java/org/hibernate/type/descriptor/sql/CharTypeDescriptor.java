@@ -19,6 +19,11 @@ public class CharTypeDescriptor extends VarcharTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "CharTypeDescriptor";
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.CHAR;
 	}

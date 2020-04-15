@@ -40,6 +40,11 @@ public class ObjectSqlTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "ObjectSqlTypeDescriptor(" + jdbcTypeCode + ")";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

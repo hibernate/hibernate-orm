@@ -11,6 +11,9 @@ import java.net.URL;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * Descriptor for {@link URL} handling.
@@ -22,6 +25,11 @@ public class UrlTypeDescriptor extends AbstractTypeDescriptor<URL> {
 
 	public UrlTypeDescriptor() {
 		super( URL.class );
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return VarcharTypeDescriptor.INSTANCE;
 	}
 
 	public String toString(URL value) {

@@ -57,7 +57,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );
 
-		throw new UnsupportedOperationException(  );
+//		throw new UnsupportedOperationException(  );
 	}
 
 	@Override

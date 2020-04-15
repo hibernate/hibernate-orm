@@ -37,6 +37,16 @@ public class NVarcharTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
+	public String getFriendlyName() {
+		return "NVARCHAR";
+	}
+
+	@Override
+	public String toString() {
+		return "NVarcharTypeDescriptor";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		return true;
 	}

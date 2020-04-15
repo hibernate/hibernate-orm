@@ -14,40 +14,47 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
+import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.type.BasicType;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicValuedSingularAttributeMapping extends AbstractSingularAttributeMapping implements SingularAttributeMapping, BasicValuedModelPart {
+@SuppressWarnings("rawtypes")
+public class BasicValuedSingularAttributeMapping
+		extends AbstractSingularAttributeMapping
+		implements SingularAttributeMapping, BasicValuedModelPart, ConvertibleModelPart {
 	private final NavigableRole navigableRole;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter valueConverter;
+
+	private final JavaTypeDescriptor domainTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
 	public BasicValuedSingularAttributeMapping(
@@ -58,31 +65,37 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 			String tableExpression,
 			String mappedColumnExpression,
 			BasicValueConverter valueConverter,
-			BasicType basicType,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, basicType, declaringType, propertyAccess );
+		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, declaringType, propertyAccess );
 		this.navigableRole = declaringType.getNavigableRole().append( attributeName );
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.valueConverter = valueConverter;
 		this.jdbcMapping = jdbcMapping;
-	}
 
-	@Override
-	public BasicType getBasicType() {
-		return getMappedTypeDescriptor();
-	}
-
-	@Override
-	public BasicType getMappedTypeDescriptor() {
-		return (BasicType) super.getMappedTypeDescriptor();
+		if ( valueConverter == null ) {
+			domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
+		}
+		else {
+			domainTypeDescriptor = valueConverter.getDomainJavaDescriptor();
+		}
 	}
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public MappingType getMappedTypeDescriptor() {
+		return getJdbcMapping();
+	}
+
+	@Override
+	public JavaTypeDescriptor getJavaTypeDescriptor() {
+		return domainTypeDescriptor;
 	}
 
 	@Override
@@ -96,7 +109,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 	}
 
 	@Override
-	public BasicValueConverter getConverter() {
+	public BasicValueConverter getValueConverter() {
 		return valueConverter;
 	}
 
@@ -198,7 +211,7 @@ public class BasicValuedSingularAttributeMapping extends AbstractSingularAttribu
 				fetchablePath,
 				this,
 				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
-				getConverter(),
+				getValueConverter(),
 				fetchTiming,
 				creationState
 		);

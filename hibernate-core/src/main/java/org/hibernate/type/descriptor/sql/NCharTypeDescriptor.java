@@ -20,6 +20,11 @@ public class NCharTypeDescriptor extends NVarcharTypeDescriptor {
 	}
 
 	@Override
+	public String toString() {
+		return "NCharTypeDescriptor";
+	}
+
+	@Override
 	public int getSqlType() {
 		return Types.NCHAR;
 	}

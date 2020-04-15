@@ -58,6 +58,11 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 	}
 
 	@Override
+	public String toString() {
+		return "AttributeConverterSqlTypeDescriptorAdapter(" + converter.getClass().getName() + ")";
+	}
+
+	@Override
 	public boolean canBeRemapped() {
 		// any remapping of the underlying SqlTypeDescriptor should have
 		// happened prior to it being passed to us.

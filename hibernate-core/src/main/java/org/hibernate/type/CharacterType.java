@@ -11,6 +11,7 @@ import java.io.Serializable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
 import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Character}
@@ -20,7 +21,7 @@ import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
  */
 public class CharacterType
 		extends AbstractSingleColumnStandardBasicType<Character>
-		implements PrimitiveType<Character>, DiscriminatorType<Character> {
+		implements PrimitiveType<Character>, DiscriminatorType<Character>, SqlTypeDescriptorIndicatorCapable<Character> {
 
 	public static final CharacterType INSTANCE = new CharacterType();
 
@@ -53,4 +54,8 @@ public class CharacterType
 		return fromString( xml );
 	}
 
+	@Override
+	public <X> BasicType<X> resolveIndicatedType(SqlTypeDescriptorIndicators indicators) {
+		return (BasicType<X>) ( indicators.isNationalized() ? CharacterNCharType.INSTANCE : this );
+	}
 }

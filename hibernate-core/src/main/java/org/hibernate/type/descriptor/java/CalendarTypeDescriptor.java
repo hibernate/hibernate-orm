@@ -10,16 +10,22 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 
+import javax.persistence.TemporalType;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.sql.TimeTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Calendar} handling.
  *
  * @author Steve Ebersole
  */
-public class CalendarTypeDescriptor extends AbstractTypeDescriptor<Calendar> {
+public class CalendarTypeDescriptor extends AbstractTemporalTypeDescriptor<Calendar> {
 	public static final CalendarTypeDescriptor INSTANCE = new CalendarTypeDescriptor();
 
 	public static class CalendarMutabilityPlan extends MutableMutabilityPlan<Calendar> {
@@ -32,6 +38,34 @@ public class CalendarTypeDescriptor extends AbstractTypeDescriptor<Calendar> {
 
 	protected CalendarTypeDescriptor() {
 		super( Calendar.class, CalendarMutabilityPlan.INSTANCE );
+	}
+
+	@Override
+	public TemporalType getPrecision() {
+		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
+		return TimeTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) CalendarDateTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) CalendarTimeTypeDescriptor.INSTANCE;
 	}
 
 	public String toString(Calendar value) {

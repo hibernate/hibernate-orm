@@ -12,18 +12,17 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -53,11 +52,6 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public BasicType getBasicType() {
-		return mappingType;
-	}
-
-	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
@@ -65,11 +59,6 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	@Override
 	public String getMappedColumnExpression() {
 		return mappedColumnExpression;
-	}
-
-	@Override
-	public BasicValueConverter getConverter() {
-		return null;
 	}
 
 	@Override
@@ -131,7 +120,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 				fetchablePath,
 				this,
 				false,
-				getConverter(),
+				null,
 				fetchTiming,
 				creationState
 		);

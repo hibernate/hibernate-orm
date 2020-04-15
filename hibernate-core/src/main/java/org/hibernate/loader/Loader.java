@@ -1311,7 +1311,7 @@ public abstract class Loader {
 	 * result set, register the fact that the the object is missing with the
 	 * session.
 	 */
-	private void registerNonExists(
+	protected void registerNonExists(
 			final EntityKey[] keys,
 			final Loadable[] persisters,
 			final SharedSessionContractImplementor session) {

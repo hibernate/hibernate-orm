@@ -221,8 +221,8 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		this.actionQueue = new ActionQueue( this );
-		this.persistenceContext = new StatefulPersistenceContext( this );
+		this.persistenceContext = createPersistenceContext();
+		this.actionQueue = createActionQueue();
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
@@ -267,6 +267,14 @@ public class SessionImpl
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
+	}
+
+	protected StatefulPersistenceContext createPersistenceContext() {
+		return new StatefulPersistenceContext( this );
+	}
+
+	protected ActionQueue createActionQueue() {
+		return new ActionQueue( this );
 	}
 
 	private LockOptions getLockOptionsForRead() {

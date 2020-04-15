@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -984,6 +985,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void initializeNonLazyCollections() throws HibernateException {
+		initializeNonLazyCollections( PersistentCollection::forceInitialization );
+	}
+
+	protected void initializeNonLazyCollections(Consumer<PersistentCollection> initializeAction ) {
 		if ( loadCounter == 0 ) {
 			LOG.trace( "Initializing non-lazy collections" );
 
@@ -994,7 +999,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				int size;
 				while ( nonlazyCollections != null && ( size = nonlazyCollections.size() ) > 0 ) {
 					//note that each iteration of the loop may add new elements
-					nonlazyCollections.remove( size - 1 ).forceInitialization();
+					initializeAction.accept( nonlazyCollections.remove( size - 1 ) );
 				}
 			}
 			finally {

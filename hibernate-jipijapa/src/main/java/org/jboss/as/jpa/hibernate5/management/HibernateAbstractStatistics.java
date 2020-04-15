@@ -32,10 +32,10 @@ public abstract class HibernateAbstractStatistics implements Statistics {
 	private static final String RESOURCE_BUNDLE = HibernateAbstractStatistics.class.getPackage()
 			.getName() + ".LocalDescriptions";
 	private static final String RESOURCE_BUNDLE_KEY_PREFIX = "hibernate";
-	private Map<String, Operation> operations = new HashMap<>();
-	private Set<String> childrenNames = new HashSet<>();
-	private Set<String> writeableNames = new HashSet<>();
-	private Map<String, Class> types = new HashMap<>();
+	protected Map<String, Operation> operations = new HashMap<>();
+	protected Set<String> childrenNames = new HashSet<>();
+	protected Set<String> writeableNames = new HashSet<>();
+	protected Map<String, Class> types = new HashMap<>();
 
 
 	@Override

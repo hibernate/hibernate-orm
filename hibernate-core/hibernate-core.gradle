@@ -240,16 +240,6 @@ artifacts {
     tests testJar
 }
 
-processTestResources {
-    doLast {
-        copy {
-            from file( 'src/test/resources' )
-            into file( "${buildDir}/resources/test" )
-            include 'org/hibernate/test/wf/ddl/manifest.mf'
-        }
-    }
-}
-
 test {
     systemProperty 'file.encoding', 'utf-8'
     beforeTest { descriptor ->

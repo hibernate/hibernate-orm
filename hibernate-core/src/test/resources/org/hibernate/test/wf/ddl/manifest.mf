@@ -1,1 +1,0 @@
-Dependencies: org.hibernate:5.3 services

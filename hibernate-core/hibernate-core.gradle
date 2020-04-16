@@ -245,16 +245,10 @@ processTestResources {
         copy {
             from file( 'src/test/resources' )
             into file( "${buildDir}/resources/test" )
-            include 'arquillian.xml'
             include 'org/hibernate/test/wf/ddl/manifest.mf'
-            expand wildFlyInstallDir: project( ':hibernate-orm-modules' ).wildFlyInstallDir,
-                   hibernateMajorMinorVersion: "${project.ormVersion.family}",
-                   arquillianDeploymentExportDir: "${rootProject.buildDir.absolutePath}/arquillian-deployments"
         }
     }
 }
-
-test.dependsOn ':hibernate-orm-modules:prepareWildFlyForTests'
 
 test {
     systemProperty 'file.encoding', 'utf-8'

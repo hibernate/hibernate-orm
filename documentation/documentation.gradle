@@ -15,7 +15,6 @@ ext {
 			'hibernate-infinispan',
 			'hibernate-ehcache',
 			'hibernate-java8',
-			'hibernate-orm-modules',
 			'hibernate-integrationtest-java-modules',
 			'release'
 	]

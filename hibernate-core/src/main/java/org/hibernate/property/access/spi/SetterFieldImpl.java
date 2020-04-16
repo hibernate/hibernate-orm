@@ -6,7 +6,6 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,6 +32,18 @@ public class SetterFieldImpl implements Setter {
 		this.propertyName = propertyName;
 		this.field = field;
 		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
+	}
+
+	public Class getContainerClass() {
+		return containerClass;
+	}
+
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	protected Field getField() {
+		return field;
 	}
 
 	@Override

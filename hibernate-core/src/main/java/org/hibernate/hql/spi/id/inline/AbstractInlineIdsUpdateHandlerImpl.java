@@ -35,7 +35,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 		extends AbstractInlineIdsBulkIdHandler
 		implements MultiTableBulkIdStrategy.UpdateHandler {
 
-	private final Map<Integer, String> updates = new LinkedHashMap<>();
+	private Map<Integer, String> updates;
 
 	private ParameterSpecification[][] assignmentParameterSpecifications;
 
@@ -47,6 +47,9 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 
 	@Override
 	public String[] getSqlStatements() {
+		if ( updates == null ) {
+			return new String[0];
+		}
 		return updates.values().toArray( new String[updates.values().size()] );
 	}
 
@@ -56,6 +59,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 			QueryParameters queryParameters) {
 
 		IdsClauseBuilder values = prepareInlineStatement( session, queryParameters );
+		updates = new LinkedHashMap<>();
 
 		if ( !values.getIds().isEmpty() ) {
 

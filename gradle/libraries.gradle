@@ -54,7 +54,7 @@ ext {
             classmate:      'com.fasterxml:classmate:1.3.4',
 
             // Dom4J
-            dom4j:          'org.dom4j:dom4j:2.1.1@jar',
+            dom4j:          'org.dom4j:dom4j:2.1.3@jar',
 
             // Javassist
             javassist:      "org.javassist:javassist:${javassistVersion}",

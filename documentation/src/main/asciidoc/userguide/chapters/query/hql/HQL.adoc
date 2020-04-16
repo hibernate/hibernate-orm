@@ -104,7 +104,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-basic-usage-example]
 ----
 ====
 
-For complete details, see the `Query` https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Query.html[Javadocs].
+For complete details, see the `Query` {jpaJavadocUrlPrefix}Query.html[Javadocs].
 Many of the settings controlling the execution of the query are defined as hints.
 JPA defines some standard hints (like timeout in the example), but most are provider specific.
 Relying on provider specific hints limits your applications portability to some degree.
@@ -1984,7 +1984,7 @@ include::{extrasdir}/hql-read-only-entities-example.sql[]
 
 As you can see, there is no SQL `UPDATE` being executed.
 
-You can also pass the read-only hint to named queries using the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/QueryHint.html[`@QueryHint`] annotation.
+You can also pass the read-only hint to named queries using the JPA {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation.
 
 [[jpa-read-only-entities-native-example]]
 .Fetching read-only entities using a named query and the read-only hint

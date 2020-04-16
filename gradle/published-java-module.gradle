@@ -170,6 +170,7 @@ javadoc {
 				'implNote:a:"Implementation Note:"'
 		)
 	}
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
 
 	doFirst {
 		// ordering problems if we try to do this during config phase :(

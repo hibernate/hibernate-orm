@@ -10,17 +10,17 @@
  */
 
 
-//
-//buildscript {
-//	repositories {
-//		mavenCentral()
-//	}
-//	dependencies {
-//		classpath 'de.thetaphi:forbiddenapis:2.6'
-//	}
-//}
 
-//import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'de.thetaphi:forbiddenapis:2.7'
+	}
+}
+
+import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
@@ -34,7 +34,7 @@ apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
-// Attempt to leverage JetBrain's Gradle extension to automatically define 
+// Attempt to leverage JetBrain's Gradle extension to automatically define
 // `copyResourcesToIntelliJOutFolder` as a "build trigger" on import.
 //
 // However, see https://github.com/JetBrains/gradle-idea-ext-plugin/issues/8
@@ -47,10 +47,6 @@ ext {
 	forbiddenAPITargetJDKCompatibility = '11'
 }
 
-
-sourceCompatibility = project.baselineJavaVersion
-targetCompatibility = project.baselineJavaVersion
-
 if ( !project.description ) {
 	project.description = "The Hibernate ORM $project.name module"
 }
@@ -62,6 +58,9 @@ if ( !project.description ) {
 configurations {
 	provided {
 		description = 'Non-exported compile-time dependencies.'
+	}
+	asciidoclet {
+		description = "Dependencies for Asciidoctor Javadoc taglet"
 	}
 }
 
@@ -130,8 +129,20 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Compilation
 
-tasks.withType(JavaCompile) {
+tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
+	sourceCompatibility = project.baselineJavaVersion
+	targetCompatibility = project.baselineJavaVersion
+}
+
+if ( project.baselineJavaVersion != gradle.ext.testedJavaVersion ) {
+	logger.info( "Forcing the target bytecode version for test classes to '$gradle.ext.testedJavaVersion'" )
+
+	tasks.compileTestJava {
+		// For *tests only*, generate bytecode matching the Java version currently in use.
+		// This allows testing bytecode enhancement on the latest Java versions (13, 14, ...).
+		targetCompatibility = gradle.ext.testedJavaVersion
+	}
 }
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
@@ -193,7 +204,7 @@ tasks.withType( Test.class ).each { test ->
 	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
 
 	test.enableAssertions = true
-	
+
 	if ( project.name != 'hibernate-testing' ) {
 		test.dependsOn ':hibernate-testing:test'
 	}
@@ -229,6 +240,15 @@ sourceSets {
 processTestResources {
 	inputs.property( "db", db )
 	filter( ReplaceTokens, tokens: dbBundle[db] )
+}
+
+// Enable the experimental features of ByteBuddy with JDK 15+
+test {
+	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {
+		logger.warn( "The version of java that will be tested is not supported by Bytebuddy by default. " +
+				 " Setting 'net.bytebuddy.experimental=true'." )
+		systemProperty 'net.bytebuddy.experimental', true
+	}
 }
 
 test {

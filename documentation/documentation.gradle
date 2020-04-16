@@ -141,9 +141,7 @@ task aggregateJavadocs(type: Javadoc) {
 			options.source = project.baselineJavaVersion
 		}
 
-		if ( JavaVersion.current().isJava8Compatible() ) {
-			options.addStringOption( 'Xdoclint:none', '-quiet' )
-		}
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
 	}
 
     // process each project, building up:
@@ -235,7 +233,8 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 			   stylesheet: "css/hibernate.css",
 			   majorMinorVersion: rootProject.ormVersion.family,
 			   fullVersion: rootProject.ormVersion.fullName,
-			   docinfo: 'private'
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
         from('src/main/asciidoc/userguide/') {

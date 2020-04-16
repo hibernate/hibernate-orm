@@ -114,9 +114,9 @@ Hibernate offers multiple identifier generation strategies, see the <<chapters/d
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html[`javax.persistence.Entity`] annotation.
+The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`javax.persistence.Entity`] annotation.
 
-The `@Entity` annotation defines just the https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
+The `@Entity` annotation defines just the {jpaJavadocUrlPrefix}Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
 
 By default, if the name attribute of the `@Entity` annotation is missing, the unqualified name of the entity class itself will be used as the entity name.
 
@@ -168,7 +168,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-po
 
 Without specifying the catalog of the associated database table a given entity is mapped to, Hibernate will use the default catalog associated with the current database connection.
 
-However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Table.html[`@Table`] annotation.
+However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using MySQL and want to map a `Book` entity to the `book` table located in the `public` catalog
 which looks as follows.
@@ -198,7 +198,7 @@ include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-
 
 Without specifying the schema of the associated database table a given entity is mapped to, Hibernate will use the default schema associated with the current database connection.
 
-However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the JPA https://javaee.github.io/javaee-spec/javadocs/javax/persistence/Table.html[`@Table`] annotation.
+However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using PostgreSQL and want to map a `Book` entity to the `book` table located in the `library` schema
 which looks as follows.

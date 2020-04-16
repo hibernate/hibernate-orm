@@ -362,36 +362,36 @@ task nonFatalCheckstyle(type:Checkstyle) {
 checkstyleMain.exclude '**/org/hibernate/cfg/**'
 checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
-//
-//task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-//	classesDirs = project.sourceSets.main.output.classesDirs
-//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-//	bundledSignatures += 'jdk-system-out'
-//	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
-//}
-//
-//task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-//	classesDirs = project.sourceSets.main.output.classesDirs
-//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-//	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
-//
-//	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
-//	// before we can fully enabled this check
-//	//
-//	// No idea how findbugs was missing these b4
-//	ignoreFailures = true
-//}
-//
-//task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-//	classesDirs = project.sourceSets.main.output.classesDirs
-//	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-//	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-//	bundledSignatures += 'jdk-non-portable'
-//}
-//
-//task forbiddenApis
-//project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
-//
-//project.tasks.check.finalizedBy forbiddenApis
+
+task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.sourceSets.main.output.classesDirs
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+	bundledSignatures += 'jdk-system-out'
+	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+}
+
+task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.sourceSets.main.output.classesDirs
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+	bundledSignatures += "jdk-unsafe-${baselineJavaVersion}".toString()
+
+	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
+	// before we can fully enabled this check
+	//
+	// No idea how findbugs was missing these b4
+	ignoreFailures = true
+}
+
+task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
+	classesDirs = project.sourceSets.main.output.classesDirs
+	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+	bundledSignatures += 'jdk-non-portable'
+}
+
+task forbiddenApis
+project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
+
+project.tasks.check.finalizedBy forbiddenApis

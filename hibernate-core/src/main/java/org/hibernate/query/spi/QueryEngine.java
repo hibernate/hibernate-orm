@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.QueryLogger;
@@ -37,6 +38,8 @@ import org.hibernate.service.ServiceRegistry;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.jboss.logging.Logger;
+
 /**
  * Aggregation and encapsulation of the components Hibernate uses
  * to execute queries (HQL, Criteria and native)
@@ -45,6 +48,7 @@ import java.util.function.Supplier;
  */
 @Incubating
 public class QueryEngine {
+	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.LOG_HQL_FUNCTIONS" );
 
 	public static QueryEngine from(
 			SessionFactoryImplementor sessionFactory,
@@ -119,7 +123,7 @@ public class QueryEngine {
 		);
 		if ( showSQLFunctions ) {
 			sqmFunctionRegistry.getFunctionsByName().forEach(
-					entry -> System.out.println( entry.getValue().getSignature( entry.getKey() ) )
+					entry -> LOG_HQL_FUNCTIONS.info( entry.getValue().getSignature( entry.getKey() ) )
 			);
 		}
 	}

@@ -8,6 +8,7 @@ package org.hibernate.hql.spi.id.inline;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +33,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 		extends AbstractInlineIdsBulkIdHandler
 		implements MultiTableBulkIdStrategy.DeleteHandler {
 
-	private final List<String> deletes = new ArrayList<>();
+	private final List<String> deletes = Collections.synchronizedList(new ArrayList<String>());
 
 	public AbstractInlineIdsDeleteHandlerImpl(
 			SessionFactoryImplementor factory,
@@ -52,6 +53,8 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 
 		IdsClauseBuilder values = prepareInlineStatement( session, queryParameters );
 
+		List<String> currentDeletes = new ArrayList<>();
+
 		if ( !values.getIds().isEmpty() ) {
 			final String idSubselect = values.toStatement();
 
@@ -60,7 +63,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 					CollectionType cType = (CollectionType) type;
 					AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory().getMetamodel().collectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
-						deletes.add( generateDelete(
+						currentDeletes.add( generateDelete(
 								cPersister.getTableName(),
 								cPersister.getKeyColumnNames(),
 								generateIdSubselect( idSubselect, getTargetedQueryable(), cPersister ),
@@ -77,11 +80,11 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 				//      the difficulty is the ordering of the tables here vs the cascade attributes on the persisters ->
 				//          the table info gotten here should really be self-contained (i.e., a class representation
 				//          defining all the needed attributes), then we could then get an array of those
-				deletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete" ).toStatementString() );
+				currentDeletes.add( generateDelete( tableNames[i], columnNames[i], idSubselect, "bulk delete" ).toStatementString() );
 			}
 
 			// Start performing the deletes
-			for ( String delete : deletes ) {
+			for ( String delete : currentDeletes ) {
 				if ( delete == null) {
 					continue;
 				}
@@ -99,6 +102,8 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 					throw convert( e, "error performing bulk delete", delete );
 				}
 			}
+
+			deletes.addAll( currentDeletes );
 		}
 
 		return values.getIds().size();

@@ -95,10 +95,7 @@ dependencies {
     testCompile( libraries.jodaTime )
     testCompile( libraries.assertj )
 
-    testCompile( libraries.cdi ) {
-        // we need to force it to make sure we influence the one coming from arquillian
-        force=true
-    }
+    testCompile( libraries.cdi )
 
     testCompile( libraries.validator ) {
         // for test runtime
@@ -120,11 +117,8 @@ dependencies {
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-    testCompile libraries.arquillian_junit_container
-    testCompile libraries.arquillian_protocol_servlet
     testCompile libraries.shrinkwrap_descriptors_api_javaee
     testCompile libraries.shrinkwrap_descriptors_impl_javaee
-    testCompile libraries.wildfly_arquillian_container_managed
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar

@@ -18,4 +18,14 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new PostgreSQL10IdentityColumnSupport();
 	}
+
+	/**
+	 * An SQL Dialect for PostgreSQL 10 and later. Adds support for Partition table.
+	 * @author huazhang.jiang
+	 */
+	@Override
+	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
+		super.augmentRecognizedTableTypes( tableTypesList );
+		tableTypesList.add( "PARTITIONED TABLE" );
+	}
 }

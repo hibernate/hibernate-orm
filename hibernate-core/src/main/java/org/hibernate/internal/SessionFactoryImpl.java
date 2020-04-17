@@ -84,6 +84,7 @@ import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -167,6 +168,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String,Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
+	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
@@ -207,6 +209,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
+
+		this.eventEngine = new EventEngine( metadata, this );
 
 		metadata.initSessionFactory( this );
 
@@ -516,6 +520,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public EventEngine getEventEngine() {
+		return eventEngine;
 	}
 
 	@Override

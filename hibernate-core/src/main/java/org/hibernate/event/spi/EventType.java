@@ -10,14 +10,12 @@ import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreLogging;
-
-import org.jboss.logging.Logger;
 
 /**
  * Enumeration of the recognized types of events, including meta-information about each.
@@ -25,8 +23,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public final class EventType<T> {
-	private static final Logger LOG = CoreLogging.logger( EventType.class );
-	private static AtomicInteger typeCounter = new AtomicInteger( 0 );
+	/**
+	 * Used to assign ordinals for the standard event-types
+	 */
+	private static AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger( 0 );
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
 	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID = create( "resolve-natural-id", ResolveNaturalIdEventListener.class );
@@ -80,59 +80,15 @@ public final class EventType<T> {
 	public static final EventType<PostCollectionUpdateEventListener> POST_COLLECTION_UPDATE = create( "post-collection-update", PostCollectionUpdateEventListener.class );
 
 	/**
-	 * Add a new event type.
-	 *
-	 * @param name - name of the custom event
-	 * @param listenerClass - the base listener class or interface associated with the entity type
-	 * @param <T> - listenerClass
-	 * @return the custom {@link EventType}
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static synchronized <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
-		if ( name == null || listenerClass == null ) {
-			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
-		}
-
-		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.computeIfAbsent(
-				name,
-				( e -> {
-					final EventType eventTypeNew = EventType.create( name, listenerClass );
-					LOG.debugf(
-							"Added custom EventType: [%s], ordinal=[%d], listener=[%s].",
-							name,
-							eventTypeNew.ordinal,
-							listenerClass.toString()
-					);
-					return eventTypeNew;
-				} )
-		);
-		// There's no way to know if there was a pre-existing EventType with
-		// the same name and listener, so ignore that case.
-		// Just check that listener is the same as listenerClass
-		if ( !listenerClass.equals( eventType.baseListenerInterface ) ) {
-				throw new HibernateException(
-						"Could not add EventType [" + name + "] with listener Class ["
-								+ "]. An EventType with that name already exists with listener ["
-								+ listenerClass.getName()
-								+ "]."
-				);
-		}
-		return eventType;
-	}
-
-	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
-		return new EventType<T>( name, listenerClass );
-	}
-
-	/**
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	private static final Map<String,EventType> EVENT_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
+	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
+	private static final Map<String,EventType> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {
-					final Map<String, EventType> typeByNameMap = new ConcurrentHashMap<>();
+					final Map<String, EventType> typeByNameMap = new HashMap<>();
 					for ( Field field : EventType.class.getDeclaredFields() ) {
 						if ( EventType.class.isAssignableFrom( field.getType() ) ) {
 							try {
@@ -144,10 +100,19 @@ public final class EventType<T> {
 							}
 						}
 					}
-					return typeByNameMap;
+
+					return Collections.unmodifiableMap( typeByNameMap );
 				}
 			}
 	);
+
+	private static <T> EventType<T> create(String name, Class<T> listenerRole) {
+		return new EventType<>( name, listenerRole, STANDARD_TYPE_COUNTER.getAndIncrement(), true );
+	}
+
+	public static <T> EventType<T> create(String name, Class<T> listenerRole, int ordinal) {
+		return new EventType<>( name, listenerRole, ordinal, false );
+	}
 
 	/**
 	 * Find an {@link EventType} by its name
@@ -158,11 +123,12 @@ public final class EventType<T> {
 	 *
 	 * @throws HibernateException If eventName is null, or if eventName does not correlate to any known event type.
 	 */
+	@SuppressWarnings("rawtypes")
 	public static EventType resolveEventTypeByName(final String eventName) {
 		if ( eventName == null ) {
 			throw new HibernateException( "event name to resolve cannot be null" );
 		}
-		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.get( eventName );
+		final EventType eventType = STANDARD_TYPE_BY_NAME_MAP.get( eventName );
 		if ( eventType == null ) {
 			throw new HibernateException( "Unable to locate proper event type for event name [" + eventName + "]" );
 		}
@@ -170,35 +136,42 @@ public final class EventType<T> {
 	}
 
 	/**
-	 * Get a collection of all {@link EventType} instances.
-	 *
-	 * @return All {@link EventType} instances
+	 * Get a collection of all the standard {@link EventType} instances.
 	 */
+	@SuppressWarnings("rawtypes")
 	public static Collection<EventType> values() {
-		return EVENT_TYPE_BY_NAME_MAP.values();
+		return STANDARD_TYPE_BY_NAME_MAP.values();
+	}
+
+	/**
+	 * Used from {@link EventEngine} to "prime" the registered event-type map.
+	 *
+	 * Simply copy the values into its (passed) Map
+	 */
+	@SuppressWarnings("rawtypes")
+	static void registerStandardTypes(Map<String, EventType> eventTypes) {
+		eventTypes.putAll( STANDARD_TYPE_BY_NAME_MAP );
 	}
 
 	private final String eventName;
 	private final Class<T> baseListenerInterface;
 	private final int ordinal;
+	private final boolean isStandardEvent;
 
-	private EventType(String eventName, Class<T> baseListenerInterface) {
+	private EventType(String eventName, Class<T> baseListenerInterface, int ordinal, boolean isStandardEvent) {
 		this.eventName = eventName;
 		this.baseListenerInterface = baseListenerInterface;
-		this.ordinal = typeCounter.getAndIncrement();
+		this.ordinal = ordinal;
+		this.isStandardEvent = isStandardEvent;
 	}
 
 	public String eventName() {
 		return eventName;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Class baseListenerInterface() {
 		return baseListenerInterface;
-	}
-
-	@Override
-	public String toString() {
-		return eventName();
 	}
 
 	/**
@@ -213,4 +186,15 @@ public final class EventType<T> {
 		return ordinal;
 	}
 
+	/**
+	 * Is this event-type one of the standard event-types?
+	 */
+	public boolean isStandardEvent() {
+		return isStandardEvent;
+	}
+
+	@Override
+	public String toString() {
+		return eventName();
+	}
 }

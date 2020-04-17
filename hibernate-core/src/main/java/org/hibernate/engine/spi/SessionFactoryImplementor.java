@@ -32,6 +32,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -94,6 +95,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @return The factory's ServiceRegistry
 	 */
 	ServiceRegistryImplementor getServiceRegistry();
+
+	/**
+	 * Get the EventEngine associated with this SessionFactory
+	 */
+	EventEngine getEventEngine();
 
 	/**
 	 * Get the factory scoped interceptor for this factory.

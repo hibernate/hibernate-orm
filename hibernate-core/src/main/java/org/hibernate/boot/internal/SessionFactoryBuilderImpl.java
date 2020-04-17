@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -30,6 +32,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.event.spi.EventEngineContributor;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
@@ -43,15 +46,20 @@ import org.hibernate.tuple.entity.EntityTuplizerFactory;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
+public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor, SessionFactoryImpl.ExplicitContributorAccess {
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
+	private List<EventEngineContributor> eventEngineContributors;
+
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
-		this( metadata, new SessionFactoryOptionsBuilder(
-				metadata.getMetadataBuildingOptions().getServiceRegistry(),
-				bootstrapContext
-		) );
+		this(
+				metadata,
+				new SessionFactoryOptionsBuilder(
+						metadata.getMetadataBuildingOptions().getServiceRegistry(),
+						bootstrapContext
+				)
+		);
 	}
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
@@ -440,6 +448,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyEventEngineContributor(EventEngineContributor contributor) {
+		if ( eventEngineContributors == null ) {
+			eventEngineContributors = new ArrayList<>();
+		}
+		eventEngineContributors.add( contributor );
+		return this;
+	}
+
+	@Override
 	public void disableRefreshDetachedEntity() {
 		this.optionsBuilder.disableRefreshDetachedEntity();
 	}
@@ -465,7 +482,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
 		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), this );
 	}
 
 	@Override
@@ -473,4 +490,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return optionsBuilder.buildOptions();
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SessionFactoryImpl.ExplicitContributorAccess
+
+	@Override
+	public List<EventEngineContributor> getEventEngineContributors() {
+		return eventEngineContributors;
+	}
 }

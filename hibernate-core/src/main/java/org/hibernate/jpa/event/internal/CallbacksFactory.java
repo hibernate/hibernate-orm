@@ -11,6 +11,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.event.spi.CallbackBuilder;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * The intent of this class is to use a lighter implementation
@@ -18,9 +19,8 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  * {@link org.hibernate.boot.spi.SessionFactoryOptions#areJPACallbacksEnabled()}
  */
 public final class CallbacksFactory {
-
-	public static CallbackRegistryImplementor buildCallbackRegistry(SessionFactoryImplementor sessionFactory) {
-		if ( jpaCallBacksEnabled( sessionFactory ) ) {
+	public static CallbackRegistryImplementor buildCallbackRegistry(SessionFactoryOptions options) {
+		if ( jpaCallBacksEnabled( options ) ) {
 			return new CallbackRegistryImpl();
 		}
 		else {
@@ -29,10 +29,11 @@ public final class CallbacksFactory {
 	}
 
 	public static CallbackBuilder buildCallbackBuilder(
-			SessionFactoryImplementor sessionFactory,
+			SessionFactoryOptions options,
+			ServiceRegistry serviceRegistry,
 			ReflectionManager reflectionManager) {
-		if ( jpaCallBacksEnabled( sessionFactory ) ) {
-			final ManagedBeanRegistry managedBeanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
+		if ( jpaCallBacksEnabled( options ) ) {
+			final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 			return new CallbackBuilderLegacyImpl(
 					managedBeanRegistry,
 					reflectionManager
@@ -43,8 +44,7 @@ public final class CallbacksFactory {
 		}
 	}
 
-	private static boolean jpaCallBacksEnabled(SessionFactoryImplementor sessionFactory) {
-		SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
+	private static boolean jpaCallBacksEnabled(SessionFactoryOptions options) {
 		return options.areJPACallbacksEnabled();
 	}
 

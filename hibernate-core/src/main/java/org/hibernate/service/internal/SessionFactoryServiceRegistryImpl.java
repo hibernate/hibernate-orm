@@ -7,7 +7,6 @@
 package org.hibernate.service.internal;
 
 import java.util.List;
-import java.util.ListIterator;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -22,6 +21,8 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
@@ -29,11 +30,12 @@ public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 
+	private static final Logger log = Logger.getLogger( SessionFactoryServiceRegistryImpl.class );
+
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
-	private EventListenerRegistry cachedEventListenerRegistry;
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator> initiators,
@@ -64,7 +66,7 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
+		if ( serviceBinding.getService() instanceof Configurable ) {
 			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
 		}
 	}
@@ -86,22 +88,16 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
-
-		//HHH-11051 cache EventListenerRegistry
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
-			if ( cachedEventListenerRegistry == null ) {
-				cachedEventListenerRegistry = (EventListenerRegistry) super.getService( serviceRole );
-			}
-			return (R) cachedEventListenerRegistry;
+			log.debug(
+					"EventListenerRegistry access via ServiceRegistry is deprecated.  " +
+							"Use `sessionFactory.getEventEngine().getListenerRegistry()` instead"
+			);
+
+			//noinspection unchecked
+			return (R) sessionFactory.getEventEngine().getListenerRegistry();
 		}
 
 		return super.getService( serviceRole );
 	}
-
-	@Override
-	public synchronized void destroy() {
-		super.destroy();
-		this.cachedEventListenerRegistry = null;
-	}
-
 }

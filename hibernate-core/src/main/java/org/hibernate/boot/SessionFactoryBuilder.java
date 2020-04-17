@@ -21,6 +21,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.event.spi.EventEngineContributor;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
@@ -752,6 +753,10 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
+	/**
+	 * Apply a EventEngineContributor
+	 */
+	SessionFactoryBuilder applyEventEngineContributor(EventEngineContributor contributor);
 
 	/**
 	 * Allows unwrapping this builder as another, more specific type.

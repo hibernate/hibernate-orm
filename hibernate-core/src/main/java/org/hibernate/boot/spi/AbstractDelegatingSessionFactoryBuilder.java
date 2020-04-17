@@ -23,6 +23,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.event.spi.EventEngineContributor;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -416,6 +417,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyEventEngineContributor(EventEngineContributor contributor) {
+		delegate.applyEventEngineContributor( contributor );
 		return getThis();
 	}
 

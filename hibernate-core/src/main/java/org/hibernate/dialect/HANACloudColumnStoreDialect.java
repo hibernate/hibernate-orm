@@ -23,7 +23,10 @@ import org.hibernate.type.StandardBasicTypes;
  * Column tables are created by this dialect when using the auto-ddl feature.
  * 
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
+ *
+ * @deprecated use HANAColumnStoreDialect(400)
  */
+@Deprecated
 public class HANACloudColumnStoreDialect extends AbstractHANADialect {
 
 	public HANACloudColumnStoreDialect() {

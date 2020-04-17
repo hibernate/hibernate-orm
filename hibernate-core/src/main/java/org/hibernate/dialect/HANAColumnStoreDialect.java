@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryEngine;
@@ -31,10 +34,68 @@ import org.hibernate.type.StandardBasicTypes;
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
+	private int version;
+
+	public int getVersion(){
+		return version;
+	}
+
+	public HANAColumnStoreDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
 	
 	public HANAColumnStoreDialect() {
-		super();
+		this(300);
 	}
+
+	public HANAColumnStoreDialect(int version) {
+		super();
+		this.version = version;
+		if ( this.version >= 400 ) {
+			registerColumnType( Types.CHAR, "nvarchar(1)" );
+			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
+			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
+
+			// for longer values map to clob/nclob
+			registerColumnType( Types.LONGVARCHAR, "nclob" );
+			registerColumnType( Types.VARCHAR, "nclob" );
+			registerColumnType( Types.CLOB, "nclob" );
+
+			registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
+			registerHibernateType( Types.NCHAR, StandardBasicTypes.NSTRING.getName() );
+			registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
+			registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+			registerHibernateType( Types.CHAR, 5000, StandardBasicTypes.NSTRING.getName() );
+			registerHibernateType( Types.VARCHAR, StandardBasicTypes.NSTRING.getName() );
+			registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.NTEXT.getName() );
+
+			// register additional keywords
+			registerHanaCloudKeywords();
+		}
+	}
+
+	private void registerHanaCloudKeywords() {
+		registerKeyword( "array" );
+		registerKeyword( "at" );
+		registerKeyword( "authorization" );
+		registerKeyword( "between" );
+		registerKeyword( "by" );
+		registerKeyword( "collate" );
+		registerKeyword( "empty" );
+		registerKeyword( "filter" );
+		registerKeyword( "grouping" );
+		registerKeyword( "no" );
+		registerKeyword( "not" );
+		registerKeyword( "of" );
+		registerKeyword( "over" );
+		registerKeyword( "recursive" );
+		registerKeyword( "row" );
+		registerKeyword( "table" );
+		registerKeyword( "to" );
+		registerKeyword( "window" );
+		registerKeyword( "within" );
+	}
+
 
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
@@ -78,11 +139,25 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
+		if ( version >= 400 ) {
+			return false;
+		}
 		return true;
 	}
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
+		if ( version >= 400 ) {
+			return Boolean.TRUE;
+		}
 		return Boolean.FALSE;
+	}
+
+	@Override
+	public boolean isUseUnicodeStringTypes() {
+		if ( version >= 400 ) {
+			return true;
+		}
+		return super.isUseUnicodeStringTypes();
 	}
 }

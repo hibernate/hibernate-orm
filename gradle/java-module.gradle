@@ -197,7 +197,6 @@ processTestResources {
 		copy {
 			from file( 'src/test/resources' )
 			into file( "${buildDir}/resources/test" )
-			exclude 'src/test/resources/arquillian.xml'
 			exclude 'src/test/resources/hibernate.properties'
 		}
 		copy {

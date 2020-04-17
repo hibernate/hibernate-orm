@@ -37,6 +37,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.FrontBaseDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -210,6 +211,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, FirebirdDialect.class );
 		addDialect( strategySelector, FrontBaseDialect.class );
 		addDialect( strategySelector, H2Dialect.class );
+		addDialect( strategySelector, HANACloudColumnStoreDialect.class );
 		addDialect( strategySelector, HANAColumnStoreDialect.class );
 		addDialect( strategySelector, HANARowStoreDialect.class );
 		addDialect( strategySelector, HSQLDialect.class );

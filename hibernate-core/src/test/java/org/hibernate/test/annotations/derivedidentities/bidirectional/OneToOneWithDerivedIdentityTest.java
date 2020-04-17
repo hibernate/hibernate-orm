@@ -25,9 +25,7 @@ import org.junit.Test;
 
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
-	//@TestForIssue(jiraKey = "HHH-5695")
 	@TestForIssue(jiraKey = "HHH-11903")
-	@FailureExpected(jiraKey = "HHH-11903")
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -34,6 +34,18 @@ public class SetterFieldImpl implements Setter {
 		this.setterMethod = ReflectHelper.setterMethodOrNull( containerClass, propertyName, field.getType() );
 	}
 
+	public Class getContainerClass() {
+		return containerClass;
+	}
+
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	protected Field getField() {
+		return field;
+	}
+
 	@Override
 	public void set(Object target, Object value, SessionFactoryImplementor factory) {
 		try {

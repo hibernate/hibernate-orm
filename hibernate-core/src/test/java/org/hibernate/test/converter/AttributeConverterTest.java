@@ -29,6 +29,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
@@ -331,7 +332,12 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertTyping( EnumJavaTypeDescriptor.class, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+			if (metadata.getDatabase().getDialect() instanceof HANACloudColumnStoreDialect) {
+				assertEquals( Types.NVARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+			}
+			else {
+				assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+			}
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

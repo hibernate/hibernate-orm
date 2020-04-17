@@ -31,7 +31,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
-
+	
 	public HANAColumnStoreDialect() {
 		super();
 	}
@@ -74,5 +74,15 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 				AfterUseAction.CLEAN,
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	protected boolean supportsAsciiStringTypes() {
+		return true;
+	}
+
+	@Override
+	protected Boolean useUnicodeStringTypesDefault() {
+		return Boolean.FALSE;
 	}
 }

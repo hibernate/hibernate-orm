@@ -55,4 +55,14 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
+
+	@Override
+	protected boolean supportsAsciiStringTypes() {
+		return true;
+	}
+
+	@Override
+	protected Boolean useUnicodeStringTypesDefault() {
+		return Boolean.FALSE;
+	}
 }

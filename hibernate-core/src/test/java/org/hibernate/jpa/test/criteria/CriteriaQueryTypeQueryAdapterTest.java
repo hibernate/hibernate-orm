@@ -113,6 +113,22 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	@TestForIssue(jiraKey = "HHH-13932")
+	public void testCriteriaQuerySetNonExistingParameter() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Item> query = builder.createQuery( Item.class );
+			Root<Item> root = query.from( Item.class );
+			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+			Predicate predicate = builder.equal( root.get( "name" ), parameter );
+			query.where( predicate );
+			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+			ParameterExpression<String> nonExistingParam = builder.parameter( String.class, "nonExistingParam" );
+			criteriaQuery.setParameter( nonExistingParam, "George" );
+		} );
+	}
+
 	@Test
 	public void testSetParameterPassingTypeNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

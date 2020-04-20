@@ -229,7 +229,6 @@ sourceSets {
 					include '*.xml'
 					include '**/*.properties'
 					include '**/*.xml'
-					exclude 'src/test/resources/arquillian.xml'
 				}
 			}
 		}

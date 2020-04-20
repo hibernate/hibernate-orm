@@ -34,12 +34,10 @@ ext {
 
     geolatteVersion = '1.4.0'
 
-    // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
+    // Wildfly version targeted by the custom Jipijapa build
     wildflyVersion = '17.0.1.Final'
-    arquillianVersion = '1.4.1.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0'
-    wildflyArquillianContainerVersion = '2.2.0.Final'
 
     jodaTimeVersion = '2.3'
 
@@ -167,17 +165,13 @@ ext {
 
             assertj: "org.assertj:assertj-core:${assertjVersion}",
 
-            // Arquillian/Shrinkwrap
-            arquillian_junit_container: "org.jboss.arquillian.junit:arquillian-junit-container:${arquillianVersion}",
-            arquillian_protocol_servlet: "org.jboss.arquillian.protocol:arquillian-protocol-servlet:${arquillianVersion}",
-
+            // Shrinkwrap
             shrinkwrap_api: "org.jboss.shrinkwrap:shrinkwrap-api:${shrinkwrapVersion}",
             shrinkwrap: "org.jboss.shrinkwrap:shrinkwrap-impl-base:${shrinkwrapVersion}",
 
             shrinkwrap_descriptors_api_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-api-javaee:${shrinkwrapDescriptorsVersion}",
             shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapDescriptorsVersion}",
 
-            wildfly_arquillian_container_managed: "org.wildfly.arquillian:wildfly-arquillian-container-managed:${wildflyArquillianContainerVersion}",
             jboss_vfs: "org.jboss:jboss-vfs:3.2.11.Final",
             jipijapa_spi: "org.wildfly:jipijapa-spi:${wildflyVersion}",
             wildfly_transaction_client : 'org.wildfly.transaction:wildfly-transaction-client:1.1.7.Final',

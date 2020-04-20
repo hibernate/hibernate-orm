@@ -100,10 +100,7 @@ dependencies {
     testCompile( libraries.jodaTime )
     testCompile( libraries.assertj )
 
-    testCompile( libraries.cdi ) {
-        // we need to force it to make sure we influence the one coming from arquillian
-        force=true
-    }
+    testCompile( libraries.cdi )
 
     testCompile( libraries.validator ) {
         // for test runtime
@@ -125,11 +122,8 @@ dependencies {
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
-    testCompile libraries.arquillian_junit_container
-    testCompile libraries.arquillian_protocol_servlet
     testCompile libraries.shrinkwrap_descriptors_api_javaee
     testCompile libraries.shrinkwrap_descriptors_impl_javaee
-    testCompile libraries.wildfly_arquillian_container_managed
 
     testCompile libraries.jboss_ejb_spec_jar
     testCompile libraries.jboss_annotation_spec_jar
@@ -282,28 +276,6 @@ task generateEnversStaticMetamodel(
     // put static metamodel classes back out to the source tree since they're version controlled.
     destinationDir = new File( "${projectDir}/src/main/java" )
 }
-//
-//if ( JavaVersion.current().isJava9Compatible() ) {
-//    logger.warn( '[WARN] Skipping Javassist-related tests for hibernate-core due to Javassist JDK 9 incompatibility' )
-//
-//    // we need to exclude tests using Javassist enhancement, which does not properly support
-//    // Java 9 yet - https://issues.jboss.org/browse/JASSIST-261
-//    test {
-//        // rather than wild-cards, keep an explicit list
-//        exclude 'org/hibernate/jpa/test/enhancement/InterceptFieldClassFileTransformerTest.class'
-//        exclude 'org/hibernate/jpa/test/enhancement/runtime/JpaRuntimeEnhancementTest.class'
-//        exclude 'org/hibernate/test/bytecode/enhancement/EnhancerTest.class'
-//        exclude 'org/hibernate/test/bytecode/enhancement/basic/BasicInSessionTest.class'
-//
-//        // also, any tests using Arquillian for in-container testing with WildFly currently
-//        // need to be excluded because WildFly does not yet work with Java 9
-//        exclude 'org/hibernate/test/wf/ddl/**'
-//        exclude 'org/hibernate/jpa/test/cdi/**'
-//        exclude 'org/hibernate/envers/internal/tools/MapProxyTest.class'
-//        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentTest.class'
-//        exclude 'org/hibernate/envers/test/integration/components/dynamic/AuditedDynamicComponentsAdvancedCasesTest.class'
-//    }
-//}
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

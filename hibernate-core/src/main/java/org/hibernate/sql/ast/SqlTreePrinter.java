@@ -74,7 +74,7 @@ public class SqlTreePrinter implements SqlAstWalker {
 		final SqlTreePrinter printer = new SqlTreePrinter();
 		printer.visitStatement( sqlAstStatement );
 
-		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:\n" + printer.buffer.toString() );
+		SqlAstTreeLogger.INSTANCE.debugf( "SQL AST Tree:%n" + printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -215,7 +215,7 @@ public class SqlTreePrinter implements SqlAstWalker {
 
 	private void logWithIndentation(Object line) {
 		pad( depth );
-		buffer.append( line ).append( '\n' );
+		buffer.append( line ).append( System.lineSeparator() );
 	}
 
 	private void logWithIndentation(String pattern, Object arg1) {

@@ -3113,7 +3113,14 @@ public final class AnnotationBinder {
 		propertyBinder.setCascade( cascadeStrategy );
 		propertyBinder.setProperty( property );
 		propertyBinder.setXToMany( true );
-		propertyBinder.makePropertyAndBind();
+
+		final Property boundProperty = propertyBinder.makePropertyAndBind();
+		if ( joinColumn != null ) {
+			boundProperty.setOptional( joinColumn.nullable() && optional );
+		}
+		else {
+			boundProperty.setOptional( optional );
+		}
 	}
 
 	protected static void defineFetchingStrategy(ToOne toOne, XProperty property) {

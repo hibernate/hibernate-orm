@@ -143,12 +143,12 @@ jar {
                          'javax.security.auth;resolution:=optional',
                          // Make javax.security.jacc optional and do not reference a version range (because that's what we used to do)
                         'javax.security.jacc;resolution:=optional;version=!',
-                        // Make javax.validation optional and do not reference a version range (because that's what we used to do)
-                         'javax.validation;resolution:=optional;version=!',
-                         'javax.validation.constraints;resolution:=optional;version=!',
-                         'javax.validation.groups;resolution:=optional;version=!',
-                         'javax.validation.metadata;resolution:=optional;version=!',
-                         // Make javax.enterprise optional and do not reference a version range (because that's what we used to do)
+                        // Make jakarta.validation optional and do not reference a version range (because that's what we used to do)
+                        'jakarta.validation;resolution:=optional;version=!',
+                        'jakarta.validation.constraints;resolution:=optional;version=!',
+                        'jakarta.validation.groups;resolution:=optional;version=!',
+                        'jakarta.validation.metadata;resolution:=optional;version=!',
+                        // Make javax.enterprise optional and do not reference a version range (because that's what we used to do)
                         '!javax.enterprise*',
                         'javax.enterprise.context.spi;resolution:=optional;version=!',
                         'javax.enterprise.inject.spi;resolution:=optional;version=!',

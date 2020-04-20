@@ -59,6 +59,14 @@ public final class XMLHelper {
 
 	public SAXReader createSAXReader(ErrorLogger errorLogger, EntityResolver entityResolver) {
 		SAXReader saxReader = new SAXReader();
+		try {
+			saxReader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+			saxReader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
+			saxReader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
+		}
+		catch (Exception e) {
+			throw new RuntimeException( e );
+		}
 		saxReader.setMergeAdjacentText( true );
 		saxReader.setValidation( true );
 		saxReader.setErrorHandler( errorLogger );

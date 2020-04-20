@@ -125,7 +125,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 		final String title = header != null ? header : "SqmQuerySpec Tree";
 
-		LOGGER.debugf( "%s :\n%s", title, treePrinter.buffer.toString() );
+		LOGGER.debugf( "%s :%n%s", title, treePrinter.buffer.toString() );
 	}
 
 	public static void logTree(SqmStatement sqmStatement) {
@@ -148,7 +148,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			printer.visitInsertSelectStatement( (SqmInsertSelectStatement) sqmStatement );
 		}
 
-		LOGGER.debugf( "SqmStatement Tree :\n%s", printer.buffer.toString() );
+		LOGGER.debugf( "SqmStatement Tree :%n%s", printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -217,7 +217,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	private void logWithIndentation(Object line) {
 		pad( depth );
-		buffer.append( line ).append( '\n' );
+		buffer.append( line ).append( System.lineSeparator() );
 	}
 
 	private void pad(int depth) {

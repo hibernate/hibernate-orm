@@ -73,9 +73,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 								.getEntityPersister()
 								.getIdentifierMapping()
 								.visitJdbcTypes(
-										jdbcMapping ->
-												jdbcMappings.add( jdbcMapping )
-										,
+										jdbcMappings::add,
 										null,
 										typeConfiguration
 								);

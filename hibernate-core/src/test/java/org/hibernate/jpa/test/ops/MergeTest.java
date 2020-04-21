@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

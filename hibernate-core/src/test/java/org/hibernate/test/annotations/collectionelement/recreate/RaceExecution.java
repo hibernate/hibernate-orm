@@ -9,7 +9,7 @@ package org.hibernate.test.annotations.collectionelement.recreate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 import org.hibernate.annotations.GenericGenerator;
 

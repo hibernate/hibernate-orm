@@ -8,12 +8,12 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -41,10 +41,10 @@ public class A {
 
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	@org.hibernate.annotations.OptimisticLock(excluded = true)
-	@javax.persistence.OneToMany(mappedBy = "a")
+	@jakarta.persistence.OneToMany(mappedBy = "a")
 	private Set<D> ds = new HashSet<D>();
 
-	@javax.persistence.OneToOne
+	@jakarta.persistence.OneToOne
 	private D singleD = null;
 
 	public String getName() {

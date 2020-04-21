@@ -8,11 +8,11 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.util.regex.Pattern;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 @Entity(name = "SimpleEntity")
 public class SimpleEntity {

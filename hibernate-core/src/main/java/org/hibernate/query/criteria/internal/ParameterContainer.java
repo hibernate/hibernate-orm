@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.criteria.internal;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Selection;
 
 /**
  * Contract for query components capable of either being a parameter or containing parameters.

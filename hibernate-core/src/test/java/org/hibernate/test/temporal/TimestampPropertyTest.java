@@ -9,12 +9,12 @@ package org.hibernate.test.temporal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import org.junit.Test;
 
@@ -140,7 +140,7 @@ public class TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		return new Class[] { Entity.class };
 	}
 
-	@javax.persistence.Entity
+	@jakarta.persistence.Entity
 	@Table(name = "MyEntity")
 	public static class Entity {
 		@GeneratedValue

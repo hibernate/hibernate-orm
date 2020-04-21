@@ -27,10 +27,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ul>
  *
  * Should only be used to name custom {@link org.hibernate.property.access.spi.PropertyAccessStrategy}.  For
- * {@code property/field} access, the JPA {@link javax.persistence.Access} annotation should be preferred
- * using the appropriate {@link javax.persistence.AccessType}.  However, if this annotation is used with
+ * {@code property/field} access, the JPA {@link jakarta.persistence.Access} annotation should be preferred
+ * using the appropriate {@link jakarta.persistence.AccessType}.  However, if this annotation is used with
  * either {@code value="property"} or {@code value="field"}, it will act just as the corresponding usage
- * of {@link javax.persistence.Access}.
+ * of {@link jakarta.persistence.Access}.
  *
  * @see org.hibernate.property.access.spi.PropertyAccessStrategy
  * @see org.hibernate.property.access.spi.PropertyAccessStrategyResolver

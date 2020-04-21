@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.orphan.onetomany;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

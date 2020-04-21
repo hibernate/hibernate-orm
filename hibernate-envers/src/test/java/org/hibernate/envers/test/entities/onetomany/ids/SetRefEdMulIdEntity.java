@@ -7,10 +7,10 @@
 package org.hibernate.envers.test.entities.onetomany.ids;
 
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.MulId;

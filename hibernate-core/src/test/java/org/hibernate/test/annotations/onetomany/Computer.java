@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.PrimaryKeyJoinColumns;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 
 @Entity
 @PrimaryKeyJoinColumns({ @PrimaryKeyJoinColumn(name = "id_asset"), @PrimaryKeyJoinColumn(name = "id_test") })

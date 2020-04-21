@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.criteria;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
 * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>

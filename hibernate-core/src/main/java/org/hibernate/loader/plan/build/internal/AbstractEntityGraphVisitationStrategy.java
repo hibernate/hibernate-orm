@@ -7,7 +7,7 @@
 package org.hibernate.loader.plan.build.internal;
 
 import java.util.Map;
-import javax.persistence.Subgraph;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;

@@ -42,7 +42,7 @@ public class DeprecatedProviderCheckerTest {
 		assertTrue( ProviderChecker.hibernateProviderNamesContain( DEPRECATED_PROVIDER_NAME ) );
 		triggerable.wasTriggered();
 		assertEquals(
-				"HHH015016: Encountered a deprecated javax.persistence.spi.PersistenceProvider [org.hibernate.ejb.HibernatePersistence]; [org.hibernate.jpa.HibernatePersistenceProvider] will be used instead.",
+				"HHH015016: Encountered a deprecated jakarta.persistence.spi.PersistenceProvider [org.hibernate.ejb.HibernatePersistence]; [org.hibernate.jpa.HibernatePersistenceProvider] will be used instead.",
 				triggerable.triggerMessage()
 		);
 	}

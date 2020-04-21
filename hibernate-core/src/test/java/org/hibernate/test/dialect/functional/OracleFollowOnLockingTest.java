@@ -7,15 +7,15 @@
 package org.hibernate.test.dialect.functional;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.LockModeType;
-import javax.persistence.NamedQuery;
-import javax.persistence.PersistenceException;
-import javax.persistence.QueryHint;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.QueryHint;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;

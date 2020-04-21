@@ -6,13 +6,13 @@
  */
 package org.hibernate.test.annotations.embedded;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SecondaryTable;
-import javax.persistence.SecondaryTables;
-import javax.persistence.Table;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
+import jakarta.persistence.Table;
 
 /**
  * @author Brett Meyer

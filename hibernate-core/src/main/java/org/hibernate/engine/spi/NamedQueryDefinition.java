@@ -88,7 +88,7 @@ public class NamedQueryDefinition implements Serializable {
 	}
 
 	/**
-	 * This version is used to bind named queries defined via {@link javax.persistence.NamedQuery}.
+	 * This version is used to bind named queries defined via {@link jakarta.persistence.NamedQuery}.
 	 *
 	 * @param name The name under which to key/register the query
 	 * @param query The query string.

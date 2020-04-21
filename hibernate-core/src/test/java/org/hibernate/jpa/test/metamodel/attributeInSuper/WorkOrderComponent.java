@@ -6,15 +6,15 @@
  */
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Steve Ebersole
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class WorkOrderComponent {
 	@EmbeddedId
 	private WorkOrderComponentId id;

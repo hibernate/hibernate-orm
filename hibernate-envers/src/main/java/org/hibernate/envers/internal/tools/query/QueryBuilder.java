@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

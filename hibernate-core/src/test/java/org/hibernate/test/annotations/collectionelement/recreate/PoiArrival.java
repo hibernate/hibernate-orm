@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.collectionelement.recreate;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import java.util.Date;
 
 /**

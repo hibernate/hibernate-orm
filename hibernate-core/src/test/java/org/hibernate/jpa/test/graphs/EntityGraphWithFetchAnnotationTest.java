@@ -8,14 +8,14 @@ package org.hibernate.jpa.test.graphs;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;

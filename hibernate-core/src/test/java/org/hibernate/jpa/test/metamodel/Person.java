@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Christian Beikov

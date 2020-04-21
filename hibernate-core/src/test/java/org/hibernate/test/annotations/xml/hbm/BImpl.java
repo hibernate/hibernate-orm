@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.xml.hbm;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @org.hibernate.annotations.Proxy( proxyClass = B.class )

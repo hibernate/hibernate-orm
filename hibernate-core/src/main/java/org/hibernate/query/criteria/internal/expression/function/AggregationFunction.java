@@ -8,8 +8,8 @@ package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
 import java.util.List;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;

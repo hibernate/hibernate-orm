@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.id.entities;
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

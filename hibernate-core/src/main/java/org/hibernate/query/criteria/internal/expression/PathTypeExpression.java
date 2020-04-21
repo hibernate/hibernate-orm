@@ -14,7 +14,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.AbstractPathImpl;
 
 /**
- * Used to construct the result of {@link javax.persistence.criteria.Path#type()}
+ * Used to construct the result of {@link jakarta.persistence.criteria.Path#type()}
  *
  * @author Steve Ebersole
  */

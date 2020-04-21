@@ -11,8 +11,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.PreparedStatement;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;

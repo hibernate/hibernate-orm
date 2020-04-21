@@ -9,7 +9,7 @@ package org.hibernate.test.locking;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;

@@ -8,8 +8,8 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

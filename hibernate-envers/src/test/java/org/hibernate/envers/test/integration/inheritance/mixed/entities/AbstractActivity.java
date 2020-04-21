@@ -6,10 +6,10 @@
  */
 package org.hibernate.envers.test.integration.inheritance.mixed.entities;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 import org.hibernate.envers.Audited;
 

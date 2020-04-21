@@ -7,8 +7,8 @@
 package org.hibernate.jpa.test.emops;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.OptimisticLockException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 
 import org.jboss.logging.Logger;
 import org.junit.Assert;

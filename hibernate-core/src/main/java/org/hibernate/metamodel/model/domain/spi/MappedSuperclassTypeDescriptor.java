@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.MappedSuperclassType;
+import jakarta.persistence.metamodel.MappedSuperclassType;
 
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 

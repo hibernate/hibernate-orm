@@ -10,21 +10,21 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -74,7 +74,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		fooGraph.addAttributeNodes( "bar", "baz" );
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( "javax.persistence.loadgraph", fooGraph );
+		properties.put( "jakarta.persistence.loadgraph", fooGraph );
 
 		Foo result = em.find( Foo.class, foo.id, properties );
 
@@ -108,7 +108,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
    		barGraph.addAttributeNodes("foos");
 
    		Map<String, Object> properties = new HashMap<String, Object>();
-   		properties.put( "javax.persistence.loadgraph", barGraph);
+   		properties.put( "jakarta.persistence.loadgraph", barGraph);
 
    		Bar result = em.find( Bar.class, bar.id, properties );
 
@@ -148,7 +148,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         barGraph.addAttributeNodes("foos");
 
    		Map<String, Object> properties = new HashMap<String, Object>();
-   		properties.put( "javax.persistence.loadgraph", fooGraph );
+   		properties.put( "jakarta.persistence.loadgraph", fooGraph );
 
    		Foo result = em.find( Foo.class, foo.id, properties );
 
@@ -199,7 +199,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		subSubgraph.addAttributeNodes( "friends" );
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( "javax.persistence.loadgraph", entityGraph );
+		properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
 		Company result = em.find( Company.class, company.id, properties );
 
@@ -239,7 +239,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         entityGraph.addAttributeNodes( "managers" );
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+        properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
         Manager result = em.find( Manager.class, manager.id, properties );
 
@@ -286,7 +286,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
         EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
         barGraph.addAttributeNodes("foos");
-        query.setHint("javax.persistence.loadgraph", barGraph);
+        query.setHint("jakarta.persistence.loadgraph", barGraph);
 
         Bar result = query.getSingleResult();
 

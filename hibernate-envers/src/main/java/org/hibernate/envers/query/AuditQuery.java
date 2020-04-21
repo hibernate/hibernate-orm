@@ -7,9 +7,9 @@
 package org.hibernate.envers.query;
 
 import java.util.List;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

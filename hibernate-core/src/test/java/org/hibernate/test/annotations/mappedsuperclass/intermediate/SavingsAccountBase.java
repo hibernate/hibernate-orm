@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.mappedsuperclass.intermediate;
 import java.math.BigDecimal;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 
 /**

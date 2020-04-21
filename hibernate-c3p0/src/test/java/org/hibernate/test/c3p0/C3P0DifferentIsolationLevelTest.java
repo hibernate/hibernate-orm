@@ -3,8 +3,8 @@ package org.hibernate.test.c3p0;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;

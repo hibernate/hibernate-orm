@@ -8,7 +8,7 @@
 //$Id: Employee.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.manytomany;
 import java.io.Serializable;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * Employee in an Employer-Employee relationship

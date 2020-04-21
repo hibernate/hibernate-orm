@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.join;
 
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.SecondaryTable;
-import javax.persistence.SecondaryTables;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
 
 import org.hibernate.annotations.ColumnTransformer;
 

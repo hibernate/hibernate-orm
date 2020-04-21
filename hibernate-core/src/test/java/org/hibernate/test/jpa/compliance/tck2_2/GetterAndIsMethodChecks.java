@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.boot.MetadataSources;
 

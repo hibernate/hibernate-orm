@@ -22,7 +22,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  *
  * All IDs are generated from an identity column.
  *
- * JPA cascade types are used (javax.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType)..
  *
  * This test uses the following model:
  *

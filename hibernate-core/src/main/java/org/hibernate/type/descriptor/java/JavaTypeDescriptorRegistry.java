@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;

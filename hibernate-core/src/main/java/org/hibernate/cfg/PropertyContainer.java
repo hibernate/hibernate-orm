@@ -16,12 +16,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.persistence.Access;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
+import jakarta.persistence.Access;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
@@ -136,7 +136,7 @@ class PropertyContainer {
 			final XProperty xProperty = propertyIterator.next();
 			final Access localAccessAnnotation = xProperty.getAnnotation( Access.class );
 			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.value() != javax.persistence.AccessType.FIELD ) {
+					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.FIELD ) {
 				continue;
 			}
 
@@ -150,7 +150,7 @@ class PropertyContainer {
 			final XProperty xProperty = propertyIterator.next();
 			final Access localAccessAnnotation = xProperty.getAnnotation( Access.class );
 			if ( localAccessAnnotation == null
-					|| localAccessAnnotation.value() != javax.persistence.AccessType.PROPERTY ) {
+					|| localAccessAnnotation.value() != jakarta.persistence.AccessType.PROPERTY ) {
 				continue;
 			}
 

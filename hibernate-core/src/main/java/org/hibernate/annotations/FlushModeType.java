@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 /**
- * Enumeration extending javax.persistence flush modes.
+ * Enumeration extending jakarta.persistence flush modes.
  *
  * @author Carlos Gonzalez-Cadenas
  */

@@ -10,8 +10,8 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Calendar;
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;

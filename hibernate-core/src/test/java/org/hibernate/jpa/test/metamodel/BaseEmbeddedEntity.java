@@ -8,8 +8,8 @@
 package org.hibernate.jpa.test.metamodel;
 
 import java.io.Serializable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Christian Beikov

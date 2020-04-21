@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integration.query;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;

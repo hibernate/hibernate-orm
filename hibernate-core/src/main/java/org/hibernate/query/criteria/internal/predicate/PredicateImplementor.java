@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal.predicate;
 
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.Renderable;

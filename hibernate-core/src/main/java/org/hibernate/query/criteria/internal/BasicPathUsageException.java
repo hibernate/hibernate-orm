@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.criteria.internal;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * Represents an incorrect usage of a basic path.  Generally this means an attempt to

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.immutable;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Created by soldier on 12.04.16.

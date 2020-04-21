@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;

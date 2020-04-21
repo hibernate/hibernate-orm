@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.embedded;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Brett Meyer

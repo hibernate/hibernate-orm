@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;

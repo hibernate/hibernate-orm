@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.embeddable;
 
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class Base {

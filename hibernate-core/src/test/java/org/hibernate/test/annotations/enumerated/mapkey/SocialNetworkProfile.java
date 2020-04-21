@@ -6,15 +6,15 @@
  */
 package org.hibernate.test.annotations.enumerated.mapkey;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * @author Dmitry Spikhalskiy
@@ -23,10 +23,10 @@ import javax.persistence.UniqueConstraint;
 @Entity
 @Table(name = "social_network_profile", uniqueConstraints = {@UniqueConstraint(columnNames = {"social_network", "network_id"})})
 public class SocialNetworkProfile {
-	@javax.persistence.Id
-	@javax.persistence.GeneratedValue(generator = "system-uuid")
+	@jakarta.persistence.Id
+	@jakarta.persistence.GeneratedValue(generator = "system-uuid")
 	@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid2")
-	@javax.persistence.Column(name = "id", unique = true)
+	@jakarta.persistence.Column(name = "id", unique = true)
 	private java.lang.String id;
 
 	@ManyToOne(fetch = FetchType.LAZY)

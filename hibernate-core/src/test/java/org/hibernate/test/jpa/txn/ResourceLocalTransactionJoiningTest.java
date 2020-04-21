@@ -42,9 +42,9 @@ public class ResourceLocalTransactionJoiningTest extends AbstractJPATest {
 	@TestForIssue( jiraKey = "HHH-9859" )
 	public void testExpectations() {
 		// JPA spec is very vague on what should happen here.  It does vaguely
-		// imply that javax.persistence.EntityManager.joinTransaction() should only be used
+		// imply that jakarta.persistence.EntityManager.joinTransaction() should only be used
 		// for JTA EMs, however it does not enforced that nor does the TCK check that.
-		// And the TCK in fact does test calls to javax.persistence.EntityManager.isJoinedToTransaction()
+		// And the TCK in fact does test calls to jakarta.persistence.EntityManager.isJoinedToTransaction()
 		// from resource-local EMs, so lets make sure those work..
 
 		Session session = sessionFactory().openSession();

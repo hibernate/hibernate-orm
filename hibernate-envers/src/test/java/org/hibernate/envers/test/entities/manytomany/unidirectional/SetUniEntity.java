@@ -7,9 +7,9 @@
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
 
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;

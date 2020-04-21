@@ -1,7 +1,7 @@
 package org.hibernate.boot.model.process.internal;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 /**
  * @author Vlad Mihalcea

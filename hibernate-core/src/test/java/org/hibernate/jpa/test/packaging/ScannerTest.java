@@ -9,8 +9,8 @@ package org.hibernate.jpa.test.packaging;
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;

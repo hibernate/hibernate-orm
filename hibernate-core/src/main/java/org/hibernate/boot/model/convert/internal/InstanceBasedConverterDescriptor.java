@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;

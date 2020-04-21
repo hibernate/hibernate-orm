@@ -8,11 +8,11 @@ package org.hibernate.query.criteria.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;

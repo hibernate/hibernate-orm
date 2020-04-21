@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.generics;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

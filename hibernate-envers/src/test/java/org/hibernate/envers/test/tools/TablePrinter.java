@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 

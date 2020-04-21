@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 

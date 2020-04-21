@@ -18,8 +18,8 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;

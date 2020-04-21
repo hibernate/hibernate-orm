@@ -17,7 +17,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

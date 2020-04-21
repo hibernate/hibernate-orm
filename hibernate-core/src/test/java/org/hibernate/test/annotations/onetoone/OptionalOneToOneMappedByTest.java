@@ -7,7 +7,7 @@
 package org.hibernate.test.annotations.onetoone;
 
 import java.util.concurrent.atomic.AtomicReference;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;

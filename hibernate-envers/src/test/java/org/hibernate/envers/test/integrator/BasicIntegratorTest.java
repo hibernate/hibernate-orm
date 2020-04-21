@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integrator;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.Configuration;
 

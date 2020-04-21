@@ -6,10 +6,10 @@
  */
 package org.hibernate.jpa.test.graphs.named.multiple;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedEntityGraphs;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedEntityGraphs;
 
 /**
  * @author Steve Ebersole

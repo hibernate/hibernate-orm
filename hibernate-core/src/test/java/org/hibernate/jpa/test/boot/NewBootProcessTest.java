@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.boot;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;

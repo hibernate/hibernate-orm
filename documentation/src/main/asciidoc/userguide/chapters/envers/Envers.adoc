@@ -340,7 +340,7 @@ please see <<envers-mappingexceptions>> for a description of the additional `@Au
 If you want to audit a relation, where the target entity is not audited (that is the case for example with dictionary-like entities, which don't change and don't have to be audited),
 just annotate it with `@Audited( targetAuditMode = RelationTargetAuditMode.NOT_AUDITED )`.
 Then, while reading historic versions of your entity, the relation will always point to the "current" related entity.
-By default Envers throws `javax.persistence.EntityNotFoundException` when "current" entity does not exist in the database.
+By default Envers throws `jakarta.persistence.EntityNotFoundException` when "current" entity does not exist in the database.
 Apply `@NotFound( action = NotFoundAction.IGNORE )` annotation to silence the exception and assign null value instead.
 The hereby solution causes implicit eager loading of to-one relations.
 
@@ -1431,7 +1431,7 @@ Although Hibernate allows this, Envers (or more precisely the database connector
 
 There are at least two ways out if you need bag semantics:
 
-. use an indexed collection, with the `@javax.persistence.OrderColumn` annotation.
+. use an indexed collection, with the `@jakarta.persistence.OrderColumn` annotation.
 . provide a unique id for your elements with the `@CollectionId` annotation.
 
 ==== What isn't and _will_ be supported

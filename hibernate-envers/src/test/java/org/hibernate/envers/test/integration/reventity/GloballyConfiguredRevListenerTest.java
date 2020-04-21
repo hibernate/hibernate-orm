@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

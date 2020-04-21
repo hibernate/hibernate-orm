@@ -8,7 +8,7 @@ package org.hibernate.osgi;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import javax.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceProvider;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -55,7 +55,7 @@ public class HibernateBundleActivator implements BundleActivator {
 
 		final Dictionary properties = new Hashtable();
 		// In order to support existing persistence.xml files, register using the legacy provider name.
-		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
+		properties.put( "jakarta.persistence.provider", HibernatePersistenceProvider.class.getName() );
 		persistenceProviderService = context.registerService(
 				PersistenceProvider.class.getName(),
 				new OsgiPersistenceProviderService( osgiJtaPlatform, osgiServiceUtil ),

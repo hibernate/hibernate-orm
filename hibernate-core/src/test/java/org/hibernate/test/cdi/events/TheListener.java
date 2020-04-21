@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.cdi.events;
 
-import javax.persistence.PrePersist;
+import jakarta.persistence.PrePersist;
 
 /**
  * @author Steve Ebersole

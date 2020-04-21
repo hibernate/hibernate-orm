@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.metadata;
-import javax.persistence.Basic;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

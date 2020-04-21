@@ -7,10 +7,10 @@
 package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
-import javax.persistence.NoResultException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransactionException;
@@ -57,7 +57,7 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
-				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+				assertThat( e, instanceOf( jakarta.persistence.NonUniqueResultException.class ) );
 			}
 
 			@Override
@@ -210,7 +210,7 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
-				assertThat( e, instanceOf( javax.persistence.NonUniqueResultException.class ) );
+				assertThat( e, instanceOf( jakarta.persistence.NonUniqueResultException.class ) );
 			}
 
 			@Override

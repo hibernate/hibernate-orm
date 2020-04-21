@@ -7,9 +7,9 @@
 package org.hibernate.test.resource.transaction.jta;
 
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.idclass;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.Arrays;
 
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;

@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.refresh;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

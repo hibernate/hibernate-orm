@@ -9,10 +9,10 @@ package org.hibernate.procedure.spi;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.FlushModeType;
-import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.QueryImplementor;

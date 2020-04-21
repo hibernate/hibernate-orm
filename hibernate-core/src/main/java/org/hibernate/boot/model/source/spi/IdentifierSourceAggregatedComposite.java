@@ -14,7 +14,7 @@ import java.util.List;
  * {@link org.hibernate.id.EntityIdentifierNature#AGGREGATED_COMPOSITE}.
  * <p/>
  * This equates to an identifier which is made up of multiple values which are
- * defined as part of a component/embedded; i.e. {@link javax.persistence.EmbeddedId}
+ * defined as part of a component/embedded; i.e. {@link jakarta.persistence.EmbeddedId}
  *
  * @author Strong Liu
  * @author Steve Ebersole
@@ -28,7 +28,7 @@ public interface IdentifierSourceAggregatedComposite extends CompositeIdentifier
 	public SingularAttributeSourceEmbedded getIdentifierAttributeSource();
 
 	/**
-	 * Obtain the mapping of attributes annotated with {@link javax.persistence.MapsId}.
+	 * Obtain the mapping of attributes annotated with {@link jakarta.persistence.MapsId}.
 	 *
 	 * @return The MapsId sources.
 	 */

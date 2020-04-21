@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 /**
  * Contract for operators with a single operand.

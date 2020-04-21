@@ -8,9 +8,9 @@ package org.hibernate.envers.test.integration.inheritance.joined.relation;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 

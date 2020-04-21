@@ -14,10 +14,10 @@
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
 import java.sql.Timestamp;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class ModelEntity {
 

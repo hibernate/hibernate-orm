@@ -8,9 +8,9 @@ package org.hibernate.jpa.test.query;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.AvailableSettings;

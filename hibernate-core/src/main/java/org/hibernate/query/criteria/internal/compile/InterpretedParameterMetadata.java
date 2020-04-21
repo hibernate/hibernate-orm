@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal.compile;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.ParameterExpression;
 
 /**
  * Represents information about parameters from a compiled criteria query.

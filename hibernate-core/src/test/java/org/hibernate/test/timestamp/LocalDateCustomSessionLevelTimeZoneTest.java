@@ -9,8 +9,8 @@ package org.hibernate.test.timestamp;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.TimeZone;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;

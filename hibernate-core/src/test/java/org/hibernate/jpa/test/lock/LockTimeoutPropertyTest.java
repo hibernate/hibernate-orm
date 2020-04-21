@@ -7,9 +7,9 @@
 package org.hibernate.jpa.test.lock;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.AvailableSettings;

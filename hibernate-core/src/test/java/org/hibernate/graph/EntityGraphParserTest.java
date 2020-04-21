@@ -9,10 +9,10 @@ package org.hibernate.graph;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Subgraph;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;

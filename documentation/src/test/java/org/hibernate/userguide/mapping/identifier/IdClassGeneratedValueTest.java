@@ -8,10 +8,10 @@ package org.hibernate.userguide.mapping.identifier;
 
 import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

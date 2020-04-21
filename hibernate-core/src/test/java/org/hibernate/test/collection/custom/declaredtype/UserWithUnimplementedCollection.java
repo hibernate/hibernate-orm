@@ -25,7 +25,7 @@ package org.hibernate.test.collection.custom.declaredtype;
 
 import org.hibernate.annotations.CollectionType;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;

@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.collection.embeddable;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import org.hibernate.envers.Audited;
 

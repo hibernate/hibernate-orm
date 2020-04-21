@@ -12,12 +12,12 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.ManyToOne;
-import javax.persistence.Tuple;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Tuple;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;

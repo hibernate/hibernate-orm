@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Hardy Ferentschik

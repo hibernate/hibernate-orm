@@ -8,10 +8,10 @@
 //$Id$
 package org.hibernate.test.annotations.idmanytoone;
 import java.io.Serializable;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Emmanuel Bernard

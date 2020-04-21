@@ -6,16 +6,16 @@
  */
 package org.hibernate.test.sql.storedproc;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.Id;
-import javax.persistence.NamedStoredProcedureQueries;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.QueryHint;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.StoredProcedureParameter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.StoredProcedureParameter;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cfg.Configuration;

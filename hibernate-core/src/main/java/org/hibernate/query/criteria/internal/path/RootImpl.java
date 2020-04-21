@@ -10,9 +10,9 @@ import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;

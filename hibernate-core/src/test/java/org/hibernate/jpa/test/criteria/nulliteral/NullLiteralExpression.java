@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.criteria.nulliteral;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

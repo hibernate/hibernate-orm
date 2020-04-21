@@ -11,10 +11,10 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal.compile;
 
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.ParameterExpression;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.Stack;

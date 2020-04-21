@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.internal;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;

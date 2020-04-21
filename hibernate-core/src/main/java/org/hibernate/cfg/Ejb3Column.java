@@ -469,7 +469,7 @@ public class Ejb3Column {
 	}
 
 	public static Ejb3Column[] buildColumnFromAnnotation(
-			javax.persistence.Column[] anns,
+			jakarta.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -488,7 +488,7 @@ public class Ejb3Column {
 		);
 	}
 	public static Ejb3Column[] buildColumnFromAnnotation(
-			javax.persistence.Column[] anns,
+			jakarta.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -507,8 +507,8 @@ public class Ejb3Column {
 			columns = new Ejb3Column[] { formulaColumn };
 		}
 		else {
-			javax.persistence.Column[] actualCols = anns;
-			javax.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
+			jakarta.persistence.Column[] actualCols = anns;
+			jakarta.persistence.Column[] overriddenCols = propertyHolder.getOverriddenColumn(
 					StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
 			);
 			if ( overriddenCols != null ) {
@@ -539,7 +539,7 @@ public class Ejb3Column {
 					final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 					final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 
-					javax.persistence.Column col = actualCols[index];
+					jakarta.persistence.Column col = actualCols[index];
 
 					final String sqlType;
 					if ( col.columnDefinition().isEmpty() ) {

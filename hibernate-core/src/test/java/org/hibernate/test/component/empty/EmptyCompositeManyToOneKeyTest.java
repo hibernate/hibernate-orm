@@ -7,9 +7,9 @@
 package org.hibernate.test.component.empty;
 
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

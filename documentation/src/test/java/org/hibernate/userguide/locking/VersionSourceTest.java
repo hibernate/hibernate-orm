@@ -7,9 +7,9 @@
 package org.hibernate.userguide.locking;
 
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;

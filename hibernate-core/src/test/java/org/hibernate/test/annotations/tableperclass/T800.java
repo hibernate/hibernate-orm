@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.tableperclass;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.orphan.one2one.fk.bidirectional.multilevelcascade;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class Tranche {

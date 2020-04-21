@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import javax.persistence.criteria.CriteriaBuilder.Case;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.Case;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

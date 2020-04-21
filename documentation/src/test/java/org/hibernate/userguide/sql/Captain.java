@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.userguide.sql;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

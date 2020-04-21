@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.converter;
 
-import javax.persistence.Convert;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;

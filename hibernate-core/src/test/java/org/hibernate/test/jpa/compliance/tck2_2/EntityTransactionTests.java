@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import javax.persistence.RollbackException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;

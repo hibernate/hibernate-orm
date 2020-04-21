@@ -9,7 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata.reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EnumType;
+import jakarta.persistence.EnumType;
 
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;

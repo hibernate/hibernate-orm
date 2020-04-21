@@ -9,7 +9,7 @@ package org.hibernate.osgi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;

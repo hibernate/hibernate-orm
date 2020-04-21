@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria.internal.expression;
 
 import java.io.Serializable;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

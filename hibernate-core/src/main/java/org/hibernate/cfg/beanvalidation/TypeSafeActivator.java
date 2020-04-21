@@ -60,7 +60,7 @@ class TypeSafeActivator {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
 
-	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
+	private static final String FACTORY_PROPERTY = "jakarta.persistence.validation.factory";
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.

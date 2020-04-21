@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.integration.manytoone.lazy;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Chris Cranford

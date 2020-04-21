@@ -3,12 +3,12 @@ package org.hibernate.test.c3p0;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.Id;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
@@ -125,7 +125,7 @@ public class OracleSQLCallableStatementProxyTest extends
 		),
 	})
 	@Entity(name = "Person")
-	@javax.persistence.Table(name = "person")
+	@jakarta.persistence.Table(name = "person")
 	public static class Person {
 
 		@Id

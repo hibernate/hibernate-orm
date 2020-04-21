@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.manytoone.unidirectional;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

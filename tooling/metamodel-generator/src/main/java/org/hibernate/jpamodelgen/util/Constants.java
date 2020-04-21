@@ -16,35 +16,35 @@ import java.util.Map;
  */
 public final class Constants {
 	// we are trying to to reference jpa annotations directly
-	public static final String ENTITY = "javax.persistence.Entity";
-	public static final String MAPPED_SUPERCLASS = "javax.persistence.MappedSuperclass";
-	public static final String EMBEDDABLE = "javax.persistence.Embeddable";
-	public static final String ID = "javax.persistence.Id";
-	public static final String EMBEDDED_ID = "javax.persistence.EmbeddedId";
-	public static final String TRANSIENT = "javax.persistence.Transient";
-	public static final String BASIC = "javax.persistence.Basic";
-	public static final String ONE_TO_ONE = "javax.persistence.OneToOne";
-	public static final String ONE_TO_MANY = "javax.persistence.OneToMany";
-	public static final String MANY_TO_ONE = "javax.persistence.ManyToOne";
-	public static final String MANY_TO_MANY = "javax.persistence.ManyToMany";
-	public static final String MAP_KEY_CLASS = "javax.persistence.MapKeyClass";
-	public static final String ELEMENT_COLLECTION = "javax.persistence.ElementCollection";
-	public static final String ACCESS = "javax.persistence.Access";
-	public static final String MAP_ATTRIBUTE = "javax.persistence.metamodel.MapAttribute";
-	public static final String CONVERT = "javax.persistence.Convert";
+	public static final String ENTITY = "jakarta.persistence.Entity";
+	public static final String MAPPED_SUPERCLASS = "jakarta.persistence.MappedSuperclass";
+	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
+	public static final String ID = "jakarta.persistence.Id";
+	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
+	public static final String TRANSIENT = "jakarta.persistence.Transient";
+	public static final String BASIC = "jakarta.persistence.Basic";
+	public static final String ONE_TO_ONE = "jakarta.persistence.OneToOne";
+	public static final String ONE_TO_MANY = "jakarta.persistence.OneToMany";
+	public static final String MANY_TO_ONE = "jakarta.persistence.ManyToOne";
+	public static final String MANY_TO_MANY = "jakarta.persistence.ManyToMany";
+	public static final String MAP_KEY_CLASS = "jakarta.persistence.MapKeyClass";
+	public static final String ELEMENT_COLLECTION = "jakarta.persistence.ElementCollection";
+	public static final String ACCESS = "jakarta.persistence.Access";
+	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
+	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
 
 	public static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
-		COLLECTIONS.put( java.util.Collection.class.getName(), "javax.persistence.metamodel.CollectionAttribute" );
-		COLLECTIONS.put( java.util.Set.class.getName(), "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( java.util.List.class.getName(), "javax.persistence.metamodel.ListAttribute" );
-		COLLECTIONS.put( java.util.Map.class.getName(), "javax.persistence.metamodel.MapAttribute" );
+		COLLECTIONS.put( java.util.Collection.class.getName(), "jakarta.persistence.metamodel.CollectionAttribute" );
+		COLLECTIONS.put( java.util.Set.class.getName(), "jakarta.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( java.util.List.class.getName(), "jakarta.persistence.metamodel.ListAttribute" );
+		COLLECTIONS.put( java.util.Map.class.getName(), "jakarta.persistence.metamodel.MapAttribute" );
 
 		// Hibernate also supports the SortedSet and SortedMap interfaces
-		COLLECTIONS.put( java.util.SortedSet.class.getName(), "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( java.util.SortedMap.class.getName(), "javax.persistence.metamodel.MapAttribute" );
+		COLLECTIONS.put( java.util.SortedSet.class.getName(), "jakarta.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( java.util.SortedMap.class.getName(), "jakarta.persistence.metamodel.MapAttribute" );
 	}
 
 	public static final List<String> BASIC_TYPES = new ArrayList<String>();

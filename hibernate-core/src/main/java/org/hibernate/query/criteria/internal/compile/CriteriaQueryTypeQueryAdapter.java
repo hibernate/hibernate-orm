@@ -22,11 +22,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.criteria.ParameterExpression;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

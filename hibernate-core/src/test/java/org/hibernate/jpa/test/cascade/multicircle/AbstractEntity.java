@@ -9,11 +9,11 @@ package org.hibernate.jpa.test.cascade.multicircle;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AbstractEntity implements Serializable {

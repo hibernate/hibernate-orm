@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.cfg.AvailableSettings;

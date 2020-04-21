@@ -9,10 +9,10 @@ package org.hibernate.jpa.boot.internal;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;

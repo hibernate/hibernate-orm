@@ -8,12 +8,12 @@
 //$Id: Ball.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
 package org.hibernate.test.annotations.id.sequences.entities;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.TableGenerator;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.TableGenerator;
 
 /**
  * Sample of table generator

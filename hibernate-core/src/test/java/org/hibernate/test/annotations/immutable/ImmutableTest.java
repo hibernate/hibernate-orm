@@ -9,7 +9,7 @@ package org.hibernate.test.annotations.immutable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Session;

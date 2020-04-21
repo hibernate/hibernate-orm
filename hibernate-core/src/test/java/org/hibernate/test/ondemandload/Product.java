@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.ondemandload;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import java.io.Serializable;
 import java.math.BigDecimal;
 

@@ -9,13 +9,13 @@
 package org.hibernate.test.annotations.join;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SecondaryTable;
-import javax.persistence.SecondaryTables;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.ForeignKey;

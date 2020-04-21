@@ -345,7 +345,7 @@ creates a single AttributeNode with 3 distinct SubGraphs.  It is functionally th
 [source, JAVA, indent=0]
 ----
 Class<Invoice> invoiceClass = ...;
-javax.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
+jakarta.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
 invoiceGraph.addAttributeNode( "responsibleParty" );
 invoiceGraph.addSubgraph( "responsibleParty" ).addAttributeNode( "taxIdNumber" );
 invoiceGraph.addSubgraph( "responsibleParty", Corporation.class ).addAttributeNode( "ceo" );

@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.criteria.internal;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.ParameterExpression;
 
 /**
  * A registry for parameters.  In criteria queries, parameters must be actively seeked out as expressions and predicates

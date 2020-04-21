@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.embedded;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Steve Ebersole

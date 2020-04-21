@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
@@ -607,7 +607,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"from Person p " +
 				"where p.name like :name" )
 			// timeout - in milliseconds
-			.setHint( "javax.persistence.query.timeout", 2000 )
+			.setHint( "jakarta.persistence.query.timeout", 2000 )
 			// flush only at commit time
 			.setFlushMode( FlushModeType.COMMIT );
 			//end::jpql-api-basic-usage-example[]

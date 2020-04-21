@@ -9,12 +9,12 @@ package org.hibernate.envers.test.integration.collection.embeddable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OrderColumn;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.envers.Audited;
 

@@ -8,7 +8,7 @@ package org.hibernate.query.procedure.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TypedValue;

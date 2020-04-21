@@ -7,10 +7,10 @@
 package org.hibernate.test.cache.cid;
 
 import java.io.Serializable;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 /**
  * @author Steve Ebersole

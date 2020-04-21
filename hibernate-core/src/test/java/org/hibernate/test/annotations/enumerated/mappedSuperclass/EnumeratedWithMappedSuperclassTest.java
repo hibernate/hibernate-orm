@@ -8,12 +8,12 @@ package org.hibernate.test.annotations.enumerated.mappedSuperclass;
 
 import java.io.Serializable;
 import java.sql.Types;
-import javax.persistence.Column;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
@@ -34,7 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static javax.persistence.EnumType.STRING;
+import static jakarta.persistence.EnumType.STRING;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
@@ -143,7 +143,7 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 		LIST, EXLIST, INPUT
 	}
 
-	@javax.persistence.Entity(name = "AddressLevel")
+	@jakarta.persistence.Entity(name = "AddressLevel")
 	@Table(name = "address_level")
 	public static class AddressLevel extends DescriptionEntity {
 //		@Column(columnDefinition = "varchar", nullable = false, length = 100)

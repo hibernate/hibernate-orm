@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;

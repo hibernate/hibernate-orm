@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.criteria.components;
 import java.io.Serializable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * The client domain entity

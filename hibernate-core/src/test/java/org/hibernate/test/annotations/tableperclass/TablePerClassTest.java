@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.tableperclass;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.util.List;
 
 import org.junit.Test;

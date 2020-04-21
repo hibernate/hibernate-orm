@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 /**
  * @author Emmanuel Bernard

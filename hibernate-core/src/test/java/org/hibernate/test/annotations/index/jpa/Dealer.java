@@ -7,7 +7,7 @@
 package org.hibernate.test.annotations.index.jpa;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>

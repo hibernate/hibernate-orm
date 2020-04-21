@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.ejb3configuration;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import java.util.Collections;
 

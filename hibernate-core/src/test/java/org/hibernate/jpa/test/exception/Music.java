@@ -8,10 +8,10 @@
 // $Id$
 package org.hibernate.jpa.test.exception;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 /**
  * @author Emmanuel Bernard

@@ -7,8 +7,8 @@
 package org.hibernate.test.converter;
 
 import java.sql.Clob;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 /**
  * @author Brett Meyer

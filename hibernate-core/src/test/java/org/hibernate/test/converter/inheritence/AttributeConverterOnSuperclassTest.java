@@ -1,7 +1,7 @@
 package org.hibernate.test.converter.inheritence;
 
 import java.util.List;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.cfg.AttributeConverterDefinition;
 

@@ -12,8 +12,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQL82Dialect;

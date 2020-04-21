@@ -7,16 +7,16 @@
 
 //$Id$
 package org.hibernate.test.annotations.reflection;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * @author Emmanuel Bernard

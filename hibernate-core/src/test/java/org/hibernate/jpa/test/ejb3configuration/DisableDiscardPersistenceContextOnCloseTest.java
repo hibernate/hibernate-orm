@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.ejb3configuration;
 
 import java.sql.SQLException;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

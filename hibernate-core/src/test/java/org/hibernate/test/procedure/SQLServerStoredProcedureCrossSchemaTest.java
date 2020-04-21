@@ -7,8 +7,8 @@
 package org.hibernate.test.procedure;
 
 import java.sql.SQLException;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

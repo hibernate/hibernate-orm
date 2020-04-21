@@ -6,9 +6,9 @@
  */
 package org.hibernate.userguide.mapping.generated;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;

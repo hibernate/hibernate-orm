@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.tm;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -9,9 +9,9 @@ package org.hibernate.cache.spi;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;

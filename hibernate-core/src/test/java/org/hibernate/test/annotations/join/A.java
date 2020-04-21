@@ -7,8 +7,8 @@
 package org.hibernate.test.annotations.join;
 
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

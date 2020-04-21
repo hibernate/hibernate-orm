@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.callbacks;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

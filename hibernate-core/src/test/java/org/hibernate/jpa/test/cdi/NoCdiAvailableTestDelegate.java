@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.cdi;
 
 import java.util.Collections;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;

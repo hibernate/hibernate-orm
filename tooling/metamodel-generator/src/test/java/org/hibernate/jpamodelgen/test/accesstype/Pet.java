@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

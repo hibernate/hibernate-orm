@@ -9,20 +9,20 @@ package org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class D extends AbstractEntity {
     private static final long serialVersionUID = 2417176961L;
 
-	@javax.persistence.OneToMany(mappedBy = "d")
+	@jakarta.persistence.OneToMany(mappedBy = "d")
 	private java.util.Set<B> bCollection = new java.util.HashSet<B>();
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	private C c;
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	private E e;
 
-    @javax.persistence.OneToMany(mappedBy = "d")
+    @jakarta.persistence.OneToMany(mappedBy = "d")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,

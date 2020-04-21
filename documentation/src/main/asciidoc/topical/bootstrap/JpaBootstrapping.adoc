@@ -10,9 +10,9 @@ the _Native Bootstrapping_ guide as well.
 
 == JPA-compliant bootstrapping
 
-In JPA we are ultimately interested in bootstrapping an `javax.persistence.EntityManagerFactory` instance.  The
+In JPA we are ultimately interested in bootstrapping an `jakarta.persistence.EntityManagerFactory` instance.  The
 JPA specification defines 2 primary standardized bootstrap approaches depending on how the application intends to
-access the `javax.persistence.EntityManager` instances from an `EntityManagerFactory`. It uses the terms "EE" and
+access the `jakarta.persistence.EntityManager` instances from an `EntityManagerFactory`. It uses the terms "EE" and
 "SE" for these 2 approaches, but those terms are very misleading in this context.  What the JPA spec calls EE
 bootstrapping is cases where a container (EE, OSGi, etc) will manage and inject the persistence context on behalf
 of the application.  What it calls SE bootstrapping is everything else.  We will use the terms
@@ -27,7 +27,7 @@ respectively.
 
 The container will build an `EntityManagerFactory` for each persistent-unit defined in the deployment's
 `META-INF/persistence.xml` and make that available to the application for injection via the
-`javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
+`jakarta.persistence.PersistenceUnit` annotation or via JNDI lookup.
 
 [[container-bootstrap-injection-example]]
 .Injecting a EntityManagerFactory
@@ -43,7 +43,7 @@ EntityManagerFactory emf;
 === Application-bootstrapping
 
 Rather than something a container building the `EntityManagerFactory` for the application, the application
-can build the `EntityManagerFactory` using the `javax.persistence.Persistence` bootstrap class.  The application
+can build the `EntityManagerFactory` using the `jakarta.persistence.Persistence` bootstrap class.  The application
 creates an entity manager factory by calling the createEntityManagerFactory method:
 
 [[application-bootstrap-example]]

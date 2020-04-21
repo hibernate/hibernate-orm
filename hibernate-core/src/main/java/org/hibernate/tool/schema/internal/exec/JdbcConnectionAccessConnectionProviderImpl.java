@@ -8,7 +8,7 @@ package org.hibernate.tool.schema.internal.exec;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;

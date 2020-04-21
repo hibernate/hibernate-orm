@@ -8,17 +8,17 @@ package org.hibernate.jpa.test.lock;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.SQLServerDialect;

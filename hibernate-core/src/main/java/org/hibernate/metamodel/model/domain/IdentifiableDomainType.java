@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.IdentifiableType;
 
 /**
  * Extension to the JPA {@link IdentifiableType} contract

@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Hardy Ferentschik

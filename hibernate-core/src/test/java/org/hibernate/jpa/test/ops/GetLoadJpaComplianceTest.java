@@ -7,8 +7,8 @@
 package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

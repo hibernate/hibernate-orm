@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrIntTestEntity;

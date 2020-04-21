@@ -6,12 +6,12 @@
  */
 package org.hibernate;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public interface Metamodel extends javax.persistence.metamodel.Metamodel {
+public interface Metamodel extends jakarta.persistence.metamodel.Metamodel {
 	/**
 	 * Access to the SessionFactory that this Metamodel instance is bound to.
 	 *

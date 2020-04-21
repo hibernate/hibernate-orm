@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.converter.caching;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole

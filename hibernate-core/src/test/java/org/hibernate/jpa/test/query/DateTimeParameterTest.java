@@ -9,13 +9,13 @@ package org.hibernate.jpa.test.query;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

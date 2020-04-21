@@ -13,11 +13,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Iterator;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;

@@ -7,8 +7,8 @@
 package org.hibernate.envers.test.integration.components.mappedsuperclass;
 
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;

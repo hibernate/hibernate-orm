@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.test.integration.components.collections.mappedsuperclasselement;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Jakob Braeuchi.

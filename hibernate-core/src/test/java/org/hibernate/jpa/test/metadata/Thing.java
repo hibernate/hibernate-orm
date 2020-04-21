@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.metadata;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Version;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 
 /**
  * @author Emmanuel Bernard

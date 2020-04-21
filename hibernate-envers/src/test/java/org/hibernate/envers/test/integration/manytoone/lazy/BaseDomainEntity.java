@@ -9,10 +9,10 @@ package org.hibernate.envers.test.integration.manytoone.lazy;
 import java.time.Instant;
 import java.util.Objects;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Chris Cranford

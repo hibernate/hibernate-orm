@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.mappedsuperclasswithoutid;
 
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.jpamodelgen.test.accesstype.Shop;
 

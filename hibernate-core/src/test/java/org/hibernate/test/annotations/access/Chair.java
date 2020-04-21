@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.access;
-import javax.persistence.Entity;
-import javax.persistence.Transient;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard

@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
 
 
 @Embeddable
@@ -31,10 +31,10 @@ public class ExchangeRateKey
     @Column(name="`date`", nullable = false)
     protected long date;
     
-    @javax.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @jakarta.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
     protected Currency currency1;
     
-    @javax.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @jakarta.persistence.ManyToOne(fetch = FetchType.LAZY, optional = false)
     protected Currency currency2;
     
 

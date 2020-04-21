@@ -13,7 +13,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.HibernateEntityManager;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

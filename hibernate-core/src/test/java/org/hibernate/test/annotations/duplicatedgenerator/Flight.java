@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * Here to test duplicate import

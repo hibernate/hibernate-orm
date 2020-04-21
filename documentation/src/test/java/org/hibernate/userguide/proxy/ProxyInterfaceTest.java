@@ -6,8 +6,8 @@
  */
 package org.hibernate.userguide.proxy;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Proxy;
 

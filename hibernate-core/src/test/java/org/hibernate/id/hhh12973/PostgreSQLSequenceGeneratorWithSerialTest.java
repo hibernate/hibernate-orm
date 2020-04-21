@@ -10,11 +10,11 @@ import java.io.StringReader;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -136,7 +136,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManager
 	public static class ApplicationConfiguration {
 
 		@Id
-		@javax.persistence.SequenceGenerator(
+		@jakarta.persistence.SequenceGenerator(
 				name = "application_configurations_id_seq",
 				sequenceName = "application_configurations_id_seq"
 		)

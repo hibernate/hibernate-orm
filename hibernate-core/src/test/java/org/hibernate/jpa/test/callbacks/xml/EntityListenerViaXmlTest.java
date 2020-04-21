@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.callbacks.xml;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

@@ -25,7 +25,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
 	public <T> T getOutputParameterValue(ParameterRegistration<T> parameterRegistration);
 
@@ -39,7 +39,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(String name);
 
@@ -53,7 +53,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 *
-	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(int, Class, jakarta.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(int position);
 }

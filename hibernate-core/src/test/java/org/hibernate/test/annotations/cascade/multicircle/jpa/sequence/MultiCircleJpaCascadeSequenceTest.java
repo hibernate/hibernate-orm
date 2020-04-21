@@ -20,7 +20,7 @@ import junit.framework.Assert;
  *
  * All IDs are generated from a sequence.
  *
- * JPA cascade types are used (javax.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType)..
  *
  * This test uses the following model:
  *

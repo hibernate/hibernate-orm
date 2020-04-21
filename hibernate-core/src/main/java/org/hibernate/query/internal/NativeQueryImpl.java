@@ -19,10 +19,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

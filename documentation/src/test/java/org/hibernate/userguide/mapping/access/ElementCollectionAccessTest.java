@@ -8,15 +8,15 @@ package org.hibernate.userguide.mapping.access;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

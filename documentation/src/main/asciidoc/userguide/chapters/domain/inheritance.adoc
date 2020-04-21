@@ -114,7 +114,7 @@ Use the `@DiscriminatorColumn` to define the discriminator column as well as the
 
 [NOTE]
 ====
-The enum `DiscriminatorType` used in `javax.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
+The enum `DiscriminatorType` used in `jakarta.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
 You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminator column.
 This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
 Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).

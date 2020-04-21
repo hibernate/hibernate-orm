@@ -12,7 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;

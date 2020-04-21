@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.graphs.named.multiple;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * Employee

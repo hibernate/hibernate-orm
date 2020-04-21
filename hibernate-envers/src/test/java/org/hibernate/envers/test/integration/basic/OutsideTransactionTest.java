@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.basic;
 
 import java.util.Map;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;

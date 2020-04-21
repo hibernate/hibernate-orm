@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.ops;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

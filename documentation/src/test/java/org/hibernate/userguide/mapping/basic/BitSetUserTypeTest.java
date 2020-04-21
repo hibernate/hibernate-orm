@@ -7,12 +7,12 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
-import javax.persistence.ColumnResult;
-import javax.persistence.ConstructorResult;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;

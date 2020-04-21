@@ -8,8 +8,8 @@ package org.hibernate.jpamodelgen.test.embeddable;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.OneToMany;
 
 /* Here the getter is mandatory to reproduce the issue. No @Access(FIELD) annotation. */
 @Embeddable

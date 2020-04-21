@@ -7,9 +7,9 @@
 package org.hibernate.jpamodelgen.test.inheritance.unmappedclassinhierarchy;
 
 import java.util.Date;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 @Access(AccessType.FIELD)

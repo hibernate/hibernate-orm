@@ -6,8 +6,8 @@
  */
 package org.hibernate.boot.spi;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;

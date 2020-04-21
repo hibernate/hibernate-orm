@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
- * JPA {@link javax.persistence.EnumType#ORDINAL} strategy (storing the ordinal)
+ * JPA {@link jakarta.persistence.EnumType#ORDINAL} strategy (storing the ordinal)
  *
  * @author Steve Ebersole
  */

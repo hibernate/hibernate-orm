@@ -8,10 +8,10 @@ package org.hibernate.envers.test.integration.manytomany.ternary;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;
@@ -28,7 +28,7 @@ public class TernaryMapEntity {
 
 	@Audited
 	@ManyToMany
-	@javax.persistence.MapKeyJoinColumn
+	@jakarta.persistence.MapKeyJoinColumn
 	private Map<IntTestPrivSeqEntity, StrTestPrivSeqEntity> map;
 
 	public TernaryMapEntity() {

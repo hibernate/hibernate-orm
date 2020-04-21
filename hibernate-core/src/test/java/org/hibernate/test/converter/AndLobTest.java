@@ -7,12 +7,12 @@
 package org.hibernate.test.converter;
 
 import java.sql.Types;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

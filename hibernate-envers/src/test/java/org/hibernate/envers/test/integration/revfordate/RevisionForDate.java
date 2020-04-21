@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.revfordate;
 
 import java.util.Date;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;

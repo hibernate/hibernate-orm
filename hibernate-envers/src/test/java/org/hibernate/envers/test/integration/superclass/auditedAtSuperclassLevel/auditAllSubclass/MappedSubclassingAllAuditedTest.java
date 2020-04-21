@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditAllSubclass;
 
 import java.util.Arrays;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

@@ -8,9 +8,9 @@
 //$Id$
 package org.hibernate.test.annotations.cid;
 import java.io.Serializable;
-import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 
 /**

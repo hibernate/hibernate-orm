@@ -6,10 +6,10 @@
  */
 package org.hibernate.envers.test.integration.inheritance.single.discriminatorformula;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.envers.Audited;

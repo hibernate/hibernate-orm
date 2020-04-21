@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.onetoone.jointable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 /**
  * @author Christian Beikov

@@ -8,7 +8,7 @@
 // $Id$
 
 package org.hibernate.test.annotations.access.xml;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

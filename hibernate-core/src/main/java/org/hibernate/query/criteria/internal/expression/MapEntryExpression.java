@@ -11,8 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.CompoundSelection;
+import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

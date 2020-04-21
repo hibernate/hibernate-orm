@@ -8,9 +8,9 @@ package org.hibernate.jpa.spi;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.type.Type;
 
 /**
- * Additional internal contracts for the Hibernate {@link javax.persistence.EntityManager} implementation.
+ * Additional internal contracts for the Hibernate {@link jakarta.persistence.EntityManager} implementation.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	void markForRollbackOnly();
 
 	/**
-	 * Convert from JPA 2 {@link javax.persistence.LockModeType} & properties into {@link org.hibernate.LockOptions}
+	 * Convert from JPA 2 {@link jakarta.persistence.LockModeType} & properties into {@link org.hibernate.LockOptions}
 	 *
 	 * @param lockModeType is the requested lock type
 	 * @param properties are the lock properties
@@ -73,7 +73,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
 
 	/**
-	 * Given a JPA {@link javax.persistence.LockModeType} and properties, build a Hibernate
+	 * Given a JPA {@link jakarta.persistence.LockModeType} and properties, build a Hibernate
 	 * {@link org.hibernate.LockOptions}
 	 *
 	 * @param lockModeType the requested LockModeType

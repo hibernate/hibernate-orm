@@ -12,11 +12,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OrderBy;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OrderBy;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

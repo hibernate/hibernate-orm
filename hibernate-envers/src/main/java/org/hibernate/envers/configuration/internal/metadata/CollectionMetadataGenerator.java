@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.persistence.EnumType;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.JoinColumn;
 
 import org.dom4j.Element;
 import org.hibernate.MappingException;
@@ -225,7 +225,7 @@ public final class CollectionMetadataGenerator {
 				new MiddleRelatedComponentMapper( referencedIdData ), 0
 		);
 
-		// Generating the index mapping, if an index exists. It can only exists in case a javax.persistence.MapKey
+		// Generating the index mapping, if an index exists. It can only exists in case a jakarta.persistence.MapKey
 		// annotation is present on the entity. So the middleEntityXml will be not be used. The queryGeneratorBuilder
 		// will only be checked for nullnes.
 		MiddleComponentData indexComponentData = addIndex( null, null );
@@ -529,7 +529,7 @@ public final class CollectionMetadataGenerator {
 			final String mapKey = propertyAuditingData.getMapKey();
 			final EnumType mapKeyEnumType = propertyAuditingData.getMapKeyEnumType();
 			if ( ( mapKey == null && mapKeyEnumType == null ) || ( mapKeyEnumType != null && referencedEntityName == null ) ) {
-				// This entity doesn't specify a javax.persistence.MapKey or there is a MapKeyEnumerated but its a non-entity type.
+				// This entity doesn't specify a jakarta.persistence.MapKey or there is a MapKeyEnumerated but its a non-entity type.
 				// Mapping it to the middle entity.
 				return addValueToMiddleTable(
 						indexedValue.getIndex(),

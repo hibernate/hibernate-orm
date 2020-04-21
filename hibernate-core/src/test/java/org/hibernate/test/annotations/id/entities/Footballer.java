@@ -7,10 +7,10 @@
 
 //$Id$
 package org.hibernate.test.annotations.id.entities;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 /**
  * @author Emmanuel Bernard

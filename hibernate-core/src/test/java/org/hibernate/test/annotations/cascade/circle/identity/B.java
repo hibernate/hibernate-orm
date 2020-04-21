@@ -9,31 +9,31 @@ package org.hibernate.test.annotations.cascade.circle.identity;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class B extends AbstractEntity {
     private static final long serialVersionUID = 325417243L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "b")
     private java.util.Set<C> cCollection = new java.util.HashSet<C>();
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , optional = false)
     private A a;
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , optional = false)
     private F f;
 

@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.callbacks;
-import javax.persistence.PreUpdate;
+import jakarta.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

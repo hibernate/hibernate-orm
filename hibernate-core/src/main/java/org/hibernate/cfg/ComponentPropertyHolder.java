@@ -8,13 +8,13 @@ package org.hibernate.cfg;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Converts;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;

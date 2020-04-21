@@ -6,8 +6,8 @@
  */
 package org.hibernate.spatial.testing.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
 

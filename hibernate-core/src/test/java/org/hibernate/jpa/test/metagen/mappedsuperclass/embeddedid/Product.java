@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.embeddedid;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 /**
  * @author Justin Wesley

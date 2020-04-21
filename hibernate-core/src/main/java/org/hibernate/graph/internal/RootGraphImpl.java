@@ -6,7 +6,7 @@
  */
 package org.hibernate.graph.internal;
 
-import javax.persistence.EntityGraph;
+import jakarta.persistence.EntityGraph;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

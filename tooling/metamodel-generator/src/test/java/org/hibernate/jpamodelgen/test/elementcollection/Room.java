@@ -7,7 +7,7 @@
 package org.hibernate.jpamodelgen.test.elementcollection;
 
 import java.math.BigDecimal;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

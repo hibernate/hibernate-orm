@@ -19,7 +19,7 @@ import java.security.ProtectionDomain;
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Emmanuel Bernard
  */
-public interface ClassTransformer extends javax.persistence.spi.ClassTransformer {
+public interface ClassTransformer extends jakarta.persistence.spi.ClassTransformer {
 	/**
 	 * Invoked when a class is being loaded or redefined to add hooks for persistence bytecode manipulation.
 	 *

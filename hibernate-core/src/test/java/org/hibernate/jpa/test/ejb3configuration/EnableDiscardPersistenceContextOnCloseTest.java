@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.ejb3configuration;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.jpa.AvailableSettings;

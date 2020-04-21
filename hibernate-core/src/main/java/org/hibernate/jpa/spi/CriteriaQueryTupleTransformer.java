@@ -7,8 +7,8 @@
 package org.hibernate.jpa.spi;
 
 import java.util.List;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.query.criteria.internal.ValueHandlerFactory;
 import org.hibernate.transform.BasicTransformerAdapter;

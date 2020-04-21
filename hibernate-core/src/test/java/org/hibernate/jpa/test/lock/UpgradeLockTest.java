@@ -8,8 +8,8 @@ package org.hibernate.jpa.test.lock;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -83,11 +83,11 @@ public class UpgradeLockTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			catch (Throwable expectedToFail) {
 				while(expectedToFail != null &&
-					!(expectedToFail instanceof javax.persistence.OptimisticLockException)) {
+					!(expectedToFail instanceof jakarta.persistence.OptimisticLockException)) {
 					expectedToFail = expectedToFail.getCause();
 				}
 				assertTrue("upgrade to OPTIMISTIC_FORCE_INCREMENT is expected to fail at end of transaction1 since tranaction2 already updated the entity",
-						expectedToFail instanceof javax.persistence.OptimisticLockException);
+						expectedToFail instanceof jakarta.persistence.OptimisticLockException);
 			}
 		}
 		finally {

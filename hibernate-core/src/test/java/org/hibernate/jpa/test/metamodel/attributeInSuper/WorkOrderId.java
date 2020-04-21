@@ -7,8 +7,8 @@
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole

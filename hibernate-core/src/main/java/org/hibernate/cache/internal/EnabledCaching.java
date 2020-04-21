@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;

@@ -1,6 +1,6 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class AnnotationEntity {

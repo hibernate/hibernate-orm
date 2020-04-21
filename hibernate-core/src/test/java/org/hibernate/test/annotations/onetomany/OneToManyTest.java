@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
@@ -571,7 +571,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToManyParent")
-	@javax.persistence.Table(name = "OneToManyParent")
+	@jakarta.persistence.Table(name = "OneToManyParent")
 	public static class OnDeleteUnidirectionalOneToManyParent {
 
 		@Id
@@ -585,7 +585,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToManyChild")
-	@javax.persistence.Table(name = "OneToManyChild")
+	@jakarta.persistence.Table(name = "OneToManyChild")
 	public static class OnDeleteUnidirectionalOneToManyChild {
 
 		@Id
@@ -594,7 +594,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToMany")
-	@javax.persistence.Table(name = "OneToMany")
+	@jakarta.persistence.Table(name = "OneToMany")
 	public static class OnDeleteUnidirectionalOneToMany {
 
 		@Id
@@ -606,7 +606,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "ParentUnawareChild")
-	@javax.persistence.Table(name = "Child")
+	@jakarta.persistence.Table(name = "Child")
 	public static class ParentUnawareChild {
 
 		@Id

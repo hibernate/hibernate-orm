@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

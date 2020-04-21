@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.sql.hand.query;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;

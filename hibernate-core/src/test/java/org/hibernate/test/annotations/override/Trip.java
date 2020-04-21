@@ -7,10 +7,10 @@
 
 //$Id$
 package org.hibernate.test.annotations.override;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 
 /**
  * @author Emmanuel Bernard

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.join;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;

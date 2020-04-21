@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

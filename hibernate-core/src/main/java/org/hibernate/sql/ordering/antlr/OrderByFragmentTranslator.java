@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
 
 /**
  * A translator for order-by mappings, whether specified by hbm.xml files, Hibernate
- * {@link org.hibernate.annotations.OrderBy} annotation or JPA {@link javax.persistence.OrderBy} annotation.
+ * {@link org.hibernate.annotations.OrderBy} annotation or JPA {@link jakarta.persistence.OrderBy} annotation.
  *
  * @author Steve Ebersole
  */

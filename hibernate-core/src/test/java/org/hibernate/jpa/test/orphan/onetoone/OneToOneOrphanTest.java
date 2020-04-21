@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.orphan.onetoone;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

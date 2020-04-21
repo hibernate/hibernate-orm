@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.PersistentAttributeDescriptor;

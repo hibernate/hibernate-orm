@@ -7,9 +7,9 @@
 package org.hibernate.test.jpa.lock;
 
 import java.util.Collections;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.PessimisticLockException;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.AvailableSettings;

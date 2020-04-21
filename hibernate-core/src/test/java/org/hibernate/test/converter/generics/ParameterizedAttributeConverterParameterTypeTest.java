@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

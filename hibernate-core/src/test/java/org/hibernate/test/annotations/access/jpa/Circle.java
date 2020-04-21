@@ -8,10 +8,10 @@
 //$Id: Being.java 18260 2009-12-17 21:14:07Z hardy.ferentschik $
 
 package org.hibernate.test.annotations.access.jpa;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
 
 
 /**

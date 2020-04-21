@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.various;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.Index;
 

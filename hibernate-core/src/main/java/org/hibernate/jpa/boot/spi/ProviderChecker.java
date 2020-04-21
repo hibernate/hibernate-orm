@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Helper for handling checks to see whether Hibernate is the requested
- * {@link javax.persistence.spi.PersistenceProvider}
+ * {@link jakarta.persistence.spi.PersistenceProvider}
  *
  * @author Steve Ebersole
  */
@@ -27,7 +27,7 @@ public final class ProviderChecker {
 
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
-	 * {@link javax.persistence.spi.PersistenceProvider}?  Note that in the case of no requested provider being named
+	 * {@link jakarta.persistence.spi.PersistenceProvider}?  Note that in the case of no requested provider being named
 	 * we assume we are the provider (the calls got to us somehow...)
 	 *
 	 * @param persistenceUnit The {@code <persistence-unit/>} descriptor.

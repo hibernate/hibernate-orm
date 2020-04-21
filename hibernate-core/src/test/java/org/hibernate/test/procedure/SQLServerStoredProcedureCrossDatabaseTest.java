@@ -15,9 +15,9 @@ import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
-import javax.persistence.EntityManager;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistry;

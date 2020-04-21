@@ -29,7 +29,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Set;
 
 /**

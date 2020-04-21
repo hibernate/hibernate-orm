@@ -9,8 +9,8 @@ package org.hibernate.jpa.internal.util;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.FlushModeType;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -33,8 +33,8 @@ public abstract class ConfigurationHelper {
 		if ( value instanceof FlushMode ) {
 			flushMode = (FlushMode) value;
 		}
-		else if ( value instanceof javax.persistence.FlushModeType ) {
-			flushMode = ConfigurationHelper.getFlushMode( (javax.persistence.FlushModeType) value );
+		else if ( value instanceof jakarta.persistence.FlushModeType ) {
+			flushMode = ConfigurationHelper.getFlushMode( (jakarta.persistence.FlushModeType) value );
 		}
 		else if ( value instanceof String ) {
 			flushMode = ConfigurationHelper.getFlushMode( (String) value );

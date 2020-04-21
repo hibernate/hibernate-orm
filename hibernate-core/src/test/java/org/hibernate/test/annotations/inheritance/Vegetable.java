@@ -7,10 +7,10 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 /**
  * @author Emmanuel Bernard

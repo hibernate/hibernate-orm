@@ -7,10 +7,10 @@
 
 //$Id$
 package org.hibernate.test.annotations.manytoone;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * Color showing a surrogate key and a unique constraint to ensure business rule

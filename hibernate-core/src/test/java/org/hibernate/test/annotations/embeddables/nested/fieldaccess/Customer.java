@@ -8,13 +8,13 @@ package org.hibernate.test.annotations.embeddables.nested.fieldaccess;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 

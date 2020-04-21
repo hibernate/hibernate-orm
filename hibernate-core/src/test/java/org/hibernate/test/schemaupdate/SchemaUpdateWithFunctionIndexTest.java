@@ -7,11 +7,11 @@
 package org.hibernate.test.schemaupdate;
 
 import java.util.EnumSet;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 
 import org.hibernate.Query;
 import org.hibernate.Session;

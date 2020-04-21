@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.generatedkeys.identity;
 
-import javax.persistence.PersistenceException;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.junit.Test;
 

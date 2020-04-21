@@ -7,9 +7,9 @@
 package org.hibernate.spatial.predicate;
 
 import java.io.Serializable;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;

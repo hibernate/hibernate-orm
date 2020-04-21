@@ -82,7 +82,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @return The ProcedureCall
 	 *
-	 * @see javax.persistence.NamedStoredProcedureQuery
+	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
 	ProcedureCall getNamedProcedureCall(String name);
 

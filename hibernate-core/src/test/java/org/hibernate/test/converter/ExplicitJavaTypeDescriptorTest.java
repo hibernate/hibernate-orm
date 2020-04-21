@@ -6,13 +6,13 @@
  */
 package org.hibernate.test.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Cacheable;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Immutable;

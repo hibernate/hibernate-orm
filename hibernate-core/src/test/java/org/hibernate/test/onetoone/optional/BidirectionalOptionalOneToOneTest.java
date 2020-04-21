@@ -6,17 +6,17 @@
  */
 package org.hibernate.test.onetoone.optional;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
-import static javax.persistence.CascadeType.ALL;
+import static jakarta.persistence.CascadeType.ALL;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
@@ -54,7 +54,7 @@ public class BidirectionalOptionalOneToOneTest
 		} );
 	}
 
-	@javax.persistence.Entity( name = "Parent" )
+	@jakarta.persistence.Entity( name = "Parent" )
 	public static class Parent {
 
 		@Id
@@ -78,7 +78,7 @@ public class BidirectionalOptionalOneToOneTest
 
 	}
 
-	@javax.persistence.Entity( name = "Child" )
+	@jakarta.persistence.Entity( name = "Child" )
 	public static class Child {
 
 		@Id

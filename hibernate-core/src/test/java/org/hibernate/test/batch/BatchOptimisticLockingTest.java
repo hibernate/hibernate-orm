@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
 

@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.criteria;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Chris Cranford

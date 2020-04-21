@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;

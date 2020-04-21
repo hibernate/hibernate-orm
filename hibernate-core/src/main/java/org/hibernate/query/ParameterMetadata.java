@@ -9,7 +9,7 @@ package org.hibernate.query;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 /**
  * Access to known information about the parameters for a query.

@@ -8,9 +8,9 @@ package org.hibernate.envers.test.integration.ids.idclass;
 
 import org.hibernate.envers.Audited;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import java.io.Serializable;
 
 /**

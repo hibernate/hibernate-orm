@@ -7,13 +7,13 @@
 package org.hibernate.cfg.annotations;
 
 import java.util.HashMap;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;

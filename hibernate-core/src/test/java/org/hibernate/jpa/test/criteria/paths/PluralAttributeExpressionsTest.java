@@ -9,8 +9,8 @@ package org.hibernate.jpa.test.criteria.paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Address;

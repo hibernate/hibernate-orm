@@ -8,9 +8,9 @@ package org.hibernate.userguide.mapping.identifier;
 
 import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

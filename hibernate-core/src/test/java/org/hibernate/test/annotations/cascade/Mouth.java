@@ -8,14 +8,14 @@
 //$Id$
 package org.hibernate.test.annotations.cascade;
 import java.util.Collection;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
-import static javax.persistence.CascadeType.DETACH;
-import static javax.persistence.CascadeType.REMOVE;
+import static jakarta.persistence.CascadeType.DETACH;
+import static jakarta.persistence.CascadeType.REMOVE;
 
 /**
  * @author Emmanuel Bernard

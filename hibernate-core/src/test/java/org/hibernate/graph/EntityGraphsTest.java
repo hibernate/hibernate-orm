@@ -6,8 +6,8 @@
  */
 package org.hibernate.graph;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Ignore;

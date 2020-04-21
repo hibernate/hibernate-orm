@@ -7,8 +7,8 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;

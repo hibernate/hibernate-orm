@@ -7,10 +7,10 @@
 package org.hibernate.graph;
 
 import java.util.List;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.Subgraph;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * Hibernate extension to the JPA {@link EntityGraph} contract.

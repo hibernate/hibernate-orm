@@ -9,8 +9,8 @@ package org.hibernate.jpamodelgen.test.arraytype;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.TYPE_USE;

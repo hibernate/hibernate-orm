@@ -8,10 +8,10 @@ package org.hibernate.userguide.events;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;

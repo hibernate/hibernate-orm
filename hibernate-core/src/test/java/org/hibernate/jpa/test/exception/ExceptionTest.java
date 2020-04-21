@@ -7,10 +7,10 @@
 package org.hibernate.jpa.test.exception;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 
 import org.jboss.logging.Logger;
 import org.junit.Test;

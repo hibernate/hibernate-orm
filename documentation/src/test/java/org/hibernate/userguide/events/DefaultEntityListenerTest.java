@@ -6,11 +6,11 @@
  */
 package org.hibernate.userguide.events;
 
-import javax.persistence.Entity;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ExcludeDefaultListeners;
+import jakarta.persistence.ExcludeSuperclassListeners;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

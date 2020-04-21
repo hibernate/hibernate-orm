@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria.internal.predicate;
 
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -15,7 +15,7 @@ import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
- * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
+ * Models a <tt>BETWEEN</tt> {@link jakarta.persistence.criteria.Predicate}.
  *
  * @author Steve Ebersole
  */

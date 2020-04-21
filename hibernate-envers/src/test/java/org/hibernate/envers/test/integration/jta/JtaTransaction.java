@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.jta;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

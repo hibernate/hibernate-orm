@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.graphs.inherited;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 
 /**

@@ -9,11 +9,11 @@ package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;

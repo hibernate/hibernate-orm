@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.integration.basic;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * @author Adam Warski (adam at warski dot org)

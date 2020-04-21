@@ -6,13 +6,13 @@
  */
 package org.hibernate.test.inheritance.discriminator.joinedsubclass;
 
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 /**
  * @author Andrea Boriero
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 public interface TestEntityInterface extends Common {
 }

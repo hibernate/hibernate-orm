@@ -277,7 +277,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-ex
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
+There's no such equivalent in JPA because the `jakarta.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
@@ -342,7 +342,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-dto-query-example, indent=0
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
+There's no such equivalent in JPA because the `jakarta.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
 ====
 
 The above query will return a list of `PersonSummaryDTO` which has been instantiated and injected the values of `id` and `name` into its corresponding properties or fields.
@@ -363,7 +363,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-inheritance-query-example]
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
+There's no such equivalent in JPA because the `jakarta.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 [[sql-query-parameters]]
@@ -395,7 +395,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-query-parameters-example]
 Named SQL queries can also be defined during mapping and called in exactly the same way as a named HQL query.
 In this case, you do _not_ need to call `addEntity()` anymore.
 
-JPA defines the `javax.persistence.NamedNativeQuery` annotation for this purpose,
+JPA defines the `jakarta.persistence.NamedNativeQuery` annotation for this purpose,
 and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extends it and adds the following attributes:
 
 `flushMode()`::

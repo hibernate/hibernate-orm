@@ -5,16 +5,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.quote.resultsetmappings;
-import javax.persistence.Column;
-import javax.persistence.ColumnResult;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.Table;
 
 /**
  * TODO : javadoc

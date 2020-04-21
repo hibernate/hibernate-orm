@@ -7,7 +7,7 @@
 package org.hibernate.internal;
 
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

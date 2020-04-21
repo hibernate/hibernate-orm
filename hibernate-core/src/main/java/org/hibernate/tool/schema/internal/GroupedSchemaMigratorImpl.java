@@ -25,7 +25,7 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
  * @author Andrea Boriero
  *
  * This implementation executes a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
- * to retrieve all the database table in order to determine if all the {@link javax.persistence.Entity} have a mapped database tables.
+ * to retrieve all the database table in order to determine if all the {@link jakarta.persistence.Entity} have a mapped database tables.
  */
 public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 

@@ -6,10 +6,10 @@
  */
 package org.hibernate.userguide.mapping.embeddable;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;

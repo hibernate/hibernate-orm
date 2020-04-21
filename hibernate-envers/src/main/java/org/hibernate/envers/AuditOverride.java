@@ -17,16 +17,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * The {@code AuditingOverride} annotation is used to override the auditing
- * behavior of a superclass or single property inherited from {@link javax.persistence.MappedSuperclass}
+ * behavior of a superclass or single property inherited from {@link jakarta.persistence.MappedSuperclass}
  * type, or attribute inside an embedded component.
  *
  * @author Erik-Berndt Scheper
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  *
- * @see javax.persistence.Embedded
- * @see javax.persistence.Embeddable
- * @see javax.persistence.MappedSuperclass
- * @see javax.persistence.AssociationOverride
+ * @see jakarta.persistence.Embedded
+ * @see jakarta.persistence.Embeddable
+ * @see jakarta.persistence.MappedSuperclass
+ * @see jakarta.persistence.AssociationOverride
  * @see AuditJoinTable
  */
 @Target({TYPE, METHOD, FIELD})
@@ -37,7 +37,7 @@ public @interface AuditOverride {
 	/**
 	 * Name of the field (or property) whose mapping is being overridden. Allows empty value if
 	 * {@link AuditOverride} is used to change auditing behavior of all attributes inherited from
-	 * {@link javax.persistence.MappedSuperclass} type.
+	 * {@link jakarta.persistence.MappedSuperclass} type.
 	 */
 	String name() default "";
 
@@ -55,7 +55,7 @@ public @interface AuditOverride {
 	/**
 	 * Specifies class which field (or property) mapping is being overridden. <strong>Required</strong> if
 	 * {@link AuditOverride} is used to change auditing behavior of attributes inherited from
-	 * {@link javax.persistence.MappedSuperclass} type.
+	 * {@link jakarta.persistence.MappedSuperclass} type.
 	 */
 	Class forClass() default void.class;
 }

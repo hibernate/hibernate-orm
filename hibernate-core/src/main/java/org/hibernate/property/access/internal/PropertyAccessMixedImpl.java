@@ -10,8 +10,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;

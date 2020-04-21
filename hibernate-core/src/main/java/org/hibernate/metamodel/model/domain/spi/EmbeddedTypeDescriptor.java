@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.metamodel.model.domain.EmbeddedDomainType;
 import org.hibernate.type.ComponentType;

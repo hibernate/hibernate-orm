@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.any;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;

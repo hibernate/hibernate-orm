@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.ops;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 

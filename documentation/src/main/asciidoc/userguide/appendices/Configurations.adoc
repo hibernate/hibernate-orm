@@ -38,24 +38,24 @@ Note that for backward compatibility, if a `CurrentSessionContext` is not config
 === JPA compliance
 
 `*hibernate.jpa.compliance.transaction*` (e.g. `true` or `false` (default value))::
-This setting controls if Hibernate  `Transaction` should behave as defined by the spec for JPA's `javax.persistence.EntityTransaction`
+This setting controls if Hibernate  `Transaction` should behave as defined by the spec for JPA's `jakarta.persistence.EntityTransaction`
 since it extends the JPA one.
 
 `*hibernate.jpa.compliance.query*` (e.g. `true` or `false` (default value))::
-Controls whether Hibernate's handling of `javax.persistence.Query` (JPQL, Criteria and native query) should strictly follow the JPA spec.
+Controls whether Hibernate's handling of `jakarta.persistence.Query` (JPQL, Criteria and native query) should strictly follow the JPA spec.
 +
-This includes both in terms of parsing or translating a query as well as calls to the `javax.persistence.Query` methods throwing spec
+This includes both in terms of parsing or translating a query as well as calls to the `jakarta.persistence.Query` methods throwing spec
 defined exceptions whereas Hibernate might not.
 
 `*hibernate.jpa.compliance.list*` (e.g. `true` or `false` (default value))::
 Controls whether Hibernate should recognize what it considers a "bag" (`org.hibernate.collection.internal.PersistentBag`)
 as a List (`org.hibernate.collection.internal.PersistentList`) or as a bag.
 +
-If enabled, we will recognize it as a List where `javax.persistence.OrderColumn`
+If enabled, we will recognize it as a List where `jakarta.persistence.OrderColumn`
 is just missing (and its defaults will apply).
 
 `*hibernate.jpa.compliance.closed*` (e.g. `true` or `false` (default value))::
-JPA defines specific exceptions upon calling specific methods on `javax.persistence.EntityManager` and `javax.persistence.EntityManagerFactory`
+JPA defines specific exceptions upon calling specific methods on `jakarta.persistence.EntityManager` and `jakarta.persistence.EntityManagerFactory`
 objects which have been closed previously.
 +
 This setting controls whether the JPA spec-defined behavior or the Hibernate behavior will be used.
@@ -63,7 +63,7 @@ This setting controls whether the JPA spec-defined behavior or the Hibernate beh
 If enabled, Hibernate will operate in the JPA specified way, throwing exceptions when the spec says it should.
 
 `*hibernate.jpa.compliance.proxy*` (e.g. `true` or `false` (default value))::
-The JPA spec says that a `javax.persistence.EntityNotFoundException` should be thrown when accessing an entity proxy
+The JPA spec says that a `jakarta.persistence.EntityNotFoundException` should be thrown when accessing an entity proxy
 which does not have an associated table row in the database.
 +
 Traditionally, Hibernate does not initialize an entity proxy when accessing its identifier since we already know the identifier value,
@@ -82,16 +82,16 @@ with the same name will cause a `java.lang.IllegalArgumentException` to be throw
 [[configurations-database-connection]]
 === Database connection properties
 
-`*hibernate.connection.driver_class*` or `*javax.persistence.jdbc.driver*` (e.g. `org.postgresql.Driver`)::
+`*hibernate.connection.driver_class*` or `*jakarta.persistence.jdbc.driver*` (e.g. `org.postgresql.Driver`)::
 Names the JDBC `Driver` class name.
 
-`*hibernate.connection.url*` or `*javax.persistence.jdbc.url*` (e.g. `jdbc:postgresql:hibernate_orm_test`)::
+`*hibernate.connection.url*` or `*jakarta.persistence.jdbc.url*` (e.g. `jdbc:postgresql:hibernate_orm_test`)::
 Names the JDBC connection URL.
 
-`*hibernate.connection.username*` or `*javax.persistence.jdbc.user*`::
+`*hibernate.connection.username*` or `*jakarta.persistence.jdbc.user*`::
 Names the JDBC connection user name.
 
-`*hibernate.connection.password*` or `*javax.persistence.jdbc.password*`::
+`*hibernate.connection.password*` or `*jakarta.persistence.jdbc.password*`::
 Names the JDBC connection password.
 
 `*hibernate.connection.isolation*` (e.g. `REPEATABLE_READ` or `Connection.TRANSACTION_REPEATABLE_READ`)::
@@ -281,8 +281,8 @@ The default value is `false` which means Hibernate will use an algorithm to dete
 Should all database identifiers be quoted.
 
 `*hibernate.globally_quoted_identifiers_skip_column_definitions*` (e.g. `true` or `false` (default value))::
-Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the global quoting to skip column-definitions as defined by `javax.persistence.Column`,
-`javax.persistence.JoinColumn`, etc., and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
+Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the global quoting to skip column-definitions as defined by `jakarta.persistence.Column`,
+`jakarta.persistence.JoinColumn`, etc., and while it avoids column-definitions being quoted due to global quoting, they can still be explicitly quoted in the annotation/xml mappings.
 
 `*hibernate.auto_quote_keyword*` (e.g. `true` or `false` (default value))::
 Specifies whether to automatically quote any names that are deemed keywords.
@@ -385,7 +385,7 @@ Unless specified, the JDBC Driver uses the default JVM time zone. If a different
 This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
 
 ==== Bean Validation options
-`*javax.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
+`*jakarta.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
 Specify the  `jakarta.validation.ValidationFactory` implementation to use for Bean Validation.
 
 `*hibernate.check_nullability*` (e.g. `true` or `false`)::
@@ -491,7 +491,7 @@ Can reference a
 
 `*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
 This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via JPA
-`javax.persistence.EntityManagerFactory`.
+`jakarta.persistence.EntityManagerFactory`.
 
 `*hibernate.criteria.literal_handling_mode*` (e.g. `AUTO` (default value), `BIND` or `INLINE`)::
 By default, Criteria queries use bind parameters for any literal that is not a numeric value.
@@ -645,7 +645,7 @@ Either a shortcut name (e.g. `jcache`, `ehcache`) or the fully-qualified name of
 
 `*hibernate.cache.default_cache_concurrency_strategy*`::
 Setting used to give the name of the default https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`] to use
-when `@javax.persistence.Cacheable`, `@org.hibernate.annotations.Cache` or `@org.hibernate.annotations.Cache` is used to override the global setting.
+when `@jakarta.persistence.Cacheable`, `@org.hibernate.annotations.Cache` or `@org.hibernate.annotations.Cache` is used to override the global setting.
 
 `*hibernate.cache.use_minimal_puts*` (e.g. `true` (default value) or `false`)::
 Optimizes second-level cache operation to minimize writes, at the cost of more frequent reads. This is most useful for clustered caches and is enabled by default for clustered cache implementations.
@@ -778,7 +778,7 @@ Valid options are defined by the `externalHbm2ddlName` value of the https://docs
 `validate`::: Validate the database schema.
 `update`::: Update the database schema.
 
-`*javax.persistence.schema-generation.database.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
+`*jakarta.persistence.schema-generation.database.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions automatically as part of the `SessionFactory` lifecycle.
 Valid options are defined by the `externalJpaName` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/Action.html[`Action`] enum:
 +
@@ -787,7 +787,7 @@ Valid options are defined by the `externalJpaName` value of the https://docs.jbo
 `drop`::: Database dropping will be generated.
 `drop-and-create`::: Database dropping will be generated followed by database creation.
 
-`*javax.persistence.schema-generation.scripts.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
+`*jakarta.persistence.schema-generation.scripts.action*` (e.g. `none` (default value), `create-only`, `drop`, `create`, `create-drop`, `validate`, and `update`)::
 Setting to perform `SchemaManagementTool` actions writing the commands into a DDL script file.
 Valid options are defined by the `externalJpaName` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/Action.html[`Action`] enum:
 +
@@ -796,73 +796,73 @@ Valid options are defined by the `externalJpaName` value of the https://docs.jbo
 `drop`::: Database dropping will be generated.
 `drop-and-create`::: Database dropping will be generated followed by database creation.
 
-`*javax.persistence.schema-generation-connection*`::
+`*jakarta.persistence.schema-generation-connection*`::
 Allows passing a specific `java.sql.Connection` instance to be used by `SchemaManagementTool`.
 
-`*javax.persistence.database-product-name*`::
+`*jakarta.persistence.database-product-name*`::
 Specifies the name of the database provider in cases where a Connection to the underlying database is not available (aka, mainly in generating scripts).
 In such cases, a value for this setting _must_ be specified.
 +
 The value of this setting is expected to match the value returned by `java.sql.DatabaseMetaData#getDatabaseProductName()` for the target database.
 +
-Additionally, specifying `javax.persistence.database-major-version` and/or `javax.persistence.database-minor-version` may be required to understand exactly how to generate the required schema commands.
+Additionally, specifying `jakarta.persistence.database-major-version` and/or `jakarta.persistence.database-minor-version` may be required to understand exactly how to generate the required schema commands.
 
-`*javax.persistence.database-major-version*`::
+`*jakarta.persistence.database-major-version*`::
 Specifies the major version of the underlying database, as would be returned by `java.sql.DatabaseMetaData#getDatabaseMajorVersion` for the target database.
 +
-This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `javax.persistence.database-product-name` does not provide enough distinction.
+This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `jakarta.persistence.database-product-name` does not provide enough distinction.
 
-`*javax.persistence.database-minor-version*`::
+`*jakarta.persistence.database-minor-version*`::
 Specifies the minor version of the underlying database, as would be returned by `java.sql.DatabaseMetaData#getDatabaseMinorVersion` for the target database.
 +
-This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `javax.persistence.database-product-name` and `javax.persistence.database-major-version` does not provide enough distinction.
+This value is used to help more precisely determine how to perform schema generation tasks for the underlying database in cases where `jakarta.persistence.database-product-name` and `jakarta.persistence.database-major-version` does not provide enough distinction.
 
-`*javax.persistence.schema-generation.create-source*`::
+`*jakarta.persistence.schema-generation.create-source*`::
 Specifies whether schema generation commands for schema creation are to be determined based on object/relational mapping metadata, DDL scripts, or a combination of the two.
 See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/SourceType.html[`SourceType`] for valid set of values.
 +
 If no value is specified, a default is assumed as follows:
 +
-* if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then `script` is assumed
+* if source scripts are specified (per `jakarta.persistence.schema-generation.create-script-source`), then `script` is assumed
 * otherwise, `metadata` is assumed
 
-`*javax.persistence.schema-generation.drop-source*`::
+`*jakarta.persistence.schema-generation.drop-source*`::
 Specifies whether schema generation commands for schema dropping are to be determined based on object/relational mapping metadata, DDL scripts, or a combination of the two.
 See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/SourceType.html[`SourceType`] for valid set of values.
 +
 If no value is specified, a default is assumed as follows:
 +
-* if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then the `script` option is assumed
+* if source scripts are specified (per `jakarta.persistence.schema-generation.create-script-source`), then the `script` option is assumed
 * otherwise, `metadata` is assumed
 
-`*javax.persistence.schema-generation.create-script-source*`::
+`*jakarta.persistence.schema-generation.create-script-source*`::
 Specifies the `create` script file as either a `java.io.Reader` configured for reading of the DDL script file or a string designating a file `java.net.URL` for the DDL script.
 +
-Hibernate historically also accepted `hibernate.hbm2ddl.import_files` for a similar purpose, but `javax.persistence.schema-generation.create-script-source` should be preferred over `hibernate.hbm2ddl.import_files`.
+Hibernate historically also accepted `hibernate.hbm2ddl.import_files` for a similar purpose, but `jakarta.persistence.schema-generation.create-script-source` should be preferred over `hibernate.hbm2ddl.import_files`.
 
-`*javax.persistence.schema-generation.drop-script-source*`::
+`*jakarta.persistence.schema-generation.drop-script-source*`::
  Specifies the `drop` script file as either a `java.io.Reader` configured for reading of the DDL script file or a string designating a file `java.net.URL` for the DDL script.
 
-`*javax.persistence.schema-generation.scripts.create-target*`::
-For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema creation commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.create-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
+`*jakarta.persistence.schema-generation.scripts.create-target*`::
+For cases where the `jakarta.persistence.schema-generation.scripts.action` value indicates that schema creation commands should be written to DDL script file, `jakarta.persistence.schema-generation.scripts.create-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
 
-`*javax.persistence.schema-generation.scripts.drop-target*`::
-For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
+`*jakarta.persistence.schema-generation.scripts.drop-target*`::
+For cases where the `jakarta.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `jakarta.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
 
-`*javax.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
+`*jakarta.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
 File order matters, the statements of a given file are executed before the statements of the following one.
 +
 These statements are only executed if the schema is created, meaning that `hibernate.hbm2ddl.auto` is set to `create`, `create-drop`, or `update`.
-`javax.persistence.schema-generation.create-script-source` / `javax.persistence.schema-generation.drop-script-source` should be preferred.
+`jakarta.persistence.schema-generation.create-script-source` / `jakarta.persistence.schema-generation.drop-script-source` should be preferred.
 
-`*javax.persistence.sql-load-script-source*`::
+`*jakarta.persistence.sql-load-script-source*`::
 JPA variant of `hibernate.hbm2ddl.import_files`. Specifies a `java.io.Reader` configured for reading of the SQL load script or a string designating the file `java.net.URL` for the SQL load script.
 A "SQL load script" is a script that performs some database initialization (INSERT, etc).
 
 `*hibernate.hbm2ddl.import_files_sql_extractor*`::
-Reference to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/ImportSqlCommandExtractor.html[`ImportSqlCommandExtractor`] implementation class to use for parsing source/import files as defined by `javax.persistence.schema-generation.create-script-source`,
-`javax.persistence.schema-generation.drop-script-source` or `hibernate.hbm2ddl.import_files`.
+Reference to the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/hbm2ddl/ImportSqlCommandExtractor.html[`ImportSqlCommandExtractor`] implementation class to use for parsing source/import files as defined by `jakarta.persistence.schema-generation.create-script-source`,
+`jakarta.persistence.schema-generation.drop-script-source` or `hibernate.hbm2ddl.import_files`.
 +
 Reference may refer to an instance, a Class implementing `ImportSqlCommandExtractor` or the fully-qualified name of the `ImportSqlCommandExtractor` implementation.
 If the fully-qualified name is given, the implementation must provide a no-arg constructor.
@@ -872,7 +872,7 @@ The default value is https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/ja
 `*hibernate.hbm2ddl.create_namespaces*` (e.g. `true` or `false` (default value))::
 Specifies whether to automatically create the database schema/catalog also.
 
-`*javax.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
+`*jakarta.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
 The JPA variant of `hibernate.hbm2ddl.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
 +
@@ -886,8 +886,8 @@ Used to specify the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/jav
 Setting to choose the strategy used to access the JDBC Metadata.
 Valid options are defined by the `strategy` value of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/JdbcMetadaAccessStrategy.html[`JdbcMetadaAccessStrategy`] enum:
 +
-`grouped`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the ``javax.persistence.Entity``s have a corresponding mapped database tables. This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
-`individually`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `javax.persistence.Entity` in order to determine if a corresponding database table exists.
+`grouped`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute a single `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call to retrieve all the database table in order to determine if all the ``jakarta.persistence.Entity``s have a corresponding mapped database tables. This strategy may require `hibernate.default_schema` and/or `hibernate.default_catalog` to be provided.
+`individually`::: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaMigrator.html[`SchemaMigrator`] and https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/tool/schema/spi/SchemaValidator.html[`SchemaValidator`] execute one `java.sql.DatabaseMetaData#getTables(String, String, String, String[])` call for each `jakarta.persistence.Entity` in order to determine if a corresponding database table exists.
 
 `*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
 Identifies the delimiter to use to separate schema management statements in script outputs.
@@ -1110,7 +1110,7 @@ Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means
 Identifies an explicit `org.hibernate.resource.beans.container.spi.BeanContainer` to be used.
 +
 Note that, for CDI-based containers, setting this is not necessary.
-Simply pass the `BeanManager` to use via `javax.persistence.bean.manager` and optionally specify `hibernate.delay_cdi_access`.
+Simply pass the `BeanManager` to use via `jakarta.persistence.bean.manager` and optionally specify `hibernate.delay_cdi_access`.
 +
 This setting is more meant to integrate non-CDI bean containers such as Spring.
 
@@ -1126,7 +1126,7 @@ false::: does not allow
 Setting which indicates whether or not the new JOINs over collection tables should be rewritten to subqueries.
 
 `*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping))::
-Setting that allows to call `javax.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `javax.persistence.EntityManager`.
+Setting that allows to call `jakarta.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `jakarta.persistence.EntityManager`.
 
 `*hibernate.use_entity_where_clause_for_collections*` (e.g., `true` (default) or `false`)::
 Setting controls whether an entity's "where" clause, mapped using `@Where(clause = "...")` or `<entity ... where="...">` is taken into account when loading one-to-many or many-to-many collections of that type of entity.

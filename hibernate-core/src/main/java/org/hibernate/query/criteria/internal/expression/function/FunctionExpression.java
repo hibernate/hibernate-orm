@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.criteria.internal.expression.function;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 /**
  * Contract for expressions which model a SQL function call.

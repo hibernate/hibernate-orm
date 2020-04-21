@@ -7,9 +7,9 @@
 
 package org.hibernate.jpa.test.criteria.components.joins;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Matt Todd

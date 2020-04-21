@@ -21,11 +21,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

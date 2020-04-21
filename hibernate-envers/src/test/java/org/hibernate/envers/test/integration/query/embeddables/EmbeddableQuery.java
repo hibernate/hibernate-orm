@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.query.embeddables;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;

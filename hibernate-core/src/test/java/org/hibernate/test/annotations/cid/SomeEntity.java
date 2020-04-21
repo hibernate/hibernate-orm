@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.cid;
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author bartek

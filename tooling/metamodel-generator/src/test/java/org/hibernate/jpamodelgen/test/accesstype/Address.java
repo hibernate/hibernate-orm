@@ -7,16 +7,16 @@
 package org.hibernate.jpamodelgen.test.accesstype;
 
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.Access;
-import javax.persistence.ElementCollection;
-import javax.persistence.CollectionTable;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Access;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
 
 /**
  * @author Emmanuel Bernard
  */
 @Embeddable
-@Access(javax.persistence.AccessType.PROPERTY)
+@Access(jakarta.persistence.AccessType.PROPERTY)
 public class Address {
 	private String street1;
 	private String city;

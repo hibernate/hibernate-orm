@@ -13,7 +13,7 @@ import org.hibernate.boot.model.source.spi.AttributePath;
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.CollectionTable
+ * @see jakarta.persistence.CollectionTable
  */
 public interface ImplicitCollectionTableNameSource extends ImplicitNameSource {
 	/**

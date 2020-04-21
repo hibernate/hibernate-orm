@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.cfg.persister;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>

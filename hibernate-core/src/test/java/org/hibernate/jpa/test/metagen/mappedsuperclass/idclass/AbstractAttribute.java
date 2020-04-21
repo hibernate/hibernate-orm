@@ -7,9 +7,9 @@
 package org.hibernate.jpa.test.metagen.mappedsuperclass.idclass;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 /**
  * @author Alexis Bataille

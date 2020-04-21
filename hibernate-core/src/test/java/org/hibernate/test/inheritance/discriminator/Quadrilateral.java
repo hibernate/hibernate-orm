@@ -23,8 +23,8 @@
  */
 package org.hibernate.test.inheritance.discriminator;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * Sub class for testing joined inheritance with a discriminator column.

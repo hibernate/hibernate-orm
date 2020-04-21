@@ -18,15 +18,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import javax.persistence.EntityGraph;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MappedSuperclassType;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MappedSuperclassType;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -77,7 +77,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
+ * Hibernate implementation of the JPA {@link jakarta.persistence.metamodel.Metamodel} contract.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -521,7 +521,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 //	 * @param entityNameResolvers
 //	 * @param entities The entity mappings.
 //	 * @param embeddables The embeddable (component) mappings.
-//	 * @param mappedSuperclassTypeMap The {@link javax.persistence.MappedSuperclass} mappings
+//	 * @param mappedSuperclassTypeMap The {@link jakarta.persistence.MappedSuperclass} mappings
 //	 */
 //	private MetamodelImpl(
 //			SessionFactoryImplementor sessionFactory,

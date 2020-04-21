@@ -19,14 +19,14 @@ public enum JdbcMetadaAccessStrategy {
 	/**
 	 * The {@link org.hibernate.tool.schema.spi.SchemaMigrator} and {@link org.hibernate.tool.schema.spi.SchemaValidator}
 	 * execute one {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call for each
-	 * {@link javax.persistence.Entity} in order to determine if a corresponding database table exists.
+	 * {@link jakarta.persistence.Entity} in order to determine if a corresponding database table exists.
 	 */
 	INDIVIDUALLY( "individually" ),
 
 	/**
 	 * The {@link org.hibernate.tool.schema.spi.SchemaMigrator} and {@link org.hibernate.tool.schema.spi.SchemaValidator}
 	 * execute a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
-	 * to retrieve all the database table in order to determine all the {@link javax.persistence.Entity} have a mapped database tables.
+	 * to retrieve all the database table in order to determine all the {@link jakarta.persistence.Entity} have a mapped database tables.
 	 * <p>
 	 * This strategy is the default one and it may require {@link AvailableSettings#DEFAULT_CATALOG} and/or
 	 * {@link AvailableSettings#DEFAULT_SCHEMA} values to be provided.

@@ -6,8 +6,8 @@
  */
 package org.hibernate.boot.spi.metadatabuildercontributor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;

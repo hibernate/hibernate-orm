@@ -85,7 +85,7 @@ The cache mappings can be configured via JPA annotations or XML descriptors or u
 
 By default, entities are not part of the second level cache and we recommend you to stick to this setting.
 However, you can override this by setting the `shared-cache-mode` element in your `persistence.xml` file
-or by using the `javax.persistence.sharedCache.mode` property in your configuration file.
+or by using the `jakarta.persistence.sharedCache.mode` property in your configuration file.
 The following values are possible:
 
 `ENABLE_SELECTIVE` (Default and recommended value)::
@@ -460,7 +460,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 Because the second level cache is bound to the `EntityManagerFactory` or the `SessionFactory`,
 cache eviction must be done through these two interfaces.
 
-JPA only supports entity eviction through the {jpaJavadocUrlPrefix}Cache.html[`javax.persistence.Cache`] interface:
+JPA only supports entity eviction through the {jpaJavadocUrlPrefix}Cache.html[`jakarta.persistence.Cache`] interface:
 
 [[caching-management-evict-jpa-example]]
 .Evicting entities with JPA

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.metamodel.wildcardmodel;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class EntityOne extends AbstractEntity {

@@ -15,7 +15,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 
 /**
- * Loadplan building strategy for {@link javax.persistence.EntityGraph} is applied in {@code javax.persistence.fetchgraph} mode.
+ * Loadplan building strategy for {@link jakarta.persistence.EntityGraph} is applied in {@code jakarta.persistence.fetchgraph} mode.
  *
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */

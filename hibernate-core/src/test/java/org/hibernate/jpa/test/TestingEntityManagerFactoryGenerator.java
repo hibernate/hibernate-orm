@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.Map;
 
 import org.hibernate.jpa.boot.spi.Bootstrap;

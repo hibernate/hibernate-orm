@@ -9,11 +9,11 @@
 package org.hibernate.test.annotations.indexcoll;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKey;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
 
 /**
  * @author Emmanuel Bernard

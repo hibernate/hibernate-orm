@@ -6,12 +6,12 @@
  */
 package org.hibernate.test.annotations.naturalid;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -29,10 +29,10 @@ public class D {
 	@Version
 	private int version;
 
-	@javax.persistence.ManyToOne(fetch = FetchType.LAZY)
+	@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY)
 	private A a = null;
 
-	@javax.persistence.OneToOne(mappedBy = "singleD")
+	@jakarta.persistence.OneToOne(mappedBy = "singleD")
 	private A singleA = null;
 
 	public A getA() {

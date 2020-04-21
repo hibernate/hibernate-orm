@@ -7,12 +7,12 @@
 package org.hibernate.test.jpa.compliance.tck2_2;
 
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.annotations.CollectionBinder;

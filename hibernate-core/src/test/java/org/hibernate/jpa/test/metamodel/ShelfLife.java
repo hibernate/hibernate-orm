@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.metamodel;
 import java.sql.Date;
-import javax.persistence.Basic;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class ShelfLife implements java.io.Serializable {

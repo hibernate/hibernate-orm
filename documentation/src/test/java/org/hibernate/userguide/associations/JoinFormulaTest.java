@@ -7,10 +7,10 @@
 package org.hibernate.userguide.associations;
 
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.dialect.PostgreSQL82Dialect;

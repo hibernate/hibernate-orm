@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.SubGraphImpl;

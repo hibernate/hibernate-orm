@@ -8,9 +8,9 @@ package org.hibernate.userguide.pc;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;

@@ -8,11 +8,11 @@ package org.hibernate.envers.test.integration.onetomany;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
 

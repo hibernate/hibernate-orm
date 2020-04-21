@@ -11,9 +11,9 @@ import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.FlushModeType;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -499,7 +499,7 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * @deprecated (since 5.2) - see deprecation note on
-	 * org.hibernate.jpa.spi.HibernateEntityManagerImplementor#createQuery(java.lang.String, java.lang.Class, javax.persistence.criteria.Selection, org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions)
+	 * org.hibernate.jpa.spi.HibernateEntityManagerImplementor#createQuery(java.lang.String, java.lang.Class, jakarta.persistence.criteria.Selection, org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions)
 	 * @return The typed query
 	 */
 	@Deprecated

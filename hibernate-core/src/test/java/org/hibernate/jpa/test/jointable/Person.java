@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.jointable;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Set;
 
 /**

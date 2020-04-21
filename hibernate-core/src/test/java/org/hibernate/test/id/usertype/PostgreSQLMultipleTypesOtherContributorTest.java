@@ -9,11 +9,11 @@ package org.hibernate.test.id.usertype;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.TypeDef;

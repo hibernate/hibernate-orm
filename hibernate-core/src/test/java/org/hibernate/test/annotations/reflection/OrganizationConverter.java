@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.reflection;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Converts {@link Organization} <=> String

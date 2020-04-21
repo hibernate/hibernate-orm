@@ -9,9 +9,9 @@
 package org.hibernate.test.annotations.inheritance.union;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

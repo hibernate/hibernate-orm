@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.query;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

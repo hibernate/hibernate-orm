@@ -13,7 +13,7 @@ import org.hibernate.boot.model.source.spi.AttributePath;
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.Column
+ * @see jakarta.persistence.Column
  */
 public interface ImplicitBasicColumnNameSource extends ImplicitNameSource {
 	/**

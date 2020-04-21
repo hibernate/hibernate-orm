@@ -8,8 +8,8 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
 
-import javax.persistence.PostPersist;
-import javax.persistence.PrePersist;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PrePersist;
 
 import org.jboss.logging.Logger;
 

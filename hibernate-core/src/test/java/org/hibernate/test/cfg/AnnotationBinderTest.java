@@ -8,9 +8,9 @@ package org.hibernate.test.cfg;
 
 import static org.junit.Assert.assertTrue;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

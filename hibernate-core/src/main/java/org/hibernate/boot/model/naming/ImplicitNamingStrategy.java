@@ -18,10 +18,10 @@ package org.hibernate.boot.model.naming;
  *             <li>
  *                 Entity primary table - {@link #determinePrimaryTableName}.  Used when the
  *                 primary table for an entity is not explicitly named in the metadata.  See
- *                 {@link javax.persistence.Table} for details.
+ *                 {@link jakarta.persistence.Table} for details.
  *             </li>
  *             <li>
- *                 Join table - {@link #determineJoinTableName}.  See {@link javax.persistence.JoinTable}
+ *                 Join table - {@link #determineJoinTableName}.  See {@link jakarta.persistence.JoinTable}
  *                 for details.  Join table covers basically any entity association whether in the form
  *                 of a collection of entities (one-to-many, many-to-many) or a singular entity association
  *                 (many-to-one, and occasionally one-to-one).
@@ -29,7 +29,7 @@ package org.hibernate.boot.model.naming;
  *             <li>
  *                 Collection table - {@link #determineCollectionTableName} - Collection table
  *                 refers to any non-entity collection (basic, component/embeddable, any).  See
- *                 {@link javax.persistence.CollectionTable} for details.
+ *                 {@link jakarta.persistence.CollectionTable} for details.
  *             </li>
  *             <li>
  *                 <i>Notice that secondary tables are not mentioned, since they must always be explicitly named</i>
@@ -114,7 +114,7 @@ public interface ImplicitNamingStrategy {
 	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source);
 
 	/**
-	 * Determine the column name related to {@link javax.persistence.JoinColumn}.  In
+	 * Determine the column name related to {@link jakarta.persistence.JoinColumn}.  In
 	 * {@code hbm.xml} terms, this would be a {@code <key/>} defined for a collection
 	 * or the column associated with a many-to-one.
 	 *
@@ -125,7 +125,7 @@ public interface ImplicitNamingStrategy {
 	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source);
 
 	/**
-	 * Determine the column name related to {@link javax.persistence.PrimaryKeyJoinColumn}.  In
+	 * Determine the column name related to {@link jakarta.persistence.PrimaryKeyJoinColumn}.  In
 	 * {@code hbm.xml} terms, this would be a {@code <key/>} defined for a {@code <join/>}
 	 * or a {@code <joined-subclass/>} (others?)
 	 *

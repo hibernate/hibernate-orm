@@ -9,7 +9,7 @@ package org.hibernate.engine.query.spi.sql;
 import java.util.List;
 
 /**
- * Describes a {@link javax.persistence.ConstructorResult}
+ * Describes a {@link jakarta.persistence.ConstructorResult}
  *
  * @author Steve Ebersole
  */

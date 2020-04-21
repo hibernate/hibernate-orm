@@ -7,10 +7,10 @@
 package org.hibernate.test.annotations.embedded;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Index;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 
 @Entity
 public class WealthyPerson extends Person {

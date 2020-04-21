@@ -10,9 +10,9 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

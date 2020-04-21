@@ -7,10 +7,10 @@
 package org.hibernate.jpa.userguide.util;
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Temporal;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Temporal;
 
 /**
  * @author Emmanuel Bernard
@@ -41,7 +41,7 @@ public class Sickness {
 	}
 
 
-	@Temporal(javax.persistence.TemporalType.DATE)
+	@Temporal(jakarta.persistence.TemporalType.DATE)
 	public Date getBeginTime() {
 		return beginTime;
 	}

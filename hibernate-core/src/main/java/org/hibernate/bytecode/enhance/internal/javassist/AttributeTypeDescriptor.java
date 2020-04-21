@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
 
 import javassist.CtClass;
 import javassist.CtField;

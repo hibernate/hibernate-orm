@@ -18,7 +18,7 @@ import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 import org.hibernate.type.Type;
 
 /**
- * Represents a {@link javax.persistence.ConstructorResult} within the custom query.
+ * Represents a {@link jakarta.persistence.ConstructorResult} within the custom query.
  *
  * @author Steve Ebersole
  */

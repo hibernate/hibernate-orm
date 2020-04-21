@@ -10,13 +10,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Id;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.MapKeyEnumerated;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

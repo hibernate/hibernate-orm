@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.test.integration.query.embeddables;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

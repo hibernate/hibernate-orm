@@ -8,8 +8,8 @@ package org.hibernate.orm.test.bootstrap.jpa;
 
 import java.util.Collections;
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceProvider;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.spi.PersistenceProvider;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;

@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.naturalid.cid;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 import org.hibernate.annotations.NaturalId;
 

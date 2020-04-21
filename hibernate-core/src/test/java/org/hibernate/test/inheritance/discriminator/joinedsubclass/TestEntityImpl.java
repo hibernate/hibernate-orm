@@ -6,12 +6,12 @@
  */
 package org.hibernate.test.inheritance.discriminator.joinedsubclass;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 /**
  * @author Andrea Boriero
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class TestEntityImpl implements TestEntityInterface {
 	@Id
 	private Integer id;

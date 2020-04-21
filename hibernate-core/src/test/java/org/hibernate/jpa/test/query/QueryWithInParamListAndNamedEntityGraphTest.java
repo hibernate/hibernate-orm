@@ -8,16 +8,16 @@ package org.hibernate.jpa.test.query;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.Table;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -58,7 +58,7 @@ public class QueryWithInParamListAndNamedEntityGraphTest extends BaseEntityManag
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		TypedQuery<Person> query = em.createQuery( "select p from Person p", Person.class );
-		query.setHint( "javax.persistence.loadgraph", em.createEntityGraph( "withBoss" ) );
+		query.setHint( "jakarta.persistence.loadgraph", em.createEntityGraph( "withBoss" ) );
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();
@@ -73,7 +73,7 @@ public class QueryWithInParamListAndNamedEntityGraphTest extends BaseEntityManag
 		ids.add( 1L );
 		ids.add( 2L );
 		TypedQuery<Person> query = em.createQuery( "select p from Person p where p.id  in :ids", Person.class );
-		query.setHint( "javax.persistence.loadgraph", em.createEntityGraph( "withBoss" ) );
+		query.setHint( "jakarta.persistence.loadgraph", em.createEntityGraph( "withBoss" ) );
 		query.setParameter( "ids", ids );
 		query.getResultList();
 		em.getTransaction().commit();

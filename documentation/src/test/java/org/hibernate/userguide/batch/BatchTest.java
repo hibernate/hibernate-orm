@@ -6,8 +6,8 @@
  */
 package org.hibernate.userguide.batch;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;

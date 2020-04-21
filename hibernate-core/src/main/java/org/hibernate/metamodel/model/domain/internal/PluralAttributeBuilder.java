@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;

@@ -7,13 +7,13 @@
 
 //$Id$
 package org.hibernate.jpa.test.lock;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.LockModeType;
-import javax.persistence.NamedQuery;
-import javax.persistence.QueryHint;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.Version;
 
 /**
  * @author Emmanuel Bernard
@@ -23,7 +23,7 @@ import javax.persistence.Version;
 		name="AllLocks",
 		query="from Lock_",
 		lockMode = LockModeType.PESSIMISTIC_WRITE,
-		hints = { @QueryHint( name = "javax.persistence.lock.timeout", value = "0")}
+		hints = { @QueryHint( name = "jakarta.persistence.lock.timeout", value = "0")}
 )
 public class Lock {
 	private Integer id;

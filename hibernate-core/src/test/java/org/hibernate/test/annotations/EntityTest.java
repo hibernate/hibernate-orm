@@ -15,7 +15,7 @@ import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

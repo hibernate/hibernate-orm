@@ -8,11 +8,11 @@
 //$
 package org.hibernate.test.annotations.manytoone.referencedcolumnname;
 import java.math.BigDecimal;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class WarehouseItem extends GenericObject {

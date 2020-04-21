@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A grouping of Hibernate-specific {@link NamedNativeQuery} definitions.  Effectively extends the named native
- * query definitions made available through {@link javax.persistence.NamedNativeQueries}.
+ * query definitions made available through {@link jakarta.persistence.NamedNativeQueries}.
  *
  * @author Emmanuel Bernard
  */

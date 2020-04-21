@@ -17,12 +17,12 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.FlushModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;

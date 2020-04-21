@@ -7,10 +7,10 @@
 package org.hibernate.jpa.test.metagen.mappedsuperclass.idclass;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 @Entity
 @IdClass(value = ProductAttributeId.class)

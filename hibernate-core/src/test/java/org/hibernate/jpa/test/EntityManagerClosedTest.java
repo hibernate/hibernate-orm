@@ -8,14 +8,14 @@ package org.hibernate.jpa.test;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.Id;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.Query;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

@@ -7,10 +7,10 @@
 package org.hibernate.jpamodelgen.test.accesstype;
 
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 
 /**
  * @author Emmanuel Bernard

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metadata;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.junit.Test;
 

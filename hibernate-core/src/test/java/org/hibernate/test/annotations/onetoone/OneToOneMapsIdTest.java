@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MapsId;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

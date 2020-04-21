@@ -8,11 +8,11 @@ package org.hibernate.test.exceptionhandling;
 
 import java.sql.SQLException;
 import java.util.Map;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.AvailableSettings;

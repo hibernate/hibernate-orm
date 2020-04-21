@@ -229,7 +229,7 @@ public interface DeprecationLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 90000022,
-			value = "Hibernate's legacy org.hibernate.Criteria API is deprecated; use the JPA javax.persistence.criteria.CriteriaQuery instead"
+			value = "Hibernate's legacy org.hibernate.Criteria API is deprecated; use the JPA jakarta.persistence.criteria.CriteriaQuery instead"
 	)
 	void deprecatedLegacyCriteria();
 

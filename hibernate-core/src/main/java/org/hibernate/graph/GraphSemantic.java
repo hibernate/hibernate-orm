@@ -19,7 +19,7 @@ public enum GraphSemantic {
 	 * subsequent select). Attributes that are not specified are treated as
 	 * FetchType.LAZY invariably.
 	 */
-	FETCH( "javax.persistence.fetchgraph" ),
+	FETCH( "jakarta.persistence.fetchgraph" ),
 
 	/**
 	 * Indicates a "load graph" EntityGraph.  Attributes explicitly specified
@@ -28,7 +28,7 @@ public enum GraphSemantic {
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
 	 * in metadata.
 	 */
-	LOAD( "javax.persistence.loadgraph" );
+	LOAD( "jakarta.persistence.loadgraph" );
 
 	private final String jpaHintName;
 

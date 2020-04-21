@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.entities.ids;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;

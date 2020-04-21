@@ -7,9 +7,9 @@
 package org.hibernate.userguide.inheritance.polymorphism;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;

@@ -9,7 +9,7 @@ package org.hibernate.query.criteria.internal.expression.function;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterContainer;

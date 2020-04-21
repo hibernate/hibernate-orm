@@ -14,7 +14,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Property mapper for not owning side of {@link javax.persistence.OneToOne} relation.
+ * Property mapper for not owning side of {@link jakarta.persistence.OneToOne} relation.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau

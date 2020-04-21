@@ -13,9 +13,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.sonatype.plexus.build.incremental.DefaultBuildContext;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;

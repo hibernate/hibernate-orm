@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.jta;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import javax.transaction.RollbackException;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal;
 import java.util.List;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Selection;
 
 /**
  * TODO : javadoc

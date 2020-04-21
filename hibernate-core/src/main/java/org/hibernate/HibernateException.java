@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 /**
  * The base exception type for Hibernate exceptions.

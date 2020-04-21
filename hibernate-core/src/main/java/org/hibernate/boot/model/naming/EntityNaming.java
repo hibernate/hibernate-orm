@@ -31,7 +31,7 @@ public interface EntityNaming {
 	public String getEntityName();
 
 	/**
-	 * The JPA-specific entity name.  See {@link javax.persistence.Entity#name()} for details.
+	 * The JPA-specific entity name.  See {@link jakarta.persistence.Entity#name()} for details.
 	 *
 	 * @return The JPA entity name, if one was specified.  May return {@code null} if one
 	 * was not explicitly specified.

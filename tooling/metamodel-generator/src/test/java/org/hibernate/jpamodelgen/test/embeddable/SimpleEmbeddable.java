@@ -9,7 +9,7 @@ package org.hibernate.jpamodelgen.test.embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

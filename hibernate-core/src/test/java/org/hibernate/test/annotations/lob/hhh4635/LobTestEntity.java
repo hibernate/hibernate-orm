@@ -8,11 +8,11 @@ package org.hibernate.test.annotations.lob.hhh4635;
 
 import java.sql.Blob;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 @Entity
 @Table( name = "lob_test" )

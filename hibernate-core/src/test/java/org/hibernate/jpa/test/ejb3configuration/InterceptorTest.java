@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.ejb3configuration;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;

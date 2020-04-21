@@ -7,10 +7,10 @@
 
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Address {

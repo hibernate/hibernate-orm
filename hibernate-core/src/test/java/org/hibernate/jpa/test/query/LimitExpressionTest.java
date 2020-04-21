@@ -7,12 +7,12 @@
 package org.hibernate.jpa.test.query;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

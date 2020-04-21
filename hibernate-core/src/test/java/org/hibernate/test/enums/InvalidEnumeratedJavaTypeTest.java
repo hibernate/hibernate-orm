@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.enums;
 
-import javax.persistence.Entity;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;

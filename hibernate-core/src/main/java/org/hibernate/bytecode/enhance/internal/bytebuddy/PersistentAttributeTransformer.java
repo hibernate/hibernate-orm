@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.Embedded;
+import jakarta.persistence.Embedded;
 
 import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;

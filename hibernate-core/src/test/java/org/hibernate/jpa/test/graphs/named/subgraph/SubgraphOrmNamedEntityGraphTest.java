@@ -1,9 +1,9 @@
 package org.hibernate.jpa.test.graphs.named.subgraph;
 
 import java.util.List;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -34,7 +34,7 @@ public class SubgraphOrmNamedEntityGraphTest extends BaseEntityManagerFunctional
 				for (AttributeNode<?> n : neg.getAttributeNodes()){
 					if (n.getAttributeName().equalsIgnoreCase( "authors" )) {
 						Assert.assertEquals(1, n.getSubgraphs().size());
-						java.util.List<javax.persistence.AttributeNode<?>> attributeNodes = n.getSubgraphs().get(Author.class).getAttributeNodes();
+						java.util.List<jakarta.persistence.AttributeNode<?>> attributeNodes = n.getSubgraphs().get(Author.class).getAttributeNodes();
 						assertNotNull("Subgraph attributes missing", attributeNodes);
 						Assert.assertEquals("Subgraph wrong number of attributes ", 3, attributeNodes.size());
 					}

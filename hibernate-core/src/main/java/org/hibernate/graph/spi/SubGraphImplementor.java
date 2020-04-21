@@ -6,7 +6,7 @@
  */
 package org.hibernate.graph.spi;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;

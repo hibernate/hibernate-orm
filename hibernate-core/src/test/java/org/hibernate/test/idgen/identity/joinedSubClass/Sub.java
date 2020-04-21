@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.idgen.identity.joinedSubClass;
 
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 /**
  * @author Andrey Vlasov

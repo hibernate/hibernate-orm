@@ -7,15 +7,15 @@
 package org.hibernate.jpamodelgen.test.accesstype;
 
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.Access;
-import javax.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Access;
+import jakarta.persistence.ElementCollection;
 
 /**
  * @author Emmanuel Bernard
  */
 @Embeddable
-@Access(javax.persistence.AccessType.FIELD)
+@Access(jakarta.persistence.AccessType.FIELD)
 public class Inhabitant {
 	private String name;
 	@ElementCollection

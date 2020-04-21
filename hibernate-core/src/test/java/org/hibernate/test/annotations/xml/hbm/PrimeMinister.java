@@ -8,11 +8,11 @@
 //$Id:PrimeMinister.java 9793 2006-04-26 02:20:18 -0400 (mer., 26 avr. 2006) epbernard $
 package org.hibernate.test.annotations.xml.hbm;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard

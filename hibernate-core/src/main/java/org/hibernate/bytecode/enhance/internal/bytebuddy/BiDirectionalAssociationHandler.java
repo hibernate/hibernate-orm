@@ -11,12 +11,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
 import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;

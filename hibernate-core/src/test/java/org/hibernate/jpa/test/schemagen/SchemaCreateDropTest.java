@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.schemagen;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

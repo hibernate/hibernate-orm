@@ -7,7 +7,7 @@
 package org.hibernate.loader.custom;
 
 /**
- * A return representing a {@link javax.persistence.ConstructorResult}
+ * A return representing a {@link jakarta.persistence.ConstructorResult}
  *
  * @author Steve Ebersole
  */

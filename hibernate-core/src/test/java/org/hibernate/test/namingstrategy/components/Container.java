@@ -7,9 +7,9 @@
 package org.hibernate.test.namingstrategy.components;
 
 import java.util.List;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Steve Ebersole

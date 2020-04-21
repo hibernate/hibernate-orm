@@ -15,19 +15,19 @@ public enum CascadeType {
 	 */
 	ALL,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#PERSIST}.
+	 * Corresponds to {@link jakarta.persistence.CascadeType#PERSIST}.
 	 */
 	PERSIST,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#MERGE}.
+	 * Corresponds to {@link jakarta.persistence.CascadeType#MERGE}.
 	 */
 	MERGE,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#REMOVE}.
+	 * Corresponds to {@link jakarta.persistence.CascadeType#REMOVE}.
 	 */
 	REMOVE,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#REFRESH}.
+	 * Corresponds to {@link jakarta.persistence.CascadeType#REFRESH}.
 	 */
 	REFRESH,
 	/**
@@ -56,12 +56,12 @@ public enum CascadeType {
 	/**
 	 * JPA originally planned on calling DETACH EVICT.
 	 *
-	 * @deprecated use {@link javax.persistence.CascadeType#DETACH}
+	 * @deprecated use {@link jakarta.persistence.CascadeType#DETACH}
 	 */
 	@Deprecated
 	EVICT,
 	/**
-	 * Corresponds to {@link javax.persistence.CascadeType#DETACH}.
+	 * Corresponds to {@link jakarta.persistence.CascadeType#DETACH}.
 	 */
 	DETACH
 }

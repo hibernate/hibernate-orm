@@ -1,6 +1,6 @@
 package org.hibernate.test.collection.map;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "multilingual_parent")

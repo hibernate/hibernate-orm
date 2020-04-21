@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.pagination.hhh9965;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 /**

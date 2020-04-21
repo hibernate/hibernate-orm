@@ -9,15 +9,15 @@ package org.hibernate.jpa.boot.spi;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
 /**
  * Abstraction for dealing with either {@code <persistence-unit/>} information whether that comes from
- * an EE container in the form of {@link javax.persistence.spi.PersistenceUnitInfo} or in an SE environment
+ * an EE container in the form of {@link jakarta.persistence.spi.PersistenceUnitInfo} or in an SE environment
  * where Hibernate has parsed the {@code persistence.xml} file itself.
  *
  * @author Steve Ebersole

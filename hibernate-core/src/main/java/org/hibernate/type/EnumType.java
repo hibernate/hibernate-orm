@@ -14,8 +14,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 import java.util.Properties;
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
  *     </li>
  *     <li>
  *         <strong>useNamed</strong> - Should enum be mapped via name.  Default is to map as ordinal.  Used when
- *         annotations are not used (otherwise {@link javax.persistence.EnumType} is used).
+ *         annotations are not used (otherwise {@link jakarta.persistence.EnumType} is used).
  *     </li>
  *     <li>
  *         <strong>type</strong> - Identifies the JDBC type (via type code) to be used for the column.
@@ -86,14 +86,14 @@ public class EnumType<T extends Enum>
 			enumClass = reader.getReturnedClass().asSubclass( Enum.class );
 
 			final boolean isOrdinal;
-			final javax.persistence.EnumType enumType = getEnumType( reader );
+			final jakarta.persistence.EnumType enumType = getEnumType( reader );
 			if ( enumType == null ) {
 				isOrdinal = true;
 			}
-			else if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
+			else if ( jakarta.persistence.EnumType.ORDINAL.equals( enumType ) ) {
 				isOrdinal = true;
 			}
-			else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
+			else if ( jakarta.persistence.EnumType.STRING.equals( enumType ) ) {
 				isOrdinal = false;
 			}
 			else {
@@ -130,8 +130,8 @@ public class EnumType<T extends Enum>
 		);
 	}
 
-	private javax.persistence.EnumType getEnumType(ParameterType reader) {
-		javax.persistence.EnumType enumType = null;
+	private jakarta.persistence.EnumType getEnumType(ParameterType reader) {
+		jakarta.persistence.EnumType enumType = null;
 		if ( reader.isPrimaryKey() ) {
 			MapKeyEnumerated enumAnn = getAnnotation( reader.getAnnotationsMethod(), MapKeyEnumerated.class );
 			if ( enumAnn != null ) {

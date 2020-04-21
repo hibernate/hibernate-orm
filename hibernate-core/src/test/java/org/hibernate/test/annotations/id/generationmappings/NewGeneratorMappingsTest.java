@@ -25,7 +25,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test mapping the {@link javax.persistence.GenerationType GenerationTypes} to the corresponding
+ * Test mapping the {@link jakarta.persistence.GenerationType GenerationTypes} to the corresponding
  * hibernate generators using the new scheme
  *
  * @author Steve Ebersole

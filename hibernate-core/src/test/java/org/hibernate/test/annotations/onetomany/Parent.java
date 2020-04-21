@@ -10,10 +10,10 @@ package org.hibernate.test.annotations.onetomany;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.BatchSize;
 
@@ -28,7 +28,7 @@ public class Parent implements Serializable {
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
 	@BatchSize(size = 5)
-	@javax.persistence.OrderBy("favoriteSuperhero asc, favoriteSinger desc")
+	@jakarta.persistence.OrderBy("favoriteSuperhero asc, favoriteSinger desc")
 	public Set<Child> children;
 
 	public int hashCode() {

@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.cdi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;

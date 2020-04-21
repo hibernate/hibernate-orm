@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.cacheable.api;
 
-import javax.persistence.EntityManager;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SharedCacheMode;
 
 import java.util.Map;
 

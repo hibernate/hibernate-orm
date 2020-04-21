@@ -10,10 +10,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.Audited;

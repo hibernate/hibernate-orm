@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.onetomany.inheritance.single;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 
 @Entity

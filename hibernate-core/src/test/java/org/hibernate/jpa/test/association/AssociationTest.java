@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.association;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

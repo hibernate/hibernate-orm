@@ -7,7 +7,7 @@
 package org.hibernate.jpamodelgen.test.mappedsuperclass.typedmappedsuperclass;
 
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AttachmentGroupPost<UserRoleType extends UserRole, GroupType extends AttachmentGroup>

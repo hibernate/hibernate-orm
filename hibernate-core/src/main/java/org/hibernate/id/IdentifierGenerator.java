@@ -7,7 +7,7 @@
 package org.hibernate.id;
 
 import java.io.Serializable;
-import javax.persistence.GeneratedValue;
+import jakarta.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

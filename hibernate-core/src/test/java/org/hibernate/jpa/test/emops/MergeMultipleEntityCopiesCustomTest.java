@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.emops;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.cache.cid;
 
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;

@@ -8,10 +8,10 @@ package org.hibernate.test.annotations.idclass;
 
 import java.io.Serializable;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.Session;
 import org.junit.Test;

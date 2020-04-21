@@ -7,14 +7,14 @@
 
 package org.hibernate.jpa.test.lock;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.LockModeType;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

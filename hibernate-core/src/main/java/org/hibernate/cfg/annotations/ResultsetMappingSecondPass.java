@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.ColumnResult;
-import javax.persistence.ConstructorResult;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;

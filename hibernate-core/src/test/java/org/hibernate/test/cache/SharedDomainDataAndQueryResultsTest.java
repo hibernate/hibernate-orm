@@ -9,11 +9,11 @@ package org.hibernate.test.cache;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.NamedQuery;
-import javax.persistence.QueryHint;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;

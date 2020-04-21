@@ -8,9 +8,9 @@ package org.hibernate.query;
 
 import org.hibernate.SQLQuery;
 
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * Contract for things that can produce Query instances.  Expected implementors include
@@ -42,7 +42,7 @@ public interface QueryProducer {
 	 *
 	 * @return The Query instance for manipulation and execution
 	 *
-	 * @see javax.persistence.EntityManager#createQuery(String)
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 */
 	org.hibernate.Query createQuery(String queryString);
 
@@ -53,7 +53,7 @@ public interface QueryProducer {
 	 *
 	 * @return The Query instance for manipulation and execution
 	 *
-	 * @see javax.persistence.EntityManager#createQuery(String,Class)
+	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
 	 */
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
 
@@ -69,7 +69,7 @@ public interface QueryProducer {
 	 * defined with the given name or if the query string is
 	 * found to be invalid
 	 *
-	 * @see javax.persistence.EntityManager#createNamedQuery(String)
+	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 */
 	Query createNamedQuery(String name);
 
@@ -87,7 +87,7 @@ public interface QueryProducer {
 	 * found to be invalid or if the query result is found to
 	 * not be assignable to the specified type
 	 *
-	 * @see javax.persistence.EntityManager#createNamedQuery(String,Class)
+	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
 	 */
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
 
@@ -114,7 +114,7 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *
-	 * @see javax.persistence.EntityManager#createNativeQuery(String)
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String)
 	 */
 	NativeQuery createNativeQuery(String sqlString);
 
@@ -127,7 +127,7 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *
-	 * @see javax.persistence.EntityManager#createNativeQuery(String,Class)
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
@@ -140,8 +140,8 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 *
-	 * @see javax.persistence.EntityManager#createNativeQuery(String,Class)
-	 * @see javax.persistence.SqlResultSetMapping
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
+	 * @see jakarta.persistence.SqlResultSetMapping
 	 */
 	NativeQuery createNativeQuery(String sqlString, String resultSetMapping);
 

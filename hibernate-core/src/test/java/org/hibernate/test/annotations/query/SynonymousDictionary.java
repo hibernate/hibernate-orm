@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.query;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

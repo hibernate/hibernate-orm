@@ -10,11 +10,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

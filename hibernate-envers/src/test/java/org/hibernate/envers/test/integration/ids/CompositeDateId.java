@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.ids;
 
 import java.util.Arrays;
 import java.util.Date;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

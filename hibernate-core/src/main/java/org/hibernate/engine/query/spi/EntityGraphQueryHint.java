@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.Subgraph;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;

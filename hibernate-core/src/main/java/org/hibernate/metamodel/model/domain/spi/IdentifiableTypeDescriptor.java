@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 

@@ -8,8 +8,8 @@ package org.hibernate.test.exceptionhandling;
 
 import static org.junit.Assert.fail;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
 

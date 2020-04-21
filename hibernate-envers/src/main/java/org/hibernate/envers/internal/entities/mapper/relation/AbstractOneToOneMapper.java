@@ -8,7 +8,7 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.util.Map;
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;

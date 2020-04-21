@@ -9,12 +9,12 @@ package org.hibernate.test.schemaupdate;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;

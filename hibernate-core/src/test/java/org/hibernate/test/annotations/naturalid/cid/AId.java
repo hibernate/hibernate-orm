@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.naturalid.cid;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Donnchadh O Donnabhain

@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
-import javax.persistence.Embedded;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Hardy Ferentschik

@@ -10,11 +10,11 @@ package org.hibernate.test.annotations.indexcoll;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.CascadeType;
 
@@ -38,8 +38,8 @@ public class ExchangeOffice {
 		return id;
 	}
 
-	@javax.persistence.OneToMany(mappedBy = "parent")
-    @javax.persistence.MapKey(name="key")
+	@jakarta.persistence.OneToMany(mappedBy = "parent")
+    @jakarta.persistence.MapKey(name="key")
     private Map<ExchangeRateKey, ExchangeRate> exchangeRates = new java.util.HashMap<ExchangeRateKey, ExchangeRate>();
 	
 	public Map<ExchangeRateKey,ExchangeRate> getExchangeRates() {

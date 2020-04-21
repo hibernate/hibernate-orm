@@ -7,7 +7,7 @@
 package org.hibernate.query.spi;
 
 import java.util.Collection;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

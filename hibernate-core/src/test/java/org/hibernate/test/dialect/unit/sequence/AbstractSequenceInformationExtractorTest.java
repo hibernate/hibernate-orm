@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.dialect.unit.sequence;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;

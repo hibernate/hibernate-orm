@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.MappedSuperclassType;
+import jakarta.persistence.metamodel.MappedSuperclassType;
 
 /**
  * Extension of the JPA {@link MappedSuperclassType} contract

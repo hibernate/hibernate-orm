@@ -9,9 +9,9 @@ package org.hibernate.userguide.hql;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Tuple;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.Session;
 import org.hibernate.boot.MetadataBuilder;

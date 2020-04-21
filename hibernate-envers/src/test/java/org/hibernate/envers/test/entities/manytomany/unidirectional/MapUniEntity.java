@@ -7,10 +7,10 @@
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
 
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKeyColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyColumn;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;

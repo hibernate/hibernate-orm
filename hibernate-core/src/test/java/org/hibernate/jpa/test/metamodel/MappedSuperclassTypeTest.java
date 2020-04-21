@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

@@ -35,10 +35,10 @@ is required to locate all JPA configuration files by classpath lookup of the `ME
 ====
 
 `persistence.xml` files should provide a unique name for each "persistence unit".  Applications use this name to
-reference the configuration when obtaining an `javax.persistence.EntityManagerFactory` reference.
+reference the configuration when obtaining an `jakarta.persistence.EntityManagerFactory` reference.
 
 The settings defined in the `<properties/>` element are discussed in <<hibernate-gsg-tutorial-basic-config>>.
-Here the `javax.persistence`-prefixed varieties are used when possible.  Notice that the remaining
+Here the `jakarta.persistence`-prefixed varieties are used when possible.  Notice that the remaining
 Hibernate-specific configuration setting names are now prefixed with `hibernate.`.
 
 Additionally, the `<class/>` element functions the same as we saw in <<hibernate-gsg-tutorial-annotations-config>>.
@@ -56,7 +56,7 @@ The entity is exactly the same as in <<hibernate-gsg-tutorial-annotations-entity
 The previous tutorials used the Hibernate native APIs.  This tutorial uses the JPA APIs.
 
 [[hibernate-gsg-tutorial-jpa-test-setUp]]
-.Obtaining the javax.persistence.EntityManagerFactory
+.Obtaining the jakarta.persistence.EntityManagerFactory
 ====
 [source, JAVA]
 ----
@@ -83,7 +83,7 @@ entityManager.close();
 ----
 ====
 
-The code is similar to <<hibernate-gsg-tutorial-basic-test-saving>>.  The `javax.persistence.EntityManager` interface
+The code is similar to <<hibernate-gsg-tutorial-basic-test-saving>>.  The `jakarta.persistence.EntityManager` interface
 is used instead of the `org.hibernate.Session` interface.  JPA calls this operation "persist" instead of "save".
 
 

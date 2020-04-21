@@ -16,7 +16,7 @@ import org.hibernate.query.spi.QueryImplementor;
  */
 public interface CriteriaInterpretation {
 	/**
-	 * Generate a {@link javax.persistence.Query} instance given the interpreted criteria compiled against the
+	 * Generate a {@link jakarta.persistence.Query} instance given the interpreted criteria compiled against the
 	 * passed EntityManager.
 	 *
 	 *

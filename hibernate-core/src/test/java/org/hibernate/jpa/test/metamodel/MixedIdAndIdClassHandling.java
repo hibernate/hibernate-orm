@@ -6,13 +6,13 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

@@ -7,7 +7,7 @@
 package org.hibernate.test.collection.basic;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Embeddable
 public class EmailAddress implements Serializable {

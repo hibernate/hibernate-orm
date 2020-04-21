@@ -6,8 +6,8 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

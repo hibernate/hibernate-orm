@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.type.Type;

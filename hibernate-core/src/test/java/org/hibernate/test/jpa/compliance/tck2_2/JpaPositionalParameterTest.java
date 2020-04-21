@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.query.Query;
 

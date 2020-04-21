@@ -6,18 +6,18 @@
  */
 package org.hibernate.jpa.test.procedure;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedStoredProcedureQueries;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
+import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.Table;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;

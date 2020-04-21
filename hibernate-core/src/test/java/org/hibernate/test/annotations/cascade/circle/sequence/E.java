@@ -9,15 +9,15 @@ package org.hibernate.test.annotations.cascade.circle.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class E extends AbstractEntity {
     private static final long serialVersionUID = 1226955558L;
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , optional = false)
     private F f;
 

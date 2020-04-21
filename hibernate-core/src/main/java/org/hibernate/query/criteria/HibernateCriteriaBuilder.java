@@ -7,9 +7,9 @@
 package org.hibernate.query.criteria;
 
 import java.util.Map;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Hibernate extensions to the JPA CriteriaBuilder.  Currently there are no extensions; these are coming in 6.0

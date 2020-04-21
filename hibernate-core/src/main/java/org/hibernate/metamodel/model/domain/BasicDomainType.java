@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.Objects;
-import javax.persistence.metamodel.BasicType;
+import jakarta.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
 

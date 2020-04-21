@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.List;
-import javax.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
 
 /**
  * Hibernate extension to the JPA {@link ListAttribute} descriptor

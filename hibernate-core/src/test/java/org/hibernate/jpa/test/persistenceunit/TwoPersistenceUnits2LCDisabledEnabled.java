@@ -8,10 +8,10 @@ package org.hibernate.jpa.test.persistenceunit;
 
 import java.util.Collections;
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -37,7 +37,7 @@ public class TwoPersistenceUnits2LCDisabledEnabled {
 	public void testDisabledEnabled() {
 		final Map<Object, Object> config = Environment.getProperties();
 		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );
-		config.put( "javax.persistence.sharedCache.mode", SharedCacheMode.ENABLE_SELECTIVE );
+		config.put( "jakarta.persistence.sharedCache.mode", SharedCacheMode.ENABLE_SELECTIVE );
 		config.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 
 		testIt( config );

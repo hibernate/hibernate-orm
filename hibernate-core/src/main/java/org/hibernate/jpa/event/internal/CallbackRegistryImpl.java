@@ -7,7 +7,7 @@
 package org.hibernate.jpa.event.internal;
 
 import java.util.HashMap;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.Callback;

@@ -18,9 +18,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * By default list indexes are stored starting at zero.
  *
- * Generally used in conjunction with {@link javax.persistence.OrderColumn}.
+ * Generally used in conjunction with {@link jakarta.persistence.OrderColumn}.
  *
- * @see javax.persistence.OrderColumn
+ * @see jakarta.persistence.OrderColumn
  *
  * @author Steve Ebersole
  */

@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.nativequery;
 
 import java.util.List;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

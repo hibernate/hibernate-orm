@@ -7,18 +7,18 @@
 
 //$Id$
 package org.hibernate.jpa.test.lock;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedQuery;
-import javax.persistence.QueryHint;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
 @NamedQuery(name = "getAll", query = "select u from UnversionedLock u",
-hints = @QueryHint( name = "javax.persistence.lock.timeout", value = "3000"))
+hints = @QueryHint( name = "jakarta.persistence.lock.timeout", value = "3000"))
 public class UnversionedLock {
 	@Id
 	@GeneratedValue

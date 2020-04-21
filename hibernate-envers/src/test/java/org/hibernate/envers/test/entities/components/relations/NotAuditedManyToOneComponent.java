@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.entities.components.relations;
 
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;

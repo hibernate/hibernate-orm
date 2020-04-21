@@ -8,9 +8,9 @@ package org.hibernate.test.annotations.lob.locator;
 
 import java.sql.Blob;
 import java.sql.Clob;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

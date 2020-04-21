@@ -10,10 +10,10 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;

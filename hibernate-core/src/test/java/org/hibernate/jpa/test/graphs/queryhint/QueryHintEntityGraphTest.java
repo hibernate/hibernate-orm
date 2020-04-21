@@ -10,10 +10,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.Subgraph;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

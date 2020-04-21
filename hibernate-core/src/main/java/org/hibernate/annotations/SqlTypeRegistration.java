@@ -15,6 +15,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -24,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({TYPE, METHOD, FIELD, ANNOTATION_TYPE})
+@java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( SqlTypeRegistrations.class )
@@ -36,7 +37,9 @@ public @interface SqlTypeRegistration {
 
 	/**
 	 * The type-code under which to register this descriptor.  Can either add a new descriptor
-	 * or override an existing one
+	 * or override an existing one.
+	 *
+	 * By default we will use {@link SqlTypeDescriptor#getJdbcTypeCode}
 	 */
 	int registrationCode() default Integer.MIN_VALUE;
 }

@@ -104,6 +104,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.named.NamedQueryRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -386,6 +388,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		valueResolvers.add( resolver );
 	}
 
+	@Override
+	public void addJavaTypeRegistration(Class<?> javaType, JavaTypeDescriptor<?> jtd) {
+		getTypeConfiguration().getJavaTypeDescriptorRegistry().addBaselineDescriptor( javaType, jtd );
+	}
+
+	@Override
+	public void addSqlTypeRegistration(int typeCode, SqlTypeDescriptor std) {
+		getTypeConfiguration().getSqlTypeDescriptorRegistry().addDescriptor( typeCode, std );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters

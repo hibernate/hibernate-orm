@@ -87,6 +87,7 @@ public class SqlTypeTests {
 
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "simple_entity" )
+	@SqlTypeRegistration( value = RegisteredCustomSqlTypeDescriptor.class, registrationCode = Integer.MAX_VALUE - 1 )
 	public static class SimpleEntity {
 		@Id
 		private Integer id;
@@ -113,7 +114,6 @@ public class SqlTypeTests {
 		@SqlType( CustomSqlTypeDescriptor.class )
 		private Integer customType;
 
-		@SqlTypeRegistration( value = RegisteredCustomSqlTypeDescriptor.class, registrationCode = Integer.MAX_VALUE - 1 )
 		@SqlTypeCode( Integer.MAX_VALUE - 1 )
 		private Integer customTypeRegistration;
 	}

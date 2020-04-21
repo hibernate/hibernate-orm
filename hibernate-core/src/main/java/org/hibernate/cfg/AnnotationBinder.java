@@ -98,6 +98,8 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.JavaTypeRegistration;
+import org.hibernate.annotations.JavaTypeRegistrations;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
@@ -118,6 +120,8 @@ import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
+import org.hibernate.annotations.SqlTypeRegistration;
+import org.hibernate.annotations.SqlTypeRegistrations;
 import org.hibernate.annotations.Tuplizer;
 import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
@@ -167,6 +171,9 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -346,6 +353,8 @@ public final class AnnotationBinder {
 			}
 		}
 
+		handleTypeDescriptorRegistrations( pckg, context );
+
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
 		bindFilterDefs( pckg, context );
@@ -353,6 +362,28 @@ public final class AnnotationBinder {
 		bindFetchProfiles( pckg, context );
 		BinderHelper.bindAnyMetaDefs( pckg, context );
 
+	}
+
+	private static void handleSqlTypeDescriptorRegistration(
+			MetadataBuildingContext context,
+			ManagedBeanRegistry managedBeanRegistry,
+			SqlTypeRegistration annotation) {
+		final Class<? extends SqlTypeDescriptor> stdClass = annotation.value();
+		final SqlTypeDescriptor std = managedBeanRegistry.getBean( stdClass ).getBeanInstance();
+
+		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
+				? std.getJdbcTypeCode()
+				: annotation.registrationCode();
+		context.getMetadataCollector().addSqlTypeRegistration( typeCode, std );
+	}
+
+	private static void handleJavaTypeDescriptorRegistration(
+			MetadataBuildingContext context,
+			ManagedBeanRegistry managedBeanRegistry,
+			JavaTypeRegistration annotation) {
+		final Class<? extends BasicJavaDescriptor<?>> jtdClass = annotation.descriptorClass();
+		final BasicJavaDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
+		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
 	}
 
 	private static void bindGenericGenerators(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
@@ -778,6 +809,8 @@ public final class AnnotationBinder {
 
 		// try to find class level generators
 		HashMap<String, IdentifierGeneratorDefinition> classGenerators = buildGenerators( clazzToProcess, context );
+		handleTypeDescriptorRegistrations( clazzToProcess, context );
+
 		// check properties
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
 		inheritanceState.postProcess( persistentClass, entityBinder );
@@ -835,6 +868,37 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 		entityBinder.processComplementaryTableDefinitions( tabAnn );
+	}
+
+	private static void handleTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+
+		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		if ( annotatedElement.isAnnotationPresent( JavaTypeRegistration.class ) ) {
+			final JavaTypeRegistration annotation = annotatedElement.getAnnotation( JavaTypeRegistration.class );
+			handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, annotation );
+		}
+		if ( annotatedElement.isAnnotationPresent( JavaTypeRegistrations.class ) ) {
+			final JavaTypeRegistrations annotation = annotatedElement.getAnnotation( JavaTypeRegistrations.class );
+			final JavaTypeRegistration[] registrations = annotation.value();
+			for ( int i = 0; i < registrations.length; i++ ) {
+				handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+			}
+		}
+
+		if ( annotatedElement.isAnnotationPresent( SqlTypeRegistration.class ) ) {
+			final SqlTypeRegistration annotation = annotatedElement.getAnnotation( SqlTypeRegistration.class );
+			handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, annotation );
+		}
+		if ( annotatedElement.isAnnotationPresent( SqlTypeRegistrations.class ) ) {
+			final SqlTypeRegistrations annotation = annotatedElement.getAnnotation( SqlTypeRegistrations.class );
+			final SqlTypeRegistration[] registrations = annotation.value();
+			for ( int i = 0; i < registrations.length; i++ ) {
+				handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+			}
+		}
 	}
 
 	/**
@@ -2816,6 +2880,8 @@ public final class AnnotationBinder {
 							buildingContext
 					);
 					buildingContext.getMetadataCollector().addSecondPass( secondPass );
+
+					handleTypeDescriptorRegistrations( property, buildingContext );
 				}
 				else {
 					Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>( buildGenerators( property, buildingContext ) );

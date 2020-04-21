@@ -10,25 +10,23 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
+@java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JavaTypeRegistrations.class )
 public @interface JavaTypeRegistration {
 	Class<?> javaType();
 
-	/**
-	 * todo (6.0) : limit to BasicJavaDescriptor?
-	 */
-	Class<? extends JavaTypeDescriptor<?>> descriptorClass();
+	Class<? extends BasicJavaDescriptor<?>> descriptorClass();
 }

@@ -41,7 +41,17 @@ public class SqlTypeDescriptorRegistry implements SqlTypeDescriptorBaseline.Base
 
 	@Override
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
+		final SqlTypeDescriptor previous = descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
+		if ( previous != null && previous != sqlTypeDescriptor ) {
+			log.debugf( "addDescriptor(%s) replaced previous registration", sqlTypeDescriptor, previous );
+		}
+	}
+
+	public void addDescriptor(int typeCode, SqlTypeDescriptor sqlTypeDescriptor) {
+		final SqlTypeDescriptor previous = descriptorMap.put( typeCode, sqlTypeDescriptor );
+		if ( previous != null && previous != sqlTypeDescriptor ) {
+			log.debugf( "addDescriptor(%i, %s) replaced previous registration", typeCode, sqlTypeDescriptor, previous );
+		}
 	}
 
 	public SqlTypeDescriptor getDescriptor(int jdbcTypeCode) {

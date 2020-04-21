@@ -61,7 +61,6 @@ include 'hibernate-agroal'
 include 'hibernate-jcache'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
-include 'hibernate-jipijapa'
 
 include 'hibernate-graalvm'
 

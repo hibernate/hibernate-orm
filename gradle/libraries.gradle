@@ -31,8 +31,6 @@ ext {
 
     geolatteVersion = '1.4.0'
 
-    // Wildfly version targeted by the custom Jipijapa build
-    wildflyVersion = '17.0.1.Final'
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0'
 
@@ -160,7 +158,6 @@ ext {
             shrinkwrap_descriptors_impl_javaee: "org.jboss.shrinkwrap.descriptors:shrinkwrap-descriptors-impl-javaee:${shrinkwrapDescriptorsVersion}",
 
             jboss_vfs: "org.jboss:jboss-vfs:3.2.11.Final",
-            jipijapa_spi: "org.wildfly:jipijapa-spi:${wildflyVersion}",
             wildfly_transaction_client : 'org.wildfly.transaction:wildfly-transaction-client:1.1.7.Final',
 
             jboss_ejb_spec_jar          : 'org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final',

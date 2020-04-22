@@ -232,6 +232,17 @@ public class SimpleValue implements KeyValue {
 
 	private IdentifierGenerator identifierGenerator;
 
+	/**
+	 * Returns the cached identifierGenerator.
+	 *
+	 * @return IdentifierGenerator null if
+	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
+	 * completed.
+	 */
+	public IdentifierGenerator getIdentifierGenerator() {
+		return identifierGenerator;
+	}
+
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,

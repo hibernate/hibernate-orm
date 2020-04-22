@@ -26,8 +26,10 @@ import org.hibernate.id.Assigned;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
@@ -169,11 +171,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		else {
 			identifierMapperType = (CompositeType) mapper.getType();
+			KeyValue identifier = mappingInfo.getIdentifier();
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					getEntityName(),
 					getFactory(),
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
-					(ComponentType) identifierMapperType
+					(ComponentType) identifierMapperType,
+					identifier
 			);
 		}
 	}
@@ -275,7 +279,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			String entityName,
 			SessionFactoryImplementor sessionFactory,
 			ComponentType mappedIdClassComponentType,
-			ComponentType virtualIdComponent) {
+			ComponentType virtualIdComponent,
+			KeyValue identifier) {
 		// so basically at this point we know we have a "mapped" composite identifier
 		// which is an awful way to say that the identifier is represented differently
 		// in the entity and in the identifier value.  The incoming value should
@@ -303,7 +308,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						entityName,
 						sessionFactory,
 						virtualIdComponent,
-						mappedIdClassComponentType
+						mappedIdClassComponentType,
+						identifier
 		);
 	}
 
@@ -342,28 +348,42 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		private final SessionFactoryImplementor sessionFactory;
 		private final ComponentType virtualIdComponent;
 		private final ComponentType mappedIdentifierType;
+		private final KeyValue identifier;
 
 		private IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller(
 				String entityName,
 				SessionFactoryImplementor sessionFactory,
 				ComponentType virtualIdComponent,
-				ComponentType mappedIdentifierType) {
+				ComponentType mappedIdentifierType,
+				KeyValue identifier) {
 			this.sessionFactory = sessionFactory;
 			this.entityName = entityName;
 			this.virtualIdComponent = virtualIdComponent;
 			this.mappedIdentifierType = mappedIdentifierType;
+			this.identifier = identifier;
 		}
 
 		@Override
 		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session) {
 			final Object id = mappedIdentifierType.instantiate( entityMode );
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
+			final String[] names = virtualIdComponent.getPropertyNames();
 			final Type[] subTypes = virtualIdComponent.getSubtypes();
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
 			for ( int i = 0; i < length; i++ ) {
 				if ( propertyValues[i] == null ) {
-					throw new HibernateException( "No part of a composite identifier may be null" );
+					try {
+						final String name = names[i];
+						final Property p = ((Component) identifier).getProperty(name);
+						final SimpleValue v = (SimpleValue) p.getValue();
+						if ( v.getIdentifierGenerator() == null ) {
+							throw new NullPointerException("No IdentifierGenerator found for property "+name);
+						}
+					}
+					catch (Throwable t) {
+						throw new HibernateException( "No part of a composite identifier may be null", t );
+					}
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {

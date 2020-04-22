@@ -16,7 +16,7 @@ buildscript {
 		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-		classpath 'de.thetaphi:forbiddenapis:2.5'
+		classpath 'de.thetaphi:forbiddenapis:2.7'
 		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:4.2.0'
 	}
 }

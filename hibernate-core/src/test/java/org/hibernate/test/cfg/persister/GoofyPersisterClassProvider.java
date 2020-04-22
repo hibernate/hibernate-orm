@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.EntityMode;
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -806,7 +807,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
+		public String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 

@@ -7,27 +7,19 @@
 package org.hibernate.orm.test.query.criteria.filter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OrderColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.Where;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,7 +27,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -43,62 +35,63 @@ import static org.junit.Assert.assertThat;
  */
 @DomainModel(
 		annotatedClasses = {
-				FilterJoinTableTests.Client.class,
-				FilterJoinTableTests.Account.class
+				WhereTests.Client.class,
+				WhereTests.Account.class
 		}
 )
 @SessionFactory
-public class FilterJoinTableTests {
+public class WhereTests {
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 
-			// ensure query plan cache won't interfere
-			scope.getSessionFactory().getQueryEngine().getInterpretationCache().close();
-
-			Client client = new Client()
-					.setId( 1L )
-					.setName( "John Doe" );
-
-			client.addAccount(
-					new Account()
-							.setId( 1L )
-							.setType( AccountType.CREDIT )
-							.setAmount( 5000d )
-							.setRate( 1.25 / 100 )
-			);
-
-			client.addAccount(
-					new Account()
-							.setId( 2L )
-							.setType( AccountType.DEBIT )
-							.setAmount( 0d )
-							.setRate( 1.05 / 100 )
-			);
-
-			client.addAccount(
-					new Account()
-							.setType( AccountType.DEBIT )
-							.setId( 3L )
-							.setAmount( 250d )
-							.setRate( 1.05 / 100 )
-			);
-
+			Client client = new Client();
+			client.setId( 1L );
+			client.setName( "John Doe" );
 			session.persist( client );
+
+			Account account1 = new Account( );
+			account1.setId( 1L );
+			account1.setType( AccountType.CREDIT );
+			account1.setAmount( 5000d );
+			account1.setRate( 1.25 / 100 );
+			account1.setActive( true );
+			account1.setClient( client );
+			client.getCreditAccounts().add( account1 );
+			session.persist( account1 );
+
+			Account account2 = new Account( );
+			account2.setId( 2L );
+			account2.setType( AccountType.DEBIT );
+			account2.setAmount( 0d );
+			account2.setRate( 1.05 / 100 );
+			account2.setActive( false );
+			account2.setClient( client );
+			client.getDebitAccounts().add( account2 );
+			session.persist( account2 );
+
+			Account account3 = new Account( );
+			account3.setType( AccountType.DEBIT );
+			account3.setId( 3L );
+			account3.setAmount( 250d );
+			account3.setRate( 1.05 / 100 );
+			account3.setActive( true );
+			account3.setClient( client );
+			client.getDebitAccounts().add( account3 );
+			session.persist( account3 );
 		} );
 	}
 
 	@Test
-	void testLoadFilterOnCollectionField(SessionFactoryScope scope) {
+	void testWhere(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "firstAccounts" ).setParameter( "maxOrderId", 1);
-
 			final CriteriaBuilder criteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 			final CriteriaQuery<Client> criteriaQuery = createCriteriaQuery( criteriaBuilder, Client.class, "id", 1L );
 			final Client client = session.createQuery( criteriaQuery ).uniqueResult();
-			assertThat( client.getAccounts().stream().map( Account::getId ).collect( Collectors.toSet() ),
-						equalTo( new HashSet<>( Arrays.asList( 1L, 2L ) ) ) );
+
+			assertThat( client.getCreditAccounts().size(), is( 1 ) );
+			assertThat( client.getDebitAccounts().size(), is( 1 ) );
 		} );
 	}
 
@@ -108,13 +101,6 @@ public class FilterJoinTableTests {
 	}
 
 	@Entity(name = "Client")
-	@FilterDef(
-			name="firstAccounts",
-			parameters=@ParamDef(
-					name="maxOrderId",
-					type="int"
-			)
-	)
 	public static class Client {
 
 		@Id
@@ -122,47 +108,49 @@ public class FilterJoinTableTests {
 
 		private String name;
 
-		@ManyToMany(cascade = CascadeType.ALL)
-		@JoinTable
-		@OrderColumn(name = "order_id")
-		@FilterJoinTable(
-				name="firstAccounts",
-				condition="order_id <= :maxOrderId"
-		)
-		private List<Account> accounts = new ArrayList<>();
+		@Where( clause = "account_type = 'DEBIT'")
+		@OneToMany(mappedBy = "client")
+		private List<Account> debitAccounts = new ArrayList<>();
+
+		@Where( clause = "account_type = 'CREDIT'")
+		@OneToMany(mappedBy = "client")
+		private List<Account> creditAccounts = new ArrayList<>();
 
 		public Long getId() {
 			return id;
 		}
 
-		public Client setId(Long id) {
+		public void setId(Long id) {
 			this.id = id;
-			return this;
 		}
 
 		public String getName() {
 			return name;
 		}
 
-		public Client setName(String name) {
+		public void setName(String name) {
 			this.name = name;
-			return this;
 		}
 
-		public List<Account> getAccounts() {
-			return accounts;
+		public List<Account> getDebitAccounts() {
+			return debitAccounts;
 		}
 
-		public void addAccount(Account account) {
-			this.accounts.add( account );
+		public List<Account> getCreditAccounts() {
+			return creditAccounts;
 		}
+
 	}
 
 	@Entity(name = "Account")
+	@Where( clause = "active = true" )
 	public static class Account {
 
 		@Id
 		private Long id;
+
+		@ManyToOne
+		private Client client;
 
 		@Column(name = "account_type")
 		@Enumerated(EnumType.STRING)
@@ -172,47 +160,60 @@ public class FilterJoinTableTests {
 
 		private Double rate;
 
+		private boolean active;
+
 		public Long getId() {
 			return id;
 		}
 
-		public Account setId(Long id) {
+		public void setId(Long id) {
 			this.id = id;
-			return this;
+		}
+
+		public Client getClient() {
+			return client;
+		}
+
+		public void setClient(Client client) {
+			this.client = client;
 		}
 
 		public AccountType getType() {
 			return type;
 		}
 
-		public Account setType(AccountType type) {
+		public void setType(AccountType type) {
 			this.type = type;
-			return this;
 		}
 
 		public Double getAmount() {
 			return amount;
 		}
 
-		public Account setAmount(Double amount) {
+		public void setAmount(Double amount) {
 			this.amount = amount;
-			return this;
 		}
 
 		public Double getRate() {
 			return rate;
 		}
 
-		public Account setRate(Double rate) {
+		public void setRate(Double rate) {
 			this.rate = rate;
-			return this;
+		}
+
+		public boolean isActive() {
+			return active;
+		}
+
+		public void setActive(boolean active) {
+			this.active = active;
 		}
 	}
 
 	private static <T> CriteriaQuery<T> createCriteriaQuery(CriteriaBuilder criteriaBuilder, Class<T> entityClass, String idFieldName, Object idValue) {
 		final CriteriaQuery<T> criteria = criteriaBuilder.createQuery( entityClass );
 		Root<T> root = criteria.from( entityClass );
-		root.fetch( "accounts", JoinType.INNER );
 		criteria.select( root );
 		criteria.where( criteriaBuilder.equal( root.get( idFieldName ), criteriaBuilder.literal( idValue ) ) );
 		return criteria;

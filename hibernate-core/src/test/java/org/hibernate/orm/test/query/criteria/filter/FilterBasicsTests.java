@@ -104,7 +104,7 @@ public class FilterBasicsTests implements SessionFactoryScopeAware {
 
 	@ParameterizedTest
 	@ValueSource( strings = { "true", "false" } )
-	void testLoadFilterOnEntity(boolean enableFilter) {
+	void testFilterOnEntity(boolean enableFilter) {
 		scope.inTransaction( session -> {
 			if ( enableFilter ) {
 				session.enableFilter( "activeAccount" ).setParameter( "active", true );
@@ -123,7 +123,7 @@ public class FilterBasicsTests implements SessionFactoryScopeAware {
 
 	@ParameterizedTest
 	@ValueSource( strings = { "true", "false" } )
-	void testLoadFilterOnCollectionField(boolean enableFilter) {
+	void testFilterOnCollectionField(boolean enableFilter) {
 		scope.inTransaction( session -> {
 			if ( enableFilter ) {
 				session.enableFilter( "activeAccount" ).setParameter( "active", true );

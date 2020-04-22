@@ -4037,14 +4037,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
+	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( alias ), enabledFilters );
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
 	}
 
 	@Override
-	public String filterFragment(String alias, Map enabledFilters, Set<String> treatAsDeclarations) {
+	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( alias ), enabledFilters );
 		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();

@@ -64,7 +64,11 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 	protected XMLContext getContext(InputStream is) throws Exception {
 		XMLContext xmlContext = new XMLContext( BootstrapContextImpl.INSTANCE );
-		Document doc = new SAXReader().read( is );
+		SAXReader reader = new SAXReader();
+		reader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+		reader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
+		reader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
+		Document doc = reader.read( is );
 		xmlContext.addDocument( doc );
 		return xmlContext;
 	}

@@ -45,7 +45,6 @@ import org.junit.Test;
 public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-10956", message = "javax.persistence.PersistenceException: org.hibernate.HibernateException: No part of a composite identifier may be null")
 	public void testCompositePkWithIdentityAndFKBySequence() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadS head = new HeadS();
@@ -75,7 +74,6 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-10956", message = "javax.persistence.PersistenceException: org.hibernate.HibernateException: No part of a composite identifier may be null")
 	public void testCompositePkWithIdentityAndFKByTable() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadT head = new HeadT();
@@ -90,7 +88,6 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-10956", message = "javax.persistence.PersistenceException: org.hibernate.HibernateException: No part of a composite identifier may be null")
 	public void testCompositePkWithIdentityAndFKByAuto() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadA head = new HeadA();

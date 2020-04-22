@@ -220,8 +220,7 @@ public class AttributeFactory {
 				final Component component = (Component) typeContext.getHibernateValue();
 				final EmbeddableTypeImpl<Y> embeddableType;
 
-				if ( component.getComponentClass() != null
-						|| component.getComponentClassName() != null ) {
+				if ( component.getComponentClassName() != null ) {
 					// we should have a non-dynamic embeddable
 
 					final Class embeddableClass;
@@ -261,8 +260,16 @@ public class AttributeFactory {
 					return embeddableType;
 				}
 				else {
+
+					final ManagedTypeRepresentationStrategy representationStrategy = context.getTypeConfiguration()
+							.getMetadataBuildingContext()
+							.getBuildingOptions()
+							.getManagedTypeRepresentationResolver()
+							.resolveStrategy( component, context.getRuntimeModelCreationContext() );
+
 					embeddableType = new EmbeddableTypeImpl(
 							component.getRoleName(),
+							representationStrategy,
 							context.getJpaMetamodel()
 					);
 				}

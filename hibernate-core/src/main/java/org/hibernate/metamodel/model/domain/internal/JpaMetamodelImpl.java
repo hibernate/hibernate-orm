@@ -515,7 +515,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		final Class javaType = persistentClass.getMappedClass();
+		final Class javaType = persistentClass.getMappedClass() == null ? Map.class : persistentClass.getMappedClass();
 		context.pushEntityWorkedOn( persistentClass );
 		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
 		IdentifiableDomainType<?> superType = superMappedSuperclass == null

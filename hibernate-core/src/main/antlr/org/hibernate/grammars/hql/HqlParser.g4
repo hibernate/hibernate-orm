@@ -723,6 +723,8 @@ standardFunction
 	|	localTimeFunction
 	|	localDateTimeFunction
 	|	offsetDateTimeFunction
+	|	cube
+	|	rollup
 	;
 
 
@@ -1039,6 +1041,14 @@ positionFunctionPatternArgument
 
 positionFunctionStringArgument
 	: expression
+	;
+
+cube
+	: CUBE LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
+	;
+
+rollup
+	: ROLLUP LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
 	;
 
 /**

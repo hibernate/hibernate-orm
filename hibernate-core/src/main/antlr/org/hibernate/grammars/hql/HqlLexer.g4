@@ -157,6 +157,7 @@ COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 CONCAT				: [cC] [oO] [nN] [cC] [aA] [tT];
 COUNT				: [cC] [oO] [uU] [nN] [tT];
 CROSS				: [cC] [rR] [oO] [sS] [sS];
+CUBE				: [cC] [uU] [bB] [eE];
 CURRENT				: [cC] [uU] [rR] [rR] [eE] [nN] [tT];
 CURRENT_DATE		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [dD] [aA] [tT] [eE];
 CURRENT_INSTANT		: [cC] [uU] [rR] [rR] [eE] [nN] [tT] '_' [iI] [nN] [sS] [tT] [aA] [nN] [tT]; //deprecated legacy
@@ -246,6 +247,7 @@ POWER				: [pP] [oO] [wW] [eE] [rR];
 QUARTER				: [qQ] [uU] [aA] [rR] [tT] [eE] [rR];
 REPLACE				: [rR] [eE] [pP] [lL] [aA] [cC] [eE];
 RIGHT				: [rR] [iI] [gG] [hH] [tT];
+ROLLUP				: [rR] [oO] [lL] [lL] [uU] [pP];
 ROUND				: [rR] [oO] [uU] [nN] [dD];
 SECOND				: [sS] [eE] [cC] [oO] [nN] [dD];
 SELECT				: [sS] [eE] [lL] [eE] [cC] [tT];

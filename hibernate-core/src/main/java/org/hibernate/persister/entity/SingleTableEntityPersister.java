@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -568,11 +569,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected String filterFragment(String alias) throws MappingException {
-		String result = discriminatorFilterFragment( alias );
 		if ( hasWhere() ) {
-			result += " and " + getSQLWhereString( alias );
+			return discriminatorFilterFragment( alias ) + " and " + getSQLWhereString( alias );
 		}
-		return result;
+		else {
+			return "";
+		}
 	}
 
 	private String discriminatorFilterFragment(String alias) throws MappingException {
@@ -594,11 +596,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
-		String result = discriminatorFilterFragment( alias, treatAsDeclarations );
 		if ( hasWhere() ) {
-			result += " and " + getSQLWhereString( alias );
+			return discriminatorFilterFragment( alias, treatAsDeclarations ) + " and " + getSQLWhereString( alias );
 		}
-		return result;
+		else {
+			return "";
+		}
 	}
 
 	private String discriminatorFilterFragment(String alias, Set<String> treatAsDeclarations) {

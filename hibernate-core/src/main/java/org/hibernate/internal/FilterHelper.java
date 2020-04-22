@@ -19,16 +19,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.type.Type;
 
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
@@ -94,7 +89,7 @@ public class FilterHelper {
 		return aliasTableMap.size() == 1 && aliasTableMap.containsKey( null );
 	}
 
-	public boolean isAffectedBy(Map enabledFilters) {
+	public boolean isAffectedBy(Map<String, Filter> enabledFilters) {
 		for ( String filterName : filterNames ) {
 			if ( enabledFilters.containsKey( filterName ) ) {
 				return true;
@@ -103,13 +98,13 @@ public class FilterHelper {
 		return false;
 	}
 
-	public String render(FilterAliasGenerator aliasGenerator, Map enabledFilters) {
+	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
 		render( buffer, aliasGenerator, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map enabledFilters) {
+	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
 		if ( CollectionHelper.isEmpty( filterNames ) ) {
 			return;
 		}
@@ -137,11 +132,11 @@ public class FilterHelper {
 			);
 		}
 		else if ( isTableFromPersistentClass( aliasTableMap ) ) {
-			return condition.replace( "{alias}", aliasGenerator.getAlias( aliasTableMap.get( null ) ) );
+			return StringHelper.replace( condition,  "{alias}", aliasGenerator.getAlias( aliasTableMap.get( null ) ) );
 		}
 		else {
 			for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
-				condition = condition.replace(
+				condition = StringHelper.replace( condition,
 						"{" + entry.getKey() + "}",
 						aliasGenerator.getAlias( entry.getValue() )
 				);
@@ -151,22 +146,13 @@ public class FilterHelper {
 	}
 
 	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable, String alias) {
-		if ( loadQueryInfluencers.hasEnabledFilters() ) {
-			final String filterFragment;
-			if ( joinable instanceof AbstractCollectionPersister && ( (AbstractCollectionPersister) joinable ).isManyToMany() ) {
-				filterFragment = ( (AbstractCollectionPersister) joinable ).getManyToManyFilterFragment(
-						alias,
-						loadQueryInfluencers.getEnabledFilters()
-				);
-			}
-			else {
-				filterFragment = joinable.filterFragment( alias, loadQueryInfluencers.getEnabledFilters() );
-			}
-			if ( ! StringHelper.isEmptyOrWhiteSpace( filterFragment ) ) {
-				return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
-			}
+		final String filterFragment = joinable.filterFragment( alias, loadQueryInfluencers.getEnabledFilters() );
+		if ( StringHelper.isNotEmpty( filterFragment ) ) {
+			return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private static FilterPredicate doCreateFilterPredicate(String filterFragment, Map<String, Filter> enabledFilters) {

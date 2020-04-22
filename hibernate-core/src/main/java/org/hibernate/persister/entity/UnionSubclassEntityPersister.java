@@ -329,9 +329,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected String filterFragment(String name) {
-		return hasWhere()
-				? " and " + getSQLWhereString( name )
-				: "";
+		return hasWhere() ? getSQLWhereString( name ) : "";
 	}
 
 	@Override

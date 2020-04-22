@@ -227,11 +227,6 @@ public class LoaderSelectBuilder {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
 
-		if ( loadable instanceof PluralAttributeMapping ) {
-			applyFiltering( rootQuerySpec, rootTableGroup, (PluralAttributeMapping) loadable );
-			applyOrdering( rootTableGroup, (PluralAttributeMapping) loadable );
-		}
-
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
 			domainResults = new ArrayList<>( partsToSelect.size() );
 			for ( ModelPart part : partsToSelect ) {
@@ -281,6 +276,12 @@ public class LoaderSelectBuilder {
 				jdbcParameterConsumer,
 				sqlAstCreationState
 		);
+
+		if ( loadable instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping );
+			applyOrdering( rootTableGroup, pluralAttributeMapping );
+		}
 
 		if ( orderByFragments != null ) {
 			orderByFragments.forEach(
@@ -380,22 +381,20 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyFiltering(QuerySpec querySpec, TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
-		if ( loadQueryInfluencers.hasEnabledFilters() ) {
-			final Joinable joinable = pluralAttributeMapping
-					.getCollectionDescriptor()
-					.getCollectionType()
-					.getAssociatedJoinable( creationContext.getSessionFactory() );
-			assert joinable instanceof AbstractCollectionPersister;
-			final String tableExpression = joinable.getTableName();
-			final String tableAlias = tableGroup.resolveTableReference( tableExpression ).getIdentificationVariable();
-			final Predicate filterPredicate = FilterHelper.createFilterPredicate(
-					loadQueryInfluencers,
-					joinable,
-					tableAlias
-			);
-			if ( filterPredicate != null ) {
-				querySpec.applyPredicate( filterPredicate );
-			}
+		final Joinable joinable = pluralAttributeMapping
+				.getCollectionDescriptor()
+				.getCollectionType()
+				.getAssociatedJoinable( creationContext.getSessionFactory() );
+		assert joinable instanceof AbstractCollectionPersister;
+		final String tableExpression = joinable.getTableName();
+		final String tableAlias = tableGroup.resolveTableReference( tableExpression ).getIdentificationVariable();
+		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
+				loadQueryInfluencers,
+				joinable,
+				tableAlias
+		);
+		if ( filterPredicate != null ) {
+			querySpec.applyPredicate( filterPredicate );
 		}
 	}
 
@@ -511,15 +510,16 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 
 				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE && joined ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 					applyFiltering(
 							querySpec,
 							creationState.getFromClauseAccess().getTableGroup( fetchablePath ),
-							( (PluralAttributeMapping) fetchable )
+							pluralAttributeMapping
 					);
 					applyOrdering(
 							querySpec,
 							fetchablePath,
-							( (PluralAttributeMapping) fetchable ),
+							pluralAttributeMapping,
 							creationState
 					);
 				}
@@ -590,10 +590,6 @@ public class LoaderSelectBuilder {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
 
-		// NOTE : no need to check - we are explicitly processing a plural-attribute
-		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping );
-		applyOrdering( rootTableGroup, attributeMapping );
-
 		// generate and apply the restriction
 		applySubSelectRestriction(
 				rootQuerySpec,
@@ -602,6 +598,10 @@ public class LoaderSelectBuilder {
 				subselect,
 				sqlAstCreationState
 		);
+
+		// NOTE : no need to check - we are explicitly processing a plural-attribute
+		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping );
+		applyOrdering( rootTableGroup, attributeMapping );
 
 		// register the jdbc-parameters
 		subselect.getLoadingJdbcParameters().forEach( jdbcParameterConsumer );

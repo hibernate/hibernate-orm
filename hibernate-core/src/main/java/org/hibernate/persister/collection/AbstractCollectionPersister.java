@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -1781,13 +1780,15 @@ public abstract class AbstractCollectionPersister
 	public abstract boolean isManyToMany();
 
 	@Override
-	public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
+	public String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
 		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator(alias), enabledFilters );
 
 		if ( manyToManyWhereString != null ) {
-			buffer.append( " and " )
-					.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, alias ) );
+			if ( buffer.length() > 0 ) {
+				buffer.append( " and " );
+			}
+			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, alias ) );
 		}
 
 		return buffer.toString();
@@ -1917,15 +1918,15 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected String filterFragment(String alias) throws MappingException {
-		return hasWhere() ? " and " + getSQLWhereString( alias ) : "";
+		return hasWhere() ? getSQLWhereString( alias ) : "";
 	}
 
 	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
-		return hasWhere() ? " and " + getSQLWhereString( alias ) : "";
+		return hasWhere() ? getSQLWhereString( alias ) : "";
 	}
 
 	@Override
-	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
+	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
 
@@ -1935,7 +1936,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public String filterFragment(
 			String alias,
-			Map enabledFilters,
+			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations) {
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -169,7 +170,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 */
 	boolean isManyToMany();
 
-	String getManyToManyFilterFragment(String alias, Map enabledFilters);
+	String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters);
 
 	/**
 	 * Is this an "indexed" collection? (list or map)

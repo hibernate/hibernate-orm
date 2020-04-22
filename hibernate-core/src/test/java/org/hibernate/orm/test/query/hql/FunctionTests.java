@@ -954,4 +954,18 @@ public class FunctionTests extends SessionFactoryBasedFunctionalTest {
 		);
 	}
 
+	@Test
+	public void testGroupingFunctions() {
+		inTransaction(
+				session -> {
+					session.createQuery("select max(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by e.gender, e.theInt")
+							.list();
+					session.createQuery("select avg(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by rollup(e.gender, e.theInt)")
+							.list();
+					session.createQuery("select sum(e.theDouble), e.gender, e.theInt from EntityOfBasics e group by cube(e.gender, e.theInt)")
+							.list();
+				}
+		);
+	}
+
 }

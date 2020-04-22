@@ -341,6 +341,10 @@ public abstract class Dialect implements ConversionContext {
 
 		CommonFunctionFactory.aggregates(queryEngine);
 
+		//grouping functions cube() and rollup() supported on some databases
+
+		CommonFunctionFactory.groupings(queryEngine);
+
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases

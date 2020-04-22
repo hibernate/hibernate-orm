@@ -30,6 +30,8 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	public SybaseASE15Dialect() {
 		super();
 
+		registerColumnType( Types.VARBINARY, "image" );
+		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 		registerColumnType( Types.LONGVARBINARY, "image" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.BIGINT, "bigint" );

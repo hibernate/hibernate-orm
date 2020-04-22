@@ -23,6 +23,7 @@ import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -50,11 +51,13 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 			HeadS head = new HeadS();
 			head.name = "Head by Sequence";
 			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
 
 			NodeS node = new NodeS();
 			node.hid = head;
 			node.name = "Node by Sequence";
 			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
 		} );
 	}
 
@@ -65,11 +68,20 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 			HeadI head = new HeadI();
 			head.name = "Head by Identity";
 			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
 
 			NodeI node = new NodeI();
 			node.hid = head;
 			node.name = "Node by Identity";
-			session.persist( node );
+			try {
+				session.persist( node );
+			}
+			catch (Error | RuntimeException e) {
+				// expected failure...
+				e.printStackTrace( System.out );
+				throw e;
+			}
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
 		} );
 	}
 
@@ -79,11 +91,13 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 			HeadT head = new HeadT();
 			head.name = "Head by Table";
 			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
 
 			NodeT node = new NodeT();
 			node.hid = head;
 			node.name = "Node by Table";
 			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
 		} );
 	}
 
@@ -93,11 +107,115 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 			HeadA head = new HeadA();
 			head.name = "Head by Auto";
 			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
 
 			NodeA node = new NodeA();
 			node.hid = head;
 			node.name = "Node by Auto";
 			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
+		} );
+	}
+
+	@Test
+	public void testCompositePkWithIdentityAndFKBySequence2() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			HeadS head = new HeadS();
+			head.name = "Head by Sequence";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			ComplexNodeS node = new ComplexNodeS();
+			node.hid = head;
+			node.name = "Node by Sequence";
+			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid + " with parent="
+					+ ( node.parent == null ? null : node.parent.nid + ":" + node.parent.hid.hid ) );
+
+			ComplexNodeS node2 = new ComplexNodeS();
+			node2.hid = head;
+			node2.name = "Node 2 by Sequence";
+			node2.parent = node;
+			session.persist( node2 );
+			System.out.println( "VALUE =>" + node2.name + "=" + node2.nid + ":" + node2.hid.hid + " with parent="
+					+ ( node2.parent == null ? null : node2.parent.nid + ":" + node2.parent.hid.hid ) );
+		} );
+	}
+
+	@Test
+	@Ignore("HHH-13971 - unit test DB is using call next value for hibernate_sequence when it should be Identity insert")
+	@FailureExpected(jiraKey = "HHH-9662", message = "Could not set field value [POST_INSERT_INDICATOR]")
+	public void testCompositePkWithIdentityAndFKByIdentity2() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			HeadI head = new HeadI();
+			head.name = "Head by Identity";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			ComplexNodeI node = new ComplexNodeI();
+			node.hid = head;
+			node.name = "Node by Identity";
+			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid + " with parent="
+					+ ( node.parent == null ? null : node.parent.nid + ":" + node.parent.hid.hid ) );
+
+			ComplexNodeI node2 = new ComplexNodeI();
+			node2.hid = head;
+			node2.name = "Node 2 by Identity";
+			node2.parent = node;
+			session.persist( node2 );
+			System.out.println( "VALUE =>" + node2.name + "=" + node2.nid + ":" + node2.hid.hid + " with parent="
+					+ ( node2.parent == null ? null : node2.parent.nid + ":" + node2.parent.hid.hid ) );
+		} );
+	}
+
+	@Test
+	public void testCompositePkWithIdentityAndFKByTable2() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			HeadT head = new HeadT();
+			head.name = "Head by Table";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			ComplexNodeT node = new ComplexNodeT();
+			node.hid = head;
+			node.name = "Node by Table";
+			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid + " with parent="
+					+ ( node.parent == null ? null : node.parent.nid + ":" + node.parent.hid.hid ) );
+
+			ComplexNodeT node2 = new ComplexNodeT();
+			node2.hid = head;
+			node2.name = "Node 2 by Table";
+			node2.parent = node;
+			session.persist( node2 );
+			System.out.println( "VALUE =>" + node2.name + "=" + node2.nid + ":" + node2.hid.hid + " with parent="
+					+ ( node2.parent == null ? null : node2.parent.nid + ":" + node2.parent.hid.hid ) );
+		} );
+	}
+
+	@Test
+	public void testCompositePkWithIdentityAndFKByAuto2() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			HeadA head = new HeadA();
+			head.name = "Head by Auto";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			ComplexNodeA node = new ComplexNodeA();
+			node.hid = head;
+			node.name = "Node by Auto";
+			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid + " with parent="
+					+ ( node.parent == null ? null : node.parent.nid + ":" + node.parent.hid.hid ) );
+
+			ComplexNodeA node2 = new ComplexNodeA();
+			node2.hid = head;
+			node2.name = "Node 2 by Auto";
+			node2.parent = node;
+			session.persist( node2 );
+			System.out.println( "VALUE =>" + node2.name + "=" + node2.nid + ":" + node2.hid.hid + " with parent="
+					+ ( node2.parent == null ? null : node2.parent.nid + ":" + node2.parent.hid.hid ) );
 		} );
 	}
 
@@ -112,6 +230,10 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 				NodeI.class,
 				HeadT.class,
 				NodeT.class,
+				ComplexNodeS.class,
+				ComplexNodeI.class,
+				ComplexNodeT.class,
+				ComplexNodeA.class,
 		};
 	}
 
@@ -310,6 +432,210 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 		@Id
 		@ManyToOne
 		private HeadT hid;
+
+		private String name;
+
+		public static class PK implements Serializable {
+
+			private Long nid;
+
+			private Long hid;
+
+			public PK(Long nid, Long hid) {
+				this.nid = nid;
+				this.hid = hid;
+			}
+
+			private PK() {
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( o == null || getClass() != o.getClass() ) {
+					return false;
+				}
+				PK pk = (PK) o;
+				return Objects.equals( nid, pk.nid ) && Objects.equals( hid, pk.hid );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( nid, hid );
+			}
+		}
+
+	}
+
+	@Entity
+	@IdClass(CompositeIdFkGeneratedValueIdentityTest.ComplexNodeS.PK.class)
+	public static class ComplexNodeS {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long nid;
+
+		@Id
+		@ManyToOne
+		private HeadS hid;
+
+		@ManyToOne
+		private ComplexNodeS parent;
+
+		private String name;
+
+		public static class PK implements Serializable {
+
+			private Long nid;
+
+			private Long hid;
+
+			public PK(Long nid, Long hid) {
+				this.nid = nid;
+				this.hid = hid;
+			}
+
+			private PK() {
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( o == null || getClass() != o.getClass() ) {
+					return false;
+				}
+				PK pk = (PK) o;
+				return Objects.equals( nid, pk.nid ) && Objects.equals( hid, pk.hid );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( nid, hid );
+			}
+		}
+
+	}
+
+	@Entity
+	@IdClass(CompositeIdFkGeneratedValueIdentityTest.ComplexNodeI.PK.class)
+	public static class ComplexNodeI {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long nid;
+
+		@Id
+		@ManyToOne
+		private HeadI hid;
+
+		@ManyToOne
+		private ComplexNodeI parent;
+
+		private String name;
+
+		public static class PK implements Serializable {
+
+			private Long nid;
+
+			private Long hid;
+
+			public PK(Long nid, Long hid) {
+				this.nid = nid;
+				this.hid = hid;
+			}
+
+			private PK() {
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( o == null || getClass() != o.getClass() ) {
+					return false;
+				}
+				PK pk = (PK) o;
+				return Objects.equals( nid, pk.nid ) && Objects.equals( hid, pk.hid );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( nid, hid );
+			}
+		}
+
+	}
+
+	@Entity
+	@IdClass(CompositeIdFkGeneratedValueIdentityTest.ComplexNodeT.PK.class)
+	public static class ComplexNodeT {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long nid;
+
+		@Id
+		@ManyToOne
+		private HeadT hid;
+
+		@ManyToOne
+		private ComplexNodeT parent;
+
+		private String name;
+
+		public static class PK implements Serializable {
+
+			private Long nid;
+
+			private Long hid;
+
+			public PK(Long nid, Long hid) {
+				this.nid = nid;
+				this.hid = hid;
+			}
+
+			private PK() {
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( o == null || getClass() != o.getClass() ) {
+					return false;
+				}
+				PK pk = (PK) o;
+				return Objects.equals( nid, pk.nid ) && Objects.equals( hid, pk.hid );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( nid, hid );
+			}
+		}
+
+	}
+
+	@Entity
+	@IdClass(CompositeIdFkGeneratedValueIdentityTest.ComplexNodeA.PK.class)
+	public static class ComplexNodeA {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long nid;
+
+		@Id
+		@ManyToOne
+		private HeadA hid;
+
+		@ManyToOne
+		private ComplexNodeA parent;
 
 		private String name;
 

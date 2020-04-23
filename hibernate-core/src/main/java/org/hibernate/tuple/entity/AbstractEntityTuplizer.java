@@ -376,7 +376,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						final String name = names[i];
 						final Property p = ((Component) identifier).getProperty(name);
 						final SimpleValue v = (SimpleValue) p.getValue();
-						if ( v.getIdentifierGenerator() == null ) throw new NullPointerException("No IdentifierGenerator found for property "+name);
+						if ( v.getIdentifierGenerator() == null ) {
+							throw new NullPointerException("No IdentifierGenerator found for property "+name);
+						}
 					}
 					catch (Throwable t) {
 						throw new HibernateException( "No part of a composite identifier may be null", t );

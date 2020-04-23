@@ -334,6 +334,10 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
 	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -347,6 +351,10 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	//
 	// No idea how findbugs was missing these b4
 	ignoreFailures = true
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -354,6 +362,10 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApis

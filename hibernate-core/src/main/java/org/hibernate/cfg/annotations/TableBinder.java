@@ -571,10 +571,10 @@ public class TableBinder {
 				mappedByColumns = property.getValue().getColumnIterator();
 			}
 			while ( mappedByColumns.hasNext() ) {
-			    Object o = mappedByColumns.next();
-			    if(o instanceof Formula) {
-                    throw new AnnotationException("Formula is not supported along with this type of relationship");
-                }
+				Object o = mappedByColumns.next();
+				if(o instanceof Formula) {
+					throw new AnnotationException("Formula is not supported along with this type of relationship");
+                		}
 				Column column = (Column) o;
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingAColumnCopy( column, value );

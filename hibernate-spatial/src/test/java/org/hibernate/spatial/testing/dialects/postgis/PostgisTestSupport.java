@@ -9,7 +9,7 @@ package org.hibernate.spatial.testing.dialects.postgis;
 
 
 import org.hibernate.spatial.integration.TestSpatialFunctions;
-import org.hibernate.spatial.integration.TestSpatialPredicates;
+import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
 import org.hibernate.spatial.integration.TestSpatialRestrictions;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
@@ -30,7 +30,7 @@ public class PostgisTestSupport extends TestSupport {
 		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
 		if ( testcaseClass == TestSpatialFunctions.class ||
 				testcaseClass == TestSpatialRestrictions.class ||
-				testcaseClass == TestSpatialPredicates.class ) {
+				testcaseClass == TestJTSSpatialPredicates.class ) {
 			return TestData.fromFile( "postgis-functions-test.xml" );
 		}
 		return TestData.fromFile( "test-data-set.xml" );

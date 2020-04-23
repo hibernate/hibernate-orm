@@ -15,7 +15,6 @@ import org.hibernate.spatial.criterion.SpatialRestrictions;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Polygon;
 
 /**
  * A factory for spatial JPA Criteria API {@link Predicate}s.
@@ -23,9 +22,9 @@ import org.locationtech.jts.geom.Polygon;
  * @author Daniel Shuy
  * @see SpatialRestrictions
  */
-public final class SpatialPredicates {
+public final class JTSSpatialPredicates {
 
-	private SpatialPredicates() {
+	private JTSSpatialPredicates() {
 	}
 
 	/**
@@ -365,13 +364,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see FilterPredicate
+	 * @see JTSFilterPredicate
 	 * @see SpatialRestrictions#filter(String, Geometry)
 	 */
 	public static Predicate filter(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2) {
-		return new FilterPredicate( criteriaBuilder, geometry1, geometry2 );
+		return new JTSFilterPredicate( criteriaBuilder, geometry1, geometry2 );
 	}
 
 	/**
@@ -383,13 +382,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see FilterPredicate
+	 * @see JTSFilterPredicate
 	 * @see SpatialRestrictions#filter(String, Geometry)
 	 */
 	public static Predicate filter(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return new FilterPredicate( criteriaBuilder, geometry1, geometry2 );
+		return new JTSFilterPredicate( criteriaBuilder, geometry1, geometry2 );
 	}
 
 	/**
@@ -402,13 +401,13 @@ public final class SpatialPredicates {
 	 *
 	 * @return bounding box overlap predicate
 	 *
-	 * @see FilterPredicate
+	 * @see JTSFilterPredicate
 	 * @see SpatialRestrictions#filter(String, Envelope, int)
 	 */
 	public static Predicate filterByPolygon(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
-		return new FilterPredicate( criteriaBuilder, geometry, envelope, srid );
+		return new JTSFilterPredicate( criteriaBuilder, geometry, envelope, srid );
 	}
 
 	/**

@@ -29,12 +29,12 @@ import org.locationtech.jts.geom.Geometry;
 /**
  * JPA Criteria API {@link Predicate} equivalent of {@link SpatialFilter}.
  */
-public class FilterPredicate extends AbstractSimplePredicate implements Serializable {
+public class JTSFilterPredicate extends AbstractSimplePredicate implements Serializable {
 
 	private final Expression<? extends Geometry> geometry;
 	private final Expression<? extends Geometry> filter;
 
-	public FilterPredicate(
+	public JTSFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Expression<? extends Geometry> filter) {
 		super( (CriteriaBuilderImpl) criteriaBuilder );
@@ -42,14 +42,14 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 		this.filter = filter;
 	}
 
-	public FilterPredicate(
+	public JTSFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Geometry filter) {
 		this( criteriaBuilder, geometry, criteriaBuilder.literal( filter )
 		);
 	}
 
-	public FilterPredicate(
+	public JTSFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Envelope envelope, int srid) {
 		this( criteriaBuilder, geometry, EnvelopeAdapter.toPolygon( envelope, srid )

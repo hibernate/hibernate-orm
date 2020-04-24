@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
+public interface StatelessSessionBuilder<T extends StatelessSessionBuilder<T>> {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -50,6 +50,8 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
+		return self();
 	}
+
+	T self();
 }

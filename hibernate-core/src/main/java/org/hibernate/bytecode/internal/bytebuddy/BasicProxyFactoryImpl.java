@@ -6,7 +6,7 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,7 +73,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 			key.add( superClass );
 		}
 		if ( interfaces != null ) {
-			key.addAll( Arrays.asList( interfaces ) );
+			Collections.addAll( key, interfaces );
 		}
 
 		return new TypeCache.SimpleKey( key );

@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -653,7 +653,7 @@ public class NativeQueryImpl<R>
 			if ( querySpaces == null ) {
 				querySpaces = new HashSet<>();
 			}
-			querySpaces.addAll( Arrays.asList( spaces ) );
+			Collections.addAll( querySpaces, spaces );
 		}
 	}
 
@@ -662,7 +662,7 @@ public class NativeQueryImpl<R>
 			if ( querySpaces == null ) {
 				querySpaces = new HashSet<>();
 			}
-			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
+			Collections.addAll( querySpaces, (String[]) spaces );
 		}
 	}
 

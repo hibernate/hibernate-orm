@@ -348,7 +348,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		Set<String> reservedWords = new HashSet<>();
 		reservedWords.addAll( dialect.getKeywords() );
 		// todo : do we need to explicitly handle SQL:2003 keywords?
-		reservedWords.addAll( Arrays.asList( dbmd.getSQLKeywords().split( "," ) ) );
+		Collections.addAll( reservedWords, dbmd.getSQLKeywords().split( "," ) );
 		return reservedWords;
 	}
 

@@ -7,7 +7,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -60,7 +60,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
 		for ( Queryable persister : affectedQueryables ) {
-			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
+			Collections.addAll( spacesList, (String[]) persister.getQuerySpaces() );
 
 			if ( persister.canWriteToCache() ) {
 				final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
@@ -115,7 +115,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		for ( EntityPersister persister : metamodel.entityPersisters().values() ) {
 			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
-				spacesList.addAll( Arrays.asList( entitySpaces ) );
+				Collections.addAll( spacesList, entitySpaces );
 
 				if ( persister.canWriteToCache() ) {
 					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy(), session ) );

@@ -8,8 +8,7 @@ package org.hibernate.proxy.pojo.bytebuddy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -44,15 +43,15 @@ public class ByteBuddyProxyHelper implements Serializable {
 		this.byteBuddyState = byteBuddyState;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public Class buildProxy(
-			final Class persistentClass,
-			final Class[] interfaces) {
+			final Class<?> persistentClass,
+			final Class<?>[] interfaces) {
 		Set<Class<?>> key = new HashSet<>();
 		if ( interfaces.length == 1 ) {
 			key.add( persistentClass );
 		}
-		key.addAll( Arrays.<Class<?>>asList( interfaces ) );
+		Collections.addAll( key, interfaces );
 
 		return byteBuddyState.loadProxy( persistentClass, new TypeCache.SimpleKey( key ), proxyBuilder( persistentClass, interfaces ) );
 	}

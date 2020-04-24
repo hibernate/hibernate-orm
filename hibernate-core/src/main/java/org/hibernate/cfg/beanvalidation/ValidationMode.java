@@ -14,7 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
- * Duplicates the jakarta.validation enum (because jakarta validation might not be on the runtime classpath)
+ * Duplicates the javax.validation enum (because javax validation might not be on the runtime classpath)
  *
  * @author Steve Ebersole
  */

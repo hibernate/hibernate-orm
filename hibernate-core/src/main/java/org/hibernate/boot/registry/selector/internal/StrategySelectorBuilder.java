@@ -23,55 +23,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.dialect.DB2390Dialect;
-import org.hibernate.dialect.DB2390V8Dialect;
-import org.hibernate.dialect.DB2400Dialect;
-import org.hibernate.dialect.DB2400V7R3Dialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyTenFiveDialect;
-import org.hibernate.dialect.DerbyTenSevenDialect;
-import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.FirebirdDialect;
-import org.hibernate.dialect.FrontBaseDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HANAColumnStoreDialect;
-import org.hibernate.dialect.HANARowStoreDialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.InformixDialect;
-import org.hibernate.dialect.Ingres10Dialect;
-import org.hibernate.dialect.Ingres9Dialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.InterbaseDialect;
-import org.hibernate.dialect.JDataStoreDialect;
-import org.hibernate.dialect.MckoiDialect;
-import org.hibernate.dialect.MimerSQLDialect;
-import org.hibernate.dialect.MySQL57Dialect;
-import org.hibernate.dialect.MySQL57InnoDBDialect;
-import org.hibernate.dialect.MySQL8Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.MySQL5InnoDBDialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.dialect.PointbaseDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.PostgreSQL9Dialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.ProgressDialect;
-import org.hibernate.dialect.SAPDBDialect;
-import org.hibernate.dialect.SQLServer2005Dialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE157Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
@@ -90,10 +42,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatfo
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.internal.EntityCopyAllowedLoggedObserver;
-import org.hibernate.event.internal.EntityCopyAllowedObserver;
-import org.hibernate.event.internal.EntityCopyNotAllowedObserver;
-import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
@@ -163,7 +111,7 @@ public class StrategySelectorBuilder {
 		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
-		addDialects( strategySelector );
+		strategySelector.registerStrategyLazily( Dialect.class, new DefaultDialectSelector() );
 		addJtaPlatforms( strategySelector );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
@@ -194,65 +142,6 @@ public class StrategySelectorBuilder {
 					strategyRegistration.getStrategyImplementation()
 			);
 		}
-	}
-
-	private void addDialects(StrategySelectorImpl strategySelector) {
-		addDialect( strategySelector, Cache71Dialect.class );
-		addDialect( strategySelector, CUBRIDDialect.class );
-		addDialect( strategySelector, DB2Dialect.class );
-		addDialect( strategySelector, DB2390Dialect.class );
-		addDialect( strategySelector, DB2390V8Dialect.class );
-		addDialect( strategySelector, DB2400Dialect.class );
-		addDialect( strategySelector, DB2400V7R3Dialect.class );
-		addDialect( strategySelector, DerbyTenFiveDialect.class );
-		addDialect( strategySelector, DerbyTenSixDialect.class );
-		addDialect( strategySelector, DerbyTenSevenDialect.class );
-		addDialect( strategySelector, FirebirdDialect.class );
-		addDialect( strategySelector, FrontBaseDialect.class );
-		addDialect( strategySelector, H2Dialect.class );
-		addDialect( strategySelector, HANAColumnStoreDialect.class );
-		addDialect( strategySelector, HANARowStoreDialect.class );
-		addDialect( strategySelector, HSQLDialect.class );
-		addDialect( strategySelector, InformixDialect.class );
-		addDialect( strategySelector, IngresDialect.class );
-		addDialect( strategySelector, Ingres9Dialect.class );
-		addDialect( strategySelector, Ingres10Dialect.class );
-		addDialect( strategySelector, InterbaseDialect.class );
-		addDialect( strategySelector, JDataStoreDialect.class );
-		addDialect( strategySelector, MckoiDialect.class );
-		addDialect( strategySelector, MimerSQLDialect.class );
-		addDialect( strategySelector, MySQL5Dialect.class );
-		addDialect( strategySelector, MySQL5InnoDBDialect.class );
-		addDialect( strategySelector, MySQL57InnoDBDialect.class );
-		addDialect( strategySelector, MySQL57Dialect.class );
-		addDialect( strategySelector, MySQL8Dialect.class );
-		addDialect( strategySelector, Oracle8iDialect.class );
-		addDialect( strategySelector, Oracle9iDialect.class );
-		addDialect( strategySelector, Oracle10gDialect.class );
-		addDialect( strategySelector, PointbaseDialect.class );
-		addDialect( strategySelector, PostgresPlusDialect.class );
-		addDialect( strategySelector, PostgreSQL81Dialect.class );
-		addDialect( strategySelector, PostgreSQL82Dialect.class );
-		addDialect( strategySelector, PostgreSQL9Dialect.class );
-		addDialect( strategySelector, ProgressDialect.class );
-		addDialect( strategySelector, SAPDBDialect.class );
-		addDialect( strategySelector, SQLServerDialect.class );
-		addDialect( strategySelector, SQLServer2005Dialect.class );
-		addDialect( strategySelector, SQLServer2008Dialect.class );
-		addDialect( strategySelector, Sybase11Dialect.class );
-		addDialect( strategySelector, SybaseAnywhereDialect.class );
-		addDialect( strategySelector, SybaseASE15Dialect.class );
-		addDialect( strategySelector, SybaseASE157Dialect.class );
-		addDialect( strategySelector, TeradataDialect.class );
-		addDialect( strategySelector, TimesTenDialect.class );
-	}
-
-	private void addDialect(StrategySelectorImpl strategySelector, Class<? extends Dialect> dialectClass) {
-		String simpleName = dialectClass.getSimpleName();
-		if ( simpleName.endsWith( "Dialect" ) ) {
-			simpleName = simpleName.substring( 0, simpleName.length() - "Dialect".length() );
-		}
-		strategySelector.registerStrategyImplementor( Dialect.class, simpleName, dialectClass );
 	}
 
 	private void addJtaPlatforms(StrategySelectorImpl strategySelector) {

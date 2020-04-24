@@ -3,6 +3,21 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
+Changes in 6.0.0.Alpha5 (April 24, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/browse/HHH/fixforversion/31821
+
+** Bug
+    * [HHH-13711] - H2 dialect not accurate for drop table since version 1.4.200
+
+** Task
+    * [HHH-13937] - Remove JUnit 5 as compile-time dependency
+    * [HHH-13953] - Upgrade dom4j to 2.1.3
+
+
+
 Changes in 6.0.0.Alpha4 (December 20, 2019)
 ------------------------------------------------------------------------------------------------------------------------
 

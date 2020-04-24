@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
-import jakarta.validation.ConstraintViolationException;
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.beanvalidation.ValidationMode;

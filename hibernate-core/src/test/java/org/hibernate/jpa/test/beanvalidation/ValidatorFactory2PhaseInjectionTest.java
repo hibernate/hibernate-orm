@@ -10,8 +10,8 @@ import java.net.URL;
 import java.util.Collections;
 
 import javax.persistence.EntityManagerFactory;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;

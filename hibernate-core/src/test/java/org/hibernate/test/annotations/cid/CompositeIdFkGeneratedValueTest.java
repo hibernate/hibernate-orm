@@ -7,6 +7,8 @@
 package org.hibernate.test.annotations.cid;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -17,7 +19,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.testing.TestForIssue;
@@ -44,7 +48,45 @@ import org.junit.Test;
 public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	public void testCompositePkWithIdentityAndFKBySequence() throws Exception {
+	public void testCompositePkWithoutIdentifierGenerator() {
+		doInHibernate( this::sessionFactory, session -> {
+			Head head = new Head();
+			head.name = "Head by Sequence";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			Node node = new Node();
+			node.nid = 1L;
+			node.name = "Node by Sequence";
+			node.hid = head;
+			session.persist( node );
+			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
+		} );
+
+		doInHibernate( this::sessionFactory, session -> {
+			Head head = new Head();
+			head.name = "Head by Sequence";
+			session.persist( head );
+			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
+
+			try {
+				Node node = new Node();
+				node.name = "Node by Sequence";
+				node.hid = head;
+				session.persist( node );
+				System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
+
+				session.flush();
+				fail("A PersistenceException is expected, the Composite Id has a null value");
+			}
+			catch (PersistenceException e) {
+				//expected Node.nid is null and hasn't an associated Identifier Generator
+			}
+		} );
+	}
+
+	@Test
+	public void testCompositePkWithIdentityAndFKBySequence() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadS head = new HeadS();
 			head.name = "Head by Sequence";
@@ -52,15 +94,33 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 			System.out.println( "VALUE =>" + head.name + "=" + head.hid );
 
 			NodeS node = new NodeS();
-			node.hid = head;
 			node.name = "Node by Sequence";
+			node.hid = head;
 			session.persist( node );
 			System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
 		} );
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByTable() throws Exception {
+	public void testCompositePkWithSequenceGeneratorAndNullValue() throws Exception {
+		doInHibernate( this::sessionFactory, session -> {
+			try {
+				NodeS node = new NodeS();
+				node.name = "Node by Sequence";
+				session.persist( node );
+				System.out.println( "VALUE =>" + node.name + "=" + node.nid + ":" + node.hid.hid );
+
+				session.flush();
+				fail( "A PersistenceException is expected, the Composite Id has a null value" );
+			}
+			catch (PersistenceException e) {
+				//expected, the NodeS.hid is null
+			}
+		} );
+	}
+
+	@Test
+	public void testCompositePkWithIdentityAndFKByTable() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadT head = new HeadT();
 			head.name = "Head by Table";
@@ -76,7 +136,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByAuto() throws Exception {
+	public void testCompositePkWithIdentityAndFKByAuto() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadA head = new HeadA();
 			head.name = "Head by Auto";
@@ -92,7 +152,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKBySequence2() throws Exception {
+	public void testCompositePkWithSequenceIdentifierGeneratorAndFKBySequence2() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadS head = new HeadS();
 			head.name = "Head by Sequence";
@@ -117,7 +177,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByTable2() throws Exception {
+	public void testCompositePkWithIdentityAndFKByTable2() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadT head = new HeadT();
 			head.name = "Head by Table";
@@ -142,7 +202,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	public void testCompositePkWithIdentityAndFKByAuto2() throws Exception {
+	public void testCompositePkWithIdentityAndFKByAuto2() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadA head = new HeadA();
 			head.name = "Head by Auto";
@@ -169,6 +229,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{
+				Head.class,
+				Node.class,
 				HeadS.class,
 				NodeS.class,
 				HeadA.class,
@@ -176,11 +238,68 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 				HeadT.class,
 				NodeT.class,
 				ComplexNodeS.class,
-
 				ComplexNodeT.class,
 				ComplexNodeA.class,
 		};
 	}
+
+	@Entity
+	public static class Head {
+
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long hid;
+
+		private String name;
+	}
+
+	@Entity
+	@IdClass(CompositeIdFkGeneratedValueTest.Node.PK.class)
+	public static class Node {
+
+		@Id
+		private Long nid;
+
+		@Id
+		@ManyToOne
+		private Head hid;
+
+		private String name;
+
+		public static class PK implements Serializable {
+
+			private Long nid;
+
+			private Long hid;
+
+			public PK(Long nid, Long hid) {
+				this.nid = nid;
+				this.hid = hid;
+			}
+
+			private PK() {
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if ( this == o ) {
+					return true;
+				}
+				if ( o == null || getClass() != o.getClass() ) {
+					return false;
+				}
+				PK pk = (PK) o;
+				return Objects.equals( nid, pk.nid ) && Objects.equals( hid, pk.hid );
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash( nid, hid );
+			}
+		}
+
+	}
+
 
 	@Entity
 	public static class HeadS {

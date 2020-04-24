@@ -39,7 +39,7 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 
 	@Test
 	@FailureExpected(jiraKey = "HHH-9662", message = "Could not set field value [POST_INSERT_INDICATOR]")
-	public void testCompositePkWithIdentityAndFKByIdentity() throws Exception {
+	public void testCompositePkWithIdentityAndFKByIdentity() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadI head = new HeadI();
 			head.name = "Head by Identity";
@@ -62,8 +62,7 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-9662", message = "Could not set field value [POST_INSERT_INDICATOR]")
-	public void testCompositePkWithIdentityAndFKByIdentity2() throws Exception {
+	public void testCompositePkWithIdentityAndFKByIdentity2() {
 		doInHibernate( this::sessionFactory, session -> {
 			HeadI head = new HeadI();
 			head.name = "Head by Identity";

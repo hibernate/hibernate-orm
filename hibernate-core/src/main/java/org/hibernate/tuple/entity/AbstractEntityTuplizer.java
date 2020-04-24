@@ -39,6 +39,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -371,24 +372,23 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
 			for ( int i = 0; i < length; i++ ) {
+				final Type subType = subTypes[i];
 				if ( propertyValues[i] == null ) {
-					try {
-						final String name = names[i];
-						final Property p = ((Component) identifier).getProperty(name);
-						final SimpleValue v = (SimpleValue) p.getValue();
-						if ( v.getIdentifierGenerator() == null ) {
-							throw new NullPointerException("No IdentifierGenerator found for property "+name);
-						}
+					if ( subType.isAssociationType() ) {
+						throw new HibernateException( "No part of a composite identifier may be null" );
 					}
-					catch (Throwable t) {
-						throw new HibernateException( "No part of a composite identifier may be null", t );
+					final String name = names[i];
+					final Property p = ( (Component) identifier ).getProperty( name );
+					final SimpleValue v = (SimpleValue) p.getValue();
+					if ( v.getIdentifierGenerator() == null ) {
+						throw new HibernateException( "No part of a composite identifier may be null" );
 					}
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
+				if ( subType.isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
 					propertyValues[i] = determineEntityId(
 							propertyValues[i],
-							(AssociationType) subTypes[i],
+							(AssociationType) subType,
 							session,
 							sessionFactory
 					);

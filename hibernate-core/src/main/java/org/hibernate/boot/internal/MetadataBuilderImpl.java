@@ -7,7 +7,7 @@
 package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import javax.persistence.AttributeConverter;
@@ -305,7 +305,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
-		options.sourceProcessOrdering.addAll( Arrays.asList( sourceTypes ) );
+		Collections.addAll( options.sourceProcessOrdering, sourceTypes );
 		return this;
 	}
 

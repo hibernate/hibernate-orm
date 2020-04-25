@@ -377,8 +377,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					if ( subType.isAssociationType() ) {
 						throw new HibernateException( "No part of a composite identifier may be null" );
 					}
-					final String name = names[i];
-					final Property p = ( (Component) identifier ).getProperty( name );
+					final Property p = ( (Component) identifier ).getProperty( i );
 					final SimpleValue v = (SimpleValue) p.getValue();
 					if ( v.getIdentifierGenerator() == null ) {
 						throw new HibernateException( "No part of a composite identifier may be null" );

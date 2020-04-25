@@ -342,6 +342,18 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return java.util.Collections.unmodifiableMap( tuplizerImpls );
 	}
 
+	/**
+	 * Returns the {@link Property} at the specified position in this {@link Component}.
+	 *
+	 * @param index index of the {@link Property} to return
+	 * @return {@link Property}
+	 * @throws IndexOutOfBoundsException - if the index is out of range(index < 0 || index >=
+	 * {@link #getPropertySpan()})
+	 */
+	public Property getProperty(int index) {
+		return properties.get( index );
+	}
+
 	public Property getProperty(String propertyName) throws MappingException {
 		Iterator iter = getPropertyIterator();
 		while ( iter.hasNext() ) {

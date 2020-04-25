@@ -53,12 +53,12 @@ public class ManyToOneTest {
 		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormua, jdbcMapping) -> {
 			assertThat( keyTable, is( "other_entity" ) );
 			assertThat( keyColumn, is( "simple_entity_id" ) );
 		} );
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
 			assertThat( targetTable, is( "simple_entity" ) );
 			assertThat( targetColumn, is( "id" ) );
 		} );

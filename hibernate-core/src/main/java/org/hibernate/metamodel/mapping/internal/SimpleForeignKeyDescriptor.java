@@ -89,6 +89,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 									new ColumnReference(
 											identificationVariable,
 											targetColumnExpression,
+											false,
 											jdbcMapping,
 											creationState.getSqlAstCreationState()
 													.getCreationContext()
@@ -139,6 +140,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 								new ColumnReference(
 										identificationVariable,
 										keyColumnExpression,
+										false,
 										jdbcMapping,
 										creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 								)
@@ -167,6 +169,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							lhs,
 							keyColumnExpression,
+							false,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					),
@@ -174,6 +177,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							rhs,
 							targetColumnExpression,
+							false,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					)
@@ -184,6 +188,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							lhs,
 							targetColumnExpression,
+							false,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					),
@@ -191,6 +196,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					new ColumnReference(
 							rhs,
 							keyColumnExpression,
+							false,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					)
@@ -285,12 +291,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
-		consumer.accept( keyColumnContainingTable, keyColumnExpression, jdbcMapping );
+		consumer.accept( keyColumnContainingTable, keyColumnExpression, false, jdbcMapping );
 	}
 
 	@Override
 	public void visitTargetColumns(ColumnConsumer consumer) {
-		consumer.accept( targetColumnContainingTable, targetColumnExpression, jdbcMapping );
+		consumer.accept( targetColumnContainingTable, targetColumnExpression, false, jdbcMapping );
 	}
 
 	@Override

@@ -67,6 +67,7 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 			final ColumnReference idColumnReference = new ColumnReference(
 					mutatingTableReference,
 					idColumn,
+					false,
 					basicIdMapping.getJdbcMapping(),
 					sessionFactory
 			);
@@ -88,8 +89,8 @@ public class DisjunctionRestrictionProducer implements MatchingIdRestrictionProd
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
 			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, jdbcMapping, sessionFactory ) );
+					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, isColumnExpressionFormula, jdbcMapping, sessionFactory ) );
 						jdbcMappings.add( jdbcMapping );
 					}
 			);

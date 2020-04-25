@@ -928,6 +928,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								getDiscriminatorColumnName(),
+								false,
 								( (BasicType) getDiscriminatorType() ).getJdbcMapping(),
 								getFactory()
 						)
@@ -952,7 +953,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> {
 						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
 						for ( String column : keyColumnNames ) {
-							columnConsumer.accept( tableName, column, null );
+							columnConsumer.accept( tableName, column, false,null );
 						}
 					}
 			);

@@ -221,10 +221,11 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		final List<ColumnReference> columnsToMatchReferences = new ArrayList<>();
 
 		columnsToMatchVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, jdbcMapping) -> columnsToMatchReferences.add(
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> columnsToMatchReferences.add(
 						new ColumnReference(
 								targetTableReference,
 								columnExpression,
+								isColumnExpressionFormula,
 								jdbcMapping,
 								sessionFactory
 						)

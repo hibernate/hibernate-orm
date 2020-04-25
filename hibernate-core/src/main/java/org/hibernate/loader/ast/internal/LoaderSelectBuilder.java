@@ -327,6 +327,7 @@ public class LoaderSelectBuilder {
 					p -> new ColumnReference(
 							tableReference,
 							columnExpression,
+							false,
 							jdbcMapping,
 							creationContext.getSessionFactory()
 					)
@@ -356,7 +357,7 @@ public class LoaderSelectBuilder {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberOfKeyColumns );
 
 			keyPart.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
+					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( containingTableExpression );
 						columnReferences.add(
 								(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
@@ -364,6 +365,7 @@ public class LoaderSelectBuilder {
 										p -> new ColumnReference(
 												tableReference,
 												columnExpression,
+												isColumnExpressionFormula,
 												jdbcMapping,
 												creationContext.getSessionFactory()
 										)
@@ -683,6 +685,7 @@ public class LoaderSelectBuilder {
 					sqlAstProcessingState -> new ColumnReference(
 							rootTableGroup.resolveTableReference( simpleFkDescriptor.getContainingTableExpression() ),
 							simpleFkDescriptor.getMappedColumnExpression(),
+							false,
 							simpleFkDescriptor.getJdbcMapping(),
 							this.creationContext.getSessionFactory()
 					)
@@ -691,13 +694,14 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			fkDescriptor.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) ->
+					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) ->
 						columnReferences.add(
 								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 										createColumnReferenceKey( containingTableExpression, columnExpression ),
 										sqlAstProcessingState -> new ColumnReference(
 												rootTableGroup.resolveTableReference( containingTableExpression ),
 												columnExpression,
+												isColumnExpressionFormula,
 												jdbcMapping,
 												this.creationContext.getSessionFactory()
 										)
@@ -747,7 +751,7 @@ public class LoaderSelectBuilder {
 
 		final MutableInteger count = new MutableInteger();
 		fkDescriptor.visitTargetColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
 					final TableReference tableReference = ownerTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
@@ -755,6 +759,7 @@ public class LoaderSelectBuilder {
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
 									columnExpression,
+									isColumnExpressionFormula,
 									jdbcMapping,
 									sessionFactory
 							)

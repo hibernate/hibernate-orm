@@ -9,9 +9,11 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
@@ -24,6 +26,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -50,6 +53,7 @@ public class BasicValuedSingularAttributeMapping
 	private final NavigableRole navigableRole;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
+	private final boolean isMappedColumnExpressionFormula;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter valueConverter;
@@ -65,6 +69,7 @@ public class BasicValuedSingularAttributeMapping
 			FetchStrategy mappedFetchStrategy,
 			String tableExpression,
 			String mappedColumnExpression,
+			boolean isMappedColumnExpressionFormula,
 			BasicValueConverter valueConverter,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
@@ -73,6 +78,7 @@ public class BasicValuedSingularAttributeMapping
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
+		this.isMappedColumnExpressionFormula = isMappedColumnExpressionFormula;
 		this.valueConverter = valueConverter;
 		this.jdbcMapping = jdbcMapping;
 
@@ -102,6 +108,11 @@ public class BasicValuedSingularAttributeMapping
 	@Override
 	public String getMappedColumnExpression() {
 		return mappedColumnExpression;
+	}
+
+	@Override
+	public boolean isMappedColumnExpressionFormula() {
+		return isMappedColumnExpressionFormula;
 	}
 
 	@Override
@@ -142,15 +153,18 @@ public class BasicValuedSingularAttributeMapping
 
 		final TableReference tableReference = tableGroup.resolveTableReference( getContainingTableExpression() );
 
+		final String tableAlias = tableReference.getIdentificationVariable();
+		final String columnExpression = getMappedColumnExpression();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
 								tableReference,
-								getMappedColumnExpression()
+								columnExpression
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								tableReference.getIdentificationVariable(),
-								getMappedColumnExpression(),
+								tableAlias,
+								columnExpression,
+								isMappedColumnExpressionFormula(),
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -179,6 +193,7 @@ public class BasicValuedSingularAttributeMapping
 						sqlAstProcessingState -> new ColumnReference(
 								tableReference.getIdentificationVariable(),
 								getMappedColumnExpression(),
+								isMappedColumnExpressionFormula(),
 								jdbcMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -246,6 +261,6 @@ public class BasicValuedSingularAttributeMapping
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( tableExpression, mappedColumnExpression, jdbcMapping );
+		consumer.accept( tableExpression, mappedColumnExpression, isMappedColumnExpressionFormula, jdbcMapping );
 	}
 }

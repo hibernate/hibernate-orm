@@ -48,12 +48,12 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
 			assertThat( keyTable, is( "EntityWithOneToOneSharingPrimaryKey" ) );
 			assertThat( keyColumn, is( "id" ) );
 		} );
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
 			assertThat( targetTable, is( "SIMPLE_ENTITY" ) );
 			assertThat( targetColumn, is( "id" ) );
 		} );

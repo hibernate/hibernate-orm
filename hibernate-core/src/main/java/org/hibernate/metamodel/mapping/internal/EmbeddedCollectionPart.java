@@ -177,7 +177,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 
 		final List<Expression> expressions = new ArrayList<>();
 		getEmbeddableTypeDescriptor().visitColumns(
-				(tableExpression, columnExpression, jdbcMapping) ->{
+				(tableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) ->{
 					assert containingTableExpression.equals( tableExpression );
 					assert columnExpressions.contains( columnExpression );
 					expressions.add(
@@ -186,6 +186,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 									sqlAstProcessingState -> new ColumnReference(
 											tableGroup.resolveTableReference( tableExpression ),
 											columnExpression,
+											isColumnExpressionFormula,
 											jdbcMapping,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)

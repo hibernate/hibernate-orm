@@ -15,5 +15,6 @@ public interface ColumnConsumer {
 	void accept(
 			String containingTableExpression,
 			String columnExpression,
+			boolean isColumnExpressionFormula,
 			JdbcMapping jdbcMapping);
 }

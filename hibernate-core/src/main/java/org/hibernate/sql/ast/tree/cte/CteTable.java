@@ -46,7 +46,7 @@ public class CteTable {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount( sessionFactory.getTypeConfiguration() );
 		cteColumns = new ArrayList<>( numberOfColumns );
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> cteColumns.add(
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> cteColumns.add(
 						new CteColumn(
 								"cte_" + columnExpression,
 								jdbcMapping
@@ -183,6 +183,7 @@ public class CteTable {
 							new ColumnReference(
 									tableReference,
 									cteColumn.getColumnExpression(),
+									false,
 									cteColumn.getJdbcMapping(),
 									sessionFactory
 							)

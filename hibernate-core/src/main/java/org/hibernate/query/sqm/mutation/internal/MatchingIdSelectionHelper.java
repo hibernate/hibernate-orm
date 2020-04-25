@@ -80,7 +80,7 @@ public class MatchingIdSelectionHelper {
 		final List<DomainResult> domainResults = new ArrayList<>();
 		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -88,6 +88,7 @@ public class MatchingIdSelectionHelper {
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
 									columnExpression,
+									isColumnExpressionFormula,
 									jdbcMapping,
 									sessionFactory
 							)
@@ -141,7 +142,7 @@ public class MatchingIdSelectionHelper {
 
 		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
@@ -149,6 +150,7 @@ public class MatchingIdSelectionHelper {
 							sqlAstProcessingState -> new ColumnReference(
 									tableReference,
 									columnExpression,
+									isColumnExpressionFormula,
 									jdbcMapping,
 									sessionFactory
 							)

@@ -26,15 +26,21 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  */
 public class ColumnReference implements OrderingExpression, SequencePart {
 	private final String columnExpression;
+	private final boolean isColumnExpressionFormula;
 	private final NavigablePath rootPath;
 
-	public ColumnReference(String columnExpression, NavigablePath rootPath) {
+	public ColumnReference(String columnExpression, boolean isColumnExpressionFormula, NavigablePath rootPath) {
 		this.columnExpression = columnExpression;
+		this.isColumnExpressionFormula = isColumnExpressionFormula;
 		this.rootPath = rootPath;
 	}
 
 	public String getColumnExpression() {
 		return columnExpression;
+	}
+
+	public boolean isColumnExpressionFormula() {
+		return isColumnExpressionFormula;
 	}
 
 	@Override
@@ -63,6 +69,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 								sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
 										tableGroup.getPrimaryTableReference(),
 										columnExpression,
+										isColumnExpressionFormula,
 										// because these ordering fragments are only ever part of the order-by clause, there
 										//		is no need for the JdbcMapping
 										null,

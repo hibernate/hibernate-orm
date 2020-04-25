@@ -131,6 +131,7 @@ public class BasicValuedCollectionPart
 						sqlAstProcessingState -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnExpression,
+								false,
 								mapper,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)

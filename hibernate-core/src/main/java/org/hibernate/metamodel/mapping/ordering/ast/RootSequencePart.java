@@ -37,7 +37,7 @@ public class RootSequencePart implements SequencePart {
 
 		if ( isTerminal ) {
 			// assume a column-reference
-			return new ColumnReference( name, pluralAttributePath.getNavigablePath() );
+			return new ColumnReference( name, false, pluralAttributePath.getNavigablePath() );
 		}
 
 		throw new PathResolutionException(

@@ -138,6 +138,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 						p -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnName,
+								false,
 								type,
 								sessionFactory
 						)
@@ -176,6 +177,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 						p -> new ColumnReference(
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								columnName,
+								false,
 								type,
 								sessionFactory
 						)

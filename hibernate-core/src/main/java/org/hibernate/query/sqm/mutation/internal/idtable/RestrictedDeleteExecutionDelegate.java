@@ -285,7 +285,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		 */
 		final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					assert targetTableReference.getTableExpression().equals( containingTableExpression );
 
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
@@ -293,6 +293,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableGroup.getPrimaryTableReference(),
 									columnExpression,
+									isColumnExpressionFormula,
 									jdbcMapping,
 									sessionFactory
 							)
@@ -456,12 +457,13 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					assert containingTableExpression.equals( tableExpression );
 					keyColumnCollector.apply(
 							new ColumnReference(
 									(String) null,
 									columnExpression,
+									isColumnExpressionFormula,
 									jdbcMapping,
 									factory
 							)

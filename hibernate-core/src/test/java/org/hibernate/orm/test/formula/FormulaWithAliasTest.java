@@ -4,79 +4,69 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.formula;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+package org.hibernate.orm.test.formula;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.Formula;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.Query;
-import org.hibernate.test.annotations.formula.FormulaWithColumnTypesTest.ExtendedDialect;
-import org.hibernate.test.locking.A;
-import org.hibernate.testing.RequiresDialect;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * @author Yanming Zhou*
+ * @author Yanming Zhou
+ * @author Nathan Xu
  */
+@DomainModel( annotatedClasses = FormulaWithAliasTest.Customer.class )
+@SessionFactory
 @RequiresDialect(H2Dialect.class)
-public class FormulaWithAliasTest extends BaseCoreFunctionalTestCase {
+public class FormulaWithAliasTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Customer.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty(
-				Environment.DIALECT,
-				ExtendedDialect.class.getName()
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-12280")
-	public void testFormulaWithAlias() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
-			Customer company1 = new Customer();
+	@BeforeEach
+	void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Customer company1 = new Customer();
 			company1.setBalance(new BigDecimal(100));
 			company1.setVip(true);
 			session.persist(company1);
 
-			Customer company2 = new Customer();
+			final Customer company2 = new Customer();
 			company2.setBalance(new BigDecimal(1000));
 			company2.setVip(false);
 			session.persist(company2);
 		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			List<Customer> customers = session.createQuery(
-				"select c " +
-				"from Customer c ", Customer.class)
-			.getResultList();
+	}
+	@Test
+	@TestForIssue(jiraKey = "HHH-12280")
+	void testFormulaWithAlias(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Customer> customers = session.createQuery( "select c from Customer c ", Customer.class ).getResultList();
 
 			assertEquals(2, customers.size());
 			assertEquals(1d, customers.get(0).getPercentage().doubleValue(), 0);
 			assertEquals(1d, customers.get(1).getPercentage().doubleValue(), 0);
 		} );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createQuery( "delete from Customer" ).executeUpdate() );
 	}
 	
 	@Entity(name = "Customer")

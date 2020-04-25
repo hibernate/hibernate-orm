@@ -237,7 +237,7 @@ public class StandardSqmUpdateTranslator
 
 					// create one JdbcParameter for each column in the assigned path
 					assignedPathInterpretation.getExpressionType().visitColumns(
-							(containingTableExpression, columnExpression, jdbcMapping) -> {
+							(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 								final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 								jdbcParametersForSqm.add( jdbcParameter );
 								assignments.add(
@@ -246,6 +246,7 @@ public class StandardSqmUpdateTranslator
 														// we do not want a qualifier (table alias) here
 														(String) null,
 														columnExpression,
+														isColumnExpressionFormula,
 														jdbcMapping,
 														getCreationContext().getSessionFactory()
 												),

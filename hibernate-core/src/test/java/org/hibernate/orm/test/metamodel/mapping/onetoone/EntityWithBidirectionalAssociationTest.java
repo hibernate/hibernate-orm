@@ -51,12 +51,12 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) childAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
 			assertThat( keyTable, is( "PARENT" ) );
 			assertThat( keyColumn, is( "child_id" ) );
 		} );
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
 			assertThat( targetTable, is( "CHILD" ) );
 			assertThat( targetColumn, is( "id" ) );
 		} );
@@ -72,12 +72,12 @@ public class EntityWithBidirectionalAssociationTest {
 		final ToOneAttributeMapping parentAttributeMapping = (ToOneAttributeMapping) parentAssociation;
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
-		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, isKeyColumnFormula, jdbcMapping) -> {
 			assertThat( keyTable, is( "PARENT" ) );
 			assertThat( keyColumn, is( "child_id" ) );
 		} );
 
-		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, jdbcMapping) -> {
+		foreignKeyDescriptor.visitTargetColumns( (targetTable, targetColumn, isTargetColumnFormula, jdbcMapping) -> {
 			assertThat( targetTable, is( "CHILD" ) );
 			assertThat( targetColumn, is( "id" ) );
 		} );

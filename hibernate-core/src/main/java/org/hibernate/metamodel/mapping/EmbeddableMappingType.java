@@ -177,6 +177,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 								(BasicType) subtype,
 								containingTableExpression,
 								mappedColumnExpressions.get( columnPosition++ ),
+								false,
 								representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 								compositeType.getCascadeStyle( attributeIndex ),
 								creationProcess

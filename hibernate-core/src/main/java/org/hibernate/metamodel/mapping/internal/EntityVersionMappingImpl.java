@@ -142,6 +142,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						sqlAstProcessingState -> new ColumnReference(
 								columnTableReference,
 								columnExpression,
+								false,
 								versionBasicType,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)
@@ -179,6 +180,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 						sqlAstProcessingState -> new ColumnReference(
 								columnTableReference,
 								columnExpression,
+								false,
 								versionBasicType,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)

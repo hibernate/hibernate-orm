@@ -24,6 +24,10 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ModelPart, Fet
 	 */
 	String getMappedColumnExpression();
 
+	default boolean isMappedColumnExpressionFormula() {
+		return false;
+	}
+
 	@Override
 	default MappingType getPartMappingType() {
 		return this::getJavaTypeDescriptor;

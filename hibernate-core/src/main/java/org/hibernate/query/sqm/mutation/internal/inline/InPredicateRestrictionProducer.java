@@ -69,6 +69,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 			final Expression inFixture = new ColumnReference(
 					mutatingTableReference,
 					idColumn,
+					false,
 					basicIdMapping.getJdbcMapping(),
 					sessionFactory
 			);
@@ -83,8 +84,8 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 			final List<ColumnReference> columnReferences = new ArrayList<>( idColumnCount );
 			final List<JdbcMapping> jdbcMappings = new ArrayList<>( idColumnCount );
 			identifierMapping.visitColumns(
-					(containingTableExpression, columnExpression, jdbcMapping) -> {
-						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, jdbcMapping, sessionFactory ) );
+					(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
+						columnReferences.add( new ColumnReference( mutatingTableReference, columnExpression, isColumnExpressionFormula, jdbcMapping, sessionFactory ) );
 						jdbcMappings.add( jdbcMapping );
 					}
 			);

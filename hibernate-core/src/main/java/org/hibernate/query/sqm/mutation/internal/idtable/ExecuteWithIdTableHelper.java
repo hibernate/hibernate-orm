@@ -76,7 +76,7 @@ public final class ExecuteWithIdTableHelper {
 		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
 			final IdTableColumn column = idTable.getIdTableColumns().get( i );
 			idTableInsert.addTargetColumnReferences(
-					new ColumnReference( idTableReference, column.getColumnName(), column.getJdbcMapping(), factory )
+					new ColumnReference( idTableReference, column.getColumnName(), false, column.getJdbcMapping(), factory )
 			);
 		}
 
@@ -88,7 +88,7 @@ public final class ExecuteWithIdTableHelper {
 		final MutableInteger positionWrapper = new MutableInteger();
 
 		mutatingEntityDescriptor.getIdentifierMapping().visitColumns(
-				(containingTableExpression, columnExpression, jdbcMapping) -> {
+				(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 					final int jdbcPosition = positionWrapper.getAndIncrement();
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference( containingTableExpression );
 					matchingIdSelection.getSelectClause().addSqlSelection(
@@ -100,6 +100,7 @@ public final class ExecuteWithIdTableHelper {
 											sqlAstProcessingState -> new ColumnReference(
 													tableReference,
 													columnExpression,
+													isColumnExpressionFormula,
 													jdbcMapping,
 													factory
 											)
@@ -190,6 +191,7 @@ public final class ExecuteWithIdTableHelper {
 								new ColumnReference(
 										tableReference,
 										idTableColumn.getColumnName(),
+										false,
 										idTableColumn.getJdbcMapping(),
 										executionContext.getSession().getFactory()
 								)
@@ -211,6 +213,7 @@ public final class ExecuteWithIdTableHelper {
 							new ColumnReference(
 									idTableReference,
 									idTable.getSessionUidColumn().getColumnName(),
+									false,
 									idTable.getSessionUidColumn().getJdbcMapping(),
 									executionContext.getSession().getFactory()
 							),

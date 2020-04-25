@@ -58,6 +58,7 @@ public interface DomainPath extends OrderingExpression, SequencePart {
 							new ColumnReference(
 									tableReference,
 									basicValuedPart.getMappedColumnExpression(),
+									basicValuedPart.isMappedColumnExpressionFormula(),
 									basicValuedPart.getJdbcMapping(),
 									creationState.getCreationContext().getSessionFactory()
 							),
@@ -68,7 +69,7 @@ public interface DomainPath extends OrderingExpression, SequencePart {
 		}
 		else {
 			getReferenceModelPart().visitColumns(
-					(tableExpression, columnExpression, jdbcMapping) -> {
+					(tableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 						final TableReference tableReference = tableGroup.resolveTableReference( tableExpression );
 						ast.addSortSpecification(
 								new SortSpecification(
@@ -80,6 +81,7 @@ public interface DomainPath extends OrderingExpression, SequencePart {
 												sqlAstProcessingState -> new ColumnReference(
 														tableReference,
 														columnExpression,
+														isColumnExpressionFormula,
 														jdbcMapping,
 														sessionFactory
 												)

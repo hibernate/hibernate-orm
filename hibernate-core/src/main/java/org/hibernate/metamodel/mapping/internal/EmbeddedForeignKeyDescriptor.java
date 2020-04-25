@@ -118,6 +118,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 										new ColumnReference(
 												identificationVariable,
 												columnExpression,
+												false,
 												jdbcMapping,
 												creationState.getSqlAstCreationState()
 														.getCreationContext()
@@ -169,6 +170,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 									new ColumnReference(
 											identificationVariable,
 											columnExpression,
+											false,
 											jdbcMapping,
 											creationState.getSqlAstCreationState()
 													.getCreationContext()
@@ -260,6 +262,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 							new ColumnReference(
 									lhs,
 									lhsExpressions.get( i ),
+									false,
 									jdbcMapping,
 									creationContext.getSessionFactory()
 							),
@@ -267,6 +270,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 							new ColumnReference(
 									rhs,
 									rhsColumnExpressions.get( i ),
+									false,
 									jdbcMapping,
 									creationContext.getSessionFactory()
 							)
@@ -312,14 +316,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
 		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept( keyColumnContainingTable, keyColumnExpressions.get( i ), jdbcMappings.get( i ) );
+			consumer.accept( keyColumnContainingTable, keyColumnExpressions.get( i ), false, jdbcMappings.get( i ) );
 		}
 	}
 
 	@Override
 	public void visitTargetColumns(ColumnConsumer consumer) {
 		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
-			consumer.accept( targetColumnContainingTable, targetColumnExpressions.get( i ), jdbcMappings.get( i ) );
+			consumer.accept( targetColumnContainingTable, targetColumnExpressions.get( i ), false, jdbcMappings.get( i ) );
 		}
 	}
 

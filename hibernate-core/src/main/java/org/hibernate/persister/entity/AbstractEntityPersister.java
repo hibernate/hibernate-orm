@@ -122,7 +122,6 @@ import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -824,7 +823,8 @@ public abstract class AbstractEntityPersister
 				colAliases[k] = thing.getAlias( dialect, prop.getValue().getTable() );
 				if ( thing.isFormula() ) {
 					foundFormula = true;
-					( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
+					// ( (Formula) thing ).setFormula( substituteBrackets( ( (Formula) thing ).getFormula() ) );
+					// TODO: uncomment the above statement when this#substituteBrackets(String) is implemented
 					formulaTemplates[k] = thing.getTemplate( dialect, factory.getQueryEngine().getSqmFunctionRegistry() );
 				}
 				else {
@@ -1406,6 +1406,7 @@ public abstract class AbstractEntityPersister
 								sqlAstProcessingState -> new ColumnReference(
 										rootTableReference.getIdentificationVariable(),
 										rootPkColumnName,
+										false,
 										jdbcMapping,
 										getFactory()
 								)
@@ -1420,6 +1421,7 @@ public abstract class AbstractEntityPersister
 								sqlAstProcessingState -> new ColumnReference(
 										joinedTableReference.getIdentificationVariable(),
 										fkColumnName,
+										false,
 										jdbcMapping,
 										getFactory()
 								)
@@ -6143,6 +6145,7 @@ public abstract class AbstractEntityPersister
 					(BasicType) attrType,
 					tableExpression,
 					attrColumnNames[0],
+					false,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -6150,6 +6153,17 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( attrType instanceof BasicType ) {
+			final String attrColumnExpression;
+			final boolean isAttrColumnExpressionFormula;
+			if ( attrColumnNames[0] != null ) {
+				attrColumnExpression = attrColumnNames[0];
+				isAttrColumnExpressionFormula = false;
+			}
+			else {
+				final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
+				attrColumnExpression = attrColumnFormulaTemplate[0];
+				isAttrColumnExpressionFormula = true;
+			}
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
 					getNavigableRole().append( bootProperty.getName() ),
@@ -6158,7 +6172,8 @@ public abstract class AbstractEntityPersister
 					this,
 					(BasicType) attrType,
 					tableExpression,
-					attrColumnNames[0],
+					attrColumnExpression,
+					isAttrColumnExpressionFormula,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess

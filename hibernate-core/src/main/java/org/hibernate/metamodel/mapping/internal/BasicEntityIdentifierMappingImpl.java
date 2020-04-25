@@ -125,7 +125,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
-		consumer.accept( getContainingTableExpression(), getMappedColumnExpression(), getJdbcMapping() );
+		consumer.accept( getContainingTableExpression(), getMappedColumnExpression(), false, getJdbcMapping() );
 	}
 
 	@Override
@@ -190,6 +190,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				sqlAstProcessingState -> new ColumnReference(
 						rootTableReference.getIdentificationVariable(),
 						pkColumnName,
+						false,
 						( (BasicValuedMapping) entityPersister.getIdentifierType() ).getJdbcMapping(),
 						sessionFactory
 				)
@@ -224,6 +225,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				sqlAstProcessingState -> new ColumnReference(
 						rootTable,
 						pkColumnName,
+						false,
 						( (BasicValuedModelPart) entityPersister.getIdentifierType() ).getJdbcMapping(),
 						sessionFactory
 				)

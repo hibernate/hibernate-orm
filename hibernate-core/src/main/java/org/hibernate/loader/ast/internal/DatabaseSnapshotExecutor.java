@@ -99,7 +99,7 @@ class DatabaseSnapshotExecutor {
 		final List<DomainResult> domainResults = new ArrayList<>();
 
 		entityDescriptor.getIdentifierMapping().visitColumns(
-				(tab, col, jdbcMapping) -> {
+				(tab, col, isColFormula, jdbcMapping) -> {
 					final TableReference tableReference = rootTableGroup.resolveTableReference( tab );
 
 					final JdbcParameter jdbcParameter = new JdbcParameterImpl( jdbcMapping );
@@ -111,6 +111,7 @@ class DatabaseSnapshotExecutor {
 									s -> new ColumnReference(
 											tableReference,
 											col,
+											isColFormula,
 											jdbcMapping,
 											sessionFactory
 									)
@@ -145,7 +146,7 @@ class DatabaseSnapshotExecutor {
 				contributorMapping -> {
 					rootPath.append( contributorMapping.getAttributeName() );
 					contributorMapping.visitColumns(
-							(containingTableExpression, columnExpression, jdbcMapping) -> {
+							(containingTableExpression, columnExpression, isColumnExpressionFormula, jdbcMapping) -> {
 								final TableReference tableReference = rootTableGroup.resolveTableReference(
 										containingTableExpression );
 
@@ -158,6 +159,7 @@ class DatabaseSnapshotExecutor {
 												s -> new ColumnReference(
 														tableReference,
 														columnExpression,
+														isColumnExpressionFormula,
 														jdbcMapping,
 														sessionFactory
 												)

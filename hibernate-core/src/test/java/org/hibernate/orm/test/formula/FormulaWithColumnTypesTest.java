@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.formula;
+package org.hibernate.orm.test.formula;
 
 import java.io.Serializable;
 import java.util.List;
@@ -49,89 +49,89 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-9951")
 	public void testFormulaAnnotationWithTypeNames() {
 
-		inTransaction(
-				session -> {
-					DisplayItem displayItem20 = new DisplayItem();
-					displayItem20.setDisplayCode( "20" );
+		inTransaction( session -> {
+			session.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 
-					DisplayItem displayItem03 = new DisplayItem();
-					displayItem03.setDisplayCode( "03" );
+			final DisplayItem displayItem20 = new DisplayItem();
+			displayItem20.setDisplayCode( "20" );
 
-					DisplayItem displayItem100 = new DisplayItem();
-					displayItem100.setDisplayCode( "100" );
+			final DisplayItem displayItem03 = new DisplayItem();
+			displayItem03.setDisplayCode( "03" );
 
-					session.persist( displayItem20 );
-					session.persist( displayItem03 );
-					session.persist( displayItem100 );
-				}
-		);
+			final DisplayItem displayItem100 = new DisplayItem();
+			displayItem100.setDisplayCode( "100" );
+
+			session.persist( displayItem20 );
+			session.persist( displayItem03 );
+			session.persist( displayItem100 );
+		} );
 
 		// 1. Default sorting by display code natural ordering (resulting in 3-100-20).
-		inTransaction(
-				session -> {
-					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-					CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
-					Root<DisplayItem> root = criteria.from( DisplayItem.class );
-					criteria.orderBy( criteriaBuilder.asc( root.get( "displayCode" ) ) );
+		inTransaction( session -> {
+			session.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 
-					List displayItems = session.createQuery( criteria ).list();
+			final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			final CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
+			final Root<DisplayItem> root = criteria.from( DisplayItem.class );
+			criteria.orderBy( criteriaBuilder.asc( root.get( "displayCode" ) ) );
+
+			final List<DisplayItem> displayItems = session.createQuery( criteria ).getResultList();
 
 //					List displayItems = session.createCriteria( DisplayItem.class )
 //							.addOrder( Order.asc( "displayCode" ) )
 //							.list();
 
-					assertNotNull( displayItems );
-					assertEquals( displayItems.size(), 3 );
-					assertEquals(
-							"03",
-							( (DisplayItem) displayItems.get( 0 ) ).getDisplayCode()
-					);
-					assertEquals(
-							"100",
-							( (DisplayItem) displayItems.get( 1 ) ).getDisplayCode()
-					);
-					assertEquals(
-							"20",
-							( (DisplayItem) displayItems.get( 2 ) ).getDisplayCode()
-					);
-				}
-		);
+			assertNotNull( displayItems );
+			assertEquals( 3, displayItems.size() );
+			assertEquals(
+					"03",
+					displayItems.get( 0 ).getDisplayCode()
+			);
+			assertEquals(
+					"100",
+					displayItems.get( 1 ).getDisplayCode()
+			);
+			assertEquals(
+					"20",
+					displayItems.get( 2 ).getDisplayCode()
+			);
+		} );
 
 		// 2. Sorting by the casted type (resulting in 3-20-100).
-		inTransaction(
-				session -> {
-					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-					CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
-					Root<DisplayItem> root = criteria.from( DisplayItem.class );
-					criteria.orderBy( criteriaBuilder.asc( root.get( "displayCodeAsInteger" ) ) );
+		inTransaction( session -> {
+			session.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 
-					List displayItemsSortedByInteger = session.createQuery( criteria ).list();
+			final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			final CriteriaQuery<DisplayItem> criteria = criteriaBuilder.createQuery( DisplayItem.class );
+			final Root<DisplayItem> root = criteria.from( DisplayItem.class );
+			criteria.orderBy( criteriaBuilder.asc( root.get( "displayCodeAsInteger" ) ) );
+
+			final List<DisplayItem> displayItemsSortedByInteger = session.createQuery( criteria ).getResultList();
 
 //					List displayItemsSortedByInteger = session.createCriteria( DisplayItem.class )
 //							.addOrder( Order.asc( "displayCodeAsInteger" ) )
 //							.list();
 
-					assertNotNull( displayItemsSortedByInteger );
-					assertEquals( displayItemsSortedByInteger.size(), 3 );
-					assertEquals(
-							"03",
-							( (DisplayItem) displayItemsSortedByInteger.get( 0 ) ).getDisplayCode()
-					);
-					assertEquals(
-							"20",
-							( (DisplayItem) displayItemsSortedByInteger.get( 1 ) ).getDisplayCode()
-					);
-					assertEquals(
-							"100",
-							( (DisplayItem) displayItemsSortedByInteger.get( 2 ) ).getDisplayCode()
-					);
-				}
-		);
+			assertNotNull( displayItemsSortedByInteger );
+			assertEquals( 3, displayItemsSortedByInteger.size() );
+			assertEquals(
+					"03",
+					displayItemsSortedByInteger.get( 0 ).getDisplayCode()
+			);
+			assertEquals(
+					"20",
+					displayItemsSortedByInteger.get( 1 ).getDisplayCode()
+			);
+			assertEquals(
+					"100",
+					displayItemsSortedByInteger.get( 2 ).getDisplayCode()
+			);
+		} );
 	}
 
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {DisplayItem.class};
+		return new Class<?>[] { DisplayItem.class };
 	}
 
 	/**
@@ -200,8 +200,8 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 
 		public ExtendedDialect() {
 			super();
+			registerKeyword( "FLOAT" );
 			registerKeyword( "INTEGER" );
 		}
-
 	}
 }

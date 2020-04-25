@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.StringHelper;
@@ -1272,7 +1273,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> {
 						final String[] keyColumnNames = constraintOrderedKeyColumnNames[tablePosition];
 						for ( String column : keyColumnNames ) {
-							columnConsumer.accept( tableName, column, null );
+							columnConsumer.accept( tableName, column, false, null );
 						}
 					}
 			);
@@ -1343,6 +1344,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return new ColumnReference(
 				tableReference.getIdentificationVariable(),
 				discriminatorColumnNameByTableName.get( tableReference.getTableExpression() ),
+				false,
 				jdbcMappings.get( 0 ),
 				getFactory()
 		);

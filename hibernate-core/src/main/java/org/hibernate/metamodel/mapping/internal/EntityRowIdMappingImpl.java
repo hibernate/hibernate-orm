@@ -87,6 +87,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 						sqlAstProcessingState -> new ColumnReference(
 								columnTableReference,
 								rowIdName,
+								false,
 								JavaObjectType.INSTANCE,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)

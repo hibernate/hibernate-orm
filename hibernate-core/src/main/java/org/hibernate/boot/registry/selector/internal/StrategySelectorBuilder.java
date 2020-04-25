@@ -24,23 +24,6 @@ import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
@@ -112,7 +95,7 @@ public class StrategySelectorBuilder {
 
 		// build the baseline...
 		strategySelector.registerStrategyLazily( Dialect.class, new DefaultDialectSelector() );
-		addJtaPlatforms( strategySelector );
+		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addMultiTableBulkIdStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
@@ -141,133 +124,6 @@ public class StrategySelectorBuilder {
 					name,
 					strategyRegistration.getStrategyImplementation()
 			);
-		}
-	}
-
-	private void addJtaPlatforms(StrategySelectorImpl strategySelector) {
-		addJtaPlatforms(
-				strategySelector,
-				AtomikosJtaPlatform.class,
-				"Atomikos",
-				"org.hibernate.service.jta.platform.internal.AtomikosJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				BorlandEnterpriseServerJtaPlatform.class,
-				"Borland",
-				"org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				BitronixJtaPlatform.class,
-				"Bitronix",
-				"org.hibernate.service.jta.platform.internal.BitronixJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				JBossAppServerJtaPlatform.class,
-				"JBossAS",
-				"org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				JBossStandAloneJtaPlatform.class,
-				"JBossTS",
-				"org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				JOnASJtaPlatform.class,
-				"JOnAS",
-				"org.hibernate.service.jta.platform.internal.JOnASJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				JOTMJtaPlatform.class,
-				"JOTM",
-				"org.hibernate.service.jta.platform.internal.JOTMJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				JRun4JtaPlatform.class,
-				"JRun4",
-				"org.hibernate.service.jta.platform.internal.JRun4JtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				OC4JJtaPlatform.class,
-				"OC4J",
-				"org.hibernate.service.jta.platform.internal.OC4JJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				OrionJtaPlatform.class,
-				"Orion",
-				"org.hibernate.service.jta.platform.internal.OrionJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				ResinJtaPlatform.class,
-				"Resin",
-				"org.hibernate.service.jta.platform.internal.ResinJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				SapNetWeaverJtaPlatform.class,
-				"SapNetWeaver",
-				"org.hibernate.service.jta.platform.internal.SapNetWeaverJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				SunOneJtaPlatform.class,
-				"SunOne",
-				"org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				WeblogicJtaPlatform.class,
-				"Weblogic",
-				"org.hibernate.service.jta.platform.internal.WeblogicJtaPlatform"
-		);
-		
-		addJtaPlatforms(
-				strategySelector,
-				WebSphereLibertyJtaPlatform.class,
-				"WebSphereLiberty",
-				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				WebSphereJtaPlatform.class,
-				"WebSphere",
-				"org.hibernate.service.jta.platform.internal.WebSphereJtaPlatform"
-		);
-
-		addJtaPlatforms(
-				strategySelector,
-				WebSphereExtendedJtaPlatform.class,
-				"WebSphereExtended",
-				"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform"
-		);
-	}
-
-	private void addJtaPlatforms(StrategySelectorImpl strategySelector, Class<? extends JtaPlatform> impl, String... names) {
-		for ( String name : names ) {
-			strategySelector.registerStrategyImplementor( JtaPlatform.class, name, impl );
 		}
 	}
 

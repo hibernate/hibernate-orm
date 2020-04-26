@@ -20,9 +20,9 @@ import org.geolatte.geom.Geometry;
  *
  * @author Daniel Shuy
  */
-public final class GeolatteSpatialPredicates {
+public class GeolatteSpatialPredicates {
 
-	private GeolatteSpatialPredicates() {
+	protected GeolatteSpatialPredicates() {
 	}
 
 	/**

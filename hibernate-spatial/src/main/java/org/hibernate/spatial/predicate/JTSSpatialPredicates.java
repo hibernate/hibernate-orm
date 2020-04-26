@@ -22,9 +22,9 @@ import org.locationtech.jts.geom.Geometry;
  * @author Daniel Shuy
  * @see SpatialRestrictions
  */
-public final class JTSSpatialPredicates {
+public class JTSSpatialPredicates {
 
-	private JTSSpatialPredicates() {
+	protected JTSSpatialPredicates() {
 	}
 
 	/**

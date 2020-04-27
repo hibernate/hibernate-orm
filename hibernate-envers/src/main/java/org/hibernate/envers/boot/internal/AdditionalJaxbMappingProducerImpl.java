@@ -28,6 +28,7 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.envers.boot.EnversBootLogger;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.service.ServiceRegistry;
 
@@ -63,21 +64,12 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 
 		// atm we do not have distinct origin info for envers
 		final Origin origin = new Origin( SourceType.OTHER, "envers" );
-//		final DOMWriter writer = new DOMWriter();
 
 		final MappingCollector mappingCollector = new MappingCollector() {
 			@Override
 			public void addDocument(Document document) throws DocumentException {
-				dump( document );
+				logXml( document );
 
-				// while the commented-out code here is more efficient (well, understanding that
-				// this whole process is un-efficient)  it leads to un-decipherable messages when
-				// we get mapping mapping errors from envers output.
-//				final DOMSource domSource = new DOMSource( writer.write( document ) );
-//				domSource.setSystemId( "envers" );
-//				final Binding jaxbBinding = mappingBinder.bind( domSource, origin );
-
-				// this form at least allows us to get better error messages
 				final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				try {
 					final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
@@ -89,11 +81,11 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 					throw new HibernateException( "Unable to bind Envers-generated XML", e );
 				}
 
-				ByteArrayInputStream bais = new ByteArrayInputStream( baos.toByteArray() );
-				BufferedInputStream bis = new BufferedInputStream( bais );
-				final Binding jaxbBinding = mappingBinder.bind( bis, origin );
+				ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( baos.toByteArray() );
+				BufferedInputStream bufferedInputStream = new BufferedInputStream( byteArrayInputStream );
+				final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( bufferedInputStream, origin );
 
-				final JaxbHbmHibernateMapping jaxbRoot = (JaxbHbmHibernateMapping) jaxbBinding.getRoot();
+				final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
 				additionalMappingDocuments.add( new MappingDocument( jaxbRoot, origin, buildingContext ) );
 			}
 		};
@@ -103,13 +95,13 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 		return additionalMappingDocuments;
 	}
 
-	private static void dump(Document document) {
-		if ( !log.isTraceEnabled() ) {
+	private static void logXml(Document document) {
+		if ( ! EnversBootLogger.DEBUG_ENABLED ) {
 			return;
 		}
 
-		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final Writer w = new PrintWriter( baos );
+		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		final Writer w = new PrintWriter( outputStream );
 
 		try {
 			final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
@@ -120,7 +112,9 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 			throw new RuntimeException( "Error dumping enhanced class", e1 );
 		}
 
-		log.tracef( "Envers-generate entity mapping -----------------------------\n%s", baos.toString() );
+		EnversBootLogger.BOOT_LOGGER.jaxbContribution( outputStream.toString() );
+
+		log.tracef( "Envers-generate entity mapping -----------------------------\n%s", outputStream.toString() );
 		log.trace( "------------------------------------------------------------" );
 	}
 }

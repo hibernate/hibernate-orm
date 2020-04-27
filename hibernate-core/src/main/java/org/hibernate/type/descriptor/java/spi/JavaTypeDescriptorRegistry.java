@@ -7,16 +7,12 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 
@@ -155,34 +151,8 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		);
 	}
 
-	public JavaTypeDescriptor<?> resolveDynamicDescriptor(String typeName) {
-		return new DynamicJtd();
+	public JavaTypeDescriptor<?> resolveDynamicEntityDescriptor(String typeName) {
+		return new DynamicModelJtd();
 	}
 
-	private static class DynamicJtd implements JavaTypeDescriptor<Map> {
-		@Override
-		public SqlTypeDescriptor getJdbcRecommendedSqlType(SqlTypeDescriptorIndicators context) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Map fromString(String string) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <X> X unwrap(Map value, Class<X> type, WrapperOptions options) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <X> Map wrap(X value, WrapperOptions options) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Class<Map> getJavaTypeClass() {
-			return Map.class;
-		}
-	}
 }

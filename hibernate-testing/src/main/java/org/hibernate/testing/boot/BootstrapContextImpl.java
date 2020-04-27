@@ -9,6 +9,8 @@ package org.hibernate.testing.boot;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -142,12 +144,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public void release() {
-		delegate.release();
+	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+		return StandardManagedTypeRepresentationResolver.INSTANCE;
 	}
 
 	@Override
-	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
-		return StandardManagedTypeRepresentationResolver.INSTANCE;
+	public void release() {
+		delegate.release();
 	}
 }

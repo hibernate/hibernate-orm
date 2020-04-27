@@ -59,6 +59,7 @@ public class BasicValuedSingularAttributeMapping
 	@SuppressWarnings("WeakerAccess")
 	public BasicValuedSingularAttributeMapping(
 			String attributeName,
+			NavigableRole navigableRole,
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchStrategy mappedFetchStrategy,
@@ -69,7 +70,7 @@ public class BasicValuedSingularAttributeMapping
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
 		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, declaringType, propertyAccess );
-		this.navigableRole = declaringType.getNavigableRole().append( attributeName );
+		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
 		this.valueConverter = valueConverter;

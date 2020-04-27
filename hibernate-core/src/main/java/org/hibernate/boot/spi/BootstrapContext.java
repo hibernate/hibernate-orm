@@ -9,6 +9,9 @@ package org.hibernate.boot.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.stream.XMLInputFactory;
+
 import org.hibernate.Incubating;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -162,6 +165,8 @@ public interface BootstrapContext {
 	 */
 	Collection<CacheRegionDefinition> getCacheRegionDefinitions();
 
+	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
+
 	/**
 	 * Releases the "bootstrap only" resources held by this BootstrapContext.
 	 * <p/>
@@ -172,6 +177,4 @@ public interface BootstrapContext {
 	 * @todo verify this ^^
 	 */
 	void release();
-
-	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 }

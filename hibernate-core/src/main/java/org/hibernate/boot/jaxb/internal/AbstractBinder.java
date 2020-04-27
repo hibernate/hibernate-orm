@@ -37,6 +37,7 @@ public abstract class AbstractBinder implements Binder {
 	private final LocalXmlResourceResolver xmlResourceResolver;
 	private final boolean validateXml;
 
+	@SuppressWarnings("unused")
 	protected AbstractBinder(ClassLoaderService classLoaderService) {
 		this( classLoaderService, true );
 	}
@@ -121,7 +122,6 @@ public abstract class AbstractBinder implements Binder {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
 		staxFactory.setXMLResolver( xmlResourceResolver );
@@ -150,6 +150,7 @@ public abstract class AbstractBinder implements Binder {
 
 	protected abstract Binding doBind(XMLEventReader staxEventReader, StartElement rootElementStartEvent, Origin origin);
 
+	@SuppressWarnings("unused")
 	protected static boolean hasNamespace(StartElement startElement) {
 		return ! "".equals( startElement.getName().getNamespaceURI() );
 	}

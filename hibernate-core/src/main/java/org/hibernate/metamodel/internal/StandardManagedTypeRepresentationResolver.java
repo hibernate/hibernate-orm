@@ -62,7 +62,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 //		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
 		RepresentationMode representation = null;
 		if ( representation == null ) {
-			if ( bootDescriptor.getComponentClass() == null ) {
+			if ( bootDescriptor.getComponentClassName() == null ) {
 				representation = RepresentationMode.MAP;
 			}
 			else {

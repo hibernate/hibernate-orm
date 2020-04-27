@@ -9,6 +9,7 @@ package org.hibernate.query.hql.internal;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
+import org.hibernate.query.hql.HqlLogger;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
@@ -31,6 +32,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 	private final SqmCreationContext sqmCreationContext;
 	private final SqmCreationOptions sqmCreationOptions;
 
+
 	public StandardHqlTranslator(
 			SqmCreationContext sqmCreationContext,
 			SqmCreationOptions sqmCreationOptions) {
@@ -40,6 +42,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public SqmStatement translate(String query) {
+		HqlLogger.QUERY_LOGGER.debugf( "HQL : " + query );
+
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
 		// then we perform semantic analysis and build the semantic representation...

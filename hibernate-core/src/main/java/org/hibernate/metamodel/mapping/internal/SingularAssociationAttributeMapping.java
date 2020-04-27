@@ -81,6 +81,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 
 	public SingularAssociationAttributeMapping(
 			String name,
+			NavigableRole navigableRole,
 			int stateArrayPosition,
 			ToOne bootValue,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
@@ -124,7 +125,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			cardinality = Cardinality.ONE_TO_ONE;
 		}
 
-		this.navigableRole = declaringType.getNavigableRole().appendContainer( name );
+		this.navigableRole = navigableRole;
 	}
 
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {

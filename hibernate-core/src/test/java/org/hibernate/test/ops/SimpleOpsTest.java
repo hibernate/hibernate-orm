@@ -28,7 +28,7 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 	}
 
 	public String[] getMappings() {
-		return new String[] { "ops/SimpleEntity.hbm.xml" };
+		return new String[] { "ops/SimpleDynamicEntity.hbm.xml" };
 	}
 
 	@Test

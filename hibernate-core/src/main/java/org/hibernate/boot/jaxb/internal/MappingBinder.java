@@ -41,6 +41,7 @@ public class MappingBinder extends AbstractBinder {
 
 	private JAXBContext hbmJaxbContext;
 
+	@SuppressWarnings("unused")
 	public MappingBinder(ClassLoaderService classLoaderService) {
 		this( classLoaderService, true );
 	}
@@ -50,7 +51,7 @@ public class MappingBinder extends AbstractBinder {
 	}
 
 	@Override
-	protected Binding doBind(
+	protected Binding<?> doBind(
 			XMLEventReader staxEventReader,
 			StartElement rootElementStartEvent,
 			Origin origin) {
@@ -98,7 +99,7 @@ public class MappingBinder extends AbstractBinder {
 				// are trying to read has comments this process will blow up.  So we
 				// override that to add that support as best we can
 				XMLEvent event = reader.peek();
-				if ( javax.xml.stream.events.Comment.class.isInstance( event ) ) {
+				if ( event instanceof javax.xml.stream.events.Comment ) {
 					return super.readComment( reader );
 				}
 				return super.readNode( reader );

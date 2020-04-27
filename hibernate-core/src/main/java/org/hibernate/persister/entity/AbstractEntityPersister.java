@@ -6039,83 +6039,17 @@ public abstract class AbstractEntityPersister
 
 	private EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
-			PersistentClass bootEntityDescriptor, CompositeType cidType) {
-		// process all of the defined "id attributes" because they are declared on the entity
-		final Component bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
-		final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
-		int columnsConsumedSoFar = 0;
-
-		if ( attributeMappings == null ) {
-			attributeMappings = new ArrayList<>(
-					bootEntityDescriptor.getPropertyClosureSpan() + bootIdDescriptor.getPropertySpan()
-			);
-
-			final Iterator bootPropertyIterator = bootIdDescriptor.getPropertyIterator();
-			while ( bootPropertyIterator.hasNext() ) {
-				final Property bootIdProperty = (Property) bootPropertyIterator.next();
-				final Type idPropertyType = bootIdProperty.getType();
-
-				if ( idPropertyType instanceof AnyType ) {
-					throw new HibernateException(
-							"AnyType property `" + getEntityName() + "#" + bootIdProperty.getName() +
-									"` cannot be used as part of entity identifier "
-					);
-				}
-
-				if ( idPropertyType instanceof CollectionType ) {
-					throw new HibernateException(
-							"Plural property `" + getEntityName() + "#" + bootIdProperty.getName() +
-									"` cannot be used as part of entity identifier "
-					);
-				}
-
-				final SingularAttributeMapping idAttributeMapping;
-
-				if ( idPropertyType instanceof BasicType ) {
-					idAttributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(
-							bootIdProperty.getName(),
-							attributeMappings.size(),
-							bootIdProperty,
-							this,
-							(BasicType) idPropertyType,
-							getRootTableName(),
-							rootTableKeyColumnNames[columnsConsumedSoFar],
-							getRepresentationStrategy().resolvePropertyAccess( bootIdProperty ),
-							CascadeStyles.ALL,
-							creationProcess
-					);
-					columnsConsumedSoFar++;
-				}
-				else {
-//					final String[] unconsumedColumnNames = Arrays.copyOfRange(
-//							rootTableKeyColumnNames,
-//							columnsConsumedSoFar,
-//							rootTableKeyColumnNames.length
-//					);
-
-					if ( idPropertyType instanceof CompositeType ) {
-						// nested composite
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
-					else if ( idPropertyType instanceof EntityType ) {
-						// key-many-to-one
-						throw new NotYetImplementedFor6Exception( getClass() );
-					}
-					else {
-						throw new UnsupportedOperationException();
-					}
-				}
-
-				idAttributeMappings.add( idAttributeMapping );
-			}
-		}
-		attributeMappings.addAll( idAttributeMappings );
+			PersistentClass bootEntityDescriptor,
+			CompositeType cidType) {
+		assert declaredAttributeMappings != null;
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
-				idAttributeMappings,
+				getRootTableName(),
+				getRootTableKeyColumnNames(),
 				cidType,
 				bootEntityDescriptor,
+				declaredAttributeMappings::put,
 				creationProcess
 		);
 	}
@@ -6167,6 +6101,7 @@ public abstract class AbstractEntityPersister
 		if ( propertyIndex == getVersionProperty() ) {
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
+					getNavigableRole().append( bootProperty.getName() ),
 					stateArrayPosition,
 					bootProperty,
 					this,
@@ -6182,6 +6117,7 @@ public abstract class AbstractEntityPersister
 		if ( attrType instanceof BasicType ) {
 			return MappingModelCreationHelper.buildBasicAttributeMapping(
 					attrName,
+					getNavigableRole().append( bootProperty.getName() ),
 					stateArrayPosition,
 					bootProperty,
 					this,
@@ -6222,6 +6158,7 @@ public abstract class AbstractEntityPersister
 		else if ( attrType instanceof EntityType ) {
 			SingularAssociationAttributeMapping attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 					attrName,
+					getNavigableRole().append( attrName ),
 					stateArrayPosition,
 					bootProperty,
 					this,

@@ -54,18 +54,17 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private static final Logger log = Logger.getLogger( BootstrapContextImpl.class );
 
 	private final StandardServiceRegistry serviceRegistry;
-
-	private final MutableJpaCompliance jpaCompliance;
+	private final MetadataBuildingOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
+	private final MutableJpaCompliance jpaCompliance;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
 
+	private boolean isJpaBootstrap;
+
 	private final JavaReflectionManager hcannReflectionManager;
 	private final ClassmateContext classmateContext;
-	private final MetadataBuildingOptions metadataBuildingOptions;
-
-	private boolean isJpaBootstrap;
 
 	private ScanOptions scanOptions;
 	private ScanEnvironment scanEnvironment;
@@ -76,7 +75,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class, ConverterDescriptor> attributeConverterDescriptorMap;
+	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private ManagedTypeRepresentationResolver representationStrategySelector;
 
@@ -87,8 +86,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
+		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
 		this.hcannReflectionManager = generateHcannReflectionManager();
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );

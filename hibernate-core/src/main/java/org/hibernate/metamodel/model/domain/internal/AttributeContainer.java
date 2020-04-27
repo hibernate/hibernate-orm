@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -23,12 +24,27 @@ public interface AttributeContainer<J> {
 	interface InFlightAccess<J> {
 		void addAttribute(PersistentAttribute<J,?> attribute);
 
+		/**
+		 * Callback used when we have a singular id attribute of some form - either a simple id
+		 * or an aggregated composite id ({@link javax.persistence.EmbeddedId
+		 */
 		default void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
 			throw new UnsupportedOperationException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
 			);
 		}
 
+		default void applyNonAggregatedIdAttributes(Set<SingularPersistentAttribute<? super J, ?>> idAttributes) {
+			throw new UnsupportedOperationException(
+					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
+			);
+		}
+
+		/**
+		 * todo (6.0) : we still need to implement this properly and the contract may change
+		 * 		- specifically I am not certain we will be able to re-use `SingularPersistentAttribute`
+		 * 		because of its dependence on declaring-type, etc that we may not be able to do
+		 */
 		default void applyIdClassAttributes(Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes) {
 			throw new UnsupportedOperationException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"

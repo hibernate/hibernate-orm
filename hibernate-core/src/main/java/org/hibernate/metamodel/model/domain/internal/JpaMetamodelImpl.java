@@ -50,6 +50,7 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.DynamicModelJtd;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -515,12 +516,14 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			PersistentClass persistentClass,
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
-		final Class javaType = persistentClass.getMappedClass();
 		context.pushEntityWorkedOn( persistentClass );
+
 		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
+
 		IdentifiableDomainType<?> superType = superMappedSuperclass == null
 				? null
 				: locateOrBuildMappedSuperclassType( superMappedSuperclass, context, typeConfiguration );
+
 		//no mappedSuperclass, check for a super entity
 		if ( superType == null ) {
 			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
@@ -529,17 +532,28 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
 
-		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		final EntityTypeImpl entityType = new EntityTypeImpl(
+		final Class<?> javaType = persistentClass.getMappedClass();
+		final JavaTypeDescriptor<?> javaTypeDescriptor;
+		if ( javaType == null || Map.class.isAssignableFrom( javaType ) ) {
+			// dynamic map
+			javaTypeDescriptor = new DynamicModelJtd();
+		}
+		else {
+			javaTypeDescriptor = context.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry()
+					.getDescriptor( javaType );
+		}
+
+		final EntityTypeImpl<?> entityType = new EntityTypeImpl(
 				javaTypeDescriptor,
 				superType,
 				persistentClass,
 				this
 		);
+
 		context.registerEntityType( persistentClass, entityType );
 		context.popEntityWorkedOn( persistentClass );
+
 		return entityType;
 	}
 

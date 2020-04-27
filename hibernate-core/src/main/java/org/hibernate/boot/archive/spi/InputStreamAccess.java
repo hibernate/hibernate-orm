@@ -6,7 +6,9 @@
  */
 package org.hibernate.boot.archive.spi;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Function;
 
 /**
  * Contract for building InputStreams, especially in on-demand situations
@@ -19,12 +21,26 @@ public interface InputStreamAccess {
 	 *
 	 * @return The backing resource name
 	 */
-	public String getStreamName();
+	String getStreamName();
 
 	/**
 	 * Get access to the stream.  Can be called multiple times, a different stream instance should be returned each time.
 	 *
 	 * @return The stream
 	 */
-	public InputStream accessInputStream();
+	InputStream accessInputStream();
+
+	default <X> X fromStream(Function<InputStream, X> action) {
+		final InputStream inputStream = accessInputStream();
+		try {
+			return action.apply( inputStream );
+		}
+		finally {
+			try {
+				inputStream.close();
+			}
+			catch (IOException ignore) {
+			}
+		}
+	}
 }

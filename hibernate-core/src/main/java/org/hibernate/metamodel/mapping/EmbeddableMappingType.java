@@ -81,6 +81,36 @@ public class EmbeddableMappingType implements ManagedMappingType {
 		return mappingType;
 	}
 
+	public static EmbeddableMappingType from(
+			Component bootDescriptor,
+			CompositeType compositeType,
+			NavigableRole embeddedRole,
+			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
+			MappingModelCreationProcess creationProcess) {
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+
+		final EmbeddableRepresentationStrategy representationStrategy = creationContext.getBootstrapContext()
+				.getRepresentationStrategySelector()
+				.resolveStrategy( bootDescriptor, creationContext );
+
+		final EmbeddableMappingType mappingType = new EmbeddableMappingType(
+				bootDescriptor,
+				representationStrategy,
+				embeddedPartBuilder,
+				creationContext.getSessionFactory()
+		);
+
+		creationProcess.registerInitializationCallback(
+				() -> mappingType.finishInitialization(
+						bootDescriptor,
+						compositeType,
+						creationProcess
+				)
+		);
+
+		return mappingType;
+	}
+
 	private final JavaTypeDescriptor embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
@@ -90,6 +120,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 	private final Map<String,AttributeMapping> attributeMappings = new LinkedHashMap<>();
 
 	private final EmbeddableValuedModelPart valueMapping;
+	private NavigableRole embeddedRole;
 
 	private final boolean createEmptyCompositesEnabled;
 
@@ -139,6 +170,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 						bootPropertyDescriptor.getName(),
 						MappingModelCreationHelper.buildBasicAttributeMapping(
 								bootPropertyDescriptor.getName(),
+								valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 								attributeIndex,
 								bootPropertyDescriptor,
 								this,
@@ -194,6 +226,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 				else if ( subtype instanceof EntityType ) {
 					final SingularAssociationAttributeMapping singularAssociationAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 							bootPropertyDescriptor.getName(),
+							valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 							attributeIndex,
 							bootPropertyDescriptor,
 							entityPersister,

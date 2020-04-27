@@ -21,16 +21,18 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -43,10 +45,9 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
-import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -358,7 +359,7 @@ public class MetadataContext {
 	// 2) register the part (mapping role)
 	// 3) somehow get the mapping role "into" the part (setter, ?)
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
@@ -371,31 +372,38 @@ public class MetadataContext {
 				( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 		}
-		else if ( persistentClass.hasIdentifierMapper() ) {
-			@SuppressWarnings("unchecked")
-			final Iterator<Property> propertyIterator = persistentClass.getIdentifierMapper().getPropertyIterator();
-			final Set<SingularPersistentAttribute<?, ?>> idClassAttributes = (Set<SingularPersistentAttribute<?, ?>>) buildIdClassAttributes(
-					identifiableType,
-					propertyIterator
-			);
-			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdClassAttributes( idClassAttributes );
-		}
 		else {
-			final KeyValue value = persistentClass.getIdentifier();
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
-				if ( component.getPropertySpan() > 1 ) {
-					//FIXME we are an Hibernate embedded id (ie not type)
-				}
-				else {
-					//FIXME take care of declared vs non declared property
-					( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute(
-							attributeFactory.buildIdAttribute(
-									identifiableType,
-									(Property) component.getPropertyIterator().next()
-							)
-					);
-				}
+			// we have a non-aggregated composite-id
+
+			//noinspection RedundantClassCall
+			if ( ! Component.class.isInstance( persistentClass.getIdentifier() ) ) {
+				throw new MappingException( "Expecting Component for id mapping with no id-attribute" );
+			}
+
+			// Handle the actual id-attributes
+			final Component cidValue = (Component) persistentClass.getIdentifier();
+			final Iterator<Property> cidPropertyItr = cidValue.getPropertyIterator();
+			final Set<SingularPersistentAttribute<?,?>> idAttributes = new HashSet<>( cidValue.getPropertySpan() );
+
+			while ( cidPropertyItr.hasNext() ) {
+				final Property cidSubProperty = cidPropertyItr.next();
+
+				final SingularPersistentAttribute<?, Object> cidSubAttr = attributeFactory.buildIdAttribute(
+						identifiableType,
+						cidSubProperty
+				);
+
+				idAttributes.add( cidSubAttr );
+			}
+
+			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes );
+
+
+			// see if it also has an IdClass (identifier-mapper)
+			final Component idClass = persistentClass.getIdentifierMapper();
+			if ( idClass != null ) {
+				// todo (6.0) : handle `@IdClass`
+				throw new NotYetImplementedFor6Exception( "Support for @IdClass not yet implemented" );
 			}
 		}
 	}
@@ -419,7 +427,7 @@ public class MetadataContext {
 					propertyIterator
 			);
 			//noinspection unchecked
-			( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyIdClassAttributes( attributes );
+			( ( AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyIdClassAttributes( attributes );
 		}
 	}
 
@@ -427,7 +435,7 @@ public class MetadataContext {
 		final Property declaredVersion = persistentClass.getDeclaredVersion();
 		if ( declaredVersion != null ) {
 			//noinspection unchecked
-			( ( AttributeContainer) jpaEntityType ).getInFlightAccess().applyVersionAttribute(
+			( ( AttributeContainer<X>) jpaEntityType ).getInFlightAccess().applyVersionAttribute(
 					attributeFactory.buildVersionAttribute( jpaEntityType, declaredVersion )
 			);
 		}
@@ -437,7 +445,7 @@ public class MetadataContext {
 		final Property declaredVersion = mappingType.getDeclaredVersion();
 		if ( declaredVersion != null ) {
 			//noinspection unchecked
-			( ( AttributeContainer) jpaMappingType ).getInFlightAccess().applyVersionAttribute(
+			( ( AttributeContainer<X>) jpaMappingType ).getInFlightAccess().applyVersionAttribute(
 					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion )
 			);
 		}

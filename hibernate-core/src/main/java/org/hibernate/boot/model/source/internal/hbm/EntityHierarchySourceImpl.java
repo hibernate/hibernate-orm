@@ -91,14 +91,29 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 		else {
 			// if we get here, we should have a composite identifier.  Just need
 			// to determine if it is aggregated, or non-aggregated...
-			if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getName() ) ) {
-				if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped()
-						&& StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
+
+			if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
+				if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
 					throw new MappingException(
 							"mapped composite identifier must name component class to use.",
 							rootEntitySource.origin()
 					);
 				}
+			}
+
+			if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getClazz() ) ) {
+				if ( StringHelper.isEmpty( rootEntitySource.jaxbEntityMapping().getCompositeId().getName() ) ) {
+					throw new MappingException(
+							"dynamic composite-id must specify name",
+							rootEntitySource.origin()
+					);
+				}
+
+				// we have a non-aggregated id without an IdClass
+				return new IdentifierSourceNonAggregatedCompositeImpl( rootEntitySource );
+			}
+			else if ( rootEntitySource.jaxbEntityMapping().getCompositeId().isMapped() ) {
+				// we have a non-aggregated id with an IdClass
 				return new IdentifierSourceNonAggregatedCompositeImpl( rootEntitySource );
 			}
 			else {

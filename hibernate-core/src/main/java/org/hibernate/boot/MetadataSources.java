@@ -32,7 +32,9 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
 import org.hibernate.boot.jaxb.internal.JarFileEntryXmlSource;
 import org.hibernate.boot.jaxb.internal.JaxpSourceXmlSource;
+import org.hibernate.boot.jaxb.internal.XmlSources;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -59,10 +61,11 @@ public class MetadataSources implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MetadataSources.class );
 
 	private final ServiceRegistry serviceRegistry;
+	private final ClassLoaderService classLoaderService;
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
-	private List<Binding> xmlBindings;
+	private List<Binding<?>> xmlBindings;
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
 	private LinkedHashSet<String> annotatedPackages;
@@ -90,11 +93,12 @@ public class MetadataSources implements Serializable {
 			}
 		}
 		this.serviceRegistry = serviceRegistry;
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
 	protected static boolean isExpectedServiceRegistryType(ServiceRegistry serviceRegistry) {
-		return BootstrapServiceRegistry.class.isInstance( serviceRegistry )
-				|| StandardServiceRegistry.class.isInstance( serviceRegistry );
+		return serviceRegistry instanceof BootstrapServiceRegistry
+				|| serviceRegistry instanceof StandardServiceRegistry;
 	}
 
 	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
@@ -104,7 +108,7 @@ public class MetadataSources implements Serializable {
 		return xmlMappingBinderAccess;
 	}
 
-	public List<Binding> getXmlBindings() {
+	public List<Binding<?>> getXmlBindings() {
 		return xmlBindings == null ? Collections.emptyList() : xmlBindings;
 	}
 
@@ -332,7 +336,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addResource(String name) {
-		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( name ) );
+		final XmlSource xmlSource = XmlSources.fromResource( name, classLoaderService );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -358,7 +364,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addFile(File file) {
-		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( file ) );
+		final XmlSource xmlSource = XmlSources.fromFile( file );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -372,13 +380,8 @@ public class MetadataSources implements Serializable {
 	 * @see #addCacheableFile(java.io.File)
 	 */
 	public MetadataSources addCacheableFile(String path) {
-		final Origin origin = new Origin( SourceType.FILE, path );
-		addCacheableFile( origin, new File( path ) );
+		addCacheableFile( new File( path ) );
 		return this;
-	}
-
-	private void addCacheableFile(Origin origin, File file) {
-		getXmlBindingsForWrite().add( new CacheableFileXmlSource( origin, file, false ).doBind( getXmlMappingBinderAccess().getMappingBinder() ) );
 	}
 
 	/**
@@ -395,8 +398,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file) {
-		final Origin origin = new Origin( SourceType.FILE, file.getName() );
-		addCacheableFile( origin, file );
+		final XmlSource xmlSource = XmlSources.fromCacheableFile( file );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -413,9 +417,10 @@ public class MetadataSources implements Serializable {
 	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
 	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
-	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException, FileNotFoundException {
-		final Origin origin = new Origin( SourceType.FILE, file.getAbsolutePath() );
-		getXmlBindingsForWrite().add( new CacheableFileXmlSource( origin, file, true ).doBind( getXmlMappingBinderAccess().getMappingBinder() ) );
+	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
+		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -427,7 +432,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStreamAccess xmlInputStreamAccess) {
-		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( xmlInputStreamAccess ) );
+		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStreamAccess );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -439,7 +446,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( xmlInputStream ) );
+		final XmlSource xmlSource = XmlSources.fromStream( xmlInputStream );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -451,7 +460,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addURL(URL url) {
-		getXmlBindingsForWrite().add( getXmlMappingBinderAccess().bind( url ) );
+		final XmlSource xmlSource = XmlSources.fromUrl( url );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -466,8 +477,9 @@ public class MetadataSources implements Serializable {
 	 */
 	@Deprecated
 	public MetadataSources addDocument(Document document) {
-		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
-		getXmlBindingsForWrite().add( new JaxpSourceXmlSource( origin, new DOMSource( document ) ).doBind( getXmlMappingBinderAccess().getMappingBinder() ) );
+		final XmlSource xmlSource = XmlSources.fromDocument( document );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
 	}
 
@@ -481,42 +493,15 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addJar(File jar) {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Seeking mapping documents in jar file : %s", jar.getName() );
-		}
-		final Origin origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
-		try {
-			JarFile jarFile = new JarFile( jar );
-			final boolean TRACE = LOG.isTraceEnabled();
-			try {
-				Enumeration jarEntries = jarFile.entries();
-				while ( jarEntries.hasMoreElements() ) {
-					final ZipEntry zipEntry = (ZipEntry) jarEntries.nextElement();
-					if ( zipEntry.getName().endsWith( ".hbm.xml" ) ) {
-						if ( TRACE ) {
-							LOG.tracef( "found mapping document : %s", zipEntry.getName() );
-						}
-						getXmlBindingsForWrite().add(
-								new JarFileEntryXmlSource( origin, jarFile, zipEntry ).doBind( getXmlMappingBinderAccess().getMappingBinder() )
-						);
-					}
-				}
-			}
-			finally {
-				try {
-					jarFile.close();
-				}
-				catch ( Exception ignore ) {
-				}
-			}
-		}
-		catch ( IOException e ) {
-			throw new MappingNotFoundException( e, origin );
-		}
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		XmlSources.fromJar(
+				jar,
+				xmlSource -> getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder() ) )
+		);
 		return this;
 	}
 
-	private <Binding> List getXmlBindingsForWrite() {
+	private List<Binding<?>> getXmlBindingsForWrite() {
 		if ( xmlBindings == null ) {
 			xmlBindings = new ArrayList<>();
 		}

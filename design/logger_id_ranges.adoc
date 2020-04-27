@@ -94,4 +94,12 @@
 |90005500
 |org.hibernate.sql.ast.tree.SqlAstTreeLogger
 
+|90005501
+|90005600
+|org.hibernate.boot.jaxb.JaxbLogger
+
+|90005601
+|90005700
+|org.hibernate.envers.boot.EnversBootLogger
+
 |===

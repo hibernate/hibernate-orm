@@ -41,8 +41,10 @@ public abstract class AbstractIdentifiableType<J>
 
 	private final boolean hasIdentifierProperty;
 	private final boolean hasIdClass;
+
 	private SingularPersistentAttribute<J,?> id;
-	private Set<SingularPersistentAttribute<? super J,?>> idClassAttributes;
+	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
+
 	private SqmPathSource identifierDescriptor;
 
 
@@ -221,8 +223,8 @@ public abstract class AbstractIdentifiableType<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J, ?>> attributeConsumer) {
-		if ( idClassAttributes != null ) {
-			idClassAttributes.forEach( attributeConsumer );
+		if ( nonAggregatedIdAttributes != null ) {
+			nonAggregatedIdAttributes.forEach( attributeConsumer );
 		}
 		else if ( getSuperType() != null ) {
 			getSuperType().visitIdClassAttributes( (Consumer) attributeConsumer );
@@ -305,6 +307,7 @@ public abstract class AbstractIdentifiableType<J>
 		return versionAttribute;
 	}
 
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private class InFlightAccessImpl extends AbstractManagedType.InFlightAccessImpl {
 		private final AbstractManagedType.InFlightAccess managedTypeAccess;
 
@@ -313,23 +316,28 @@ public abstract class AbstractIdentifiableType<J>
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void applyIdAttribute(SingularPersistentAttribute idAttribute) {
 			AbstractIdentifiableType.this.id = idAttribute;
 			managedTypeAccess.addAttribute( idAttribute );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public void applyIdClassAttributes(Set idClassAttributes) {
-			for ( SingularAttribute idClassAttribute : ( (Set<SingularPersistentAttribute>) idClassAttributes ) ) {
-				if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
-					@SuppressWarnings({ "unchecked" })
-					SingularPersistentAttribute<J,?> declaredAttribute = (SingularPersistentAttribute) idClassAttribute;
-					addAttribute( declaredAttribute );
+		public void applyNonAggregatedIdAttributes(Set idAttributes) {
+			if ( AbstractIdentifiableType.this.id != null ) {
+				throw new IllegalArgumentException( "`AbstractIdentifiableType#id` already set on call to `#applyNonAggregatedIdAttribute`" );
+			}
+
+			if ( nonAggregatedIdAttributes != null ) {
+				throw new IllegalStateException( "Non-aggregated id attributes were already set" );
+			}
+
+			for ( SingularPersistentAttribute idAttribute : (Set<SingularPersistentAttribute>) idAttributes ) {
+				if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
+					addAttribute( idAttribute );
 				}
 			}
-			AbstractIdentifiableType.this.idClassAttributes = idClassAttributes;
+
+			AbstractIdentifiableType.this.nonAggregatedIdAttributes = (Set) idAttributes;
 		}
 
 		@Override
@@ -383,7 +391,7 @@ public abstract class AbstractIdentifiableType<J>
 				);
 			}
 		}
-		else if ( idClassAttributes != null && ! idClassAttributes.isEmpty() ) {
+		else if ( nonAggregatedIdAttributes != null && ! nonAggregatedIdAttributes.isEmpty() ) {
 			// non-aggregate composite id
 			return new NonAggregatedCompositeSqmPathSource(
 					EntityIdentifierMapping.ROLE_LOCAL_NAME,

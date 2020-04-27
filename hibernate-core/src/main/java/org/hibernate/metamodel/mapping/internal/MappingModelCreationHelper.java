@@ -12,8 +12,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.BiConsumer;
 
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.collection.internal.StandardArraySemantics;
@@ -27,6 +29,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -63,16 +66,20 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -116,10 +123,10 @@ public class MappingModelCreationHelper {
 		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
 				(Component) bootProperty.getValue(),
 				cidType,
-				attributeMappingType -> new EmbeddedIdentifierMappingImpl(
+				embeddable -> new EmbeddedIdentifierMappingImpl(
 						entityPersister,
 						attributeName,
-						attributeMappingType,
+						embeddable,
 						attributeMetadataAccess,
 						propertyAccess,
 						rootTableName,
@@ -135,20 +142,119 @@ public class MappingModelCreationHelper {
 
 	public static CompositeIdentifierMapping buildNonEncapsulatedCompositeIdentifierMapping(
 			EntityPersister entityPersister,
-			List<SingularAttributeMapping> idAttributeMappings,
+			String rootTableName,
+			String[] rootTableKeyColumnNames,
 			CompositeType cidType,
 			PersistentClass bootEntityDescriptor,
+			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
-
+		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final Component bootCompositeDescriptor = (Component) bootEntityDescriptor.getIdentifier();
 
-		return new NonAggregatedIdentifierMappingImpl(
-				entityPersister,
-				idAttributeMappings,
+		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+				null,
+				EntityIdentifierMapping.ROLE_LOCAL_NAME
+		);
+
+		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+				propertyAccess
+		);
+
+		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
 				bootCompositeDescriptor,
 				cidType,
+				attributeMappingType -> {
+					final Component bootIdDescriptor = (Component) bootEntityDescriptor.getIdentifier();
+
+					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootIdDescriptor.getPropertySpan() );
+
+					//noinspection unchecked
+					final Iterator<Property> bootIdSubPropertyItr = bootIdDescriptor.getPropertyIterator();
+					int columnsConsumedSoFar = 0;
+
+					while ( bootIdSubPropertyItr.hasNext() ) {
+						final Property bootIdSubProperty = bootIdSubPropertyItr.next();
+						final Type idSubPropertyType = bootIdSubProperty.getType();
+
+						if ( idSubPropertyType instanceof AnyType ) {
+							throw new HibernateException(
+									"AnyType property `" + bootEntityDescriptor.getEntityName() + "#" + bootIdSubProperty.getName() +
+											"` cannot be used as part of entity identifier "
+							);
+						}
+
+						if ( idSubPropertyType instanceof CollectionType ) {
+							throw new HibernateException(
+									"Plural property `" + bootEntityDescriptor.getEntityName() + "#" + bootIdSubProperty.getName() +
+											"` cannot be used as part of entity identifier "
+							);
+						}
+
+						final SingularAttributeMapping idSubAttribute;
+
+						if ( idSubPropertyType instanceof BasicType ) {
+							//noinspection rawtypes
+							idSubAttribute = buildBasicAttributeMapping(
+									bootIdSubProperty.getName(),
+									entityPersister.getNavigableRole().append( bootIdSubProperty.getName() ),
+									idAttributeMappings.size(),
+									bootIdSubProperty,
+									attributeMappingType,
+									(BasicType) idSubPropertyType,
+									rootTableName,
+									rootTableKeyColumnNames[columnsConsumedSoFar],
+									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
+									CascadeStyles.ALL,
+									creationProcess
+							);
+							columnsConsumedSoFar++;
+						}
+						else if ( idSubPropertyType instanceof CompositeType ) {
+							// nested composite
+							throw new NotYetImplementedFor6Exception();
+						}
+						else if ( idSubPropertyType instanceof EntityType ) {
+							// key-many-to-one
+							final EntityType keyManyToOnePropertyType = (EntityType) idSubPropertyType;
+
+							idSubAttribute = buildSingularAssociationAttributeMapping(
+									bootIdSubProperty.getName(),
+									entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+									idAttributeMappings.size(),
+									bootIdSubProperty,
+									attributeMappingType,
+									keyManyToOnePropertyType,
+									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
+									CascadeStyles.ALL,
+									creationProcess
+							);
+
+							columnsConsumedSoFar += keyManyToOnePropertyType.getColumnSpan( sessionFactory );
+						}
+						else {
+							throw new UnsupportedOperationException();
+						}
+
+						idAttributeMappings.add( idSubAttribute );
+						idSubAttributeConsumer.accept( idSubAttribute.getAttributeName(), idSubAttribute );
+					}
+
+					return new NonAggregatedIdentifierMappingImpl(
+							attributeMappingType,
+							entityPersister,
+							idAttributeMappings,
+							attributeMetadataAccess,
+							rootTableName,
+							rootTableKeyColumnNames,
+							bootCompositeDescriptor,
+							bootEntityDescriptor.getDeclaredIdentifierMapper(),
+							creationProcess
+					);
+				},
 				creationProcess
 		);
+
+		return (CompositeIdentifierMapping) embeddableMappingType.getEmbeddedValueMapping();
 	}
 
 
@@ -158,6 +264,7 @@ public class MappingModelCreationHelper {
 	@SuppressWarnings("rawtypes")
 	public static BasicValuedSingularAttributeMapping buildBasicAttributeMapping(
 			String attrName,
+			NavigableRole navigableRole,
 			int stateArrayPosition,
 			Property bootProperty,
 			ManagedMappingType declaringType,
@@ -240,6 +347,7 @@ public class MappingModelCreationHelper {
 
 			return new BasicValuedSingularAttributeMapping(
 					attrName,
+					navigableRole,
 					stateArrayPosition,
 					attributeMetadataAccess,
 					fetchStrategy,
@@ -254,6 +362,7 @@ public class MappingModelCreationHelper {
 		else {
 			return new BasicValuedSingularAttributeMapping(
 					attrName,
+					navigableRole,
 					stateArrayPosition,
 					attributeMetadataAccess,
 					fetchStrategy,
@@ -1141,6 +1250,7 @@ public class MappingModelCreationHelper {
 
 	public static SingularAssociationAttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
+			NavigableRole navigableRole,
 			int stateArrayPosition,
 			Property bootProperty,
 			ManagedMappingType declaringType,
@@ -1183,6 +1293,7 @@ public class MappingModelCreationHelper {
 
 			final SingularAssociationAttributeMapping attributeMapping = new SingularAssociationAttributeMapping(
 					attrName,
+					navigableRole,
 					stateArrayPosition,
 					(ToOne) bootProperty.getValue(),
 					stateArrayContributorMetadataAccess,

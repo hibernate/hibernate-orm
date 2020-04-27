@@ -49,6 +49,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -739,6 +740,11 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public EntityVersionMapping getVersionMapping() {
+		return null;
+	}
+
+	@Override
+	public EntityRowIdMapping getRowIdMapping() {
 		return null;
 	}
 

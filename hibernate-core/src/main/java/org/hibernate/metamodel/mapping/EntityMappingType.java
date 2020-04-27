@@ -137,6 +137,8 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 
 	EntityVersionMapping getVersionMapping();
 
+	EntityRowIdMapping getRowIdMapping();
+
 	default EntityDiscriminatorMapping getDiscriminatorMapping() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

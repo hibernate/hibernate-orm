@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
@@ -41,6 +40,7 @@ public class EmbeddableTypeImpl<J>
 
 	public EmbeddableTypeImpl(
 			String name,
+			ManagedTypeRepresentationStrategy representationStrategy,
 			JpaMetamodel domainMetamodel) {
 		//noinspection unchecked
 		super(
@@ -52,8 +52,7 @@ public class EmbeddableTypeImpl<J>
 				domainMetamodel
 		);
 
-		// todo (6.0) : need ManagedTypeRepresentationStrategy impls
-		throw new NotYetImplementedFor6Exception( getClass() );
+		this.representationStrategy = representationStrategy;
 	}
 
 	@Override

@@ -210,7 +210,11 @@ tasks.withType( Test.class ).each { test ->
 	}
 
 	// todo (6.0) : temporarily include just the new tests so we can publish SNAPSHOTS for others to use
-	test.include 'org/hibernate/orm/test/**'
+	test.includes = [
+		'org/hibernate/orm/test/**',
+		'org/hibernate/envers/**',
+		'ee/estonia/entities/**'
+	]
 }
 
 sourceSets {

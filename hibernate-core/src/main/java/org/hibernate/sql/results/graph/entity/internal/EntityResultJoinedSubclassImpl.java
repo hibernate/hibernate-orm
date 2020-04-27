@@ -40,6 +40,7 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 						getIdentifierResult(),
 						getDiscriminatorResult(),
 						getVersionResult(),
+						getRowIdResult(),
 						creationState
 				)
 		);

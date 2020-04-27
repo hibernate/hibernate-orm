@@ -6,12 +6,19 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import java.util.ArrayList;
+
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -29,6 +36,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private final DomainResult identifierResult;
 	private final DomainResult discriminatorResult;
 	private final DomainResult versionResult;
+	private final DomainResult<Object> rowIdResult;
 	private final LockMode lockMode;
 
 	private final EntityMappingType targetType;
@@ -57,12 +65,30 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( navigablePath );
 
-		identifierResult = entityDescriptor.getIdentifierMapping().createDomainResult(
-				navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
-				entityTableGroup,
-				null,
-				creationState
-		);
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+
+		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
+			identifierResult = null;
+			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+				identifierMapping.createDomainResult(
+						navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+						entityTableGroup,
+						null,
+						creationState
+				);
+			}
+			else {
+				visitCompositeIdentifierMapping( navigablePath, creationState, identifierMapping, entityTableGroup );
+			}
+		}
+		else {
+			identifierResult = entityDescriptor.getIdentifierMapping().createDomainResult(
+					navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+					entityTableGroup,
+					null,
+					creationState
+			);
+		}
 
 		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
 		if ( discriminatorMapping != null ) {
@@ -89,6 +115,48 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					creationState
 			);
 		}
+
+		final EntityRowIdMapping rowIdMapping = entityDescriptor.getRowIdMapping();
+		if ( rowIdMapping == null ) {
+			rowIdResult = null;
+		}
+		else {
+			rowIdResult = rowIdMapping.createDomainResult(
+					navigablePath.append( rowIdMapping.getRowIdName() ),
+					entityTableGroup,
+					AbstractEntityPersister.ROWID_ALIAS,
+					creationState
+			);
+		}
+	}
+
+	private void visitCompositeIdentifierMapping(
+			NavigablePath navigablePath,
+			DomainResultCreationState creationState,
+			EntityIdentifierMapping identifierMapping,
+			TableGroup entityTableGroup) {
+		ManagedMappingType mappingType = (ManagedMappingType) identifierMapping.getPartMappingType();
+		fetches = new ArrayList<>();
+		mappingType.visitAttributeMappings(
+				attributeMapping -> {
+					if ( attributeMapping instanceof ToOneAttributeMapping ) {
+						( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
+								navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+								entityTableGroup,
+								null,
+								creationState
+						);
+					}
+					else {
+						attributeMapping.createDomainResult(
+								navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+								entityTableGroup,
+								null,
+								creationState
+						);
+					}
+				}
+		);
 	}
 
 	protected EntityDiscriminatorMapping getDiscriminatorMapping(
@@ -126,5 +194,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	public DomainResult getVersionResult() {
 		return versionResult;
+	}
+
+	public DomainResult<Object> getRowIdResult() {
+		return rowIdResult;
 	}
 }

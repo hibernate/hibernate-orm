@@ -18,7 +18,9 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
+ * @deprecated use {@link SQLStatementInspector} instead
  */
+@Deprecated
 public class SQLStatementInterceptor {
 
 	private final LinkedList<String> sqlQueries = new LinkedList<>();

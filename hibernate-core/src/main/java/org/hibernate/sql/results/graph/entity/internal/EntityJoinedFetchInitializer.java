@@ -35,6 +35,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				identifierResult,
 				discriminatorResult,
 				versionResult,
+				null,
 				creationState
 		);
 	}

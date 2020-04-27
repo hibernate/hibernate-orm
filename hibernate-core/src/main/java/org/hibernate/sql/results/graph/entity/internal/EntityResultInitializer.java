@@ -29,6 +29,7 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 			DomainResult identifierResult,
 			DomainResult discriminatorResult,
 			DomainResult versionResult,
+			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
 		super(
 				resultDescriptor,
@@ -37,6 +38,7 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 				identifierResult,
 				discriminatorResult,
 				versionResult,
+				rowIdResult,
 				creationState
 		);
 	}

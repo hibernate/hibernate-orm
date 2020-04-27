@@ -77,6 +77,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 						getIdentifierResult(),
 						getDiscriminatorResult(),
 						getVersionResult(),
+						getRowIdResult(),
 						creationState
 				)
 		);

@@ -137,6 +137,7 @@ import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -146,6 +147,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -198,7 +200,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.internal.RootEntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
@@ -1226,9 +1227,6 @@ public abstract class AbstractEntityPersister
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		//noinspection unchecked
-		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection()) {
-			return new RootEntityResultImpl( navigablePath, this, resultVariable, creationState );
-		}
 		return new EntityResultImpl( navigablePath, this, resultVariable, creationState );
 	}
 
@@ -5775,6 +5773,7 @@ public abstract class AbstractEntityPersister
 	private EntityIdentifierMapping identifierMapping;
 	private NaturalIdMapping naturalIdMapping;
 	private EntityVersionMapping versionMapping;
+	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 
 	private Map<String, AttributeMapping> declaredAttributeMappings = new LinkedHashMap<>();
@@ -5805,6 +5804,7 @@ public abstract class AbstractEntityPersister
 
 			this.identifierMapping = superMappingType.getIdentifierMapping();
 			this.versionMapping = superMappingType.getVersionMapping();
+			this.rowIdMapping = superMappingType.getRowIdMapping();
 			this.naturalIdMapping = superMappingType.getNaturalIdMapping();
 		}
 		else {
@@ -5831,13 +5831,21 @@ public abstract class AbstractEntityPersister
 				);
 			}
 
+			if ( rowIdName == null ) {
+				rowIdMapping = null;
+			}
+			else {
+				rowIdMapping = creationProcess.processSubPart(
+						rowIdName,
+						(role, creationProcess1) -> new EntityRowIdMappingImpl( rowIdName, this.getRootTableName(), this)
+				);
+			}
+
 			buildDiscriminatorMapping();
 
 			// todo (6.0) : support for natural-id not yet implemented
 			naturalIdMapping = null;
 		}
-
-
 
 		final EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
@@ -6215,6 +6223,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return versionMapping;
+	}
+
+	@Override
+	public EntityRowIdMapping getRowIdMapping() {
+		return rowIdMapping;
 	}
 
 	@Override

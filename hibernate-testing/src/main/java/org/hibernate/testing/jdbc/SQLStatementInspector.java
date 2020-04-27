@@ -7,6 +7,7 @@
 package org.hibernate.testing.jdbc;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -19,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  * @author Andrea Boriero
  */
 public class SQLStatementInspector implements StatementInspector {
-	private final LinkedList<String> sqlQueries = new LinkedList<>();
+	private final List<String> sqlQueries = new LinkedList<>();
 
 	public SQLStatementInspector() {
 	}
@@ -30,7 +31,7 @@ public class SQLStatementInspector implements StatementInspector {
 		return sql;
 	}
 
-	public LinkedList<String> getSqlQueries() {
+	public List<String> getSqlQueries() {
 		return sqlQueries;
 	}
 

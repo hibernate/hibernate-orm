@@ -54,6 +54,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * @author Steve Ebersole
+ * @author Nathan Xu
  */
 public abstract class AbstractEntityInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
@@ -74,6 +75,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final DomainResultAssembler identifierAssembler;
 	private final DomainResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
+	private final DomainResultAssembler<Object> rowIdAssembler;
 
 	private final Map<AttributeMapping, DomainResultAssembler> assemblerMap;
 
@@ -94,6 +96,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			DomainResult<?> identifierResult,
 			DomainResult<?> discriminatorResult,
 			DomainResult<?> versionResult,
+			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
 		super( );
 
@@ -162,6 +165,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			this.versionAssembler = null;
+		}
+
+		if ( rowIdResult != null ) {
+			this.rowIdAssembler = rowIdResult.createResultAssembler(
+					creationState
+			);
+		}
+		else {
+			this.rowIdAssembler = null;
 		}
 
 		assemblerMap = new IdentityHashMap<>( entityDescriptor.getNumberOfAttributeMappings() );
@@ -506,23 +518,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				return;
 			}
 		}
-		final Object rowId = null;
-// todo (6.0) : rowId
-//		final Object rowId;
-//		if ( concreteDescriptor.getHierarchy().getRowIdDescriptor() != null ) {
-//			rowId = ro sqlSelectionMappings.getRowIdSqlSelection().hydrateStateArray( rowProcessingState );
-//
-//			if ( rowId == null ) {
-//				throw new HibernateException(
-//						"Could not read entity row-id from JDBC : " + entityKey
-//				);
-//			}
-//		}
-//		else {
-//			rowId = null;
-//		}
-
-
 
 		entityDescriptor.setIdentifier( entityInstance, entityIdentifier, session );
 
@@ -545,6 +540,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			version = null;
+		}
+
+		final Object rowId;
+
+		if ( rowIdAssembler != null ) {
+			rowId = rowIdAssembler.assemble( rowProcessingState );
+		}
+		else {
+			rowId = null;
 		}
 
 		final EntityEntry entityEntry = persistenceContext.addEntry(

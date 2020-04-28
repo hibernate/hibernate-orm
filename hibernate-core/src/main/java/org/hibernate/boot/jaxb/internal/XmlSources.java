@@ -80,7 +80,7 @@ public class XmlSources {
 		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from cacheable-file : %s", filePath );
 
 		final Origin origin = new Origin( SourceType.FILE, filePath );
-		return new CacheableFileXmlSource( origin, file, true );
+		return new CacheableFileXmlSource( origin, file, strict );
 	}
 
 	public static XmlSource fromStream(InputStreamAccess inputStreamAccess) {

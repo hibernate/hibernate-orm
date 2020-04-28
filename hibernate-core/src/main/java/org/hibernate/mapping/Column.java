@@ -242,21 +242,20 @@ public class Column implements Selectable, Serializable, Cloneable {
 		if ( sqlType == null ) {
 			Size size = new Size( getPrecision(), getScale(), getLength(), null );
 			Type type = getValue().getType();
-			if ( size.getLength() == null
-					&& size.getScale() == null && size.getPrecision() == null ) {
+			if ( size.getLength() == null && size.getScale() == null && size.getPrecision() == null ) {
 				if ( type instanceof EntityType ) {
-					//ManyToOneType doesn't implement JdbcMapping
-					type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
-					if ( type instanceof ComponentType ) {
-						type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+					while ( !( type instanceof JdbcMapping ) ) {
+						//ManyToOneType doesn't implement JdbcMapping
+						type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
+						if ( type instanceof ComponentType ) {
+							type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+						}
 					}
 				}
-				if ( type instanceof JdbcMapping ) {
-					size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
-							((JdbcMapping) type).getSqlTypeDescriptor(),
-							((JdbcMapping) type).getJavaTypeDescriptor()
-					);
-				}
+				size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
+						( (JdbcMapping) type ).getSqlTypeDescriptor(),
+						( (JdbcMapping) type ).getJavaTypeDescriptor()
+				);
 			}
 
 			try {

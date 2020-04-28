@@ -421,7 +421,7 @@ public class QuerySqmImpl<R>
 	protected void collectHints(Map<String, Object> hints) {
 		super.collectHints( hints );
 
-		if ( queryOptions.getAppliedGraph() != null ) {
+		if ( queryOptions.getAppliedGraph() != null && queryOptions.getAppliedGraph().getSemantic() != null ) {
 			hints.put(
 					queryOptions.getAppliedGraph().getSemantic().getJpaHintName(),
 					queryOptions.getAppliedGraph().getGraph()

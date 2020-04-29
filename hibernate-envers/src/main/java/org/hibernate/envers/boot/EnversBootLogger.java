@@ -45,7 +45,7 @@ public interface EnversBootLogger extends BasicLogger {
 	@LogMessage( level = INFO )
 	@Message(
 			value = "Envers-generated HBM mapping...%n%s",
-			id = 90000001
+			id = 90005601
 	)
 	void jaxbContribution(String hbm);
 }

@@ -44,11 +44,12 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers influencers,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext) {
 		return new StandardSqmDeleteTranslator(
 				creationContext,
 				queryOptions,
+				loadQueryInfluencers,
 				domainParameterXref,
 				domainParameterBindings
 		);
@@ -79,6 +80,7 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 		return new StandardSqmUpdateTranslator(
 				factory,
 				queryOptions,
+				loadQueryInfluencers,
 				domainParameterXref,
 				queryParameterBindings
 		);

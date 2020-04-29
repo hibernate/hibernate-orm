@@ -80,6 +80,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -102,6 +103,8 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -1780,15 +1783,16 @@ public abstract class AbstractCollectionPersister
 	public abstract boolean isManyToMany();
 
 	@Override
-	public String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters) {
+	public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
-		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator(alias), enabledFilters );
+		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
 
 		if ( manyToManyWhereString != null ) {
 			if ( buffer.length() > 0 ) {
 				buffer.append( " and " );
 			}
-			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, alias ) );
+			assert elementPersister instanceof Joinable;
+			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, ( (Joinable) elementPersister ).getTableName() ) );
 		}
 
 		return buffer.toString();
@@ -1926,22 +1930,36 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
-		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
-
-		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
-	}
-
-	@Override
 	public String filterFragment(
 			String alias,
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations) {
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
-
 		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+	}
+
+	@Override
+	public String filterFragment(
+			TableGroup tableGroup,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations) {
+		StringBuilder sessionFilterFragment = new StringBuilder();
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
+
+		TableReference tableReference = null;
+		if ( isManyToMany() ) {
+			// if filtering on many-to-many element were intended, getManyToManyFilterFragment() should have been chosen
+			tableReference = tableGroup.getPrimaryTableReference();
+		}
+		else if ( elementPersister instanceof Joinable ) {
+			tableReference = tableGroup.getTableReference( ( (Joinable) elementPersister ).getTableName() );
+		}
+
+		if ( tableReference != null ) {
+			sessionFilterFragment.append( filterFragment( tableReference.getIdentificationVariable(), treatAsDeclarations ) );
+		}
+		return sessionFilterFragment.toString();
 	}
 
 	@Override
@@ -2226,7 +2244,9 @@ public abstract class AbstractCollectionPersister
 //		}
 //	}
 
-	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
+	public abstract FilterAliasGenerator getFilterAliasGenerator(String rootAlias);
+
+	public abstract FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup);
 
 	// ColectionDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

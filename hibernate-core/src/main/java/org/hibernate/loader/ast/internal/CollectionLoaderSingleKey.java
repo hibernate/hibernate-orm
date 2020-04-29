@@ -99,7 +99,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
-		jdbcSelect.registerFilterJdbcParameterBindings( jdbcParameterBindings );
+		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		final Iterator<JdbcParameter> paramItr = jdbcParameters.iterator();
 

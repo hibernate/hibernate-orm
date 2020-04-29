@@ -23,14 +23,14 @@ public class JdbcSelect implements JdbcOperation {
 	private final List<JdbcParameterBinder> parameterBinders;
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final Set<String> affectedTableNames;
-	private final List<FilterJdbcParameter> filterJdbcParameters;
+	private final Set<FilterJdbcParameter> filterJdbcParameters;
 
 	public JdbcSelect(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Set<String> affectedTableNames,
-			List<FilterJdbcParameter> filterJdbcParameters) {
+			Set<FilterJdbcParameter> filterJdbcParameters) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
@@ -53,15 +53,13 @@ public class JdbcSelect implements JdbcOperation {
 		return affectedTableNames;
 	}
 
+	@Override
+	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+		return filterJdbcParameters;
+	}
+
 	public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
 		return jdbcValuesMappingProducer;
 	}
 
-	public void registerFilterJdbcParameterBindings(JdbcParameterBindings jdbcParameterBindings) {
-		if ( CollectionHelper.isNotEmpty( filterJdbcParameters ) ) {
-			for ( FilterJdbcParameter filterJdbcParameter : filterJdbcParameters ) {
-				jdbcParameterBindings.addBinding( filterJdbcParameter.getParameter(), filterJdbcParameter.getBinding() );
-			}
-		}
-	}
 }

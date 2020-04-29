@@ -78,7 +78,7 @@ public class StandardSqlAstSelectTranslator
 						Collections.emptyList()
 				),
 				getAffectedTableNames(),
-				filterJdbcParameters
+				getFilterJdbcParameters()
 		);
 	}
 
@@ -97,7 +97,7 @@ public class StandardSqlAstSelectTranslator
 						sqlAstSelect.getDomainResultDescriptors()
 				),
 				getAffectedTableNames(),
-				filterJdbcParameters
+				getFilterJdbcParameters()
 		);
 	}
 

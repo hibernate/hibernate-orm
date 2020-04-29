@@ -59,6 +59,7 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -807,7 +808,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters) {
+		public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 

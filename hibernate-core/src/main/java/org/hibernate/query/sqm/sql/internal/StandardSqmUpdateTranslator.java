@@ -12,8 +12,11 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -39,6 +42,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
@@ -56,9 +60,10 @@ public class StandardSqmUpdateTranslator
 	public StandardSqmUpdateTranslator(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings) {
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
+		super( creationContext, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
 	}
 
 	@Override
@@ -109,6 +114,14 @@ public class StandardSqmUpdateTranslator
 			getFromClauseIndex().registerTableGroup( rootPath, rootTableGroup );
 
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
+
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) entityDescriptor
+			);
+			if ( filterPredicate != null ) {
+				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
+			}
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = sqmStatement.getWhereClause();

@@ -174,8 +174,10 @@ public class MatchingIdSelectionHelper {
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
+				sqmMutationStatement.getTarget().getExplicitAlias(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
+				executionContext.getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				factory
 		);

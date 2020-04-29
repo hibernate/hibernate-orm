@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import java.util.Objects;
+
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -46,5 +48,24 @@ public class FilterJdbcParameter {
 				return jdbcParameterValue;
 			}
 		};
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		FilterJdbcParameter that = (FilterJdbcParameter) o;
+		return Objects.equals( parameter, that.parameter ) &&
+				Objects.equals( jdbcMapping, that.jdbcMapping ) &&
+				Objects.equals( jdbcParameterValue, that.jdbcParameterValue );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( parameter, jdbcMapping, jdbcParameterValue );
 	}
 }

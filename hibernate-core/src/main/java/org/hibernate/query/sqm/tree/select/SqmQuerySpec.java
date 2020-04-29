@@ -188,7 +188,9 @@ public class SqmQuerySpec<T> implements SqmCteConsumer, SqmNode, SqmFromClauseCo
 
 	@Override
 	public SqmQuerySpec addRoot(JpaRoot<?> root) {
-		assert getFromClause() != null;
+		if ( getFromClause() == null ) {
+			setFromClause( new SqmFromClause() );
+		}
 		getFromClause().addRoot( (SqmRoot) root );
 		return this;
 	}

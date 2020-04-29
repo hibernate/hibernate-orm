@@ -33,6 +33,7 @@ import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.AssociationType;
 
 /**
@@ -389,6 +390,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
+	}
+
+	@Override
+	public FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup) {
+		return getFilterAliasGenerator( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
 	}
 
 }

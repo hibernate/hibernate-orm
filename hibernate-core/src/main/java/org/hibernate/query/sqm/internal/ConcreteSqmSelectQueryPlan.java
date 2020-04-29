@@ -160,7 +160,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqmInterpretation.getTableGroupAccess()::findTableGroup,
 				session
 		);
-		sqmInterpretation.getJdbcSelect().registerFilterJdbcParameterBindings( jdbcParameterBindings );
+		sqmInterpretation.getJdbcSelect().bindFilterJdbcParameters( jdbcParameterBindings );
 
 		try {
 			return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(

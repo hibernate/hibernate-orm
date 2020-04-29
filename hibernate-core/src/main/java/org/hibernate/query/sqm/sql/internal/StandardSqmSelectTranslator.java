@@ -30,7 +30,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.DynamicInstantiationNature;
@@ -63,6 +63,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -81,12 +82,12 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  * @author John O'Hara
+ * @author Nathan Xu
  */
 @SuppressWarnings("unchecked")
 public class StandardSqmSelectTranslator
 		extends BaseSqmToSqlAstConverter
 		implements DomainResultCreationState, SqmSelectTranslator {
-	private final LoadQueryInfluencers fetchInfluencers;
 
 	// prepare for 10 root selections to avoid list growth in most cases
 	private final List<DomainResult> domainResults = CollectionHelper.arrayList( 10 );
@@ -95,7 +96,7 @@ public class StandardSqmSelectTranslator
 
 	private int fetchDepth;
 
-	private List<FilterPredicate> collectionFieldFilterPredicates;
+	private List<FilterPredicate> collectionFilterPredicates;
 
 	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
@@ -103,8 +104,7 @@ public class StandardSqmSelectTranslator
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers fetchInfluencers,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
-		this.fetchInfluencers = fetchInfluencers;
+		super( creationContext, queryOptions, fetchInfluencers, domainParameterXref, domainParameterBindings );
 
 		if ( fetchInfluencers != null
 				&& fetchInfluencers.getEffectiveEntityGraph() != null
@@ -200,16 +200,15 @@ public class StandardSqmSelectTranslator
 			final TableGroup root = roots.get( 0 );
 			final ModelPartContainer modelPartContainer = root.getModelPart();
 			final EntityPersister entityPersister = modelPartContainer.findContainingEntityMapping().getEntityPersister();
-			assert entityPersister instanceof AbstractEntityPersister;
-			final String primaryTableAlias = root.getPrimaryTableReference().getIdentificationVariable();
+			assert entityPersister instanceof Joinable;
 			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					fetchInfluencers, (AbstractEntityPersister) entityPersister, primaryTableAlias
+					getLoadQueryInfluencers(), (Joinable) entityPersister, root
 			);
 			if ( filterPredicate != null ) {
 				sqlQuerySpec.applyPredicate( filterPredicate );
 			}
-			if ( !CollectionHelper.isEmpty( collectionFieldFilterPredicates ) ) {
-				collectionFieldFilterPredicates.forEach( sqlQuerySpec::applyPredicate );
+			if ( CollectionHelper.isNotEmpty( collectionFilterPredicates ) ) {
+				collectionFilterPredicates.forEach( sqlQuerySpec::applyPredicate );
 			}
 		}
 
@@ -337,14 +336,14 @@ public class StandardSqmSelectTranslator
 				fetchTiming = traversalResult.getFetchStrategy();
 				joined = traversalResult.isJoined();
 			}
-			else if ( fetchInfluencers.hasEnabledFetchProfiles() ) {
+			else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
 				if ( fetchParent instanceof EntityResultGraphNode ) {
 					final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
 					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
 					final String fetchParentEntityName = entityMappingType.getEntityName();
 					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
 
-					for ( String enabledFetchProfileName : fetchInfluencers.getEnabledFetchProfileNames() ) {
+					for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 						final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory().getFetchProfile( enabledFetchProfileName );
 						final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
 
@@ -411,30 +410,39 @@ public class StandardSqmSelectTranslator
 			if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				String tableAlias = alias;
-				if ( tableAlias == null ) {
-					tableAlias = getFromClauseAccess().getTableGroup( fetchablePath ).getPrimaryTableReference().getIdentificationVariable();
-				}
 				final Joinable joinable = pluralAttributeMapping
 						.getCollectionDescriptor()
 						.getCollectionType()
 						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+				final TableGroup tableGroup = getFromClauseAccess().getTableGroup( fetchablePath );
 				final FilterPredicate collectionFieldFilterPredicate = FilterHelper.createFilterPredicate(
-						fetchInfluencers,
+						getLoadQueryInfluencers(),
 						joinable,
-						tableAlias
+						tableGroup
 				);
 				if ( collectionFieldFilterPredicate != null ) {
-					if ( collectionFieldFilterPredicates == null ) {
-						collectionFieldFilterPredicates = new ArrayList<>();
+					if ( collectionFilterPredicates == null ) {
+						collectionFilterPredicates = new ArrayList<>();
 					}
-					collectionFieldFilterPredicates.add( collectionFieldFilterPredicate );
+					collectionFilterPredicates.add( collectionFieldFilterPredicate );
+				}
+				if ( pluralAttributeMapping.getCollectionDescriptor().isManyToMany() ) {
+					assert joinable instanceof CollectionPersister;
+					final Predicate manyToManyFilterPredicate = FilterHelper.createManyToManyFilterPredicate(
+							getLoadQueryInfluencers(),
+							( CollectionPersister) joinable,
+							tableGroup
+					);
+					if ( manyToManyFilterPredicate != null ) {
+						assert tableGroup.getTableReferenceJoins() != null &&
+								tableGroup.getTableReferenceJoins().size() == 1;
+						tableGroup.getTableReferenceJoins().get( 0 ).applyPredicate( manyToManyFilterPredicate );
+					}
 				}
 
 				final OrderByFragmentConsumer orderByFragmentConsumer = orderByFragmentConsumerStack.getCurrent();
 				if ( orderByFragmentConsumer != null ) {
 
-					final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
 					assert tableGroup.getModelPart() == pluralAttributeMapping;
 
 					if ( pluralAttributeMapping.getOrderByFragment() != null ) {

@@ -7,7 +7,9 @@
 package org.hibernate.sql.ast.spi;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SortOrder;
@@ -103,7 +105,7 @@ public abstract class AbstractSqlAstWalker
 	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 	private final JdbcParametersImpl jdbcParameters = new JdbcParametersImpl();
 
-	protected final List<FilterJdbcParameter> filterJdbcParameters = new ArrayList<>();
+	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 
@@ -136,6 +138,9 @@ public abstract class AbstractSqlAstWalker
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+		return filterJdbcParameters;
+	}
 
 	@SuppressWarnings("unused")
 	protected SqlAppender getSqlAppender() {

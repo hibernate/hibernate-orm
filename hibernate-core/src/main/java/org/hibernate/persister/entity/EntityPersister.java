@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -39,6 +40,7 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -868,6 +870,11 @@ public interface EntityPersister extends EntityDefinition, EntityValuedModelPart
 	}
 
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
+
+	default FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
+		assert this instanceof Joinable;
+		return new TableGroupFilterAliasGenerator( ( (Joinable) this ).getTableName(), rootTableGroup );
+	}
 
 	/**
 	 * Converts an array of attribute names to a set of indexes, according to the entity metamodel

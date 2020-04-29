@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.resultcache;
 import java.util.List;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Hibernate;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.sql.exec.SqlExecLogger;
@@ -31,6 +32,7 @@ import org.apache.log4j.Logger;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -141,9 +143,9 @@ public class QueryResultCacheTests {
 							.setCacheRegion( "fetch-region" )
 							.list();
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-
 					verifyFetchResults( values );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 
@@ -157,9 +159,9 @@ public class QueryResultCacheTests {
 							.setCacheRegion( "fetch-region" )
 							.list();
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-
 					verifyFetchResults( values );
+
+					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 				}
 		);
 	}
@@ -168,9 +170,13 @@ public class QueryResultCacheTests {
 		assertThat( values.size(), is( 1 ) );
 		final AggregateEntity rootEntity = values.get( 0 );
 		assertThat( rootEntity.getValue1(), notNullValue() );
+		assertTrue( Hibernate.isInitialized( rootEntity.getValue1() ) );
 		assertThat( rootEntity.getValue1().getId(), is( 1 ) );
+		assertThat( rootEntity.getValue1().getName(), is("first" ) );
 		assertThat( rootEntity.getValue2(), notNullValue() );
+		assertTrue( Hibernate.isInitialized( rootEntity.getValue2() ) );
 		assertThat( rootEntity.getValue2().getId(), is( 2 ) );
+		assertThat( rootEntity.getValue2().getName(), is("second" ) );
 	}
 
 	@BeforeEach

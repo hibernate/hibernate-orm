@@ -1,0 +1,72 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.query.resultcache;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+/**
+ * @author Steve Ebersole
+ */
+@Entity
+public class AggregateEntity {
+	@Id
+	private Integer id;
+	private String name;
+	@ManyToOne(cascade = CascadeType.ALL)
+	private TestEntity value1;
+	@ManyToOne(cascade = CascadeType.ALL)
+	private TestEntity value2;
+
+	protected AggregateEntity() {
+	}
+
+	public AggregateEntity(
+			Integer id,
+			String name,
+			TestEntity value1,
+			TestEntity value2) {
+		this.id = id;
+		this.name = name;
+		this.value1 = value1;
+		this.value2 = value2;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public TestEntity getValue1() {
+		return value1;
+	}
+
+	public void setValue1(TestEntity value1) {
+		this.value1 = value1;
+	}
+
+	public TestEntity getValue2() {
+		return value2;
+	}
+
+	public void setValue2(TestEntity value2) {
+		this.value2 = value2;
+	}
+}

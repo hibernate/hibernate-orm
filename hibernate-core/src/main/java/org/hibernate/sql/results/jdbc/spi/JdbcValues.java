@@ -8,6 +8,8 @@ package org.hibernate.sql.results.jdbc.spi;
 
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 /**
  * Provides unified access to query results (JDBC values - see
  * {@link RowProcessingState#getJdbcValue} whether they come from
@@ -47,6 +49,7 @@ public interface JdbcValues {
 	 * 		^^ it's supposed to give impls a chance to write to the query cache
 	 * 		or release ResultSet it.  But that could technically be handled by the
 	 * 		case of `#next` returning false the first time.
+	 * @param session
 	 */
-	void finishUp();
+	void finishUp(SharedSessionContractImplementor session);
 }

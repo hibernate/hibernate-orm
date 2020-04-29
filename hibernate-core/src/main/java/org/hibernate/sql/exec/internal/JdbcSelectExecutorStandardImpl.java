@@ -23,17 +23,18 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.internal.Helper;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.ResultSetAccess;
-import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -42,8 +43,6 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -60,8 +59,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	 * Singleton access
 	 */
 	public static final JdbcSelectExecutorStandardImpl INSTANCE = new JdbcSelectExecutorStandardImpl();
-
-	private static final Logger log = Logger.getLogger( JdbcSelectExecutorStandardImpl.class );
 
 	@Override
 	public <R> List<R> list(
@@ -254,7 +251,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final QueryKey queryResultsCacheKey;
 
 		if ( queryCacheEnabled && cacheMode.isGetEnabled() ) {
-			log.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
+			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
 			final QueryResultsCache queryCache = executionContext.getSession().getFactory()
 					.getCache()
@@ -290,7 +287,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			//		invalidation strategies - QueryCacheInvalidationStrategy
 		}
 		else {
-			log.debugf( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
+			SqlExecLogger.INSTANCE.debugf( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
 						queryCacheEnabled,
 						cacheMode.name()
 			);

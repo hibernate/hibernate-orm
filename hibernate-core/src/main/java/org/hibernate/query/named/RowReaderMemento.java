@@ -10,7 +10,7 @@ package org.hibernate.query.named;
  * @author Steve Ebersole
  */
 public interface RowReaderMemento {
-	Class[] getResultClasses();
+	Class<?>[] getResultClasses();
 
 	String[] getResultMappingNames();
 }

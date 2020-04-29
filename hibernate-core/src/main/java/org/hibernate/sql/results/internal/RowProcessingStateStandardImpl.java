@@ -36,6 +36,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	private final Initializer[] initializers;
 
+	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
 	private Object[] currentRowJdbcValues;
 
@@ -46,6 +47,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 			JdbcValues jdbcValues) {
 		this.resultSetProcessingState = resultSetProcessingState;
 		this.queryOptions = queryOptions;
+		this.rowReader = rowReader;
 		this.jdbcValues = jdbcValues;
 
 		final List<Initializer> initializers = rowReader.getInitializers();
@@ -61,6 +63,11 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	@Override
 	public JdbcValuesSourceProcessingState getJdbcValuesSourceProcessingState() {
 		return resultSetProcessingState;
+	}
+
+	@Override
+	public RowReader<?> getRowReader() {
+		return rowReader;
 	}
 
 	public boolean next() throws SQLException {

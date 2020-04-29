@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.caching.internal;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
 
 /**
@@ -28,7 +29,7 @@ public class QueryCachePutManagerDisabledImpl implements QueryCachePutManager {
 	}
 
 	@Override
-	public void finishUp() {
+	public void finishUp(SharedSessionContractImplementor session) {
 
 	}
 }

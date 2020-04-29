@@ -8,6 +8,7 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -27,17 +28,19 @@ public abstract class AbstractJdbcValues implements JdbcValues {
 
 	@Override
 	public final boolean next(RowProcessingState rowProcessingState) throws SQLException {
-		if ( getCurrentRowValuesArray() != null ) {
+		final boolean hadRow = processNext( rowProcessingState );
+		if ( hadRow ) {
+
 			queryCachePutManager.registerJdbcRow( getCurrentRowValuesArray() );
 		}
-		return processNext( rowProcessingState );
+		return hadRow;
 	}
 
 	protected abstract boolean processNext(RowProcessingState rowProcessingState);
 
 	@Override
-	public final void finishUp() {
-		queryCachePutManager.finishUp();
+	public final void finishUp(SharedSessionContractImplementor session) {
+		queryCachePutManager.finishUp( session );
 		release();
 	}
 

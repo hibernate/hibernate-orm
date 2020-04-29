@@ -49,23 +49,15 @@ public class Helper {
 	}
 
 	private static Consumer<Initializer> getInitializerConsumer(List<Initializer> initializers) {
-		if ( ResultsLogger.INSTANCE.isDebugEnabled() ) {
-			return initializer -> {
-				ResultsLogger.INSTANCE.debug( "Adding initializer : " + initializer );
-				addIfNotPresent( initializers, initializer );
-			};
-		}
-		else {
-			return initializer ->
-					addIfNotPresent( initializers, initializer );
-		}
-	}
+		return initializer -> {
+			ResultsLogger.INSTANCE.debugf( "Initializer registration : %s", initializer );
+			if ( initializers.contains( initializer ) ) {
+				ResultsLogger.INSTANCE.debug( "Skipping initializer registration - already registered" );
+			}
 
-	private static void addIfNotPresent(List<Initializer> initializers, Initializer initializer) {
-		if ( initializers.contains( initializer ) ) {
-			return;
-		}
-		initializers.add( initializer );
+			ResultsLogger.INSTANCE.debugf( "Adding initializer : %s", initializer );
+			initializers.add( initializer );
+		};
 	}
 
 	public static void finalizeCollectionLoading(

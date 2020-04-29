@@ -7,10 +7,12 @@
 package org.hibernate.sql.results.caching.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
 
 /**
@@ -35,16 +37,21 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 		if ( dataToCache == null ) {
 			dataToCache = new ArrayList<>();
 		}
-		dataToCache.add( values );
+
+		// todo (6.0) : verify whether we really need to copy these..
+		//		`RowProcessingStateStandardImpl` (see `#finishRowProcessing`) already creates new array
+		//		instances for each row
+//		dataToCache.add( values );
+		dataToCache.add( Arrays.copyOf( values, values.length ) );
 	}
 
 	@Override
-	public void finishUp() {
+	public void finishUp(SharedSessionContractImplementor session) {
+		// todo (
 		queryCache.put(
 				queryKey,
 				dataToCache,
-				// todo (6.0) : needs access to Session to pass along to cache call
-				null
+				session
 		);
 	}
 }

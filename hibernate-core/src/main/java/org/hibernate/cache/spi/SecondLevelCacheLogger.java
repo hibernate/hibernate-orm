@@ -24,10 +24,9 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90001001, max = 90002000 )
 public interface SecondLevelCacheLogger extends BasicLogger {
-	SecondLevelCacheLogger INSTANCE = Logger.getMessageLogger(
-			SecondLevelCacheLogger.class,
-			"org.hibernate.orm.cache"
-	);
+	String LOGGER_NAME = "org.hibernate.orm.cache";
+
+	SecondLevelCacheLogger INSTANCE = Logger.getMessageLogger( SecondLevelCacheLogger.class, LOGGER_NAME );
 
 	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
 	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();

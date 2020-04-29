@@ -11,9 +11,9 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -25,6 +25,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
 	private static final Logger LOG = Logger.getLogger( StandardRowReader.class );
 
@@ -35,7 +36,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final int assemblerCount;
 	private final Callback callback;
 
-	private final Object[] resultRow;
 
 	@SuppressWarnings("WeakerAccess")
 	public StandardRowReader(
@@ -49,15 +49,13 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		this.assemblerCount = resultAssemblers.size();
 		this.callback = callback;
-
-		this.resultRow = new Object[assemblerCount];
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Class<T> getResultJavaType() {
 		if ( resultAssemblers.size() == 1 ) {
-			return resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaType();
+			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaType();
 		}
 
 		return (Class<T>) Object[].class;
@@ -73,6 +71,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 		LOG.debug( "---Processing Row---" );
 
 		coordinateInitializers( rowProcessingState, options );
+
+		final Object[] resultRow = new Object[ assemblerCount ];
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
 			resultRow[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
@@ -91,6 +91,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 		}
 	}
 
+	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private void coordinateInitializers(
 			RowProcessingState rowProcessingState,
 			JdbcValuesSourceProcessingOptions options) {
@@ -143,6 +144,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
+	@SuppressWarnings("ForLoopReplaceableByForEach")
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
 		for ( int i = 0; i < initializers.size(); i++ ) {
 			initializers.get( i ).endLoading( processingState.getExecutionContext() );
@@ -156,7 +158,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public RowReaderMemento toMemento(SessionFactoryImplementor factory) {
 		return new RowReaderMemento() {
 			@Override
-			public Class[] getResultClasses() {
+			public Class<?>[] getResultClasses() {
 				return new Class[0];
 			}
 

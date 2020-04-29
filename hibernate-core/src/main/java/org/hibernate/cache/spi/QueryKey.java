@@ -98,40 +98,51 @@ public class QueryKey implements Serializable {
 	private int generateHashCode() {
 		int result = 13;
 		result = 37 * result + sqlQueryString.hashCode();
-		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
-		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
-		result = 37 * result + parameterBindingsMemento.hashCode();
-		result = 37 * result + ( enabledFilterNames == null ? 0 : enabledFilterNames.hashCode() );
+		result = 37 * result + ( firstRow==null ? 0 : firstRow );
+		result = 37 * result + ( maxRows==null ? 0 : maxRows );
 		result = 37 * result + ( tenantIdentifier==null ? 0 : tenantIdentifier.hashCode() );
+		// the collections are too complicated to incorporate into the hashcode.  but they really
+		// aren't needed in the hashcode calculation - they are handled in `#equals` and the calculation
+		// without them is a good hashing code.
+		//
+		// todo (6.0) : maybe even just base it on `sqlQueryString`?
+
 		return result;
 	}
 
 	@Override
-	@SuppressWarnings("RedundantIfStatement")
+	@SuppressWarnings({"RedundantIfStatement", "EqualsWhichDoesntCheckParameterClass"})
 	public boolean equals(Object other) {
-		if ( !( other instanceof QueryKey ) ) {
+		// it should never be another type, so skip the instanceof check and just do the cast
+		final QueryKey that;
+
+		try {
+			that = (QueryKey) other;
+		}
+		catch (ClassCastException cce) {
+			// treat this as the exception case
 			return false;
 		}
 
-		final QueryKey that = (QueryKey) other;
-		if ( !sqlQueryString.equals( that.sqlQueryString ) ) {
+		if ( ! Objects.equals( sqlQueryString, that.sqlQueryString ) ) {
 			return false;
 		}
 
-		if ( !Objects.equals( tenantIdentifier, that.tenantIdentifier ) ) {
+		if ( ! Objects.equals( tenantIdentifier, that.tenantIdentifier ) ) {
 			return false;
 		}
 
-		if ( !Objects.equals( firstRow, that.firstRow )
-				|| !Objects.equals( maxRows, that.maxRows ) ) {
+		if ( ! Objects.equals( firstRow, that.firstRow )
+				|| ! Objects.equals( maxRows, that.maxRows ) ) {
 			return false;
 		}
 
-		if ( !Objects.equals( parameterBindingsMemento, that.parameterBindingsMemento ) ) {
+		// Set's `#equals` impl does a deep check, so `Objects#equals` is a good check
+		if ( ! Objects.equals( parameterBindingsMemento, that.parameterBindingsMemento ) ) {
 			return false;
 		}
 
-		if ( !Objects.equals( enabledFilterNames, that.enabledFilterNames ) ) {
+		if ( ! Objects.equals( enabledFilterNames, that.enabledFilterNames ) ) {
 			return false;
 		}
 

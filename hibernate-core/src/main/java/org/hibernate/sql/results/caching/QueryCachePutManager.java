@@ -6,11 +6,13 @@
  */
 package org.hibernate.sql.results.caching;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 /**
  * @author Steve Ebersole
  */
 public interface QueryCachePutManager {
 	void registerJdbcRow(Object[] values);
 
-	void finishUp();
+	void finishUp(SharedSessionContractImplementor session);
 }

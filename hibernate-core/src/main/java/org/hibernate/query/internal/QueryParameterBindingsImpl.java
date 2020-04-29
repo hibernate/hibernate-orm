@@ -12,8 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
+import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.QueryParameter;
@@ -173,5 +175,25 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					action.accept( queryParameterImplementor, parameterBindingMap.get( queryParameterImplementor ) );
 				}
 		);
+	}
+
+	@Override
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento() {
+		// todo (6.0) : need to decide how to handle
+		if ( parameterMetadata.getParameterCount() == 0 && CollectionHelper.isEmpty( parameterBindingMap ) ) {
+			return new QueryKey.ParameterBindingsMemento() {
+				@Override
+				public int hashCode() {
+					return QueryParameterBindingsImpl.class.hashCode();
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					return obj instanceof QueryKey.ParameterBindingsMemento;
+				}
+			};
+		}
+
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

@@ -90,7 +90,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
 			jdbcValuesSourceProcessingState.finishUp();
-			jdbcValues.finishUp();
+			jdbcValues.finishUp( session );
 		}
 	}
 }

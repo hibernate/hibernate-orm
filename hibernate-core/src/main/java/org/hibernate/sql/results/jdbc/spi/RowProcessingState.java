@@ -11,6 +11,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.spi.RowReader;
 
 /**
  * State pertaining to the processing of a single "row" of a JdbcValuesSource
@@ -33,6 +34,11 @@ public interface RowProcessingState extends ExecutionContext {
 	default Object getJdbcValue(SqlSelection sqlSelection) {
 		return getJdbcValue( sqlSelection.getValuesArrayPosition() );
 	}
+
+	/**
+	 * todo (6.0) : do we want this here?  Depends how we handle caching assembler / result memento
+	 */
+	RowReader<?> getRowReader();
 
 	/**
 	 * Retrieve the value corresponding to the given index as part

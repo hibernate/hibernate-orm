@@ -25,6 +25,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ import static org.junit.Assert.assertEquals;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncrementSizeTest {
+public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncrementSizeTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;

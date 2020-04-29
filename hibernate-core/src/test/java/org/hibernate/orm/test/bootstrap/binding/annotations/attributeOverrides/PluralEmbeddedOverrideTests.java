@@ -53,13 +53,13 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				PluralAttributeOverridesTests.TypeValue.class,
-				PluralAttributeOverridesTests.AggregatedTypeValue.class
+				PluralEmbeddedOverrideTests.TypeValue.class,
+				PluralEmbeddedOverrideTests.AggregatedTypeValue.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class PluralAttributeOverridesTests {
+public class PluralEmbeddedOverrideTests {
 
 	@SuppressWarnings("rawtypes")
 	@Test

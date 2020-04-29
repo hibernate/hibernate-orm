@@ -4,21 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.inheritance;
+package org.hibernate.orm.test.bootstrap.binding.annotations.associationOverride;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
+import javax.persistence.AssociationOverride;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
-import org.hibernate.boot.spi.MetadataImplementor;
-
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,20 +36,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				MappedSuperclassTest.Customer.class,
-				MappedSuperclassTest.DomesticCustomer.class,
-				MappedSuperclassTest.ForeignCustomer.class
+				MappedSuperclassOverrideTests.Customer.class,
+				MappedSuperclassOverrideTests.DomesticCustomer.class,
+				MappedSuperclassOverrideTests.ForeignCustomer.class,
+				MappedSuperclassOverrideTests.Address.class
 		}
 )
 @ServiceRegistry
 @SessionFactory
-public class MappedSuperclassTest {
+public class MappedSuperclassOverrideTests {
 
 	@Test
-	public void testSchema(SessionFactoryScope scope) {
-		MetadataImplementor metadata = scope.getMetadataImplementor();
-		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "DC_address_street", metadata ) );
-		assertTrue( SchemaUtil.isColumnPresent( "FOREIGN_CUSTOMER", "STREET", metadata ) );
+	public void testMapping(DomainModelScope scope) {
+		assertTrue( SchemaUtil.isColumnPresent( "DOMESTIC_CUSTOMER", "dc_home_addr_id", scope.getDomainModel() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "FOREIGN_CUSTOMER", "fc_home_addr_id", scope.getDomainModel() ) );
 	}
 
 	@Test
@@ -62,14 +61,16 @@ public class MappedSuperclassTest {
 							DomesticCustomer.class
 					).getSingleResult();
 					assertThat( domesticCustomer.getName(), is( "domestic" ) );
-					assertThat( domesticCustomer.getAddress().getCity(), is( "London" ) );
+					assertThat( domesticCustomer.getHomeAddress().getCity(), is( "London" ) );
+					assertThat( domesticCustomer.getWorkAddress(), nullValue() );
 
 					ForeignCustomer foreignCustomer = session.createQuery(
 							"from ForeignCustomer c",
 							ForeignCustomer.class
 					).getSingleResult();
 					assertThat( foreignCustomer.getName(), is( "foreign" ) );
-					assertThat( foreignCustomer.getAddress(), is( nullValue() ) );
+					assertThat( foreignCustomer.getHomeAddress().getCity(), is( "London" ) );
+					assertThat( foreignCustomer.getWorkAddress(), nullValue() );
 				}
 		);
 	}
@@ -78,11 +79,26 @@ public class MappedSuperclassTest {
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Address address = new Address( "Kennington road", "London" );
-					DomesticCustomer domestic = new DomesticCustomer( 1, "domestic", "123" );
-					domestic.setAddress( address );
+					final Address address = new Address( 1, "Kennington road", "London" );
+
+					final DomesticCustomer domestic = new DomesticCustomer(
+							1,
+							"domestic",
+							address,
+							null,
+							"123"
+					);
+
+					final ForeignCustomer foreign = new ForeignCustomer(
+							1,
+							"foreign",
+							address,
+							null,
+							"123"
+					);
+
 					session.persist( domestic );
-					session.persist( new ForeignCustomer( 2, "foreign", "987" ) );
+					session.persist( foreign );
 				}
 		);
 	}
@@ -91,28 +107,29 @@ public class MappedSuperclassTest {
 	public void cleanupTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from DomesticCustomer", DomesticCustomer.class )
-							.list()
-							.forEach( cust -> session.delete( cust ) );
-					session.createQuery( "from ForeignCustomer", ForeignCustomer.class )
-							.list()
-							.forEach( cust -> session.delete( cust ) );
+					session.createQuery( "delete DomesticCustomer" ).executeUpdate();
+					session.createQuery( "delete ForeignCustomer" ).executeUpdate();
+					session.createQuery( "delete Address" ).executeUpdate();
 				}
 		);
 	}
 
-	@Embeddable
+	@Entity( name = "Address" )
 	public static class Address {
+		@Id
+		private Integer id;
 		private String street;
 		private String city;
 
 		public Address() {
 		}
 
-		public Address(String street, String city) {
+		public Address(Integer id, String street, String city) {
+			this.id = id;
 			this.street = street;
 			this.city = city;
 		}
+
 
 		@Column(name = "STREET")
 		public String getStreet() {
@@ -135,9 +152,15 @@ public class MappedSuperclassTest {
 
 	@MappedSuperclass
 	public static abstract class Customer {
+		@Id
 		private Integer id;
 		private String name;
-		private Address address;
+		@ManyToOne( cascade = CascadeType.ALL )
+		@JoinColumn
+		private Address homeAddress;
+		@ManyToOne( cascade = CascadeType.ALL )
+		@JoinColumn
+		private Address workAddress;
 
 		public Customer() {
 		}
@@ -147,7 +170,17 @@ public class MappedSuperclassTest {
 			this.name = name;
 		}
 
-		@Id
+		public Customer(
+				Integer id,
+				String name,
+				Address homeAddress,
+				Address workAddress) {
+			this.id = id;
+			this.name = name;
+			this.homeAddress = homeAddress;
+			this.workAddress = workAddress;
+		}
+
 		public Integer getId() {
 			return id;
 		}
@@ -164,28 +197,28 @@ public class MappedSuperclassTest {
 			this.name = name;
 		}
 
-		@Embedded
-		public Address getAddress() {
-			return address;
+		public Address getHomeAddress() {
+			return homeAddress;
 		}
 
-		public void setAddress(Address address) {
-			this.address = address;
+		public void setHomeAddress(Address homeAddress) {
+			this.homeAddress = homeAddress;
 		}
+
+		public Address getWorkAddress() {
+			return workAddress;
+		}
+
+		public void setWorkAddress(Address workAddress) {
+			this.workAddress = workAddress;
+		}
+
 	}
 
 	@Entity(name = "DomesticCustomer")
-	@AttributeOverrides(
-			value = {
-					@AttributeOverride(
-							name = "name",
-							column = @Column(name = "DC_name")),
-					@AttributeOverride(
-							name = "address.street",
-							column = @Column(name = "DC_address_street")),
-			}
-	)
 	@Table(name = "DOMESTIC_CUSTOMER")
+	@AssociationOverride( name = "homeAddress", joinColumns = @JoinColumn( name = "dc_home_addr_id") )
+	@AssociationOverride( name = "workAddress", joinColumns = @JoinColumn( name = "dc_work_addr_id") )
 	public static class DomesticCustomer extends Customer {
 		private String taxId;
 
@@ -197,6 +230,15 @@ public class MappedSuperclassTest {
 			this.taxId = taxId;
 		}
 
+		public DomesticCustomer(
+				Integer id,
+				String name,
+				Address homeAddress,
+				Address workAddress,
+				String taxId) {
+			super( id, name, homeAddress, workAddress );
+			this.taxId = taxId;
+		}
 
 		public String getTaxId() {
 			return taxId;
@@ -209,6 +251,8 @@ public class MappedSuperclassTest {
 
 	@Entity(name = "ForeignCustomer")
 	@Table(name = "FOREIGN_CUSTOMER")
+	@AssociationOverride( name = "homeAddress", joinColumns = @JoinColumn( name = "fc_home_addr_id") )
+	@AssociationOverride( name = "workAddress", joinColumns = @JoinColumn( name = "fc_work_addr_id") )
 	public static class ForeignCustomer extends Customer {
 		private String vat;
 
@@ -217,6 +261,16 @@ public class MappedSuperclassTest {
 
 		public ForeignCustomer(Integer id, String name, String vat) {
 			super( id, name );
+			this.vat = vat;
+		}
+
+		public ForeignCustomer(
+				Integer id,
+				String name,
+				Address homeAddress,
+				Address workAddress,
+				String vat) {
+			super( id, name, homeAddress, workAddress );
 			this.vat = vat;
 		}
 

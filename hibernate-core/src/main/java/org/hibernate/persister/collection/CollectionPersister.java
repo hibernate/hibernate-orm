@@ -31,6 +31,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -170,7 +171,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 */
 	boolean isManyToMany();
 
-	String getManyToManyFilterFragment(String alias, Map<String, Filter> enabledFilters);
+	String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters);
 
 	/**
 	 * Is this an "indexed" collection? (list or map)

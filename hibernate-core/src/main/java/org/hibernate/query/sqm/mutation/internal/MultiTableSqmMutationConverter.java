@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
@@ -63,11 +64,13 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
+			String mutatingEntityExplicitAlias,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
 			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
+		super( creationContext, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
 		this.mutatingEntityDescriptor = mutatingEntityDescriptor;
 
 		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
@@ -78,10 +81,10 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter imp
 
 		getProcessingStateStack().push( rootProcessingState );
 
-		final NavigablePath navigablePath = new NavigablePath( mutatingEntityDescriptor.getEntityName() );
+		final NavigablePath navigablePath = new NavigablePath( mutatingEntityDescriptor.getEntityName(), mutatingEntityExplicitAlias );
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
 				navigablePath,
-				null,
+				mutatingEntityExplicitAlias,
 				true,
 				LockMode.PESSIMISTIC_WRITE,
 				getSqlAliasBaseGenerator(),

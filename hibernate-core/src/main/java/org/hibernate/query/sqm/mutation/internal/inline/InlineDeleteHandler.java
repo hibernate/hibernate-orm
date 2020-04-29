@@ -12,17 +12,21 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -156,10 +160,16 @@ public class InlineDeleteHandler implements DeleteHandler {
 				executionContext
 		);
 
-		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, matchingIdsPredicate );
+		Predicate restriction = matchingIdsPredicate;
+		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate( executionContext.getLoadQueryInfluencers(), (Joinable) entityDescriptor );
+		if ( filterPredicate != null ) {
+			restriction = SqlAstTreeHelper.combinePredicates( restriction, filterPredicate );
+		}
+		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, restriction );
 
 		final SqlAstDeleteTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory );
 		final JdbcDelete jdbcOperation = sqlAstTranslator.translate( deleteStatement );
+		jdbcOperation.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		jdbcMutationExecutor.execute(
 				jdbcOperation,

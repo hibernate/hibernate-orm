@@ -5,11 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Anything that can be loaded by outer join - namely
@@ -79,12 +81,20 @@ public interface Joinable {
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters
 	 */
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException;
+	public default String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
+		return filterFragment( alias, enabledFilters, Collections.emptySet() );
+	}
+
+	public default String filterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) throws MappingException {
+		return filterFragment( tableGroup, enabledFilters, Collections.emptySet() );
+	}
 
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters
 	 */
 	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) throws MappingException;
+
+	public String filterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) throws MappingException;
 
 	public String oneToManyFilterFragment(String alias) throws MappingException;
 

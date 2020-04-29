@@ -19,8 +19,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.type.Type;
 
@@ -35,7 +38,7 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  */
 public class FilterHelper {
 
-	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\w+)\\.(\\w+)" );
+	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\S+)\\.(\\w+)" );
 
 	private final String[] filterNames;
 	private final String[] filterConditions;
@@ -124,6 +127,9 @@ public class FilterHelper {
 	private String render(FilterAliasGenerator aliasGenerator, int filterIndex) {
 		Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
 		String condition = filterConditions[filterIndex];
+		if ( aliasGenerator == null ) {
+			return StringHelper.replace( condition, FilterImpl.MARKER + ".", "");
+		}
 		if ( filterAutoAliasFlags[filterIndex] ) {
 			return StringHelper.replace(
 					condition,
@@ -145,8 +151,23 @@ public class FilterHelper {
 		}
 	}
 
-	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable, String alias) {
-		final String filterFragment = joinable.filterFragment( alias, loadQueryInfluencers.getEnabledFilters() );
+	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable) {
+		return createFilterPredicate( loadQueryInfluencers, joinable, null );
+	}
+
+	public static FilterPredicate createFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, Joinable joinable, TableGroup rootTableGroup) {
+		final String filterFragment = joinable.filterFragment( rootTableGroup, loadQueryInfluencers.getEnabledFilters() );
+		if ( StringHelper.isNotEmpty( filterFragment ) ) {
+			return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
+		}
+		else {
+			return null;
+		}
+	}
+
+	public static FilterPredicate createManyToManyFilterPredicate(LoadQueryInfluencers loadQueryInfluencers, CollectionPersister collectionPersister, TableGroup tableGroup) {
+		assert collectionPersister.isManyToMany();
+		final String filterFragment = collectionPersister.getManyToManyFilterFragment( tableGroup, loadQueryInfluencers.getEnabledFilters() );
 		if ( StringHelper.isNotEmpty( filterFragment ) ) {
 			return doCreateFilterPredicate( filterFragment, loadQueryInfluencers.getEnabledFilters() );
 		}

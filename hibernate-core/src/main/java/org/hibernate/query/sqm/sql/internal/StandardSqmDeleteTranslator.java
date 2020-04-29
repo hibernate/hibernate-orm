@@ -8,8 +8,11 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -26,6 +29,7 @@ import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 
@@ -45,9 +49,10 @@ public class StandardSqmDeleteTranslator
 	public StandardSqmDeleteTranslator(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings) {
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
+		super( creationContext, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
 	}
 
 	@Override
@@ -92,6 +97,14 @@ public class StandardSqmDeleteTranslator
 
 			if ( ! rootTableGroup.getTableReferenceJoins().isEmpty() ) {
 				throw new HibernateException( "Not expecting multiple table references for an SQM DELETE" );
+			}
+
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) entityDescriptor
+			);
+			if ( filterPredicate != null ) {
+				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
 			}
 
 			Predicate suppliedPredicate = null;

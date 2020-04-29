@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.sql.ast.SqlAstUpdateTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -84,6 +85,11 @@ public class StandardSqlAstUpdateTranslator
 			@Override
 			public List<JdbcParameterBinder> getParameterBinders() {
 				return StandardSqlAstUpdateTranslator.this.getParameterBinders();
+			}
+
+			@Override
+			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+				return StandardSqlAstUpdateTranslator.this.getFilterJdbcParameters();
 			}
 
 			@Override

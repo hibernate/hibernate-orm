@@ -78,9 +78,15 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			elementFetch = fetches.get( 1 );
 		}
 		else {
-			assert fetches.size() == 1;
-			indexFetch = null;
-			elementFetch = fetches.get( 0 );
+			if ( !fetches.isEmpty() ) { // might be empty due to fetch depth limit
+				assert fetches.size() == 1;
+				indexFetch = null;
+				elementFetch = fetches.get( 0 );
+			}
+			else {
+				indexFetch = null;
+				elementFetch = null;
+			}
 		}
 
 		final CollectionSemantics collectionSemantics = getFetchedMapping().getCollectionDescriptor().getCollectionSemantics();

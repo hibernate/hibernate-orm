@@ -89,6 +89,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				tableGroupAccess::findTableGroup,
 				executionContext.getSession()
 		);
+		jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,

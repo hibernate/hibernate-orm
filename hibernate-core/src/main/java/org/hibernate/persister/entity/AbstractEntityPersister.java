@@ -431,7 +431,9 @@ public abstract class AbstractEntityPersister
 
 	protected abstract int getSubclassPropertyTableNumber(int i);
 
-	protected abstract String filterFragment(String alias) throws MappingException;
+	protected String filterFragment(String alias) throws MappingException {
+		return filterFragment( alias, Collections.emptySet() );
+	}
 
 	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
 
@@ -4050,17 +4052,17 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
+	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( alias ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
+		filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
+		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
 	}
 
 	@Override
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
+	public String filterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( alias ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+		filterHelper.render( sessionFilterFragment, tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
+		return sessionFilterFragment.append( filterFragment( tableGroup == null ? null : tableGroup.getPrimaryTableReference().getIdentificationVariable(), treatAsDeclarations ) ).toString();
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {

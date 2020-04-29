@@ -35,7 +35,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -385,16 +385,25 @@ public class LoaderSelectBuilder {
 				.getCollectionDescriptor()
 				.getCollectionType()
 				.getAssociatedJoinable( creationContext.getSessionFactory() );
-		assert joinable instanceof AbstractCollectionPersister;
-		final String tableExpression = joinable.getTableName();
-		final String tableAlias = tableGroup.resolveTableReference( tableExpression ).getIdentificationVariable();
 		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
 				loadQueryInfluencers,
 				joinable,
-				tableAlias
+				tableGroup
 		);
 		if ( filterPredicate != null ) {
 			querySpec.applyPredicate( filterPredicate );
+		}
+		if ( pluralAttributeMapping.getCollectionDescriptor().isManyToMany() ) {
+			assert joinable instanceof CollectionPersister;
+			final Predicate manyToManyFilterPredicate = FilterHelper.createManyToManyFilterPredicate(
+					loadQueryInfluencers,
+					(CollectionPersister) joinable,
+					tableGroup
+			);
+			if ( manyToManyFilterPredicate != null ) {
+				assert tableGroup.getTableReferenceJoins().size() == 1;
+				tableGroup.getTableReferenceJoins().get( 0 ).applyPredicate( manyToManyFilterPredicate );
+			}
 		}
 	}
 
@@ -510,10 +519,11 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 
 				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE && joined ) {
+					final TableGroup joinTableGroup = creationState.getFromClauseAccess().getTableGroup( fetchablePath );
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 					applyFiltering(
 							querySpec,
-							creationState.getFromClauseAccess().getTableGroup( fetchablePath ),
+							joinTableGroup,
 							pluralAttributeMapping
 					);
 					applyOrdering(

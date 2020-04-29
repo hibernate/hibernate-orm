@@ -29,7 +29,7 @@ public interface SqmTranslatorFactory {
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers influencers,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext);
 
 	SqmInsertTranslator createInsertTranslator(

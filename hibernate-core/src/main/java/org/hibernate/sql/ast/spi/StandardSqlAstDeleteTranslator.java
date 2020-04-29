@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -50,6 +51,11 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 			@Override
 			public Set<String> getAffectedTableNames() {
 				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
+			}
+
+			@Override
+			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+				return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
 			}
 		};
 	}
@@ -99,6 +105,11 @@ public class StandardSqlAstDeleteTranslator extends AbstractSqlAstTranslator imp
 			@Override
 			public Set<String> getAffectedTableNames() {
 				return StandardSqlAstDeleteTranslator.this.getAffectedTableNames();
+			}
+
+			@Override
+			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+				return StandardSqlAstDeleteTranslator.this.getFilterJdbcParameters();
 			}
 		};
 	}

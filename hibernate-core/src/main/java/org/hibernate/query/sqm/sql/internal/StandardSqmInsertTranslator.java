@@ -58,7 +58,7 @@ public class StandardSqmInsertTranslator
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings) {
-		super( creationContext, queryOptions, domainParameterXref, domainParameterBindings );
+		super( creationContext, queryOptions, null, domainParameterXref, domainParameterBindings );
 	}
 
 	@Override

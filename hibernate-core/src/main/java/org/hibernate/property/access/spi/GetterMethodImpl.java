@@ -11,8 +11,10 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -62,12 +64,21 @@ public class GetterMethodImpl implements Getter {
 		}
 		catch (IllegalArgumentException iae) {
 			LOG.illegalPropertyGetterArgument( containerClass.getName(), propertyName );
-			throw new PropertyAccessException(
-					iae,
-					"IllegalArgumentException occurred calling",
-					false,
-					containerClass,
-					propertyName
+//			throw new PropertyAccessException(
+//					iae,
+//					"IllegalArgumentException occurred calling",
+//					false,
+//					containerClass,
+//					propertyName
+//			);
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Cannot invoke getter [%s] as passed instance [%s] is not an instance of the declaring class [%s]",
+							getterMethod.toString(),
+							owner,
+							getterMethod.getDeclaringClass().getName()
+					)
 			);
 		}
 	}

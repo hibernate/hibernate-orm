@@ -1012,7 +1012,7 @@ public class SessionImpl
 			boolean nullable) {
 		final EffectiveEntityGraph effectiveEntityGraph = getLoadQueryInfluencers().getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
-		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
+		final GraphImplementor<?> graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph = false;
 		if ( semantic != null ) {
 			if ( ! graph.appliesTo( entityName ) ) {

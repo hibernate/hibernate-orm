@@ -26,6 +26,10 @@ public interface Graph<J> extends GraphNode<J> {
 	 */
 	ManagedType<J> getGraphedType();
 
+	boolean appliesTo(String entityName);
+
+	boolean appliesTo(Class<? super J> entityType);
+
 	/**
 	 * Create a named (if passed `name` != null) root Graph.  The `mutable`
 	 * parameter controls whether the created Graph is mutable.

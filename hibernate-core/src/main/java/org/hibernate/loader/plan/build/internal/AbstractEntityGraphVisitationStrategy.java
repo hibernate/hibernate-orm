@@ -85,7 +85,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	@Override
 	public void start() {
 		super.start();
-		graphStack.push( getRootEntityGraph() );
+		graphStack.push( getEntityGraph() );
 	}
 
 	@Override
@@ -254,7 +254,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		return new LoadPlanImpl( rootEntityReturn, getQuerySpaces() );
 	}
 
-	abstract protected GraphImplementor getRootEntityGraph();
+	abstract protected GraphImplementor<?> getEntityGraph();
 
 	@Override
 	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition) {

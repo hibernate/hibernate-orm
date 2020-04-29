@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -53,6 +54,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -66,10 +68,13 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
@@ -83,6 +88,13 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.SubGraph;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -119,6 +131,8 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -4483,6 +4497,153 @@ public abstract class AbstractEntityPersister
 		return session.getLoadQueryInfluencers().hasEnabledFilters()
 				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
 	}
+
+	@Override
+	public void initializeLazyProperties(Object entity, EventSource session) {
+		// todo - a better solution here might be to:
+		//		1) collect the names of all the attributes to be loaded
+		//		2) create a LoadPlan to load them all in one query based on:
+		//			a) the entity
+		//			b) the properties to be initialized
+		//		+
+		//		the downside being that we would miss EG fetches below these attributes to initialize
+
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+
+		// Entity Graph
+		final GraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
+		if ( graph != null ) {
+			if ( graph.appliesTo( getEntityName() ) ) {
+				for ( String propertyName : getPropertyNames() ) {
+					final AttributeNodeImplementor<?> attributeNode = graph.findAttributeNode( propertyName );
+					if ( attributeNode != null ) {
+						triggerLazyPropertyInitialization( entity, propertyName, attributeNode, session );
+					}
+				}
+			}
+		}
+
+		// fetch profiles
+		for ( String attribute : findAllFetchedAttributes( loadQueryInfluencers ) ) {
+			triggerLazyPropertyInitialization( entity, attribute, null, session );
+		}
+
+	}
+
+	private List<String> findAllFetchedAttributes(LoadQueryInfluencers loadQueryInfluencers) {
+		if ( ! loadQueryInfluencers.hasEnabledFetchProfiles() ) {
+			return Collections.emptyList();
+		}
+
+		final ArrayList<String> names = new ArrayList<>();
+
+		for ( String profileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+			final FetchProfile fetchProfile = factory.getFetchProfile( profileName );
+			for ( Fetch fetch : fetchProfile.getFetches().values() ) {
+				if ( fetch.getAssociation().getOwner() == this ) {
+					names.add( fetch.getAssociation().getAssociationPath() );
+				}
+			}
+		}
+
+		return names;
+	}
+
+	private void triggerLazyPropertyInitialization(
+			Object entity,
+			String propertyName,
+			AttributeNodeImplementor<?> attributeNode,
+			EventSource session) {
+		if ( getInstrumentationMetadata().isEnhancedForLazyLoading() ) {
+			PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) entity ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof LazyAttributeLoadingInterceptor ) {
+				final LazyAttributeLoadingInterceptor lazyLoadInterceptor = (LazyAttributeLoadingInterceptor) interceptor;
+				if ( ! lazyLoadInterceptor.isAttributeLoaded( propertyName ) ) {
+					initializeLazyProperty( propertyName, entity, session );
+				}
+			}
+		}
+		else {
+			final Type propertyType = getPropertyType( propertyName );
+			if ( propertyType instanceof EntityType ) {
+				triggerLazyToOnePropertyInitialization( entity, propertyName, (EntityType) propertyType, attributeNode, session );
+			}
+			else if ( propertyType instanceof CollectionType ) {
+				triggerLazyPluralPropertyInitialization( entity, propertyName, (CollectionType) propertyType, session );
+			}
+		}
+	}
+
+	private void triggerLazyToOnePropertyInitialization(
+			Object entity,
+			String propertyName,
+			EntityType entityType,
+			AttributeNodeImplementor<?> attributeNode,
+			EventSource session) {
+		final EntityPersister associatedPersister = getFactory().getMetamodel().entityPersister(
+				entityType.getAssociatedEntityName()
+		);
+
+		Object propertyValue = getPropertyValue( entity, propertyName );
+
+		if ( propertyValue != null ) {
+			if ( propertyValue instanceof HibernateProxy ) {
+				final LazyInitializer li = ( (HibernateProxy) propertyValue ).getHibernateLazyInitializer();
+				if ( li.isUninitialized() ) {
+					propertyValue = session.internalLoad(
+							associatedPersister.getEntityName(),
+							associatedPersister.getIdentifier( propertyValue, session ),
+							true,
+							false
+					);
+				}
+			}
+			else {
+				// todo (HHH-11147) : if we have the case of the propertyValue being an "enhanced entity as proxy",
+				//  	trigger it to load here
+			}
+		}
+
+		if ( attributeNode != null && propertyValue != null ) {
+			final Class subGraphKey = propertyValue instanceof HibernateProxy
+					? ( (HibernateProxy) propertyValue ).getHibernateLazyInitializer().getPersistentClass()
+					: propertyValue.getClass();
+
+			final SubGraphImplementor<?> subGraph = attributeNode.getSubGraphMap().get( subGraphKey );
+			if ( subGraph != null ) {
+				final EffectiveEntityGraph effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
+				final GraphImplementor<?> originalGraph = effectiveEntityGraph.getGraph();
+				final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
+				effectiveEntityGraph.clear();
+				effectiveEntityGraph.applyGraph( subGraph, semantic );
+				try {
+					associatedPersister.initializeLazyProperties( propertyValue, session );
+				}
+				finally {
+					effectiveEntityGraph.clear();
+					effectiveEntityGraph.applyGraph( originalGraph, semantic );
+				}
+			}
+		}
+	}
+
+	private void triggerLazyPluralPropertyInitialization(
+			Object entity,
+			String propertyName,
+			CollectionType propertyType,
+			EventSource session) {
+		final Object propertyValue = getPropertyValue( entity, propertyName );
+		// should never be null
+		if ( propertyValue instanceof AbstractPersistentCollection ) {
+			// calling `#forceInitialization` on a collection that is initializing throws an exception
+			//		- unfortunately that means casting to AbstractPersistentCollection to make that determination
+			final AbstractPersistentCollection collection = (AbstractPersistentCollection) propertyValue;
+			if ( !collection.isInitializing() ) {
+				collection.forceInitialization();
+			}
+		}
+	}
+
 
 	protected UniqueEntityLoader getAppropriateLoader(LockOptions lockOptions, SharedSessionContractImplementor session) {
 		if ( queryLoader != null ) {

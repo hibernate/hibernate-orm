@@ -17,7 +17,7 @@ public interface AppliedGraph {
 	/**
 	 * The applied graph
 	 */
-	RootGraphImplementor<?> getGraph();
+	GraphImplementor<?> getGraph();
 
 	/**
 	 * The semantic (fetch/load) under which the graph should be applied

@@ -41,9 +41,18 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 	}
 
+	private final boolean defaultToTimestamp;
+
 	public JdbcTimestampTypeDescriptor() {
 		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+		defaultToTimestamp = true;
 	}
+
+	public JdbcTimestampTypeDescriptor(Class type) {
+		super( type, TimestampMutabilityPlan.INSTANCE );
+		defaultToTimestamp = false;
+	}
+
 	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( TIMESTAMP_FORMAT ).format( value );
@@ -139,8 +148,12 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		if ( value == null ) {
 			return null;
 		}
+
 		if ( Timestamp.class.isInstance( value ) ) {
-			return (Timestamp) value;
+			Timestamp timestampValue = (Timestamp) value;
+			return ( java.util.Date.class.equals( getJavaType() ) ) && !defaultToTimestamp ?
+					new Date( timestampValue.getTime() ) :
+					timestampValue;
 		}
 
 		if ( Long.class.isInstance( value ) ) {
@@ -152,7 +165,11 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Date.class.isInstance( value ) ) {
-			return new Timestamp( ( (Date) value ).getTime() );
+			Date dateValue = (Date) value;
+
+			return ( java.util.Date.class.equals( getJavaType() ) ) ?
+					new Date( dateValue.getTime() ) :
+					new Timestamp( dateValue.getTime() );
 		}
 
 		throw unknownWrap( value.getClass() );

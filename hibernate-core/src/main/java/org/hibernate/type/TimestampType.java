@@ -9,12 +9,15 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.sql.Timestamp}
@@ -24,7 +27,7 @@ import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
  */
 public class TimestampType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements VersionType<Date>, LiteralType<Date> {
+		implements VersionType<Date>, LiteralType<Date>, DynamicParameterizedType {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
@@ -69,5 +72,14 @@ public class TimestampType
 	@Override
 	public Date fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
+	}
+
+	@Override
+	public void setParameterValues(Properties parameters) {
+		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
+
+		if ( reader != null ) {
+			setJavaTypeDescriptor( new JdbcTimestampTypeDescriptor( reader.getReturnedClass() ) );
+		}
 	}
 }

@@ -45,6 +45,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.CharacterArrayNClobType;
 import org.hibernate.type.CharacterNCharType;
@@ -532,10 +533,15 @@ public class SimpleValueBinder {
 			simpleValue.setTypeName( timeStampVersionType );
 		}
 
-		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0
-				&& simpleValue.getMetadata().getTypeResolver().basic( simpleValue.getTypeName() ) == null ) {
+		if ( simpleValue.getTypeName() != null && simpleValue.getTypeName().length() > 0 ) {
 			try {
-				Class typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess().classForName( simpleValue.getTypeName() );
+				BasicType basicType = simpleValue.getMetadata().getTypeResolver().basic( simpleValue.getTypeName() );
+
+				Class typeClass = ( basicType != null ) ?
+						basicType.getClass() :
+						buildingContext.getBootstrapContext()
+								.getClassLoaderAccess()
+								.classForName( simpleValue.getTypeName() );
 
 				if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
 					Properties parameters = simpleValue.getTypeParameters();

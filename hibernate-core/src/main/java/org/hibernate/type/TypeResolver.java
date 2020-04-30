@@ -14,6 +14,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -115,8 +116,11 @@ public class TypeResolver implements Serializable {
 	 */
 	public Type heuristicType(String typeName, Properties parameters) throws MappingException {
 		Type type = basic( typeName );
+
 		if ( type != null ) {
-			return type;
+			return ( type instanceof ParameterizedType ) ?
+					typeFactory.byClass( type.getClass(), parameters ) :
+					type;
 		}
 
 		try {

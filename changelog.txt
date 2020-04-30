@@ -3,6 +3,20 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.17.Final (April 30th, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31835/tab/release-report-all-issues
+
+** Bug
+    * [HHH-13695] - DDL export forgets to close a Statement
+
+** Task
+    * [HHH-13953] - Upgrade dom4j to 2.1.3
+
+** Improvement
+    * [HHH-13960] - Add SAXReader sec features to match the defaults
+
 Changes in 5.3.16.Final (March 27th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

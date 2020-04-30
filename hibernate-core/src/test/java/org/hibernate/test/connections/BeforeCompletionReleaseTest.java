@@ -43,7 +43,7 @@ public class BeforeCompletionReleaseTest extends BaseEntityManagerFunctionalTest
 
     @Override
     protected Map getConfig() {
-		Map config = super.getConfig();
+        Map config = super.getConfig();
         TestingJtaBootstrap.prepare( config );
         config.put( AvailableSettings.CONNECTION_PROVIDER, new ConnectionProviderDecorator() );
         config.put( AvailableSettings.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION );

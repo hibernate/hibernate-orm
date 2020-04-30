@@ -78,15 +78,15 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 
 	@SuppressWarnings({ "unchecked" })
 	public String renderProjection(RenderingContext renderingContext) {
+		if ( ValueHandlerFactory.isCharacter( literal ) ) {
+			// In case literal is a Character, pass literal.toString() as the argument.
+			return renderingContext.getDialect().inlineLiteral( literal.toString() );
+		}
+
 		// some drivers/servers do not like parameters in the select clause
 		final ValueHandlerFactory.ValueHandler handler =
 				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );
-		if ( ValueHandlerFactory.isCharacter( literal ) ) {
-			return '\'' + handler.render( literal ) + '\'';
-		}
-		else {
-			return handler.render( literal );
-		}
+		return handler.render( literal );
 	}
 
 	@Override

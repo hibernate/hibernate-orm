@@ -46,7 +46,6 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 
 				fail("Should have thrown lock timeout exception!");
 			} catch (Exception expected) {
-				expected.printStackTrace();
 				assertTrue(
 					ExceptionUtil.rootCause(expected)
 						.getMessage().contains("canceling statement due to user request")

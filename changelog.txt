@@ -3,6 +3,32 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.15.Final (April 30, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31841/tab/release-report-done
+
+** Bug
+    * [HHH-11903] - @OneToOne Derived ID is null when returned by query when bidirectional
+
+** New Feature
+    * [HHH-13917] - Add support for HANA Cloud
+    * [HHH-13976] - Add BEFORE_TRANSACTION_COMPLETION release mode
+
+** Task
+    * [HHH-13948] - EnhancedSetterImpl should define writeReplace
+    * [HHH-13953] - Upgrade dom4j to 2.1.3
+    * [HHH-13977] - Upgrade to Agroal 1.8
+    * [HHH-13981] - Upgrade to Jandex 2.1.3.Final
+    * [HHH-13986] - SequenceHiLoGeneratorNoIncrementTest is not testing the right Optimiser
+    * [HHH-13992] - Upgrade to ByteBuddy 1.10.10
+
+** Improvement
+    * [HHH-13960] - Add SAXReader sec features to match the defaults
+    * [HHH-13993] - Bootstrap analysis: avoid initializing many Dialect classes
+    * [HHH-13994] - Bootstrap analysis: avoid initializing unused JtaPlatform classes
+    * [HHH-13995] - Remove dead code from StandardBasicTypes
+
 Changes in 5.4.14.Final (April 6, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

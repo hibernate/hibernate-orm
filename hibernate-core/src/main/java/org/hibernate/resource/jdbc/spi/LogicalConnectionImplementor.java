@@ -36,8 +36,9 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	void afterStatement();
 
 	/**
-	 * Notification indicating a transaction is about to completed to trigger
-	 * {@link org.hibernate.ConnectionReleaseMode#BEFORE_TRANSACTION_COMPLETION} releasing if needed
+	 * Notification indicating a transaction is about to be completed, so to trigger
+	 * releasing of the connection if needed ({@link org.hibernate.ConnectionReleaseMode#BEFORE_TRANSACTION_COMPLETION}
+	 * is enabled)
 	 */
 	void beforeTransactionCompletion();
 

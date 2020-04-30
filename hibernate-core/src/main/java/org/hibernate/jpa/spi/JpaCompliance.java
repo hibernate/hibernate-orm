@@ -97,4 +97,12 @@ public interface JpaCompliance {
 	 * @return {@code true} indicates the generator name scope is considered global.
 	 */
 	boolean isGlobalGeneratorScopeEnabled();
+
+	/**
+	 * Should we strictly handle {@link javax.persistence.OrderBy} expressions?
+	 *
+	 * JPA says the order-items can only be attribute references whereas Hibernate supports a wide range of items.  With
+	 * this enabled, Hibernate will throw a compliance error when a non-attribute-reference is used.
+	 */
+	boolean isJpaOrderByMappingComplianceEnabled();
 }

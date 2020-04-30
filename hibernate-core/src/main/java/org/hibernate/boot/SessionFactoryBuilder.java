@@ -729,6 +729,11 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled);
 
 	/**
+	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 */
+	SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled);
+
+	/**
 	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
 	 */
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);

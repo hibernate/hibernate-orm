@@ -102,4 +102,8 @@
 |90005700
 |org.hibernate.envers.boot.EnversBootLogger
 
+|90005701
+|90005800
+|org.hibernate.metamodel.mapping.MappingModelCreationLogger
+
 |===

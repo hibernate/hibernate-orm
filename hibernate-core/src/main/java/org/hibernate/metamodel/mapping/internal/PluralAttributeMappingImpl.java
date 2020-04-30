@@ -17,6 +17,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
@@ -246,6 +247,10 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 
 		if ( hasOrder || hasManyToManyOrder ) {
 			final TranslationContext context = new TranslationContext() {
+				@Override
+				public JpaCompliance getJpaCompliance() {
+					return collectionDescriptor.getFactory().getSessionFactoryOptions().getJpaCompliance();
+				}
 			};
 
 			if ( hasOrder ) {

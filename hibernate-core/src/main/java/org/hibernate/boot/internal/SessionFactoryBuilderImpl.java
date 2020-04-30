@@ -417,6 +417,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaOrderByMappingCompliance( enabled );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaTransactionCompliance( enabled );
 		return this;

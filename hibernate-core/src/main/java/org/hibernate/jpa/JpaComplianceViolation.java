@@ -4,15 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.mapping.ordering;
-
-import org.hibernate.jpa.spi.JpaCompliance;
+package org.hibernate.jpa;
 
 /**
- * Access to information needed while translating a collection's order-by fragment
+ * Contract for exceptions describing JPA compliance violations
  *
  * @author Steve Ebersole
  */
-public interface TranslationContext {
-	JpaCompliance getJpaCompliance();
+public interface JpaComplianceViolation {
 }

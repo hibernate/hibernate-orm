@@ -47,6 +47,7 @@ public class JpaComplianceTestingImpl implements JpaCompliance {
 	private boolean proxyCompliance;
 	private boolean cacheCompliance;
 	private boolean idGeneratorNameScopeCompliance;
+	private boolean orderByCompliance;
 
 	@Override
 	public boolean isJpaQueryComplianceEnabled() {
@@ -61,6 +62,11 @@ public class JpaComplianceTestingImpl implements JpaCompliance {
 	@Override
 	public boolean isJpaListComplianceEnabled() {
 		return listCompliance;
+	}
+
+	@Override
+	public boolean isJpaOrderByMappingComplianceEnabled() {
+		return orderByCompliance;
 	}
 
 	@Override

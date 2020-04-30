@@ -17,16 +17,12 @@ import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 
-import org.jboss.logging.Logger;
-
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * @author Steve Ebersole
  */
-public class ParseTreeVisitor extends OrderingParserBaseVisitor {
-	private static final Logger log = Logger.getLogger( ParseTreeVisitor.class );
-
+public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 	private final PathConsumer pathConsumer;
 	private final TranslationContext translationContext;
 
@@ -60,7 +56,21 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor {
 		assert parsedSpec != null;
 		assert parsedSpec.expression() != null;
 
-		final OrderingSpecification result = new OrderingSpecification( visitExpression( parsedSpec.expression() ) );
+		final OrderingExpression orderingExpression = visitExpression( parsedSpec.expression() );
+		if ( translationContext.getJpaCompliance().isJpaOrderByMappingComplianceEnabled() ) {
+			if ( orderingExpression instanceof DomainPath ) {
+				// nothing to do
+			}
+			else {
+				throw new OrderByComplianceViolation(
+						"`@OrderBy` expression (" + parsedSpec.expression().getText()
+								+ ") resolved to `" + orderingExpression
+								+ "` which is not a domain-model reference which violates the JPA specification"
+				);
+			}
+		}
+
+		final OrderingSpecification result = new OrderingSpecification( orderingExpression );
 
 		if ( parsedSpec.collationSpecification() != null ) {
 			result.setCollation( parsedSpec.collationSpecification().identifier().getText() );

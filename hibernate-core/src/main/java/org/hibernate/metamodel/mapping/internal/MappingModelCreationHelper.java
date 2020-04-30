@@ -61,6 +61,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
@@ -793,7 +794,11 @@ public class MappingModelCreationHelper {
 					catch (NotYetImplementedFor6Exception nye) {
 						throw nye;
 					}
-					catch (Exception wait) {
+					catch (Exception e) {
+						if ( e instanceof NonTransientException ) {
+							throw e;
+						}
+
 						return false;
 					}
 				}

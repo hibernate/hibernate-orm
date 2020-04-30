@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -69,25 +71,40 @@ public class MappingModelCreationProcess {
 			entityPersister.prepareMappingModel( this );
 		}
 
-		executePostInitCallbakcs( postInitCallbacks );
+		MappingModelCreationLogger.LOGGER.debugf( "Starting generic post-init callbacks" );
+		executePostInitCallbacks( postInitCallbacks );
 
-		executePostInitCallbakcs( foreignKeyPostInitCallbacks );
+		MappingModelCreationLogger.LOGGER.debugf( "Starting foreign-key post-init callbacks" );
+		executePostInitCallbacks( foreignKeyPostInitCallbacks );
 	}
 
-	private void executePostInitCallbakcs(List<PostInitCallback> postInitCallbacks) {
+	private void executePostInitCallbacks(List<PostInitCallback> postInitCallbacks) {
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
-			// copy to avoid CCME
-			final ArrayList<PostInitCallback> copy = new ArrayList<>( new ArrayList<>( postInitCallbacks ) );
 
-			for ( PostInitCallback callback : copy ) {
-				final boolean completed = callback.process();
-				if ( completed ) {
-					postInitCallbacks.remove( callback );
+			// copy to avoid CCME
+			final ArrayList<PostInitCallback> copy = new ArrayList<>( postInitCallbacks );
+
+			for ( int i = 0; i < copy.size(); i++ ) {
+				final PostInitCallback callback = copy.get( i );
+
+				try {
+					final boolean completed = callback.process();
+					if ( completed ) {
+						postInitCallbacks.remove( callback );
+					}
+				}
+				catch (Exception e) {
+					if ( e instanceof NonTransientException ) {
+						MappingModelCreationLogger.LOGGER.debugf( "Mapping-model creation encountered non-transient error : %s", e );
+						throw e;
+					}
+
+					MappingModelCreationLogger.LOGGER.debugf( "Mapping-model creation encountered (possibly) transient error : %s", e );
 				}
 			}
 
 			if ( copy.size() == postInitCallbacks.size() ) {
-				// none of the processes could complete fully, this is an error
+				// none of the remaining callbacks could complete fully, this is an error
 				throw new IllegalStateException( "No post-init callbacks could complete" );
 			}
 		}

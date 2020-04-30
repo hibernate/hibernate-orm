@@ -395,6 +395,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
+		delegate.enableJpaOrderByMappingCompliance( enabled );
+		return getThis();
+	}
+
+	@Override
 	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
 		return getThis();

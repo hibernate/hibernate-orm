@@ -2007,6 +2007,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**
+	 * Controls whether Hibernate should recognize what it considers a "bag"
+	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
+	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
+	 *
+	 * If enabled, we will recognize it as a List where {@link javax.persistence.OrderColumn}
+	 * is just missing (and its defaults will apply).
+	 *
+	 * @see JpaCompliance#isJpaOrderByMappingComplianceEnabled() ()
+	 * @since 6.0
+	 */
+	String JPA_ORDER_BY_MAPPING_COMPLIANCE	= "hibernate.jpa.compliance.orderby";
+
+	/**
 	 * JPA defines specific exceptions on specific methods when called on
 	 * {@link javax.persistence.EntityManager} and {@link javax.persistence.EntityManagerFactory}
 	 * when those objects have been closed.  This setting controls

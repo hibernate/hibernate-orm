@@ -10,17 +10,21 @@ package org.hibernate.jpa.spi;
  * @author Steve Ebersole
  */
 public interface MutableJpaCompliance extends JpaCompliance {
+	void setListCompliance(boolean listCompliance);
+
+	void setOrderByMappingCompliance(boolean orderByCompliance);
+
+	void setProxyCompliance(boolean proxyCompliance);
+
 	void setQueryCompliance(boolean queryCompliance);
 
 	void setTransactionCompliance(boolean transactionCompliance);
 
-	void setListCompliance(boolean listCompliance);
-
 	void setClosedCompliance(boolean closedCompliance);
 
-	void setProxyCompliance(boolean proxyCompliance);
-
 	void setCachingCompliance(boolean cachingCompliance);
+
+	void setGeneratorNameScopeCompliance(boolean generatorScopeCompliance);
 
 	JpaCompliance immutableCopy();
 }

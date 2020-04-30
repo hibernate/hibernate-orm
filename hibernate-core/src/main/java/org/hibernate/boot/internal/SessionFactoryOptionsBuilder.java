@@ -1478,6 +1478,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		mutableJpaCompliance().setCachingCompliance( enabled );
 	}
 
+	public void enableJpaOrderByMappingCompliance(boolean enabled) {
+		mutableJpaCompliance().setOrderByMappingCompliance( enabled );
+	}
+
+	public void enableGeneratorNameScopeCompliance(boolean enabled) {
+		mutableJpaCompliance().setGeneratorNameScopeCompliance( enabled );
+	}
+
 	public void disableRefreshDetachedEntity() {
 		this.allowRefreshDetachedEntity = false;
 	}

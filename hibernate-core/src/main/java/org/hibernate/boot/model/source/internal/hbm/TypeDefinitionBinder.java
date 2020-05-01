@@ -43,7 +43,7 @@ public class TypeDefinitionBinder {
 				definition.getTypeImplementorClass().getName()
 		);
 
-		context.getMetadataCollector().addTypeDefinition( definition );
+		context.getTypeDefinitionRegistry().register( definition );
 	}
 
 }

@@ -33,11 +33,12 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
+import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
@@ -131,9 +132,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
-	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
 	private final Map<String, String> imports = new HashMap<>();
+
+	private final TypeDefinitionRegistry typeDefRegistry = new TypeDefinitionRegistryStandardImpl();
 
 	private Database database;
 
@@ -340,39 +342,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hibernate Type handling
 
+
+	@Override
+	public TypeDefinitionRegistry getTypeDefinitionRegistry() {
+		return typeDefRegistry;
+	}
+
 	@Override
 	public TypeDefinition getTypeDefinition(String registrationKey) {
-		return typeDefinitionMap.get( registrationKey );
+		return typeDefRegistry.resolve( registrationKey );
 	}
 
 	@Override
 	public void addTypeDefinition(TypeDefinition typeDefinition) {
-		if ( typeDefinition == null ) {
-			throw new IllegalArgumentException( "Type definition is null" );
-		}
-
-		// Need to register both by name and registration keys.
-		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
-			addTypeDefinition( typeDefinition.getName(), typeDefinition );
-		}
-
-		if ( typeDefinition.getRegistrationKeys() != null ) {
-			for ( String registrationKey : typeDefinition.getRegistrationKeys() ) {
-				addTypeDefinition( registrationKey, typeDefinition );
-			}
-		}
-	}
-
-	private void addTypeDefinition(String registrationKey, TypeDefinition typeDefinition) {
-		final TypeDefinition previous = typeDefinitionMap.put(
-				registrationKey, typeDefinition );
-		if ( previous != null ) {
-			log.debugf(
-					"Duplicate typedef name [%s] now -> %s",
-					registrationKey,
-					typeDefinition.getTypeImplementorClass().getName()
-			);
-		}
+		typeDefRegistry.register( typeDefinition );
 	}
 
 	@Override
@@ -2259,7 +2242,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					entityBindingMap,
 					mappedSuperClasses,
 					collectionBindingMap,
-					typeDefinitionMap,
+					typeDefRegistry.copyRegistrationMap(),
 					filterDefinitionMap,
 					fetchProfileMap,
 					imports,

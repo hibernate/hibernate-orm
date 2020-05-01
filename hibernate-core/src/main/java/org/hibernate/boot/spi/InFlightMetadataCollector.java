@@ -22,6 +22,7 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -171,8 +172,15 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 * @param typeDefinition The named type definition to add.
 	 *
 	 * @throws DuplicateMappingException If a TypeDefinition already exists with that name.
+	 *
+	 * @deprecated Use {@link #getTypeDefinitionRegistry()} instead
+	 *
+	 * @see #getTypeDefinitionRegistry()
 	 */
+	@Deprecated
 	void addTypeDefinition(TypeDefinition typeDefinition);
+
+	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**
 	 * Adds a filter definition to this repository.

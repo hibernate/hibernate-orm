@@ -1463,7 +1463,16 @@ public final class AnnotationBinder {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( typeBindMessageF, defAnn.name() );
 			}
-			context.getMetadataCollector().addTypeDefinition(
+//			context.getMetadataCollector().addTypeDefinition(
+//					new TypeDefinition(
+//							defAnn.name(),
+//							defAnn.typeClass(),
+//							null,
+//							params,
+//							context.getMetadataCollector().getTypeConfiguration()
+//					)
+//			);
+			context.getTypeDefinitionRegistry().register(
 					new TypeDefinition(
 							defAnn.name(),
 							defAnn.typeClass(),
@@ -1478,7 +1487,8 @@ public final class AnnotationBinder {
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( typeBindMessageF, defAnn.defaultForType().getName() );
 			}
-			context.getMetadataCollector().addTypeDefinition(
+
+			context.getTypeDefinitionRegistry().register(
 					new TypeDefinition(
 							defAnn.defaultForType().getName(),
 							defAnn.typeClass(),

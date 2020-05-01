@@ -25,7 +25,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -48,6 +48,7 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  * @author John Verhaeg
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class TypeDefinition implements Serializable {
 	private static final AtomicInteger nameCounter = new AtomicInteger();
 
@@ -96,8 +97,6 @@ public class TypeDefinition implements Serializable {
 	}
 
 	public BasicValue.Resolution<?> resolve(
-			JavaTypeDescriptor<?> explicitJtd,
-			SqlTypeDescriptor explicitStd,
 			Map localConfigParameters,
 			MutabilityPlan explicitMutabilityPlan,
 			MetadataBuildingContext context) {
@@ -137,8 +136,6 @@ public class TypeDefinition implements Serializable {
 			return createResolution(
 					name,
 					typeInstance,
-					explicitJtd,
-					explicitStd,
 					explicitMutabilityPlan,
 					context
 			);
@@ -213,7 +210,10 @@ public class TypeDefinition implements Serializable {
 
 				@Override
 				public MutabilityPlan<Object> getMutabilityPlan() {
-					throw new NotYetImplementedFor6Exception( getClass() );
+					// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
+					return resolvedBasicType.isMutable()
+							? getDomainJavaDescriptor().getMutabilityPlan()
+							: ImmutableMutabilityPlan.instance();
 				}
 			};
 		}
@@ -226,8 +226,6 @@ public class TypeDefinition implements Serializable {
 	public static BasicValue.Resolution<?> createLocalResolution(
 			String name,
 			Class typeImplementorClass,
-			JavaTypeDescriptor<?> explicitJtd,
-			SqlTypeDescriptor explicitStd,
 			MutabilityPlan explicitMutabilityPlan,
 			Map localTypeParams,
 			MetadataBuildingContext buildingContext) {
@@ -245,8 +243,6 @@ public class TypeDefinition implements Serializable {
 		return createResolution(
 				name,
 				typeInstance,
-				explicitJtd,
-				explicitStd,
 				explicitMutabilityPlan,
 				buildingContext
 		);
@@ -255,8 +251,6 @@ public class TypeDefinition implements Serializable {
 	private static BasicValue.Resolution<?> createResolution(
 			String name,
 			Object namedTypeInstance,
-			JavaTypeDescriptor<?> explicitJtd,
-			SqlTypeDescriptor explicitStd,
 			MutabilityPlan explicitMutabilityPlan,
 			MetadataBuildingContext metadataBuildingContext) {
 		if ( namedTypeInstance instanceof UserType ) {

@@ -361,6 +361,13 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 
 		// Use JTD if we know it to apply any specialized resolutions
 
+		final TypeDefinition autoAppliedTypeDef = getBuildingContext().getTypeDefinitionRegistry()
+				.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
+		if ( autoAppliedTypeDef != null ) {
+			log.debugf( "BasicValue resolution matched auto-applied type-definition" );
+			return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext() );
+		}
+
 		if ( jtd instanceof EnumJavaTypeDescriptor ) {
 			return InferredBasicValueResolver.fromEnum(
 					(EnumJavaTypeDescriptor) jtd,
@@ -499,8 +506,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		final TypeDefinition typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
 		if ( typeDefinition != null ) {
 			return typeDefinition.resolve(
-					explicitJtdAccess.apply( typeConfiguration ),
-					explicitStdAccess.apply( typeConfiguration ),
 					localTypeParams,
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
@@ -527,8 +532,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 				);
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
-						explicitJtdAccess != null ? explicitJtdAccess.apply( typeConfiguration ) : null,
-						explicitStdAccess != null ? explicitStdAccess.apply( typeConfiguration ) : null,
 						null,
 						explicitMutabilityPlanAccess != null
 								? explicitMutabilityPlanAccess.apply( typeConfiguration )
@@ -540,8 +543,6 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 			return TypeDefinition.createLocalResolution(
 					name,
 					typeNamedClass,
-					explicitJtdAccess.apply( typeConfiguration ),
-					explicitStdAccess.apply( typeConfiguration ),
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
 							: null,
@@ -549,8 +550,9 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 					context
 			);
 		}
-		catch (ClassLoadingException ignore) {
+		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
+			log.debugf( "Could not resolve type-name [%s] as Java type : %s", name, e );
 		}
 
 		throw new MappingException( "Could not resolve named type : " + name );

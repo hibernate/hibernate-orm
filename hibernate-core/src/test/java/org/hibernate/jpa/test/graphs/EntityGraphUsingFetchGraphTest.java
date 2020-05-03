@@ -6,21 +6,21 @@
  */
 package org.hibernate.jpa.test.graphs;
 
-import javax.persistence.AttributeNode;
-import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.metamodel.Attribute;
 
 import java.util.Collection;
 import java.util.Date;
@@ -86,7 +86,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		TypedQuery<CustomerOrder> query = em.createQuery(
 				"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
 		);
-		query.setHint( "javax.persistence.loadgraph", entityGraph );
+		query.setHint( "jakarta.persistence.loadgraph", entityGraph );
 		final List<CustomerOrder> results = query.getResultList();
 
 		assertTrue( Hibernate.isInitialized( results ) );
@@ -137,7 +137,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		TypedQuery<CustomerOrder> query = em.createQuery(
 				"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
 		);
-		query.setHint( "javax.persistence.loadgraph", entityGraph );
+		query.setHint( "jakarta.persistence.loadgraph", entityGraph );
 		final List<CustomerOrder> results = query.getResultList();
 
 		assertEntityGraph( entityGraph );
@@ -200,7 +200,7 @@ public class EntityGraphUsingFetchGraphTest extends BaseEntityManagerFunctionalT
 		TypedQuery<CustomerOrder> query = em.createQuery(
 			"SELECT o FROM EntityGraphUsingFetchGraphTest$CustomerOrder o", CustomerOrder.class
 		);
-		query.setHint( "javax.persistence.loadgraph", entityGraph );
+		query.setHint( "jakarta.persistence.loadgraph", entityGraph );
 		final List<CustomerOrder> results = query.getResultList();
 
 		assertEntityGraph( entityGraph );

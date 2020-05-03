@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.component.empty;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class ComponentEmptyEmbedded {

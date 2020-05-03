@@ -8,11 +8,11 @@ package org.hibernate.test.fetchstrategyhelper;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.ElementCollection;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.junit.Test;
 
@@ -189,7 +189,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 				OtherEntity.class
 		};
 	}
-	@javax.persistence.Entity
+	@jakarta.persistence.Entity
 	@Table(name="entity")
 	public static class AnEntity {
 		@Id
@@ -229,7 +229,7 @@ public class BatchFetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 		private Set<String> colorsSubselect = new HashSet<String>();
 	}
 
-	@javax.persistence.Entity
+	@jakarta.persistence.Entity
 	@Table(name="otherentity")
 	@BatchSize( size = 5)
 	public static class OtherEntity {

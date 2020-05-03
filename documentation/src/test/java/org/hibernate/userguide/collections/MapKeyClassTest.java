@@ -9,16 +9,16 @@ package org.hibernate.userguide.collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyClass;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.Table;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

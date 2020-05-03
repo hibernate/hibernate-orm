@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
-import javax.persistence.AttributeOverride;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 import org.hibernate.annotations.Parent;
 

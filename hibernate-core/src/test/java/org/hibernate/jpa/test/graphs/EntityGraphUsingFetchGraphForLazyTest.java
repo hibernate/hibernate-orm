@@ -10,20 +10,20 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Subgraph;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -79,7 +79,7 @@ public class EntityGraphUsingFetchGraphForLazyTest extends BaseEntityManagerFunc
 			addressGraph.addAttributeNodes( "shippingAddress" );
 
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( "javax.persistence.fetchgraph", addressGraph );
+			properties.put( "jakarta.persistence.fetchgraph", addressGraph );
 
 			CustomerOrder _customerOrder = em.find( CustomerOrder.class, customerOrder.id, properties );
 
@@ -94,7 +94,7 @@ public class EntityGraphUsingFetchGraphForLazyTest extends BaseEntityManagerFunc
 			addressAndPositionGraph.addAttributeNodes( "orderPosition" );
 
 			properties = new HashMap<>();
-			properties.put( "javax.persistence.fetchgraph", addressAndPositionGraph );
+			properties.put( "jakarta.persistence.fetchgraph", addressAndPositionGraph );
 
 			_customerOrder = em.find( CustomerOrder.class, customerOrder.id, properties );
 
@@ -112,7 +112,7 @@ public class EntityGraphUsingFetchGraphForLazyTest extends BaseEntityManagerFunc
 					.addAttributeNodes( "product" );
 
 			properties = new HashMap<>();
-			properties.put( "javax.persistence.fetchgraph", addressAndPositionAndProductGraph );
+			properties.put( "jakarta.persistence.fetchgraph", addressAndPositionAndProductGraph );
 
 			_customerOrder = em.find( CustomerOrder.class, customerOrder.id, properties );
 

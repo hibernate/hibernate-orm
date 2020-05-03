@@ -9,14 +9,14 @@ package org.hibernate.test.annotations.cascade.multicircle.jpa.identity;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class EntityG extends AbstractEntity {
     private static final long serialVersionUID = 325417437L;
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	private EntityB b;
 
-    @javax.persistence.OneToMany(mappedBy = "g")
+    @jakarta.persistence.OneToMany(mappedBy = "g")
     private java.util.Set<EntityF> fCollection = new java.util.HashSet<EntityF>();
 
 	public EntityB getB() {

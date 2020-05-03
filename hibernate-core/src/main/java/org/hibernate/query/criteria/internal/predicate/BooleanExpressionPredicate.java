@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria.internal.predicate;
 
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;
@@ -15,7 +15,7 @@ import org.hibernate.query.criteria.internal.Renderable;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
- * Defines a {@link javax.persistence.criteria.Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
+ * Defines a {@link jakarta.persistence.criteria.Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
  * 
  * @author Steve Ebersole
  */

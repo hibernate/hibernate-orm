@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.version.sybase;
 
-import javax.persistence.OptimisticLockException;
+import jakarta.persistence.OptimisticLockException;
 
 import org.junit.Test;
 

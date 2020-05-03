@@ -104,7 +104,7 @@ That is the purpose of the "BasicTypeRegistry key(s)" column in the previous tab
 [[basic-annotation]]
 ==== The `@Basic` annotation
 
-Strictly speaking, a basic type is denoted by the `javax.persistence.Basic` annotation.
+Strictly speaking, a basic type is denoted by the `jakarta.persistence.Basic` annotation.
 Generally speaking, the `@Basic` annotation can be ignored, as it is assumed by default.
 Both of the following examples are ultimately the same.
 
@@ -147,7 +147,7 @@ The JPA specification strictly limits the Java types that can be marked as basic
 
 If provider portability is a concern, you should stick to just these basic types.
 
-Note that JPA 2.1 introduced the `javax.persistence.AttributeConverter` contract to help alleviate some of these concerns. See <<basic-jpa-convert>> for more on this topic.
+Note that JPA 2.1 introduced the `jakarta.persistence.AttributeConverter` contract to help alleviate some of these concerns. See <<basic-jpa-convert>> for more on this topic.
 ====
 
 The `@Basic` annotation defines 2 attributes.
@@ -429,7 +429,7 @@ Hibernate supports the mapping of Java enums as basic value types in a number of
 [[basic-enums-Enumerated]]
 ===== `@Enumerated`
 
-The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated` for map keys annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `javax.persistence.EnumType`:
+The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated` for map keys annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `jakarta.persistence.EnumType`:
 
 `ORDINAL`::
 	stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`

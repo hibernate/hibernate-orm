@@ -8,8 +8,8 @@ package org.hibernate.test.ordered;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

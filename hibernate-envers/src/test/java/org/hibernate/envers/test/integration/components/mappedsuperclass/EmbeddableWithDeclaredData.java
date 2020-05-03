@@ -11,7 +11,7 @@ package org.hibernate.envers.test.integration.components.mappedsuperclass;
  * @author Gail Badner
  */
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class EmbeddableWithDeclaredData extends AbstractEmbeddable {

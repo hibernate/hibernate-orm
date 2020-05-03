@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;

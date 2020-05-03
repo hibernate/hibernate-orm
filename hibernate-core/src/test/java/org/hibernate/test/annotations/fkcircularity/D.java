@@ -7,8 +7,8 @@
 
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 /**
  * Test entities ANN-722.

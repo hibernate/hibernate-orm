@@ -10,8 +10,8 @@ package org.hibernate.test.annotations.reflection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

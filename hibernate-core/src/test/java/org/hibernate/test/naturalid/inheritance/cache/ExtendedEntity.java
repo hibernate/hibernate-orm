@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.naturalid.inheritance.cache;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 @Entity
 public class ExtendedEntity extends MyEntity {

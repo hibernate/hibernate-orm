@@ -8,9 +8,9 @@ package org.hibernate.jpa.test.cdi.extended;
 
 import javax.ejb.LocalBean;
 import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.PersistenceContextType;
 
 /**
  * @author Vlad Mihalcea

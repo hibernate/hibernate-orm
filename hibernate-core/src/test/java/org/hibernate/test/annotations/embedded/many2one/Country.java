@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.embedded.many2one;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * THe entity target of the many-to-one from a component/embeddable.

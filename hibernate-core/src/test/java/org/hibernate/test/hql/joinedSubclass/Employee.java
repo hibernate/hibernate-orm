@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.hql.joinedSubclass;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Steve Ebersole

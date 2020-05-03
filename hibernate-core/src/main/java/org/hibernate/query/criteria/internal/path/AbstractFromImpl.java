@@ -10,23 +10,23 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.CollectionAttribute;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SetAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.query.criteria.internal.BasicPathUsageException;
 import org.hibernate.query.criteria.internal.CollectionJoinImplementor;
@@ -41,7 +41,7 @@ import org.hibernate.query.criteria.internal.SetJoinImplementor;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
- * Convenience base class for various {@link javax.persistence.criteria.From} implementations.
+ * Convenience base class for various {@link jakarta.persistence.criteria.From} implementations.
  *
  * @author Steve Ebersole
  */

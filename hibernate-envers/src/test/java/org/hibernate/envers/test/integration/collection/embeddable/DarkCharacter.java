@@ -9,9 +9,9 @@ package org.hibernate.envers.test.integration.collection.embeddable;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.Audited;
 

@@ -12,8 +12,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;

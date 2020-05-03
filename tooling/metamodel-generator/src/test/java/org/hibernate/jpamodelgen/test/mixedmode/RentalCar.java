@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.mixedmode;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 
 /**

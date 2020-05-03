@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.auditReader;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.exception.NotAuditedException;

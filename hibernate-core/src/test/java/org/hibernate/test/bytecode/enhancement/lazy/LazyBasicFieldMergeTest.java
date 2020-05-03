@@ -6,16 +6,16 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
@@ -80,7 +80,7 @@ public class LazyBasicFieldMergeTest extends BaseCoreFunctionalTestCase {
         @Column(name = "NAME")
         private String name;
 
-        @OneToOne(mappedBy = "company", cascade = javax.persistence.CascadeType.ALL, orphanRemoval = true)
+        @OneToOne(mappedBy = "company", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
         private Manager manager;
 
         public Long getId() {

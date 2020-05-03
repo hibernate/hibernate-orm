@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.jpa.compliance.tck2_2;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.junit.Test;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.BasicType;
+import jakarta.persistence.metamodel.BasicType;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 

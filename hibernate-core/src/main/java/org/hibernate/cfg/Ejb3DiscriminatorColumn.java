@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.cfg;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;

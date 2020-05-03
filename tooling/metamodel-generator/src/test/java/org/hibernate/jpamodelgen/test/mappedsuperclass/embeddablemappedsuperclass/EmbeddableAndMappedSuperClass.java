@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.embeddablemappedsuperclass;
 
-import javax.persistence.Embeddable;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Hardy Ferentschik

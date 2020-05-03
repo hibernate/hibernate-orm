@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.lazyload;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

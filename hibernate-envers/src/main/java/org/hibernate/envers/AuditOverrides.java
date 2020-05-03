@@ -20,11 +20,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * component.
  *
  * @author Erik-Berndt Scheper
- * @see javax.persistence.Embedded
- * @see javax.persistence.Embeddable
- * @see javax.persistence.MappedSuperclass
- * @see javax.persistence.AssociationOverride
- * @see javax.persistence.AssociationOverrides
+ * @see jakarta.persistence.Embedded
+ * @see jakarta.persistence.Embeddable
+ * @see jakarta.persistence.MappedSuperclass
+ * @see jakarta.persistence.AssociationOverride
+ * @see jakarta.persistence.AssociationOverrides
  * @see AuditJoinTable
  * @see AuditOverride
  */

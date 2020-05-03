@@ -9,16 +9,16 @@ package org.hibernate.userguide.locking;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.LockModeType;
-import javax.persistence.PessimisticLockScope;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -60,7 +60,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::locking-jpa-query-hints-timeout-example[]
 			entityManager.find(
 				Person.class, id, LockModeType.PESSIMISTIC_WRITE,
-				Collections.singletonMap( "javax.persistence.lock.timeout", 200 )
+				Collections.singletonMap( "jakarta.persistence.lock.timeout", 200 )
 			);
 			//end::locking-jpa-query-hints-timeout-example[]
 		} );
@@ -84,7 +84,7 @@ public class ExplicitLockingTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = entityManager.find(
 				Person.class, id, LockModeType.PESSIMISTIC_WRITE,
 				Collections.singletonMap(
-					"javax.persistence.lock.scope",
+					"jakarta.persistence.lock.scope",
 					PessimisticLockScope.EXTENDED )
 			);
 			//end::locking-jpa-query-hints-scope-example[]

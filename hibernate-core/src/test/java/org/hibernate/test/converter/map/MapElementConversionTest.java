@@ -8,17 +8,17 @@ package org.hibernate.test.converter.map;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Converter;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Converter;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 

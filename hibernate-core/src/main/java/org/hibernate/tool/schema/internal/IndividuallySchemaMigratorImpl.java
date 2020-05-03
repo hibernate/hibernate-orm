@@ -25,7 +25,7 @@ import org.hibernate.tool.schema.spi.SchemaFilter;
  * @author Andrea Boriero
  *
  * This implementation executes one {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
- * for each {@link javax.persistence.Entity} in order to determine if a corresponding database table exists.
+ * for each {@link jakarta.persistence.Entity} in order to determine if a corresponding database table exists.
  */
 public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 

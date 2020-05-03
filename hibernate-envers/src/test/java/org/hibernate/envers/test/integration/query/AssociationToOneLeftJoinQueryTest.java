@@ -11,8 +11,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.query.AuditEntity;

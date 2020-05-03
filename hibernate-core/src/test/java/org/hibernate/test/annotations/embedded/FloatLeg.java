@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.embedded;
 import java.text.NumberFormat;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * Represents floating part of Interest Rate Swap cash flows.

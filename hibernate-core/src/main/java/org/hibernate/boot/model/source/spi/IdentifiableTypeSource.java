@@ -13,7 +13,7 @@ import org.hibernate.boot.jaxb.Origin;
 
 /**
  * Common contract between Entity and MappedSuperclass sources.  The
- * terminology is taken from JPA's {@link javax.persistence.metamodel.IdentifiableType}
+ * terminology is taken from JPA's {@link jakarta.persistence.metamodel.IdentifiableType}
  *
  * @author Steve Ebersole
  */

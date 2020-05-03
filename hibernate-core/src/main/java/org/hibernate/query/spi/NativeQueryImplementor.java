@@ -11,8 +11,8 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

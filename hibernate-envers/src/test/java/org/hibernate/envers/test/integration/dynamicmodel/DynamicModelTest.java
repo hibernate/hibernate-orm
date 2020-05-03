@@ -10,7 +10,7 @@ import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import static org.junit.Assert.assertNotNull;
 

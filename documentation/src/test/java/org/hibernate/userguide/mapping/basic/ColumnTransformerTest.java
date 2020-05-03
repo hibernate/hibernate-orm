@@ -9,9 +9,9 @@ package org.hibernate.userguide.mapping.basic;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Columns;

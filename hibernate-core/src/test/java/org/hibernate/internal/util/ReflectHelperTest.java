@@ -8,7 +8,7 @@ package org.hibernate.internal.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import javax.persistence.FetchType;
+import jakarta.persistence.FetchType;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -161,10 +161,10 @@ public class ReflectHelperTest {
 	public void test_getConstantValue_outerEnum() {
 		when( sessionFactoryOptionsMock.isConventionalJavaConstants() ).thenReturn( true );
 
-		when( classLoaderServiceMock.classForName( "javax.persistence.FetchType" ) ).thenReturn( (Class) FetchType.class );
-		Object value = ReflectHelper.getConstantValue( "javax.persistence.FetchType.LAZY", sessionFactoryImplementorMock);
+		when( classLoaderServiceMock.classForName( "jakarta.persistence.FetchType" ) ).thenReturn( (Class) FetchType.class );
+		Object value = ReflectHelper.getConstantValue( "jakarta.persistence.FetchType.LAZY", sessionFactoryImplementorMock);
 		assertEquals( FetchType.LAZY, value );
-		verify(classLoaderServiceMock, times(1)).classForName( eq("javax.persistence.FetchType") );
+		verify(classLoaderServiceMock, times(1)).classForName( eq("jakarta.persistence.FetchType") );
 	}
 
 	@Test

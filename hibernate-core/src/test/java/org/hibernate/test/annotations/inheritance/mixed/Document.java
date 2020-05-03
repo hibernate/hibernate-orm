@@ -7,11 +7,11 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.mixed;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

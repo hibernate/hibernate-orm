@@ -7,8 +7,8 @@
 package org.hibernate.query.criteria.internal.expression.function;
 
 import java.io.Serializable;
-import javax.persistence.criteria.CriteriaBuilder.Trimspec;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.CriteriaBuilder.Trimspec;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

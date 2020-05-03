@@ -126,7 +126,7 @@ package p is created.
 managed class by appending "_" to the name of the managed class.
 
 * The metamodel class X_ must be annotated with the 
-`javax.persistence.StaticMetamodel` annotation.
+`jakarta.persistence.StaticMetamodel` annotation.
 
 * If class X extends another class S, where S is the most derived
 managed class (i.e., entity or mapped superclass) extended by X, then
@@ -160,7 +160,7 @@ a declaration as follows:
 +
 where K is the type of the key of the map in class X
 
-Import statements must be included for the needed `javax.persistence.metamodel` types as
+Import statements must be included for the needed `jakarta.persistence.metamodel` types as
 appropriate and all classes X, Y, Z, and K.
 
 [[chapter-usage]]

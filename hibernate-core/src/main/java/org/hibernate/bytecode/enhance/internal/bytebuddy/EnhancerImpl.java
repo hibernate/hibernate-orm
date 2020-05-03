@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Transient;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Transient;
 
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;

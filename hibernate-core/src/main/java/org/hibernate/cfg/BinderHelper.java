@@ -17,12 +17,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Index;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Index;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -748,7 +748,7 @@ public class BinderHelper {
 		log.debugf( "Could not resolve explicit IdentifierGeneratorDefinition - using implicit interpretation (%s)", name );
 
 		// If we were unable to locate an actual matching named generator assume a sequence/table of the given name.
-		//		this really needs access to the `javax.persistence.GenerationType` to work completely properly
+		//		this really needs access to the `jakarta.persistence.GenerationType` to work completely properly
 		//
 		// 		(the crux of HHH-12122)
 
@@ -938,7 +938,7 @@ public class BinderHelper {
 	public static Any buildAnyValue(
 			String anyMetaDefName,
 			Ejb3JoinColumn[] columns,
-			javax.persistence.Column metaColumn,
+			jakarta.persistence.Column metaColumn,
 			PropertyData inferredData,
 			boolean cascadeOnDelete,
 			boolean lazy,
@@ -997,7 +997,7 @@ public class BinderHelper {
 		}
 
 		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation(
-				new javax.persistence.Column[] { metaColumn },
+				new jakarta.persistence.Column[] { metaColumn },
 				null,
 				nullability,
 				propertyHolder,

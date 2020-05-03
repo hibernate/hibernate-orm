@@ -8,9 +8,9 @@
 //$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
 
 package org.hibernate.test.annotations.access.jpa;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * @author Hardy Ferentschik

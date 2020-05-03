@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  *

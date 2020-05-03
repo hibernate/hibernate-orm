@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 import org.hibernate.annotations.ForeignKey;
 

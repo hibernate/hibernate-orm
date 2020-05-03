@@ -9,12 +9,12 @@ package org.hibernate.query.criteria.internal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.criteria.CommonAbstractCriteria;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,8 +29,8 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.sql.ast.Clause;
 
 /**
- * Base class for commonality between {@link javax.persistence.criteria.CriteriaUpdate} and
- * {@link javax.persistence.criteria.CriteriaDelete}
+ * Base class for commonality between {@link jakarta.persistence.criteria.CriteriaUpdate} and
+ * {@link jakarta.persistence.criteria.CriteriaDelete}
  *
  * @author Steve Ebersole
  */

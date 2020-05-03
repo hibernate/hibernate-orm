@@ -10,7 +10,7 @@
 package org.hibernate.jpa.test;
 
 import java.util.Map;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;

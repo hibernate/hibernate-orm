@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.procedure;
 
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -39,13 +39,13 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		assertEquals( 2, list.size() );
 		ProcedureCallMementoImpl.ParameterMemento memento = list.get( 0 );
 		assertEquals( "p11", memento.getName() );
-		assertEquals( javax.persistence.ParameterMode.IN, memento.getMode() );
+		assertEquals( jakarta.persistence.ParameterMode.IN, memento.getMode() );
 		assertEquals( IntegerType.INSTANCE, memento.getHibernateType() );
 		assertEquals( Integer.class, memento.getType() );
 
 		memento = list.get( 1 );
 		assertEquals( "p12", memento.getName() );
-		assertEquals( javax.persistence.ParameterMode.IN, memento.getMode() );
+		assertEquals( jakarta.persistence.ParameterMode.IN, memento.getMode() );
 		assertEquals( IntegerType.INSTANCE, memento.getHibernateType() );
 		assertEquals( Integer.class, memento.getType() );
 
@@ -60,13 +60,13 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 
 		memento = list.get( 0 );
 		assertEquals( Integer.valueOf( 1 ), memento.getPosition() );
-		assertEquals( javax.persistence.ParameterMode.INOUT, memento.getMode() );
+		assertEquals( jakarta.persistence.ParameterMode.INOUT, memento.getMode() );
 		assertEquals( StringType.INSTANCE, memento.getHibernateType() );
 		assertEquals( String.class, memento.getType() );
 
 		memento = list.get( 1 );
 		assertEquals( Integer.valueOf( 2 ), memento.getPosition() );
-		assertEquals( javax.persistence.ParameterMode.INOUT, memento.getMode() );
+		assertEquals( jakarta.persistence.ParameterMode.INOUT, memento.getMode() );
 		assertEquals( LongType.INSTANCE, memento.getHibernateType() );
 		assertEquals( Long.class, memento.getType() );
 

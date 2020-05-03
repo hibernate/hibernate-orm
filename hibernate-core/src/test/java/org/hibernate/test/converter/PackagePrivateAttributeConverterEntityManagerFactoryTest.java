@@ -8,12 +8,12 @@ package org.hibernate.test.converter;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Tuple;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

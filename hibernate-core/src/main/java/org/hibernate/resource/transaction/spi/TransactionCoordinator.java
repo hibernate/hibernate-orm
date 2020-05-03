@@ -40,7 +40,7 @@ public interface TransactionCoordinator {
 
 	/**
 	 * Indicates an explicit request to join a transaction.  This is mainly intended to handle the JPA requirement
-	 * around {@link javax.persistence.EntityManager#joinTransaction()}, and generally speaking only has an impact in
+	 * around {@link jakarta.persistence.EntityManager#joinTransaction()}, and generally speaking only has an impact in
 	 * JTA environments
 	 */
 	void explicitJoin();

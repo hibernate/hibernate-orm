@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;

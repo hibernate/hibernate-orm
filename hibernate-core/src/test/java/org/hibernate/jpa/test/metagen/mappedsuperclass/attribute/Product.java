@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Steve Ebersole

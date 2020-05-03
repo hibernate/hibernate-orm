@@ -6,10 +6,10 @@
  */
 package org.hibernate.boot.model;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 
 /**
  * Strategy for interpreting identifier generator related information.
@@ -43,7 +43,7 @@ public interface IdGeneratorStrategyInterpreter {
 	 * For implementations that need it, the {@link GeneratedValue#generator()}
 	 * is passed as part of the `context`.
 	 *
-	 * @param generationType The {@link javax.persistence.GeneratedValue#strategy} value
+	 * @param generationType The {@link jakarta.persistence.GeneratedValue#strategy} value
 	 * @param context The context for resolution (method parameter object)
 	 *
 	 * @return The {@link org.hibernate.id.IdentifierGenerator} name (FQN, short name, etc)

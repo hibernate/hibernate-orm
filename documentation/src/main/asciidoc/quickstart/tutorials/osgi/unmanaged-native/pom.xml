@@ -75,7 +75,7 @@
               org.hibernate,
               org.hibernate.cfg,
               org.hibernate.service,
-              javax.persistence;version="[1.0.0,2.1.0]",
+              jakarta.persistence;version="[1.0.0,2.1.0]",
               <!-- Needed for proxy enhancement during runtime -->
               org.hibernate.proxy,
               javassist.util.proxy,

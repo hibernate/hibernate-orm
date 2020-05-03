@@ -9,7 +9,7 @@ package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

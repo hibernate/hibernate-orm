@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.naturalid.inheritance;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.MetadataSources;

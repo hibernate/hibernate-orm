@@ -6,14 +6,14 @@
  */
 package org.hibernate.test.annotations.enumerated.mapkey;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.FetchType;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.MapKeyEnumerated;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -25,10 +25,10 @@ import java.util.Map;
 @Entity
 @Table( name = "USER_TABLE" )
 public class User {
-	@javax.persistence.Id
-	@javax.persistence.GeneratedValue(generator = "system-uuid")
+	@jakarta.persistence.Id
+	@jakarta.persistence.GeneratedValue(generator = "system-uuid")
 	@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid2")
-	@javax.persistence.Column(name = "id", unique = true)
+	@jakarta.persistence.Column(name = "id", unique = true)
 	private java.lang.String id;
 
 	@MapKeyEnumerated( EnumType.STRING )

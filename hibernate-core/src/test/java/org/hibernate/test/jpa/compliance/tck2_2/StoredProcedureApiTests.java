@@ -7,11 +7,11 @@
 package org.hibernate.test.jpa.compliance.tck2_2;
 
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.Table;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

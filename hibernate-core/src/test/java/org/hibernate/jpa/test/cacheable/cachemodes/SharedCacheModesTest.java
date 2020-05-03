@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.cacheable.cachemodes;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
-import javax.persistence.EntityManager;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;

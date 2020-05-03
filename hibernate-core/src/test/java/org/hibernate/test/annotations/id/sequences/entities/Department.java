@@ -8,10 +8,10 @@
 //$Id: Department.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
 package org.hibernate.test.annotations.id.sequences.entities;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 /**
  * Sample of method generator
@@ -25,7 +25,7 @@ public class Department implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_DEPT")
-	@javax.persistence.SequenceGenerator(
+	@jakarta.persistence.SequenceGenerator(
 			name = "SEQ_DEPT",
 			sequenceName = "my_sequence"
 	)

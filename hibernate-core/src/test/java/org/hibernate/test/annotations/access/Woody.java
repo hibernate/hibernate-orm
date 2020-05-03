@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.access;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.AccessType;
 

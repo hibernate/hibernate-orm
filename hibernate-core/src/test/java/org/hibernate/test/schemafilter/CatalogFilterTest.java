@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -160,7 +160,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_1", catalog = "the_catalog_1")
+	@jakarta.persistence.Table(name = "the_entity_1", catalog = "the_catalog_1")
 	public static class Catalog1Entity1 {
 
 		@Id
@@ -176,7 +176,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_2", catalog = "the_catalog_1")
+	@jakarta.persistence.Table(name = "the_entity_2", catalog = "the_catalog_1")
 	public static class Catalog1Entity2 {
 
 		@Id
@@ -192,7 +192,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_3", catalog = "the_catalog_2")
+	@jakarta.persistence.Table(name = "the_entity_3", catalog = "the_catalog_2")
 	public static class Catalog2Entity3 {
 
 		@Id
@@ -208,7 +208,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_4", catalog = "the_catalog_2")
+	@jakarta.persistence.Table(name = "the_entity_4", catalog = "the_catalog_2")
 	public static class Catalog2Entity4 {
 
 		@Id
@@ -224,7 +224,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = "the_entity_0")
+	@jakarta.persistence.Table(name = "the_entity_0")
 	public static class CatalogNoneEntity0 {
 
 		@Id

@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.metamodel.model.domain.spi.DomainTypeDescriptor;
 

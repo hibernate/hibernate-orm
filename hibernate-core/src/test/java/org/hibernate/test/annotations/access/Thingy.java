@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.test.annotations.access;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard

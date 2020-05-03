@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 

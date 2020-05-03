@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.xml.sequences;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

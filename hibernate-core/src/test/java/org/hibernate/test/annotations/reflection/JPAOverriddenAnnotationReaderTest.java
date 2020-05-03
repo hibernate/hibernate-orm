@@ -24,7 +24,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotSupportedException;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

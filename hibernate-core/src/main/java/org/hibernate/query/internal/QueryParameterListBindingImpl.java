@@ -7,7 +7,7 @@
 package org.hibernate.query.internal;
 
 import java.util.Collection;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.spi.QueryParameterListBinding;

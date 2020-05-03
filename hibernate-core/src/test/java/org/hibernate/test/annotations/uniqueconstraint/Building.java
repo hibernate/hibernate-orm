@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.uniqueconstraint;
 
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>

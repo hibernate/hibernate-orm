@@ -9,8 +9,8 @@ package org.hibernate.test.type.contributor;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import javax.transaction.Transactional;
 
 import org.hibernate.Session;

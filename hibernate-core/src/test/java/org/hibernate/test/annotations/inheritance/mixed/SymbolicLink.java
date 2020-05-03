@@ -7,11 +7,11 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.mixed;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.SecondaryTable;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SecondaryTable;
 
 @Entity
 @DiscriminatorValue("L")

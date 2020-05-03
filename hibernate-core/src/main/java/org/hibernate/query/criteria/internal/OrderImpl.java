@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.criteria.internal;
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
 
 /**
  * Represents an <tt>ORDER BY</tt> fragment.

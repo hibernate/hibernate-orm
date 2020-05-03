@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import java.util.HashSet;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.configuration.EnversSettings;

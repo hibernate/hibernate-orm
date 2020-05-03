@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.type.ComponentType;
 
 /**
- * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
+ * Standard Hibernate implementation of JPA's {@link jakarta.persistence.metamodel.EmbeddableType}
  * contract
  *
  * @author Emmanuel Bernard

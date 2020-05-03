@@ -8,7 +8,7 @@ package org.hibernate.test.subselect;
 
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class EmployeeGroupId

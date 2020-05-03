@@ -9,8 +9,8 @@ package org.hibernate.envers.test.integration.jta;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.Transaction;

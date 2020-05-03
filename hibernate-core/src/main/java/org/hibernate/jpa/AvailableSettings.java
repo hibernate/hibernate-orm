@@ -262,10 +262,10 @@ public interface AvailableSettings {
 	String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";
 
 	/**
-	 * Query hint (aka {@link javax.persistence.Query#setHint}) for applying
+	 * Query hint (aka {@link jakarta.persistence.Query#setHint}) for applying
 	 * an alias specific lock mode (aka {@link org.hibernate.Query#setLockMode}).
 	 * <p/>
-	 * Either {@link org.hibernate.LockMode} or {@link javax.persistence.LockModeType}
+	 * Either {@link org.hibernate.LockMode} or {@link jakarta.persistence.LockModeType}
 	 * are accepted.  Also the String names of either are accepted as well.  <tt>null</tt>
 	 * is additionally accepted as meaning {@link org.hibernate.LockMode#NONE}.
 	 * <p/>

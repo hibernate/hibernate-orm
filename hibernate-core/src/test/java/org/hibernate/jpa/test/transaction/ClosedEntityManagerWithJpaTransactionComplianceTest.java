@@ -7,8 +7,8 @@
 package org.hibernate.jpa.test.transaction;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

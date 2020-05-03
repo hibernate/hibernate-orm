@@ -7,11 +7,11 @@
 package org.hibernate.query.criteria.internal.path;
 
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.CriteriaSubqueryImpl;
@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.predicate.PredicateImplementor;
 
 /**
- * Convenience base class for various {@link javax.persistence.criteria.Join} implementations.
+ * Convenience base class for various {@link jakarta.persistence.criteria.Join} implementations.
  *
  * @author Steve Ebersole
  */

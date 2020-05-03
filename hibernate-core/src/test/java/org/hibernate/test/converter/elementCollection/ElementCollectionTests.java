@@ -11,18 +11,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Converts;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.mapping.Collection;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Test for {@link org.hibernate.cfg.CollectionPropertyHolder}.
  *
- * Tests that {@link javax.persistence.AttributeConverter}s are considered correctly for {@link javax.persistence.ElementCollection}.
+ * Tests that {@link jakarta.persistence.AttributeConverter}s are considered correctly for {@link jakarta.persistence.ElementCollection}.
  *
  * @author Markus Heiden
  * @author Steve Ebersole

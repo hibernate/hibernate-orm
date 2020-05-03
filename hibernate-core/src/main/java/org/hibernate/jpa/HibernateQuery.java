@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * Marker interface for Hibernate generated JPA queries so that we can access the underlying Hibernate query objects.

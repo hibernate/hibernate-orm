@@ -76,7 +76,7 @@ public enum LockMode {
 	FORCE( 15, "force" ),
 
 	/**
-	 *  start of javax.persistence.LockModeType equivalent modes
+	 *  start of jakarta.persistence.LockModeType equivalent modes
 	 */
 
 	/**

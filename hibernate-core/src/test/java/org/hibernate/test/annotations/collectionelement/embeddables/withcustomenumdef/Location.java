@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.annotations.collectionelement.embeddables.withcustomenumdef;
 
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Column;
 
 /**
  * @author Steve Ebersole

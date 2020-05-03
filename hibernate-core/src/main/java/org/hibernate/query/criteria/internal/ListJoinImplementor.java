@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Specialization of {@link JoinImplementor} for {@link java.util.List} typed attribute joins

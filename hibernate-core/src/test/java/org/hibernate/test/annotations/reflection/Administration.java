@@ -7,15 +7,15 @@
 
 //$Id$
 package org.hibernate.test.annotations.reflection;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.SecondaryTable;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

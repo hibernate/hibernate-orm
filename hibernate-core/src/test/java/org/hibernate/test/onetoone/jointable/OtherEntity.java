@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.onetoone.jointable;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Christian Beikov

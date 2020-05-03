@@ -8,7 +8,7 @@ Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queri
 ====
 Hibernate offers an older, legacy `org.hibernate.Criteria` API which should be considered deprecated.
 
-No feature development will target those APIs. Eventually, Hibernate-specific Criteria features will be ported as extensions to the JPA `javax.persistence.criteria.CriteriaQuery`.
+No feature development will target those APIs. Eventually, Hibernate-specific Criteria features will be ported as extensions to the JPA `jakarta.persistence.criteria.CriteriaQuery`.
 For details on the `org.hibernate.Criteria` API, see <<appendices/Legacy_Criteria.adoc#appendix-legacy-criteria, Legacy Hibernate Criteria Queries>>.
 
 This chapter will focus on the JPA APIs for declaring type-safe criteria queries.
@@ -21,12 +21,12 @@ Users of the older Hibernate `org.hibernate.Criteria` query API will recognize t
 
 Criteria queries are essentially an object graph, where each part of the graph represents an increasing (as we navigate down this graph) more atomic part of the query.
 The first step in performing a criteria query is building this graph.
-The `javax.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted with before using criteria queries.
+The `jakarta.persistence.criteria.CriteriaBuilder` interface is the first thing with which you need to become acquainted with before using criteria queries.
 Its role is that of a factory for all the individual pieces of the criteria.
-You obtain a `javax.persistence.criteria.CriteriaBuilder` instance by calling the `getCriteriaBuilder()` method of either `javax.persistence.EntityManagerFactory` or `javax.persistence.EntityManager`.
+You obtain a `jakarta.persistence.criteria.CriteriaBuilder` instance by calling the `getCriteriaBuilder()` method of either `jakarta.persistence.EntityManagerFactory` or `jakarta.persistence.EntityManager`.
 
-The next step is to obtain a `javax.persistence.criteria.CriteriaQuery`.
-This is accomplished using one of the three methods on `javax.persistence.criteria.CriteriaBuilder` for this purpose:
+The next step is to obtain a `jakarta.persistence.criteria.CriteriaQuery`.
+This is accomplished using one of the three methods on `jakarta.persistence.criteria.CriteriaBuilder` for this purpose:
 
 * `<T> CriteriaQuery<T> createQuery( Class<T> resultClass )`
 * `CriteriaQuery<Tuple> createTupleQuery()`
@@ -111,7 +111,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-multiselect-arra
 Technically this is classified as a typed query, but you can see from handling the results that this is sort of misleading.
 Anyway, the expected result type here is an array.
 
-The example then uses the array method of `javax.persistence.criteria.CriteriaBuilder` which explicitly combines individual selections into a `javax.persistence.criteria.CompoundSelection`.
+The example then uses the array method of `jakarta.persistence.criteria.CriteriaBuilder` which explicitly combines individual selections into a `jakarta.persistence.criteria.CompoundSelection`.
 
 [[criteria-typedquery-multiselect-array-implicit-example]]
 .Selecting an array using `multiselect`
@@ -148,14 +148,14 @@ First, we see the simple definition of the wrapper object we will be using to wr
 Specifically, notice the constructor and its argument types.
 Since we will be returning `PersonWrapper` objects, we use `PersonWrapper` as the type of our criteria query.
 
-This example illustrates the use of the `javax.persistence.criteria.CriteriaBuilder` method construct which is used to build a wrapper expression.
+This example illustrates the use of the `jakarta.persistence.criteria.CriteriaBuilder` method construct which is used to build a wrapper expression.
 For every row in the result, we are saying we would like a `PersonWrapper` instantiated with the remaining arguments by the matching constructor.
 This wrapper expression is then passed as the select.
 
 [[criteria-tuple]]
 === Tuple criteria queries
 
-A better approach to <<criteria-typedquery-multiselect>> is to use either a wrapper (which we just saw in <<criteria-typedquery-wrapper>>) or using the `javax.persistence.Tuple` contract.
+A better approach to <<criteria-typedquery-multiselect>> is to use either a wrapper (which we just saw in <<criteria-typedquery-wrapper>>) or using the `jakarta.persistence.Tuple` contract.
 
 [[criteria-tuple-example]]
 .Selecting a tuple
@@ -166,18 +166,18 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-tuple-example]
 ----
 ====
 
-This example illustrates accessing the query results through the `javax.persistence.Tuple` interface.
-The example uses the explicit `createTupleQuery()` of `javax.persistence.criteria.CriteriaBuilder`.
+This example illustrates accessing the query results through the `jakarta.persistence.Tuple` interface.
+The example uses the explicit `createTupleQuery()` of `jakarta.persistence.criteria.CriteriaBuilder`.
 An alternate approach is to use `createQuery( Tuple.class )`.
 
 Again we see the use of the `multiselect()` method, just like in <<criteria-typedquery-multiselect-array-implicit-example>>.
-The difference here is that the type of the `javax.persistence.criteria.CriteriaQuery` was defined as `javax.persistence.Tuple` so the compound selections, in this case, are interpreted to be the tuple elements.
+The difference here is that the type of the `jakarta.persistence.criteria.CriteriaQuery` was defined as `jakarta.persistence.Tuple` so the compound selections, in this case, are interpreted to be the tuple elements.
 
-The javax.persistence.Tuple contract provides three forms of access to the underlying elements:
+The jakarta.persistence.Tuple contract provides three forms of access to the underlying elements:
 
 typed::
   The <<criteria-tuple-example>> example illustrates this form of access in the `tuple.get( idPath )` and `tuple.get( nickNamePath )` calls.
-  This allows typed access to the underlying tuple values based on the `javax.persistence.TupleElement` expressions used to build the criteria.
+  This allows typed access to the underlying tuple values based on the `jakarta.persistence.TupleElement` expressions used to build the criteria.
 positional::
   Allows access to the underlying tuple values based on the position.
   The simple _Object get(int position)_ form is very similar to the access illustrated in <<criteria-typedquery-multiselect-array-explicit-example>> and <<criteria-typedquery-multiselect-array-implicit-example>>.
@@ -185,7 +185,7 @@ positional::
 aliased::
   Allows access to the underlying tuple values based on (optionally) assigned alias.
   The example query did not apply an alias.
-  An alias would be applied via the alias method on `javax.persistence.criteria.Selection`.
+  An alias would be applied via the alias method on `jakarta.persistence.criteria.Selection`.
   Just like `positional` access, there is both a typed (__Object get(String alias)__) and an untyped (__<X> X get(String alias, Class<X> type)__) form.
 
 [[criteria-from]]
@@ -200,14 +200,14 @@ The root objects of the query are entities, from which the other types are reach
 
 [NOTE]
 ====
-All the individual parts of the FROM clause (roots, joins, paths) implement the `javax.persistence.criteria.From` interface.
+All the individual parts of the FROM clause (roots, joins, paths) implement the `jakarta.persistence.criteria.From` interface.
 ====
 
 [[criteria-from-root]]
 === Roots
 
 Roots define the basis from which all joins, paths and attributes are available in the query.
-A root is always an entity type. Roots are defined and added to the criteria by the overloaded __from__ methods on `javax.persistence.criteria.CriteriaQuery`:
+A root is always an entity type. Roots are defined and added to the criteria by the overloaded __from__ methods on `jakarta.persistence.criteria.CriteriaQuery`:
 
 [[criteria-from-root-methods-example]]
 .Root methods
@@ -244,8 +244,8 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-multiple-root-example]
 [[criteria-from-join]]
 === Joins
 
-Joins allow navigation from other `javax.persistence.criteria.From` to either association or embedded attributes.
-Joins are created by the numerous overloaded __join__ methods of the `javax.persistence.criteria.From` interface.
+Joins allow navigation from other `jakarta.persistence.criteria.From` to either association or embedded attributes.
+Joins are created by the numerous overloaded __join__ methods of the `jakarta.persistence.criteria.From` interface.
 
 [[criteria-from-join-example]]
 .Join example
@@ -260,7 +260,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-join-example]
 === Fetches
 
 Just like in HQL and JPQL, criteria queries can specify that associated data be fetched along with the owner.
-Fetches are created by the numerous overloaded __fetch__ methods of the `javax.persistence.criteria.From` interface.
+Fetches are created by the numerous overloaded __fetch__ methods of the `jakarta.persistence.criteria.From` interface.
 
 [[criteria-from-fetch-example]]
 .Join fetch example
@@ -274,7 +274,7 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-from-fetch-example]
 [NOTE]
 ====
 Technically speaking, embedded attributes are always fetched with their owner.
-However, in order to define the fetching of _Phone#addresses_ we needed a `javax.persistence.criteria.Fetch` because element collections are `LAZY` by default.
+However, in order to define the fetching of _Phone#addresses_ we needed a `jakarta.persistence.criteria.Fetch` because element collections are `LAZY` by default.
 ====
 
 [[criteria-path]]
@@ -297,8 +297,8 @@ include::{sourcedir}/CriteriaTest.java[tags=criteria-param-example]
 ----
 ====
 
-Use the parameter method of `javax.persistence.criteria.CriteriaBuilder` to obtain a parameter reference.
-Then use the parameter reference to bind the parameter value to the `javax.persistence.Query`.
+Use the parameter method of `jakarta.persistence.criteria.CriteriaBuilder` to obtain a parameter reference.
+Then use the parameter reference to bind the parameter value to the `jakarta.persistence.Query`.
 
 [[criteria-group-by]]
 === Using group by

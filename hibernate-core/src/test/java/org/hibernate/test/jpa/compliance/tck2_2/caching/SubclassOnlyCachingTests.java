@@ -7,13 +7,13 @@
 package org.hibernate.test.jpa.compliance.tck2_2.caching;
 
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.Table;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;

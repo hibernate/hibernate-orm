@@ -148,7 +148,7 @@ jar {
                         'javax.enterprise.context.spi;resolution:=optional;version=!',
                         'javax.enterprise.inject.spi;resolution:=optional;version=!',
                         // For JPA, we don't want to target the automatically generated range, but a specific version
-                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+                        "jakarta.persistence;version=\"${project.jpaVersion.osgiName}\"",
                         // optionals
                         'javax.management;resolution:=optional',
                         'javax.naming.event;resolution:=optional',

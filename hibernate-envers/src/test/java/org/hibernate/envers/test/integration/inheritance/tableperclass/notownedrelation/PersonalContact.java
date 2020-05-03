@@ -7,7 +7,7 @@
 
 package org.hibernate.envers.test.integration.inheritance.tableperclass.notownedrelation;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.Audited;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.converter.lob;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole

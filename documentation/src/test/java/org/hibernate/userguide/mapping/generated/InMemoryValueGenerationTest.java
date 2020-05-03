@@ -9,10 +9,10 @@ package org.hibernate.userguide.mapping.generated;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria.internal.compile;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 /**
  * Used to describe implicit (not defined in criteria query) parameters.

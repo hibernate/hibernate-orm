@@ -7,9 +7,9 @@
 package org.hibernate.envers.test.integration.superclass.auditoverride;
 
 import java.io.Serializable;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

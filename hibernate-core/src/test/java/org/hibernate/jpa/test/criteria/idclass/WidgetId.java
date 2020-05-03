@@ -7,9 +7,9 @@
 package org.hibernate.jpa.test.criteria.idclass;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Id;
 
 /**
  * @author Erich Heard

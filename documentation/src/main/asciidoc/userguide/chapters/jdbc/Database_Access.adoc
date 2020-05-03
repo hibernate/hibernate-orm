@@ -32,7 +32,7 @@ For cases where a JNDI name is given, be sure to read <<chapters/jndi/JNDI.adoc#
 
 [NOTE]
 ====
-For JPA applications, note that `hibernate.connection.datasource` corresponds to either `javax.persistence.jtaDataSource` or `javax.persistence.nonJtaDataSource`.
+For JPA applications, note that `hibernate.connection.datasource` corresponds to either `jakarta.persistence.jtaDataSource` or `jakarta.persistence.nonJtaDataSource`.
 ====
 
 The `DataSource` `ConnectionProvider` also (optionally) accepts the `hibernate.connection.username` and `hibernate.connection.password`.

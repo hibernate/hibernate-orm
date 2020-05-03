@@ -15,13 +15,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Property Access type.  Prefer the standard {@link javax.persistence.Access} annotation; however,
+ * Property Access type.  Prefer the standard {@link jakarta.persistence.Access} annotation; however,
  * {@code @Access} is limited to field/property access definitions.
  *
  * @author Emmanuel Bernard
  *
  * @deprecated Use {@link AttributeAccessor} instead; renamed to avoid confusion with the JPA
- * {@link javax.persistence.AccessType} enum.
+ * {@link jakarta.persistence.AccessType} enum.
  */
 @Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)

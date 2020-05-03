@@ -121,7 +121,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		Iterator<Tiger> iterator1 = zoo.getTigers().iterator();
 		Assert.assertEquals( tiger2.getName(), iterator1.next().getName() );
 		Assert.assertNull( iterator1.next().getName() );
-		// Testing @javax.persistence.OrderBy.
+		// Testing @jakarta.persistence.OrderBy.
 		Iterator<Monkey> iterator2 = zoo.getMonkeys().iterator();
 		Assert.assertEquals( monkey1.getName(), iterator2.next().getName() );
 		Assert.assertNull( iterator2.next().getName() );

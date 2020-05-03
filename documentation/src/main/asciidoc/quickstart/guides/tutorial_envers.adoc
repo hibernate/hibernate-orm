@@ -47,7 +47,7 @@ public void testBasicUsage() {
 ====
 
 We see that an `org.hibernate.envers.AuditReader` is obtained from the `org.hibernate.envers.AuditReaderFactory`
-which wraps the `javax.persistence.EntityManager`.
+which wraps the `jakarta.persistence.EntityManager`.
 
 Next, the `find` method retrieves specific revisions of the entity.  The first call says to find revision number
 1 of Event with id 2.  The second call says to find revision number 2 of Event with id 2.

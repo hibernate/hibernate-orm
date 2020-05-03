@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.metamodel.ManagedType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

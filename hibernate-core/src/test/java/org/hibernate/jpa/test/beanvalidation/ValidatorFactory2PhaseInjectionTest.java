@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.beanvalidation;
 import java.net.URL;
 import java.util.Collections;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 

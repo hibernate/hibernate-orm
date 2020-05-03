@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.manytomany;
 
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToOne;
 
 /**
  * @author Chris Cranford

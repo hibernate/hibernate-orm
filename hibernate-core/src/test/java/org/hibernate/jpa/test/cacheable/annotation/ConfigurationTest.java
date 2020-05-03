@@ -9,8 +9,8 @@ package org.hibernate.jpa.test.cacheable.annotation;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;

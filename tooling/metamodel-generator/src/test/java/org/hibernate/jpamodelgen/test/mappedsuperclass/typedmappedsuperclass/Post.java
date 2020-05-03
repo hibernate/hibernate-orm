@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.typedmappedsuperclass;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class Post<UserRoleType extends UserRole> {

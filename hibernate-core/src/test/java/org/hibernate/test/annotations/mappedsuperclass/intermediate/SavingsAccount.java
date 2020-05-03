@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.mappedsuperclass.intermediate;
 import java.math.BigDecimal;
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 
 /**
  * The "leaf" entity in the hierarchy

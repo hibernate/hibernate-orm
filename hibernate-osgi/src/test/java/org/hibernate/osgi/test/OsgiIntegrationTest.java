@@ -13,9 +13,9 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.Properties;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceProvider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -169,8 +169,8 @@ public class OsgiIntegrationTest {
 //		probe.setHeader(
 //				Constants.IMPORT_PACKAGE,
 //				"javassist.util.proxy"
-//						+ ",javax.persistence"
-//						+ ",javax.persistence.spi"
+//						+ ",jakarta.persistence"
+//						+ ",jakarta.persistence.spi"
 //						+ ",org.h2"
 //						+ ",org.osgi.framework"
 //						+ ",org.hibernate"

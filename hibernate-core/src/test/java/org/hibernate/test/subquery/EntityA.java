@@ -9,7 +9,7 @@
 
 package org.hibernate.test.subquery;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class EntityA {

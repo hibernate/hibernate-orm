@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.graphs.inherited;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Subgraph;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Subgraph;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +53,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         entityGraph.addSubgraph( "bar" );
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+        properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
         Foo result = em.find( Foo.class, foo.id, properties );
 
@@ -86,7 +86,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         entityGraph.addSubgraph( "bars" );
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+        properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
         Foo result = em.find( Foo.class, foo.id, properties );
 
@@ -125,7 +125,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         subgraphFoo.addSubgraph( "bar" );
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+        properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
         Foo2 result = em.find( Foo2.class, foo2.id, properties );
 
@@ -164,7 +164,7 @@ public class InheritedEntityGraphTest extends BaseEntityManagerFunctionalTestCas
         subgraphFoo.addSubgraph( "bars" );
 
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put( "javax.persistence.loadgraph", entityGraph );
+        properties.put( "jakarta.persistence.loadgraph", entityGraph );
 
         Foo2 result = em.find( Foo2.class, foo2.id, properties );
 

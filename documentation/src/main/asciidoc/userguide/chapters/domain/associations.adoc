@@ -306,7 +306,7 @@ Hibernate would throw an exception because another person is still associated wi
 Person person1 = entityManager.find(Person.class, personId);
 entityManager.remove(person1);
 
-Caused by: javax.persistence.PersistenceException: org.hibernate.exception.ConstraintViolationException: could not execute statement
+Caused by: jakarta.persistence.PersistenceException: org.hibernate.exception.ConstraintViolationException: could not execute statement
 Caused by: org.hibernate.exception.ConstraintViolationException: could not execute statement
 Caused by: java.sql.SQLIntegrityConstraintViolationException: integrity constraint violation: foreign key no action; FKM7J0BNABH2YR0PE99IL1D066U table: PERSON_ADDRESS
 ----

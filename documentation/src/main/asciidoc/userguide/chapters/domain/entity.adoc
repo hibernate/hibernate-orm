@@ -21,7 +21,7 @@ Throughout this chapter and thereafter, entity types will be simply referred to 
 Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
 Applications that wish to remain portable across JPA providers should adhere to these requirements:
 
-* The entity class must be annotated with the `javax.persistence.Entity` annotation (or be denoted as such in XML mapping).
+* The entity class must be annotated with the `jakarta.persistence.Entity` annotation (or be denoted as such in XML mapping).
 * The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
 * The entity class must be a top-level class.
 * An enum or interface may not be designated as an entity.
@@ -114,7 +114,7 @@ Hibernate offers multiple identifier generation strategies, see the <<chapters/d
 [[entity-pojo-mapping]]
 ==== Mapping the entity
 
-The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`javax.persistence.Entity`] annotation.
+The main piece in mapping the entity is the {jpaJavadocUrlPrefix}Entity.html[`jakarta.persistence.Entity`] annotation.
 
 The `@Entity` annotation defines just the {jpaJavadocUrlPrefix}Entity.html#name--[`name`] attribute which is used to give a specific entity name for use in JPQL queries.
 
@@ -152,7 +152,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTest.java[tag=entity-pojo-ma
 An entity models a database table.
 The identifier uniquely identifies each row in that table.
 By default, the name of the table is assumed to be the same as the name of the entity.
-To explicitly give the name of the table or to specify other information about the table, we would use the `javax.persistence.Table` annotation.
+To explicitly give the name of the table or to specify other information about the table, we would use the `jakarta.persistence.Table` annotation.
 
 [[entity-pojo-table-mapping-example]]
 .Simple `@Entity` with `@Table`

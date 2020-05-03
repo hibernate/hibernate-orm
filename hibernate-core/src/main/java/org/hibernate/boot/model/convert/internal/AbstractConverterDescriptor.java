@@ -7,8 +7,8 @@
 package org.hibernate.boot.model.convert.internal;
 
 import java.util.List;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.internal.ClassmateContext;

@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

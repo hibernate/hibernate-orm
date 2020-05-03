@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Steve Ebersole

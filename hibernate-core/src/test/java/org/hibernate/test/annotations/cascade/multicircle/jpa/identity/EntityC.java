@@ -11,15 +11,15 @@ import java.util.Set;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class EntityC extends AbstractEntity {
     private static final long serialVersionUID = 1226955752L;
 
-	@javax.persistence.OneToMany(mappedBy = "c")
+	@jakarta.persistence.OneToMany(mappedBy = "c")
 	private Set<EntityB> bCollection = new java.util.HashSet<EntityB>();
 
-	@javax.persistence.OneToMany(cascade =  {
-		javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+	@jakarta.persistence.OneToMany(cascade =  {
+		jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
 	, mappedBy = "c")
 	private Set<EntityD> dCollection = new java.util.HashSet<EntityD>();
 

@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.userguide.sql;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

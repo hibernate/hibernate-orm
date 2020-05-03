@@ -8,7 +8,7 @@ package org.hibernate.query.criteria.internal.compile;
 
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 /**
  * @author Steve Ebersole

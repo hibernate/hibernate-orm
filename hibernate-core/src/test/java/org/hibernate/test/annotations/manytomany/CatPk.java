@@ -8,7 +8,7 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
 import java.io.Serializable;
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 
 /**
  * @author Emmanuel Bernard

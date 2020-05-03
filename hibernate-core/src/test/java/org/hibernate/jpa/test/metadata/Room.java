@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metadata;
 import java.math.BigDecimal;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

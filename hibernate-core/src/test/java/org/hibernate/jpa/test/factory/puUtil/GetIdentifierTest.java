@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.factory.puUtil;
 
 import java.io.Serializable;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

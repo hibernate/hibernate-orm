@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.metamodel;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

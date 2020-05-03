@@ -10,7 +10,7 @@ apply plugin: 'base'
 ext {
 	ormVersion = new HibernateVersion( '5.5.0-SNAPSHOT', project )
 	baselineJavaVersion = '1.8'
-	jpaVersion = new JpaVersion('2.2')
+	jpaVersion = new JpaVersion('3.0')
 }
 
 group = 'org.hibernate'

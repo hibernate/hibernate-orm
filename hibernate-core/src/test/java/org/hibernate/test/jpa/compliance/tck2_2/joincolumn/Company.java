@@ -9,10 +9,10 @@ package org.hibernate.test.jpa.compliance.tck2_2.joincolumn;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 /**
  * @author Steve Ebersole

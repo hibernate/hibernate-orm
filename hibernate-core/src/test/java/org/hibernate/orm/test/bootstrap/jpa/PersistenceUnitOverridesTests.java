@@ -10,12 +10,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -268,7 +268,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 							@Override
 							public DataSource getJtaDataSource() {
 								// pretend the DataSource was defined using the `jta-data-source` element in persistence.xml
-								//		- as opposed using `javax.persistence.jtaDataSource` under the `properties` element
+								//		- as opposed using `jakarta.persistence.jtaDataSource` under the `properties` element
 								return puDataSource;
 							}
 						},

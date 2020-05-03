@@ -6,8 +6,8 @@
  */
 package org.hibernate.procedure;
 
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;

@@ -1,8 +1,8 @@
 package org.hibernate.procedure.internal;
 
 import java.util.stream.Stream;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;

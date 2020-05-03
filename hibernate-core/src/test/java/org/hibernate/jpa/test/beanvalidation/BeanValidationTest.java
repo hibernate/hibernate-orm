@@ -8,8 +8,8 @@ package org.hibernate.jpa.test.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.RollbackException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.RollbackException;
 import jakarta.validation.ConstraintViolationException;
 
 import org.hibernate.cfg.AvailableSettings;

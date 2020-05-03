@@ -9,11 +9,11 @@ package org.hibernate.userguide.collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

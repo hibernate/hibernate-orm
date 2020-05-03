@@ -3,7 +3,7 @@ package org.hibernate.jpa.test.criteria.fetchscroll;
 
 import java.util.List;
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "purchase_organizations")

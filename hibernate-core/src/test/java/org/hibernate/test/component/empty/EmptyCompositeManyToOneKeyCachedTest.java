@@ -7,11 +7,11 @@
 package org.hibernate.test.component.empty;
 
 import java.io.Serializable;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Configuration;
@@ -50,7 +50,7 @@ public class EmptyCompositeManyToOneKeyCachedTest extends BaseCoreFunctionalTest
 		configuration.getProperties().put( Environment.USE_QUERY_CACHE, "true" );
 		configuration.getProperties().put( Environment.GENERATE_STATISTICS, "true" );
 		configuration.getProperties().put( Environment.CACHE_REGION_PREFIX, "" );
-		configuration.getProperties().put( "javax.persistence.sharedCache.mode", SharedCacheMode.ALL );
+		configuration.getProperties().put( "jakarta.persistence.sharedCache.mode", SharedCacheMode.ALL );
 	}
 
 	@Test

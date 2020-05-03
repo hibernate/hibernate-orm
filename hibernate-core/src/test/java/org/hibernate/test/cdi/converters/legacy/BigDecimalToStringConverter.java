@@ -32,7 +32,7 @@ package org.hibernate.test.cdi.converters.legacy;
 
 import java.math.BigDecimal;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Etienne Miret

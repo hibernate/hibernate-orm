@@ -27,7 +27,7 @@ import static org.junit.Assert.fail;
 
 
 /**
- * Tests verifying the correct behaviour for the usage of {@code @javax.persistence.Access}.
+ * Tests verifying the correct behaviour for the usage of {@code @jakarta.persistence.Access}.
  *
  * @author Hardy Ferentschik
  */

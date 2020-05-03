@@ -47,13 +47,13 @@ public class SchemaGenetationSciptsActionPropertyValueEndingWithSpaceTest extend
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
 		// the value of the property ends with a space
-		properties.setProperty( "javax.persistence.schema-generation.scripts.action", "drop-and-create " );
+		properties.setProperty( "jakarta.persistence.schema-generation.scripts.action", "drop-and-create " );
 		properties.setProperty(
-				"javax.persistence.schema-generation.scripts.create-target",
+				"jakarta.persistence.schema-generation.scripts.create-target",
 				createOutput.getAbsolutePath()
 		);
 		properties.setProperty(
-				"javax.persistence.schema-generation.scripts.drop-target",
+				"jakarta.persistence.schema-generation.scripts.drop-target",
 				dropOutput.getAbsolutePath()
 		);
 		ConfigurationHelper.resolvePlaceHolders( properties );

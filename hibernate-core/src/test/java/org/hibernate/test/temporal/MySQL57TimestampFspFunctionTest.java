@@ -8,9 +8,9 @@ package org.hibernate.test.temporal;
 
 import java.sql.Timestamp;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.junit.Test;
 
@@ -76,7 +76,7 @@ public class MySQL57TimestampFspFunctionTest extends BaseCoreFunctionalTestCase 
 	}
 
 	// If MySQL supported something like Oracle's "dual", then this entity wouldn't be needed.
-	@javax.persistence.Entity
+	@jakarta.persistence.Entity
 	@Table(name = "DummyEntity")
 	public static class Entity {
 		@GeneratedValue

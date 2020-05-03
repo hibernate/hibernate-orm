@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;

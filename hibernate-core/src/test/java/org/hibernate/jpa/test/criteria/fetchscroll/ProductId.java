@@ -2,7 +2,7 @@
 package org.hibernate.jpa.test.criteria.fetchscroll;
 
 import java.io.Serializable;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Embeddable
 public class ProductId implements Serializable {

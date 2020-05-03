@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integration.inheritance.single.discriminatorformula;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.Audited;
 

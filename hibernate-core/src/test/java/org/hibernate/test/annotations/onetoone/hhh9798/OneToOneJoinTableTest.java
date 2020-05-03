@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.onetoone.hhh9798;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

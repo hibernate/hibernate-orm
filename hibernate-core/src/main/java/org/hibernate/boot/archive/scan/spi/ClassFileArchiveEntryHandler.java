@@ -8,10 +8,10 @@ package org.hibernate.boot.archive.scan.spi;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
 import org.hibernate.boot.archive.scan.internal.ScanResultCollector;

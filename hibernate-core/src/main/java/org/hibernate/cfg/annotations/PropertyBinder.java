@@ -8,9 +8,9 @@ package org.hibernate.cfg.annotations;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
-import javax.persistence.Lob;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
@@ -310,7 +310,7 @@ public class PropertyBinder {
 			if ( lockAnn != null ) {
 				//TODO this should go to the core as a mapping validation checking
 				if ( lockAnn.excluded() && (
-						property.isAnnotationPresent( javax.persistence.Version.class )
+						property.isAnnotationPresent( jakarta.persistence.Version.class )
 								|| property.isAnnotationPresent( Id.class )
 								|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
 					throw new AnnotationException(
@@ -397,7 +397,7 @@ public class PropertyBinder {
 		);
 
 		if ( annotation.annotationType() == Generated.class &&
-				property.isAnnotationPresent( javax.persistence.Version.class ) &&
+				property.isAnnotationPresent( jakarta.persistence.Version.class ) &&
 				valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
 
 			throw new AnnotationException(

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.procedure;
 
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.Incubating;
 import org.hibernate.procedure.spi.ParameterRegistrationImplementor;

@@ -9,10 +9,10 @@ package org.hibernate.test.querytimeout;
 import java.sql.SQLException;
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.QueryHint;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.QueryHints;

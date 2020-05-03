@@ -8,11 +8,11 @@ package org.hibernate.userguide.inheritance;
 
 import java.math.BigDecimal;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

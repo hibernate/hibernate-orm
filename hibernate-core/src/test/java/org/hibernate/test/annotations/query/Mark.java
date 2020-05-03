@@ -7,12 +7,12 @@
 
 //$Id$
 package org.hibernate.test.annotations.query;
-import javax.persistence.ColumnResult;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.SqlResultSetMapping;
 
 /**
  * Example of scalar result (not working right now)

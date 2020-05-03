@@ -9,7 +9,7 @@ package org.hibernate.query.criteria.internal.predicate;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.compile.RenderingContext;

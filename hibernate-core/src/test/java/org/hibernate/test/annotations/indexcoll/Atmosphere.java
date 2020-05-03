@@ -10,22 +10,22 @@ package org.hibernate.test.annotations.indexcoll;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.MapKeyEnumerated;
-import javax.persistence.MapKeyJoinColumn;
-import javax.persistence.MapKeyJoinColumns;
-import javax.persistence.MapKeyTemporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Emmanuel Bernard

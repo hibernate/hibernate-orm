@@ -7,12 +7,12 @@
 package org.hibernate.query.criteria.internal.path;
 
 import java.io.Serializable;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.PathSource;
@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
  * Models a path for a {@link SingularAttribute} generally obtained from a
- * {@link javax.persistence.criteria.Path#get(SingularAttribute)} call
+ * {@link jakarta.persistence.criteria.Path#get(SingularAttribute)} call
  *
  * @author Steve Ebersole
  */

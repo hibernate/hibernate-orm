@@ -23,6 +23,6 @@ public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute imple
 
 	@Override
 	public final String getMetaType() {
-		return "javax.persistence.metamodel.SingularAttribute";
+		return "jakarta.persistence.metamodel.SingularAttribute";
 	}
 }

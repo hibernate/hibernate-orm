@@ -6,28 +6,28 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CascadeType;
-import javax.persistence.EnumType;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKey;
-import javax.persistence.MapKeyClass;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.MapKeyEnumerated;
-import javax.persistence.MapKeyJoinColumn;
-import javax.persistence.MapKeyJoinColumns;
-import javax.persistence.MapKeyTemporal;
-import javax.persistence.OrderBy;
-import javax.persistence.OrderColumn;
-import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 import org.junit.Test;
 

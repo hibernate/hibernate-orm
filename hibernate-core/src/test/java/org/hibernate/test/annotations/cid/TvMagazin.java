@@ -8,14 +8,14 @@
 //$Id$
 package org.hibernate.test.annotations.cid;
 import java.util.Date;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Column;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Column;
 
 /**
  * @author Emmanuel Bernard

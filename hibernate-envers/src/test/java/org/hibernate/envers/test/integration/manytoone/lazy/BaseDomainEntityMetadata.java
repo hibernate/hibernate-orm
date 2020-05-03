@@ -9,8 +9,8 @@ package org.hibernate.envers.test.integration.manytoone.lazy;
 import java.io.Serializable;
 import java.time.Instant;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.CreationTimestamp;
 

@@ -8,17 +8,17 @@
 //$Id$
 
 package org.hibernate.test.annotations.access.jpa;
-import javax.persistence.Access;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import jakarta.persistence.Access;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Access(javax.persistence.AccessType.FIELD)
+@Access(jakarta.persistence.AccessType.FIELD)
 public class Furniture extends Woody {
 	@Id
 	@GeneratedValue
@@ -45,7 +45,7 @@ public class Furniture extends Woody {
 
 	public long weight;
 
-	@Access(javax.persistence.AccessType.PROPERTY)
+	@Access(jakarta.persistence.AccessType.PROPERTY)
 	public long getWeight() {
 		return weight + 1;
 	}

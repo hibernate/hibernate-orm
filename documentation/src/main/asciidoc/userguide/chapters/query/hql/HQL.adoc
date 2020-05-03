@@ -46,14 +46,14 @@ include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-exam
 
 When using Hibernate, you can execute entity queries either via JPA or the Hibernate-specific API.
 Since 5.2, the Hibernate `Session` interface extends the JPA `EntityManager` interface.
-For this reason, the query API was also merged, and now the Hibernate `org.hibernate.query.Query` interface extends the JPA `javax.persistence.Query`.
+For this reason, the query API was also merged, and now the Hibernate `org.hibernate.query.Query` interface extends the JPA `jakarta.persistence.Query`.
 
 Next, we are going to see how the query API differs between the standard JPA interfaces and the Hibernate-specific API.
 
 [[jpql-api]]
 ==== JPA Query API
 
-In JPA, the query is represented by `javax.persistence.Query` or `javax.persistence.TypedQuery` as obtained from the `EntityManager`.
+In JPA, the query is represented by `jakarta.persistence.Query` or `jakarta.persistence.TypedQuery` as obtained from the `EntityManager`.
 The create an inline `Query` or `TypedQuery`, you need to use the `EntityManager#createQuery` method.
 For named queries, the `EntityManager#createNamedQuery` method is needed.
 
@@ -109,13 +109,13 @@ Many of the settings controlling the execution of the query are defined as hints
 JPA defines some standard hints (like timeout in the example), but most are provider specific.
 Relying on provider specific hints limits your applications portability to some degree.
 
-`javax.persistence.query.timeout`::
+`jakarta.persistence.query.timeout`::
     Defines the query timeout, in milliseconds.
-`javax.persistence.fetchgraph`::
+`jakarta.persistence.fetchgraph`::
     Defines a _fetchgraph_ EntityGraph.
     Attributes explicitly specified as `AttributeNodes` are treated as `FetchType.EAGER` (via join fetch or subsequent select).
     For details, see the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
-`javax.persistence.loadgraph`::
+`jakarta.persistence.loadgraph`::
     Defines a _loadgraph_ EntityGraph.
     Attributes explicitly specified as AttributeNodes are treated as `FetchType.EAGER` (via join fetch or subsequent select).
     Attributes that are not specified are treated as `FetchType.LAZY` or `FetchType.EAGER` depending on the attribute's definition in metadata.
@@ -131,7 +131,7 @@ Relying on provider specific hints limits your applications portability to some 
 `org.hibernate.fetchSize`::
     Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`.
 `org.hibernate.flushMode`::
-    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `javax.persistence.Query#setFlushMode` instead.
+    Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `jakarta.persistence.Query#setFlushMode` instead.
 `org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`.
 
 The final thing that needs to happen before the query can be executed is to bind the values for any defined parameters.
@@ -542,7 +542,7 @@ Versioned updates is a Hibernate-specific feature and will not work in a portabl
 Custom version types, `org.hibernate.usertype.UserVersionType`, are not allowed in conjunction with an `update versioned` statement.
 ====
 
-An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.query.Query` or `javax.persistence.Query`.
+An `UPDATE` statement is executed using the `executeUpdate()` of either `org.hibernate.query.Query` or `jakarta.persistence.Query`.
 The method is named for those familiar with the JDBC `executeUpdate()` on `java.sql.PreparedStatement`.
 
 The `int` value returned by the `executeUpdate()` method indicates the number of entities affected by the operation.
@@ -582,7 +582,7 @@ include::{extrasdir}/statement_delete_bnf.txt[]
 ----
 ====
 
-A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.query.Query` or `javax.persistence.Query`.
+A `DELETE` statement is also executed using the `executeUpdate()` method of either `org.hibernate.query.Query` or `jakarta.persistence.Query`.
 
 [[hql-insert]]
 === Insert statements
@@ -975,7 +975,7 @@ VALUE::
   Useful to explicitly show intent.
   Valid for any type of collection-valued reference.
 INDEX::
-  According to HQL rules, this is valid for both `Maps` and `Lists` which specify a `javax.persistence.OrderColumn` annotation to refer to the `Map` key or the `List` position (aka the `OrderColumn` value).
+  According to HQL rules, this is valid for both `Maps` and `Lists` which specify a `jakarta.persistence.OrderColumn` annotation to refer to the `Map` key or the `List` position (aka the `OrderColumn` value).
   JPQL however, reserves this for use in the `List` case and adds `KEY` for the `Map` case.
   Applications interested in JPA provider portability should be aware of this distinction.
 KEY::

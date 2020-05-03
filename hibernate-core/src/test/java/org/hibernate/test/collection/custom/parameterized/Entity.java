@@ -8,12 +8,12 @@ package org.hibernate.test.collection.custom.parameterized;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OrderColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Parameter;
@@ -30,7 +30,7 @@ import org.hibernate.annotations.TypeDef;
 		typeClass = DefaultableListType.class,
 		parameters = @Parameter(name = "default", value = "Hello" )
 )
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class Entity {
 	private String name;
 	private List values = new ArrayList();

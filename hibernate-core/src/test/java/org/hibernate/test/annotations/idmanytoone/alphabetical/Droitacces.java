@@ -8,9 +8,9 @@
 //$
 package org.hibernate.test.annotations.idmanytoone.alphabetical;
 import java.math.BigInteger;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Droitacces {

@@ -8,11 +8,11 @@ package org.hibernate.query.criteria.internal.path;
 
 import java.io.Serializable;
 import java.util.Collection;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.CollectionAttribute;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.query.criteria.internal.CollectionJoinImplementor;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;

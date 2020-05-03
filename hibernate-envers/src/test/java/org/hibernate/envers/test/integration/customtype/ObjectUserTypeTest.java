@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.customtype;
 
 import java.util.Arrays;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.configuration.EnversSettings;

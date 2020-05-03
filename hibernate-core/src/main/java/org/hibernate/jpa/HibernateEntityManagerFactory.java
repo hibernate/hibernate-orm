@@ -8,16 +8,16 @@ package org.hibernate.jpa;
 
 import java.io.Serializable;
 import java.util.List;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
+ * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link jakarta.persistence.EntityManagerFactory}
  *
  * @author Gavin King
  *

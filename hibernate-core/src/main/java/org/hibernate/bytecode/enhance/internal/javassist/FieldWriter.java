@@ -6,7 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.javassist;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;

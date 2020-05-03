@@ -1,7 +1,7 @@
 
 package org.hibernate.jpa.test.criteria.fetchscroll;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "products")

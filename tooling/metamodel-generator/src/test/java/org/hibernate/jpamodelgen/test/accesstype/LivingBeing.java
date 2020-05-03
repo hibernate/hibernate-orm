@@ -6,14 +6,14 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Access;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
 
 /**
  * @author Emmanuel Bernard
  */
 @MappedSuperclass
-@Access(javax.persistence.AccessType.FIELD)
+@Access(jakarta.persistence.AccessType.FIELD)
 public class LivingBeing {
 	boolean isReallyAlive;
 

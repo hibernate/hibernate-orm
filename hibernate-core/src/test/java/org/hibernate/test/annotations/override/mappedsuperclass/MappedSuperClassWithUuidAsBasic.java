@@ -1,8 +1,8 @@
 package org.hibernate.test.annotations.override.mappedsuperclass;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Vlad Mihalcea

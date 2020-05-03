@@ -11,8 +11,8 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 

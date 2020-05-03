@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.embedded.many2one;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.AccessType;
 

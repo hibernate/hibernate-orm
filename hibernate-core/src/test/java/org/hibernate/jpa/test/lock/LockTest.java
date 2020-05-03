@@ -14,13 +14,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
-import javax.persistence.Query;
-import javax.persistence.QueryTimeoutException;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.Query;
+import jakarta.persistence.QueryTimeoutException;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
@@ -152,7 +152,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 					entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
 							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setHint( "javax.persistence.lock.timeout", 0 )
+							.setHint( "jakarta.persistence.lock.timeout", 0 )
 							.getSingleResult();
 					fail( "Exception should be thrown" );
 				}
@@ -196,7 +196,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 					entityManager.createQuery( "from Lock_ where id = " + lock.getId(), Lock.class )
 							.setLockMode( LockModeType.PESSIMISTIC_WRITE )
-							.setHint( "javax.persistence.lock.timeout", 0 )
+							.setHint( "jakarta.persistence.lock.timeout", 0 )
 							.getResultList();
 					fail( "Exception should be thrown" );
 				}

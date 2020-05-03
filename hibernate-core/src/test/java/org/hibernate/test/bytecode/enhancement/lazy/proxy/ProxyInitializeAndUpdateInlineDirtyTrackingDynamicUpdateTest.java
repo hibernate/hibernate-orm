@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.spi.LoadState;
-import javax.persistence.spi.PersistenceProvider;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.spi.LoadState;
+import jakarta.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.DynamicUpdate;

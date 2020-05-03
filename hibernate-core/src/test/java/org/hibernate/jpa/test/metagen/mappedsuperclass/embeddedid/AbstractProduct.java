@@ -7,8 +7,8 @@
 package org.hibernate.jpa.test.metagen.mappedsuperclass.embeddedid;
 
 import java.io.Serializable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Justin Wesley

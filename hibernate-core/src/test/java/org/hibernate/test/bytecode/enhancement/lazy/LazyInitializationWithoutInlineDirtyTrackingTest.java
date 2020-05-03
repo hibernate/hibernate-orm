@@ -8,13 +8,13 @@ package org.hibernate.test.bytecode.enhancement.lazy;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.testing.TestForIssue;

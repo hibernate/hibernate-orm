@@ -6,14 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * Hibernate extension to the JPA {@link EntityType} contract.
  *
- * @apiNote Notice that this describes {@link javax.persistence.Embedded}, not
- * {@link javax.persistence.Embeddable} - like {@link CollectionDomainType}, it includes
+ * @apiNote Notice that this describes {@link jakarta.persistence.Embedded}, not
+ * {@link jakarta.persistence.Embeddable} - like {@link CollectionDomainType}, it includes
  * mapping information per usage (attribute)
  *
  * @author Steve Ebersole

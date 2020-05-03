@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.naturalid.immutable;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.lang.reflect.Field;
 
 import org.junit.Test;

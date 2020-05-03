@@ -9,8 +9,8 @@ package org.hibernate.query.criteria.internal.hhh13151;
 import org.hibernate.annotations.*;
 import org.hibernate.annotations.CascadeType;
 
-import javax.persistence.*;
-import javax.persistence.Entity;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

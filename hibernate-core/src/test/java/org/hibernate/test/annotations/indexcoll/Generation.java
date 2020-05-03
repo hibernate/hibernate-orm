@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

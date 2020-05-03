@@ -30,7 +30,7 @@
  */
 package org.hibernate.test.cdi.converters.legacy;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * This converter adds 10 to each integer stored in the database, and remove

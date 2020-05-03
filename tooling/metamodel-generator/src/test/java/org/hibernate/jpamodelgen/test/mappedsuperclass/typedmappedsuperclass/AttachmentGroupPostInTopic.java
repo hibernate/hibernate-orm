@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.typedmappedsuperclass;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class AttachmentGroupPostInTopic extends AttachmentGroupPost<UserRole, AttachmentGroupInTopic> {

@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.userguide.util;
 
-import javax.persistence.Persistence;
-import javax.persistence.spi.LoadState;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

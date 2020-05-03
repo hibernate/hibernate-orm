@@ -102,12 +102,12 @@ jar {
 		attributes(
 				// BND Plugin instructions (for OSGi):
 				'Bundle-Activator': 'org.hibernate.osgi.HibernateBundleActivator',
-				'Provide-Capability': 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider',
+				'Provide-Capability': 'osgi.service;effective:=active;objectClass=jakarta.persistence.spi.PersistenceProvider',
 				'Import-Package': [
 						// TODO: Shouldn't have to explicitly list this, but the plugin
 						// generates it with a [1.0,2) version.
-						"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-						"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
+						"jakarta.persistence;version=\"${project.jpaVersion.osgiName}\"",
+						"jakarta.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
 						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
 						// use it.  Without this, the plugin generates [1.2,2).
 						'javax.transaction;version="[1.1,2)"',

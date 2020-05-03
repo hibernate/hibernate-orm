@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.entities.ids;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 

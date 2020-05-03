@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * Hibernate extension to the JPA {@link Attribute} contract

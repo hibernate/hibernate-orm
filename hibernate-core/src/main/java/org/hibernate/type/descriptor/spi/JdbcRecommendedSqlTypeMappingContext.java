@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.spi;
 
 import java.sql.Types;
-import javax.persistence.EnumType;
+import jakarta.persistence.EnumType;
 
 import org.hibernate.type.spi.TypeConfiguration;
 

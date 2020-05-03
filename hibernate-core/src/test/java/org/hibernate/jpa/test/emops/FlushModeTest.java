@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.emops;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Assert;
 import org.junit.Test;

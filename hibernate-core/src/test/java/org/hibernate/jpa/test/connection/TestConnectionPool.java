@@ -8,12 +8,12 @@ package org.hibernate.jpa.test.connection;
 
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;

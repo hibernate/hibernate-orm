@@ -7,8 +7,8 @@
 package org.hibernate.envers.test.integration.naming;
 
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.junit.Assert;

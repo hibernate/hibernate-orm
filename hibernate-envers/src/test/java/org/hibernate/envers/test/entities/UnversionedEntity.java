@@ -6,10 +6,10 @@
  */
 package org.hibernate.envers.test.entities;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;

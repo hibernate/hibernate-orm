@@ -36,9 +36,9 @@ public class Event {
 ----
 ====
 
-The `@javax.persistence.Entity` annotation is used to mark a class as an entity.  It functions the same as the
+The `@jakarta.persistence.Entity` annotation is used to mark a class as an entity.  It functions the same as the
 `<class/>` mapping element discussed in <<hibernate-gsg-tutorial-basic-mapping>>.   Additionally the
-`@javax.persistence.Table` annotation explicitly specifies the table name. Without this specification, the default
+`@jakarta.persistence.Table` annotation explicitly specifies the table name. Without this specification, the default
 table name would be _EVENT_.
 
 
@@ -56,9 +56,9 @@ public Long getId() {
 ----
 ====
 
-`@javax.persistence.Id` marks the property which defines the entity's identifier.
+`@jakarta.persistence.Id` marks the property which defines the entity's identifier.
 
-`@javax.persistence.GeneratedValue` and `@org.hibernate.annotations.GenericGenerator` work in tandem
+`@jakarta.persistence.GeneratedValue` and `@org.hibernate.annotations.GenericGenerator` work in tandem
 to indicate that Hibernate should use Hibernate's `increment` generation strategy for this entity's identifier values.
 
 

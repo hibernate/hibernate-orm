@@ -8,12 +8,12 @@ package org.hibernate.envers.test.integration.query;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OneToOne;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

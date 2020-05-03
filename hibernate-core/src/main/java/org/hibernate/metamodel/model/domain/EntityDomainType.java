@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * Extension to the JPA {@link EntityType} contract

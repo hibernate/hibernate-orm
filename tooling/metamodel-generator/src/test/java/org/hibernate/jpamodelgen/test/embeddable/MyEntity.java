@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.embeddable;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
 
 @Entity
 public class MyEntity extends Base {

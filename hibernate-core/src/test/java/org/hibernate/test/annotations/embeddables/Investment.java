@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.embeddables;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Pheby

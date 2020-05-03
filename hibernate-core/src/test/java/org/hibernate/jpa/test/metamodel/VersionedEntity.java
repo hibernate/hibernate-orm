@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 /**
  * @author Steve Ebersole

@@ -8,7 +8,7 @@
 //$Id: Being.java 18260 2009-12-17 21:14:07Z hardy.ferentschik $
 
 package org.hibernate.test.annotations.access.jpa;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 
 /**

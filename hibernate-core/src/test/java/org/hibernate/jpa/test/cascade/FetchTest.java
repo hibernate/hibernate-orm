@@ -8,8 +8,8 @@ package org.hibernate.jpa.test.cascade;
 
 import java.util.ArrayList;
 import java.util.Date;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

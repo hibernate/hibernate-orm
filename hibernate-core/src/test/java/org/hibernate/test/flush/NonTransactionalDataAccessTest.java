@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.flush;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

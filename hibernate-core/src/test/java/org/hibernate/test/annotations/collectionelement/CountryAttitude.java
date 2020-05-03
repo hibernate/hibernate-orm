@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.test.annotations.Country;
 

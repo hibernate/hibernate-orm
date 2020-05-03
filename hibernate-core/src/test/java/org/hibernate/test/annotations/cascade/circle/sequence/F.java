@@ -9,23 +9,23 @@ package org.hibernate.test.annotations.cascade.circle.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class F extends AbstractEntity {
     private static final long serialVersionUID = 1471534025L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "f")
     private java.util.Set<org.hibernate.test.annotations.cascade.circle.sequence.B> bCollection = new java.util.HashSet<org.hibernate.test.annotations.cascade.circle.sequence.B>();
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     )
     private H h;
 

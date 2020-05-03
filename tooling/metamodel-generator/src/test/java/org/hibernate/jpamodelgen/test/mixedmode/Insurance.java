@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.mixedmode;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

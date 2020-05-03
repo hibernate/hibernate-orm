@@ -7,8 +7,8 @@
 
 //$Id: $
 package org.hibernate.jpa.test.xml.sequences;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

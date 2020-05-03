@@ -527,7 +527,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			int numberOfArguments);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity (most likely a user error): %s",
+	@Message(value = "Class annotated @org.hibernate.annotations.Entity but not jakarta.persistence.Entity (most likely a user error): %s",
 			id = 175)
 	void missingEntityAnnotation(String className);
 
@@ -1613,7 +1613,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void explicitSkipLockedLockCombo();
 
 	@LogMessage(level = INFO)
-	@Message(value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448)
+	@Message(value = "'jakarta.persistence.validation.mode' named multiple values : %s", id = 448)
 	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)
@@ -1857,7 +1857,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'javax.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
+	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
 	void multipleSchemaCreationSettingsDefined();
 
 	@LogMessage(level = WARN)

@@ -8,17 +8,17 @@ package org.hibernate.jpa.test.criteria.paths;
 
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -75,7 +75,7 @@ public class SingularAttributeJoinTest extends BaseEntityManagerFunctionalTestCa
         final EntityManager entityManager = entityManagerFactory().createEntityManager();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery criteriaQuery = criteriaBuilder.createQuery();
-        javax.persistence.metamodel.EntityType distributionEntity = getEntityType("Distribution");
+        jakarta.persistence.metamodel.EntityType distributionEntity = getEntityType("Distribution");
         From distributionFrom = criteriaQuery.from(distributionEntity);
         From policyJoin = distributionFrom.join("policy");
         Path policyId = policyJoin.get("policyId");
@@ -84,8 +84,8 @@ public class SingularAttributeJoinTest extends BaseEntityManagerFunctionalTestCa
 //        typedQuery.getResultList();
     }
 
-    private javax.persistence.metamodel.EntityType getEntityType(String entityName) {
-        for(javax.persistence.metamodel.EntityType entityType : entityManagerFactory().getMetamodel().getEntities()) {
+    private jakarta.persistence.metamodel.EntityType getEntityType(String entityName) {
+        for(jakarta.persistence.metamodel.EntityType entityType : entityManagerFactory().getMetamodel().getEntities()) {
             if (entityType.getName().equals("Distribution")) {
                 return entityType;
             }

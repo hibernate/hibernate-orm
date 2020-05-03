@@ -11,14 +11,14 @@ import java.util.Set;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class C extends AbstractEntity {
     private static final long serialVersionUID = 1226955752L;
 
-	@javax.persistence.OneToMany(mappedBy = "c")
+	@jakarta.persistence.OneToMany(mappedBy = "c")
 	private Set<B> bCollection = new java.util.HashSet<B>();
 
-	@javax.persistence.OneToMany(mappedBy = "c")
+	@jakarta.persistence.OneToMany(mappedBy = "c")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,

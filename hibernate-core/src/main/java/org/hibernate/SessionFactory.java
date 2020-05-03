@@ -11,7 +11,7 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
 import javax.naming.Referenceable;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;

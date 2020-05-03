@@ -6,10 +6,10 @@
  */
 package org.hibernate.jpa.test.criteria.idclass;
 
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Table;
 
 /**
  * @author Erich Heard

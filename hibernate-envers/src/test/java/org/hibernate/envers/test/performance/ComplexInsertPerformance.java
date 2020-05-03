@@ -10,7 +10,7 @@ package org.hibernate.envers.test.performance;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.performance.complex.ChildEntity1;
 import org.hibernate.envers.test.performance.complex.ChildEntity2;

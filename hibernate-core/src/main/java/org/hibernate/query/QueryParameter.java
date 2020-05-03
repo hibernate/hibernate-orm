@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 @Incubating
-public interface QueryParameter<T> extends javax.persistence.Parameter<T> {
+public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	/**
 	 * Get the Hibernate Type associated with this parameter.
 	 *

@@ -6,10 +6,10 @@
  */
 package org.hibernate.envers.test.entities.converter;
 
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.envers.Audited;

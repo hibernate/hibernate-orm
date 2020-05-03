@@ -12,12 +12,12 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.Query;
-import javax.persistence.SynchronizationType;
-import javax.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.criteria.CriteriaBuilder;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;

@@ -13,9 +13,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.RollbackException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;

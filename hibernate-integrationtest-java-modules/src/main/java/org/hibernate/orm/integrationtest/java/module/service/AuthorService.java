@@ -8,7 +8,7 @@ package org.hibernate.orm.integrationtest.java.module.service;
 
 import java.util.List;
 
-import javax.persistence.Persistence;
+import jakarta.persistence.Persistence;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

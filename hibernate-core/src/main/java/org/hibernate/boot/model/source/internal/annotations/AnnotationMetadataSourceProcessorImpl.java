@@ -11,11 +11,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;
@@ -277,7 +277,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					&& !reflectionManager.equals( superClass, Object.class )
 					&& !copy.contains( superClass ) ) {
 				if ( superClass.isAnnotationPresent( Entity.class )
-						|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+						|| superClass.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
 					copy.add( superClass );
 				}
 				superClass = superClass.getSuperclass();

@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.boot.spi;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 /**

@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.integration.inheritance.single.discriminatorformula;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

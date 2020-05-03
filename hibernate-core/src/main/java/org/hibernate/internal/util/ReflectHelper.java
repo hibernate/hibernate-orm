@@ -15,7 +15,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
 import java.util.regex.Pattern;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;

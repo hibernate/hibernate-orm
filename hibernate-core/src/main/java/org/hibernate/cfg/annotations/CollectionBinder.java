@@ -15,20 +15,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CollectionTable;
-import javax.persistence.ConstraintMode;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.MapKey;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
@@ -169,7 +169,7 @@ public abstract class CollectionBinder {
 	private boolean hibernateExtensionMapping;
 
 	private boolean isSortedCollection;
-	private javax.persistence.OrderBy jpaOrderBy;
+	private jakarta.persistence.OrderBy jpaOrderBy;
 	private OrderBy sqlOrderBy;
 	private Sort deprecatedSort;
 	private SortNatural naturalSort;
@@ -240,7 +240,7 @@ public abstract class CollectionBinder {
 		this.batchSize = batchSize == null ? -1 : batchSize.size();
 	}
 
-	public void setJpaOrderBy(javax.persistence.OrderBy jpaOrderBy) {
+	public void setJpaOrderBy(jakarta.persistence.OrderBy jpaOrderBy) {
 		this.jpaOrderBy = jpaOrderBy;
 	}
 
@@ -454,7 +454,7 @@ public abstract class CollectionBinder {
 		if ( property.isAnnotationPresent( MapKeyColumn.class )
 			&& mapKeyPropertyName != null ) {
 			throw new AnnotationException(
-					"Cannot mix @javax.persistence.MapKey and @MapKeyColumn or @org.hibernate.annotations.MapKey "
+					"Cannot mix @jakarta.persistence.MapKey and @MapKeyColumn or @org.hibernate.annotations.MapKey "
 							+ "on the same collection: " + StringHelper.qualify(
 							propertyHolder.getPath(), propertyName
 					)
@@ -650,7 +650,7 @@ public abstract class CollectionBinder {
 				throw new AnnotationException(
 						String.format(
 								"Illegal combination of @%s and @%s on %s",
-								javax.persistence.OrderBy.class.getName(),
+								jakarta.persistence.OrderBy.class.getName(),
 								OrderBy.class.getName(),
 								safeCollectionRole()
 						)
@@ -1257,7 +1257,7 @@ public abstract class CollectionBinder {
 						}
 					}
 					else {
-						final javax.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
+						final jakarta.persistence.ForeignKey fkOverride = propertyHolder.getOverriddenForeignKey(
 								StringHelper.qualify( propertyHolder.getPath(), property.getName() )
 						);
 						if ( fkOverride != null && fkOverride.value() == ConstraintMode.NO_CONSTRAINT ) {
@@ -1661,7 +1661,7 @@ public abstract class CollectionBinder {
 
 	}
 
-	private String extractHqlOrderBy(javax.persistence.OrderBy jpaOrderBy) {
+	private String extractHqlOrderBy(jakarta.persistence.OrderBy jpaOrderBy) {
 		if ( jpaOrderBy != null ) {
 			return jpaOrderBy.value(); // Null not possible. In case of empty expression, apply default ordering.
 		}

@@ -9,7 +9,7 @@ package org.hibernate.envers.test.integration.notupdatable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;

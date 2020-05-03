@@ -9,10 +9,10 @@
 package org.hibernate.test.annotations.embedded;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard

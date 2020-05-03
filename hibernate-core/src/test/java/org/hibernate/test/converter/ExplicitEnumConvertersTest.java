@@ -7,10 +7,10 @@
 package org.hibernate.test.converter;
 
 import java.net.MalformedURLException;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.persister.entity.EntityPersister;

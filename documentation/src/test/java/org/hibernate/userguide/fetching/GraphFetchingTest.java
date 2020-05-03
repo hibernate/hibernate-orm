@@ -9,17 +9,17 @@ package org.hibernate.userguide.fetching;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedSubgraph;
-import javax.persistence.OneToMany;
-import javax.persistence.QueryHint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.QueryHint;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.NaturalId;
@@ -89,7 +89,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 				Employee.class,
 				userId,
 				Collections.singletonMap(
-					"javax.persistence.fetchgraph",
+					"jakarta.persistence.fetchgraph",
 					entityManager.getEntityGraph( "employee.projects" )
 				)
 			);
@@ -103,7 +103,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 				Project.class,
 				1L,
 				Collections.singletonMap(
-					"javax.persistence.fetchgraph",
+					"jakarta.persistence.fetchgraph",
 					entityManager.getEntityGraph( "project.employees" )
 				)
 			);

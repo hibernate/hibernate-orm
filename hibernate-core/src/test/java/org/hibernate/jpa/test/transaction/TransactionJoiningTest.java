@@ -8,10 +8,10 @@ package org.hibernate.jpa.test.transaction;
 
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.persistence.SynchronizationType;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TransactionRequiredException;
 import javax.transaction.Status;
 
 import org.hibernate.HibernateException;

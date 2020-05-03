@@ -11,8 +11,8 @@ import static org.junit.Assert.fail;
 
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;

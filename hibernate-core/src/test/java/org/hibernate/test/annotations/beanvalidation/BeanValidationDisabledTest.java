@@ -51,7 +51,7 @@ public class BeanValidationDisabledTest extends BaseNonConfigCoreFunctionalTestC
 
 	@Override
 	protected void addSettings(Map settings) {
-		settings.put( "javax.persistence.validation.mode", "none" );
+		settings.put( "jakarta.persistence.validation.mode", "none" );
 	}
 
 	@Override

@@ -8,7 +8,7 @@ package org.hibernate.graph.spi;
 
 import java.util.List;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.AttributeNode;

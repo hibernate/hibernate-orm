@@ -13,7 +13,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.Entity} with Hibernate features.
+ * Extends {@link jakarta.persistence.Entity} with Hibernate features.
  *
  * @author Emmanuel Bernard
  *

@@ -13,7 +13,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.persistence.Persistence;
+import jakarta.persistence.Persistence;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

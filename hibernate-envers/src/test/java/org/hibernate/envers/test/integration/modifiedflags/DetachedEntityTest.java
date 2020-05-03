@@ -9,8 +9,8 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.envers.Audited;

@@ -7,11 +7,11 @@
 
 //$Id$
 package org.hibernate.jpa.test.callbacks;
-import javax.persistence.EntityListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.ExcludeSuperclassListeners;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

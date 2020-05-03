@@ -8,21 +8,21 @@ package org.hibernate.envers.test.integration.inheritance.single.notownedrelatio
 
 import java.io.Serializable;
 import java.util.Set;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OneToMany;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("Contact")
-@DiscriminatorColumn(name = "contactType", discriminatorType = javax.persistence.DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "contactType", discriminatorType = jakarta.persistence.DiscriminatorType.STRING)
 @Audited
 public class Contact implements Serializable {
 	@Id

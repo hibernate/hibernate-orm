@@ -12,9 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AvailableSettings;
@@ -36,7 +36,7 @@ import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.Paramete
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.NamedStoredProcedureQuery
+ * @see jakarta.persistence.NamedStoredProcedureQuery
  */
 public class NamedProcedureCallDefinition {
 	private final String registeredName;

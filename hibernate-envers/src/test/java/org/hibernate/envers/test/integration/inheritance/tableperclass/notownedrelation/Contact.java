@@ -9,11 +9,11 @@ package org.hibernate.envers.test.integration.inheritance.tableperclass.notowned
 
 import java.io.Serializable;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
 

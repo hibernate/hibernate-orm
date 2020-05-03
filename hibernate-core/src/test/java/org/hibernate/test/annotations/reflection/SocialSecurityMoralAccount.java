@@ -7,11 +7,11 @@
 
 //$Id$
 package org.hibernate.test.annotations.reflection;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.IdClass;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 
 /**
  * @author Emmanuel Bernard

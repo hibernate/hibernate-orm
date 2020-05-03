@@ -95,8 +95,8 @@ public abstract class ObjectNameNormalizer {
 
 	/**
 	 * Intended only for use in handling quoting requirements for {@code column-definition}
-	 * as defined by {@link javax.persistence.Column#columnDefinition()},
-	 *  {@link javax.persistence.JoinColumn#columnDefinition}, etc.  This method should not
+	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
+	 *  {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not
 	 * be called in any other scenario.
 	 *
 	 * @param text The specified column definition

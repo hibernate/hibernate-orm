@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.annotations.manytomany;
 import java.util.Collection;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 
 @Entity
 public class PhoneNumber {

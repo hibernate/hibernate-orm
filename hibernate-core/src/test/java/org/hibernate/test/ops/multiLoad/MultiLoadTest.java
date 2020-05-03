@@ -8,11 +8,11 @@ package org.hibernate.test.ops.multiLoad;
 
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.Table;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.Table;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;

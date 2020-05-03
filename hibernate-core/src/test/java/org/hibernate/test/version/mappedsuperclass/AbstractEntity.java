@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.version.mappedsuperclass;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Andrea Boriero

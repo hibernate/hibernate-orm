@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.ParameterExpression;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.ParameterExpression;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;

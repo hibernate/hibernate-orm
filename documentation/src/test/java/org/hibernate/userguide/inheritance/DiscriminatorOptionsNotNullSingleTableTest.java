@@ -11,11 +11,11 @@ import java.sql.Statement;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.DiscriminatorOptions;

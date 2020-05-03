@@ -8,7 +8,7 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.xml;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

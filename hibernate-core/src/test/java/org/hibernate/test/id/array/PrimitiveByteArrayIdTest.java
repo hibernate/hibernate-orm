@@ -9,9 +9,9 @@ package org.hibernate.test.id.array;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.junit.After;
 import org.junit.Before;

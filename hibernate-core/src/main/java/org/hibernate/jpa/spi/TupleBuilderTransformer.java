@@ -9,8 +9,8 @@ package org.hibernate.jpa.spi;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.transform.BasicTransformerAdapter;

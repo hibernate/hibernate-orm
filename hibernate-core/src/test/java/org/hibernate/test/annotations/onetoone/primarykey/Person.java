@@ -7,11 +7,11 @@
 
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.OneToOne;
 
 @Entity
 public class Person {

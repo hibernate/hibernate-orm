@@ -9,7 +9,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;

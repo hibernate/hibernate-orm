@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.test.annotations.embedded;
-import javax.persistence.Embedded;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

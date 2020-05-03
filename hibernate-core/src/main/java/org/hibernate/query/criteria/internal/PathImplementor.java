@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * Implementation contract for the JPA {@link Path} interface.

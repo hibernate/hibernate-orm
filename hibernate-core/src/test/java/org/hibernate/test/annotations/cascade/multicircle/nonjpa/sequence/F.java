@@ -9,14 +9,14 @@ package org.hibernate.test.annotations.cascade.multicircle.nonjpa.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class F extends AbstractEntity {
     private static final long serialVersionUID = 1471534025L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(mappedBy = "f")
+    @jakarta.persistence.OneToMany(mappedBy = "f")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,
@@ -25,10 +25,10 @@ public class F extends AbstractEntity {
 	})
     private java.util.Set<E> eCollection = new java.util.HashSet<E>();
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	private D d;
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	private G g;
 
     public java.util.Set<E> getECollection() {

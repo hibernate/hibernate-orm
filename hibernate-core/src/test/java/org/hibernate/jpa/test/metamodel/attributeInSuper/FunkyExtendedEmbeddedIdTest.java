@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
-import javax.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

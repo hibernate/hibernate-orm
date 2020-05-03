@@ -9,10 +9,10 @@ import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.clearDirtyTracking;

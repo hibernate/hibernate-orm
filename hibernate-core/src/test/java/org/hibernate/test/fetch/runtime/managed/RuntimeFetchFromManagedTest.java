@@ -7,12 +7,12 @@
 package org.hibernate.test.fetch.runtime.managed;
 
 import java.util.Collections;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
@@ -83,7 +83,7 @@ public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTest
 						final RootEntity rootEntity = session.find(
 								RootEntity.class,
 								2,
-								Collections.singletonMap( "javax.persistence.loadgraph", entityGraph )
+								Collections.singletonMap( "jakarta.persistence.loadgraph", entityGraph )
 						);
 						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
 						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
@@ -114,7 +114,7 @@ public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTest
 								RootEntity.class
 						);
 
-						final RootEntity rootEntity = query.setHint( "javax.persistence.loadgraph", entityGraph ).uniqueResult();
+						final RootEntity rootEntity = query.setHint( "jakarta.persistence.loadgraph", entityGraph ).uniqueResult();
 						assertThat( Hibernate.isInitialized( rootEntity ), is( true ) );
 						assertThat( Hibernate.isInitialized( rootEntity.getChild() ), is( true ) );
 					}

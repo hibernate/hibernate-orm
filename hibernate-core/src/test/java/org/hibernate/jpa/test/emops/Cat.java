@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.jpa.test.emops;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 @Entity
 @Inheritance( strategy = InheritanceType.JOINED )

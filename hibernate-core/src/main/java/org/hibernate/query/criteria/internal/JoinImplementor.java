@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Consolidates the {@link Join} and {@link Fetch} hierarchies since that is how we implement them.

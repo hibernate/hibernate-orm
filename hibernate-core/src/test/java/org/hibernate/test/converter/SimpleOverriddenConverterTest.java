@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.converter;
 
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.StringType;

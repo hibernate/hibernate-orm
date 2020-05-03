@@ -5,10 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.id.generationmappings;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 /**
  * TODO : javadoc
@@ -22,7 +22,7 @@ public class CompleteSequenceEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "COMPLETE_SEQ")
-	@javax.persistence.SequenceGenerator(
+	@jakarta.persistence.SequenceGenerator(
 			name = "COMPLETE_SEQ",
 			sequenceName = SEQ_NAME,
 			initialValue = 1000,

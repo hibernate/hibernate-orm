@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.convert.spi;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;

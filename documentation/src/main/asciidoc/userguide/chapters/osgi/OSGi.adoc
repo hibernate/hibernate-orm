@@ -92,7 +92,7 @@ That `DataSource` is then used by your `persistence.xml` persistence-unit. The f
 
 Your bundle's manifest will need to import, at a minimum:
 
-* `javax.persistence`
+* `jakarta.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime).
 
 === Obtaining an EntityManger
@@ -122,7 +122,7 @@ Similar to any other JPA setup, your bundle must include a `persistence.xml` fil
 
 Your bundle's manifest will need to import, at a minimum:
 
-* `javax.persistence`
+* `jakarta.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime)
 * JDBC driver package (example: `org.h2`)
 * `org.osgi.framework`, necessary to discover the `EntityManagerFactory` (described below)
@@ -156,7 +156,7 @@ Native Hibernate use is also supported. The client bundle is responsible for man
 
 Your bundle's manifest will need to import, at a minimum:
 
-* `javax.persistence`
+* `jakarta.persistence`
 * `org.hibernate.proxy` and `javassist.util.proxy`, due to Hibernate's ability to return proxies for lazy initialization (Javassist enhancement occurs on the entity's `ClassLoader` during runtime)
 * JDBC driver package (example: `org.h2`)
 * `org.osgi.framework`, necessary to discover the `SessionFactory` (described below)

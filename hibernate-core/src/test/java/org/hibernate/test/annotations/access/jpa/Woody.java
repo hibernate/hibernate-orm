@@ -8,14 +8,14 @@
 //$Id$
 
 package org.hibernate.test.annotations.access.jpa;
-import javax.persistence.Access;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard
  */
 @MappedSuperclass
-@Access(javax.persistence.AccessType.PROPERTY)
+@Access(jakarta.persistence.AccessType.PROPERTY)
 public class Woody extends Thingy {
 	private String color;
 	private String name;

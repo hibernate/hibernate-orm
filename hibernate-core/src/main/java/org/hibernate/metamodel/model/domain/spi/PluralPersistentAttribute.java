@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.spi;
 
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
  * Hibernate extension to the JPA {@link PluralAttribute} descriptor

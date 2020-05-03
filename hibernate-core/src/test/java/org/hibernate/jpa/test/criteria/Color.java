@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

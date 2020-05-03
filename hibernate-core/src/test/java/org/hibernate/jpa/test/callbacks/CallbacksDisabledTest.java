@@ -8,7 +8,7 @@ package org.hibernate.jpa.test.callbacks;
 
 import java.util.Date;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

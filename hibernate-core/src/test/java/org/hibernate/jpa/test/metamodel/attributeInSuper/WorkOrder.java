@@ -8,12 +8,12 @@ package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
 import java.io.Serializable;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.EmbeddedId;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class WorkOrder implements Serializable {
 	@EmbeddedId
 	private WorkOrderId id;

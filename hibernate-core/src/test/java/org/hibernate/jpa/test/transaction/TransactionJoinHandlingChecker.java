@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;

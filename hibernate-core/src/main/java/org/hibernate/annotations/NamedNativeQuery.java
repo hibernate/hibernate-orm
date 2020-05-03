@@ -15,7 +15,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.NamedNativeQuery} with Hibernate features.
+ * Extends {@link jakarta.persistence.NamedNativeQuery} with Hibernate features.
  *
  * @author Emmanuel Bernard
  *

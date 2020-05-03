@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
- * JPA {@link javax.persistence.EnumType#STRING} strategy (storing the name)
+ * JPA {@link jakarta.persistence.EnumType#STRING} strategy (storing the name)
  *
  * @author Steve Ebersole
  */

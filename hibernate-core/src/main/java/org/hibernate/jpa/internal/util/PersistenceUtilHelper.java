@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import javax.persistence.spi.LoadState;
+import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.AbstractLazyLoadInterceptor;
@@ -32,11 +32,11 @@ import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Central delegate for handling calls from:<ul>
- *     <li>{@link javax.persistence.PersistenceUtil#isLoaded(Object)}</li>
- *     <li>{@link javax.persistence.PersistenceUtil#isLoaded(Object, String)}</li>
- *     <li>{@link javax.persistence.spi.ProviderUtil#isLoaded(Object)}</li>
- *     <li>{@link javax.persistence.spi.ProviderUtil#isLoadedWithReference(Object, String)}</li>
- *     <li>{@link javax.persistence.spi.ProviderUtil#isLoadedWithoutReference(Object, String)}li>
+ *     <li>{@link jakarta.persistence.PersistenceUtil#isLoaded(Object)}</li>
+ *     <li>{@link jakarta.persistence.PersistenceUtil#isLoaded(Object, String)}</li>
+ *     <li>{@link jakarta.persistence.spi.ProviderUtil#isLoaded(Object)}</li>
+ *     <li>{@link jakarta.persistence.spi.ProviderUtil#isLoadedWithReference(Object, String)}</li>
+ *     <li>{@link jakarta.persistence.spi.ProviderUtil#isLoadedWithoutReference(Object, String)}li>
  * </ul>
  *
  * @author Emmanuel Bernard

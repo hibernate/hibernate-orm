@@ -9,8 +9,8 @@
 package org.hibernate.test.annotations.inheritance.joined;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard

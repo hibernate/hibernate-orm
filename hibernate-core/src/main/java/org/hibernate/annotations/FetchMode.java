@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 /**
- * Fetch options on associations.  Defines more of the "how" of fetching, whereas JPA {@link javax.persistence.FetchType}
+ * Fetch options on associations.  Defines more of the "how" of fetching, whereas JPA {@link jakarta.persistence.FetchType}
  * focuses on the "when".
  *
  * @author Emmanuel Bernard

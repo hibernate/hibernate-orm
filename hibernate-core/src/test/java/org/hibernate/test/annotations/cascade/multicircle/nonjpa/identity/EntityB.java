@@ -6,11 +6,11 @@
  */
 package org.hibernate.test.annotations.cascade.multicircle.nonjpa.identity;
 
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class EntityB extends AbstractEntity {
     private static final long serialVersionUID = 325417243L;
 
-    @javax.persistence.OneToMany(mappedBy = "b")
+    @jakarta.persistence.OneToMany(mappedBy = "b")
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,
@@ -20,7 +20,7 @@ public class EntityB extends AbstractEntity {
     private java.util.Set<EntityG> gCollection = new java.util.HashSet<EntityG>();
 
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,
@@ -29,7 +29,7 @@ public class EntityB extends AbstractEntity {
 	})
 	private EntityC c;
 
-	@javax.persistence.ManyToOne(optional = false)
+	@jakarta.persistence.ManyToOne(optional = false)
 	@org.hibernate.annotations.Cascade({
 			org.hibernate.annotations.CascadeType.PERSIST,
 			org.hibernate.annotations.CascadeType.SAVE_UPDATE,

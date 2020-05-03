@@ -7,14 +7,14 @@
 package org.hibernate.query.criteria.internal.path;
 
 import java.io.Serializable;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.MappedSuperclassType;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -24,7 +24,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Models a path for a {@link PluralAttribute} generally obtained from a
- * {@link javax.persistence.criteria.Path#get} call
+ * {@link jakarta.persistence.criteria.Path#get} call
  *
  * @author Steve Ebersole
  */

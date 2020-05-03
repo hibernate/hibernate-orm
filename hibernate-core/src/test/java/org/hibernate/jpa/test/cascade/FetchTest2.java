@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.cascade;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

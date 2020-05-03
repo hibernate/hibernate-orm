@@ -9,12 +9,12 @@ package org.hibernate.graph;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.Subgraph;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;

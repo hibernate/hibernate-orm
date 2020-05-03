@@ -9,7 +9,7 @@ package org.hibernate.envers.test.performance;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;

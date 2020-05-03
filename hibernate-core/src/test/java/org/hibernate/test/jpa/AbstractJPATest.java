@@ -8,7 +8,7 @@ package org.hibernate.test.jpa;
 
 import java.io.Serializable;
 import java.util.IdentityHashMap;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;

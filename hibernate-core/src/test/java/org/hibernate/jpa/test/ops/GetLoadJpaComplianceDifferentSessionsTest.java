@@ -7,7 +7,7 @@
 package org.hibernate.jpa.test.ops;
 
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

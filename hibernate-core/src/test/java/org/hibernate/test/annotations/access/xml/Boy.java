@@ -9,8 +9,8 @@
 
 package org.hibernate.test.annotations.access.xml;
 import java.util.Set;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Entity;
 

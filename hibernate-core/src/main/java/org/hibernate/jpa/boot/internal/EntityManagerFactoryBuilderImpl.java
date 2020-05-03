@@ -17,11 +17,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.persistence.AttributeConverter;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.SessionFactory;

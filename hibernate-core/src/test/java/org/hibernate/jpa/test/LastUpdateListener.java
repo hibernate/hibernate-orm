@@ -8,8 +8,8 @@
 //$Id$
 package org.hibernate.jpa.test;
 import java.util.Date;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

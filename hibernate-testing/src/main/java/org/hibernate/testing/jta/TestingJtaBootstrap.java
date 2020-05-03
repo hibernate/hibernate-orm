@@ -21,14 +21,14 @@ public final class TestingJtaBootstrap {
 	public static void prepare(Map configValues) {
 		configValues.put( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		configValues.put( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
-		configValues.put( "javax.persistence.transactionType", "JTA" );
+		configValues.put( "jakarta.persistence.transactionType", "JTA" );
 	}
 
 	public static void prepare(StandardServiceRegistryBuilder registryBuilder) {
 		registryBuilder.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 		registryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		registryBuilder.applySetting( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
-		registryBuilder.applySetting( "javax.persistence.transactionType", "JTA" );
+		registryBuilder.applySetting( "jakarta.persistence.transactionType", "JTA" );
 	}
 
 	public static StandardServiceRegistryBuilder prepare() {

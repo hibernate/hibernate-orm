@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.override;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

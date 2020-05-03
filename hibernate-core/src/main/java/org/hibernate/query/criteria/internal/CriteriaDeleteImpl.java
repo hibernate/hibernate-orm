@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.criteria.internal;
 
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 

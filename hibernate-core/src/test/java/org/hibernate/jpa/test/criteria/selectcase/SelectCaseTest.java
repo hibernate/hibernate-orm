@@ -24,15 +24,15 @@
 package org.hibernate.jpa.test.criteria.selectcase;
 
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -121,7 +121,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 		entityManager.createQuery( query ).getResultList();
 	}
 
-	@javax.persistence.Entity
+	@jakarta.persistence.Entity
 	@Table(name = "entity")
 	public static class Entity {
 

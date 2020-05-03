@@ -6,9 +6,9 @@
  */
 package org.hibernate.userguide.schema;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NaturalId;

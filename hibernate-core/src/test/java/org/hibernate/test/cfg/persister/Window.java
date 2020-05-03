@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.cfg.persister;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Persister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;

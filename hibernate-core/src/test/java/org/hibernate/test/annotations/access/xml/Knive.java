@@ -8,7 +8,7 @@
 // $Id: Waiter.java 18506 2010-01-11 20:23:08Z hardy.ferentschik $
 
 package org.hibernate.test.annotations.access.xml;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

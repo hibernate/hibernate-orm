@@ -16,34 +16,34 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.CollectionTable;
-import javax.persistence.ConstraintMode;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyJoinColumn;
-import javax.persistence.MapKeyJoinColumns;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.PrimaryKeyJoinColumns;
-import javax.persistence.SecondaryTable;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AssociationOverrides;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
+import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
@@ -217,7 +217,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	public static class Person {
 		@Id
 		@GeneratedValue
-		@javax.persistence.Column( nullable = false, unique = true)
+		@jakarta.persistence.Column( nullable = false, unique = true)
 		public long id;
 
 		@OneToMany
@@ -242,7 +242,7 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 	@PrimaryKeyJoinColumn( name = "PERSON_ID", foreignKey = @ForeignKey( name = "FK_STUDENT_PERSON" ) )
 	public static class Student extends Person {
 
-		@javax.persistence.Column( name = "MATRICULATION_NUMBER" )
+		@jakarta.persistence.Column( name = "MATRICULATION_NUMBER" )
 		public String matriculationNumber;
 
 		@ManyToOne
@@ -320,9 +320,9 @@ public class ForeignKeyConstraintTest extends BaseNonConfigCoreFunctionalTestCas
 
 	@Embeddable
 	public static class VehicleId implements Serializable {
-		@javax.persistence.Column( name = "VEHICLE_VENDOR_NR" )
+		@jakarta.persistence.Column( name = "VEHICLE_VENDOR_NR" )
 		public long vehicleVendorNumber;
-		@javax.persistence.Column( name = "VEHICLE_NR" )
+		@jakarta.persistence.Column( name = "VEHICLE_NR" )
 		public long vehicleNumber;
 
 		@Override

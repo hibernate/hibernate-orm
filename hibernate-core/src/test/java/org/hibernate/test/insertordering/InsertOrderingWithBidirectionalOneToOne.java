@@ -14,7 +14,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;

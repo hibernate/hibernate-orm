@@ -8,7 +8,7 @@ package org.hibernate.test.cascade.circle;
 
 import java.util.Iterator;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.junit.Test;
 

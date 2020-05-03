@@ -7,13 +7,13 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Describes a relationship annotated with {@link javax.persistence.MapsId}
+ * Describes a relationship annotated with {@link jakarta.persistence.MapsId}
  * 
  * @author Steve Ebersole
  */
 public interface MapsIdSource {
 	/**
-	 * Obtain the {@link javax.persistence.MapsId#value()} naming the attribute
+	 * Obtain the {@link jakarta.persistence.MapsId#value()} naming the attribute
 	 * within the EmbeddedId mapped by this relationship.
 	 * 
 	 * @return The corresponding id attribute name.

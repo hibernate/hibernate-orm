@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;

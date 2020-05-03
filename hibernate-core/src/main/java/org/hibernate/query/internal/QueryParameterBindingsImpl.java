@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;

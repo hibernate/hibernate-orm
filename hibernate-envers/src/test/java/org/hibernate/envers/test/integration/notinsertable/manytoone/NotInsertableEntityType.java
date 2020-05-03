@@ -6,9 +6,9 @@
  */
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.Audited;
 

@@ -676,7 +676,7 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
 
-For JPA cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`javax.persistence.CascadeType`] instead.
+For JPA cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`jakarta.persistence.CascadeType`] instead.
 
 When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
 

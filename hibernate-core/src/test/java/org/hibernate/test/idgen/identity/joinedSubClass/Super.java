@@ -6,14 +6,14 @@
  */
 package org.hibernate.test.idgen.identity.joinedSubClass;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
 
-import static javax.persistence.GenerationType.IDENTITY;
-import static javax.persistence.InheritanceType.JOINED;
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static jakarta.persistence.InheritanceType.JOINED;
 
 /**
  * @author Andrey Vlasov

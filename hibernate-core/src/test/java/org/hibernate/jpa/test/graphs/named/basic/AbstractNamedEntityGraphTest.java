@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.graphs.named.basic;
 
-import javax.persistence.EntityGraph;
+import jakarta.persistence.EntityGraph;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

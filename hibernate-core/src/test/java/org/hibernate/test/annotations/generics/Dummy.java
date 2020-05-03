@@ -7,9 +7,9 @@
 
 //$
 package org.hibernate.test.annotations.generics;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard

@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.manytoone;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 
 public class UserPK implements Serializable {
 	private static final long serialVersionUID = -7720874756224520523L;

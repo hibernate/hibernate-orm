@@ -9,9 +9,9 @@ package org.hibernate.query.criteria.internal.expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CompoundSelection;
+import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.criteria.internal.ParameterRegistry;

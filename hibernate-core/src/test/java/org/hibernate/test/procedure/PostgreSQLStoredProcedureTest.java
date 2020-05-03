@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Properties;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

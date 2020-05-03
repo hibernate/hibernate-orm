@@ -7,10 +7,10 @@
 package org.hibernate.jpamodelgen.test.blob;
 
 import java.sql.Blob;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 /**
  * @author Hardy Ferentschik

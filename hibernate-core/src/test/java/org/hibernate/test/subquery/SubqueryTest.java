@@ -21,7 +21,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
 import org.junit.Test;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.function.Consumer;
 

@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.jpa.test.callbacks;
-import javax.persistence.EntityListeners;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

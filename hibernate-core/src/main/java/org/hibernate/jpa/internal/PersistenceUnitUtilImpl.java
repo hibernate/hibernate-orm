@@ -7,8 +7,8 @@
 package org.hibernate.jpa.internal;
 
 import java.io.Serializable;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.spi.LoadState;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
@@ -77,13 +77,13 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			}
 			else {
 				// HHH-11426 - best effort to deal with the case of detached entities
-				log.debug( "javax.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
+				log.debug( "jakarta.persistence.PersistenceUnitUtil.getIdentifier may not be able to read identifier of a detached entity" );
 				return getIdentifierFromPersister( entity );
 			}
 		}
 		else {
 			log.debugf(
-					"javax.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
+					"jakarta.persistence.PersistenceUnitUtil.getIdentifier is only intended to work with enhanced entities " +
 							"(although Hibernate also adapts this support to its proxies); " +
 							"however the passed entity was not enhanced (nor a proxy).. may not be able to read identifier"
 			);

@@ -724,7 +724,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
-	 * Should resources held by {@link javax.persistence.EntityManager} instance be released immediately on close?
+	 * Should resources held by {@link jakarta.persistence.EntityManager} instance be released immediately on close?
 	 * <p/>
 	 * The other option is to release them as part of an after-transaction callback.
 	 *

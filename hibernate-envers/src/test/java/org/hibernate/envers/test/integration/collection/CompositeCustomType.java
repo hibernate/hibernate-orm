@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.HashSet;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.collection.CompositeCustomTypeSetEntity;

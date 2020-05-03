@@ -7,7 +7,7 @@
 package org.hibernate.test.component.basic2;
 
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 

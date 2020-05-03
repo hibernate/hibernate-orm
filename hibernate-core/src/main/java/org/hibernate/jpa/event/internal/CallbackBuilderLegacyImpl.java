@@ -12,12 +12,12 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.ExcludeDefaultListeners;
-import javax.persistence.ExcludeSuperclassListeners;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.ExcludeDefaultListeners;
+import jakarta.persistence.ExcludeSuperclassListeners;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ClassLoadingException;

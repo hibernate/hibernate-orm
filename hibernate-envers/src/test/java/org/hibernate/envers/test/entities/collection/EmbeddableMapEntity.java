@@ -8,13 +8,13 @@ package org.hibernate.envers.test.entities.collection;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.Table;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.components.Component3;

@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpa.test.metagen.mappedsuperclass.attribute;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole

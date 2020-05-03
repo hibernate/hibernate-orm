@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.sql.autodiscovery;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -6,8 +6,8 @@
  */
 package org.hibernate.envers.test.integration.accesstype;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.envers.Audited;

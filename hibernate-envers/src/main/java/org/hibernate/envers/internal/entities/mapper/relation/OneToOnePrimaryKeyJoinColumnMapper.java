@@ -15,7 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Property mapper for {@link javax.persistence.OneToOne} with {@link javax.persistence.PrimaryKeyJoinColumn} relation.
+ * Property mapper for {@link jakarta.persistence.OneToOne} with {@link jakarta.persistence.PrimaryKeyJoinColumn} relation.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

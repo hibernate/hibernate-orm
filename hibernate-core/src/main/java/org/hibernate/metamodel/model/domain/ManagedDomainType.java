@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 /**
  * @author Steve Ebersole

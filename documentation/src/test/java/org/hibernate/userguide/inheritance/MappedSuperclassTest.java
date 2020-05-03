@@ -7,9 +7,9 @@
 package org.hibernate.userguide.inheritance;
 
 import java.math.BigDecimal;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 

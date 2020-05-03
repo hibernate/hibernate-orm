@@ -9,12 +9,12 @@
 package org.hibernate.test.annotations.manytoone.referencedcolumnname;
 import java.io.Serializable;
 import java.rmi.server.UID;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-import javax.persistence.Version;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
 
 @MappedSuperclass
 public class GenericObject implements Serializable {

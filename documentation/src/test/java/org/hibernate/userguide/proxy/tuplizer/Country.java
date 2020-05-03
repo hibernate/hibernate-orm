@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.userguide.proxy.tuplizer;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

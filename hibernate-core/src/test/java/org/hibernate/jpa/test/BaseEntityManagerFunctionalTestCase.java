@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.persistence.EntityManager;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;

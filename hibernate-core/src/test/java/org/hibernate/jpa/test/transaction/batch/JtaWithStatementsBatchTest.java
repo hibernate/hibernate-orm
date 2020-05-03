@@ -9,8 +9,8 @@ package org.hibernate.jpa.test.transaction.batch;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 

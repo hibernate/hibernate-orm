@@ -9,7 +9,7 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

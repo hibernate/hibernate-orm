@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.pack.defaultpar_1_0;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

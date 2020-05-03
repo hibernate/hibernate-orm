@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.criteria;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import java.io.Serializable;
 
 /**

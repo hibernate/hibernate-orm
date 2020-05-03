@@ -8,9 +8,9 @@
 //$
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
 import java.util.List;
-import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 
 @Embeddable
 public class B {

@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.naturalid.mutable.cached;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Guenther Demetz

@@ -12,9 +12,9 @@ package org.hibernate.jpa.test.ops;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;

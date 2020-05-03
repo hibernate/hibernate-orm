@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.embeddable;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class Stuff extends Base implements IStuff {

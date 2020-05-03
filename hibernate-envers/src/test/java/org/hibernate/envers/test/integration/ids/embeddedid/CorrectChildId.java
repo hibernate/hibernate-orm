@@ -8,8 +8,8 @@ package org.hibernate.envers.test.integration.ids.embeddedid;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

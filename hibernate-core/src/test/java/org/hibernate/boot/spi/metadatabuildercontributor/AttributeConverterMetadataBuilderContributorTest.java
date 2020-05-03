@@ -8,11 +8,11 @@ package org.hibernate.boot.spi.metadatabuildercontributor;
 
 import java.time.YearMonth;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Column;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.spi.MetadataBuilderContributor;

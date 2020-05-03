@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.metadata;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Gail Badner

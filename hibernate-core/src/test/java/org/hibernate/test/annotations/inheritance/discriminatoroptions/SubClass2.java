@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.annotations.inheritance.discriminatoroptions;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

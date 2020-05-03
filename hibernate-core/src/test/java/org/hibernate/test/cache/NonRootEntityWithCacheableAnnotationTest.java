@@ -8,11 +8,11 @@ package org.hibernate.test.cache;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

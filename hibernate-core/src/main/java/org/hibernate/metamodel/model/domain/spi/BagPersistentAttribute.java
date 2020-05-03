@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Collection;
-import javax.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.CollectionAttribute;
 
 /**
  * Hibernate extension to the JPA {@link CollectionAttribute} descriptor

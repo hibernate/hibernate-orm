@@ -5,10 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.annotations.id.generationmappings;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 /**
  * TODO : javadoc
@@ -22,7 +22,7 @@ public class MinimalSequenceEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "MINIMAL_SEQ")
-	@javax.persistence.SequenceGenerator( name = "MINIMAL_SEQ", sequenceName = SEQ_NAME )
+	@jakarta.persistence.SequenceGenerator( name = "MINIMAL_SEQ", sequenceName = SEQ_NAME )
 	public Long getId() {
 		return id;
 	}

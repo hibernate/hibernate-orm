@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.test.integration.onetoone.unidirectional;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;

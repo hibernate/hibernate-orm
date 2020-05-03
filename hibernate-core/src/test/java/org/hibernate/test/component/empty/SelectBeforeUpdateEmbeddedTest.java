@@ -9,11 +9,11 @@ package org.hibernate.test.component.empty;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.annotations.SelectBeforeUpdate;

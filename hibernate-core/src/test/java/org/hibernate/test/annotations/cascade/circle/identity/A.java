@@ -9,31 +9,31 @@ package org.hibernate.test.annotations.cascade.circle.identity;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class A extends AbstractEntity {
     private static final long serialVersionUID = 864804063L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "a")
     private java.util.Set<B> bCollection = new java.util.HashSet<B>();
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "aCollection")
     private java.util.Set<D> dCollection = new java.util.HashSet<D>();
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "a")
     private java.util.Set<C> cCollection = new java.util.HashSet<C>();
 

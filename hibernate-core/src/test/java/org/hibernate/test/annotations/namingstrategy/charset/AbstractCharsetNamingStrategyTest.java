@@ -10,12 +10,12 @@ package org.hibernate.test.annotations.namingstrategy.charset;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

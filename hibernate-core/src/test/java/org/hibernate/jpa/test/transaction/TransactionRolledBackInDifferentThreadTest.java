@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
@@ -69,7 +69,7 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setRollbackOnly();
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 				}
-				catch (javax.persistence.PersistenceException e) {
+				catch (jakarta.persistence.PersistenceException e) {
 					if ( e.getCause() instanceof HibernateException &&
 							e.getCause().getMessage().equals( "Transaction was rolled back in a different thread!" ) ) {
 						/**
@@ -114,7 +114,7 @@ public class TransactionRolledBackInDifferentThreadTest extends BaseEntityManage
 					em.joinTransaction();
 					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 				}
-				catch (javax.persistence.PersistenceException e) {
+				catch (jakarta.persistence.PersistenceException e) {
 					if ( e.getCause() instanceof HibernateException &&
 							e.getCause().getMessage().equals( "Transaction was rolled back in a different thread!" ) ) {
 						/**

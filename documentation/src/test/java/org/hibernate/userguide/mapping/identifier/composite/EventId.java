@@ -9,7 +9,7 @@ package org.hibernate.userguide.mapping.identifier.composite;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Vlad Mihalcea

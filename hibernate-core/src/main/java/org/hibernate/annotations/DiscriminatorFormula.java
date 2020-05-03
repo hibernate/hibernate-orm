@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Used to apply a Hibernate formula (derived value) as the inheritance discriminator "column".  Used in place of
- * the JPA {@link javax.persistence.DiscriminatorColumn} when a formula is wanted.
+ * the JPA {@link jakarta.persistence.DiscriminatorColumn} when a formula is wanted.
  *
  * To be placed on the root entity.
  *

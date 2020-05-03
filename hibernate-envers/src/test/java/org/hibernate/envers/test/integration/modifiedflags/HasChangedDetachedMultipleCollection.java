@@ -8,7 +8,7 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.test.Priority;

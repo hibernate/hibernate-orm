@@ -1,6 +1,6 @@
 package org.hibernate.test.annotations.derivedidentities.e3.b3;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name="`Policy`")

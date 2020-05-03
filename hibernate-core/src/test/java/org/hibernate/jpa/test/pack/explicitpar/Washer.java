@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.jpa.test.pack.explicitpar;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

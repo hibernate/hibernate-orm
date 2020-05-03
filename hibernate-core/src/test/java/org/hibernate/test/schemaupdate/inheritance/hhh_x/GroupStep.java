@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.schemaupdate.inheritance.hhh_x;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import java.util.List;
 
 /**

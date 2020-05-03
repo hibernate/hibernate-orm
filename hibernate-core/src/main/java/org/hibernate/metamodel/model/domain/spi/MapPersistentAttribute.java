@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain.spi;
 
 import java.util.Map;
-import javax.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.MapAttribute;
 
 /**
  * Hibernate extension to the JPA {@link MapAttribute} descriptor

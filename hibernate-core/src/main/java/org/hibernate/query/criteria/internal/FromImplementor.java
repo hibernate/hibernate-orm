@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.query.criteria.internal;
-import javax.persistence.criteria.From;
+import jakarta.persistence.criteria.From;
 
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 

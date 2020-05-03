@@ -7,13 +7,13 @@
 package org.hibernate.graph;
 
 import java.util.List;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
 
 /**
  * A container for {@link AttributeNode}s.
  *
- * Acts as a "bridge" between JPA's {@link javax.persistence.EntityGraph} and {@link javax.persistence.Subgraph}
+ * Acts as a "bridge" between JPA's {@link jakarta.persistence.EntityGraph} and {@link jakarta.persistence.Subgraph}
  *
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
@@ -48,8 +48,8 @@ public interface Graph<J> extends GraphNode<J> {
 	// AttributeNode handling
 
 	/**
-	 * Ultimately only needed for implementing {@link javax.persistence.EntityGraph#getAttributeNodes()}
-	 * and {@link javax.persistence.Subgraph#getAttributeNodes()}
+	 * Ultimately only needed for implementing {@link jakarta.persistence.EntityGraph#getAttributeNodes()}
+	 * and {@link jakarta.persistence.Subgraph#getAttributeNodes()}
 	 */
 	List<AttributeNode<?>> getGraphAttributeNodes();
 

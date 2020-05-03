@@ -7,7 +7,7 @@
 package org.hibernate.envers.test.integration.basic;
 
 import java.util.List;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.IntTestEntity;

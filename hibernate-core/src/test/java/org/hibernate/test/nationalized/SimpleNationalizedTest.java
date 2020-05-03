@@ -7,9 +7,9 @@
 package org.hibernate.test.nationalized;
 
 import java.sql.NClob;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Type;

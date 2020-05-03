@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Objects;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;

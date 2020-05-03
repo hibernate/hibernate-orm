@@ -8,8 +8,8 @@
 //$
 package org.hibernate.test.annotations.idmanytoone.alphabetical;
 import java.math.BigInteger;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 
 @Entity

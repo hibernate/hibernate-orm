@@ -55,7 +55,7 @@
               org.apache.felix.gogo.commands,
               org.apache.karaf.shell.console,
               org.apache.karaf.shell.commands,
-              javax.persistence;version="[1.0.0,2.1.0]",
+              jakarta.persistence;version="[1.0.0,2.1.0]",
               <!-- Needed for proxying's Javassist enhancement during runtime -->
               org.hibernate.proxy,
               javassist.util.proxy,

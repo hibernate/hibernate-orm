@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.component.proxy;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class Adult extends Person {

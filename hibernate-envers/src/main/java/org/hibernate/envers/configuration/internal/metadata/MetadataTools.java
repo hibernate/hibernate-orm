@@ -7,7 +7,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.JoinColumn;
 
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Column;

@@ -8,16 +8,16 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
-import javax.persistence.QueryTimeoutException;
-import javax.persistence.RollbackException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.QueryTimeoutException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;

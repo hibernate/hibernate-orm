@@ -11,9 +11,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.FlushModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.query.NativeQuery;
@@ -59,7 +59,7 @@ import org.hibernate.type.Type;
 public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	/**
 	 * Use a predefined named result-set mapping.  This might be defined by a {@code <result-set/>} element in a
-	 * Hibernate <tt>hbm.xml</tt> file or through a {@link javax.persistence.SqlResultSetMapping} annotation.
+	 * Hibernate <tt>hbm.xml</tt> file or through a {@link jakarta.persistence.SqlResultSetMapping} annotation.
 	 *
 	 * @param name The name of the mapping to use.
 	 *
@@ -84,7 +84,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically detect the underlying type.
 	 * <p/>
-	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link javax.persistence.ColumnResult}
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link jakarta.persistence.ColumnResult}
 	 *
 	 * @param columnAlias The column alias in the result-set to be processed as a scalar result
 	 *
@@ -95,7 +95,7 @@ public interface SQLQuery<T> extends Query<T>, SynchronizeableQuery<T> {
 	/**
 	 * Declare a scalar query result.
 	 * <p/>
-	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link javax.persistence.ColumnResult}
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or {@link jakarta.persistence.ColumnResult}
 	 *
 	 * @param columnAlias The column alias in the result-set to be processed as a scalar result
 	 * @param type The Hibernate type as which to treat the value.

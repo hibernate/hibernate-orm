@@ -1,8 +1,8 @@
 package org.hibernate.test.stateless;
 
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;

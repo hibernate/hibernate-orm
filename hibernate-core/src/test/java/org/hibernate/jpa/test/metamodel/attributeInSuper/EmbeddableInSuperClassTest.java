@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpa.test.metamodel.attributeInSuper;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.junit.Test;
 

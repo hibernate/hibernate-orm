@@ -6,14 +6,14 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import javax.persistence.Entity;
-import javax.persistence.Access;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Access;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Access(javax.persistence.AccessType.FIELD)
+@Access(jakarta.persistence.AccessType.FIELD)
 public class Hominidae extends Mammals {
 	private int intelligence;
 

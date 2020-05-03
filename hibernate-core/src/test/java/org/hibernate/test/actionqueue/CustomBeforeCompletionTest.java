@@ -7,9 +7,9 @@
 package org.hibernate.test.actionqueue;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;

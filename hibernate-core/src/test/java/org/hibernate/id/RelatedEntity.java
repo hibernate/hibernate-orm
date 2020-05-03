@@ -7,12 +7,12 @@
 
 package org.hibernate.id;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
-@javax.persistence.Entity
-@javax.persistence.Table(name = "entity2")
+@jakarta.persistence.Entity
+@jakarta.persistence.Table(name = "entity2")
 public class RelatedEntity {
 
 	@Id
@@ -20,7 +20,7 @@ public class RelatedEntity {
 	@Column(name = "universalid")// "uid" is a keywork in Oracle
 	private long uid;
 
-	@javax.persistence.ManyToOne
+	@jakarta.persistence.ManyToOne
 	private RootEntity linkedRoot;
 
 	public long getUid() {

@@ -82,6 +82,7 @@ import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
@@ -171,6 +172,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String,Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
+	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
@@ -211,6 +213,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.buildServiceRegistry( this, options );
 
 		bootMetamodel.initSessionFactory( this );
+
+		this.eventEngine = new EventEngine( metadata, this );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 
@@ -576,6 +580,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public QueryEngine getQueryEngine() {
 		return queryEngine;
+	}
+
+	@Override
+	public EventEngine getEventEngine() {
+		return eventEngine;
 	}
 
 	@Override

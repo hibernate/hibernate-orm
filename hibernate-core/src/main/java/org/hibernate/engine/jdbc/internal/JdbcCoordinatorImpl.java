@@ -439,7 +439,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void beforeTransactionCompletion() {
-		owner.beforeTransactionCompletion();
+		this.owner.beforeTransactionCompletion();
+		this.logicalConnection.beforeTransactionCompletion();
 	}
 
 	@Override

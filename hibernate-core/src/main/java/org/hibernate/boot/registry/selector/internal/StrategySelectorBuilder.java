@@ -23,16 +23,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.dialect.DB2390Dialect;
-import org.hibernate.dialect.DB2390V8Dialect;
-import org.hibernate.dialect.DB2400Dialect;
-import org.hibernate.dialect.DB2400V7R3Dialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyTenFiveDialect;
-import org.hibernate.dialect.DerbyTenSevenDialect;
-import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -152,8 +142,8 @@ public class StrategySelectorBuilder {
 		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
-		addDialects( strategySelector );
-		addJtaPlatforms( strategySelector );
+		strategySelector.registerStrategyLazily( Dialect.class, new DefaultDialectSelector() );
+		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );

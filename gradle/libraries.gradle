@@ -26,9 +26,9 @@ ext {
     weldVersion = '3.0.0.Final'
 
     javassistVersion = '3.24.0-GA'
-    byteBuddyVersion = '1.10.7'
+    byteBuddyVersion = '1.10.10'
 
-    agroalVersion = '1.7'
+    agroalVersion = '1.8'
 
     assertjVersion = '3.14.0'
 
@@ -59,7 +59,7 @@ ext {
 
             // Annotations
             commons_annotations: "org.hibernate.common:hibernate-commons-annotations:${hibernateCommonsVersion}",
-            jandex:         'org.jboss:jandex:2.1.1.Final',
+            jandex:         'org.jboss:jandex:2.1.3.Final',
             classmate:      'com.fasterxml:classmate:1.5.1',
 
             // Dom4J

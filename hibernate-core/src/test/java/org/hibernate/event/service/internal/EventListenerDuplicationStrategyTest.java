@@ -2,7 +2,6 @@ package org.hibernate.event.service.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -32,7 +31,7 @@ public class EventListenerDuplicationStrategyTest {
 
 	Tracker tracker = new Tracker();
 	ClearEvent event = new ClearEvent( null );
-	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null );
+	EventListenerGroup<ClearEventListener> listenerGroup = new EventListenerGroupImpl( EventType.CLEAR, null, false );
 
 	@Test
 	public void testListenersIterator() {

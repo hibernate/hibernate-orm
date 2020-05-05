@@ -771,8 +771,13 @@ public class SemanticQueryBuilder extends HqlParserBaseVisitor implements SqmCre
 			sortOrder = null;
 		}
 
-		// todo (6.0) : NullPrecedence
-		final NullPrecedence nullPrecedence = null;
+		final NullPrecedence nullPrecedence;
+		if ( ctx.nullsPrecedence() != null ) {
+			nullPrecedence = ctx.nullsPrecedence().FIRST() != null ? NullPrecedence.FIRST : NullPrecedence.LAST;
+		}
+		else {
+			nullPrecedence = null;
+		}
 
 		return new SqmSortSpecification( sortExpression, collation, sortOrder, nullPrecedence );
 	}

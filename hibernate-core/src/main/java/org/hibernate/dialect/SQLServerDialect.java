@@ -392,6 +392,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsNullPrecedence() {
+		return getVersion() < 10;
+	}
+
+	@Override
 	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
 		if ( getVersion() < 10 ) {
 			return super.renderOrderByElement( expression, collation, order, nulls );

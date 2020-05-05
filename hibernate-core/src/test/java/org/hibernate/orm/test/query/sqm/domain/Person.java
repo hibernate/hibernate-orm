@@ -82,23 +82,23 @@ public class Person {
 
 	@Embeddable
 	public static class Name {
-		public String first;
-		public String last;
+		public String firstName;
+		public String lastName;
 
-		public String getFirst() {
-			return first;
+		public String getFirstName() {
+			return firstName;
 		}
 
-		public void setFirst(String first) {
-			this.first = first;
+		public void setFirstName(String firstName) {
+			this.firstName = firstName;
 		}
 
-		public String getLast() {
-			return last;
+		public String getLastName() {
+			return lastName;
 		}
 
-		public void setLast(String last) {
-			this.last = last;
+		public void setLastName(String lastName) {
+			this.lastName = lastName;
 		}
 	}
 }

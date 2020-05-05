@@ -196,4 +196,16 @@ abstract public class DialectFeatureChecks {
 			return dialect.dropConstraints();
 		}
 	}
+
+	public static class SupportNullPrecedence implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsNullPrecedence();
+		}
+	}
+
+	public static class DoesNotSupportNullPrecedence implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !dialect.supportsNullPrecedence();
+		}
+	}
 }

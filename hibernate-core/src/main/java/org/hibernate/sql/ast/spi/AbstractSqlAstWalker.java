@@ -9,9 +9,11 @@ package org.hibernate.sql.ast.spi;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.NullPrecedence;
 import org.hibernate.SortOrder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -231,6 +233,22 @@ public abstract class AbstractSqlAstWalker
 
 	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
+		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		final boolean hasNullPrecedence = nullPrecedence != null && nullPrecedence != NullPrecedence.NONE;
+		if ( hasNullPrecedence && ! dialect.supportsNullPrecedence() ) {
+			appendSql( "case when (" );
+			sortSpecification.getSortExpression().accept( this );
+			appendSql( ") is null then " );
+			if ( nullPrecedence == NullPrecedence.FIRST ) {
+				appendSql( "0 else 1" );
+			}
+			else {
+				appendSql( "1 else 0" );
+			}
+			appendSql( " end" );
+			appendSql( COMA_SEPARATOR );
+		}
+
 		sortSpecification.getSortExpression().accept( this );
 
 		final String collation = sortSpecification.getCollation();
@@ -247,7 +265,10 @@ public abstract class AbstractSqlAstWalker
 			appendSql( " desc" );
 		}
 
-		// TODO: null precedence handling
+		if ( hasNullPrecedence && dialect.supportsNullPrecedence() ) {
+			appendSql( " nulls " );
+			appendSql( nullPrecedence.name().toLowerCase( Locale.ROOT ) );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

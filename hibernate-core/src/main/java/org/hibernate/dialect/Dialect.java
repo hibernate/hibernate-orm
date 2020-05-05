@@ -2578,6 +2578,9 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	public boolean supportsNullPrecedence() {
+		return true;
+	}
 	/**
 	 * Renders an ordering fragment
 	 *

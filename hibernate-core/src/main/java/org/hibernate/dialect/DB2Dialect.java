@@ -578,6 +578,10 @@ public class DB2Dialect extends Dialect {
 		return limitHandler;
 	}
 
+	@Override
+	public boolean supportsNullPrecedence() {
+		return false;
+	}
 	/**
 	 * Handle DB2 "support" for null precedence...
 	 *

@@ -312,14 +312,12 @@ orderByFragment
 	;
 
 sortSpecification
-// todo (6.0) : null precedence
-//	: sortExpression collationSpecification? orderingSpecification? nullsPrecedence?
-	: sortExpression collationSpecification? orderingSpecification?
+	: sortExpression collationSpecification? orderingSpecification? nullsPrecedence?
 	;
 
-//nullsPrecedence
-//	: NULLS (FIRST | LAST)
-//	;
+nullsPrecedence
+	: NULLS (FIRST | LAST)
+	;
 
 sortExpression
 	: identifier

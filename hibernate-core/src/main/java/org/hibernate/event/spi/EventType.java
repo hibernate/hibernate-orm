@@ -80,51 +80,6 @@ public final class EventType<T> {
 	public static final EventType<PostCollectionUpdateEventListener> POST_COLLECTION_UPDATE = create( "post-collection-update", PostCollectionUpdateEventListener.class );
 
 	/**
-	 * Add a new event type.
-	 *
-	 * @param name - name of the custom event
-	 * @param listenerClass - the base listener class or interface associated with the entity type
-	 * @param <T> - listenerClass
-	 * @return the custom {@link EventType}
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static synchronized <T> EventType<T> addCustomEventType(String name, Class<T> listenerClass) {
-		if ( name == null || listenerClass == null ) {
-			throw new HibernateException( "Custom EventType name and associated class must be non-null." );
-		}
-
-		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.computeIfAbsent(
-				name,
-				( e -> {
-					final EventType eventTypeNew = EventType.create( name, listenerClass );
-					LOG.debugf(
-							"Added custom EventType: [%s], ordinal=[%d], listener=[%s].",
-							name,
-							eventTypeNew.ordinal,
-							listenerClass.toString()
-					);
-					return eventTypeNew;
-				} )
-		);
-		// There's no way to know if there was a pre-existing EventType with
-		// the same name and listener, so ignore that case.
-		// Just check that listener is the same as listenerClass
-		if ( !listenerClass.equals( eventType.baseListenerInterface ) ) {
-				throw new HibernateException(
-						"Could not add EventType [" + name + "] with listener Class ["
-								+ "]. An EventType with that name already exists with listener ["
-								+ listenerClass.getName()
-								+ "]."
-				);
-		}
-		return eventType;
-	}
-
-	private static <T> EventType<T> create(String name, Class<T> listenerClass) {
-		return new EventType<>( name, listenerClass );
-	}
-
-	/**
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */

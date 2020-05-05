@@ -20,7 +20,6 @@ import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
-import org.hibernate.dialect.FrontBaseDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
@@ -29,24 +28,17 @@ import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.Ingres10Dialect;
 import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.InterbaseDialect;
-import org.hibernate.dialect.JDataStoreDialect;
-import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQL57Dialect;
-import org.hibernate.dialect.MySQL57InnoDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.ProgressDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
@@ -74,7 +66,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 			case 'F': return caseF( name );
 			case 'H': return caseH( name );
 			case 'I': return caseI( name );
-			case 'J': return caseJ( name );
 			case 'M': return caseM( name );
 			case 'O': return caseO( name );
 			case 'P': return caseP( name );
@@ -126,9 +117,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 		if ( name.equals( "Firebird" ) ) {
 			return FirebirdDialect.class;
 		}
-		if ( name.equals( "FrontBase" ) ) {
-			return FrontBaseDialect.class;
-		}
 		return null;
 	}
 
@@ -161,34 +149,15 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 		if ( name.equals( "Ingres10" ) ) {
 			return Ingres10Dialect.class;
 		}
-		if ( name.equals( "Interbase" ) ) {
-			return InterbaseDialect.class;
-		}
-		return null;
-	}
-
-	private static Class<? extends Dialect> caseJ(final String name) {
-		if ( name.equals( "JDataStore" ) ) {
-			return JDataStoreDialect.class;
-		}
 		return null;
 	}
 
 	private static Class<? extends Dialect> caseM(final String name) {
-		if ( name.equals( "Mckoi" ) ) {
-			return MckoiDialect.class;
-		}
 		if ( name.equals( "MimerSQL" ) ) {
 			return MimerSQLDialect.class;
 		}
 		if ( name.equals( "MySQL5" ) ) {
 			return MySQL5Dialect.class;
-		}
-		if ( name.equals( "MySQL5InnoDB" ) ) {
-			return MySQL5InnoDBDialect.class;
-		}
-		if ( name.equals( "MySQL57InnoDB" ) ) {
-			return MySQL57InnoDBDialect.class;
 		}
 		if ( name.equals( "MySQL57" ) ) {
 			return MySQL57Dialect.class;
@@ -213,9 +182,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 	}
 
 	private static Class<? extends Dialect> caseP(final String name) {
-		if ( name.equals( "Pointbase" ) ) {
-			return PointbaseDialect.class;
-		}
 		if ( name.equals( "PostgresPlus" ) ) {
 			return PostgresPlusDialect.class;
 		}
@@ -227,9 +193,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 		}
 		if ( name.equals( "PostgreSQL9" ) ) {
 			return PostgreSQL9Dialect.class;
-		}
-		if ( name.equals( "Progress" ) ) {
-			return ProgressDialect.class;
 		}
 		return null;
 	}

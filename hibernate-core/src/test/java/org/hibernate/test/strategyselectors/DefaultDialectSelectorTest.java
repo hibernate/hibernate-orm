@@ -29,7 +29,6 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( DerbyTenSixDialect.class );
 		testDialectNamingResolution( DerbyTenSevenDialect.class );
 		testDialectNamingResolution( FirebirdDialect.class );
-		testDialectNamingResolution( FrontBaseDialect.class );
 		testDialectNamingResolution( H2Dialect.class );
 		testDialectNamingResolution( HANAColumnStoreDialect.class );
 		testDialectNamingResolution( HANARowStoreDialect.class );
@@ -38,26 +37,19 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( IngresDialect.class );
 		testDialectNamingResolution( Ingres9Dialect.class );
 		testDialectNamingResolution( Ingres10Dialect.class );
-		testDialectNamingResolution( InterbaseDialect.class );
-		testDialectNamingResolution( JDataStoreDialect.class );
 
-		testDialectNamingResolution( MckoiDialect.class );
 		testDialectNamingResolution( MimerSQLDialect.class );
 		testDialectNamingResolution( MySQL5Dialect.class );
-		testDialectNamingResolution( MySQL5InnoDBDialect.class );
-		testDialectNamingResolution( MySQL57InnoDBDialect.class );
 		testDialectNamingResolution( MySQL57Dialect.class );
 		testDialectNamingResolution( MySQL8Dialect.class );
 		testDialectNamingResolution( Oracle8iDialect.class );
 		testDialectNamingResolution( Oracle9iDialect.class );
 		testDialectNamingResolution( Oracle10gDialect.class );
 
-		testDialectNamingResolution( PointbaseDialect.class );
 		testDialectNamingResolution( PostgresPlusDialect.class );
 		testDialectNamingResolution( PostgreSQL81Dialect.class );
 		testDialectNamingResolution( PostgreSQL82Dialect.class );
 		testDialectNamingResolution( PostgreSQL9Dialect.class );
-		testDialectNamingResolution( ProgressDialect.class );
 
 		testDialectNamingResolution( SAPDBDialect.class );
 		testDialectNamingResolution( SQLServerDialect.class );

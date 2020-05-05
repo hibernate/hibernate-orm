@@ -212,9 +212,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
 
-		bootMetamodel.initSessionFactory( this );
+		this.eventEngine = new EventEngine( bootMetamodel, this );
 
-		this.eventEngine = new EventEngine( metadata, this );
+		bootMetamodel.initSessionFactory( this );
 
 		final CfgXmlAccessService cfgXmlAccessService = serviceRegistry.getService( CfgXmlAccessService.class );
 

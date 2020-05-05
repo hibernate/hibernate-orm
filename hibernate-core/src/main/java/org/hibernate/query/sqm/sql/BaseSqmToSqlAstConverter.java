@@ -473,7 +473,8 @@ public abstract class BaseSqmToSqlAstConverter
 		return new SortSpecification(
 				(Expression) sortSpecification.getSortExpression().accept( this ),
 				sortSpecification.getCollation(),
-				sortSpecification.getSortOrder()
+				sortSpecification.getSortOrder(),
+				sortSpecification.getNullPrecedence()
 		);
 	}
 

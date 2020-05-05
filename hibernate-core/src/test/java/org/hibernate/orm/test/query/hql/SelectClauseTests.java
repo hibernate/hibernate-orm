@@ -70,7 +70,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 
 	@Test
 	public void testCompoundAttributeSelection() {
-		SqmSelectStatement statement = interpretSelect( "select p.nickName, p.name.first from Person p" );
+		SqmSelectStatement statement = interpretSelect( "select p.nickName, p.name.firstName from Person p" );
 		assertEquals( 2, statement.getQuerySpec().getSelectClause().getSelections().size() );
 		assertThat(
 				statement.getQuerySpec().getSelectClause().getSelections().get( 0 ).getSelectableNode(),

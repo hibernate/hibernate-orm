@@ -126,7 +126,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	@Test
 	public void testEmbeddableUseInPredicates() {
 		{
-			final SqmSelectStatement<?> sqm = interpretSelect( "select p.id from Person p where p.name.first = :fname" );
+			final SqmSelectStatement<?> sqm = interpretSelect( "select p.id from Person p where p.name.firstName = :fname" );
 			assertThat( sqm.getSqmParameters().size(), equalTo( 1 ) );
 			final SqmParameter<?> parameter = sqm.getSqmParameters().iterator().next();
 //			assertThat( parameter.getAnticipatedType(), instanceOf( BasicSqmPathSource.class ) );
@@ -145,7 +145,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	public void testNullParamValues() {
 		inTransaction(
 				session -> {
-					session.createQuery( "from Person p where p.name.first = :p" ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.name.firstName = :p" ).setParameter( "p", null ).list();
 					session.createQuery( "from Person p where p.name = :p" ).setParameter( "p", null ).list();
 					session.createQuery( "from Person p where p.pk = :p" ).setParameter( "p", null ).list();
 				}
@@ -168,8 +168,8 @@ public class ParameterTests extends BaseSqmUnitTest {
 	public static class Person {
 		@Embeddable
 		public static class Name {
-			public String first;
-			public String last;
+			public String firstName;
+			public String lastName;
 		}
 
 		@Id

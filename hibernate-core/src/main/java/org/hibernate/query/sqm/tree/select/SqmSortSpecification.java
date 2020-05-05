@@ -16,12 +16,10 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  * @author Steve Ebersole
  */
 public class SqmSortSpecification implements JpaOrder {
-	private SqmExpression sortExpression;
-	private String collation;
+	private final SqmExpression sortExpression;
+	private final String collation;
 	private SortOrder sortOrder;
-	private final NullPrecedence nullPrecedence;
-
-	private NullPrecedence precedence;
+	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
 			SqmExpression sortExpression,
@@ -63,14 +61,14 @@ public class SqmSortSpecification implements JpaOrder {
 	// JPA
 
 	@Override
-	public JpaOrder nullPrecedence(NullPrecedence precedence) {
-		this.precedence = precedence;
+	public JpaOrder nullPrecedence(NullPrecedence nullPrecedence) {
+		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
 
 	@Override
 	public NullPrecedence getNullPrecedence() {
-		return precedence;
+		return nullPrecedence;
 	}
 
 	@Override

@@ -100,7 +100,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( loadType.isNakedEntityReturned() ) {
 				//do not return a proxy!
 				//(this option indicates we are initializing a proxy)
-				event.setResult( load( event, persister, keyToLoad, loadType ) );
+				event.setResult( load( event, persister, keyToLoad, loadType, false ) );
 			}
 			else {
 				//return a proxy if appropriate
@@ -164,14 +164,14 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			EntityPersister parentPersister) {
 		final EventSource session = event.getSession();
 		final EntityKey parentEntityKey = session.generateEntityKey( event.getEntityId(), parentPersister );
-		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
+		final Object parent = doLoad( event, parentPersister, parentEntityKey, options, false );
 
 		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, session );
 		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getEntityMode() );
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 
-		event.setResult( doLoad( event, dependentPersister, dependentEntityKey, options ) );
+		event.setResult( doLoad( event, dependentPersister, dependentEntityKey, options, false ) );
 	}
 
 	/**
@@ -181,6 +181,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @param persister The persister corresponding to the entity to be loaded
 	 * @param keyToLoad The key of the entity to be loaded
 	 * @param options The defined load options
+	 * @param alreadyChecked2LC set this to true to skip checking the 2LC. Not meant to disable 2LC: use it to signal that the caller has already checked.
 	 *
 	 * @return The loaded entity.
 	 */
@@ -188,7 +189,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options) {
+			final LoadEventListener.LoadType options,
+			final boolean alreadyChecked2LC) {
 
 		final EventSource session = event.getSession();
 		if ( event.getInstanceToLoad() != null ) {
@@ -205,7 +207,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), session);
 		}
 
-		final Object entity = doLoad( event, persister, keyToLoad, options );
+		final Object entity = doLoad( event, persister, keyToLoad, options, alreadyChecked2LC );
 
 		boolean isOptionalInstance = event.getInstanceToLoad() != null;
 
@@ -224,7 +226,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	/**
 	 * Based on configured options, will either return a pre-existing proxy,
-	 * generate a new proxy, or perform an actual load.
+	 * generate a new proxy, or perform an actual load; but first we'll check
+	 * if the data could be retrieved from 2LC.
 	 *
 	 * @param event The initiating load request event
 	 * @param persister The persister corresponding to the entity to be loaded
@@ -242,6 +245,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final boolean traceEnabled = LOG.isTraceEnabled();
+		boolean checked2LC = false;
 
 		if ( traceEnabled ) {
 			LOG.tracev(
@@ -276,6 +280,20 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					}
 				}
 				return managed;
+			}
+
+			//Check for presence of the required data in 2LC, as in this case there is no compelling reason to
+			//instantiate a lazily initialized enhanced proxy: might as well return it initialized.
+			{
+				Object entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+						event,
+						persister,
+						keyToLoad
+				);
+				if ( entity != null ) {
+					return entity;
+				}
+				checked2LC = true;
 			}
 
 			// if the entity defines a HibernateProxy factory, see if there is an
@@ -329,7 +347,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 
 		// return a newly loaded object
-		return load( event, persister, keyToLoad, options );
+		return load( event, persister, keyToLoad, options, checked2LC );
 	}
 
 
@@ -365,7 +383,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		Object impl = null;
 		if ( !options.isAllowProxyCreation() ) {
-			impl = load( event, persister, keyToLoad, options );
+			impl = load( event, persister, keyToLoad, options, false );
 			if ( impl == null ) {
 				event.getSession()
 						.getFactory()
@@ -467,7 +485,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 		Object entity;
 		try {
-			entity = load( event, persister, keyToLoad, options );
+			entity = load( event, persister, keyToLoad, options, false );
 		}
 		finally {
 			if ( canWriteToCache ) {
@@ -496,7 +514,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options) {
+			final LoadEventListener.LoadType options,
+			final boolean alreadyChecked2LC) {
 
 		final EventSource session = event.getSession();
 		final boolean traceEnabled = LOG.isTraceEnabled();
@@ -518,22 +537,26 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			return persistenceContextEntry.isManaged() ? entity : null;
 		}
 
-		entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
-		if ( entity != null ) {
-			if ( traceEnabled ) {
-				LOG.tracev(
-						"Resolved object in second-level cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
-				);
+		if ( !alreadyChecked2LC ) {
+			entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
+			if ( entity != null ) {
+				if ( traceEnabled ) {
+					LOG.tracev(
+							"Resolved object in second-level cache: {0}",
+							MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
+					);
+				}
+			}
+			else {
+				if ( traceEnabled ) {
+					LOG.tracev(
+							"Object not resolved in any cache: {0}",
+							MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
+					);
+				}
 			}
 		}
-		else {
-			if ( traceEnabled ) {
-				LOG.tracev(
-						"Object not resolved in any cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
-				);
-			}
+		if ( entity == null ) {
 			entity = loadFromDatasource( event, persister );
 		}
 

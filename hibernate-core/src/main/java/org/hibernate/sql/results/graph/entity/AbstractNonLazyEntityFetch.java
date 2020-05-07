@@ -71,7 +71,6 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 				collector,
 				creationState
 		);
-		collector.accept( entityInitializer );
 		return new EntityAssembler( getFetchedMapping().getJavaTypeDescriptor(), entityInitializer );
 	}
 

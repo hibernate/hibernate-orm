@@ -142,12 +142,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
-		}
-	}
-
 	public static class SupportsExistsInSelectCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExistsInSelect();
@@ -182,12 +176,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportCatalogCreation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.canCreateCatalog();
-		}
-	}
-
-	public static class DoesNotSupportRowValueConstructorSyntax implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntax() == false;
 		}
 	}
 

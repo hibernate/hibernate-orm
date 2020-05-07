@@ -63,7 +63,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 		if ( !effectiveRequiresDialects.isEmpty() ) {
 			StringBuilder requiredDialects = new StringBuilder(  );
 			for ( RequiresDialect requiresDialect : effectiveRequiresDialects ) {
-				requiredDialects.append(requiresDialect.value()  );
+				requiredDialects.append( requiresDialect.value()  );
 				requiredDialects.append( " " );
 				if ( requiresDialect.matchSubTypes() ) {
 					if ( requiresDialect.value().isInstance( dialect ) ) {
@@ -116,12 +116,15 @@ public class DialectFilterExtension implements ExecutionCondition {
 			try {
 				final DialectFeatureCheck dialectFeatureCheck = effectiveRequiresDialectFeature.feature()
 						.newInstance();
-				if ( !dialectFeatureCheck.apply( getDialect( context ) ) ) {
+				final boolean applicable = dialectFeatureCheck.apply( getDialect( context ) );
+				final boolean reverse = effectiveRequiresDialectFeature.reverse();
+				if ( applicable ^ reverse ) {
 					return ConditionEvaluationResult.disabled(
 							String.format(
 									Locale.ROOT,
-									"Failed @RequiresDialectFeature [%s]",
-									effectiveRequiresDialectFeature.feature()
+									"Failed @RequiresDialectFeature [feature: %s, reverse: %s]",
+									effectiveRequiresDialectFeature.feature(),
+									effectiveRequiresDialectFeature.reverse()
 							) );
 				}
 			}
@@ -130,7 +133,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			}
 		}
 
-		return ConditionEvaluationResult.enabled( "Passed all @SkipForDialects" );
+		return ConditionEvaluationResult.enabled( "Passed all @RequiresDialect(s), @SkipForDialect(s) and @RequiresDialectFeature(group)" );
 	}
 
 	private Dialect getDialect(ExtensionContext context) {

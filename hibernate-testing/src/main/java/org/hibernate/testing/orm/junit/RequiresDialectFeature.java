@@ -34,6 +34,11 @@ public @interface RequiresDialectFeature {
 	Class<? extends DialectFeatureCheck> feature();
 
 	/**
+	 * @return Whether the decision of {@link #feature()} is reversed
+	 */
+	boolean reverse() default false;
+
+	/**
 	 * Comment describing the reason why the feature is required.
 	 *
 	 * @return The comment

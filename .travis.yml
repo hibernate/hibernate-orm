@@ -5,16 +5,33 @@ jobs:
   include:
     - stage: Oracle JDK 8
       jdk: oraclejdk8
+    - stage: OpenJDK 11
+      jdk: openjdk11
+      dist: bionic
+      arch: s390x
     - stage: AdoptOpenJDK 11.0.3
       install:
         - curl -L -o install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh
         - source ./install-jdk.sh --target ./openjdk11 --url https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.3%2B7/OpenJDK11U-jdk_x64_linux_hotspot_11.0.3_7.tar.gz
-
+    - os: linux
+      dist: bionic
+      arch: s390x
+      install:
+        - curl -L -o install-jdk.sh https://github.com/sormuras/bach/raw/master/install-jdk.sh 
+        - source ./install-jdk.sh --target ./openjdk11 --url https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.3%2B7/OpenJDK11U-jdk_s390x_linux_hotspot_11.0.3_7.tar.gz
 before_script:
   - java -version
-  - ./gradlew assemble
+  - if [ "$HOSTTYPE" == "s390x" ];then
+      ./gradlew --no-daemon assemble;
+    else
+      ./gradlew assemble;
+    fi
 script:
-  - ./gradlew check -Plog-test-progress=true
+  - if [ "$HOSTTYPE" == "s390x" ];then
+      ./gradlew --no-daemon check -Plog-test-progress=true;
+    else
+      ./gradlew check -Plog-test-progress=true;
+    fi
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

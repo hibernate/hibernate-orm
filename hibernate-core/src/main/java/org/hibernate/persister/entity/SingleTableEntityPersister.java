@@ -8,14 +8,12 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -31,6 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -942,7 +941,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		final AtomicInteger tablePositionWrapper = new AtomicInteger(  );
+		final MutableInteger tablePositionWrapper = new MutableInteger();
 
 		for ( String tableName : constraintOrderedTableNames ) {
 			final int tablePosition = tablePositionWrapper.getAndIncrement();

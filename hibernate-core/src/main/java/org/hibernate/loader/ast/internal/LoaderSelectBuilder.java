@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -24,6 +23,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -711,7 +711,7 @@ public class LoaderSelectBuilder {
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
-		final AtomicInteger count = new AtomicInteger();
+		final MutableInteger count = new MutableInteger();
 		fkDescriptor.visitTargetColumns(
 				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause

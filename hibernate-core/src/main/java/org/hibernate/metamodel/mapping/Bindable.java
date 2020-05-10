@@ -8,11 +8,11 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -44,7 +44,7 @@ public interface Bindable {
 	 */
 
 	default int getJdbcTypeCount(TypeConfiguration typeConfiguration) {
-		final AtomicInteger value = new AtomicInteger( 0 );
+		final MutableInteger value = new MutableInteger();
 		visitJdbcTypes(
 				sqlExpressableType -> value.incrementAndGet(),
 				Clause.IRRELEVANT,

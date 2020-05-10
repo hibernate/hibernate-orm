@@ -11,10 +11,10 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -25,18 +25,18 @@ import org.hibernate.sql.ast.SqlAstSelectTranslator;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import org.jboss.logging.Logger;
 
@@ -73,7 +73,7 @@ public class MatchingIdSelectionHelper {
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
 		final List<DomainResult> domainResults = new ArrayList<>();
-		final AtomicInteger i = new AtomicInteger();
+		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
 				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					final int position = i.getAndIncrement();
@@ -130,7 +130,7 @@ public class MatchingIdSelectionHelper {
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
-		final AtomicInteger i = new AtomicInteger();
+		final MutableInteger i = new MutableInteger();
 		targetEntityDescriptor.getIdentifierMapping().visitColumns(
 				(containingTableExpression, columnExpression, jdbcMapping) -> {
 					final int position = i.getAndIncrement();

@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
@@ -65,13 +64,13 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 			List<SqlSelection> sqlSelections,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState,
-			MutableInteger atomicInteger,
+			MutableInteger mutableInteger,
 			Fetchable fetchable) {
 		if ( fetchable instanceof SingularAssociationAttributeMapping ) {
 			final SingularAssociationAttributeMapping singularAssociationAttributeMapping = (SingularAssociationAttributeMapping) fetchable;
 			EntityMappingType associatedEntityMappingType = singularAssociationAttributeMapping.getAssociatedEntityMappingType();
 			BasicResult domainResult = new BasicResult(
-					sqlSelections.get( atomicInteger.getAndIncrement() ).getValuesArrayPosition(),
+					sqlSelections.get( mutableInteger.getAndIncrement() ).getValuesArrayPosition(),
 					null,
 					associatedEntityMappingType.getIdentifierMapping().getJavaTypeDescriptor()
 			);
@@ -101,7 +100,7 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 		}
 		else {
 			final Fetch fetch = new BasicFetch(
-					sqlSelections.get( atomicInteger.getAndIncrement() ).getValuesArrayPosition(),
+					sqlSelections.get( mutableInteger.getAndIncrement() ).getValuesArrayPosition(),
 					null,
 					navigablePath.append( fetchable.getFetchableName() ),
 					(BasicValuedModelPart) fetchable,

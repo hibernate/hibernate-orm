@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -34,6 +33,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -371,7 +371,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		final AtomicInteger tablePositionWrapper = new AtomicInteger(  );
+		final MutableInteger tablePositionWrapper = new MutableInteger();
 
 		for ( String tableName : constraintOrderedTableNames ) {
 			final int tablePosition = tablePositionWrapper.getAndIncrement();

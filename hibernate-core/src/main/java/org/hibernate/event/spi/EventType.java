@@ -26,7 +26,7 @@ public final class EventType<T> {
 	/**
 	 * Used to assign ordinals for the standard event-types
 	 */
-	private static AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger( 0 );
+	private static AtomicInteger STANDARD_TYPE_COUNTER = new AtomicInteger();
 
 	public static final EventType<LoadEventListener> LOAD = create( "load", LoadEventListener.class );
 	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID = create( "resolve-natural-id", ResolveNaturalIdEventListener.class );

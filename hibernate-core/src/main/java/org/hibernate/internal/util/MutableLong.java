@@ -6,33 +6,33 @@
  */
 package org.hibernate.internal.util;
 
-public class MutableInteger {
-	private int value;
+public class MutableLong {
+	private long value;
 
-	public MutableInteger() {
+	public MutableLong() {
 	}
 
-	public MutableInteger(int value) {
+	public MutableLong(long value) {
 		this.value = value;
 	}
 
-	public MutableInteger deepCopy() {
-		return new MutableInteger( value );
+	public MutableLong deepCopy() {
+		return new MutableLong( value );
 	}
 
-	public int getAndIncrement() {
+	public long getAndIncrement() {
 		return value++;
 	}
 
-	public int incrementAndGet() {
+	public long incrementAndGet() {
 		return ++value;
 	}
 
-	public int get() {
+	public long get() {
 		return value;
 	}
 
-	public void set(int value) {
+	public void set(long value) {
 		this.value = value;
 	}
 

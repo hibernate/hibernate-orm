@@ -24,7 +24,7 @@ import org.hibernate.dialect.Dialect;
 public abstract class AbstractAuxiliaryDatabaseObject
 		implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {
 	private static final String EXPORT_IDENTIFIER_PREFIX = "auxiliary-object-";
-	private static final AtomicInteger counter = new AtomicInteger( 0 );
+	private static final AtomicInteger counter = new AtomicInteger();
 
 	private final String exportIdentifier;
 	private final boolean beforeTables;

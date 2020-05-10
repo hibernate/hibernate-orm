@@ -6,16 +6,15 @@
  */
 package org.hibernate.cfg;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -78,7 +77,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			columnByReferencedName.put( referencedColumnName.toLowerCase(Locale.ROOT), joinColumn );
 		}
 		//try default column orientation
-		AtomicInteger index = new AtomicInteger( 0 );
+		MutableInteger index = new MutableInteger();
 		if ( columnByReferencedName.isEmpty() ) {
 			isExplicitReference = false;
 			for ( Ejb3JoinColumn joinColumn : joinColumns ) {
@@ -105,7 +104,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
 			Map<String, Ejb3JoinColumn> columnByReferencedName,
-			AtomicInteger index,
+			MutableInteger index,
 			Property referencedProperty ) {
 		Property property = new Property();
 		property.setName( referencedProperty.getName() );
@@ -144,7 +143,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
 			Map<String, Ejb3JoinColumn> columnByReferencedName,
-			AtomicInteger index,
+			MutableInteger index,
 			Property referencedProperty ) {
 		Property property = new Property();
 		property.setName( referencedProperty.getName() );

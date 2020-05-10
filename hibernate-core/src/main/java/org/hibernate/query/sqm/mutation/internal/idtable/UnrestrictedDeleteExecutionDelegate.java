@@ -6,11 +6,10 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
@@ -36,7 +35,7 @@ public class UnrestrictedDeleteExecutionDelegate implements TableBasedDeleteHand
 		// NOTE : we want the number of rows returned from this method to be the number of rows deleted
 		// 		from the root table of the entity hierarchy,  which happens to be the last table we
 		// 		will visit
-		final AtomicInteger result = new AtomicInteger();
+		final MutableInteger result = new MutableInteger();
 
 		SqmMutationStrategyHelper.cleanUpCollectionTables(
 				entityDescriptor,

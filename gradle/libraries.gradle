@@ -15,9 +15,9 @@ ext {
     jnpVersion = '5.0.6.CR1'
 
     hibernateCommonsVersion = '5.1.0.Final'
-    hibernateValidatorVersion = '7.0.0.Alpha1' // Preview of Jakarta EE 9 (Validation 3.0)
-    validationApiVersion = '3.0.0-M1' // Preview of Jakarta EE 9 (Validation 3.0)
-    elVersion = '4.0.0-RC1' // Preview of Jakarta EE 9 : dependency of Validation 3.0
+    hibernateValidatorVersion = '6.0.13.Final'
+    validationApiVersion = '2.0.1.Final'
+    elVersion = '3.0.1-b09'
 
     cdiVersion = '2.0'
     weldVersion = '3.0.0.Final'
@@ -68,7 +68,7 @@ ext {
             // javax
             jpa:            "javax.persistence:javax.persistence-api:${project.jpaVersion}",
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final',
-            validation:     "jakarta.validation:jakarta.validation-api:${validationApiVersion}",
+            validation:     "javax.validation:validation-api:${validationApiVersion}",
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
             interceptor:    'javax.interceptor:javax.interceptor-api:1.2',
             // required by JAXB from JDK 9 as it is not available anymore in JDK 9
@@ -130,7 +130,7 @@ ext {
 
             validator:       "org.hibernate.validator:hibernate-validator:${hibernateValidatorVersion}",
             // EL required by Hibernate Validator at test runtime
-            expression_language: "org.glassfish:jakarta.el:${elVersion}",
+            expression_language: "org.glassfish:javax.el:${elVersion}",
 
             c3p0:            "com.mchange:c3p0:0.9.5.3",
             ehcache:         "net.sf.ehcache:ehcache:2.10.6",

@@ -385,8 +385,8 @@ Unless specified, the JDBC Driver uses the default JVM time zone. If a different
 This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
 
 ==== Bean Validation options
-`*javax.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
-Specify the  `jakarta.validation.ValidationFactory` implementation to use for Bean Validation.
+`*javax.persistence.validation.factory*` (e.g. `javax.validation.ValidationFactory` implementation)::
+Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
 
 `*hibernate.check_nullability*` (e.g. `true` or `false`)::
 Enable nullability checking. Raises an exception if a property marked as not-null is null.

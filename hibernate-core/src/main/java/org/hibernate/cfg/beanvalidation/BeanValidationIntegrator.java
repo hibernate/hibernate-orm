@@ -32,7 +32,7 @@ public class BeanValidationIntegrator implements Integrator {
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
-	public static final String BV_CHECK_CLASS = "jakarta.validation.Validation";
+	public static final String BV_CHECK_CLASS = "javax.validation.Validation";
 
 	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
 

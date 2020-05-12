@@ -1088,7 +1088,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	public static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
+	public static class SessionBuilderImpl<T extends SessionBuilderImpl<T>> implements SessionBuilderImplementor<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
@@ -1232,41 +1232,35 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T owner(SessionOwner sessionOwner) {
 			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T connection(Connection connection) {
 			this.connection = connection;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 			// NOTE : Legacy behavior (when only ConnectionReleaseMode was exposed) was to always acquire a
 			// Connection using ConnectionAcquisitionMode.AS_NEEDED..
@@ -1276,53 +1270,46 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					connectionReleaseMode
 			);
 			connectionHandlingMode( handlingMode );
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoJoinTransactions(boolean autoJoinTransactions) {
 			this.autoJoinTransactions = autoJoinTransactions;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoClose(boolean autoClose) {
 			this.autoClose = autoClose;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T autoClear(boolean autoClear) {
 			this.autoClear = autoClear;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T flushMode(FlushMode flushMode) {
 			this.flushMode = flushMode;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
 				this.listeners = sessionFactory.getSessionFactoryOptions()
@@ -1330,11 +1317,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 						.buildBaselineList();
 			}
 			Collections.addAll( this.listeners, listeners );
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" immplies the default listeners will be applied
@@ -1343,23 +1329,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			else {
 				listeners.clear();
 			}
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
 		public T jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
 		public T setQueryParameterValidation(boolean enabled) {
 			queryParametersValidationEnabled = enabled;
-			return (T) this;
+			return getThis();
 		}
 	}
 
-	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
+	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder<StatelessSessionBuilderImpl>, SessionCreationOptions {
 		private final SessionFactoryImpl sessionFactory;
 		private Connection connection;
 		private String tenantIdentifier;
@@ -1381,14 +1367,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public StatelessSessionBuilder connection(Connection connection) {
+		public StatelessSessionBuilderImpl connection(Connection connection) {
 			this.connection = connection;
 			return this;
 		}
 
 		@Override
-		public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
+		public StatelessSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilderImpl getThis() {
 			return this;
 		}
 
@@ -1474,7 +1465,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
+		public StatelessSessionBuilderImpl setQueryParameterValidation(boolean enabled) {
 			queryParametersValidationEnabled = enabled;
 			return this;
 		}

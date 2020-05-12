@@ -22,8 +22,4 @@ public class TestDelegatingSessionBuilder extends AbstractDelegatingSessionBuild
 		super( delegate );
 	}
 
-	@Override
-	protected TestDelegatingSessionBuilder getThis() {
-		return this;
-	}
 }

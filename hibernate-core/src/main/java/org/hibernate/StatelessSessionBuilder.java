@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
+public interface StatelessSessionBuilder<T extends StatelessSessionBuilder<T>> {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -39,6 +39,8 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 */
 	T tenantIdentifier(String tenantIdentifier);
 
+	T getThis();
+
 	/**
 	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
 	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
@@ -50,6 +52,6 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
+		return getThis();
 	}
 }

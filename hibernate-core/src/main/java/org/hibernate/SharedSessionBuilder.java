@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
+public interface SharedSessionBuilder<T extends SharedSessionBuilder<T>> extends SessionBuilder<T> {
 
 	/**
 	 * Signifies that the transaction context from the original session should be used to create the new session.
@@ -87,10 +87,9 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	 * @deprecated (since 5.2) use {@link #flushMode()} instead.
 	 */
 	@Deprecated
-	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion() {
 		flushMode();
-		return (T) this;
+		return getThis();
 	}
 
 
@@ -123,6 +122,6 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 		else {
 			flushMode( FlushMode.MANUAL );
 		}
-		return (T) this;
+		return getThis();
 	}
 }

@@ -26,17 +26,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Guillaume Smet
  */
 @SuppressWarnings("unused")
-public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder> implements SharedSessionBuilder<T> {
+public abstract class AbstractDelegatingSharedSessionBuilder<T extends AbstractDelegatingSharedSessionBuilder<T>> implements SharedSessionBuilder<T> {
 
 	private final SharedSessionBuilder delegate;
 
 	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
 		this.delegate = delegate;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
 	}
 
 	public SharedSessionBuilder delegate() {

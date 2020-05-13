@@ -108,7 +108,6 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
 
-		//TODO: this has gotta be wrong!!
 		if ( this.selections != null ) {
 			if ( this.selections.size() == 1 ) {
 				this.selections.get( 0 ).getSelectableNode().visitSubSelectableNodes( subSelections::add );

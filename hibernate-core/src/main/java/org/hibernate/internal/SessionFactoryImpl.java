@@ -1658,7 +1658,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	/**
 	 * @return the FastSessionServices for this SessionFactory.
 	 */
-	FastSessionServices getFastSessionServices() {
+	@Override
+	public FastSessionServices getFastSessionServices() {
 		return this.fastSessionServices;
 	}
 

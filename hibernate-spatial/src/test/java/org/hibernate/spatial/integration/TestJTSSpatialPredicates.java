@@ -21,7 +21,7 @@ import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.hana.HANASpatialDialect;
 import org.hibernate.spatial.integration.jts.JtsGeomEntity;
-import org.hibernate.spatial.predicate.SpatialPredicates;
+import org.hibernate.spatial.predicate.JTSSpatialPredicates;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 
@@ -39,11 +39,11 @@ import static org.junit.Assert.fail;
  */
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
-public class TestSpatialPredicates extends SpatialFunctionalTestCase {
+public class TestJTSSpatialPredicates extends SpatialFunctionalTestCase {
 
 	private static HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
-			TestSpatialPredicates.class.getName()
+			TestJTSSpatialPredicates.class.getName()
 	);
 
 	protected HSMessageLogger getLogger() {
@@ -57,7 +57,11 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getWithin( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.within( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				JTSSpatialPredicates.within(
+						criteriaBuilder,
+						root.get( "geom" ),
+						expectationsFactory.getTestPolygon()
+				);
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -69,7 +73,11 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getFilter( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.filter( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				JTSSpatialPredicates.filter(
+						criteriaBuilder,
+						root.get( "geom" ),
+						expectationsFactory.getTestPolygon()
+				);
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -80,7 +88,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getContains( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.contains(
+				JTSSpatialPredicates.contains(
 						criteriaBuilder,
 						root.get( "geom" ),
 						expectationsFactory.getTestPolygon()
@@ -95,7 +103,11 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getCrosses( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.crosses( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				JTSSpatialPredicates.crosses(
+						criteriaBuilder,
+						root.get( "geom" ),
+						expectationsFactory.getTestPolygon()
+				);
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -106,7 +118,11 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getTouches( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.touches( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				JTSSpatialPredicates.touches(
+						criteriaBuilder,
+						root.get( "geom" ),
+						expectationsFactory.getTestPolygon()
+				);
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -117,7 +133,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getDisjoint( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.disjoint(
+				JTSSpatialPredicates.disjoint(
 						criteriaBuilder,
 						root.get( "geom" ),
 						expectationsFactory.getTestPolygon()
@@ -132,7 +148,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getEquals( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.eq( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
+				JTSSpatialPredicates.eq( criteriaBuilder, root.get( "geom" ), expectationsFactory.getTestPolygon() );
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -143,7 +159,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIntersects( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.intersects(
+				JTSSpatialPredicates.intersects(
 						criteriaBuilder,
 						root.get( "geom" ),
 						expectationsFactory.getTestPolygon()
@@ -158,7 +174,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getOverlaps( expectationsFactory.getTestPolygon() );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.overlaps(
+				JTSSpatialPredicates.overlaps(
 						criteriaBuilder,
 						root.get( "geom" ),
 						expectationsFactory.getTestPolygon()
@@ -173,7 +189,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getDwithin( expectationsFactory.getTestPoint(), 30.0 );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.distanceWithin(
+				JTSSpatialPredicates.distanceWithin(
 						criteriaBuilder,
 						root.get( "geom" ),
 						expectationsFactory.getTestPoint(),
@@ -189,7 +205,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIsEmpty();
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.isEmpty( criteriaBuilder, root.get( "geom" ) );
+				JTSSpatialPredicates.isEmpty( criteriaBuilder, root.get( "geom" ) );
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -200,7 +216,7 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIsNotEmpty();
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.isNotEmpty( criteriaBuilder, root.get( "geom" ) );
+				JTSSpatialPredicates.isNotEmpty( criteriaBuilder, root.get( "geom" ) );
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 
@@ -211,11 +227,11 @@ public class TestSpatialPredicates extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.havingSRID( 4326 );
 		BiFunction<CriteriaBuilder, Root<JtsGeomEntity>, Predicate> predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.havingSRID( criteriaBuilder, root.get( "geom" ), 4326 );
+				JTSSpatialPredicates.havingSRID( criteriaBuilder, root.get( "geom" ), 4326 );
 		retrieveAndCompare( dbexpected, predicateFactory );
 		dbexpected = expectationsFactory.havingSRID( 31370 );
 		predicateFactory = (criteriaBuilder, root) ->
-				SpatialPredicates.havingSRID( criteriaBuilder, root.get( "geom" ), 31370 );
+				JTSSpatialPredicates.havingSRID( criteriaBuilder, root.get( "geom" ), 31370 );
 		retrieveAndCompare( dbexpected, predicateFactory );
 	}
 

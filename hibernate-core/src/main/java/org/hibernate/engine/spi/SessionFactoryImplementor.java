@@ -35,6 +35,7 @@ import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -175,6 +176,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	default Iterable<EntityNameResolver> iterateEntityNameResolvers() {
 		return getMetamodel().getEntityNameResolvers();
 	}
+
+	/**
+	 * @return the FastSessionServices instance associated with this SessionFactory
+	 */
+	FastSessionServices getFastSessionServices();
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization

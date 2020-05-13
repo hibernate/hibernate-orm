@@ -45,6 +45,7 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -380,6 +381,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
 		return delegate.iterateEntityNameResolvers();
+	}
+
+	@Override
+	public FastSessionServices getFastSessionServices() {
+		return delegate.getFastSessionServices();
 	}
 
 	@Override

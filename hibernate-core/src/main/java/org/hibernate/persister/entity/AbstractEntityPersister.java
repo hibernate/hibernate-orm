@@ -119,6 +119,7 @@ import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -4511,7 +4512,7 @@ public abstract class AbstractEntityPersister
 						identifier,
 						entity,
 						LockOptions.READ,
-						session
+					session
 				);
 			}
 

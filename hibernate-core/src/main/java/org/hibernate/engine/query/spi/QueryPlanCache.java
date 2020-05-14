@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -152,7 +153,7 @@ public class QueryPlanCache implements Serializable {
 			final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
 			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
-			value = new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
+			value = createHQLQueryPlan( queryString, shallow, enabledFilters, factory );
 
 			if ( stats ) {
 				final long endTime = System.nanoTime();
@@ -170,6 +171,10 @@ public class QueryPlanCache implements Serializable {
 			}
 		}
 		return value;
+	}
+
+	protected HQLQueryPlan createHQLQueryPlan(String queryString, boolean shallow, Map<String, Filter> enabledFilters, SessionFactoryImplementor factory) {
+		return new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
 	}
 
 	/**

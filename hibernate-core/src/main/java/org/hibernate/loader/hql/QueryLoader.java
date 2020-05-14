@@ -402,7 +402,7 @@ public class QueryLoader extends BasicLoader {
 		return true;
 	}
 
-	private boolean hasSelectNew() {
+	protected boolean hasSelectNew() {
 		return aggregatedSelectExpression != null && aggregatedSelectExpression.getResultTransformer() != null;
 	}
 
@@ -487,7 +487,7 @@ public class QueryLoader extends BasicLoader {
 		}
 	}
 
-	private HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
+	protected HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
 		final ResultTransformer implicitResultTransformer = aggregatedSelectExpression == null
 				? null
 				: aggregatedSelectExpression.getResultTransformer();
@@ -506,7 +506,7 @@ public class QueryLoader extends BasicLoader {
 		return list( session, queryParameters, queryTranslator.getQuerySpaces(), queryReturnTypes );
 	}
 
-	private void checkQuery(QueryParameters queryParameters) {
+	protected void checkQuery(QueryParameters queryParameters) {
 		if ( hasSelectNew() && queryParameters.getResultTransformer() != null ) {
 			throw new QueryException( "ResultTransformer is not allowed for 'select new' queries." );
 		}

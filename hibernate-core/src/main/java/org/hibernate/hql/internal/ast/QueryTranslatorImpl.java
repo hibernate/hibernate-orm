@@ -210,7 +210,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			else {
 				// PHASE 3 : Generate the SQL.
 				generate( (QueryNode) sqlAst );
-				queryLoader = new QueryLoader( this, factory, w.getSelectClause() );
+				queryLoader = createQueryLoader( w, factory );
 			}
 
 			compiled = true;
@@ -243,6 +243,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		//only needed during compilation phase...
 		this.enabledFilters = null;
+	}
+
+	protected QueryLoader createQueryLoader(HqlSqlWalker w, SessionFactoryImplementor factory) {
+		return new QueryLoader( this, factory, w.getSelectClause() );
 	}
 
 	private void generate(AST sqlAst) throws QueryException, RecognitionException {

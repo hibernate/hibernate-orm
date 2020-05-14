@@ -2710,7 +2710,7 @@ public abstract class Loader {
 		return getResultList( result, queryParameters.getResultTransformer() );
 	}
 
-	private QueryKey generateQueryKey(
+	protected QueryKey generateQueryKey(
 			SharedSessionContractImplementor session,
 			QueryParameters queryParameters) {
 		return QueryKey.generateQueryKey(
@@ -2722,7 +2722,7 @@ public abstract class Loader {
 		);
 	}
 
-	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
+	protected CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
 		return CacheableResultTransformer.create(
 				queryParameters.getResultTransformer(),
 				getResultRowAliases(),
@@ -2730,7 +2730,7 @@ public abstract class Loader {
 		);
 	}
 
-	private List getResultFromQueryCache(
+	protected List getResultFromQueryCache(
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
@@ -2786,7 +2786,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private EntityPersister getEntityPersister(EntityType entityType) {
+	protected EntityPersister getEntityPersister(EntityType entityType) {
 		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
 	}
 

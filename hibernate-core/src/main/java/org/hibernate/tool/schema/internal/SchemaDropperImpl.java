@@ -422,7 +422,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 		doDrop( metadata, options, tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect(), sourceDescriptor, target );
-		return new DelayedDropActionImpl( target.commands );
+		return new DelayedDropActionImpl( target.commands, tool.getCustomDatabaseGenerationTarget() );
 	}
 
 	/**
@@ -513,9 +513,11 @@ public class SchemaDropperImpl implements SchemaDropper {
 		private static final CoreMessageLogger log = CoreLogging.messageLogger( DelayedDropActionImpl.class );
 
 		private final ArrayList<String> commands;
+		private GenerationTarget target;
 
-		public DelayedDropActionImpl(ArrayList<String> commands) {
+		public DelayedDropActionImpl(ArrayList<String> commands, GenerationTarget target) {
 			this.commands = commands;
+			this.target = target;
 		}
 
 		@Override
@@ -523,10 +525,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 			log.startingDelayedSchemaDrop();
 
 			final JdbcContext jdbcContext = new JdbcContextDelayedDropImpl( serviceRegistry );
-			final GenerationTargetToDatabase target = new GenerationTargetToDatabase(
-					serviceRegistry.getService( TransactionCoordinatorBuilder.class ).buildDdlTransactionIsolator( jdbcContext ),
-					true
-			);
+
+			if ( target == null ) {
+				target = new GenerationTargetToDatabase(
+						serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+								.buildDdlTransactionIsolator( jdbcContext ),
+						true
+				);
+			}
 
 			target.prepare();
 			try {

@@ -21,6 +21,7 @@ import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -123,6 +124,9 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 	private static Class<? extends Dialect> caseH(final String name) {
 		if ( name.equals( "H2" ) ) {
 			return H2Dialect.class;
+		}
+		if ( name.equals( "HANACloudColumnStore" ) ) {
+			return HANACloudColumnStoreDialect.class;
 		}
 		if ( name.equals( "HANAColumnStore" ) ) {
 			return HANAColumnStoreDialect.class;

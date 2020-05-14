@@ -32,7 +32,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 
 	public static Object getFieldByReflection(Object entity, String fieldName) {
 		try {
-			Field field = entity.getClass().getDeclaredField( fieldName );
+			Field field = findField( entity.getClass(), fieldName );
 			ReflectHelper.ensureAccessibility( field );
 			return field.get( entity );
 		}
@@ -73,6 +73,22 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 				false,
 				null
 		);
+	}
+
+	private static Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {
+		NoSuchFieldException exception = null;
+		while ( clazz != null ) {
+			try {
+				return clazz.getDeclaredField( fieldName );
+			}
+			catch (NoSuchFieldException e) {
+				if ( exception == null ) {
+					exception = e;
+				}
+				clazz = clazz.getSuperclass();
+			}
+		}
+		throw exception;
 	}
 
 }

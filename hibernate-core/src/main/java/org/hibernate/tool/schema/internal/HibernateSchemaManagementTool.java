@@ -56,6 +56,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	private static final Logger log = Logger.getLogger( HibernateSchemaManagementTool.class );
 
 	private ServiceRegistry serviceRegistry;
+	private GenerationTarget customTarget;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -107,6 +108,15 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		return JdbcMetadaAccessStrategy.interpretSetting( options );
 	}
 
+	@Override
+	public void setCustomDatabaseGenerationTarget(GenerationTarget generationTarget) {
+		this.customTarget = generationTarget;
+	}
+
+	GenerationTarget getCustomDatabaseGenerationTarget() {
+		return customTarget;
+	}
+
 	GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
 			JdbcContext jdbcContext,
@@ -132,7 +142,10 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true );
+			targets[index] = customTarget == null
+					? new GenerationTargetToDatabase( getDdlTransactionIsolator( jdbcContext ), true )
+					: customTarget;
+			index++;
 		}
 
 		return targets;

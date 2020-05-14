@@ -92,6 +92,8 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -235,7 +237,6 @@ public abstract class AbstractEntityPersister
 
 	public static final String ENTITY_CLASS = "class";
 
-
 	private final String sqlAliasStem;
 
 	private final SingleIdEntityLoader singleIdEntityLoader;
@@ -243,9 +244,6 @@ public abstract class AbstractEntityPersister
 	private final NaturalIdLoader naturalIdLoader;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
-
-
-
 
 	private final NavigableRole navigableRole;
 
@@ -330,7 +328,6 @@ public abstract class AbstractEntityPersister
 	private final FilterHelper filterHelper;
 
 	private final Set<String> affectingFetchProfileNames = new HashSet<>();
-
 
 	private final Map uniqueKeyLoaders = new HashMap();
 	private final Map lockers = new HashMap();
@@ -2610,7 +2607,6 @@ public abstract class AbstractEntityPersister
 
 	}
 
-
 	public Object loadByUniqueKey(
 			String propertyName,
 			Object uniqueKey,
@@ -4503,12 +4499,21 @@ public abstract class AbstractEntityPersister
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Serializable identifier = entityKey.getIdentifier();
-			final Object loaded = singleIdEntityLoader.load(
-					identifier,
-					entity,
-					LockOptions.READ,
-					session
-			);
+
+
+			LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource)session, false );
+			Object loaded = null;
+			if ( canReadFromCache ) {
+				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+			}
+			if ( loaded == null ) {
+				loaded = singleIdEntityLoader.load(
+						identifier,
+						entity,
+						LockOptions.READ,
+						session
+				);
+			}
 
 			if ( loaded == null ) {
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

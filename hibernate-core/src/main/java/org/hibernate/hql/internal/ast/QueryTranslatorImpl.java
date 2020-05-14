@@ -314,7 +314,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
-	private void errorIfDML() throws HibernateException {
+	protected void errorIfDML() throws HibernateException {
 		if ( sqlAst.needsExecutor() ) {
 			throw new QueryExecutionRequestException( "Not supported for DML operations", hql );
 		}

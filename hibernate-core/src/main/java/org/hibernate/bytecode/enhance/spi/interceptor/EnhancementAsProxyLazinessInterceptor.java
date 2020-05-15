@@ -305,4 +305,9 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 	public Object getIdentifier() {
 		return entityKey.getIdentifier();
 	}
+
+	//Mostly useful for testing
+	public boolean isInitialized() {
+		return initialized;
+	}
 }

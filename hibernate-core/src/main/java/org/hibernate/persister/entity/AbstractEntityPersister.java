@@ -83,6 +83,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -98,6 +100,7 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.custom.sql.SQLQueryParser;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.DynamicBatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.EntityLoader;
@@ -4408,12 +4411,21 @@ public abstract class AbstractEntityPersister
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Serializable identifier = entityKey.getIdentifier();
-			final Object loaded = readLockLoader.load(
-					identifier,
-					entity,
-					session,
-					LockOptions.READ
-			);
+
+
+			LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource)session, false );
+			Object loaded = null;
+			if ( canReadFromCache ) {
+				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+			}
+			if ( loaded == null ) {
+				loaded = readLockLoader.load(
+						identifier,
+						entity,
+						session,
+						LockOptions.READ
+				);
+			}
 
 			if ( loaded == null ) {
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

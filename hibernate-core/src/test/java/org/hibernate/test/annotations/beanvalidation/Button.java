@@ -8,8 +8,8 @@
 package org.hibernate.test.annotations.beanvalidation;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Emmanuel Bernard

@@ -8,7 +8,7 @@ package org.hibernate.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import jakarta.validation.ConstraintViolationException;
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

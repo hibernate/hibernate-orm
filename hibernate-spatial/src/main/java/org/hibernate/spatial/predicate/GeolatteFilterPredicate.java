@@ -9,7 +9,6 @@ package org.hibernate.spatial.predicate;
 import java.io.Serializable;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
@@ -19,22 +18,25 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
 import org.hibernate.query.criteria.internal.predicate.AbstractSimplePredicate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.criterion.SpatialFilter;
 import org.hibernate.spatial.dialect.WithCustomJPAFilter;
-import org.hibernate.spatial.jts.EnvelopeAdapter;
 
-import org.locationtech.jts.geom.Envelope;
-import org.locationtech.jts.geom.Geometry;
+import org.geolatte.geom.Envelope;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.Polygon;
+import org.geolatte.geom.Position;
+import org.geolatte.geom.PositionSequence;
+import org.geolatte.geom.PositionSequenceBuilders;
+import org.geolatte.geom.crs.CoordinateReferenceSystem;
 
 /**
- * JPA Criteria API {@link Predicate} equivalent of {@link SpatialFilter}.
+ * {@link JTSFilterPredicate}, but for geolatte-geom.
  */
-public class FilterPredicate extends AbstractSimplePredicate implements Serializable {
+public class GeolatteFilterPredicate extends AbstractSimplePredicate implements Serializable {
 
 	private final Expression<? extends Geometry> geometry;
 	private final Expression<? extends Geometry> filter;
 
-	public FilterPredicate(
+	public GeolatteFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Expression<? extends Geometry> filter) {
 		super( (CriteriaBuilderImpl) criteriaBuilder );
@@ -42,17 +44,17 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 		this.filter = filter;
 	}
 
-	public FilterPredicate(
+	public GeolatteFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Geometry filter) {
 		this( criteriaBuilder, geometry, criteriaBuilder.literal( filter )
 		);
 	}
 
-	public FilterPredicate(
+	public GeolatteFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
-			Envelope envelope, int srid) {
-		this( criteriaBuilder, geometry, EnvelopeAdapter.toPolygon( envelope, srid )
+			Envelope envelope) {
+		this( criteriaBuilder, geometry, fromEnvelope( envelope )
 		);
 	}
 
@@ -76,5 +78,27 @@ public class FilterPredicate extends AbstractSimplePredicate implements Serializ
 		else {
 			return SpatialFunction.filter.name() + "(" + geometryParameter + ", " + filterParameter + ") = true";
 		}
+	}
+
+	private static <P extends Position> Polygon<P> fromEnvelope(Envelope<P> envelope) {
+		CoordinateReferenceSystem<P> crs = envelope.getCoordinateReferenceSystem();
+
+		P lowerLeft = envelope.lowerLeft();
+		P upperLeft = envelope.upperLeft();
+		P upperRight = envelope.upperRight();
+		P lowerRight = envelope.lowerRight();
+
+		PositionSequence<P> positionSequence = PositionSequenceBuilders.fixedSized(
+				5,
+				crs.getPositionClass()
+		)
+				.add( lowerLeft )
+				.add( upperLeft )
+				.add( upperRight )
+				.add( lowerRight )
+				.add( lowerLeft )
+				.toPositionSequence();
+
+		return new Polygon<>( positionSequence, crs );
 	}
 }

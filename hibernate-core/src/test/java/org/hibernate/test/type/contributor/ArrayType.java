@@ -3,10 +3,11 @@ package org.hibernate.test.type.contributor;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
-import org.hibernate.type.spi.TypeBootstrapContext;
 
 /**
  * @author Vlad Mihalcea
@@ -23,9 +24,10 @@ public class ArrayType
         super( VarcharTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
     }
 
-    public ArrayType(TypeBootstrapContext typeBootstrapContext) {
+    public ArrayType(ServiceRegistry serviceRegistry) {
         super( VarcharTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
-        this.settings = typeBootstrapContext.getConfigurationSettings();
+        ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+        this.settings = configurationService.getSettings();
     }
 
     @Override

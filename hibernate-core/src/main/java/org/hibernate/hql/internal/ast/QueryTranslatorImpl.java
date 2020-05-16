@@ -459,6 +459,18 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	/**
+	 * The SQl statements used for an update query.
+	 * Throws exception if the query is a SELECT.
+	 * @see #getSQLString()
+	 * @throws QueryExecutionRequestException for select queries.
+	 * @return the sql queries used for the update
+	 */
+	protected String[] getSqlStatements() {
+		errorIfSelect();
+		return statementExecutor.getSqlStatements();
+	}
+
+	/**
 	 * The SQL query string to be called; implemented by all subclasses
 	 */
 	@Override

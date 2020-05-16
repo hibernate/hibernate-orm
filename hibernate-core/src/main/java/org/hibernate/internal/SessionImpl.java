@@ -1435,7 +1435,7 @@ public class SessionImpl
 		return result;
 	}
 
-	private void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
+	protected void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
 		if ( plan.isUpdate() ) {
 			List<String> primaryFromClauseTables = new ArrayList<>();
 			for ( QueryTranslator queryTranslator : plan.getTranslators() ) {

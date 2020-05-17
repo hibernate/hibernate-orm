@@ -37,6 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -101,7 +102,9 @@ public class H2Dialect extends Dialect {
 		}
 
 		if ( buildId >= 32 ) {
-			this.sequenceInformationExtractor = SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+			this.sequenceInformationExtractor = buildId >= 201
+					? SequenceInformationExtractorLegacyImpl.INSTANCE
+					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 		}
 		else {
@@ -423,12 +426,12 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
-	
+
 	// Do not drop constraints explicitly, just do this by cascading instead.
 	@Override
 	public boolean dropConstraints() {

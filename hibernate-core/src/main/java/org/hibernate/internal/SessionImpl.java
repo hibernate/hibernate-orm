@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
@@ -220,17 +219,10 @@ public class SessionImpl
 	private transient GraphImplementor fetchGraphLoadContext;
 
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
-		this( factory, options, StatefulPersistenceContext::new, ActionQueue::new );
-	}
-
-	public SessionImpl(
-			SessionFactoryImpl factory, SessionCreationOptions options,
-			Function<SharedSessionContractImplementor, StatefulPersistenceContext> persistenceContextFunction,
-			Function<SessionImplementor, ActionQueue> actionQueueFunction) {
 		super( factory, options );
 
-		this.persistenceContext = persistenceContextFunction.apply( this );
-		this.actionQueue = actionQueueFunction.apply( this );
+		this.persistenceContext = createPersistenceContext();
+		this.actionQueue = createActionQueue();
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
@@ -275,6 +267,14 @@ public class SessionImpl
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
+	}
+
+	protected StatefulPersistenceContext createPersistenceContext() {
+		return new StatefulPersistenceContext( this );
+	}
+
+	protected ActionQueue createActionQueue() {
+		return new ActionQueue( this );
 	}
 
 	private LockOptions getLockOptionsForRead() {

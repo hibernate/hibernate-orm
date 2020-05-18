@@ -3,6 +3,33 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.16.Final (May 18, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31851/tab/release-report-done
+
+** Bug
+    * [HHH-13179] - Unionsubclass 2nd level caching no longer works for XML mappings in 5.3 and 5.4
+    * [HHH-13936] - No auto transaction joining from SessionImpl.doFlush
+    * [HHH-14004] - Enhanced Proxies are never loaded from 2LC
+
+** New Feature
+    * [HHH-14019] - Allow customizing the Database target in the Schema Management tool
+    * [HHH-14024] - Allow the creation of a different QueryPlan
+    * [HHH-14025] - Add getter for update statements in query translator
+    * [HHH-14027] - Allow the creation of a different QueryLoader
+    * [HHH-14028] - Hibernate Reactive needs access to some private methods for support of reactive queries
+
+** Task
+    * [HHH-13997] - Add methods to SessionImpl and StatefulPersistenceContext; make Loader#registerNonExists protected
+    * [HHH-14012] - Upgrade to Hibernate Validator 6.1.5.Final
+
+** Improvement
+    * [HHH-13996] - Update documentation for HANA Cloud
+    * [HHH-14026] - Change scope for SessionImple#verifyImmutableEntityUpdate
+    * [HHH-14029] - Small optimisation in firing of PostLoadEventListener(s)
+
+
 Changes in 5.4.15.Final (April 30, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

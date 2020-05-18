@@ -1206,21 +1206,8 @@ public abstract class Loader {
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
-
-			final Iterable<PostLoadEventListener> postLoadEventListeners;
-			if ( session.isEventSource() ) {
-				final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.POST_LOAD );
-				postLoadEventListeners = listenerGroup.listeners();
-			}
-			else {
-				postLoadEventListeners = Collections.emptyList();
-			}
-
 			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.postLoad( hydratedObject, session, post, postLoadEventListeners );
+				TwoPhaseLoad.postLoad( hydratedObject, session, post );
 				if ( afterLoadActions != null ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
 						final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );

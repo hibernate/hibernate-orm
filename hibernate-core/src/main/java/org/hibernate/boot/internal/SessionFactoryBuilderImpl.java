@@ -30,6 +30,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
@@ -468,7 +469,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
 		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
 		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), HQLQueryPlan::new );
 	}
 
 	@Override

@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,6 +42,11 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 public class QueryPlanCache implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryPlanCache.class );
 
+	@FunctionalInterface
+	public interface QueryPlanCreator {
+		HQLQueryPlan createQueryPlan(String queryString, boolean shallow, Map<String, Filter> enabledFilters, SessionFactoryImplementor factory);
+	}
+
 	/**
 	 * The default strong reference count.
 	 */
@@ -53,6 +57,7 @@ public class QueryPlanCache implements Serializable {
 	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
 
 	private final SessionFactoryImplementor factory;
+	private QueryPlanCreator queryPlanCreator;
 
 	/**
 	 * the cache of the actual plans...
@@ -78,8 +83,9 @@ public class QueryPlanCache implements Serializable {
 	 * @param factory The SessionFactory
 	 */
 	@SuppressWarnings("deprecation")
-	public QueryPlanCache(final SessionFactoryImplementor factory) {
+	public QueryPlanCache(final SessionFactoryImplementor factory, QueryPlanCreator queryPlanCreator) {
 		this.factory = factory;
+		this.queryPlanCreator = queryPlanCreator;
 
 		Integer maxParameterMetadataCount = ConfigurationHelper.getInteger(
 				Environment.QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE,
@@ -153,7 +159,7 @@ public class QueryPlanCache implements Serializable {
 			final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
 			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
-			value = createHQLQueryPlan( queryString, shallow, enabledFilters, factory );
+			value = queryPlanCreator.createQueryPlan( queryString, shallow, enabledFilters, factory );
 
 			if ( stats ) {
 				final long endTime = System.nanoTime();
@@ -171,10 +177,6 @@ public class QueryPlanCache implements Serializable {
 			}
 		}
 		return value;
-	}
-
-	protected HQLQueryPlan createHQLQueryPlan(String queryString, boolean shallow, Map<String, Filter> enabledFilters, SessionFactoryImplementor factory) {
-		return new HQLQueryPlan( queryString, shallow, enabledFilters, factory );
 	}
 
 	/**

@@ -293,20 +293,9 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 
 		final SharedSessionContractImplementor session = context.getSession();
-		final Iterable<PostLoadEventListener> postLoadEventListeners;
-		if ( session.isEventSource() ) {
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.POST_LOAD );
-			postLoadEventListeners = listenerGroup.listeners();
-		}
-		else {
-			postLoadEventListeners = Collections.emptyList();
-		}
 
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrations ) {
-			TwoPhaseLoad.postLoad( registration.getInstance(), session, postLoadEvent, postLoadEventListeners );
+			TwoPhaseLoad.postLoad( registration.getInstance(), session, postLoadEvent );
 			if ( afterLoadActionList != null ) {
 				for ( AfterLoadAction afterLoadAction : afterLoadActionList ) {
 					afterLoadAction.afterLoad(

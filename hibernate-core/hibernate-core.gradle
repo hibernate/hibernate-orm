@@ -209,6 +209,9 @@ xjc {
     }
 }
 
+generateGrammarSource {
+    arguments += "-traceParser"
+}
 
 //sourceSets.main.sourceGeneratorsTask.dependsOn xjc
 //sourceSets.main.sourceGeneratorsTask.dependsOn generateGrammarSource

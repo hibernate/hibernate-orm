@@ -30,3 +30,5 @@ INSERT INTO test_data (id, text)
           , NULL
           );
 
+-- comment;
+-- comment;

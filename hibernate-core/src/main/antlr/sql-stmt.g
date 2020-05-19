@@ -1,6 +1,6 @@
 header
 {
-package org.hibernate.hql.internal.antlr;
+package org.hibernate.tool.schema.ast;
 
 import java.util.Iterator;
 import java.util.List;
@@ -14,139 +14,136 @@ import org.hibernate.hql.internal.ast.ErrorReporter;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-class SqlStatementParser extends Parser;
+class GeneratedSqlScriptParser extends Parser;
 
 options {
     buildAST = false;
+	k=3;
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Semantic actions
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
-    private ErrorHandler errorHandler = new ErrorHandler();
-
-    @Override
-    public void reportError(RecognitionException e) {
-        errorHandler.reportError( e );
-    }
-
-    @Override
-    public void reportError(String s) {
-        errorHandler.reportError( s );
-    }
-
-    @Override
-    public void reportWarning(String s) {
-        errorHandler.reportWarning( s );
-    }
-
-    public void throwExceptionIfErrorOccurred() {
-        if ( errorHandler.hasErrors() ) {
-        	String errorMessage = errorHandler.getErrorMessage();
-        	if(errorMessage.contains("expecting STMT_END")) {
-        		throw new StatementParserException( "Import script Sql statements must terminate with a ';' char"  );
-        	}
-            throw new StatementParserException( errorHandler.getErrorMessage() );
-        }
-    }
-
-    /** List of all SQL statements. */
-    private List<String> statementList = new LinkedList<String>();
-
-    /** Currently processing SQL statement. */
-    private StringBuilder current = new StringBuilder();
-
     protected void out(String stmt) {
-        current.append( stmt );
+    	// by default, nothing to do
     }
 
     protected void out(Token token) {
-        out( token.getText() );
+    	// by default, nothing to do
     }
 
-    public List<String> getStatementList() {
-        return statementList;
+    protected void statementStarted() {
+    	// by default, nothing to do
     }
 
-    protected void statementEnd() {
-        statementList.add( current.toString().trim() );
-        current = new StringBuilder();
-    }
-
-    public class StatementParserException extends RuntimeException {
-        public StatementParserException(String message) {
-            super( message );
-        }
-    }
-
-    private class ErrorHandler implements ErrorReporter {
-        private List<String> errorList = new LinkedList<String>();
-
-        @Override
-        public void reportError(RecognitionException e) {
-            reportError( e.toString() );
-        }
-
-        @Override
-        public void reportError(String s) {
-            errorList.add( s );
-        }
-
-        @Override
-        public void reportWarning(String s) {
-        }
-
-        public boolean hasErrors() {
-            return !errorList.isEmpty();
-        }
-
-        public String getErrorMessage() {
-            StringBuilder buf = new StringBuilder();
-            for ( Iterator iterator = errorList.iterator(); iterator.hasNext(); ) {
-                buf.append( (String) iterator.next() );
-                if ( iterator.hasNext() ) {
-                    buf.append( "\n" );
-                }
-            }
-            return buf.toString();
-        }
+    protected void statementEnded() {
+    	// by default, nothing to do
     }
 }
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Parser rules
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 script
-    :   ( statement )*
+	: (statement)+ EOF
     ;
 
 statement
-    :   ( s:NOT_STMT_END { out( s ); } | q:QUOTED_STRING { out( q ); } )* STMT_END { statementEnd(); }
-    ;
+	: { statementStarted(); } (statementPart)*  DELIMITER { statementEnded(); }
+	;
 
-class SqlStatementLexer extends Lexer;
+statementPart
+	: quotedString
+	| nonSkippedChar
+	;
+
+quotedString
+	: q:QUOTED_TEXT {
+		out( q );
+	}
+	;
+
+nonSkippedChar
+	: c:CHAR {
+   		out( c );
+   	}
+	;
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Lexer rules
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class SqlScriptLexer extends Lexer;
 
 options {
     k = 2;
     charVocabulary = '\u0000'..'\uFFFE';
 }
 
-STMT_END
-    : ';' ( '\t' | ' ' | '\r' | '\n' )*
-    ;
+DELIMITER : ';' ;
 
-NOT_STMT_END
-    : ~( ';' )
-    ;
-
-QUOTED_STRING
-	: '\'' ( (ESCqs)=> ESCqs | ~'\'' )* '\''
+// NOTE : The `ESCqs` part in the match is meant to an escaped quote (two single-quotes) and
+// add it to the recognized text.  The `(ESCqs) => ESCqs` syntax is a syntactic predicate.
+// We basically give precedence to the two single-quotes as a group as opposed to the first of them
+// matching the terminal single-quote.  Both single-quotes end up in the quoted text
+QUOTED_TEXT
+	: '`' ( ~('`') )* '`'
+	| '\'' ( (ESCqs) => ESCqs | ~('\'') )* '\''
+//	: '\'' ( ~('\'') )* '\''
 	;
 
 protected
-ESCqs
-	: '\'' '\''
+ESCqs :	'\'' '\'' ;
+
+CHAR
+	: ( ' ' | '\t' ) => ( ' ' | '\t' )
+    | ~( ';' | '\n' | '\r' )
+    ;
+
+NEWLINE
+	: ( '\r' | '\n' | '\r''\n' ) {
+		newline();
+		// skip the entire match from the lexer stream
+		$setType( Token.SKIP );
+	}
 	;
 
 LINE_COMMENT
-    : ( "//" | "--" ) ( ~('\n'|'\r') )* { $setType(Token.SKIP); }
+	// match `//` or `--` followed by anything other than \n or \r until NEWLINE
+	: ("//" | "--") ( ~('\n'|'\r') )* {
+		// skip the entire match from the lexer stream
+		$setType( Token.SKIP );
+	}
 	;
 
-MULTILINE_COMMENT
-    : "/*" ( options {greedy=false;} : . )* "*/" { $setType(Token.SKIP); }
-    ;
+BLOCK_COMMENT
+	: "/*"
+          (               /* '\r' '\n' can be matched in one alternative or by matching
+                             '\r' in one iteration and '\n' in another. I am trying to
+                             handle any flavor of newline that comes in, but the language
+                             that allows both "\r\n" and "\r" and "\n" to all be valid
+                             newline is ambiguous. Consequently, the resulting grammar
+                             must be ambiguous. I'm shutting this warning off.
+                          */
+            options {
+              generateAmbigWarnings=false;
+            }
+            :  { LA(2)!='/' }? '*'
+            | '\r' '\n' {newline();}
+            | '\r' {newline();}
+            | '\n' {newline();}
+            | ~('*'|'\n'|'\r')
+          )*
+          "*/"
+          {$setType(Token.SKIP);}
+	;

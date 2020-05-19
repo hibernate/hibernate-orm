@@ -274,7 +274,7 @@ public class HQLQueryPlan implements Serializable {
 	 * @return a reasonable size to use for allocation
 	 */
 	@SuppressWarnings("UnnecessaryUnboxing")
-	private int guessResultSize(RowSelection rowSelection) {
+	protected int guessResultSize(RowSelection rowSelection) {
 		if ( rowSelection != null ) {
 			final int maxReasonableAllocation = rowSelection.getFetchSize() != null ? rowSelection.getFetchSize().intValue() : 100;
 			if ( rowSelection.getMaxRows() != null && rowSelection.getMaxRows().intValue() > 0 ) {

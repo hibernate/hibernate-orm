@@ -221,8 +221,8 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		this.actionQueue = new ActionQueue( this );
-		this.persistenceContext = new StatefulPersistenceContext( this );
+		this.persistenceContext = createPersistenceContext();
+		this.actionQueue = createActionQueue();
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
@@ -267,6 +267,14 @@ public class SessionImpl
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), getTimestamp() );
 		}
+	}
+
+	protected StatefulPersistenceContext createPersistenceContext() {
+		return new StatefulPersistenceContext( this );
+	}
+
+	protected ActionQueue createActionQueue() {
+		return new ActionQueue( this );
 	}
 
 	private LockOptions getLockOptionsForRead() {
@@ -1435,7 +1443,7 @@ public class SessionImpl
 		return result;
 	}
 
-	private void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
+	protected void verifyImmutableEntityUpdate(HQLQueryPlan plan) {
 		if ( plan.isUpdate() ) {
 			List<String> primaryFromClauseTables = new ArrayList<>();
 			for ( QueryTranslator queryTranslator : plan.getTranslators() ) {

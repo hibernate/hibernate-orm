@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -199,7 +200,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public SessionFactoryImpl(
 			final MetadataImplementor metadata,
-			SessionFactoryOptions options) {
+			SessionFactoryOptions options,
+			QueryPlanCache.QueryPlanCreator queryPlanCacheFunction) {
 		LOG.debug( "Building session factory" );
 
 		this.sessionFactoryOptions = options;
@@ -260,7 +262,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
-		this.queryPlanCache = new QueryPlanCache( this );
+		this.queryPlanCache = new QueryPlanCache( this, queryPlanCacheFunction );
 
 		class IntegratorObserver implements SessionFactoryObserver {
 			private ArrayList<Integrator> integrators = new ArrayList<>();
@@ -1656,7 +1658,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	/**
 	 * @return the FastSessionServices for this SessionFactory.
 	 */
-	FastSessionServices getFastSessionServices() {
+	@Override
+	public FastSessionServices getFastSessionServices() {
 		return this.fastSessionServices;
 	}
 

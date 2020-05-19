@@ -1206,21 +1206,8 @@ public abstract class Loader {
 		// persistence context.
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( hydratedObjects != null && hydratedObjects.size() > 0 ) {
-
-			final Iterable<PostLoadEventListener> postLoadEventListeners;
-			if ( session.isEventSource() ) {
-				final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class )
-					.getEventListenerGroup( EventType.POST_LOAD );
-				postLoadEventListeners = listenerGroup.listeners();
-			}
-			else {
-				postLoadEventListeners = Collections.emptyList();
-			}
-
 			for ( Object hydratedObject : hydratedObjects ) {
-				TwoPhaseLoad.postLoad( hydratedObject, session, post, postLoadEventListeners );
+				TwoPhaseLoad.postLoad( hydratedObject, session, post );
 				if ( afterLoadActions != null ) {
 					for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
 						final EntityEntry entityEntry = persistenceContext.getEntry( hydratedObject );
@@ -1311,7 +1298,7 @@ public abstract class Loader {
 	 * result set, register the fact that the the object is missing with the
 	 * session.
 	 */
-	private void registerNonExists(
+	protected void registerNonExists(
 			final EntityKey[] keys,
 			final Loadable[] persisters,
 			final SharedSessionContractImplementor session) {
@@ -2710,7 +2697,7 @@ public abstract class Loader {
 		return getResultList( result, queryParameters.getResultTransformer() );
 	}
 
-	private QueryKey generateQueryKey(
+	protected QueryKey generateQueryKey(
 			SharedSessionContractImplementor session,
 			QueryParameters queryParameters) {
 		return QueryKey.generateQueryKey(
@@ -2722,7 +2709,7 @@ public abstract class Loader {
 		);
 	}
 
-	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
+	protected CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
 		return CacheableResultTransformer.create(
 				queryParameters.getResultTransformer(),
 				getResultRowAliases(),
@@ -2730,7 +2717,7 @@ public abstract class Loader {
 		);
 	}
 
-	private List getResultFromQueryCache(
+	protected List getResultFromQueryCache(
 			final SharedSessionContractImplementor session,
 			final QueryParameters queryParameters,
 			final Set<Serializable> querySpaces,
@@ -2786,7 +2773,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private EntityPersister getEntityPersister(EntityType entityType) {
+	protected EntityPersister getEntityPersister(EntityType entityType) {
 		return factory.getMetamodel().entityPersister( entityType.getAssociatedEntityName() );
 	}
 

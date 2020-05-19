@@ -22,6 +22,7 @@ dependencies {
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }
+    compile( libraries.h2 )
 }
 
 // resources inherently exclude sources

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.h2.util.DateTimeUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -450,6 +451,11 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
+		if ( getDialect() instanceof H2Dialect ) {
+			DateTimeUtils.resetCalendar();
+		}
+
 		completeStrayTransaction();
 
 		if ( isCleanupTestDataRequired() ) {
@@ -505,6 +511,8 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public class RollbackWork implements Work {
+
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

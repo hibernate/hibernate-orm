@@ -55,6 +55,8 @@ public class GraphParser extends GeneratedGraphParser {
 		this.sessionFactory = sessionFactory;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Semantic actions
 
 	@Override
 	protected void startAttribute(Token attributeNameToken) {
@@ -164,6 +166,10 @@ public class GraphParser extends GeneratedGraphParser {
 			);
 		}
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// trace logging hooks
 
 	@Override
 	public void traceIn(String s) throws TokenStreamException {

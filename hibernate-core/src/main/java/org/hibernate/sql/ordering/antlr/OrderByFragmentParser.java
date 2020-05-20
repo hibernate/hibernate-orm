@@ -45,6 +45,9 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		return columnReferences;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// semantic actions
+
 	@Override
 	protected AST quotedIdentifier(AST ident) {
 		/*
@@ -286,7 +289,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	}
 
 
-	// trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// trace logging hooks
 
 	private int traceDepth = 0;
 

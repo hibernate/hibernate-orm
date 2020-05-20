@@ -65,7 +65,6 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	 */
 	@Override
 	protected void out(String text) {
-		SchemaToolingLogging.AST_LOGGER.tracef( "Buffering text : %s", text );
 		currentStatementBuffer.append( text );
 	}
 
@@ -74,7 +73,6 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 	 */
 	@Override
 	protected void out(Token token) {
-		SchemaToolingLogging.AST_LOGGER.tracef( "out( %s(%s) )", TOKEN_NAMES[ token.getType() ], token.getText() );
 		currentStatementBuffer.append( token.getText() );
 	}
 
@@ -117,6 +115,10 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 		return buf.toString();
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// error handling hooks
+
 	@Override
 	public void reportError(RecognitionException e) {
 		final String textBase = "RecognitionException(@" + e.getLine() + ":" + e.getColumn() + ")";
@@ -143,7 +145,8 @@ public class SqlScriptParser extends GeneratedSqlScriptParser {
 		SchemaToolingLogging.LOGGER.debugf( "SqlScriptParser recognition warning : " + message );
 	}
 
-	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// trace logging hooks
 
 	private final int depthIndent = 2;
 	private int traceDepth;

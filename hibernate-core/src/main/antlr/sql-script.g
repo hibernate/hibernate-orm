@@ -126,6 +126,11 @@ LINE_COMMENT
 	}
 	;
 
+/**
+ * Note : this comes from the great Terrance Parr (author of Antlr) -
+ *
+ * https://theantlrguy.atlassian.net/wiki/spaces/ANTLR3/pages/2687360/How+do+I+match+multi-line+comments
+ */
 BLOCK_COMMENT
 	: "/*"
           (               /* '\r' '\n' can be matched in one alternative or by matching

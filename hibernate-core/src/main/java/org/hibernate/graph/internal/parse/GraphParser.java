@@ -164,4 +164,14 @@ public class GraphParser extends GeneratedGraphParser {
 			);
 		}
 	}
+
+	@Override
+	public void traceIn(String s) throws TokenStreamException {
+		// nothing to do - this parser already does a good job with logging trace info
+	}
+
+	@Override
+	public void traceOut(String s) throws TokenStreamException {
+		// nothing to do - this parser already does a good job with logging trace info
+	}
 }

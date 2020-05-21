@@ -23,13 +23,14 @@ import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtracter;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
+import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
@@ -41,8 +42,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Andrea Boriero
@@ -55,16 +58,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCase implements ExecutionOptions {
 	private StandardServiceRegistry ssr;
 
-	// NOTE regarding `HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR` setting:
-	//		the original test tried to use the "no terminal chars" sql script along with the multi-line parser
-	//		and expected the fact that the lines did not end with a `;` to throw a `SqlScriptException`.
-	//
-	//		but I don't think its reasonable to expect this situation to lead to a "SqlScriptException":
-	//			1. The default is the single-line version, so the multi-line one is an explicit override.
-	//			2. The script does not comply with the format expected by the explicit multi-line parser.
-	//
-	// 		the script is perfectly valid in terms of being a multi-line script, although it is invalid when
-	// 		interpreted that way
+	private static final String EXPECTED_ERROR_MESSAGE = "Import script Sql statements must terminate with a ';' char";
 
 	@Before
 	public void setUp() {
@@ -80,7 +74,7 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 				//		specify anything as single-line is the default
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
-						SingleLineSqlScriptExtractor.INSTANCE
+						MultiLineSqlScriptExtracter.INSTANCE
 				)
 				.build();
 	}
@@ -89,12 +83,18 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 	public void testImportFile() {
 		final SchemaCreator schemaCreator = new SchemaCreatorImpl( ssr );
 
-		schemaCreator.doCreation(
-				buildMappings( ssr ),
-				this,
-				SourceDescriptorImpl.INSTANCE,
-				TargetDescriptorImpl.INSTANCE
-		);
+		try {
+			schemaCreator.doCreation(
+					buildMappings( ssr ),
+					this,
+					SourceDescriptorImpl.INSTANCE,
+					TargetDescriptorImpl.INSTANCE
+			);
+			fail( "SqlScriptParserException expected" );
+		}
+		catch (SqlScriptException e) {
+			assertThat( e.getMessage(), endsWith( EXPECTED_ERROR_MESSAGE ) );
+		}
 	}
 
 	@After

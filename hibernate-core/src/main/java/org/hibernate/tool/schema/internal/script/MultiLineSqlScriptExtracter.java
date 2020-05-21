@@ -17,10 +17,13 @@ import org.hibernate.tool.schema.spi.SqlScriptCommandExtractor;
 import org.hibernate.tool.schema.spi.SqlScriptException;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
@@ -44,6 +47,9 @@ public class MultiLineSqlScriptExtracter implements SqlScriptCommandExtractor {
 			return visitor.visitScript( scriptParseTree );
 		}
 		catch (Exception e) {
+			if ( e instanceof SqlScriptException ) {
+				throw (SqlScriptException) e;
+			}
 			throw new SqlScriptException( "Error during sql-script parsing.", e );
 		}
 	}
@@ -62,6 +68,7 @@ public class MultiLineSqlScriptExtracter implements SqlScriptCommandExtractor {
 		parser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		parser.removeErrorListeners();
 		parser.setErrorHandler( new BailErrorStrategy() );
+		parser.addErrorListener( new VerboseListener() );
 
 		try {
 			return parser.script();
@@ -77,6 +84,22 @@ public class MultiLineSqlScriptExtracter implements SqlScriptCommandExtractor {
 			parser.setErrorHandler( new DefaultErrorStrategy() );
 
 			return parser.script();
+		}
+	}
+
+	public static class VerboseListener extends BaseErrorListener {
+		@Override
+		public void syntaxError(
+				Recognizer<?, ?> recognizer,
+				Object offendingSymbol,
+				int line,
+				int charPositionInLine,
+				String msg,
+				RecognitionException e) {
+			if ( msg.contains( "missing STMT_END" ) ) {
+				throw new SqlScriptException( "Import script Sql statements must terminate with a ';' char" );
+			}
+			super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, msg, e );
 		}
 	}
 }

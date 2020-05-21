@@ -31,6 +31,7 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -420,6 +421,20 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
+	 * This method will be removed.
+	 * @deprecated Use {@link #postLoad(Object, SharedSessionContractImplementor, PostLoadEvent)}
+	 * instead.
+	 */
+	@Deprecated
+	public static void postLoad(
+			final Object entity,
+			final SharedSessionContractImplementor session,
+			final PostLoadEvent postLoadEvent,
+			final Iterable<PostLoadEventListener> postLoadEventListeners) {
+		postLoad( entity, session, postLoadEvent );
+	}
+
+	/**
 	 * PostLoad cannot occur during initializeEntity, as that call occurs *before*
 	 * the Set collections are added to the persistence context by Loader.
 	 * Without the split, LazyInitializationExceptions can occur in the Entity's
@@ -432,41 +447,16 @@ public final class TwoPhaseLoad {
 	 * @param postLoadEvent The (re-used) post-load event
 	 */
 	public static void postLoad(
-			final Object entity,
-			final SharedSessionContractImplementor session,
-			final PostLoadEvent postLoadEvent,
-			final Iterable<PostLoadEventListener> postLoadEventListeners) {
-
-		if ( session.isEventSource() ) {
-			final PersistenceContext persistenceContext
-					= session.getPersistenceContextInternal();
-			final EntityEntry entityEntry = persistenceContext.getEntry( entity );
-
-			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() ).setPersister( entityEntry.getPersister() );
-
-			for ( PostLoadEventListener listener : postLoadEventListeners ) {
-				listener.onPostLoad( postLoadEvent );
-			}
-		}
-	}
-
-	/**
-	 * This method will be removed.
-	 * @deprecated Use {@link #postLoad(Object, SharedSessionContractImplementor, PostLoadEvent, Iterable)}
-	 * instead.
-	 */
-	@Deprecated
-	public static void postLoad(
 		final Object entity,
 		final SharedSessionContractImplementor session,
 		final PostLoadEvent postLoadEvent) {
+		if ( session.isEventSource() ) {
+			final EntityEntry entityEntry = session.getPersistenceContextInternal().getEntry( entity );
 
-		final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
-			.getServiceRegistry()
-			.getService( EventListenerRegistry.class )
-			.getEventListenerGroup( EventType.POST_LOAD );
+			postLoadEvent.setEntity( entity ).setId( entityEntry.getId() ).setPersister( entityEntry.getPersister() );
 
-		postLoad( entity, session, postLoadEvent, listenerGroup.listeners() );
+			session.getFactory().getFastSessionServices().firePostLoadEvent( postLoadEvent );
+		}
 	}
 
 	private static boolean useMinimalPuts(SharedSessionContractImplementor session, EntityEntry entityEntry) {

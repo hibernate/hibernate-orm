@@ -6,13 +6,19 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQL10IdentityColumnSupport;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for Postgres 10 and later.
  */
 public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
+
+	public PostgreSQL10Dialect() {
+		registerFunction( "timezone", new StandardSQLFunction( "timezone", StandardBasicTypes.TIMESTAMP ) );
+	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {

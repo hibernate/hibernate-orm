@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
@@ -26,10 +25,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.StringUtil;
-import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
@@ -191,7 +188,9 @@ public class Cfg2JavaTool {
 
 	static public boolean isNonPrimitiveTypeName(String typeName) {
 		return (!PRIMITIVES.containsKey( typeName ))
-				&& new BasicTypeRegistry().getRegisteredType(typeName) != null;
+				&& new TypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType(typeName) != null;
 	}
 
 	private String getRawTypeName(Property p, boolean useGenerics, boolean preferRawTypeNames, ImportContext importContext) {
@@ -333,14 +332,15 @@ public class Cfg2JavaTool {
 	public String asFinderArgumentList(Map<Object,Object> parameterTypes, ImportContext ctx) {
 		StringBuffer buf = new StringBuffer();
 		Iterator<Entry<Object,Object>> iter = parameterTypes.entrySet().iterator();
-		TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
 		while ( iter.hasNext() ) {
 			Entry<Object,Object> entry = iter.next();
 			String typename = null;
 			Type type = null;
 			if(entry.getValue() instanceof String) {
 				try {
-					type = typeResolver.heuristicType((String) entry.getValue());
+					type = new TypeConfiguration()
+							.getBasicTypeRegistry()
+							.getRegisteredType((String) entry.getValue());
 				} catch(Throwable t) {
 					type = null;
 					typename = (String) entry.getValue();
@@ -412,11 +412,4 @@ public class Cfg2JavaTool {
 		return typeName!=null && typeName.endsWith("[]");
 	}
 	
-	public Map<?, ?> getParameterTypes(NamedQueryDefinition query) {
-		Map<?, ?> result = query.getParameterTypes();
-		if (result == null) {
-			result = new HashMap<>();
-		}
-		return result;
-	}
 }

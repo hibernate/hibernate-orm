@@ -227,8 +227,6 @@ public class ${declarationName}Home {
 <#assign queryName = query.name>
 <#if queryName.startsWith(clazz.entityName + ".")>
 <#assign methname = c2j.unqualify(queryName)>
-<#assign params = c2j.getParameterTypes(query)>
-<#assign argList = c2j.asFinderArgumentList(params, pojo)>
 <#if jdk5 && methname.startsWith("find")>
     public ${pojo.importType("java.util.List")}<${declarationName}> ${methname}(${argList}) {
 <#elseif methname.startsWith("count")>
@@ -238,15 +236,6 @@ public class ${declarationName}Home {
 </#if>
         ${pojo.importType("org.hibernate.Query")} query = sessionFactory.getCurrentSession()
                 .getNamedQuery("${queryName}");
-<#foreach param in params.keySet()>
-<#if param.equals("maxResults")>
-		query.setMaxResults(maxResults);
-<#elseif param.equals("firstResult")>
-        query.setFirstResult(firstResult);
-<#else>
-        query.setParameter("${param}", ${param});
-</#if>
-</#foreach>
 <#if jdk5 && methname.startsWith("find")>
         return (List<${declarationName}>) query.list();
 <#elseif methname.startsWith("count")>

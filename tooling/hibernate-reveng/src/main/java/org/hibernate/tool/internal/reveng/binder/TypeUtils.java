@@ -41,16 +41,17 @@ public class TypeUtils {
 				TableIdentifier.create(table),
 				column.getName(),
 				sqlTypeCode.intValue(),
-				column.getLength(), 
-				column.getPrecision(), 
-				column.getScale(),
+				column.getLength().intValue(), 
+				column.getPrecision().intValue(), 
+				column.getScale().intValue(),
 				column.isNullable(), 
 				generatedIdentifier
 		);
 
 		Type wantedType = metadataCollector
-				.getTypeResolver()
-				.heuristicType(preferredHibernateType);
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType(preferredHibernateType);
 
 		if(wantedType!=null) {
 

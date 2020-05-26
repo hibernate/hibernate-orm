@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.grammars.hql.HqlLexer;
 
 /**
  * The HQLAnalyzer can answer certain questions about a HQL String.
@@ -112,13 +112,13 @@ public class HQLAnalyzer {
     	SimpleHQLLexer lexer = getLexer( chars, cursorPosition );
         int tokenId = -1;
         boolean show = false;
-        while ((tokenId = lexer.nextTokenId()) != HqlSqlTokenTypes.EOF) {
-            if ((tokenId == HqlSqlTokenTypes.FROM ||
-                    tokenId == HqlSqlTokenTypes.DELETE ||
-                    tokenId == HqlSqlTokenTypes.UPDATE) &&
+        while ((tokenId = lexer.nextTokenId()) != HqlLexer.EOF) {
+            if ((tokenId == HqlLexer.FROM ||
+                    tokenId == HqlLexer.DELETE ||
+                    tokenId == HqlLexer.UPDATE) &&
                     (lexer.getTokenOffset() + lexer.getTokenLength()) < cursorPosition) {
                 show = true;
-            } else if (tokenId != HqlSqlTokenTypes.DOT && tokenId != HqlSqlTokenTypes.AS && tokenId != HqlSqlTokenTypes.COMMA && tokenId != HqlSqlTokenTypes.IDENT && tokenId != HqlSqlTokenTypes.WS) {
+            } else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
                 show = false;                
             } 
         }
@@ -155,14 +155,14 @@ public class HQLAnalyzer {
         int caretDepth = 0;
         Map<Integer, SubQuery> level2SubQuery = new HashMap<Integer, SubQuery>();
         SubQuery current = null;
-        while ((numericId = syntax.nextTokenId()) != HqlSqlTokenTypes.EOF) {
+        while ((numericId = syntax.nextTokenId()) != HqlLexer.EOF) {
             boolean tokenAdded = false;
-            if (numericId == HqlSqlTokenTypes.OPEN) {
+            if (numericId == HqlLexer.LEFT_PAREN) {
                 depth++;
                 if (position > syntax.getTokenOffset()) {
                     caretDepth = depth;
                 }
-            } else if (numericId == HqlSqlTokenTypes.CLOSE) {
+            } else if (numericId == HqlLexer.RIGHT_PAREN) {
                 SubQuery currentDepthQuery = level2SubQuery.get(Integer.valueOf(depth));
                 // We check if we have a query on the current depth.
                 // If yes, we'll have to close it
@@ -180,10 +180,10 @@ public class HQLAnalyzer {
                 }
             }
             switch (numericId) {
-                case HqlSqlTokenTypes.FROM:
-                case HqlSqlTokenTypes.UPDATE:
-                case HqlSqlTokenTypes.DELETE:
-                case HqlSqlTokenTypes.SELECT:
+                case HqlLexer.FROM:
+                case HqlLexer.UPDATE:
+                case HqlLexer.DELETE:
+                case HqlLexer.SELECT:
                     if (!level2SubQuery.containsKey(Integer.valueOf(depth))) {
                         current = new SubQuery();
                         current.depth = depth;

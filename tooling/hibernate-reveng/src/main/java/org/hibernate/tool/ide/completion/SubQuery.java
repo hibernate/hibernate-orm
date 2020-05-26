@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.grammars.hql.HqlLexer;
 
 public class SubQuery implements Comparable<SubQuery> {
 
@@ -42,7 +42,7 @@ public class SubQuery implements Comparable<SubQuery> {
         StringBuffer joins = new StringBuffer();
         int i = 0;
         boolean cont = true;
-        int lastToken = HqlSqlTokenTypes.EOF;
+        int lastToken = HqlLexer.EOF;
         for (Iterator<Integer> iter = tokenIds.iterator(); iter.hasNext();) {
 			Integer typeInteger = (Integer) iter.next();
 			int type = typeInteger.intValue();
@@ -50,33 +50,33 @@ public class SubQuery implements Comparable<SubQuery> {
                 break;
             }
             if (!afterFrom &&
-                    (type == HqlSqlTokenTypes.FROM ||
-                    type == HqlSqlTokenTypes.UPDATE ||
-                    type == HqlSqlTokenTypes.DELETE)) {
+                    (type == HqlLexer.FROM ||
+                    type == HqlLexer.UPDATE ||
+                    type == HqlLexer.DELETE)) {
                 afterFrom = true;
             } else if (afterJoin) {
                 switch (type) {
-                    case HqlSqlTokenTypes.ORDER:
-                    case HqlSqlTokenTypes.WHERE:
-                    case HqlSqlTokenTypes.GROUP:
-                    case HqlSqlTokenTypes.HAVING:
+                    case HqlLexer.ORDER:
+                    case HqlLexer.WHERE:
+                    case HqlLexer.GROUP:
+                    case HqlLexer.HAVING:
                         cont = false;
                         break;
-                    case HqlSqlTokenTypes.INNER:
-                    case HqlSqlTokenTypes.OUTER:
-                    case HqlSqlTokenTypes.LEFT:
-                    case HqlSqlTokenTypes.RIGHT:
-                    case HqlSqlTokenTypes.JOIN:
+                    case HqlLexer.INNER:
+                    case HqlLexer.OUTER:
+                    case HqlLexer.LEFT:
+                    case HqlLexer.RIGHT:
+                    case HqlLexer.JOIN:
                         joins.append(",");
                         break;
-                    case HqlSqlTokenTypes.COMMA: 
+                    case HqlLexer.COMMA: 
                     	joins.append(","); //TODO: we should detect this and create the list directly instead of relying on the tokenizer
                     	break;
-                    case HqlSqlTokenTypes.DOT:
+                    case HqlLexer.DOT:
                     	joins.append("."); 
                     	break;
-                    case HqlSqlTokenTypes.IDENT:
-                    	if(lastToken!=HqlSqlTokenTypes.DOT) {
+                    case HqlLexer.IDENTIFIER:
+                    	if(lastToken!=HqlLexer.DOT) {
                     		joins.append(" ");
                     	} 
                         joins.append(tokenText.get(i));
@@ -84,26 +84,26 @@ public class SubQuery implements Comparable<SubQuery> {
                 }
             } else if (afterFrom) {
                 switch (type) {
-                    case HqlSqlTokenTypes.ORDER:
-                    case HqlSqlTokenTypes.WHERE:
-                    case HqlSqlTokenTypes.GROUP:
-                    case HqlSqlTokenTypes.HAVING:
-                    case HqlSqlTokenTypes.SET:
+                    case HqlLexer.ORDER:
+                    case HqlLexer.WHERE:
+                    case HqlLexer.GROUP:
+                    case HqlLexer.HAVING:
+                    case HqlLexer.SET:
                         cont = false;
                         break;
-                    case HqlSqlTokenTypes.COMMA: 
+                    case HqlLexer.COMMA: 
                     	tableNames.append(","); //TODO: we should detect this and create the list directly instead of relying on the tokenizer
                     	break;
-                    case HqlSqlTokenTypes.DOT:
+                    case HqlLexer.DOT:
                     	tableNames.append("."); 
                     	break;
-                    case HqlSqlTokenTypes.IDENT:
-                    	if(lastToken!=HqlSqlTokenTypes.DOT) {
+                    case HqlLexer.IDENTIFIER:
+                    	if(lastToken!=HqlLexer.DOT) {
                     		tableNames.append(" ");
                     	} 
                         tableNames.append(tokenText.get(i));
                         break;
-                    case HqlSqlTokenTypes.JOIN:
+                    case HqlLexer.JOIN:
                     	tableNames.append(",");
                         afterJoin = true;
                         break;

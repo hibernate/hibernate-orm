@@ -35,7 +35,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 	}
 	
 	private final BasicPropertyBinder basicPropertyBinder;
-	private final SimpleValueBinder simpleValueBinder;
+	private final BasicValueBinder simpleValueBinder;
 	private final ManyToOneBinder manyToOneBinder;
 	private final PropertyBinder propertyBinder;
 
@@ -43,7 +43,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 	private PrimaryKeyBinder(BinderContext binderContext) {
 		super(binderContext);
 		this.basicPropertyBinder = BasicPropertyBinder.create(binderContext);
-		this.simpleValueBinder = SimpleValueBinder.create(binderContext);
+		this.simpleValueBinder = BasicValueBinder.create(binderContext);
 		this.manyToOneBinder = ManyToOneBinder.create(binderContext);
 		this.propertyBinder = PropertyBinder.create(binderContext);
 	}

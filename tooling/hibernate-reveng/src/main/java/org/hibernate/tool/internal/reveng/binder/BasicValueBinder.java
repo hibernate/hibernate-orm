@@ -5,13 +5,13 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
-class SimpleValueBinder extends AbstractBinder {
+class BasicValueBinder extends AbstractBinder {
 	
-	static SimpleValueBinder create(BinderContext binderContext) {
-		return new SimpleValueBinder(binderContext);
+	static BasicValueBinder create(BinderContext binderContext) {
+		return new BasicValueBinder(binderContext);
 	}
 	
-	private SimpleValueBinder(BinderContext binderContext) {
+	private BasicValueBinder(BinderContext binderContext) {
 		super(binderContext);
 	}
 	

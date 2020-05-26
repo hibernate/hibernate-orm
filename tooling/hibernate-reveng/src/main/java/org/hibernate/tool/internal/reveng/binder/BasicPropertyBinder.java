@@ -11,12 +11,12 @@ class BasicPropertyBinder extends AbstractBinder {
 		return new BasicPropertyBinder(binderContext);
 	}
 	
-	private final SimpleValueBinder simpleValueBinder;
+	private final BasicValueBinder simpleValueBinder;
 	private final PropertyBinder propertyBinder;
 	
 	private BasicPropertyBinder(BinderContext binderContext) {
 		super(binderContext);
-		simpleValueBinder = SimpleValueBinder.create(binderContext);
+		simpleValueBinder = BasicValueBinder.create(binderContext);
 		propertyBinder = PropertyBinder.create(binderContext);
 	}
 	

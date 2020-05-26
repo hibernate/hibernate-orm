@@ -11,7 +11,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.common.DefaultValueVisitor;
-import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
@@ -78,7 +77,7 @@ public class JavaTypeFromValueVisitor extends DefaultValueVisitor {
 		try {
 			// have to attempt calling gettype to decide if its custom type.
 			Type type = value.getType();
-			if(type instanceof CustomType || type instanceof CompositeCustomType) {
+			if(type instanceof CustomType) {
 				return toName( type.getReturnedClass() );
 			}
 		} catch(HibernateException he) {

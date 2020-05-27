@@ -1216,7 +1216,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// todo : close the bootstrap registry (not critical, but nice to do)
 	}
 
-	private MetadataImplementor metadata() {
+	/**
+	 * Used by extensions : Hibernate Reactive
+	 */
+	protected MetadataImplementor metadata() {
 		if ( this.metadata == null ) {
 			this.metadata = MetadataBuildingProcess.complete(
 					managedResources,
@@ -1328,7 +1331,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return persistenceException( message, null );
 	}
 
-	private PersistenceException persistenceException(String message, Exception cause) {
+	protected PersistenceException persistenceException(String message, Exception cause) {
 		return new PersistenceException(
 				getExceptionHeader() + message,
 				cause
@@ -1447,5 +1450,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		return instance;
+	}
+
+	/**
+	 * Exposed to extensions: see Hibernate Reactive
+	 * @return
+	 */
+	protected StandardServiceRegistry getStandardServiceRegistry() {
+		return standardServiceRegistry;
 	}
 }

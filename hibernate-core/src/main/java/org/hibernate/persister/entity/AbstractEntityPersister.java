@@ -1196,7 +1196,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromDatastore(
+	protected Object initializeLazyPropertiesFromDatastore(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -1308,7 +1308,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromCache(
+	protected Object initializeLazyPropertiesFromCache(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -1346,7 +1346,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	private boolean initializeLazyProperty(
+	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -2407,6 +2407,22 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
+	}
+
+	protected int[] getLazyPropertyNumbers() {
+		return lazyPropertyNumbers;
+	}
+
+	protected String[] getLazyPropertyNames() {
+		return lazyPropertyNames;
+	}
+
+	protected Type[] getLazyPropertyTypes() {
+		return lazyPropertyTypes;
+	}
+
+	protected String[][] getLazyPropertyColumnAliases() {
+		return lazyPropertyColumnAliases;
 	}
 
 	public Object loadByUniqueKey(

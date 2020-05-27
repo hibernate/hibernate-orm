@@ -141,7 +141,7 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 
 	@Override
 	public final void stop() {
-		BeansMessageLogger.BEANS_LOGGER.stoppingBeanContainer( this );
+		BeansMessageLogger.BEANS_MESSAGE_LOGGER.stoppingBeanContainer( this );
 		forEachBean( ContainedBeanImplementor::release );
 		registeredBeans.clear();
 		beanCache.clear();

@@ -24,7 +24,7 @@ import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
-import static org.hibernate.internal.log.UrlMessageBundle.URL_LOGGER;
+import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
  * An ArchiveDescriptor implementation leveraging the {@link java.util.jar.JarFile} API for processing.
@@ -169,10 +169,10 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			}
 		}
 		catch (IOException e) {
-			URL_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
 		}
 		catch (URISyntaxException e) {
-			URL_LOGGER.logMalformedUrl( getArchiveUrl(), e );
+			URL_MESSAGE_LOGGER.logMalformedUrl( getArchiveUrl(), e );
 		}
 		return null;
 	}

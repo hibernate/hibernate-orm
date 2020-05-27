@@ -12,28 +12,15 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 /**
- * @asciidoc
- *
- * Logger for DomainResult related messages.  This includes messages related to:
- *
- * 		* creation of the DomainResult / Fetch nodes
- * 		* creation of Initializer / DomainResultAssembler delegates
- * 		* processing of JDBC values via Initializer / DomainResultAssembler
- *
  * @author Steve Ebersole
  */
 @MessageLogger( projectCode = "HHH" )
-@ValidIdRange( min = 90005001, max = 90005100 )
-public interface ResultsLogger extends BasicLogger {
-	String LOGGER_NAME = "org.hibernate.orm.sql.results";
+@ValidIdRange( min = 90005801, max = 90005900 )
+public interface LoadingLogger extends BasicLogger {
+	String LOGGER_NAME = ResultsLogger.subLoggerName( "loading" );
 
-	/**
-	 * Static access to the logging instance
-	 */
-	ResultsLogger LOGGER = Logger.getMessageLogger(
-			ResultsLogger.class,
-			LOGGER_NAME
-	);
+	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
+	LoadingLogger MESSAGE_LOGGER = Logger.getMessageLogger( LoadingLogger.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + "." + subName;
@@ -43,9 +30,6 @@ public interface ResultsLogger extends BasicLogger {
 		return Logger.getLogger( subLoggerName( subName ) );
 	}
 
-	// todo (6.0) : make sure sql result processing classes use this logger
-
 	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	boolean INFO_ENABLED = LOGGER.isInfoEnabled();
 }

@@ -28,10 +28,13 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10000001, max = 10001000 )
 public interface UrlMessageBundle {
-	public static final UrlMessageBundle URL_LOGGER = Logger.getMessageLogger(
-			UrlMessageBundle.class,
-			"org.hibernate.orm.url"
-	);
+	String LOGGER_NAME = "org.hibernate.orm.url";
+
+	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
+	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( UrlMessageBundle.class, LOGGER_NAME );
+
+	boolean DEBUG_ENABLED = URL_LOGGER.isDebugEnabled();
+	boolean TRACE_ENABLED = URL_LOGGER.isTraceEnabled();
 
 	/**
 	 * Logs a warning about a malformed URL, caused by a {@link java.net.URISyntaxException}

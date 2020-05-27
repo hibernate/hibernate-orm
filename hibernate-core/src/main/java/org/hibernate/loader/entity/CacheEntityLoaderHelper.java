@@ -38,6 +38,7 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
@@ -94,7 +95,7 @@ public class CacheEntityLoaderHelper extends AbstractLockUpgradeEventListener {
 			if ( options.isCheckDeleted() ) {
 				Status status = oldEntry.getStatus();
 				if ( status == Status.DELETED || status == Status.GONE ) {
-					LOG.debug(
+					LoadingLogger.LOGGER.debug(
 							"Load request found matching entity in context, but it is scheduled for removal; returning null" );
 					return new PersistenceContextEntry( old, EntityStatus.REMOVED_ENTITY_MARKER );
 				}

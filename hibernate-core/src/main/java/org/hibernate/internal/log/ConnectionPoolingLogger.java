@@ -27,13 +27,13 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10001001, max = 10001500 )
 public interface ConnectionPoolingLogger extends BasicLogger {
+	String LOGGER_NAME = "org.hibernate.orm.connections.pooling";
+
 	/**
 	 * Static access to the logging instance
 	 */
-	ConnectionPoolingLogger CONNECTIONS_LOGGER = Logger.getMessageLogger(
-			ConnectionPoolingLogger.class,
-			"org.hibernate.orm.connections.pooling"
-	);
+	Logger CONNECTIONS_LOGGER = Logger.getLogger( LOGGER_NAME );
+	ConnectionPoolingLogger CONNECTIONS_MESSAGE_LOGGER = Logger.getMessageLogger( ConnectionPoolingLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = INFO)
 	@Message(value = "Connection properties: %s", id = 10001001)

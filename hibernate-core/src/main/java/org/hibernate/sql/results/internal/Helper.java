@@ -50,12 +50,12 @@ public class Helper {
 
 	private static Consumer<Initializer> getInitializerConsumer(List<Initializer> initializers) {
 		return initializer -> {
-			ResultsLogger.INSTANCE.debugf( "Initializer registration : %s", initializer );
+			ResultsLogger.LOGGER.debugf( "Initializer registration : %s", initializer );
 			if ( initializers.contains( initializer ) ) {
-				ResultsLogger.INSTANCE.debug( "Skipping initializer registration - already registered" );
+				ResultsLogger.LOGGER.debug( "Skipping initializer registration - already registered" );
 			}
 
-			ResultsLogger.INSTANCE.debugf( "Adding initializer : %s", initializer );
+			ResultsLogger.LOGGER.debugf( "Adding initializer : %s", initializer );
 			initializers.add( initializer );
 		};
 	}

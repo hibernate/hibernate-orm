@@ -35,6 +35,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_LOGGER;
+import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MESSAGE_LOGGER;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -69,7 +70,7 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public void configure(Map configurationValues) {
-		CONNECTIONS_LOGGER.usingHibernateBuiltInConnectionPool();
+		CONNECTIONS_MESSAGE_LOGGER.usingHibernateBuiltInConnectionPool();
 		PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		PoolState newstate = new PoolState( pool, validationInterval );
@@ -130,11 +131,11 @@ public class DriverManagerConnectionProviderImpl
 		}
 
 		if ( success ) {
-			CONNECTIONS_LOGGER.loadedDriver( driverClassName );
+			CONNECTIONS_MESSAGE_LOGGER.loadedDriver( driverClassName );
 		}
 		else {
 			//we're hoping that the driver is already loaded
-			CONNECTIONS_LOGGER.noDriver( AvailableSettings.DRIVER );
+			CONNECTIONS_MESSAGE_LOGGER.noDriver( AvailableSettings.DRIVER );
 			StringBuilder list = new StringBuilder();
 			Enumeration<Driver> drivers = DriverManager.getDrivers();
 			while ( drivers.hasMoreElements() ) {
@@ -143,36 +144,36 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			CONNECTIONS_LOGGER.loadedDrivers( list.toString() );
+			CONNECTIONS_MESSAGE_LOGGER.loadedDrivers( list.toString() );
 		}
 
 		if ( url == null ) {
-			final String msg = CONNECTIONS_LOGGER.jdbcUrlNotSpecified( AvailableSettings.URL );
+			final String msg = CONNECTIONS_MESSAGE_LOGGER.jdbcUrlNotSpecified( AvailableSettings.URL );
 			CONNECTIONS_LOGGER.error( msg );
 			throw new HibernateException( msg );
 		}
 		connectionCreatorBuilder.setUrl( url );
 
-		CONNECTIONS_LOGGER.usingUrl( url );
+		CONNECTIONS_MESSAGE_LOGGER.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
 		// if debug level is enabled, then log the password, otherwise mask it
 		if ( CONNECTIONS_LOGGER.isDebugEnabled() ) {
-			CONNECTIONS_LOGGER.connectionProperties( connectionProps );
+			CONNECTIONS_MESSAGE_LOGGER.connectionProperties( connectionProps );
 		}
 		else {
-			CONNECTIONS_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
+			CONNECTIONS_MESSAGE_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 		}
 		connectionCreatorBuilder.setConnectionProps( connectionProps );
 
 		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
-		CONNECTIONS_LOGGER.autoCommitMode( autoCommit );
+		CONNECTIONS_MESSAGE_LOGGER.autoCommitMode( autoCommit );
 		connectionCreatorBuilder.setAutoCommit( autoCommit );
 
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
 		if ( isolation != null ) {
-			CONNECTIONS_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
+			CONNECTIONS_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 		}
 		connectionCreatorBuilder.setIsolation( isolation );
 
@@ -284,7 +285,7 @@ public class DriverManagerConnectionProviderImpl
 			autoCommit = builder.autoCommit;
 			maxSize = builder.maxSize;
 			minSize = builder.minSize;
-			CONNECTIONS_LOGGER.hibernateConnectionPoolSize( maxSize, minSize );
+			CONNECTIONS_MESSAGE_LOGGER.hibernateConnectionPoolSize( maxSize, minSize );
 			addConnections( builder.initialSize );
 		}
 
@@ -359,7 +360,7 @@ public class DriverManagerConnectionProviderImpl
 					allConnections.remove( connection );
 				}
 				catch (SQLException e) {
-					CONNECTIONS_LOGGER.unableToCloseConnection( e );
+					CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( e );
 				}
 			}
 		}
@@ -453,7 +454,7 @@ public class DriverManagerConnectionProviderImpl
 				if ( !active ) {
 					return;
 				}
-				CONNECTIONS_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
+				CONNECTIONS_MESSAGE_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
 				active = false;
 				if ( executorService != null ) {
 					executorService.shutdown();
@@ -463,7 +464,7 @@ public class DriverManagerConnectionProviderImpl
 					pool.close();
 				}
 				catch (SQLException e) {
-					CONNECTIONS_LOGGER.unableToClosePooledConnection( e );
+					CONNECTIONS_MESSAGE_LOGGER.unableToClosePooledConnection( e );
 				}
 			}
 			finally {

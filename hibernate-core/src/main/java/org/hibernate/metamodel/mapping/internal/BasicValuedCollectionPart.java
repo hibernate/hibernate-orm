@@ -179,7 +179,7 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		ResultsLogger.INSTANCE.debugf(
+		ResultsLogger.LOGGER.debugf(
 				"Generating Fetch for collection-part : `%s` -> `%s`",
 				collectionDescriptor.getRole(),
 				nature.getName()

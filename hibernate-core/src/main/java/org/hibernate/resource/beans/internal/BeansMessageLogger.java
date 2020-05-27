@@ -24,13 +24,13 @@ import static org.jboss.logging.Logger.Level.WARN;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10005001, max = 10010000 )
 public interface BeansMessageLogger {
+	String LOGGER_NAME = "org.hibernate.orm.beans";
+
 	/**
-	 * *The* BeansMessageLogger instance
+	 * The BeansMessageLogger instance
 	 */
-	BeansMessageLogger BEANS_LOGGER = Logger.getMessageLogger(
-			BeansMessageLogger.class,
-			"org.hibernate.orm.beans"
-	);
+	Logger BEANS_LOGGER = Logger.getLogger( LOGGER_NAME );
+	BeansMessageLogger BEANS_MESSAGE_LOGGER = Logger.getMessageLogger( BeansMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage( level = WARN )
 	@Message(

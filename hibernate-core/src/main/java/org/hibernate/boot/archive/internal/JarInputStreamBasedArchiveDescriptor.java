@@ -19,7 +19,7 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
-import static org.hibernate.internal.log.UrlMessageBundle.URL_LOGGER;
+import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
  * An ArchiveDescriptor implementation that works on archives accessible through a {@link java.util.jar.JarInputStream}.
@@ -52,7 +52,7 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 		}
 		catch (Exception e) {
 			//really should catch IOException but Eclipse is buggy and raise NPE...
-			URL_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
 			return;
 		}
 

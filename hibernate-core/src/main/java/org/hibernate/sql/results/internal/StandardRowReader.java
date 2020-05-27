@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
@@ -20,15 +21,11 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
-import org.jboss.logging.Logger;
-
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
-	private static final Logger LOG = Logger.getLogger( StandardRowReader.class );
-
 	private final List<DomainResultAssembler> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
@@ -49,6 +46,20 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 		this.assemblerCount = resultAssemblers.size();
 		this.callback = callback;
+
+		logDebugInfo();
+	}
+
+	protected void logDebugInfo() {
+		// we'd really need some form of description for the assemblers and initializers for this
+		// to be useful.
+		//
+		// todo (6.0) : consider whether this ^^ is worth it
+
+//		if ( ! ResultsLogger.DEBUG_ENABLED ) {
+//			return;
+//		}
+
 	}
 
 	@Override
@@ -68,14 +79,16 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-		LOG.debug( "---Processing Row---" );
+		LoadingLogger.LOGGER.trace( "StandardRowReader#readRow" );
 
 		coordinateInitializers( rowProcessingState, options );
 
 		final Object[] resultRow = new Object[ assemblerCount ];
 
 		for ( int i = 0; i < assemblerCount; i++ ) {
-			resultRow[i] = resultAssemblers.get( i ).assemble( rowProcessingState, options );
+			final DomainResultAssembler assembler = resultAssemblers.get( i );
+			LoadingLogger.LOGGER.debugf( "Calling top-level assembler (%i / %i) : %s", i, assemblerCount, assembler );
+			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 
 		afterRow( rowProcessingState, options );
@@ -84,7 +97,12 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
+
 		// todo (6.0) : add AfterLoadActions handling here via Callback
+		//
+		// maybe :
+		// 		initializer.finishUpRow( rowProcessingState, callback );
 
 		for ( Initializer initializer : initializers ) {
 			initializer.finishUpRow( rowProcessingState );

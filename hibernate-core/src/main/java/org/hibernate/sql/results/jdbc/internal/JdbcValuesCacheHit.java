@@ -59,7 +59,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
-		ResultsLogger.INSTANCE.tracef( "JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i", position, numberOfRows );
+		ResultsLogger.LOGGER.tracef( "JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i", position, numberOfRows );
 
 		// NOTE : explicitly skipping limit handling because the cached state ought
 		// 		already be the limited size since the cache key includes limits

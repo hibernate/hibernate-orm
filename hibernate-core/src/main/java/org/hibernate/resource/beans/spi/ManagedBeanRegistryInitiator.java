@@ -63,14 +63,14 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		final Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
 		if ( beanManagerRef != null ) {
 			if ( !isCdiAvailable ) {
-				BeansMessageLogger.BEANS_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
+				BeansMessageLogger.BEANS_MESSAGE_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
 			}
 
 			return CdiBeanContainerBuilder.fromBeanManagerReference( beanManagerRef, serviceRegistry );
 		}
 		else {
 			if ( isCdiAvailable ) {
-				BeansMessageLogger.BEANS_LOGGER.noBeanManagerButCdiAvailable();
+				BeansMessageLogger.BEANS_MESSAGE_LOGGER.noBeanManagerButCdiAvailable();
 			}
 		}
 

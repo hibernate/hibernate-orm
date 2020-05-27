@@ -1,109 +1,206 @@
-= JBoss Logging ValidIdRange Mapping
+= Logging design
 
-[width="50%",cols=">s,>s,^2m",options="header"]
+== "System"-specific Loggers
+
+The basic idea here is to group log messages into a more logical hierarchy of Logger names for
+the purpose of filtering.
+
+E.g. "org.hibernate.orm.model.mapping" is one such system we define for the purpose of
+grouping hierarchy of loggers names related to specific aspects of the mapping model:
+
+----
+* org.hibernate.orm.model.mapping
+|- * org.hibernate.orm.model.mapping.creation
+\- * org.hibernate.orm.model.mapping....
+----
+
+Just like with normal log filtering, here we'd use these system names in the underlying logger config.
+
+E.g., in our test-suite we've found the following log4j pattern to be great for these systems:
+
+----
+...
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %c{1}(%C{1}:%L) - %m%n
+
+log4j.logger.org.hibernate.orm.model.mapping.creation=trace
+...
+----
+
+An example of output:
+
+----
+09:45:34,713 DEBUG creation(MappingModelCreationProcess:76) - Starting generic post-init callbacks
+09:45:34,713 DEBUG creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : EmbeddableMappingType builder : org.hibernate.type.EmbeddedComponentType@69b2f8e5
+09:45:34,714 DEBUG creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : Static fetchable list builder : org.hibernate.test.ecid.CompositeIdAssociationsWithEmbeddedCompositeIdTest$Parent
+----
+
+The pattern could use `%c` rather than `%c{1}`.  That approach is much nicer for these system-based names.  However,
+that would be verbose with the more normal pattern of using class name for logger name.
+
+As an example output:
+
+----
+09:45:34,713 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess:76) - Starting generic post-init callbacks
+09:45:34,713 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : EmbeddableMappingType builder : org.hibernate.type.EmbeddedComponentType@69b2f8e5
+09:45:34,714 DEBUG org.hibernate.orm.model.mapping.creation(MappingModelCreationProcess$PostInitCallbackEntry:160) - Starting MappingModelCreationProcess.PostInitCallbackEntry processing : Static fetchable list builder : org.hibernate.test.ecid.CompositeIdAssociationsWithEmbeddedCompositeIdTest$Parent
+----
+
+Typically, a class would be created for each system to hold a shared reference to a singleton Logger instance as
+well as some helper info such as whether DEBUG or TRACE are enabled.  E.g.:
+
+[source,java]
+----
+@MessageLogger( projectCode = "HHH" )
+@ValidIdRange( min = 90005701, max = 90005800 )
+public interface MappingModelCreationLogger extends BasicLogger {
+	String LOGGER_NAME = "org.hibernate.orm.model.mapping.creation";
+
+	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME );
+
+	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+}
+----
+
+
+== `@ValidIdRange` registry
+
+[width="50%",cols=">s,>s,^2m,^2m",options="header"]
 |===
 |`ValidIdRange#min`
 |`ValidIdRange#max`
+|Channel
 |Logger
 
 |1
 |10000
+|n/a
 |org.hibernate.internal.CoreMessageLogger
 
 |10001
 |15000
+|n/a
 |org.hibernate.c3p0.internal.C3P0MessageLogger (extends ConnectionPoolingLogger)
 
 |15000
 |20000
+|n/a
 |org.hibernate.internal.EntityManagerMessageLogger
 
 |20001
 |25000
+|n/a
 |org.hibernate.cache.ehcache.EhCacheMessageLogger (extends CoreMessageLogger)
 
 |25001
 |30000
+|n/a
 |org.hibernate.envers.internal.EnversMessageLogger
 
 |25001
 |30000
+|n/a
 |org.hibernate.cache.infinispan.util.InfinispanMessageLogger
 
 |30001
 |35000
+|n/a
 |org.hibernate.proxool.internal.ProxoolMessageLogger (extends ConnectionPoolingLogger)
 
 |10000001
 |10001000
+|org.hibernate.orm.url
 |org.hibernate.internal.log.UrlMessageBundle
 
 |10001001
 |10001500
+|org.hibernate.orm.connections.pooling
 |org.hibernate.internal.log.ConnectionPoolingLogger
 
 |10005001
 |10010000
-|org.hibernate.resource.cdi.internal.CdiMessageLogger
+|org.hibernate.orm.beans
+|org.hibernate.resource.beans.internal.BeansMessageLogger
 
 |80000001
 |80001000
+|n/a
 |org.hibernate.spatial.HSMessageLogger
 
 |90000001
 |90001000
+|org.hibernate.orm.deprecation
 |org.hibernate.internal.log.DeprecationLogger
 
 |90001001
 |90002000
+|org.hibernate.orm.cache
 |org.hibernate.cache.spi.SecondLevelCacheLogger
 
 |90002001
 |90003000
+|n/a
 |org.hibernate.internal.log.UnsupportedLogger
 
 |90003001
 |90003500
+|org.hibernate.orm.query
 |org.hibernate.query.spi.QueryLogger
 
 |90003501
 |90004000
+|org.hibernate.orm.query.hql
 |org.hibernate.query.hql.HqlLogger
 
 |90004001
 |90005000
+|org.hibernate.orm.sql.exec
 |org.hibernate.sql.exec.SqlExecLogger
 
 |90005001
 |90005100
-|org.hibernate.sql.results.SqlResultsLogger
+|org.hibernate.orm.sql.results
+|org.hibernate.sql.results.ResultsLogger
 
 |90005101
 |90005200
-|org.hibernate.sql.results.internal.domain.collection.CollectionLoadingLogger
+|org.hibernate.orm.sql.results.loading.collection
+|org.hibernate.sql.results.graph.collection.CollectionLoadingLogger
 
 |90005201
 |90005300
-|org.hibernate.sql.results.internal.domain.entity.EntityLoadingLogger
+|org.hibernate.orm.sql.results.loading.entity
+|org.hibernate.sql.results.graph.entity.EntityLoadingLogger
 
 |90005301
 |90005400
-|org.hibernate.sql.results.internal.domain.embedded.CompositeLoadingLogger
+|org.hibernate.orm.sql.results.loading.composite
+|org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger
 
 |90005401
 |90005500
+|org.hibernate.orm.sql.ast.tree
 |org.hibernate.sql.ast.tree.SqlAstTreeLogger
 
 |90005501
 |90005600
+|org.hibernate.orm.boot.jaxb
 |org.hibernate.boot.jaxb.JaxbLogger
 
 |90005601
 |90005700
+|org.hibernate.envers.boot
 |org.hibernate.envers.boot.EnversBootLogger
 
 |90005701
 |90005800
+|org.hibernate.orm.model.mapping.creation
 |org.hibernate.metamodel.mapping.MappingModelCreationLogger
+
+|90005801
+|90005900
+|org.hibernate.orm.sql.results.loading
+|org.hibernate.sql.results.LoadingLogger
 
 |===

@@ -3606,7 +3606,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private String[] getUpdateStrings(boolean byRowId, boolean lazy) {
+	protected String[] getUpdateStrings(boolean byRowId, boolean lazy) {
 		if ( byRowId ) {
 			return lazy ? getSQLLazyUpdateByRowIdStrings() : getSQLUpdateByRowIdStrings();
 		}
@@ -3781,7 +3781,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
+	protected void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
 		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
 			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
 			for ( int i = 0; i < strategies.length; i++ ) {
@@ -3831,7 +3831,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private boolean isAllOrDirtyOptLocking() {
+	protected boolean isAllOrDirtyOptLocking() {
 		return entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.DIRTY
 				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}

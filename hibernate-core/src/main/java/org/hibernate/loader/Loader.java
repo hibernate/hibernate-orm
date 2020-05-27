@@ -62,12 +62,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -1972,15 +1970,18 @@ public abstract class Loader {
 
 	private ScrollMode getScrollMode(
 			boolean scroll,
-			boolean hasFirstRow,
-			boolean useLimitOffSet,
+			LimitHandler limitHandler,
 			QueryParameters queryParameters) {
 		final boolean canScroll = getFactory().getSessionFactoryOptions().isScrollableResultSetsEnabled();
 		if ( canScroll ) {
 			if ( scroll ) {
 				return queryParameters.getScrollMode();
 			}
-			if ( hasFirstRow && !useLimitOffSet ) {
+			final RowSelection selection = queryParameters.getRowSelection();
+			final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
+			final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
+			final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
+			if ( hasFirstRow && !useLimitOffset ) {
 				return ScrollMode.SCROLL_INSENSITIVE;
 			}
 		}
@@ -2080,19 +2081,24 @@ public abstract class Loader {
 			final LimitHandler limitHandler,
 			final boolean scroll,
 			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
+		final PreparedStatement preparedStatement = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
+				sql,
+				queryParameters.isCallable(),
+				getScrollMode( scroll, limitHandler, queryParameters )
+		);
+		return bindPreparedStatement( preparedStatement, queryParameters, limitHandler, session );
+	}
+
+	protected final PreparedStatement bindPreparedStatement(
+			final PreparedStatement st,
+			final QueryParameters queryParameters,
+			final LimitHandler limitHandler,
+			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
 		final Dialect dialect = getFactory().getDialect();
 		final RowSelection selection = queryParameters.getRowSelection();
-		final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
-		final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
-		final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
 		final boolean callable = queryParameters.isCallable();
-		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-
-		PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
-				sql,
-				callable,
-				scrollMode
-		);
 
 		try {
 
@@ -2278,7 +2284,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2299,7 +2305,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2308,7 +2314,7 @@ public abstract class Loader {
 		}
 	}
 
-	private ResultSet processResultSet(
+	protected ResultSet preprocessResultSet(
 			ResultSet rs,
 			final RowSelection selection,
 			final LimitHandler limitHandler,

@@ -201,7 +201,15 @@ processTestResources {
 	}
 }
 
-// Enable the experimental features of ByteBuddy with JDK 12+
+// Keep system properties in sync with gradle.properties!
+test {
+	systemProperty 'user.language', 'en'
+	systemProperty 'user.country', 'US'
+	systemProperty 'user.timezone', 'UTC'
+	systemProperty 'file.encoding', 'UTF-8'
+}
+
+// Enable the experimental features of ByteBuddy with JDK 15+
 test {
 	//Only safe to attempt to parse the version as an integer since JDK11
 	if ( JavaVersion.current().isJava11Compatible() ) {

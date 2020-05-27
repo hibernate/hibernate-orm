@@ -50,9 +50,6 @@ configurations {
 	provided {
 		description = 'Non-exported compile-time dependencies.'
 	}
-	jbossLoggingTool {
-		description = 'Dependencies for running the jboss-logging tooling.'
-	}
 	asciidoclet {
 		description = "Dependencies for Asciidoctor Javadoc taglet"
 	}
@@ -66,7 +63,9 @@ dependencies {
 
 	provided libraries.logging_annotations
 
-	jbossLoggingTool( libraries.logging_processor )
+	annotationProcessor( libraries.logging_processor )
+	annotationProcessor( libraries.logging )
+	annotationProcessor( libraries.logging_annotations )
 
 	testCompile( libraries.junit )
 	testCompile( libraries.byteman )
@@ -132,7 +131,6 @@ task compile(dependsOn: [compileJava, processResources, compileTestJava, process
 
 sourceSets.main {
 	compileClasspath += configurations.provided
-	compileClasspath += configurations.jbossLoggingTool
 }
 
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
@@ -210,15 +208,23 @@ processTestResources {
 	}
 }
 
-// Enable the experimental features of ByteBuddy with JDK 12+
+// Keep system properties in sync with gradle.properties!
 test {
-	//Only safe to attempt to parse the version as an integer since JDK11
-	if ( JavaVersion.current().isJava11Compatible() ) {
-		int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
-		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
-		if (majorJVMVersionInt >= 12) {
-			systemProperty 'net.bytebuddy.experimental', true
-		}
+	systemProperty 'user.language', 'en'
+	systemProperty 'user.country', 'US'
+	systemProperty 'user.timezone', 'UTC'
+	systemProperty 'file.encoding', 'UTF-8'
+}
+
+// Enable the experimental features of ByteBuddy with JDK 15+
+test {
+	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {
+		if ( JavaVersion.current().isJava11Compatible() ) {
+			int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
+			//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
+			if (majorJVMVersionInt >= 12) {
+				systemProperty 'net.bytebuddy.experimental', true
+			}
 	}
 }
 
@@ -340,6 +346,10 @@ task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
 	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -353,6 +363,10 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	//
 	// No idea how findbugs was missing these b4
 	ignoreFailures = true
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
@@ -360,6 +374,10 @@ task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) 
 	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
 	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'
+
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	disableClassloadingCache = true
 }
 
 task forbiddenApis

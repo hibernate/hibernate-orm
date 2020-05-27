@@ -1,11 +1,9 @@
 package org.hibernate.tool.ide.completion;
 
-import java.io.CharArrayReader;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.Token;
+import org.hibernate.grammars.hql.HqlLexer;
 
-import org.hibernate.hql.internal.antlr.HqlBaseLexer;
-
-import antlr.Token;
-import antlr.TokenStreamException;
 
 /**
  * A lexer implemented on top of the Antlr grammer implemented in core.
@@ -15,20 +13,22 @@ import antlr.TokenStreamException;
  */
 public class AntlrSimpleHQLLexer implements SimpleHQLLexer {
 
-	private HqlBaseLexer lexer;
+	private HqlLexer lexer;
 	private Token token;
 
 	public AntlrSimpleHQLLexer(char[] cs, int length) {
-		lexer = new HqlBaseLexer(new CharArrayReader(cs, 0, length)) {
-			public void newline() {
-				//super.newline();
-			}
-			
-			public int getColumn() {
-				return super.getColumn()-1;
-			}
-		};
-		lexer.setTabSize(1);
+		lexer = new HqlLexer(CharStreams.fromString(new String(cs)));
+		// Commenting out, not sure if this is still relevant and/or needed
+//		{
+//			public void newline() {
+//				//super.newline();
+//			}
+//			
+//			public int getColumn() {
+//				return super.getCharPositionInLine();
+//			}
+//		};
+//		lexer.setTabSize(1);
 	}
 
 	public int getTokenLength() {
@@ -39,18 +39,13 @@ public class AntlrSimpleHQLLexer implements SimpleHQLLexer {
 	}
 
 	public int getTokenOffset() {
-		return token.getColumn()-1;
+		return token.getCharPositionInLine();
 	}
 
 	public int nextTokenId() {
-		try {
-			token = lexer.nextToken();
-			if(token==null) {
-				System.out.println(token);
-			}
-		}
-		catch (TokenStreamException e) {
-			throw new SimpleLexerException(e);
+		token = lexer.nextToken();
+		if(token==null) {
+			System.out.println(token);
 		}
 		return token.getType();
 	}

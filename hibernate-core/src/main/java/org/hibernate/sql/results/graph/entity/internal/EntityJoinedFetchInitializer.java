@@ -6,21 +6,19 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * @author Andrea Boriero
  */
 public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
+	private static final String CONCRETE_NAME = EntityJoinedFetchInitializer.class.getSimpleName();
 
 	protected EntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
@@ -29,7 +27,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 			DomainResult<?> identifierResult,
 			DomainResult<?> discriminatorResult,
 			DomainResult<?> versionResult,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super(
 				resultDescriptor,
@@ -38,9 +35,13 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				identifierResult,
 				discriminatorResult,
 				versionResult,
-				initializerConsumer,
 				creationState
 		);
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override
@@ -50,6 +51,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	@Override
 	public String toString() {
-		return "EntityFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "EntityJoinedFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 }

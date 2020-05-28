@@ -24,6 +24,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class ListInitializer extends AbstractImmediateCollectionInitializer {
+	private static final String CONCRETE_NAME = ListInitializer.class.getSimpleName();
+
 	private final DomainResultAssembler listIndexAssembler;
 	private final DomainResultAssembler elementAssembler;
 
@@ -43,6 +45,11 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 		this.elementAssembler = elementAssembler;
 
 		listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override

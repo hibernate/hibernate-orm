@@ -21,6 +21,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -94,7 +95,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			CollectionPersister ceLoadedPersister) {
 		if ( !collection.wasInitialized() ) {
 			collection.initializeEmptyCollection( ceLoadedPersister );
-			org.hibernate.sql.results.internal.Helper.finalizeCollectionLoading(
+			ResultsHelper.finalizeCollectionLoading(
 					source.getPersistenceContext(),
 					ceLoadedPersister,
 					collection,

@@ -7,8 +7,10 @@
 package org.hibernate.sql.results.internal;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -16,8 +18,11 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -27,17 +32,48 @@ import org.hibernate.sql.results.spi.RowTransformer;
 /**
  * @author Steve Ebersole
  */
-public class Helper {
+public class ResultsHelper {
 	public static <R> RowReader<R> createRowReader(
 			SessionFactoryImplementor sessionFactory,
 			Callback callback,
 			RowTransformer<R> rowTransformer,
 			JdbcValues jdbcValues) {
+		final Map<NavigablePath,Initializer> initializerMap = new LinkedHashMap<>();
 		final List<Initializer> initializers = new ArrayList<>();
 
+		//noinspection rawtypes
 		final List<DomainResultAssembler> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
-				getInitializerConsumer( initializers ),
-				() -> sessionFactory
+				new AssemblerCreationState() {
+					@Override
+					public Initializer resolveInitializer(
+							NavigablePath navigablePath,
+							Supplier<Initializer> producer) {
+						final Initializer existing = initializerMap.get( navigablePath );
+						if ( existing != null ) {
+							ResultsLogger.LOGGER.debugf(
+									"Returning previously-registered initializer : %s",
+									existing
+							);
+							return existing;
+						}
+
+						final Initializer initializer = producer.get();
+						ResultsLogger.LOGGER.debugf(
+								"Registering initializer : %s",
+								initializer
+						);
+
+						initializerMap.put( navigablePath, initializer );
+						initializers.add( initializer );
+
+						return initializer;
+					}
+
+					@Override
+					public SqlAstCreationContext getSqlAstCreationContext() {
+						return sessionFactory;
+					}
+				}
 		);
 
 		return new StandardRowReader<>(
@@ -46,18 +82,6 @@ public class Helper {
 				rowTransformer,
 				callback
 		);
-	}
-
-	private static Consumer<Initializer> getInitializerConsumer(List<Initializer> initializers) {
-		return initializer -> {
-			ResultsLogger.LOGGER.debugf( "Initializer registration : %s", initializer );
-			if ( initializers.contains( initializer ) ) {
-				ResultsLogger.LOGGER.debug( "Skipping initializer registration - already registered" );
-			}
-
-			ResultsLogger.LOGGER.debugf( "Adding initializer : %s", initializer );
-			initializers.add( initializer );
-		};
 	}
 
 	public static void finalizeCollectionLoading(

@@ -20,8 +20,8 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public class LoggingHelper {
-	private static final String NULL = "<null>";
-	private static final String UNREFERENCED = "<unreferenced>";
+	public static final String NULL = "<null>";
+	public static final String UNREFERENCED = "<unreferenced>";
 
 	public static String toLoggableString(NavigableRole role) {
 		if ( role == null ) {

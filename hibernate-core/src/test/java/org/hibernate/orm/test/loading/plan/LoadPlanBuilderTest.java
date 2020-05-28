@@ -123,7 +123,7 @@ public class LoadPlanBuilderTest {
 				.getDomainResultDescriptors()
 				.get( 0 );
 
-		DomainResultGraphPrinter.print( loader.getSqlAst().getDomainResultDescriptors() );
+		DomainResultGraphPrinter.logDomainResultGraph( loader.getSqlAst().getDomainResultDescriptors() );
 
 		assertThat( domainResult.getFetches(), isEmpty() );
 	}

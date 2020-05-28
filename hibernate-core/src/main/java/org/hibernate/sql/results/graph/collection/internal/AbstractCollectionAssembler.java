@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.function.Supplier;
+
 import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -25,9 +27,9 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 
 	public AbstractCollectionAssembler(
 			PluralAttributeMapping fetchedMapping,
-			CollectionInitializer initializer) {
+			Supplier<CollectionInitializer> initializerProducer) {
 		this.fetchedMapping = fetchedMapping;
-		this.initializer = initializer;
+		this.initializer = initializerProducer.get();
 	}
 
 	@Override

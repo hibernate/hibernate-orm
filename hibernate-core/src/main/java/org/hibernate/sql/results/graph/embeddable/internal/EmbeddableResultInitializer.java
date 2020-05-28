@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.function.Consumer;
-
-import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * @author Steve Ebersole
@@ -19,13 +16,17 @@ import org.hibernate.sql.results.graph.Initializer;
 public class EmbeddableResultInitializer extends AbstractEmbeddableInitializer {
 	public EmbeddableResultInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
-		super( resultDescriptor, null, initializerConsumer, creationState );
+		super( resultDescriptor, null, creationState );
 	}
 
 	@Override
 	public Object getParentKey() {
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return "EmbeddableResultInitializer(" + getNavigablePath() + ")";
 	}
 }

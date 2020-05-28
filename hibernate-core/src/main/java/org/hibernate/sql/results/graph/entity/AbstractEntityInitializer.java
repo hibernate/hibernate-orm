@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.WrongClassException;
@@ -38,13 +38,14 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.internal.NullValueAssembler;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.TypeHelper;
@@ -56,10 +57,10 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
  */
 public abstract class AbstractEntityInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
-	// NOTE : even though we only keep the EntityDescriptor here, rather than EntityReference
+	// NOTE : even though we only keep the EntityDescriptor here, rather than EntityResultGraphNode
 	//		the "scope" of this initializer is a specific EntityReference.
 	//
-	//		The full EntityReference is simply not needed here, and so we just keep
+	//		The full EntityResultGraphNode is simply not needed here, and so we just keep
 	//		the EntityDescriptor here to avoid chicken/egg issues in the creation of
 	// 		these
 
@@ -93,7 +94,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			DomainResult<?> identifierResult,
 			DomainResult<?> discriminatorResult,
 			DomainResult<?> versionResult,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super( );
 
@@ -112,8 +112,38 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( identifierResult != null ) {
 			this.identifierAssembler = identifierResult.createResultAssembler(
-					identifierInitializers::add,
-					creationState
+					new AssemblerCreationState() {
+						@Override
+						public Initializer resolveInitializer(NavigablePath navigablePath, Supplier<Initializer> producer) {
+							for ( int i = 0; i < identifierInitializers.size(); i++ ) {
+								final Initializer existing = identifierInitializers.get( i );
+								if ( existing.getNavigablePath().equals( navigablePath ) ) {
+									identifierInitializers.add( existing );
+									return existing;
+								}
+							}
+
+//							// also check the non-identifier initializers
+//							final Initializer otherExisting = creationState.resolveInitializer(
+//									navigablePath,
+//									() -> null
+//							);
+//
+//							if ( otherExisting != null ) {
+//								identifierInitializers.add( otherExisting );
+//								return otherExisting;
+//							}
+
+							final Initializer initializer = producer.get();
+							identifierInitializers.add( initializer );
+							return initializer;
+						}
+
+						@Override
+						public SqlAstCreationContext getSqlAstCreationContext() {
+							return creationState.getSqlAstCreationContext();
+						}
+					}
 			);
 		}
 		else {
@@ -121,26 +151,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( discriminatorResult != null ) {
-			discriminatorAssembler = discriminatorResult.createResultAssembler(
-					initializer -> {
-						throw new UnsupportedOperationException(
-								"Registering an Initializer as part of Entity discriminator is illegal" );
-					},
-					creationState
-			);
+			discriminatorAssembler = discriminatorResult.createResultAssembler( creationState );
 		}
 		else {
 			discriminatorAssembler = null;
 		}
 
 		if ( versionResult != null ) {
-			this.versionAssembler = versionResult.createResultAssembler(
-					initializer -> {
-						throw new UnsupportedOperationException(
-								"Registering an Initializer as part of Entity version is illegal" );
-					},
-					creationState
-			);
+			this.versionAssembler = versionResult.createResultAssembler( creationState );
 		}
 		else {
 			this.versionAssembler = null;
@@ -163,20 +181,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						stateAssembler = new NullValueAssembler( attributeMapping.getMappedTypeDescriptor().getMappedJavaTypeDescriptor() );
 					}
 					else {
-						stateAssembler = fetch.createAssembler(
-								this,
-								initializerConsumer,
-								creationState
-						);
+						stateAssembler = fetch.createAssembler( this, creationState );
 					}
 
 					assemblerMap.put( attributeMapping, stateAssembler );
 				},
 				null
 		);
-
-		initializerConsumer.accept( this );
 	}
+
+	protected abstract String getSimpleConcreteImplName();
 
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
@@ -234,7 +248,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.INSTANCE.tracef(
+			EntityLoadingLogger.LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveKey process for entity : %s",
 					StringHelper.collapse( this.getClass().getName() ),
 					getNavigablePath().getFullPath()
@@ -248,9 +262,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		resolveEntityKey( rowProcessingState );
 
 		if ( entityKey == null ) {
-			EntityLoadingLogger.INSTANCE.debugf(
+			EntityLoadingLogger.LOGGER.debugf(
 					"(%s) EntityKey (%s) is null",
-					StringHelper.collapse( this.getClass().getName() ),
+					getSimpleConcreteImplName(),
 					getNavigablePath()
 			);
 
@@ -260,9 +274,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.INSTANCE.debugf(
+			EntityLoadingLogger.LOGGER.debugf(
 					"(%s) Hydrated EntityKey (%s): %s",
-					StringHelper.collapse( this.getClass().getName() ),
+					getSimpleConcreteImplName(),
 					getNavigablePath(),
 					entityKey.getIdentifier()
 			);
@@ -355,7 +369,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.INSTANCE.tracef(
+			EntityLoadingLogger.LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
 					StringHelper.collapse( this.getClass().getName() ),
 					getNavigablePath(),
@@ -385,9 +399,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( existingLoadingEntry != null ) {
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.INSTANCE.debugf(
+				EntityLoadingLogger.LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						toLoggableString( getNavigablePath(), entityIdentifier )
 				);
 			}
@@ -397,9 +411,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingLoadingEntry.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
 				if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-					EntityLoadingLogger.INSTANCE.debugf(
+					EntityLoadingLogger.LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
-							StringHelper.collapse( this.getClass().getName() ),
+							getSimpleConcreteImplName(),
 							toLoggableString( getNavigablePath(), entityIdentifier ),
 							existingLoadingEntry.getEntityInitializer()
 					);
@@ -433,8 +447,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			entityInstance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
 
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.INSTANCE.debugf(
-						"Created new entity instance [%s] : %s",
+				EntityLoadingLogger.LOGGER.debugf(
+						"(%s) Created new entity instance [%s] : %s",
+						getSimpleConcreteImplName(),
 						toLoggableString( getNavigablePath(), entityIdentifier ),
 						entityInstance
 				);
@@ -475,8 +490,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Serializable entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.INSTANCE.tracef(
-					"Beginning Initializer#initializeInstance process for entity %s",
+			EntityLoadingLogger.LOGGER.tracef(
+					"(%s) Beginning Initializer#initializeInstance process for entity %s",
+					getSimpleConcreteImplName(),
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}
@@ -549,8 +565,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
 
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.INSTANCE.debugf(
-						"Adding entityInstance to second-level cache: %s",
+				EntityLoadingLogger.LOGGER.debugf(
+						"(%S) Adding entityInstance to second-level cache: %s",
+						getSimpleConcreteImplName(),
 						toLoggableString( getNavigablePath(), entityIdentifier )
 				);
 			}
@@ -605,8 +622,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			persistenceContext.getNaturalIdHelper().cacheNaturalIdCrossReferenceFromLoad(
 					entityDescriptor,
 					entityIdentifier,
-					persistenceContext
-							.getNaturalIdHelper().extractNaturalIdValues( resolvedEntityState, entityDescriptor )
+					persistenceContext.getNaturalIdHelper()
+							.extractNaturalIdValues( resolvedEntityState, entityDescriptor )
 			);
 		}
 
@@ -643,8 +660,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		concreteDescriptor.afterInitialize( entityInstance, session );
 
 		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.INSTANCE.debugf(
-					"Done materializing entityInstance : %s",
+			EntityLoadingLogger.LOGGER.debugf(
+					"(%s) Done materializing entityInstance : %s",
+					getSimpleConcreteImplName(),
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}

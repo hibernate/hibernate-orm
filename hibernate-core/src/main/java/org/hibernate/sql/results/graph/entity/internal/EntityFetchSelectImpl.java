@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
@@ -18,7 +16,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * An eager entity fetch performed as a subsequent (n+1) select
@@ -53,22 +51,17 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
-			AssemblerCreationState creationState) {
-		final EntitySelectFetchInitializer initializer = new EntitySelectFetchInitializer(
+	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getReferencedMappingContainer().getEntityPersister(),
-				result.createResultAssembler( collector, creationState ),
-				nullable
+				() -> new EntitySelectFetchInitializer(
+						getNavigablePath(),
+						getReferencedMappingContainer().getEntityPersister(),
+						result.createResultAssembler( creationState ),
+						nullable
+				)
 		);
 
-		collector.accept( initializer );
-
-		return new EntityAssembler(
-				getResultJavaTypeDescriptor(),
-				initializer
-		);
+		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
 	}
 }

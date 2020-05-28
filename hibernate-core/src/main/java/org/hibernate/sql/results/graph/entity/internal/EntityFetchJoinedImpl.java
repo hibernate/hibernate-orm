@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
@@ -15,7 +13,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
@@ -49,17 +46,18 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 	@Override
 	protected EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		return new EntityJoinedFetchInitializer(
-				entityResult,
+		return (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				lockMode,
-				entityResult.getIdentifierResult(),
-				entityResult.getDiscriminatorResult(),
-				entityResult.getVersionResult(),
-				collector,
-				creationState
+				() -> new EntityJoinedFetchInitializer(
+						entityResult,
+						getNavigablePath(),
+						lockMode,
+						entityResult.getIdentifierResult(),
+						entityResult.getDiscriminatorResult(),
+						entityResult.getVersionResult(),
+						creationState
+				)
 		);
 	}
 

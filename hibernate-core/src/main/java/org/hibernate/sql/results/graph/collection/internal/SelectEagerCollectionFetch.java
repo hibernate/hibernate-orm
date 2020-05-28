@@ -41,12 +41,12 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 
 	@Override
 	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess, Consumer<Initializer> collector, AssemblerCreationState creationState) {
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		return new SelectEagerCollectionAssembler(
 				getNavigablePath(),
 				getFetchedMapping(),
 				parentAccess,
-				collector,
 				creationState
 		);
 	}

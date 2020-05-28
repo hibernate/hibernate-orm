@@ -17,6 +17,6 @@ public class EagerCollectionAssembler extends AbstractCollectionAssembler {
 	public EagerCollectionAssembler(
 			PluralAttributeMapping fetchedMapping,
 			CollectionInitializer initializer) {
-		super( fetchedMapping, initializer );
+		super( fetchedMapping, () -> initializer );
 	}
 }

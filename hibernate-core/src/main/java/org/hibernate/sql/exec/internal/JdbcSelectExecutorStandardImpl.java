@@ -28,7 +28,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.internal.Helper;
+import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
@@ -204,7 +204,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
 
-		final RowReader<R> rowReader = Helper.createRowReader(
+		final RowReader<R> rowReader = ResultsHelper.createRowReader(
 				executionContext.getSession().getFactory(),
 				afterLoadActions::add,
 				rowTransformer,

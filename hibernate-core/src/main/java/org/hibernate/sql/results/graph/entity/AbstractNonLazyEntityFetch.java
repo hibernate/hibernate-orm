@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.util.function.Consumer;
-
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -17,7 +15,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 
 /**
@@ -64,19 +61,13 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		final EntityInitializer entityInitializer = getEntityInitializer(
-				parentAccess,
-				collector,
-				creationState
-		);
+		final EntityInitializer entityInitializer = getEntityInitializer( parentAccess, creationState );
 		return new EntityAssembler( getFetchedMapping().getJavaTypeDescriptor(), entityInitializer );
 	}
 
 	protected abstract EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState);
 
 	@Override

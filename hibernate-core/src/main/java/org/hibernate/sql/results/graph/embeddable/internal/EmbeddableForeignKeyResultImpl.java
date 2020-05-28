@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.MutableInteger;
@@ -26,9 +25,9 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
@@ -36,7 +35,8 @@ import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 /**
  * @author Andrea Boriero
  */
-public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
+public class EmbeddableForeignKeyResultImpl<T>
+		extends AbstractFetchParent
 		implements EmbeddableResultGraphNode, DomainResult<T> {
 
 	private final String resultVariable;
@@ -119,15 +119,11 @@ public class EmbeddableForeignKeyResultImpl<T> extends AbstractFetchParent
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(
-			Consumer<Initializer> initializerCollector, AssemblerCreationState creationState) {
-		final EmbeddableResultInitializer initializer = new EmbeddableResultInitializer(
-				this,
-				initializerCollector,
-				creationState
+	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+				getNavigablePath(),
+				() -> new EmbeddableResultInitializer(this, creationState )
 		);
-
-		initializerCollector.accept( initializer );
 
 		//noinspection unchecked
 		return new EmbeddableAssembler( initializer );

@@ -6,10 +6,7 @@
  */
 package org.hibernate.sql.results.internal.domain;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CollectionKey;
@@ -91,7 +88,6 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
 		return new CircularFetchAssembler(
 				fetchable,

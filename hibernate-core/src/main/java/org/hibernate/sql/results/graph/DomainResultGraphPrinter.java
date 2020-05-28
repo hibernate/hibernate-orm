@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.sql.results.ResultsLogger;
 
 import org.jboss.logging.Logger;
 
@@ -21,21 +22,28 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DomainResultGraphPrinter {
-	private static final Logger log = Logger.getLogger( DomainResultGraphPrinter.class );
+	private static final Logger log = ResultsLogger.subLogger( "graph.AST" );
+	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
+	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
-	public static void print(List<DomainResult> domainResults) {
-		if ( ! log.isDebugEnabled() ) {
+	public static void logDomainResultGraph(List<DomainResult> domainResults) {
+		logDomainResultGraph( "DomainResult Graph", domainResults );
+	}
+
+	public static void logDomainResultGraph(String header, List<DomainResult> domainResults) {
+		if ( ! DEBUG_ENABLED ) {
 			return;
 		}
 
-		final DomainResultGraphPrinter graphPrinter = new DomainResultGraphPrinter();
+		final DomainResultGraphPrinter graphPrinter = new DomainResultGraphPrinter( header );
 		graphPrinter.visitDomainResults( domainResults );
 	}
 
-	private final StringBuilder buffer = new StringBuilder( "DomainResult Graph:\n");
+	private final StringBuilder buffer;
 	private final Stack<FetchParent> fetchParentStack = new StandardStack<>();
 
-	private DomainResultGraphPrinter() {
+	private DomainResultGraphPrinter(String header) {
+		buffer = new StringBuilder( header + ":" + System.lineSeparator() );
 	}
 
 	private void visitDomainResults(List<DomainResult> domainResults) {
@@ -50,9 +58,17 @@ public class DomainResultGraphPrinter {
 		}
 
 		log.debug( buffer.toString() );
+
+		if ( TRACE_ENABLED ) {
+			log.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
+		}
 	}
 
 	private void visitGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
+		visitGraphNode( node, lastInBranch, node.getClass().getSimpleName() );
+	}
+
+	private void visitGraphNode(DomainResultGraphNode node, boolean lastInBranch, String nodeText) {
 		indentLine();
 
 		if ( lastInBranch ) {
@@ -62,7 +78,7 @@ public class DomainResultGraphPrinter {
 			buffer.append( " +-" );
 		}
 
-		buffer.append( node.getClass().getSimpleName() );
+		buffer.append( nodeText );
 		if ( node.getNavigablePath() != null ) {
 			buffer.append( " [" )
 					.append( node.getNavigablePath().getFullPath() )
@@ -75,10 +91,20 @@ public class DomainResultGraphPrinter {
 		}
 	}
 
+	private void visitKeyGraphNode(DomainResultGraphNode node, boolean lastInBranch) {
+		visitGraphNode( node, lastInBranch, "(key) " + node.getClass().getSimpleName() );
+	}
+
 	private void visitFetches(FetchParent fetchParent) {
 		fetchParentStack.push( fetchParent );
 
 		try {
+//			final Fetch identifierFetch = fetchParent.getKeyFetch();
+//			if ( identifierFetch != null ) {
+//				final boolean lastInBranch = identifierFetch.getFetchedMapping() instanceof FetchParent;
+//				visitKeyGraphNode( identifierFetch, lastInBranch );
+//			}
+
 			final int numberOfFetches = fetchParent.getFetches().size();
 
 			for ( int i = 0; i < numberOfFetches; i++ ) {

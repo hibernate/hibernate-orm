@@ -28,6 +28,6 @@ public class EmbeddableResultTests extends AbstractResultTests {
 				"select e from EntityOfComposites e join fetch e.component c join fetch c.nested",
 				scope.getSessionFactory()
 		);
-		DomainResultGraphPrinter.print( interpretation.getDomainResultDescriptors() );
+		DomainResultGraphPrinter.logDomainResultGraph( interpretation.getDomainResultDescriptors() );
 	}
 }

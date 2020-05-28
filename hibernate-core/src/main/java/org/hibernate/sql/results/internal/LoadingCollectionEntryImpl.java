@@ -87,7 +87,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
-		Helper.finalizeCollectionLoading( persistenceContext, collectionDescriptor, collectionInstance, getKey() );
+		ResultsHelper.finalizeCollectionLoading( persistenceContext, collectionDescriptor, collectionInstance, getKey() );
 	}
 
 	@Override

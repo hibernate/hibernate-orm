@@ -32,13 +32,11 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
 		return new DelayedCollectionAssembler(
 				getNavigablePath(),
 				getFetchedMapping(),
 				parentAccess,
-				collector,
 				creationState
 		);
 	}

@@ -28,7 +28,7 @@ public class BasicResultTests extends AbstractResultTests {
 				"select s.id, s.someString, s.someLong from SimpleEntity s",
 				scope.getSessionFactory()
 		);
-		DomainResultGraphPrinter.print( sqlAst.getDomainResultDescriptors() );
+		DomainResultGraphPrinter.logDomainResultGraph( sqlAst.getDomainResultDescriptors() );
 
 	}
 }

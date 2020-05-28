@@ -6,18 +6,15 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
  * @author Chris Cranford
@@ -44,7 +41,6 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		return new ArrayInitializer(
 				navigablePath,
@@ -53,16 +49,8 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 				lockMode,
 				keyContainerAssembler,
 				keyCollectionAssembler,
-				listIndexFetch.createAssembler(
-						parentAccess,
-						initializerConsumer,
-						creationState
-				),
-				elementFetch.createAssembler(
-						parentAccess,
-						initializerConsumer,
-						creationState
-				)
+				listIndexFetch.createAssembler( parentAccess, creationState ),
+				elementFetch.createAssembler( parentAccess, creationState )
 		);
 	}
 }

@@ -388,9 +388,7 @@ public class StandardSqmSelectTranslator
 									alias,
 									SqlAstJoinType.LEFT,
 									LockMode.NONE,
-									getSqlAliasBaseManager(),
-									getSqlExpressionResolver(),
-									getCreationContext()
+									this
 							);
 							return tableGroupJoin.getJoinedGroup();
 						}

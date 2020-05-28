@@ -610,8 +610,7 @@ public abstract class BaseSqmToSqlAstConverter
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
-					sqlAliasBaseManager, getSqlExpressionResolver(),
-					creationContext
+					this
 			);
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
 
@@ -642,8 +641,7 @@ public abstract class BaseSqmToSqlAstConverter
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					determineLockMode( sqmJoin.getExplicitAlias() ),
-					sqlAliasBaseManager, getSqlExpressionResolver(),
-					creationContext
+					this
 			);
 
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
@@ -684,9 +682,7 @@ public abstract class BaseSqmToSqlAstConverter
 						sqmJoin.getExplicitAlias(),
 						sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 						determineLockMode( sqmJoin.getExplicitAlias() ),
-						sqlAliasBaseManager,
-						getSqlExpressionResolver(),
-						creationContext
+						this
 				);
 
 				joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
@@ -802,9 +798,7 @@ public abstract class BaseSqmToSqlAstConverter
 							null,
 							tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
 							null,
-							sqlAliasBaseManager,
-							getSqlExpressionResolver(),
-							creationContext
+							this
 					);
 
 					fromClauseIndex.register( joinedPath, tableGroupJoin.getJoinedGroup() );

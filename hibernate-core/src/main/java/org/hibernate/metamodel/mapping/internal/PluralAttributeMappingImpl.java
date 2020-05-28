@@ -402,9 +402,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 									null,
 									SqlAstJoinType.LEFT,
 									lockMode,
-									creationState.getSqlAliasBaseManager(),
-									creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-									creationState.getSqlAstCreationState().getCreationContext()
+									creationState.getSqlAstCreationState()
 							);
 							return tableGroupJoin.getJoinedGroup();
 						}

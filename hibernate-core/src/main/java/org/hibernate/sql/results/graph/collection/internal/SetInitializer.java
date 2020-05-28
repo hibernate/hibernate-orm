@@ -22,6 +22,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class SetInitializer extends AbstractImmediateCollectionInitializer {
+	private static final String CONCRETE_NAME = SetInitializer.class.getSimpleName();
+
 	private final DomainResultAssembler elementAssembler;
 
 	public SetInitializer(
@@ -34,6 +36,11 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			DomainResultAssembler elementAssembler) {
 		super( navigablePath, setDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.elementAssembler = elementAssembler;
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override

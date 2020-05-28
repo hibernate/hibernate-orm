@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -24,7 +22,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 
@@ -64,9 +62,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							null,
 							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
 							LockMode.NONE,
-							stem -> creationState.getSqlAliasBaseManager().createSqlAliasBase( stem ),
-							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-							creationState.getSqlAstCreationState().getCreationContext()
+							creationState.getSqlAstCreationState()
 					);
 					return tableGroupJoin.getJoinedGroup();
 				}
@@ -114,17 +110,15 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		final EmbeddableFetchInitializer initializer = new EmbeddableFetchInitializer(
-				parentAccess,
-				this,
-				collector,
-				creationState
+		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+				getNavigablePath(),
+				() -> new EmbeddableFetchInitializer(
+						parentAccess,
+						this,
+						creationState
+				)
 		);
-
-
-		collector.accept( initializer );
 
 		return new EmbeddableAssembler( initializer );
 	}

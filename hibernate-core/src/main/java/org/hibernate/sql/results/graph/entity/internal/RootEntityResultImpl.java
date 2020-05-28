@@ -26,6 +26,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -186,20 +188,20 @@ public class RootEntityResultImpl extends AbstractFetchParent implements EntityR
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(
-			Consumer initializerCollector,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
 		// todo (6.0) : seems like here is where we ought to determine the SQL selection mappings
 
-		final EntityResultInitializer initializer = new EntityResultInitializer(
-				this,
+		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getLockMode(),
-				null,
-				getDiscriminatorResult(),
-				getVersionResult(),
-				initializerCollector,
-				creationState
+				() -> new EntityResultInitializer(
+						this,
+						getNavigablePath(),
+						getLockMode(),
+						null,
+						getDiscriminatorResult(),
+						getVersionResult(),
+						creationState
+				)
 		);
 
 		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );

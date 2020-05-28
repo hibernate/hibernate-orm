@@ -13,6 +13,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
  * @author Steve Ebersole
@@ -22,9 +23,14 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		super( fetchedMapping, new DelayedCollectionInitializer( fetchPath, fetchedMapping, parentAccess ) );
-		collector.accept( initializer );
+		super(
+				fetchedMapping,
+				() -> (CollectionInitializer) creationState.resolveInitializer(
+						fetchPath,
+						() -> new DelayedCollectionInitializer( fetchPath, fetchedMapping, parentAccess )
+				)
+
+		);
 	}
 }

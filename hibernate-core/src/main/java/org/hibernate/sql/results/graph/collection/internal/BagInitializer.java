@@ -26,6 +26,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class BagInitializer extends AbstractImmediateCollectionInitializer {
+	private static final String CONCRETE_NAME = BagInitializer.class.getSimpleName();
+
 	private final DomainResultAssembler elementAssembler;
 	private final DomainResultAssembler collectionIdAssembler;
 
@@ -41,6 +43,11 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 		super( navigablePath, bagDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.elementAssembler = elementAssembler;
 		this.collectionIdAssembler = collectionIdAssembler;
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override

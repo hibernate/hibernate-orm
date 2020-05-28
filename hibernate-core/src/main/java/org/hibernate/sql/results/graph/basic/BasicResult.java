@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.results.graph.basic;
 
-import java.util.function.Consumer;
-
 import org.hibernate.Internal;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -93,9 +90,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(
-			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
 		return assembler;
 	}
 }

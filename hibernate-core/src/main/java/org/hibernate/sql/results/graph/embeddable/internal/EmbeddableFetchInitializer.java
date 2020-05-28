@@ -6,14 +6,11 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.function.Consumer;
-
-import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * @author Steve Ebersole
@@ -24,9 +21,8 @@ public class EmbeddableFetchInitializer
 	public EmbeddableFetchInitializer(
 			FetchParentAccess fetchParentAccess,
 			EmbeddableResultGraphNode resultDescriptor,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
-		super( resultDescriptor, fetchParentAccess, initializerConsumer, creationState );
+		super( resultDescriptor, fetchParentAccess, creationState );
 	}
 
 	@Override

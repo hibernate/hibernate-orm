@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
@@ -79,27 +78,23 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(
-			Consumer initializerCollector,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
+		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
+				getNavigablePath(),
+				() -> {
+					final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( creationState );
 
-		final DomainResultAssembler fkAssembler = fkResult.createResultAssembler(
-				initializerCollector,
-				creationState
+					return initializerProducer.produceInitializer(
+							loadingPath,
+							loadingAttribute,
+							null,
+							LockMode.READ,
+							fkAssembler,
+							fkAssembler,
+							creationState
+					);
+				}
 		);
-
-		final CollectionInitializer initializer = initializerProducer.produceInitializer(
-				loadingPath,
-				loadingAttribute,
-				null,
-				LockMode.READ,
-				fkAssembler,
-				fkAssembler,
-				initializerCollector,
-				creationState
-		);
-
-		initializerCollector.accept( initializer );
 
 		return new EagerCollectionAssembler( loadingAttribute, initializer );
 	}

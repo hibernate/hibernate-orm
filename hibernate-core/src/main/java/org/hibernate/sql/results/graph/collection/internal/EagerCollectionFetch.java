@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
@@ -20,7 +19,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -28,7 +26,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -99,38 +97,31 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
-			AssemblerCreationState creationState) {
-		final DomainResultAssembler keyContainerAssembler = keyContainerResult.createResultAssembler(
-				collector,
-				creationState
-		);
-
-		final DomainResultAssembler keyCollectionAssembler;
-		if ( keyCollectionResult == null ) {
-			keyCollectionAssembler = null;
-		}
-		else {
-			keyCollectionAssembler = keyCollectionResult.createResultAssembler(
-					collector,
-					creationState
-			);
-		}
-
-		final CollectionInitializer initializer = initializerProducer.produceInitializer(
+	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getFetchedMapping(),
-				parentAccess,
-				null,
-				keyContainerAssembler,
-				keyCollectionAssembler,
-				collector,
-				creationState
-		);
+				() -> {
+					final DomainResultAssembler keyContainerAssembler = keyContainerResult.createResultAssembler( creationState );
 
-		collector.accept( initializer );
+					final DomainResultAssembler keyCollectionAssembler;
+					if ( keyCollectionResult == null ) {
+						keyCollectionAssembler = null;
+					}
+					else {
+						keyCollectionAssembler = keyCollectionResult.createResultAssembler( creationState );
+					}
+
+					return initializerProducer.produceInitializer(
+							getNavigablePath(),
+							getFetchedMapping(),
+							parentAccess,
+							null,
+							keyContainerAssembler,
+							keyCollectionAssembler,
+							creationState
+					);
+				}
+		);
 
 		return new EagerCollectionAssembler( getFetchedMapping(), initializer );
 	}

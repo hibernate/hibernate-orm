@@ -200,10 +200,7 @@ public class SmokeTests {
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
-					final DomainResultAssembler resultAssembler = domainResult.createResultAssembler(
-							null,
-							null
-					);
+					final DomainResultAssembler resultAssembler = domainResult.createResultAssembler( null );
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
 					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();

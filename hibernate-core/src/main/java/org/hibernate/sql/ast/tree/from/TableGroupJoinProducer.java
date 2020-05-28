@@ -11,12 +11,35 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 
 /**
  * @author Steve Ebersole
  */
 public interface TableGroupJoinProducer extends TableGroupProducer {
+	/**
+	 * Create a TableGroupJoin as defined for this producer
+	 */
+	default TableGroupJoin createTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			LockMode lockMode,
+			SqlAstCreationState creationState) {
+		return createTableGroupJoin(
+				navigablePath, 
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				lockMode,
+				creationState.getSqlAliasBaseGenerator(),
+				creationState.getSqlExpressionResolver(),
+				creationState.getCreationContext()
+		);
+	}
+
 	/**
 	 * Create a TableGroupJoin as defined for this producer
 	 */

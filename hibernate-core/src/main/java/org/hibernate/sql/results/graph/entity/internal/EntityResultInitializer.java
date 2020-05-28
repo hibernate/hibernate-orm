@@ -6,15 +6,13 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
-import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.collection.internal.MapInitializer;
+import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * Initializer for cases where the entity is a root domain selection
@@ -22,6 +20,8 @@ import org.hibernate.sql.results.graph.Initializer;
  * @author Steve Ebersole
  */
 public class EntityResultInitializer extends AbstractEntityInitializer {
+	private static final String CONCRETE_NAME = EntityResultInitializer.class.getSimpleName();
+
 	public EntityResultInitializer(
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
@@ -29,7 +29,6 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 			DomainResult identifierResult,
 			DomainResult discriminatorResult,
 			DomainResult versionResult,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		super(
 				resultDescriptor,
@@ -38,9 +37,13 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 				identifierResult,
 				discriminatorResult,
 				versionResult,
-				initializerConsumer,
 				creationState
 		);
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override

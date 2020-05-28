@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import java.util.function.Consumer;
-
 /**
  * Represents a result value in the domain query results.  Acts as the producer for the
  * {@link DomainResultAssembler} for this result as well as any {@link Initializer} instances needed
@@ -30,7 +28,5 @@ public interface DomainResult<J> extends DomainResultGraphNode {
 	/**
 	 * Create an assembler (and any initializers) for this result.
 	 */
-	DomainResultAssembler<J> createResultAssembler(
-			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationState);
+	DomainResultAssembler<J> createResultAssembler(AssemblerCreationState creationState);
 }

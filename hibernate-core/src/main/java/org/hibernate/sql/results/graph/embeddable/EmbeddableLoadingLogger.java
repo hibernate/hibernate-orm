@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
-import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.LoadingLogger;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -19,17 +19,16 @@ import org.jboss.logging.annotations.ValidIdRange;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005301, max = 90005400 )
 public interface EmbeddableLoadingLogger extends BasicLogger {
-	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + "loading.composite";
+	String LOCAL_NAME = "composite";
+
+	String LOGGER_NAME = LoadingLogger.subLoggerName( LOCAL_NAME );
 
 	/**
 	 * Static access to the logging instance
 	 */
-	EmbeddableLoadingLogger INSTANCE = Logger.getMessageLogger(
-			EmbeddableLoadingLogger.class,
-			LOGGER_NAME
-	);
+	Logger INSTANCE = LoadingLogger.subLogger( LOCAL_NAME );
+
 
 	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
 	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();
-	boolean INFO_ENABLED = INSTANCE.isInfoEnabled();
 }

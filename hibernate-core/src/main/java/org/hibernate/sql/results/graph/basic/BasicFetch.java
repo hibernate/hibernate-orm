@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.basic;
 
-import java.util.function.Consumer;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -19,7 +17,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -95,15 +92,12 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
 		return assembler;
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(
-			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
 		return assembler;
 	}
 

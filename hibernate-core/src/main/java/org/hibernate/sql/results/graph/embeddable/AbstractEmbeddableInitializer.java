@@ -8,10 +8,10 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.query.NavigablePath;
@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -44,7 +43,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState) {
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.embeddedModelPartDescriptor = resultDescriptor.getReferencedMappingContainer();
@@ -61,7 +59,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 					final DomainResultAssembler stateAssembler = fetch == null
 							? new NullValueAssembler( stateArrayContributor.getJavaTypeDescriptor() )
-							: fetch.createAssembler( this, initializerConsumer, creationState );
+							: fetch.createAssembler( this, creationState );
 
 					assemblerMap.put( stateArrayContributor, stateAssembler );
 				}

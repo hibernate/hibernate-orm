@@ -26,6 +26,7 @@ import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -273,35 +274,37 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+
+		final TableGroup parentTableGroup = fromClauseAccess.getTableGroup(
 				fetchParent.getNavigablePath()
 		);
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
-			if ( sqlAstCreationState.getFromClauseAccess().findTableGroup( fetchablePath ) == null ) {
-				SqlAstJoinType sqlAstJoinType;
-				if ( isNullable ) {
-					sqlAstJoinType = SqlAstJoinType.LEFT;
-				}
-				else {
-					sqlAstJoinType = SqlAstJoinType.INNER;
-				}
-				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-						fetchablePath,
-						lhsTableGroup,
-						null,
-						sqlAstJoinType,
-						lockMode,
-						creationState.getSqlAliasBaseManager(),
-						creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-						creationState.getSqlAstCreationState().getCreationContext()
-				);
+			fromClauseAccess.resolveTableGroup(
+					fetchablePath,
+					np -> {
+						final SqlAstJoinType sqlAstJoinType;
+						if ( isNullable ) {
+							sqlAstJoinType = SqlAstJoinType.LEFT;
+						}
+						else {
+							sqlAstJoinType = SqlAstJoinType.INNER;
+						}
 
-				sqlAstCreationState.getFromClauseAccess().registerTableGroup(
-						fetchablePath,
-						tableGroupJoin.getJoinedGroup()
-				);
-			}
+
+						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+								fetchablePath,
+								parentTableGroup,
+								null,
+								sqlAstJoinType,
+								lockMode,
+								creationState.getSqlAstCreationState()
+						);
+
+						return tableGroupJoin.getJoinedGroup();
+					}
+			);
 
 			return new EntityFetchJoinedImpl(
 					fetchParent,
@@ -317,11 +320,11 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		final DomainResult keyResult;
 
 		if ( referringPrimaryKey ) {
-			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, lhsTableGroup, creationState );
+			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, creationState );
 		}
 		else {
 			keyResult = ( (EntityPersister) getDeclaringType() ).getIdentifierMapping()
-					.createDomainResult( fetchablePath, lhsTableGroup, null, creationState );
+					.createDomainResult( fetchablePath, parentTableGroup, null, creationState );
 		}
 
 		assert !selected;

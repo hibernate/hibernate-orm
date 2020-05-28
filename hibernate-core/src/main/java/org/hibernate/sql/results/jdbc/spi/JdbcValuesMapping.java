@@ -7,12 +7,10 @@
 package org.hibernate.sql.results.jdbc.spi;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
@@ -33,7 +31,5 @@ public interface JdbcValuesMapping {
 
 	List<DomainResult> getDomainResults();
 
-	List<DomainResultAssembler> resolveAssemblers(
-			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState);
+	List<DomainResultAssembler> resolveAssemblers(AssemblerCreationState creationState);
 }

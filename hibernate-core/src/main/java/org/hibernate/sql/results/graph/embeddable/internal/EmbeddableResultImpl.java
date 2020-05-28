@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -17,11 +15,11 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -50,9 +48,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							resultVariable,
 							SqlAstJoinType.INNER,
 							LockMode.NONE,
-							creationState.getSqlAstCreationState().getSqlAliasBaseGenerator(),
-							creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-							creationState.getSqlAstCreationState().getCreationContext()
+							creationState.getSqlAstCreationState()
 					);
 
 					return tableGroupJoin.getJoinedGroup();
@@ -88,16 +84,14 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(
-			Consumer<Initializer> initializerCollector,
-			AssemblerCreationState creationState) {
-		final EmbeddableResultInitializer initializer = new EmbeddableResultInitializer(
-				this,
-				initializerCollector,
-				creationState
+	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+				getNavigablePath(),
+				() -> new EmbeddableResultInitializer(
+						this,
+						creationState
+				)
 		);
-
-		initializerCollector.accept( initializer );
 
 		//noinspection unchecked
 		return new EmbeddableAssembler( initializer );

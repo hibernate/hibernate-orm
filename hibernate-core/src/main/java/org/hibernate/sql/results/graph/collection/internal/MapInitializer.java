@@ -27,6 +27,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Steve Ebersole
  */
 public class MapInitializer extends AbstractImmediateCollectionInitializer {
+	private static final String CONCRETE_NAME = MapInitializer.class.getSimpleName();
+
 	private final DomainResultAssembler mapKeyAssembler;
 	private final DomainResultAssembler mapValueAssembler;
 
@@ -42,6 +44,11 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 		super( navigablePath, attributeMapping, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
 		this.mapKeyAssembler = mapKeyAssembler;
 		this.mapValueAssembler = mapValueAssembler;
+	}
+
+	@Override
+	protected String getSimpleConcreteImplName() {
+		return CONCRETE_NAME;
 	}
 
 	@Override

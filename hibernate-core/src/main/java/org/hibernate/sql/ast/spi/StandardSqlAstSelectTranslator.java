@@ -20,6 +20,9 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 
+import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
+import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
+
 /**
  * The final phase of query translation.  Here we take the SQL-AST an
  * "interpretation".  For a select query, that means an instance of
@@ -81,9 +84,8 @@ public class StandardSqlAstSelectTranslator
 
 	@Override
 	public JdbcSelect translate(SelectStatement sqlAstSelect) {
-		if ( SqlAstTreeLogger.DEBUG_ENABLED ) {
-			SqlTreePrinter.print( sqlAstSelect );
-		}
+		logDomainResultGraph( sqlAstSelect.getDomainResultDescriptors() );
+		logSqlAst( sqlAstSelect );
 
 		visitQuerySpec( sqlAstSelect.getQuerySpec() );
 

@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -16,6 +14,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 
 /**
@@ -68,20 +67,18 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(
-			Consumer initializerCollector,
-			AssemblerCreationState creationState) {
-		// todo (6.0) : seems like here is where we ought to determine the SQL selection mappings
-
-		final EntityResultInitializer initializer = new EntityResultInitializer(
-				this,
+	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
+		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getLockMode(),
-				getIdentifierResult(),
-				getDiscriminatorResult(),
-				getVersionResult(),
-				initializerCollector,
-				creationState
+				() -> new EntityResultInitializer(
+						this,
+						getNavigablePath(),
+						getLockMode(),
+						getIdentifierResult(),
+						getDiscriminatorResult(),
+						getVersionResult(),
+						creationState
+				)
 		);
 
 		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );

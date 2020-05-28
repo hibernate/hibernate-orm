@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.DynamicInstantiationNature;
@@ -19,7 +18,6 @@ import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -58,9 +56,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	}
 
 	@Override
-	public DomainResultAssembler<R> createResultAssembler(
-			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState) {
+	public DomainResultAssembler<R> createResultAssembler(AssemblerCreationState creationState) {
 		boolean areAllArgumentsAliased = true;
 		boolean areAnyArgumentsAliased = false;
 		final Set<String> aliases = new HashSet<>();
@@ -84,7 +80,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				}
 
 				argumentReaders.add(
-						argumentResult.createResultAssembler( initializerConsumer, creationState )
+						argumentResult.createResultAssembler( creationState )
 				);
 			}
 		}

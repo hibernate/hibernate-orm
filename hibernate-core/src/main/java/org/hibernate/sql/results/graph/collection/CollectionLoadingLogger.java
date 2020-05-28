@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.graph.collection;
 
-import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.LoadingLogger;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -15,12 +15,14 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public interface CollectionLoadingLogger extends BasicLogger {
-	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + "loading.collection";
+	String LOCAL_NAME = "collection";
+
+	String LOGGER_NAME = LoadingLogger.subLoggerName( LOCAL_NAME );
 
 	/**
 	 * Static access to the logging instance
 	 */
-	Logger INSTANCE = Logger.getLogger( LOGGER_NAME );
+	Logger INSTANCE = LoadingLogger.subLogger( LOCAL_NAME );
 
 	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
 	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();

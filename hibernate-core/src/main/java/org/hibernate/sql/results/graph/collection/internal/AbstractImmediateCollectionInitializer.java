@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
@@ -71,6 +70,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		this.lockMode = lockMode;
 	}
 
+	protected abstract String getSimpleConcreteImplName();
+
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( collectionInstance != null ) {
@@ -80,7 +81,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
 			CollectionLoadingLogger.INSTANCE.tracef(
 					"(%s) Beginning Initializer#resolveInstance for collection : %s",
-					StringHelper.collapse( this.getClass().getName() ),
+					getSimpleConcreteImplName(),
 					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
 			);
 		}
@@ -105,9 +106,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Found existing loading collection entry [%s]; using loading collection instance - %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						LoggingHelper.toLoggableString( collectionInstance )
+						toLoggableString( collectionInstance )
 				);
 			}
 
@@ -120,7 +121,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 					CollectionLoadingLogger.INSTANCE.debugf(
 							"(%s) Collection [%s] being loaded by another initializer [%s] - skipping processing",
-							StringHelper.collapse( this.getClass().getName() ),
+							getSimpleConcreteImplName(),
 							LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
 							existingLoadingEntry.getInitializer()
 					);
@@ -142,9 +143,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 						CollectionLoadingLogger.INSTANCE.debugf(
 								"(%s) Found existing collection instance [%s] in Session; skipping processing - [%s]",
-								StringHelper.collapse( this.getClass().getName() ),
+								getSimpleConcreteImplName(),
 								LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-								LoggingHelper.toLoggableString( collectionInstance )
+								toLoggableString( collectionInstance )
 						);
 					}
 
@@ -167,9 +168,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 						if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 							CollectionLoadingLogger.INSTANCE.debugf(
 									"(%s) Found existing unowned collection instance [%s] in Session; skipping processing - [%s]",
-									StringHelper.collapse( this.getClass().getName() ),
+									getSimpleConcreteImplName(),
 									LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-									LoggingHelper.toLoggableString( collectionInstance )
+									toLoggableString( collectionInstance )
 							);
 						}
 
@@ -197,9 +198,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Created new collection wrapper [%s] : %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						LoggingHelper.toLoggableString( collectionInstance )
+						toLoggableString( collectionInstance )
 				);
 			}
 
@@ -212,9 +213,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Responsible for loading collection [%s] : %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						LoggingHelper.toLoggableString( collectionInstance )
+						toLoggableString( collectionInstance )
 				);
 			}
 
@@ -224,6 +225,16 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 		}
+	}
+
+	/**
+	 * Specialized toString handling for PersistentCollection.  All `PersistentCollection#toString`
+	 * implementations are crazy expensive as they trigger a load
+	 */
+	private String toLoggableString(PersistentCollection collectionInstance) {
+		return collectionInstance == null
+				? LoggingHelper.NULL
+				: collectionInstance.getClass().getName() + "@" + System.identityHashCode( collectionInstance );
 	}
 
 	protected void takeResponsibility(RowProcessingState rowProcessingState, CollectionKey collectionKey) {
@@ -280,7 +291,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Current row collection key : %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
 				);
 			}
@@ -294,7 +305,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Current row collection key : %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
 				);
 			}
@@ -343,9 +354,9 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
 				CollectionLoadingLogger.INSTANCE.debugf(
 						"(%s) Reading element from row for collection [%s] -> %s",
-						StringHelper.collapse( this.getClass().getName() ),
+						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
-						LoggingHelper.toLoggableString( collectionInstance )
+						toLoggableString( collectionInstance )
 				);
 			}
 

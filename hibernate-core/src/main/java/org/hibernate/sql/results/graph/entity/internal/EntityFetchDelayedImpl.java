@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
@@ -17,7 +15,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -57,14 +54,16 @@ public class EntityFetchDelayedImpl extends AbstractNonJoinedEntityFetch {
 	@Override
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
-			Consumer<Initializer> collector,
 			AssemblerCreationState creationState) {
-		final EntityInitializer entityInitializer = new EntityFetchDelayedInitializer(
+		final EntityInitializer entityInitializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				getEntityValuedModelPart().getEntityMappingType().getEntityPersister(),
-				keyResult.createResultAssembler( collector, creationState )
+				() -> new EntityFetchDelayedInitializer(
+						getNavigablePath(),
+						getEntityValuedModelPart().getEntityMappingType().getEntityPersister(),
+						keyResult.createResultAssembler( creationState )
+				)
 		);
-		collector.accept( entityInitializer );
+
 		return new EntityAssembler( getFetchedMapping().getJavaTypeDescriptor(), entityInitializer );
 	}
 }

@@ -6,11 +6,8 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -35,11 +32,10 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 
 	@Override
 	public ArgumentReader<A> createResultAssembler(
-			Consumer<Initializer> initializerCollector,
 			AssemblerCreationState creationState) {
 		//noinspection unchecked
 		return new ArgumentReader(
-				realDomainResult.createResultAssembler( initializerCollector, creationState ),
+				realDomainResult.createResultAssembler( creationState ),
 				getResultVariable()
 		);
 	}

@@ -7,14 +7,12 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 
 /**
@@ -42,17 +40,12 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 	}
 
 	@Override
-	public List<DomainResultAssembler> resolveAssemblers(
-			Consumer<Initializer> initializerConsumer,
-			AssemblerCreationState creationState) {
+	public List<DomainResultAssembler> resolveAssemblers(AssemblerCreationState creationState) {
 		final List<DomainResultAssembler> assemblers = CollectionHelper.arrayList( domainResults.size() );
 
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < domainResults.size(); i++ ) {
-			final DomainResultAssembler resultAssembler = domainResults.get( i ).createResultAssembler(
-					initializerConsumer,
-					creationState
-			);
+			final DomainResultAssembler resultAssembler = domainResults.get( i ).createResultAssembler( creationState );
 
 			assemblers.add( resultAssembler );
 		}

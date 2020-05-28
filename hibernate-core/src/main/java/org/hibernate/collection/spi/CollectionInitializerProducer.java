@@ -34,6 +34,5 @@ public interface CollectionInitializerProducer {
 			LockMode lockMode,
 			DomainResultAssembler keyContainerAssembler,
 			DomainResultAssembler keyCollectionAssembler,
-			Consumer<Initializer> initializerConsumer,
 			AssemblerCreationState creationState);
 }

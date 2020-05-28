@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 		}
 )
 @ServiceRegistry
-@SessionFactory(generateStatistics = true)
+@SessionFactory(generateStatistics = true, statementInspectorClass = SQLStatementInspector.class)
 public class EntityWithManyToOneSelfReferenceTest {
 
 	@BeforeEach
@@ -95,8 +96,8 @@ public class EntityWithManyToOneSelfReferenceTest {
 
 	@Test
 	public void testGetEntity(SessionFactoryScope scope) {
-		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
-		statistics.clear();
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
@@ -104,7 +105,8 @@ public class EntityWithManyToOneSelfReferenceTest {
 							2
 					);
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 					assertThat( loaded, notNullValue() );
 					assertThat( loaded.getName(), is( "second" ) );
@@ -113,18 +115,20 @@ public class EntityWithManyToOneSelfReferenceTest {
 					assertTrue( Hibernate.isInitialized( other ) );
 					assertThat( other.getName(), is( "first" ) );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					statementInspector.assertExecutedCount( 1 );
 				}
 		);
 
-		statistics.clear();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
 					final EntityWithManyToOneSelfReference loaded = session.get(
 							EntityWithManyToOneSelfReference.class,
 							1
 					);
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+
 					assertThat( loaded, notNullValue() );
 					assertThat( loaded.getName(), is( "first" ) );
 

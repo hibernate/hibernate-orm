@@ -46,7 +46,7 @@ import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetc
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
-import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 
 import org.hibernate.testing.TestForIssue;
@@ -104,7 +104,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 					// Check the domain-result graph
 					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
-										entityFetch -> assertThat( entityFetch, instanceOf( EntityFetchDelayedImpl.class ) )
+										entityFetch -> assertThat( entityFetch, instanceOf( EntityDelayedFetchImpl.class ) )
 					);
 				}
 		);
@@ -135,7 +135,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 							final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
 							expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
 							expectedFetchClassByAttributeName.put( "homeAddress", EmbeddableFetchImpl.class );
-							expectedFetchClassByAttributeName.put( "company", EntityFetchDelayedImpl.class );
+							expectedFetchClassByAttributeName.put( "company", EntityDelayedFetchImpl.class );
 							assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
 						}
 					} );

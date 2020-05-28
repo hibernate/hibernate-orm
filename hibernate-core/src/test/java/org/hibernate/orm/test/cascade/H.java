@@ -10,6 +10,8 @@ package org.hibernate.orm.test.cascade;
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 public class H
 {

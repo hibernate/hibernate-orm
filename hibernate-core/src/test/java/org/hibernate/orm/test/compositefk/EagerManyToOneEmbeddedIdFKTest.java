@@ -89,11 +89,11 @@ public class EagerManyToOneEmbeddedIdFKTest {
 				session -> {
 					System system = (System) session.createQuery( "from System e where e.id = :id" )
 							.setParameter( "id", 1 ).uniqueResult();
-					statementInspector.assertExecutedCount( 2 );
 
 					assertThat( system, is( notNullValue() ) );
 					SystemUser user = system.getUser();
 					assertThat( user, is( notNullValue() ) );
+					statementInspector.assertExecutedCount( 2 );
 				}
 		);
 	}

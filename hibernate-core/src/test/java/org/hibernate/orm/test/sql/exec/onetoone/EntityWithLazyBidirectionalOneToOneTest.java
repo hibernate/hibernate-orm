@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @ServiceRegistry
 @SessionFactory(generateStatistics = true)
-public class EntityWithLazyOneToOneTest {
+public class EntityWithLazyBidirectionalOneToOneTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {

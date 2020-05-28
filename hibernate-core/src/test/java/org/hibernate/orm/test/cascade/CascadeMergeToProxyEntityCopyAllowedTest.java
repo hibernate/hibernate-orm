@@ -30,6 +30,7 @@ import javax.persistence.Version;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CascadeMergeToProxyEntityCopyAllowedTest.Speaker.class
 		}
 )
-@SessionFactory
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 @ServiceRegistry(
 		settings = {
 				@ServiceRegistry.Setting(
@@ -65,6 +66,8 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 	public void test(SessionFactoryScope scope) {
 		final Event root = (Event) persistEntity( scope, new Event( null, defaultProject ) );
 
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		Event rootFromDB = scope.fromTransaction(
 				session -> {
 					TypedQuery<Event> eventTypedQuery = session.createQuery(
@@ -78,6 +81,8 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 
 				}
 		);
+		statementInspector.assertExecutedCount( 1 );
+		statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4 );
 		assertNotNull( rootFromDB );
 		assertEquals( 0, rootFromDB.getChildren().size() );
 		assertEquals( 0, rootFromDB.getSpeakers().size() );
@@ -113,7 +118,6 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 		assertNotNull( rootFromDB );
 		assertEquals( 1, rootFromDB.getChildren().size() );
 		assertEquals( 0, rootFromDB.getSpeakers().size() );
-
 	}
 
 	private Object persistEntity(SessionFactoryScope scope, Object entity) {

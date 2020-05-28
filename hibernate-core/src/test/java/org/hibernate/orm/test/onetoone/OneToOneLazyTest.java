@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -34,12 +35,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel(
 		annotatedClasses = {
-				OneToOneLazy.Title.class,
-				OneToOneLazy.Book.class
+				OneToOneLazyTest.Title.class,
+				OneToOneLazyTest.Book.class
 		}
 )
 @SessionFactory
-public class OneToOneLazy {
+public class OneToOneLazyTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -59,15 +60,20 @@ public class OneToOneLazy {
 		scope.inTransaction(
 				session -> {
 					Book book = session.find( Book.class, 2L );
-					assertThat( Hibernate.isInitialized( book.getTitle() ), is( false ) );
+					Title title = book.getTitle();
+					assertThat( Hibernate.isInitialized( title ), is( false ) );
+					assertThat( title, notNullValue() );
+					assertThat( title.getId(), is( 1L ) );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					Title title = session.find( Title.class, 1L );
-					assertThat( Hibernate.isInitialized( title.getBook() ), is( true ) );
-
+					Book book = title.getBook();
+					assertThat( Hibernate.isInitialized( book ), is( true ) );
+					assertThat( book, notNullValue() );
+					assertThat( book.getId(), is( 2L ) );
 				}
 		);
 	}

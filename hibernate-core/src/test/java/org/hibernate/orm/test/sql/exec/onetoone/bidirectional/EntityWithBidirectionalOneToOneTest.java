@@ -12,20 +12,27 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.validator.internal.util.Contracts;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalOneToOneTest.AdoptedChild;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalOneToOneTest.Child;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalOneToOneTest.Mother;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -33,248 +40,438 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				EntityWithBidirectionalOneToOneTest.Parent.class,
-				EntityWithBidirectionalOneToOneTest.Child.class,
-				EntityWithBidirectionalOneToOneTest.Child2.class
+				Mother.class,
+				Child.class,
+				AdoptedChild.class
 		}
 )
 @ServiceRegistry
-@SessionFactory(generateStatistics = true)
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 public class EntityWithBidirectionalOneToOneTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Parent parent = new Parent( 1, "Hibernate ORM" );
-			Child child = new Child( 2, parent );
-			child.setName( "Acme" );
-			Child2 child2 = new Child2( 3, parent );
-			child2.setName( "Fab" );
-			session.save( parent );
+			Mother mother = new Mother( 1, "Giulia" );
+
+			Child child = new Child( 2, "Luis", mother );
+
+			AdoptedChild adoptedChild = new AdoptedChild( 3, "Fab", mother );
+
+			session.save( mother );
 			session.save( child );
-			session.save( child2 );
+			session.save( adoptedChild );
 		} );
 	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createQuery( "delete from Child2" ).executeUpdate();
-			session.createQuery( "delete from Parent" ).executeUpdate();
+			session.createQuery( "delete from AdoptedChild" ).executeUpdate();
+			session.createQuery( "delete from Mother" ).executeUpdate();
 			session.createQuery( "delete from Child" ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testGetParent(SessionFactoryScope scope) {
+	public void testGetMother(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction( session -> {
-			final Parent parent = session.get( Parent.class, 1 );
-			Child child = parent.getOwnedBidirectionalChild();
+			final Mother mother = session.get( Mother.class, 1 );
+
+			Child child = mother.getBiologicalChild();
 			assertThat( child, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child ),
 					"The child eager OneToOne association is not initialized"
 			);
-			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParentMappedByChild(), notNullValue() );
-			assertThat( child.getParentMappedByChild(), notNullValue() );
+			assertThat( child.getName(), is( "Luis" ) );
+			assertSame( child.getMother(), mother );
 
-			Child2 child2 = parent.getChildMappedByParent1();
-			assertThat( child2, notNullValue() );
+			AdoptedChild adoptedChild = mother.getAdopted();
+			assertThat( adoptedChild.getName(), is( "Fab" ) );
 			assertTrue(
-					Hibernate.isInitialized( child2 ),
-					"The child2 eager OneToOne association is not initialized"
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
 			);
-			assertThat( child2.getName(), equalTo( "Fab" ) );
-			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
+			assertThat( adoptedChild.getName(), equalTo( "Fab" ) );
+
+			assertSame( adoptedChild.getStepMother(), mother );
+			assertThat( adoptedChild.getBiologicalMother(), is( nullValue() ) );
+
+			/*
+				fetchablePath: Mother.biologicalChild --- NO circular --- first join created
+				fetchablePath: Mother.biologicalChild.mother --- Circular ---
+				fetchablePath: Mother.adopted --- NO circular --- second join created
+				fetchablePath: Mother.adopted.biologicalMother --- NO circular --- third join created
+				fetchablePath: Mother.adopted.biologicalMother.biologicalChild --- NO circular --- fourth join created
+				fetchablePath: Mother.adopted.biologicalMother.biologicalChild.mother --- Circular ---
+				fetchablePath: Mother.adopted.biologicalMother.adopted --- NO circular --- fifth join created
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother --- NO circular --- sixth join created
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular --- seventh join created
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother.biologicalChild.mother --- Circular ---
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother.adopted --- NO circular --- eighth join created
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother.adopted.biologicalMother --- NO circular ---  max fetch depth reached no join created
+				fetchablePath: Mother.adopted.biologicalMother.adopted.biologicalMother.adopted.stepMother --- Circular ---
+				fetchablePath: Mother.adopted.biologicalMother.adopted.stepMother --- Circular ---
+				fetchablePath org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalOneToOneTest$Mother.adopted.stepMother --- Circular ---
+			 */
+			statementInspector.assertExecutedCount( 1 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4 );
 
 		} );
 	}
 
 	@Test
-	public void testGetParent2(SessionFactoryScope scope) {
+	public void testUnrealCaseWhenMotherIsAlsoStepMother(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Parent parent = new Parent( 4, "Hibernate OGM" );
-			Child child = new Child( 5, parent );
-			child.setName( "Acme2" );
+			Mother mother = new Mother( 4, "Jiny" );
 
-			Child2 child2 = new Child2( 6, parent );
-			child2.setName( "Fab2" );
+			Child child = new Child( 5, "Carlo", mother );
 
-			child2.setUnidirectionalParent( parent );
+			AdoptedChild adoptedChild = new AdoptedChild( 6, "Andrea", mother );
 
-			session.save( parent );
+			adoptedChild.setBiologicalMother( mother );
+
+			session.save( mother );
 			session.save( child );
-			session.save( child2 );
+			session.save( adoptedChild );
 		} );
 
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction( session -> {
-			final Parent parent = session.get( Parent.class, 4 );
-			Child child = parent.getOwnedBidirectionalChild();
+			final Mother mother = session.get( Mother.class, 4 );
+
+			Child child = mother.getBiologicalChild();
 			assertThat( child, notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( child ),
 					"The child eager OneToOne association is not initialized"
 			);
-			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParentMappedByChild(), notNullValue() );
+			assertThat( child.getName(), is( "Carlo" ) );
+			assertSame( child.getMother(), mother );
 
-			Child2 child2 = parent.getChildMappedByParent1();
-			assertThat( child2, notNullValue() );
+			AdoptedChild adoptedChild = mother.getAdopted();
+			assertThat( adoptedChild, notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child2 ),
-					"The child2 eager OneToOne association is not initialized"
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
 			);
-			assertThat( child2.getName(), equalTo( "Fab2" ) );
-			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
-			assertThat( child2.getOwnedBidirectionalParent().getDescription(), equalTo( "Hibernate OGM" ) );
+			assertThat( adoptedChild.getName(), equalTo( "Andrea" ) );
 
-			Parent parent2 = child2.getUnidirectionalParent();
-			assertThat( parent2, notNullValue() );
-			assertThat( parent2.getDescription(), equalTo( "Hibernate OGM" ) );
-			assertThat( parent2.getOwnedBidirectionalChild(), notNullValue() );
+			assertSame( adoptedChild.getStepMother(), mother );
+			assertSame( adoptedChild.getBiologicalMother(), mother );
 
+			statementInspector.assertExecutedCount( 1 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4 );
 		} );
 	}
 
 	@Test
-	public void testGetParent3(SessionFactoryScope scope) {
+	public void testGetMother3(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 
-			Parent parent = new Parent( 4, "Hibernate Search" );
-			Child child = new Child( 5, parent );
-			child.setName( "Acme2" );
-			Child2 child2 = new Child2( 7, parent );
-			child2.setName( "Fab2" );
+			Mother mother = new Mother( 4, "Catia" );
 
-			Parent parent2 = new Parent( 6, "Hibernate OGM" );
-			child2.setUnidirectionalParent( parent2 );
+			Child child = new Child( 5, "Stefano", mother );
 
-			Child child1 = new Child( 8, parent2 );
+			AdoptedChild adoptedChild = new AdoptedChild( 7, "Luisa", mother );
 
-			session.save( parent );
-			session.save( parent2 );
+			Mother biologicalMother = new Mother( 6, "Rebecca" );
+			adoptedChild.setBiologicalMother( biologicalMother );
+
+			Child anotherChild = new Child( 8, "Igor", biologicalMother );
+
+			session.save( mother );
+			session.save( biologicalMother );
 			session.save( child );
-			session.save( child1 );
-			session.save( child2 );
+			session.save( adoptedChild );
+			session.save( anotherChild );
 		} );
 
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction( session -> {
-			final Parent parent = session.get( Parent.class, 4 );
-			assertThat( parent.getDescription(), equalTo( "Hibernate Search" ) );
+			final Mother mother = session.get( Mother.class, 4 );
 
-			Child child = parent.getOwnedBidirectionalChild();
-			assertThat( child, notNullValue() );
+			assertThat( mother.getName(), equalTo( "Catia" ) );
+
+			Child procreatedChild = mother.getBiologicalChild();
+			assertThat( procreatedChild, notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child ),
-					"The child eager OneToOne association is not initialized"
+					Hibernate.isInitialized( procreatedChild ),
+					"The procreatedChild eager OneToOne association is not initialized"
 			);
-			assertThat( child.getName(), notNullValue() );
-			assertThat( child.getParentMappedByChild(), notNullValue() );
+			assertThat( procreatedChild.getName(), equalTo( "Stefano" ) );
+			assertSame( procreatedChild.getMother(), mother );
 
-			Child2 child2 = parent.getChildMappedByParent1();
-			assertThat( child2, notNullValue() );
+			AdoptedChild adoptedChild = mother.getAdopted();
+			assertThat( adoptedChild, notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child2 ),
-					"The child2 eager OneToOne association is not initialized"
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
 			);
-			assertThat( child2.getName(), equalTo( "Fab2" ) );
-			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
-			assertThat( child2.getOwnedBidirectionalParent().getDescription(), equalTo( "Hibernate Search" ) );
+			assertThat( adoptedChild.getName(), equalTo( "Luisa" ) );
+			assertSame( adoptedChild.getStepMother(), mother );
 
-			Parent parent2 = child2.getUnidirectionalParent();
-			assertThat( parent2, notNullValue() );
-			assertThat( parent2.getDescription(), equalTo( "Hibernate OGM" ) );
-			assertThat( parent2.getOwnedBidirectionalChild(), notNullValue() );
+			Mother biologicalMother = adoptedChild.getBiologicalMother();
+			assertThat( biologicalMother.getId(), equalTo( 6 ) );
+			assertThat( biologicalMother.getAdopted(), nullValue() );
 
+			Child anotherChild = biologicalMother.getBiologicalChild();
+			assertThat( anotherChild.getId(), equalTo( 8 ) );
+			assertThat( anotherChild.getName(), equalTo( "Igor" ) );
+			assertSame(  biologicalMother, anotherChild.getMother() );
+
+			statementInspector.assertExecutedCount( 2 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4);
+			statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 4);
 		} );
 	}
 
 	@Test
 	public void testGetChild(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Child child = session.get( Child.class, 2 );
-			Parent parent = child.getParentMappedByChild();
+
+			Mother mother = child.getMother();
 			assertTrue(
-					Hibernate.isInitialized( parent ),
-					"The parent eager OneToOne association is not initialized"
+					Hibernate.isInitialized( mother ),
+					"The mother eager OneToOne association is not initialized"
 			);
-			assertThat( parent, notNullValue() );
-			assertThat( parent.getDescription(), notNullValue() );
-			Child child1 = parent.getOwnedBidirectionalChild();
-			assertThat( child1, notNullValue() );
+			assertThat( mother, notNullValue() );
+			assertThat( mother.getName(), is( "Giulia" ) );
+
+			Child biologicalChild = mother.getBiologicalChild();
+			assertSame( biologicalChild, child );
 			assertTrue(
-					Hibernate.isInitialized( child1 ),
+					Hibernate.isInitialized( biologicalChild ),
 					"The child eager OneToOne association is not initialized"
 			);
-			Child2 child2 = parent.getChildMappedByParent1();
-			assertThat( child2, notNullValue() );
+
+			AdoptedChild adoptedChild = mother.getAdopted();
+			assertThat( adoptedChild, notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child2 ),
-					"The child2 eager OneToOne association is not initialized"
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
 			);
-			assertThat( child2.getOwnedBidirectionalParent(), notNullValue() );
-			assertThat( child2.getUnidirectionalParent(), nullValue() );
+			assertSame( adoptedChild.getStepMother(), mother );
+			assertThat( adoptedChild.getBiologicalMother(), nullValue() );
+
+			statementInspector.assertExecutedCount( 1 );
+			/*
+				fetchablePath: Child.mother --- NO circular --- first join created
+				fetchablePath: Child.mother.biologicalChild --- Circular ---
+				fetchablePath: Child.mother.adopted --- NO circular --- second join created
+				fetchablePath: Child.mother.adopted.biologicalMother --- NO circular --- third join created
+				fetchablePath: Child.mother.adopted.biologicalMother.biologicalChild --- NO circular --- fourth join created
+				fetchablePath: Child.mother.adopted.biologicalMother.biologicalChild.mother --- Circular ---
+				fetchablePath: Child.mother.adopted.biologicalMother.adopted --- NO circular --- fifth join created
+				fetchablePath: Child.mother.adopted.biologicalMother.adopted.biologicalMother --- NO circular --- sixth join created
+				fetchablePath: Child.mother.adopted.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular ---  max fetch depth reached no join created
+				fetchablePath Child.mother.adopted.biologicalMother.adopted.biologicalMother.adopted --- NO circular --- max fetch depth reached no join created
+				fetchablePath Child.mother.adopted.biologicalMother.adopted.stepMother --- Circular ---
+				fetchablePath Child.mother.adopted.stepMother --- Circular --
+			 */
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4 );
 		} );
 	}
 
 	@Test
-	public void testHqlSelectParent(SessionFactoryScope scope) {
+	public void testGetAdoptedChild(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction( session -> {
+			final AdoptedChild adoptedChild = session.get( AdoptedChild.class, 3 );
+
+			Mother stepMother = adoptedChild.getStepMother();
+			assertTrue(
+					Hibernate.isInitialized( stepMother ),
+					"The stepMother eager OneToOne association is not initialized"
+			);
+			assertThat( stepMother, notNullValue() );
+			assertThat( stepMother.getName(), is( "Giulia" ) );
+
+			Child biologicalChild = stepMother.getBiologicalChild();
+			assertThat( biologicalChild, notNullValue() );
+			assertThat( biologicalChild.getId(), is(2) );
+			assertTrue(
+					Hibernate.isInitialized( biologicalChild ),
+					"The biological eager OneToOne association is not initialized"
+			);
+
+			assertSame( adoptedChild, stepMother.getAdopted() );
+			assertTrue(
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
+			);
+			assertThat( adoptedChild.getBiologicalMother(), nullValue() );
+
+			statementInspector.assertExecutedCount( 2 );
+			/*
+				fetchablePath: AdoptedChild.biologicalMother --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.biologicalChild --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.biologicalChild.mother --- Circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular --- [N.b is is not circular because adoped is an instance of AdoptedChild while biologicalChild is an instance of Child]
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.biologicalMother --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.biologicalMother.biologicalChild --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.biologicalMother.adopted --- NO circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.biologicalMother.adopted.stepMother --- Circular ---
+				fetchablePath: AdoptedChild.biologicalMother.adopted.stepMother --- Circular ---
+				fetchablePath: AdoptedChild.stepMother --- NO circular ---
+				fetchablePath: AdoptedChild.stepMother.biologicalChild --- NO circular ---
+				fetchablePath: AdoptedChild.stepMother.biologicalChild.mother --- Circular ---
+				fetchablePath: AdoptedChild.stepMother.adopted --- Circular ---
+			 */
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 3 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 4 );
+		} );
+	}
+
+	@Test
+	public void testGetChild2(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+
+			Mother mother = new Mother( 4, "Giulia" );
+			Child child = new Child( 5, "Stefano", mother );
+
+			AdoptedChild child2 = new AdoptedChild( 7, "Fab2", mother );
+
+			Mother biologicalMother = new Mother( 6, "Hibernate OGM" );
+			child2.setBiologicalMother( biologicalMother );
+
+			Child child3 = new Child( 8, "Carla", biologicalMother );
+
+			session.save( mother );
+			session.save( biologicalMother );
+			session.save( child );
+			session.save( child2 );
+			session.save( child3 );
+		} );
+
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction( session -> {
+			final Child child = session.get( Child.class, 5 );
+
+			Mother mother = child.getMother();
+			Contracts.assertTrue(
+					Hibernate.isInitialized( mother ),
+					"The mother eager OneToOne association is not initialized"
+			);
+			assertThat( mother, notNullValue() );
+			assertThat( mother.getName(), is( "Giulia" ) );
+
+			Child child1 = mother.getBiologicalChild();
+			assertSame( child1, child );
+			Contracts.assertTrue(
+					Hibernate.isInitialized( child1 ),
+					"The child eager OneToOne association is not initialized"
+			);
+
+			AdoptedChild adoptedChild = mother.getAdopted();
+			assertThat( adoptedChild, notNullValue() );
+			Contracts.assertTrue(
+					Hibernate.isInitialized( adoptedChild ),
+					"The adoptedChild eager OneToOne association is not initialized"
+			);
+
+			Assert.assertSame( adoptedChild.getStepMother(), mother );
+
+			Mother biologicalMother = adoptedChild.getBiologicalMother();
+			assertThat( biologicalMother, notNullValue() );
+			assertThat( biologicalMother.getId(), equalTo( 6 ) );
+
+			Child anotherChild = biologicalMother.getBiologicalChild();
+			assertThat( anotherChild, notNullValue() );
+			assertThat( anotherChild.getId(), equalTo( 8 ) );
+
+			Assert.assertSame( anotherChild.getMother(), biologicalMother );
+
+			assertThat( biologicalMother.getAdopted(), nullValue() );
+
+			statementInspector.assertExecutedCount( 2 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 4 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 4 );
+		} );
+	}
+
+	@Test
+	public void testHqlSelectMother(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					final Parent parent = session.createQuery(
-							"SELECT p FROM Parent p JOIN p.ownedBidirectionalChild WHERE p.id = :id",
-							Parent.class
+					final Mother mother = session.createQuery(
+							"SELECT m FROM Mother m JOIN m.biologicalChild WHERE m.id = :id",
+							Mother.class
 					)
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					assertThat( parent.getOwnedBidirectionalChild(), notNullValue() );
-					String name = parent.getOwnedBidirectionalChild().getName();
-					assertThat( name, notNullValue() );
+					Child child = mother.getBiologicalChild();
+					assertThat( child, notNullValue() );
+					assertThat( child.getName(), is( "Luis" ) );
+					statementInspector.assertExecutedCount( 3 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+					// Mother.biologicalChild
+					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 4 );
+					// Mother.adopted
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 3 );
 				}
 		);
 	}
 
 	@Test
-	@FailureExpected
 	public void testHqlSelectChild(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					final String queryString = "SELECT c FROM Child c JOIN c.parentMappedByChild d WHERE d.id = :id";
+					final String queryString = "SELECT c FROM Child c JOIN c.mother d WHERE d.id = :id";
 					final Child child = session.createQuery( queryString, Child.class )
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					assertThat( child.getParentMappedByChild(), notNullValue() );
+					Mother mother = child.getMother();
+					assertThat( mother, notNullValue() );
 
-					String description = child.getParentMappedByChild().getDescription();
-					assertThat( description, notNullValue() );
+					assertThat( mother.getName(), is( "Giulia" ) );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 4 );
 				}
 		);
 	}
 
-	@Entity(name = "Parent")
-	public static class Parent {
+	@Entity(name = "Mother")
+	public static class Mother {
 		@Id
 		private Integer id;
-		private String description;
+		private String name;
 
 		@OneToOne
-		private Child ownedBidirectionalChild;
+		private Child biologicalChild;
 
-		@OneToOne(mappedBy = "ownedBidirectionalParent")
-		private Child2 childMappedByParent1;
+		@OneToOne(mappedBy = "stepMother")
+		private AdoptedChild adopted;
 
-		Parent() {
+		Mother() {
 		}
 
-		public Parent(Integer id, String description) {
+		public Mother(Integer id, String name) {
 			this.id = id;
-			this.description = description;
+			this.name = name;
 		}
 
-		Parent(Integer id) {
+		Mother(Integer id) {
 			this.id = id;
 		}
 
@@ -286,30 +483,29 @@ public class EntityWithBidirectionalOneToOneTest {
 			this.id = id;
 		}
 
-		public String getDescription() {
-			return description;
+		public String getName() {
+			return name;
 		}
 
-		public void setDescription(String description) {
-			this.description = description;
+		public void setName(String name) {
+			this.name = name;
 		}
 
-		public Child getOwnedBidirectionalChild() {
-			return ownedBidirectionalChild;
+		public Child getBiologicalChild() {
+			return biologicalChild;
 		}
 
-		public void setOwnedBidirectionalChild(Child ownedBidirectionalChild) {
-			this.ownedBidirectionalChild = ownedBidirectionalChild;
+		public void setBiologicalChild(Child biologicalChild) {
+			this.biologicalChild = biologicalChild;
 		}
 
-		public Child2 getChildMappedByParent1() {
-			return childMappedByParent1;
+		public AdoptedChild getAdopted() {
+			return adopted;
 		}
 
-		public void setChildMappedByParent1(Child2 childMappedByParent1) {
-			this.childMappedByParent1 = childMappedByParent1;
+		public void setAdopted(AdoptedChild adopted) {
+			this.adopted = adopted;
 		}
-
 	}
 
 	@Entity(name = "Child")
@@ -318,17 +514,18 @@ public class EntityWithBidirectionalOneToOneTest {
 		private Integer id;
 		private String name;
 
-		@OneToOne(mappedBy = "ownedBidirectionalChild")
-		private Parent parentMappedByChild;
+		@OneToOne(mappedBy = "biologicalChild")
+		private Mother mother;
 
 		Child() {
 
 		}
 
-		Child(Integer id, Parent parentMappedByChild) {
+		Child(Integer id, String name, Mother mother) {
 			this.id = id;
-			this.parentMappedByChild = parentMappedByChild;
-			this.parentMappedByChild.setOwnedBidirectionalChild( this );
+			this.name = name;
+			this.mother = mother;
+			this.mother.setBiologicalChild( this );
 		}
 
 		public Integer getId() {
@@ -347,38 +544,38 @@ public class EntityWithBidirectionalOneToOneTest {
 			this.name = name;
 		}
 
-		public Parent getParentMappedByChild() {
-			return parentMappedByChild;
+		public Mother getMother() {
+			return mother;
 		}
 
-		public void setParentMappedByChild(Parent parentMappedByChild) {
-			this.parentMappedByChild = parentMappedByChild;
+		public void setMother(Mother mother) {
+			this.mother = mother;
 		}
 	}
 
-	@Entity(name = "Child2")
-	@Table(name = "CHILD2")
-	public static class Child2 {
+	@Entity(name = "AdoptedChild")
+	@Table(name = "ADOPTED_CHILD")
+	public static class AdoptedChild {
 		@Id
 		private Integer id;
 
 		private String name;
 
 		@OneToOne
-		private Parent ownedBidirectionalParent;
+		private Mother biologicalMother;
 
 		@OneToOne
-		private Parent unidirectionalParent;
+		private Mother stepMother;
 
-		Child2() {
+		AdoptedChild() {
 		}
 
-		Child2(Integer id, Parent ownedBidirectionalParent) {
+		AdoptedChild(Integer id, String name, Mother stepMother) {
 			this.id = id;
-			this.ownedBidirectionalParent = ownedBidirectionalParent;
-			this.ownedBidirectionalParent.setChildMappedByParent1( this );
+			this.name = name;
+			this.stepMother = stepMother;
+			this.stepMother.setAdopted( this );
 		}
-
 
 		public Integer getId() {
 			return id;
@@ -396,20 +593,28 @@ public class EntityWithBidirectionalOneToOneTest {
 			this.name = name;
 		}
 
-		public Parent getOwnedBidirectionalParent() {
-			return ownedBidirectionalParent;
+		public Mother getBiologicalMother() {
+			return biologicalMother;
 		}
 
-		public void setOwnedBidirectionalParent(Parent ownedBidirectionalParent) {
-			this.ownedBidirectionalParent = ownedBidirectionalParent;
+		public void setBiologicalMother(Mother biologicalMother) {
+			this.biologicalMother = biologicalMother;
 		}
 
-		public Parent getUnidirectionalParent() {
-			return unidirectionalParent;
+		public Mother getStepMother() {
+			return stepMother;
 		}
 
-		public void setUnidirectionalParent(Parent parent) {
-			this.unidirectionalParent = parent;
+		public void setStepMother(Mother stepMother) {
+			this.stepMother = stepMother;
+		}
+
+		@Override
+		public String toString() {
+			return "AdoptedChild{" +
+					"id=" + id +
+					", name='" + name + '\'' +
+					'}';
 		}
 	}
 }

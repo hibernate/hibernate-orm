@@ -78,62 +78,6 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 	public void testHql(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
-		/*
-		select
-			s1_0.id,
-			s1_0.dataCenterUser_dataCenter_id,
-			s1_0.dataCenterUser_username,
-			s1_0.name
-		from
-			System s1_0
-		where
-			s1_0.id=?
-
-		select
-			d1_0.id,
-		 	d1_0.description
-		from
-        	data_center as d1_0
-    	where
-        	d1_0.id = ?
-
-		select
-			d1_0.dataCenter_id,
-			d1_0.username,
-			d1_0.privilegeMask
-		from
-			data_center_user as d1_0
-		where
-			(
-				d1_0.dataCenter_id, d1_0.username
-			) in (
-				(
-					?, ?
-				)
-			)
-
-			NOTE: currently the 3rd query is:
-
-        select
-            d2_0.id,
-            d2_0.description,
-            d1_0.dataCenter_id,
-            d1_0.username,
-            d1_0.privilegeMask
-        from
-            data_center_user as d1_0
-        inner join
-            data_center as d2_0
-                on d1_0.dataCenter_id = d2_0.id
-        where
-            (
-                d1_0.dataCenter_id, d1_0.username
-            ) in (
-                (
-                    ?, ?
-                )
-            )
-		 */
 		scope.inTransaction(
 				session -> {
 					// this HQL should load the System with id = 1
@@ -228,22 +172,6 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 	public void testHql2(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
-		/*
-		  select
-			s1_0.subsystem_id,
-			s1_0.username,
-			s1_0.name
-		from
-			SystemUser as s1_0
-
-        select
-			s1_0.id,
-			s1_0.description
-		from
-			Subsystem s1_0
-		where
-			s1_0.id=?
-		 */
 		scope.inTransaction(
 				session -> {
 					DataCenterUser system = (DataCenterUser) session.createQuery( "from DataCenterUser " )
@@ -259,7 +187,6 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 				}
 		);
 	}
-
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {

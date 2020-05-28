@@ -647,13 +647,11 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 					"select o from Order o join fetch o.lineItems",
 					Order.class
 			).list();
-			orders.forEach( order ->
-									order.getLineItems().forEach( item ->
-																		  assertThat(
-																				  item.getOrder(),
-																				  sameInstance( order )
-																		  )
-									)
+			orders.forEach(
+					order ->
+							order.getLineItems().forEach(
+									item -> assertThat( item.getOrder(), sameInstance( order ) )
+							)
 			);
 		} );
 	}

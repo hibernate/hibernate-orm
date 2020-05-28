@@ -44,12 +44,12 @@ public class SQLStatementInspector implements StatementInspector {
 	}
 
 	public void assertExecutedCount(int expected) {
-		assertEquals( expected, sqlQueries.size() );
+		assertEquals( "Number of executed statements ",expected, sqlQueries.size() );
 	}
 
 	public void assertNumberOfOccurrenceInQuery(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {
 		String query = sqlQueries.get( queryNumber );
-		int actual = query.split( toCheck, -1 ).length - 1;
-		assertThat( actual, is( expectedNumberOfOccurrences ) );
+		int actual = query.split( " " + toCheck + " ", -1 ).length - 1;
+		assertThat( "number of " + toCheck,actual, is( expectedNumberOfOccurrences ) );
 	}
 }

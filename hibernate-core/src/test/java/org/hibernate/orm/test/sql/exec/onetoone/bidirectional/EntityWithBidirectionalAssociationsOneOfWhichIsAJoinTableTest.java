@@ -15,6 +15,7 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,6 +28,10 @@ import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Female;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Male;
+import static org.hibernate.orm.test.sql.exec.onetoone.bidirectional.EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Parent;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -34,13 +39,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		annotatedClasses = {
-				EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Parent.class,
-				EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Child.class,
-				EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest.Child2.class,
+				Parent.class,
+				Male.class,
+				Female.class,
 		}
 )
 @ServiceRegistry
-@SessionFactory(generateStatistics = true)
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@BeforeEach
@@ -48,13 +53,16 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		scope.inTransaction(
 				session -> {
 					Parent parent = new Parent( 1, "Hibernate" );
-					Child child = new Child( 2, parent );
-					child.setName( "Acme" );
-					Child2 child2 = new Child2( 3, parent );
-					child2.setName( "Fab" );
+
+					Male son = new Male( 2, parent );
+					son.setName( "Luigi" );
+
+					Female daughter = new Female( 3, parent );
+					daughter.setName( "Fab" );
+
 					session.save( parent );
-					session.save( child );
-					session.save( child2 );
+					session.save( son );
+					session.save( daughter );
 				} );
 	}
 
@@ -63,43 +71,50 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Parent" ).executeUpdate();
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from Child2" ).executeUpdate();
+					session.createQuery( "delete from Male" ).executeUpdate();
+					session.createQuery( "delete from Female" ).executeUpdate();
 				} );
 	}
 
 	@Test
 	public void testGetParent(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
 					final Parent parent = session.get( Parent.class, 1 );
-					Child child = parent.getChild();
-					assertThat( child, CoreMatchers.notNullValue() );
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 6 );
+					Male son = parent.getSon();
+					assertThat( son, CoreMatchers.notNullValue() );
 					assertTrue(
-							Hibernate.isInitialized( child ),
-							"The child eager OneToOne association is not initialized"
+							Hibernate.isInitialized( son ),
+							"The son eager OneToOne association is not initialized"
 					);
-					assertThat( child.getName(), equalTo( "Acme" ) );
-					assertThat( child.getParent(), CoreMatchers.notNullValue() );
+					assertThat( son.getName(), equalTo( "Luigi" ) );
+					assertSame( son.getParent(), parent );
 
-
-					Child2 child2 = parent.getChild2();
-					assertThat( child2, CoreMatchers.notNullValue() );
+					Female daughter = parent.getDaughter();
+					assertThat( daughter, CoreMatchers.notNullValue() );
 					assertTrue(
-							Hibernate.isInitialized( child2 ),
-							"The child2 eager OneToOne association is not initialized"
+							Hibernate.isInitialized( daughter ),
+							"The daughter eager OneToOne association is not initialized"
 					);
-					assertThat( child2.getName(), equalTo( "Fab" ) );
-					assertThat( child2.getParent(), CoreMatchers.notNullValue() );
-
+					assertThat( daughter.getName(), equalTo( "Fab" ) );
+					assertSame( daughter.getParent(), parent );
+					statementInspector.assertExecutedCount( 1 );
 				} );
 	}
 
 	@Test
 	public void testGetChild(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction( session -> {
-			final Child child = session.get( Child.class, 2 );
-			Parent parent = child.getParent();
+			final Male son = session.get( Male.class, 2 );
+			statementInspector.assertExecutedCount( 1 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 6 );
+			Parent parent = son.getParent();
 			assertThat( parent, CoreMatchers.notNullValue() );
 			assertTrue(
 					Hibernate.isInitialized( parent ),
@@ -107,36 +122,41 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 			);
 			assertThat( parent.getDescription(), CoreMatchers.notNullValue() );
 
-			Child child1 = parent.getChild();
-			assertThat( child1, CoreMatchers.notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child1 ),
-					"The child eager OneToOne association is not initialized"
+					Hibernate.isInitialized( parent.getSon() ),
+					"The son eager OneToOne association is not initialized"
 			);
+			assertSame( parent.getSon(), son );
 
-			Child2 child2 = parent.getChild2();
-			assertThat( child2, CoreMatchers.notNullValue() );
+			Female daughter = parent.getDaughter();
+			assertThat( daughter, CoreMatchers.notNullValue() );
 			assertTrue(
-					Hibernate.isInitialized( child2 ),
+					Hibernate.isInitialized( daughter ),
 					"The child2 eager OneToOne association is not initialized"
 
 			);
-			assertThat( child2.getParent(), CoreMatchers.notNullValue() );
+			assertThat( daughter.getParent(), CoreMatchers.notNullValue() );
+			statementInspector.assertExecutedCount( 1 );
 		} );
 	}
 
 	@Test
-	public void testHqlSelectChild(SessionFactoryScope scope) {
+	public void testHqlSelectSon(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					final String queryString = "SELECT c FROM Child c JOIN c.parent d WHERE d.id = :id";
-					final Child child = session.createQuery( queryString, Child.class )
+					final String queryString = "SELECT m FROM Male m JOIN m.parent d WHERE d.id = :id";
+					final Male son = session.createQuery( queryString, Male.class )
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					assertThat( child.getParent(), CoreMatchers.notNullValue() );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 6 );
+					assertThat( son.getParent(), CoreMatchers.notNullValue() );
 
-					String description = child.getParent().getDescription();
+					String description = son.getParent().getDescription();
 					assertThat( description, CoreMatchers.notNullValue() );
 				}
 		);
@@ -146,20 +166,24 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 	public void testHqlSelectParent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+					statementInspector.clear();
 					final Parent parent = session.createQuery(
-							"SELECT p FROM Parent p JOIN p.child WHERE p.id = :id",
+							"SELECT p FROM Parent p JOIN p.son WHERE p.id = :id",
 							Parent.class
 					)
 							.setParameter( "id", 1 )
 							.getSingleResult();
-
-					Child child = parent.getChild();
-					assertThat( child, CoreMatchers.notNullValue() );
+					statementInspector.assertExecutedCount( 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 6 );
+					Male son = parent.getSon();
+					assertThat( son, CoreMatchers.notNullValue() );
 					assertTrue(
-							Hibernate.isInitialized( child ),
-							"the child have to be initialized"
+							Hibernate.isInitialized( son ),
+							"the son have to be initialized"
 					);
-					String name = child.getName();
+					String name = son.getName();
 					assertThat( name, CoreMatchers.notNullValue() );
 				}
 
@@ -168,19 +192,19 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		scope.inTransaction(
 				session -> {
 					final Parent parent = session.createQuery(
-							"SELECT p FROM Parent p JOIN p.child WHERE p.id = :id",
+							"SELECT p FROM Parent p JOIN p.son WHERE p.id = :id",
 							Parent.class
 					)
 							.setParameter( "id", 1 )
 							.getSingleResult();
 
-					Child child = parent.getChild();
-					assertThat( child, CoreMatchers.notNullValue() );
+					Male son = parent.getSon();
+					assertThat( son, CoreMatchers.notNullValue() );
 					assertTrue(
-							Hibernate.isInitialized( child ),
-							"The child have to be initialized"
+							Hibernate.isInitialized( son ),
+							"The son have to be initialized"
 					);
-					String name = child.getName();
+					String name = son.getName();
 					assertThat( name, CoreMatchers.notNullValue() );
 				}
 
@@ -193,8 +217,8 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		private Integer id;
 
 		private String description;
-		private Child child;
-		private Child2 child2;
+		private Male son;
+		private Female daughter;
 
 		Parent() {
 		}
@@ -222,40 +246,40 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		}
 
 		@OneToOne
-		@JoinTable(name = "PARENT_CHILD", inverseJoinColumns = @JoinColumn(name = "child_id"), joinColumns = @JoinColumn(name = "parent_id"))
-		public Child getChild() {
-			return child;
+		@JoinTable(name = "PARENT_SON", inverseJoinColumns = @JoinColumn(name = "son_id"), joinColumns = @JoinColumn(name = "parent_id"))
+		public Male getSon() {
+			return son;
 		}
 
-		public void setChild(Child other) {
-			this.child = other;
+		public void setSon(Male son) {
+			this.son = son;
 		}
 
 		@OneToOne
-		public Child2 getChild2() {
-			return child2;
+		public Female getDaughter() {
+			return daughter;
 		}
 
-		public void setChild2(Child2 child2) {
-			this.child2 = child2;
+		public void setDaughter(Female daughter) {
+			this.daughter = daughter;
 		}
 	}
 
-	@Entity(name = "Child")
-	@Table(name = "CHILD")
-	public static class Child {
+	@Entity(name = "Male")
+	@Table(name = "MALE")
+	public static class Male {
 		private Integer id;
 
 		private String name;
 		private Parent parent;
 
-		Child() {
+		Male() {
 		}
 
-		Child(Integer id, Parent parent) {
+		Male(Integer id, Parent parent) {
 			this.id = id;
 			this.parent = parent;
-			this.parent.setChild( this );
+			this.parent.setSon( this );
 		}
 
 		@Id
@@ -275,7 +299,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 			this.name = name;
 		}
 
-		@OneToOne(mappedBy = "child")
+		@OneToOne(mappedBy = "son")
 		public Parent getParent() {
 			return parent;
 		}
@@ -285,21 +309,21 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 		}
 	}
 
-	@Entity(name = "Child2")
-	@Table(name = "CHILD2")
-	public static class Child2 {
+	@Entity(name = "Female")
+	@Table(name = "FEMALE")
+	public static class Female {
 		private Integer id;
 
 		private String name;
 		private Parent parent;
 
-		Child2() {
+		Female() {
 		}
 
-		Child2(Integer id, Parent child) {
+		Female(Integer id, Parent child) {
 			this.id = id;
 			this.parent = child;
-			this.parent.setChild2( this );
+			this.parent.setDaughter( this );
 		}
 
 		@Id
@@ -319,7 +343,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 			this.name = name;
 		}
 
-		@OneToOne(mappedBy = "child2")
+		@OneToOne(mappedBy = "daughter")
 		public Parent getParent() {
 			return parent;
 		}

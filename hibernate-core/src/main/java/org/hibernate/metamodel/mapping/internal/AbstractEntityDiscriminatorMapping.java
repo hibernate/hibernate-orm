@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -29,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscriminatorMapping {
+public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscriminatorMapping, FetchOptions {
 	private final EntityPersister entityDescriptor;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
@@ -67,8 +68,18 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 
 	@Override

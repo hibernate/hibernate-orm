@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
@@ -18,7 +17,7 @@ import org.hibernate.query.NavigablePath;
 public interface Fetchable extends ModelPart {
 	String getFetchableName();
 
-	FetchStrategy getMappedFetchStrategy();
+	FetchOptions getMappedFetchOptions();
 
 	// todo (6.0) : all we need here is (1) FetchTiming and (2) whether the values are available in the current JdbcValuesSource
 	//		Having to instantiate new FetchStrategy potentially multiple times

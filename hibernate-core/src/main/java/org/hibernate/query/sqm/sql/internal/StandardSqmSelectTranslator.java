@@ -307,7 +307,7 @@ public class StandardSqmSelectTranslator
 
 		final String alias;
 		LockMode lockMode = LockMode.READ;
-		FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
+		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 		boolean joined = false;
 
 		EntityGraphTraversalState.TraversalResult traversalResult = null;

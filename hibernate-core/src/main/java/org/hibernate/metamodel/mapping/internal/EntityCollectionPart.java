@@ -6,12 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Value;
@@ -29,6 +26,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -40,7 +38,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EntityCollectionPart
-		implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable, Association {
+		implements CollectionPart, EntityAssociationMapping, EntityValuedFetchable, Association, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
@@ -118,8 +116,8 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -202,5 +200,15 @@ public class EntityCollectionPart
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		// todo (6.0) : this will not strictly work - we'd want a new ForeignKeyDescriptor that points the other direction
 		return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 }

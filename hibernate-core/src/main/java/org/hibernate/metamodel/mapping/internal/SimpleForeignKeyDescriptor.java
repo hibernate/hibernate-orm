@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -46,7 +47,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart {
+public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart, FetchOptions {
 	private final String keyColumnContainingTable;
 	private final String keyColumnExpression;
 	private final String targetColumnContainingTable;
@@ -356,8 +357,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 
 	@Override

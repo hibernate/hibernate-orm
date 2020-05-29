@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import java.util.function.Consumer;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 
@@ -48,6 +46,8 @@ public interface Fetch extends DomainResultGraphNode {
 
 	/**
 	 * immediate or delayed?
+	 *
+	 * todo (6.0) : should we also expose the fetch-style?  Perhaps the fetch-options?
 	 */
 	FetchTiming getTiming();
 

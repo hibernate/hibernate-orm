@@ -455,8 +455,8 @@ public class LoaderSelectBuilder {
 			}
 
 			final LockMode lockMode = LockMode.READ;
-			FetchTiming fetchTiming = fetchable.getMappedFetchStrategy().getTiming();
-			boolean joined = fetchable.getMappedFetchStrategy().getStyle() == FetchStyle.JOIN;
+			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+			boolean joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
 
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 

@@ -6,12 +6,14 @@
  */
 package org.hibernate.engine;
 
+import org.hibernate.sql.results.graph.FetchOptions;
+
 /**
  * Describes the strategy for fetching an association, which includes both when and how.
  *
  * @author Steve Ebersole
  */
-public class FetchStrategy {
+public class FetchStrategy implements FetchOptions {
 	public static FetchStrategy IMMEDIATE_JOIN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final FetchTiming timing;
@@ -28,10 +30,12 @@ public class FetchStrategy {
 		this.style = style;
 	}
 
+	@Override
 	public FetchTiming getTiming() {
 		return timing;
 	}
 
+	@Override
 	public FetchStyle getStyle() {
 		return style;
 	}

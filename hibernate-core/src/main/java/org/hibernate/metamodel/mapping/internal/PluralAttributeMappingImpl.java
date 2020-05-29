@@ -14,6 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -59,6 +60,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
@@ -71,7 +73,8 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-public class PluralAttributeMappingImpl extends AbstractAttributeMapping implements PluralAttributeMapping {
+public class PluralAttributeMappingImpl extends AbstractAttributeMapping implements PluralAttributeMapping,
+		FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
 	public interface Aware {
@@ -87,8 +90,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final CollectionPart elementDescriptor;
 	private final CollectionPart indexDescriptor;
 	private final CollectionIdentifierDescriptor identifierDescriptor;
+	private final FetchTiming fetchTiming;
+	private final FetchStyle fetchStyle;
 
-	private final FetchStrategy fetchStrategy;
 	private final CascadeStyle cascadeStyle;
 
 	private final CollectionPersister collectionDescriptor;
@@ -119,6 +123,40 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
+		this(
+				attributeName,
+				bootDescriptor,
+				propertyAccess,
+				stateArrayContributorMetadataAccess,
+				collectionMappingType,
+				stateArrayPosition,
+				elementDescriptor,
+				indexDescriptor,
+				identifierDescriptor,
+				fetchStrategy.getTiming(),
+				fetchStrategy.getStyle(),
+				cascadeStyle,
+				declaringType,
+				collectionDescriptor
+		);
+	}
+
+	@SuppressWarnings({"WeakerAccess", "rawtypes"})
+	public PluralAttributeMappingImpl(
+			String attributeName,
+			Collection bootDescriptor,
+			PropertyAccess propertyAccess,
+			StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess,
+			CollectionMappingType collectionMappingType,
+			int stateArrayPosition,
+			CollectionPart elementDescriptor,
+			CollectionPart indexDescriptor,
+			CollectionIdentifierDescriptor identifierDescriptor,
+			FetchTiming fetchTiming,
+			FetchStyle fetchStyle,
+			CascadeStyle cascadeStyle,
+			ManagedMappingType declaringType,
+			CollectionPersister collectionDescriptor) {
 		super( attributeName, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.stateArrayContributorMetadataAccess = stateArrayContributorMetadataAccess;
@@ -127,7 +165,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.elementDescriptor = elementDescriptor;
 		this.indexDescriptor = indexDescriptor;
 		this.identifierDescriptor = identifierDescriptor;
-		this.fetchStrategy = fetchStrategy;
+		this.fetchTiming = fetchTiming;
+		this.fetchStyle = fetchStyle;
 		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
 
@@ -282,6 +321,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
+	public NavigableRole getNavigableRole() {
+		return getCollectionDescriptor().getNavigableRole();
+	}
+
+	@Override
 	@SuppressWarnings("rawtypes")
 	public CollectionMappingType getMappedTypeDescriptor() {
 		return collectionMappingType;
@@ -353,13 +397,18 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return fetchStrategy;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
-	public NavigableRole getNavigableRole() {
-		return getCollectionDescriptor().getNavigableRole();
+	public FetchStyle getStyle() {
+		return fetchStyle;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return fetchTiming;
 	}
 
 	@Override

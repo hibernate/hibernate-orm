@@ -137,7 +137,7 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
+	public FetchStrategy getMappedFetchOptions() {
 		throw new UnsupportedOperationException();
 	}
 

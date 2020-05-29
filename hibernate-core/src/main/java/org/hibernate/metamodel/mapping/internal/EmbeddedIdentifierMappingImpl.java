@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -48,6 +48,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
@@ -60,7 +61,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Andrea Boriero
  */
-public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping,  EmbeddableValuedFetchable {
+public class EmbeddedIdentifierMappingImpl
+		implements CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final EntityMappingType entityMapping;
 	private final String name;
@@ -285,8 +287,8 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return null;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -345,4 +347,13 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		return (Collection) getEmbeddableTypeDescriptor().getAttributeMappings();
 	}
 
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
+	}
 }

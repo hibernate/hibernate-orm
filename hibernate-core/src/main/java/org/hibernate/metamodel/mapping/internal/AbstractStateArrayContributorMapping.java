@@ -7,21 +7,39 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.sql.results.graph.FetchOptions;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractStateArrayContributorMapping
 		extends AbstractAttributeMapping
-		implements StateArrayContributorMapping {
+		implements StateArrayContributorMapping, FetchOptions {
 
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
+	private final FetchTiming fetchTiming;
+	private final FetchStyle fetchStyle;
 	private final int stateArrayPosition;
-	private final FetchStrategy mappedFetchStrategy;
 
+
+	public AbstractStateArrayContributorMapping(
+			String name,
+			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			FetchTiming fetchTiming,
+			FetchStyle fetchStyle,
+			int stateArrayPosition,
+			ManagedMappingType declaringType) {
+		super( name, declaringType );
+		this.attributeMetadataAccess = attributeMetadataAccess;
+		this.fetchTiming = fetchTiming;
+		this.fetchStyle = fetchStyle;
+		this.stateArrayPosition = stateArrayPosition;
+	}
 
 	public AbstractStateArrayContributorMapping(
 			String name,
@@ -29,10 +47,14 @@ public abstract class AbstractStateArrayContributorMapping
 			FetchStrategy mappedFetchStrategy,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
-		super( name, declaringType );
-		this.attributeMetadataAccess = attributeMetadataAccess;
-		this.mappedFetchStrategy = mappedFetchStrategy;
-		this.stateArrayPosition = stateArrayPosition;
+		this(
+				name,
+				attributeMetadataAccess,
+				mappedFetchStrategy.getTiming(),
+				mappedFetchStrategy.getStyle(),
+				stateArrayPosition,
+				declaringType
+		);
 	}
 
 	@Override
@@ -51,7 +73,17 @@ public abstract class AbstractStateArrayContributorMapping
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return mappedFetchStrategy;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return fetchStyle;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return fetchTiming;
 	}
 }

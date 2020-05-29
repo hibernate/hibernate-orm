@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -36,7 +37,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class EntityVersionMappingImpl implements EntityVersionMapping {
+public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOptions {
 	private final String attributeName;
 	private final EntityMappingType declaringType;
 
@@ -116,8 +117,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping {
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -213,5 +214,15 @@ public class EntityVersionMappingImpl implements EntityVersionMapping {
 	@Override
 	public void visitColumns(ColumnConsumer consumer) {
 
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 }

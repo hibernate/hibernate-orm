@@ -10,9 +10,8 @@ import java.util.Locale;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -39,6 +38,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -49,7 +49,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Andrea Boriero
  */
-public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping {
+public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping, FetchOptions {
 	private final PropertyAccess propertyAccess;
 	private final EntityPersister entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
@@ -258,8 +258,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -281,5 +281,15 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 }

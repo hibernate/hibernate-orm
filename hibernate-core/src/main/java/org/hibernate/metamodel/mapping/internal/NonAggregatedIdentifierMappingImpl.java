@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
@@ -54,7 +55,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class NonAggregatedIdentifierMappingImpl implements CompositeIdentifierMapping, EmbeddableValuedFetchable {
+public class NonAggregatedIdentifierMappingImpl
+		implements CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions {
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final NavigableRole navigableRole;
 	private final EntityMappingType entityMapping;
@@ -228,8 +230,8 @@ public class NonAggregatedIdentifierMappingImpl implements CompositeIdentifierMa
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return null;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -255,5 +257,15 @@ public class NonAggregatedIdentifierMappingImpl implements CompositeIdentifierMa
 	@Override
 	public int getNumberOfFetchables() {
 		return idAttributeMappings.size();
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 }

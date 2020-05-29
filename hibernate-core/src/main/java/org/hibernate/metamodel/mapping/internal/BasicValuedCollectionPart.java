@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -30,10 +30,10 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -42,7 +42,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class BasicValuedCollectionPart implements CollectionPart, BasicValuedModelPart, ConvertibleModelPart {
+public class BasicValuedCollectionPart
+		implements CollectionPart, BasicValuedModelPart, ConvertibleModelPart, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
@@ -166,8 +167,8 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchStrategy() {
-		return FetchStrategy.IMMEDIATE_JOIN;
+	public FetchOptions getMappedFetchOptions() {
+		return this;
 	}
 
 	@Override
@@ -210,6 +211,16 @@ public class BasicValuedCollectionPart implements CollectionPart, BasicValuedMod
 	@Override
 	public List<JdbcMapping> getJdbcMappings(TypeConfiguration typeConfiguration) {
 		return Collections.singletonList( getJdbcMapping() );
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
 	}
 
 //

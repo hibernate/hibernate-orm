@@ -75,7 +75,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 					associatedEntityMappingType.getIdentifierMapping().getJavaTypeDescriptor()
 			);
 			Fetch fetch;
-			if ( toOneAttributeMapping.getMappedFetchStrategy().getTiming() == FetchTiming.DELAYED ) {
+			if ( toOneAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				fetch = new EntityFetchDelayedImpl(
 						this,
 						toOneAttributeMapping,

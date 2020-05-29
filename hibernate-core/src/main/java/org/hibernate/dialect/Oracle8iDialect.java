@@ -490,7 +490,7 @@ public class Oracle8iDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from all_sequences";
+		return "select * from user_sequences";
 	}
 
 	public SequenceInformationExtractor getSequenceInformationExtractor() {

@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -66,19 +66,19 @@ public class EmbeddableForeignKeyResultImpl<T>
 			DomainResultCreationState creationState,
 			MutableInteger mutableInteger,
 			Fetchable fetchable) {
-		if ( fetchable instanceof SingularAssociationAttributeMapping ) {
-			final SingularAssociationAttributeMapping singularAssociationAttributeMapping = (SingularAssociationAttributeMapping) fetchable;
-			EntityMappingType associatedEntityMappingType = singularAssociationAttributeMapping.getAssociatedEntityMappingType();
+		if ( fetchable instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fetchable;
+			EntityMappingType associatedEntityMappingType = toOneAttributeMapping.getAssociatedEntityMappingType();
 			BasicResult domainResult = new BasicResult(
 					sqlSelections.get( mutableInteger.getAndIncrement() ).getValuesArrayPosition(),
 					null,
 					associatedEntityMappingType.getIdentifierMapping().getJavaTypeDescriptor()
 			);
 			Fetch fetch;
-			if ( singularAssociationAttributeMapping.getMappedFetchStrategy().getTiming() == FetchTiming.DELAYED ) {
+			if ( toOneAttributeMapping.getMappedFetchStrategy().getTiming() == FetchTiming.DELAYED ) {
 				fetch = new EntityFetchDelayedImpl(
 						this,
-						singularAssociationAttributeMapping,
+						toOneAttributeMapping,
 						null,
 						false,
 						navigablePath.append( fetchable.getFetchableName() ),
@@ -88,7 +88,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 			else {
 				fetch = new EntityFetchSelectImpl(
 						this,
-						singularAssociationAttributeMapping,
+						toOneAttributeMapping,
 						null,
 						false,
 						navigablePath.append( fetchable.getFetchableName() ),

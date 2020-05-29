@@ -67,8 +67,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 				attribute -> {
 					final TypeConfiguration typeConfiguration = creationProcess.getCreationContext()
 							.getTypeConfiguration();
-					if ( attribute instanceof SingularAssociationAttributeMapping ) {
-						SingularAssociationAttributeMapping associationAttributeMapping = (SingularAssociationAttributeMapping) attribute;
+					if ( attribute instanceof ToOneAttributeMapping ) {
+						ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
 						associationAttributeMapping.getAssociatedEntityMappingType()
 								.getEntityPersister()
 								.getIdentifierMapping()

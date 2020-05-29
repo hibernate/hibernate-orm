@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -17,7 +16,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -26,7 +25,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
@@ -119,8 +117,8 @@ public class RootEntityResultImpl extends AbstractFetchParent implements EntityR
 		fetches = new ArrayList<>();
 		mappingType.visitAttributeMappings(
 				attributeMapping -> {
-					if ( attributeMapping instanceof SingularAssociationAttributeMapping ) {
-						((SingularAssociationAttributeMapping)attributeMapping).getForeignKeyDescriptor().createDomainResult(
+					if ( attributeMapping instanceof ToOneAttributeMapping ) {
+						((ToOneAttributeMapping)attributeMapping).getForeignKeyDescriptor().createDomainResult(
 								navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
 								entityTableGroup,
 								null,

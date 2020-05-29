@@ -172,9 +172,9 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 		getEmbeddableTypeDescriptor().getAttributeMappings().forEach(
 				attributeMapping -> {
 					final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-					if ( attributeMapping instanceof SingularAssociationAttributeMapping ) {
+					if ( attributeMapping instanceof ToOneAttributeMapping ) {
 						final EntityMappingType associatedEntityMappingType =
-								( (SingularAssociationAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
+								( (ToOneAttributeMapping) attributeMapping ).getAssociatedEntityMappingType();
 						final EntityIdentifierMapping identifierMapping =
 								associatedEntityMappingType.getIdentifierMapping();
 						final Object identifier = identifierMapping.getIdentifier( o, session );
@@ -318,8 +318,8 @@ public class EmbeddedIdentifierMappingImpl implements CompositeIdentifierMapping
 	public void visitColumns(ColumnConsumer consumer) {
 		getAttributes().forEach(
 				attribute -> {
-					if ( attribute instanceof SingularAssociationAttributeMapping ) {
-						final SingularAssociationAttributeMapping associationAttributeMapping = (SingularAssociationAttributeMapping) attribute;
+					if ( attribute instanceof ToOneAttributeMapping ) {
+						final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
 						associationAttributeMapping.getForeignKeyDescriptor().visitReferringColumns( consumer );
 					}
 					else {

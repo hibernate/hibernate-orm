@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -29,7 +29,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 	public EntityFetchSelectImpl(
 			FetchParent fetchParent,
-			SingularAssociationAttributeMapping fetchedAttribute,
+			ToOneAttributeMapping fetchedAttribute,
 			LockMode lockMode,
 			boolean nullable,
 			NavigablePath navigablePath,

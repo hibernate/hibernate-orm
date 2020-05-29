@@ -55,7 +55,7 @@ import org.hibernate.type.ForeignKeyDirection;
 /**
  * @author Steve Ebersole
  */
-public class SingularAssociationAttributeMapping extends AbstractSingularAttributeMapping
+public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		implements EntityValuedFetchable, EntityAssociationMapping, Association, TableGroupJoinProducer {
 
 	public enum Cardinality {
@@ -80,7 +80,7 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 	private ForeignKeyDirection foreignKeyDirection;
 	private String identifyingColumnsTableExpression;
 
-	public SingularAssociationAttributeMapping(
+	public ToOneAttributeMapping(
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
@@ -209,8 +209,8 @@ public class SingularAssociationAttributeMapping extends AbstractSingularAttribu
 		// while the getIdentifyingColumnExpressions for this association is PARENT_CHILD.child_id
 		// so we will check if the parentAssociation ForeignKey Target match with the association entity identifier table and columns
 		final ForeignKeyDescriptor associationParentForeignKeyDescriptor = associationParent.getForeignKeyDescriptor();
-		if ( referencedModePart instanceof SingularAssociationAttributeMapping
-				&& ( (SingularAssociationAttributeMapping) referencedModePart ).getDeclaringType() == getPartMappingType() ) {
+		if ( referencedModePart instanceof ToOneAttributeMapping
+				&& ( (ToOneAttributeMapping) referencedModePart ).getDeclaringType() == getPartMappingType() ) {
 			if ( this.foreignKeyDescriptor.getReferringTableExpression()
 					.equals( associationParentForeignKeyDescriptor.getReferringTableExpression() ) ) {
 				final SingleTableEntityPersister entityPersister = (SingleTableEntityPersister) getDeclaringType();

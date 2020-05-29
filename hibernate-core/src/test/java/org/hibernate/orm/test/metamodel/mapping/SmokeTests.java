@@ -21,14 +21,11 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.CustomType;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -131,8 +128,8 @@ public class SmokeTests {
 
 		final ModelPart part = entityDescriptor.findSubPart( "simpleEntity" );
 		assertThat( part, notNullValue() );
-		assertThat( part, instanceOf( SingularAssociationAttributeMapping.class ) );
-		final SingularAssociationAttributeMapping attrMapping = (SingularAssociationAttributeMapping) part;
+		assertThat( part, instanceOf( ToOneAttributeMapping.class ) );
+		final ToOneAttributeMapping attrMapping = (ToOneAttributeMapping) part;
 		assertThat( attrMapping.getAttributeName(), is( "simpleEntity" ) );
 		assertThat( attrMapping.getMappedTypeDescriptor(), is( simpleEntityDescriptor ) );
 		assertThat(

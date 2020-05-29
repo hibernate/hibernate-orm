@@ -16,7 +16,7 @@ import javax.persistence.Table;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -51,9 +51,9 @@ public class ManyToOneJoinTableTest {
 
 		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
 
-		assertThat( simpleEntityAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( simpleEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping simpleAttributeMapping = (SingularAssociationAttributeMapping) simpleEntityAssociation;
+		final ToOneAttributeMapping simpleAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = simpleAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
@@ -68,9 +68,9 @@ public class ManyToOneJoinTableTest {
 
 		final ModelPart anotherEntityAssociation = otherDescriptor.findSubPart( "anotherEntity" );
 
-		assertThat( anotherEntityAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( anotherEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping anotherAttributeMapping = (SingularAssociationAttributeMapping) anotherEntityAssociation;
+		final ToOneAttributeMapping anotherAttributeMapping = (ToOneAttributeMapping) anotherEntityAssociation;
 
 		foreignKeyDescriptor = anotherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
@@ -90,9 +90,9 @@ public class ManyToOneJoinTableTest {
 
 		ModelPart otherEntityEntityAssociation = simpleDescriptor.findSubPart( "other" );
 
-		assertThat( otherEntityEntityAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( otherEntityEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		SingularAssociationAttributeMapping otherAttributeMapping = (SingularAssociationAttributeMapping) otherEntityEntityAssociation;
+		ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
@@ -112,9 +112,9 @@ public class ManyToOneJoinTableTest {
 
 		otherEntityEntityAssociation = anotherDescriptor.findSubPart( "other" );
 
-		assertThat( otherEntityEntityAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( otherEntityEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		otherAttributeMapping = (SingularAssociationAttributeMapping) otherEntityEntityAssociation;
+		otherAttributeMapping = (ToOneAttributeMapping) otherEntityEntityAssociation;
 
 		foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {

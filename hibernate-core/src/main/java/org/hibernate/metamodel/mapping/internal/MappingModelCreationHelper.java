@@ -833,8 +833,8 @@ public class MappingModelCreationHelper {
 			attributeMappingSubPart = attributeMapping.findSubPart( collectionDescriptor.getMappedByProperty(), null );
 		}
 
-		if ( attributeMappingSubPart != null && attributeMappingSubPart instanceof SingularAssociationAttributeMapping ) {
-			final SingularAssociationAttributeMapping referencedAttributeMapping = (SingularAssociationAttributeMapping) attributeMappingSubPart;
+		if ( attributeMappingSubPart != null && attributeMappingSubPart instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) attributeMappingSubPart;
 
 			setRefererencedAttributeForeignKeyDescriptor(
 					attributeMapping,
@@ -892,7 +892,7 @@ public class MappingModelCreationHelper {
 	}
 
 	public static void interpretSingularAssociationAttributeMappingKeyDescriptor(
-			SingularAssociationAttributeMapping attributeMapping,
+			ToOneAttributeMapping attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
 			EntityMappingType declaringEntityDescriptor,
@@ -915,8 +915,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( referencedPropertyName != null  ) {
-			final SingularAssociationAttributeMapping referencedAttributeMapping =
-					(SingularAssociationAttributeMapping) referencedEntityDescriptor.findSubPart( referencedPropertyName );
+			final ToOneAttributeMapping referencedAttributeMapping =
+					(ToOneAttributeMapping) referencedEntityDescriptor.findSubPart( referencedPropertyName );
 
 			setRefererencedAttributeForeignKeyDescriptor(
 					attributeMapping,
@@ -1006,7 +1006,7 @@ public class MappingModelCreationHelper {
 
 	private static void setRefererencedAttributeForeignKeyDescriptor(
 			AbstractAttributeMapping attributeMapping,
-			SingularAssociationAttributeMapping referencedAttributeMapping,
+			ToOneAttributeMapping referencedAttributeMapping,
 			EntityPersister referencedEntityDescriptor,
 			String referencedPropertyName,
 			Dialect dialect,
@@ -1253,7 +1253,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	public static SingularAssociationAttributeMapping buildSingularAssociationAttributeMapping(
+	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
@@ -1296,7 +1296,7 @@ public class MappingModelCreationHelper {
 
 			final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
 
-			final SingularAssociationAttributeMapping attributeMapping = new SingularAssociationAttributeMapping(
+			final ToOneAttributeMapping attributeMapping = new ToOneAttributeMapping(
 					attrName,
 					navigableRole,
 					stateArrayPosition,

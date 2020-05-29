@@ -9,14 +9,12 @@ package org.hibernate.orm.test.bootstrap.binding.hbm.cid.nonaggregated.dynamic;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedSingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -63,7 +61,7 @@ public class DynamicCompositeIdManyToOneTests {
 
 			final AttributeMapping key2 = cid.getEmbeddableTypeDescriptor().findAttributeMapping( "key2" );
 			assertThat( key2, notNullValue() );
-			assertThat( key2, instanceOf( SingularAssociationAttributeMapping.class ) );
+			assertThat( key2, instanceOf( ToOneAttributeMapping.class ) );
 
 			final AttributeMapping attr1 = entityDescriptor.findAttributeMapping( "attr1" );
 			assertThat( attr1, notNullValue() );

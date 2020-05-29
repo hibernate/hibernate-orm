@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -44,7 +45,7 @@ public interface FetchParent extends DomainResultGraphNode {
 	 * referenced container type, this method returns the referenced part.
 	 *
 	 * E.g. for a many-to-one this methods returns the
-	 * {@link org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping} while
+	 * {@link ToOneAttributeMapping} while
 	 * {@link #getReferencedMappingContainer} and {@link #getReferencedMappingType} return the referenced
 	 * {@link org.hibernate.metamodel.mapping.EntityMappingType}.
 	 */

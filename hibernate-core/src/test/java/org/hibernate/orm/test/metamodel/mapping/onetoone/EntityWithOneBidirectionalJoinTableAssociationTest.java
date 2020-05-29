@@ -15,7 +15,7 @@ import javax.persistence.Table;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -48,9 +48,9 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 
 		final ModelPart childAssociation = parentDescriptor.findSubPart( "child" );
 
-		assertThat( childAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( childAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping childAttributeMapping = (SingularAssociationAttributeMapping) childAssociation;
+		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) childAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {
@@ -69,9 +69,9 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 
 		final ModelPart parentAssociation = childDescriptor.findSubPart( "parent" );
 
-		assertThat( parentAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( parentAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping parentAttributeMapping = (SingularAssociationAttributeMapping) parentAssociation;
+		final ToOneAttributeMapping parentAttributeMapping = (ToOneAttributeMapping) parentAssociation;
 
 		foreignKeyDescriptor = parentAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {

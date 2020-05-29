@@ -27,7 +27,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -224,7 +224,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 					);
 				}
 				else if ( subtype instanceof EntityType ) {
-					final SingularAssociationAttributeMapping singularAssociationAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+					final ToOneAttributeMapping toOneAttributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 							bootPropertyDescriptor.getName(),
 							valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
 							attributeIndex,
@@ -235,7 +235,7 @@ public class EmbeddableMappingType implements ManagedMappingType {
 							compositeType.getCascadeStyle( attributeIndex ),
 							creationProcess
 					);
-					attributeMappings.put( bootPropertyDescriptor.getName(), singularAssociationAttributeMapping );
+					attributeMappings.put( bootPropertyDescriptor.getName(), toOneAttributeMapping );
 					// todo (6.0) : not sure it is always correct
 					columnPosition++;
 				}

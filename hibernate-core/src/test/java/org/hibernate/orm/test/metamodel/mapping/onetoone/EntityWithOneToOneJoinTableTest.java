@@ -8,7 +8,7 @@ package org.hibernate.orm.test.metamodel.mapping.onetoone;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.domain.gambit.EntityWithOneToOneJoinTable;
@@ -42,9 +42,9 @@ public class EntityWithOneToOneJoinTableTest {
 				.getMetamodel()
 				.findEntityDescriptor( EntityWithOneToOneJoinTable.class );
 		final ModelPart other = entityWithOneToOneJoinTableDescriptor.findSubPart( "other" );
-		assertThat( other, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( other, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping otherAttributeMapping = (SingularAssociationAttributeMapping) other;
+		final ToOneAttributeMapping otherAttributeMapping = (ToOneAttributeMapping) other;
 
 		final ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {

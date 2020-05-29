@@ -14,7 +14,7 @@ import javax.persistence.Table;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.SingularAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -48,9 +48,9 @@ public class ManyToOneTest {
 
 		final ModelPart simpleEntityAssociation = otherDescriptor.findSubPart( "simpleEntity" );
 
-		assertThat( simpleEntityAssociation, instanceOf( SingularAssociationAttributeMapping.class ) );
+		assertThat( simpleEntityAssociation, instanceOf( ToOneAttributeMapping.class ) );
 
-		final SingularAssociationAttributeMapping childAttributeMapping = (SingularAssociationAttributeMapping) simpleEntityAssociation;
+		final ToOneAttributeMapping childAttributeMapping = (ToOneAttributeMapping) simpleEntityAssociation;
 
 		ForeignKeyDescriptor foreignKeyDescriptor = childAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitReferringColumns( (keyTable, keyColumn, jdbcMapping) -> {

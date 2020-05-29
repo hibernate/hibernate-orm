@@ -1553,8 +1553,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromDatastore(
-			final Object entity, final Object id, final EntityEntry entry, final String fieldName,
+	protected Object initializeLazyPropertiesFromDatastore(
+			final Object entity,
+			final Object id,
+			final EntityEntry entry,
+			final String fieldName,
 			final SharedSessionContractImplementor session) {
 
 		if ( !hasLazyProperties() ) {
@@ -1662,7 +1665,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private Object initializeLazyPropertiesFromCache(
+	protected Object initializeLazyPropertiesFromCache(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -1700,7 +1703,7 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	private boolean initializeLazyProperty(
+	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
 			final SharedSessionContractImplementor session,
@@ -2606,6 +2609,22 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
+	}
+
+	protected int[] getLazyPropertyNumbers() {
+		return lazyPropertyNumbers;
+	}
+
+	protected String[] getLazyPropertyNames() {
+		return lazyPropertyNames;
+	}
+
+	protected Type[] getLazyPropertyTypes() {
+		return lazyPropertyTypes;
+	}
+
+	protected String[][] getLazyPropertyColumnAliases() {
+		return lazyPropertyColumnAliases;
 	}
 
 	public Object loadByUniqueKey(
@@ -3735,7 +3754,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private String[] getUpdateStrings(boolean byRowId, boolean lazy) {
+	protected String[] getUpdateStrings(boolean byRowId, boolean lazy) {
 		if ( byRowId ) {
 			return lazy ? getSQLLazyUpdateByRowIdStrings() : getSQLUpdateByRowIdStrings();
 		}
@@ -3910,7 +3929,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
+	protected void preInsertInMemoryValueGeneration(Object[] fields, Object object, SharedSessionContractImplementor session) {
 		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
 			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
 			for ( int i = 0; i < strategies.length; i++ ) {
@@ -3960,7 +3979,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private boolean isAllOrDirtyOptLocking() {
+	protected boolean isAllOrDirtyOptLocking() {
 		return entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.DIRTY
 				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}
@@ -4512,7 +4531,7 @@ public abstract class AbstractEntityPersister
 						identifier,
 						entity,
 						LockOptions.READ,
-					session
+						session
 				);
 			}
 

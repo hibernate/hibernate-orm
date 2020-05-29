@@ -36,6 +36,8 @@ import org.hibernate.boot.spi.NamedNativeQueryDefinition;
 import org.hibernate.boot.spi.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.NamedResultSetMappingDefinition;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
+import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
+import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -147,7 +149,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImpl defaultBuilder = new SessionFactoryBuilderImpl( this, bootstrapContext );
+		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().getService( SessionFactoryBuilderService.class );
+		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
 
 		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
 		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );

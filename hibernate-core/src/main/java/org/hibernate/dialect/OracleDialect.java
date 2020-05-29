@@ -691,7 +691,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from user_sequences";
+		return "select * from all_sequences";
 	}
 
 	public SequenceInformationExtractor getSequenceInformationExtractor() {

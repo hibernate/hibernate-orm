@@ -3,6 +3,27 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.17.Final (May 29, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31858/tab/release-report-done
+
+** Bug
+    * [HHH-10956] - Persisting partially-generated composite Ids fails with HibernateException: No part of a composite identifier may be null
+    * [HHH-13959] - Add nullability and uniqueness for @OneToOne with @JoinTable
+    * [HHH-14022] - Oracle-Dialect does not find Sequences outside User-Schema
+    * [HHH-14030] - hibernate-orm fails to build locally on German Win10
+
+** Task
+    * [HHH-14044] - Extract code from Loader into protected methods
+
+** Patch
+    * [HHH-14046] - Allow customizing the type of SessionFactory by changing the initial ServiceInitiator list
+    * [HHH-14047] - Extensions points of EntityManagerFactoryBuilderImpl for Hibernate Reactive
+    * [HHH-14048] - Expose lazy property fetching to Hibernate Reactive
+    * [HHH-14049] - AbstractEntityPersister make three private methods protected for use in Hibernate Reactive
+
+
 Changes in 5.4.16.Final (May 18, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

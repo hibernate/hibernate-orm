@@ -58,13 +58,23 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class JpaMetamodelImpl implements JpaMetamodel {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
-	private static final String INVALID_IMPORT = "";
+	private static final ImportInfo<?> INVALID_IMPORT = new ImportInfo<>( null, null );
+
+	private static class ImportInfo<T> {
+		final String importedName;
+		Class<T> loadedClass; // could be null for boot metamodel import; not final to allow for populating later
+
+		ImportInfo(String importedName, Class<T> loadedClass) {
+			this.importedName = importedName;
+			this.loadedClass = loadedClass;
+		}
+	}
 
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
-	private final  Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
+	private final Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
 
 	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
 
@@ -72,7 +82,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
-	private final Map<String, String> nameToImportNameMap = new ConcurrentHashMap<>();
+	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
 
 
 	public JpaMetamodelImpl(TypeConfiguration typeConfiguration) {
@@ -92,10 +102,11 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
-		// todo (6.0) : currently we lookup the Class reference here twice potentially - fix that
-		final String rename = resolveImportedName( entityName );
-		if ( rename != null ) {
-			entityName = rename;
+		Class<X> loadedClass = null;
+		final ImportInfo<X> importInfo = resolveImport( entityName );
+		if ( importInfo != null ) {
+			loadedClass = importInfo.loadedClass;
+			entityName = importInfo.importedName;
 		}
 
 		final EntityDomainType<X> entityDescriptor = entity( entityName );
@@ -103,12 +114,18 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			return entityDescriptor;
 		}
 
-		final Class<X> requestedClass = resolveRequestedClass( entityName );
-		if ( requestedClass != null ) {
-			return resolveEntityReference( requestedClass );
+		if ( loadedClass == null ) {
+			loadedClass = resolveRequestedClass( entityName );
+			// populate class cache for boot metamodel imports
+			if ( importInfo != null && loadedClass != null ) {
+				importInfo.loadedClass = loadedClass;
+			}
+		}
+		if ( loadedClass != null ) {
+			return resolveEntityReference( loadedClass );
 		}
 
-		throw new IllegalArgumentException( "Could not resolve entity reference " + entityName );
+		throw new IllegalArgumentException( "Could not resolve entity reference: " + entityName );
 	}
 
 	@Override
@@ -272,37 +289,32 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 	@Override
 	public String qualifyImportableName(String queryName) {
-		return resolveImportedName( queryName );
+		final ImportInfo<?> importInfo = resolveImport( queryName );
+		return importInfo == null ? null : importInfo.importedName;
 	}
 
-	private String resolveImportedName(String name) {
-		String result = nameToImportNameMap.get( name );
-		if ( result == null ) {
+	private <T> ImportInfo<T> resolveImport(String name) {
+		//noinspection unchecked
+		final ImportInfo<T> result = (ImportInfo<T>) nameToImportMap.computeIfAbsent( name, unknownName -> {
 			// see if the name is a fully-qualified class name
-			try {
-				getServiceRegistry().getService( ClassLoaderService.class ).classForName( name );
-
-				// it is a fully-qualified class name - add it to the cache
+			final Class<T> loadedClass = resolveRequestedClass( unknownName );
+			if ( loadedClass == null ) {
+				// it is NOT a fully-qualified class name - add a marker entry
 				//		so we do not keep trying later
-				nameToImportNameMap.put( name, name );
-				return name;
-			}
-			catch (ClassLoadingException cnfe) {
-				// it is a NOT fully-qualified class name - add a marker entry
-				//		so we do not keep trying later
-				nameToImportNameMap.put( name, INVALID_IMPORT );
-				return null;
-			}
-		}
-		else {
-			// explicitly check for same instance
-			//noinspection StringEquality
-			if ( result == INVALID_IMPORT ) {
-				return null;
+				// note that ConcurrentHashMap does not support null value so a marker entry is needed
+				return INVALID_IMPORT;
 			}
 			else {
-				return result;
+				// it is a fully-qualified class name - add it to the cache
+				//		so we do not keep trying later
+				return new ImportInfo<>( unknownName, loadedClass );
 			}
+		} );
+		if ( result == INVALID_IMPORT ) {
+			return null;
+		}
+		else {
+			return result;
 		}
 	}
 
@@ -467,8 +479,8 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		this.nameToImportNameMap.putAll( bootMetamodel.getImports() );
-		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap);
+		bootMetamodel.getImports().forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
+		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
 		// todo (6.0) : I believe there should be a distinction here between building the JPA metamodel and pushing that metamodel to the `X_` model
 		//		- JpaStaticMetaModelPopulationSetting is meant to control the latter part - populating the `X_` model
@@ -486,8 +498,6 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			handleUnusedMappedSuperclasses( context, typeConfiguration );
 
 			context.wrapUp();
-
-			this.nameToImportNameMap.putAll( bootMetamodel.getImports() );
 
 			this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
 			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );

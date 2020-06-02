@@ -8,6 +8,7 @@ package org.hibernate.envers.configuration.internal;
 
 import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 import javax.persistence.Column;
 
 import org.hibernate.MappingException;
@@ -202,10 +203,17 @@ public class RevisionInfoConfiguration {
 					// The default is integer
 					revisionPropType = "long";
 				}
+				else if ( reflectionManager.equals( revisionNumberClass, UUID.class ) ) {// HHH-14055 add UUID support
+					revisionInfoIdData = new PropertyData( property.getName(), property.getName(), accessType, null );
+					revisionNumberFound.set();
+
+					// The default is integer
+					revisionPropType = "uuid";
+				}
 				else {
 					throw new MappingException(
 							"The field annotated with @RevisionNumber must be of type " +
-									"int, Integer, long or Long"
+									"int, Integer, long, Long or UUID"
 					);
 				}
 

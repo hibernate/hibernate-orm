@@ -14,8 +14,10 @@ apply plugin: 'com.jfrog.bintray'
 
 
 ext {
-	bintrayUser = project.hasProperty( 'PERSONAL_BINTRAY_USER' ) ? project.property( 'PERSONAL_BINTRAY_USER' ) : null
-	bintrayKey = project.hasProperty( 'PERSONAL_BINTRAY_API_KEY' ) ? project.property( 'PERSONAL_BINTRAY_API_KEY' ) : null
+	bintrayUser = project.findProperty( 'PERSONAL_BINTRAY_USER' )
+	bintrayKey = project.findProperty( 'PERSONAL_BINTRAY_API_KEY' )
+	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
+	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
 }
 
 
@@ -58,6 +60,8 @@ bintray {
 			]
 			mavenCentralSync {
 				sync = true
+				user = project.sonatypeOssrhUser
+				password = project.sonatypeOssrhPassword
 			}
 		}
 	}

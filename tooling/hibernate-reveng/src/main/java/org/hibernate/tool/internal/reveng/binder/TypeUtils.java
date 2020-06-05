@@ -16,6 +16,10 @@ public class TypeUtils {
 	
 	private static final Logger LOGGER = Logger.getLogger(TypeUtils.class.getName());
 
+	public static final int DEFAULT_COLUMN_LENGTH = 255;
+	public static final int DEFAULT_COLUMN_PRECISION = 19;
+	public static final int DEFAULT_COLUMN_SCALE = 2;
+
 	public static String determinePreferredType(
 			InFlightMetadataCollector metadataCollector,
 			RevengStrategy revengStrategy,
@@ -41,9 +45,9 @@ public class TypeUtils {
 				TableIdentifier.create(table),
 				column.getName(),
 				sqlTypeCode.intValue(),
-				column.getLength().intValue(), 
-				column.getPrecision().intValue(), 
-				column.getScale().intValue(),
+				column.getLength() != null ? column.getLength().intValue() : DEFAULT_COLUMN_LENGTH, 
+				column.getPrecision() != null ? column.getPrecision().intValue() : DEFAULT_COLUMN_PRECISION, 
+				column.getScale() != null ? column.getScale().intValue() : DEFAULT_COLUMN_SCALE,
 				column.isNullable(), 
 				generatedIdentifier
 		);

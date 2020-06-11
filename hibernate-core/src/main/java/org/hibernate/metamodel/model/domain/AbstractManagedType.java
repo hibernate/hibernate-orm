@@ -117,7 +117,7 @@ public abstract class AbstractManagedType<J>
 	@SuppressWarnings("unchecked")
 	public PersistentAttribute<? super J,?> getAttribute(String name) {
 		final PersistentAttribute attribute = findAttribute( name );
-		checkNotNull( "Attribute ", attribute, name );
+		checkNotNull( "Attribute", attribute, name );
 		return attribute;
 	}
 
@@ -164,7 +164,7 @@ public abstract class AbstractManagedType<J>
 	@SuppressWarnings("unchecked")
 	public PersistentAttribute<J,?> getDeclaredAttribute(String name) {
 		PersistentAttribute attr = findDeclaredAttribute( name );
-		checkNotNull( "Attribute ", attr, name );
+		checkNotNull( "Attribute", attr, name );
 		return attr;
 	}
 
@@ -209,7 +209,7 @@ public abstract class AbstractManagedType<J>
 	@SuppressWarnings("unchecked")
 	public SingularPersistentAttribute<? super J, ?> getSingularAttribute(String name) {
 		SingularPersistentAttribute attribute = findSingularAttribute( name );
-		checkNotNull( "SingularAttribute ", attribute, name );
+		checkNotNull( "SingularAttribute", attribute, name );
 		return attribute;
 	}
 
@@ -235,7 +235,7 @@ public abstract class AbstractManagedType<J>
 	@SuppressWarnings("unchecked")
 	public SingularAttribute<J, ?> getDeclaredSingularAttribute(String name) {
 		final SingularAttribute attr = findDeclaredSingularAttribute( name );
-		checkNotNull( "SingularAttribute ", attr, name );
+		checkNotNull( "SingularAttribute", attr, name );
 		return attr;
 	}
 

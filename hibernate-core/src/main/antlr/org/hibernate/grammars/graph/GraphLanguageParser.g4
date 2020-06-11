@@ -33,15 +33,15 @@ attributeList
     ;
 
 attributeNode
-	: attributePath (subGraph)?
+	: attributePath subGraph?
 	;
 
 attributePath
-	: NAME attributeQualifier?
+	: ATTR_NAME attributeQualifier?
 	;
 
 attributeQualifier
-	: DOT NAME
+	: DOT ATTR_NAME
 	;
 
 subGraph
@@ -49,5 +49,5 @@ subGraph
 	;
 
 subType
-	: NAME
+	: TYPE_NAME
 	;

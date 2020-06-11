@@ -1,7 +1,6 @@
-package org.hibernate.graph;
+package org.hibernate.orm.test.loading.entitygraph.parser;
 
 import java.util.Map;
-
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
@@ -11,7 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-@Entity
+@Entity( name = "GraphParsingTestEntity" )
 public class GraphParsingTestEntity {
 
 	private String id;

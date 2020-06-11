@@ -77,7 +77,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 	@Override
 	public AttributeNodeImplementor visitAttributeNode(GraphLanguageParser.AttributeNodeContext ctx) {
-		final String attributeName = ctx.attributePath().NAME().getText();
+		final String attributeName = ctx.attributePath().ATTR_NAME().getText();
 
 		final SubGraphGenerator subGraphCreator;
 
@@ -93,7 +93,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			subGraphCreator = PathQualifierType.VALUE.getSubGraphCreator();
 		}
 		else {
-			final String qualifierName = ctx.attributePath().attributeQualifier().NAME().getText();
+			final String qualifierName = ctx.attributePath().attributeQualifier().ATTR_NAME().getText();
 
 			if ( PARSING_LOGGER.isDebugEnabled() ) {
 				PARSING_LOGGER.debugf(

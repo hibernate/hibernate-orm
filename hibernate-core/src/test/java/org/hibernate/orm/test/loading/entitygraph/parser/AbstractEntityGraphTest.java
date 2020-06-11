@@ -4,17 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.graph;
+package org.hibernate.orm.test.loading.entitygraph.parser;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.Subgraph;
 
+import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -28,7 +28,7 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ GraphParsingTestEntity.class, GraphParsingTestSubentity.class };
+		return new Class[]{ GraphParsingTestEntity.class, GraphParsingTestSubEntity.class };
 	}
 
 	protected <T> RootGraphImplementor<T> parseGraph(Class<T> entityType, String graphString) {
@@ -104,3 +104,4 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 	}
 
 }
+

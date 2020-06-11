@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.graph;
+package org.hibernate.orm.test.loading.entitygraph.parser;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +15,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Subgraph;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
@@ -191,7 +192,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		//
 		// return type.isAssignableFrom( entityPersister.getMappedClass() );
 
-		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubentity: sub)" );
+		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
 		assertNotNull( graph );
 
 		List<AttributeNodeImplementor<?>> attrs = graph.getAttributeNodeImplementors();
@@ -204,7 +205,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
 
-		final SubGraphImplementor subGraph = linkToOneNode.getSubGraphMap().get( GraphParsingTestSubentity.class );
+		final SubGraphImplementor subGraph = linkToOneNode.getSubGraphMap().get( GraphParsingTestSubEntity.class );
 		assertNotNull( subGraph );
 
 		assertBasicAttributes( subGraph, "sub" );
@@ -215,12 +216,12 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		EntityManager entityManager = getOrCreateEntityManager();
 		RootGraphImplementor<GraphParsingTestEntity> graph = ( (SessionImplementor) entityManager ).createEntityGraph(
 				GraphParsingTestEntity.class );
-		final SubGraphImplementor<GraphParsingTestSubentity> subGraph = graph.addSubGraph(
+		final SubGraphImplementor<GraphParsingTestSubEntity> subGraph = graph.addSubGraph(
 				"linkToOne",
-				GraphParsingTestSubentity.class
+				GraphParsingTestSubEntity.class
 		);
 
-		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubentity.class );
+		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubEntity.class );
 
 		final AttributeNodeImplementor<Object> subTypeAttrNode = subGraph.addAttributeNode( "sub" );
 		assert subTypeAttrNode != null;

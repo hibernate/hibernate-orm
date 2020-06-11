@@ -29,7 +29,7 @@ public class DomainModelHelper {
 		}
 
 		// first, try to find it by name directly..
-		ManagedDomainType<S> subManagedType = jpaMetamodel.entity( subTypeName );
+		ManagedDomainType<S> subManagedType = jpaMetamodel.resolveHqlEntityReference( subTypeName );
 		if ( subManagedType != null ) {
 			return subManagedType;
 		}

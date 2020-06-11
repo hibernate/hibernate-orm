@@ -39,17 +39,30 @@ RPAREN: ')';
 /**
  * In this grammar, basically any string since we (atm) have no keywords
  */
-NAME : NAME_START ( NAME_CONTINUATION )*;
+ATTR_NAME : ATTR_NAME_START NAME_CONTINUATION*;
 
-fragment NAME_START
-    :    '_'
+TYPE_NAME : TYPE_NAME_START NAME_CONTINUATION*;
+
+fragment NON_ALPHANUM_EXTENTION
+	:    '_'
     |    '$'
-    |    'a'..'z'
     // HHH-558 : Allow unicode chars in identifiers
     //|    '\u0080'..'\ufffe'
     ;
 
+fragment ATTR_NAME_START
+    :    NON_ALPHANUM_EXTENTION
+    |    'a'..'z'
+    ;
+
+fragment TYPE_NAME_START
+    :    NON_ALPHANUM_EXTENTION
+    |    'A'..'Z'
+    ;
+
 fragment NAME_CONTINUATION
-    :    NAME_START
+    :    NON_ALPHANUM_EXTENTION
+    |    'a'..'z'
+    |    'A'..'Z'
     |    '0'..'9'
     ;

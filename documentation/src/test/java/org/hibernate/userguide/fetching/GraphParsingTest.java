@@ -16,7 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.graph.AbstractEntityGraphTest;
+import org.hibernate.orm.test.loading.entitygraph.parser.AbstractEntityGraphTest;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.EntityGraphs;
 import org.hibernate.graph.GraphSemantic;

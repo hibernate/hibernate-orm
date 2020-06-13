@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.unmodifiableMap;
@@ -1446,6 +1447,63 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
+		V computeIfAbsent(K key, int hash, Function<? super K, ? extends V> mappingFunction) {
+			lock();
+			Set<HashEntry<K, V>> evicted = null;
+			try {
+				int c = count;
+				if ( c++ > threshold && eviction.strategy() == Eviction.NONE ) {
+					rehash();
+				}
+				HashEntry<K, V>[] tab = table;
+				int index = hash & tab.length - 1;
+				HashEntry<K, V> first = tab[index];
+				HashEntry<K, V> e = first;
+				while ( e != null && ( e.hash != hash || !key.equals( e.key ) ) ) {
+					e = e.next;
+				}
+
+				V oldValue;
+				if ( e != null ) {
+					oldValue = e.value;
+				}
+				else {
+					oldValue = null;
+					++modCount;
+					count = c; // write-volatile
+					V value = mappingFunction.apply( key );
+					if ( eviction.strategy() != Eviction.NONE ) {
+						if ( c > evictCap ) {
+							// remove entries;lower count
+							evicted = eviction.execute();
+							// re-read first
+							first = tab[index];
+						}
+						// add a new entry
+						tab[index] = eviction.createNewEntry( key, hash, first, value );
+						// notify a miss
+						Set<HashEntry<K, V>> newlyEvicted = eviction.onEntryMiss( tab[index] );
+						if ( !newlyEvicted.isEmpty() ) {
+							if ( evicted != null ) {
+								evicted.addAll( newlyEvicted );
+							}
+							else {
+								evicted = newlyEvicted;
+							}
+						}
+					}
+					else {
+						tab[index] = eviction.createNewEntry( key, hash, first, value );
+					}
+				}
+				return oldValue;
+			}
+			finally {
+				unlock();
+				notifyEvictionListener( evicted );
+			}
+		}
+
 		void rehash() {
 			HashEntry<K, V>[] oldTable = table;
 			int oldCapacity = oldTable.length;
@@ -1980,6 +2038,23 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 		int hash = hash( key.hashCode() );
 		return segmentFor( hash ).put( key, hash, value, false );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return the current (existing or computed) value associated with
+	 *         the specified key, or null if the computed value is null
+	 *
+	 * @throws NullPointerException if the specified key or value is null
+	 */
+	@Override
+	public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+		if ( mappingFunction == null ) {
+			throw new NullPointerException();
+		}
+		int hash = hash( key.hashCode() );
+		return segmentFor( hash ).computeIfAbsent( key, hash, mappingFunction );
 	}
 
 	/**

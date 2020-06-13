@@ -77,14 +77,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Supplier<SelectQueryPlan> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
 
-		final SelectQueryPlan cached = (SelectQueryPlan) queryPlanCache.get( key );
-		if ( cached != null ) {
-			return cached;
-		}
-
-		final SelectQueryPlan plan = creator.get();
-		queryPlanCache.put( key, plan );
-		return plan;
+		return (SelectQueryPlan) queryPlanCache.computeIfAbsent( key, k -> creator.get() );
 	}
 
 	@Override
@@ -104,32 +97,27 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
 
-		final HqlInterpretation cached = hqlInterpretationCache.get( queryString );
-		if ( cached != null ) {
-			return cached;
-		}
+		return hqlInterpretationCache.computeIfAbsent( queryString, qs -> {
+			log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
 
-		log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
+			final SqmStatement<?> sqmStatement = creator.apply( queryString );
+			final DomainParameterXref domainParameterXref;
+			final ParameterMetadataImplementor parameterMetadata;
 
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
-		final DomainParameterXref domainParameterXref;
-		final ParameterMetadataImplementor parameterMetadata;
+			if ( sqmStatement.getSqmParameters().isEmpty() ) {
+				domainParameterXref = DomainParameterXref.empty();
+				parameterMetadata = ParameterMetadataImpl.EMPTY;
+			}
+			else {
+				domainParameterXref = DomainParameterXref.from( sqmStatement );
+				parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+			}
 
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
-			parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			domainParameterXref = DomainParameterXref.from( sqmStatement );
-			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		}
-
-		final HqlInterpretation interpretation = new SimpleHqlInterpretationImpl(
-				sqmStatement,
-				parameterMetadata,
-				domainParameterXref);
-		hqlInterpretationCache.put( queryString, interpretation );
-		return interpretation;
+			return new SimpleHqlInterpretationImpl(
+					sqmStatement,
+					parameterMetadata,
+					domainParameterXref);
+		} );
 	}
 
 	@Override

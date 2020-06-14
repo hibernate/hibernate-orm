@@ -349,7 +349,6 @@ public final class AnnotationBinder {
 		bindQueries( pckg, context );
 		bindFilterDefs( pckg, context );
 		bindTypeDefs( pckg, context );
-		bindFetchProfiles( pckg, context );
 		BinderHelper.bindAnyMetaDefs( pckg, context );
 
 	}
@@ -587,7 +586,6 @@ public final class AnnotationBinder {
 		bindQueries( clazzToProcess, context );
 		bindFilterDefs( clazzToProcess, context );
 		bindTypeDefs( clazzToProcess, context );
-		bindFetchProfiles( clazzToProcess, context );
 		BinderHelper.bindAnyMetaDefs( clazzToProcess, context );
 
 		String schema = "";
@@ -1415,6 +1413,27 @@ public final class AnnotationBinder {
 			);
 		}
 
+	}
+
+	public static void bindFetchProfilesForClass(XClass clazzToProcess, MetadataBuildingContext context) {
+		bindFetchProfiles( clazzToProcess, context );
+	}
+
+	public static void bindFetchProfilesForPackage(String packageName, MetadataBuildingContext context) {
+		XPackage pckg;
+		try {
+			pckg = context.getBootstrapContext().getReflectionManager().packageForName( packageName );
+		}
+		catch (ClassLoadingException e) {
+			LOG.packageNotFound( packageName );
+			return;
+		}
+		catch ( ClassNotFoundException cnf ) {
+			LOG.packageNotFound( packageName );
+			return;
+		}
+
+		bindFetchProfiles( pckg, context );
 	}
 
 	private static void bindFetchProfiles(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {

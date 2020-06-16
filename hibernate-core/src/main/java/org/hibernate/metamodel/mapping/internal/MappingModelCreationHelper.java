@@ -983,20 +983,33 @@ public class MappingModelCreationHelper {
 			Value bootValueMapping,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		final List<String> keyColumnExpressions = new ArrayList<>(bootValueMapping.getColumnSpan());
-		bootValueMapping.getColumnIterator().forEachRemaining(
-				column ->
-						keyColumnExpressions.add( column.getText( dialect ) ) );
-
 		final List<String> mappedColumnExpressions = fkTarget.getMappedColumnExpressions();
 		final List<String> targetColumnExpressions = new ArrayList<>( mappedColumnExpressions.size() );
 		mappedColumnExpressions.forEach(
 				column ->
 						targetColumnExpressions.add( column ) );
 
+		final List<String> keyColumnExpressions;
+		Table keyTableExpression;
+		if ( bootValueMapping instanceof Collection ) {
+			final Collection collectioBootValueMapping = (Collection) bootValueMapping;
+			keyTableExpression = collectioBootValueMapping.getCollectionTable();
+			final KeyValue key = collectioBootValueMapping.getKey();
+			keyColumnExpressions = new ArrayList<>( key.getColumnSpan() );
+			key.getColumnIterator().forEachRemaining(
+					column ->
+							keyColumnExpressions.add( column.getText( dialect ) ) );
+		}
+		else {
+			keyTableExpression = bootValueMapping.getTable();
+			keyColumnExpressions = new ArrayList<>( bootValueMapping.getColumnSpan() );
+			bootValueMapping.getColumnIterator().forEachRemaining(
+					column ->
+							keyColumnExpressions.add( column.getText( dialect ) ) );
+		}
 		return new EmbeddedForeignKeyDescriptor(
 				(EmbeddedIdentifierMappingImpl) fkTarget,
-				getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess ),
+				getTableIdentifierExpression( keyTableExpression, creationProcess ),
 				keyColumnExpressions,
 				fkTarget.getContainingTableExpression(),
 				targetColumnExpressions,

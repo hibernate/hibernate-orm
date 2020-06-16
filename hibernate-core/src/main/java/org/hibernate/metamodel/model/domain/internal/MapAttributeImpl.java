@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -64,11 +63,6 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	@Override
 	public SimpleDomainType getKeyGraphType() {
 		return getKeyType();
-	}
-
-	@Override
-	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

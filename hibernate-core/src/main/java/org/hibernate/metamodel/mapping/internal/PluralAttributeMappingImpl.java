@@ -40,7 +40,9 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -234,9 +236,15 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 						if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 							final EntityType elementEntityType = (EntityType) collectionDescriptor.getElementType();
 							associatedEntityDescriptor = creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
-							fkTargetPart = elementEntityType.isReferenceToPrimaryKey()
-									? associatedEntityDescriptor.getIdentifierMapping()
-									: associatedEntityDescriptor.findSubPart( elementEntityType.getRHSUniqueKeyPropertyName() );
+							if ( ( (AbstractEntityPersister) associatedEntityDescriptor ).getTableName()
+									.equals( ( (AbstractCollectionPersister) collectionDescriptor ).getTableName() ) ) {
+								fkTargetPart = creationProcess
+										.getEntityPersister( bootDescriptor.getOwner().getEntityName() )
+										.getIdentifierMapping();
+							}
+							else {
+								fkTargetPart = associatedEntityDescriptor.getIdentifierMapping();
+							}
 							fkBootDescriptorSource = bootDescriptor.getElement();
 						}
 						else {

@@ -202,7 +202,6 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 						final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 
 						values[index++] = value;
-
 					}
 				}
 		);

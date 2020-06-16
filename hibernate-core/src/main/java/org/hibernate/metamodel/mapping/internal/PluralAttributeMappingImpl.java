@@ -22,6 +22,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -45,6 +46,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -94,6 +96,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final FetchStyle fetchStyle;
 
 	private final CascadeStyle cascadeStyle;
+	private final String mappedBy;
 
 	private final CollectionPersister collectionDescriptor;
 	private final String separateCollectionTable;
@@ -169,6 +172,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.fetchStyle = fetchStyle;
 		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
+		this.mappedBy = bootDescriptor.getMappedByProperty();
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
@@ -381,6 +385,11 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
+	public String getMappedBy() {
+		return mappedBy;
+	}
+
+	@Override
 	public int getStateArrayPosition() {
 		return stateArrayPosition;
 	}
@@ -442,12 +451,15 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
+		creationState.registerVisitedAssociationKey( fkDescriptor.getAssociationKey() );
+
 		if ( fetchTiming == FetchTiming.IMMEDIATE) {
 			if ( selected ) {
-				final TableGroup collectionTableGroup = sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
+				final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+				final TableGroup collectionTableGroup = fromClauseAccess.resolveTableGroup(
 						fetchablePath,
 						p -> {
-							final TableGroup lhsTableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+							final TableGroup lhsTableGroup = fromClauseAccess.getTableGroup(
 									fetchParent.getNavigablePath() );
 							final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 									fetchablePath,

@@ -6347,10 +6347,10 @@ public abstract class AbstractEntityPersister
 	public void visitKeyFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
-		if ( getIdentifierMapping() instanceof FetchableContainer ) {
-			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
-			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
-		}
+//		if ( getIdentifierMapping() instanceof FetchableContainer ) {
+//			// essentially means the entity has a composite id - ask the embeddable to visit its fetchables
+//			( (FetchableContainer) getIdentifierMapping() ).visitFetchables( fetchableConsumer, treatTargetType );
+//		}
 		// otherwise, nothing to do
 	}
 

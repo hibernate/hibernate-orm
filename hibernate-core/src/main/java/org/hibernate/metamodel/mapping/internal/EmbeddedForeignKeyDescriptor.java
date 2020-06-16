@@ -8,8 +8,10 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,6 +22,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -49,6 +52,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	private final List<String> targetColumnExpressions;
 	private final EmbeddableValuedModelPart mappingType;
 	private final List<JdbcMapping> jdbcMappings;
+	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
 			EmbeddedIdentifierMappingImpl mappingType,
@@ -306,16 +310,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public String getReferringTableExpression() {
-		return keyColumnContainingTable;
-	}
-
-	@Override
-	public String getTargetTableExpression() {
-		return targetColumnContainingTable;
-	}
-
-	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
 		for ( int i = 0; i < keyColumnExpressions.size(); i++ ) {
 			consumer.accept( keyColumnContainingTable, keyColumnExpressions.get( i ), jdbcMappings.get( i ) );
@@ -330,17 +324,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 	}
 
 	@Override
-	public boolean areTargetColumnNamesEqualsTo(String[] columnNames) {
-		int length = columnNames.length;
-		if ( length != targetColumnExpressions.size() ) {
-			return false;
+	public AssociationKey getAssociationKey() {
+		if ( associationKey == null ) {
+			associationKey = new AssociationKey( keyColumnContainingTable, keyColumnExpressions );
 		}
-		for ( int i = 0; i < length; i++ ) {
-			if ( !targetColumnExpressions.contains( columnNames[i] ) ) {
-				return false;
-			}
-		}
-		return true;
+		return associationKey;
 	}
 
 	@Override
@@ -363,4 +351,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor, Model
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
+		mappingType.visitJdbcTypes( action, clause, typeConfiguration );
+	}
 }

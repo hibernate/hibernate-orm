@@ -345,7 +345,18 @@ public class EmbeddableMappingType implements ManagedMappingType {
 			Clause clause,
 			TypeConfiguration typeConfiguration) {
 		attributeMappings.forEach(
-				(s, attributeMapping) -> attributeMapping.visitJdbcTypes( action, clause, typeConfiguration )
+				(s, attributeMapping) -> {
+					if ( attributeMapping instanceof ToOneAttributeMapping ) {
+						( (ToOneAttributeMapping) attributeMapping ).getKeyTargetMatchPart().visitJdbcTypes(
+								action,
+								clause,
+								typeConfiguration
+						);
+					}
+					else {
+						attributeMapping.visitJdbcTypes( action, clause, typeConfiguration );
+					}
+				}
 		);
 	}
 

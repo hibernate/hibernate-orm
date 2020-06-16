@@ -7,31 +7,29 @@
 package org.hibernate.sql.results.internal.domain;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -39,25 +37,32 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Andrea Boriero
  */
-public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
+public class CircularFetchImpl implements BiDirectionalFetch, Association {
+	private DomainResult keyResult;
+	private final EntityMappingType entityMappingType;
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
-	private final Fetchable fetchable;
+	private final ToOneAttributeMapping fetchable;
 
 	private final FetchParent fetchParent;
 	private final NavigablePath referencedNavigablePath;
 
-	public BiDirectionalFetchImpl(
+	public CircularFetchImpl(
+			EntityMappingType entityMappingType,
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			Fetchable fetchable,
-			NavigablePath referencedNavigablePath) {
+			ToOneAttributeMapping fetchable,
+			NavigablePath referencedNavigablePath,
+			DomainResult keyResult) {
+		this.entityMappingType = entityMappingType;
 		this.timing = timing;
 		this.fetchParent = fetchParent;
 		this.navigablePath = navigablePath;
-		this.fetchable = fetchable;
 		this.referencedNavigablePath = referencedNavigablePath;
+		this.fetchable = fetchable;
+		this.keyResult = keyResult;
+
 	}
 
 	@Override
@@ -89,9 +94,31 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		return new CircularFetchAssembler(
-				fetchable,
-				getReferencedPath(),
+		final DomainResultAssembler resultAssembler = keyResult.createResultAssembler( creationState );
+
+		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
+				getNavigablePath(),
+				() -> {
+					if ( timing == FetchTiming.IMMEDIATE ) {
+						return new EntitySelectFetchInitializer(
+								getReferencedPath(),
+								entityMappingType.getEntityPersister(),
+								resultAssembler,
+								fetchable.isNullable()
+						);
+					}
+					else {
+						return new EntityDelayedFetchInitializer(
+								getReferencedPath(),
+								(EntityPersister) ( (AttributeMapping) fetchable ).getMappedTypeDescriptor(),
+								resultAssembler
+						);
+					}
+				}
+		);
+
+		return new BiDirectionalFetchAssembler(
+				initializer,
 				fetchable.getJavaTypeDescriptor()
 		);
 	}
@@ -109,6 +136,11 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	@Override
 	public String getFetchableName() {
 		return fetchable.getFetchableName();
+	}
+
+	@Override
+	public FetchOptions getMappedFetchOptions() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -137,11 +169,6 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public FetchStrategy getMappedFetchOptions() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return ( (Association) fetchParent ).getForeignKeyDescriptor();
 	}
@@ -158,75 +185,25 @@ public class BiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 		throw new UnsupportedOperationException();
 	}
 
-	private static class CircularFetchAssembler implements DomainResultAssembler {
-		private final NavigablePath circularPath;
-		private final JavaTypeDescriptor javaTypeDescriptor;
-		private final Fetchable fetchable;
+	private static class BiDirectionalFetchAssembler implements DomainResultAssembler {
+		private EntityInitializer initializer;
+		private JavaTypeDescriptor assembledJavaTypeDescriptor;
 
-		public CircularFetchAssembler(
-				Fetchable fetchable,
-				NavigablePath circularPath,
-				JavaTypeDescriptor javaTypeDescriptor) {
-			this.fetchable = fetchable;
-			this.circularPath = circularPath;
-			this.javaTypeDescriptor = javaTypeDescriptor;
+		public BiDirectionalFetchAssembler(
+				EntityInitializer initializer,
+				JavaTypeDescriptor assembledJavaTypeDescriptor) {
+			this.initializer = initializer;
+			this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
 		}
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			final EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
-			if ( initializer == null ) {
-
-				final Initializer parentInitializer = rowProcessingState.resolveInitializer(
-						circularPath.getParent() );
-				assert parentInitializer instanceof CollectionInitializer;
-				final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
-				final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
-				final EntityKey entityKey = new EntityKey(
-						collectionKey.getKey(),
-						(EntityPersister) ( (AttributeMapping) fetchable ).getMappedTypeDescriptor()
-				);
-
-				final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
-						.getSession();
-				return session.getPersistenceContext()
-						.getEntity( entityKey );
-
-			}
-			if ( initializer.getInitializedInstance() == null ) {
-				initializer.resolveKey( rowProcessingState );
-				initializer.resolveInstance( rowProcessingState );
-				initializer.initializeInstance( rowProcessingState );
-			}
 			return initializer.getInitializedInstance();
-		}
-
-		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
-			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
-			final ModelPart initializedPart = initializer.getInitializedPart();
-
-			if ( initializedPart instanceof EntityInitializer ) {
-				return (EntityInitializer) initializedPart;
-			}
-
-			NavigablePath path = circularPath.getParent();
-			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-			while ( !( parentInitializer instanceof EntityInitializer) && path.getParent() != null ) {
-				path = path.getParent();
-				parentInitializer = rowProcessingState.resolveInitializer( path );
-
-			}
-
-			if ( !( parentInitializer instanceof EntityInitializer ) ) {
-				return null;
-			}
-
-			return (EntityInitializer) parentInitializer;
 		}
 
 		@Override
 		public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
-			return javaTypeDescriptor;
+			return assembledJavaTypeDescriptor;
 		}
 	}
 

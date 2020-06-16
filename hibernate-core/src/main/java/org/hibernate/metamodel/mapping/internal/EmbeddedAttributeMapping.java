@@ -98,6 +98,7 @@ public class EmbeddedAttributeMapping
 	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
+
 	@Override
 	public SingularAttributeMapping getParentInjectionAttributeMapping() {
 		// todo (6.0) : implement

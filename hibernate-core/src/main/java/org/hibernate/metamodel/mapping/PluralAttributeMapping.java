@@ -55,4 +55,6 @@ public interface PluralAttributeMapping
 	}
 
 	String getSeparateCollectionTable();
+
+	String getMappedBy();
 }

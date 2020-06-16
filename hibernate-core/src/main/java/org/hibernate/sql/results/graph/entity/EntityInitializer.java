@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;

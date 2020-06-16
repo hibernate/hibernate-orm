@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;

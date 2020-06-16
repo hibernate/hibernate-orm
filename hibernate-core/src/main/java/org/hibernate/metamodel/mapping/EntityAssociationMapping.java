@@ -6,14 +6,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.sql.results.graph.Fetchable;
-
 /**
  * Commonality between `many-to-one`, `one-to-one` and `any`, as well as entity-valued collection elements and map-keys
  *
  * @author Steve Ebersole
  */
-public interface EntityAssociationMapping extends ModelPart, Fetchable {
+public interface EntityAssociationMapping extends ModelPart, Association {
 	@Override
 	default String getFetchableName() {
 		return getPartName();

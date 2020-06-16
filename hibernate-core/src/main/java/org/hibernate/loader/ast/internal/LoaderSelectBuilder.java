@@ -8,6 +8,7 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -79,6 +81,8 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  */
 public class LoaderSelectBuilder {
 	private static final Logger log = Logger.getLogger( LoaderSelectBuilder.class );
+
+	private HashMap<String, List<Fetch>> visitedNavigablePath = new HashMap<>();
 
 	/**
 	 * Create an SQL AST select-statement based on matching one-or-more keys
@@ -209,7 +213,7 @@ public class LoaderSelectBuilder {
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,
-				numberOfKeysToLoad > 1,
+				numberOfKeysToLoad > 1 || restrictedPart instanceof ForeignKeyDescriptor,
 				creationContext
 		);
 
@@ -430,15 +434,22 @@ public class LoaderSelectBuilder {
 		}
 
 		final List<Fetch> fetches = new ArrayList<>();
+		String fullPath = fetchParent.getNavigablePath().getFullPath();
+		final List<Fetch> fullPathFetches = visitedNavigablePath.get( fullPath );
+		if ( fullPathFetches != null ) {
+			return fullPathFetches;
+		}
 
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
-			referencedMappingContainer.visitKeyFetchables( fetchable -> processor.accept( fetchable, true ), null );
+			referencedMappingContainer.visitKeyFetchables(
+					fetchable -> processor.accept( fetchable, true ), null );
 		}
-		referencedMappingContainer.visitFetchables( fetchable -> processor.accept( fetchable, false ), null );
-
+		referencedMappingContainer.visitFetchables(
+				fetchable -> processor.accept( fetchable, false ), null );
+		visitedNavigablePath.put( fullPath, fetches );
 		return fetches;
 	}
 
@@ -501,12 +512,14 @@ public class LoaderSelectBuilder {
 					joined = false;
 				}
 				else if ( fetchDepth > maximumFetchDepth ) {
-					return;
+					if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+						return;
+					}
 				}
 			}
 
 			try {
-				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
+				if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
 					fetchDepth++;
 				}
 				final Fetch fetch = fetchable.generateFetch(
@@ -537,7 +550,7 @@ public class LoaderSelectBuilder {
 				}
 			}
 			finally {
-				if ( !( fetchable instanceof BasicValuedModelPart ) ) {
+				if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
 					fetchDepth--;
 				}
 				if ( entityGraphTraversalState != null ) {

@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -54,6 +55,13 @@ public interface JdbcValuesSourceProcessingState {
 	void registerLoadingEntity(
 			EntityKey entityKey,
 			LoadingEntityEntry loadingEntry);
+
+	void registerInitilaizer(
+			EntityKey entityKey,
+			Initializer initializer);
+
+	Initializer findInitializer(EntityKey entityKey);
+
 
 	/**
 	 * Find a LoadingCollectionEntry locally to this context.

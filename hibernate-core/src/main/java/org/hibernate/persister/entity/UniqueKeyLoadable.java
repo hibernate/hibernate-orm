@@ -18,6 +18,7 @@ public interface UniqueKeyLoadable extends Loadable {
 	 */
 	Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session);
 
+
 	/**
 	 * Get the property number of the unique key property
 	 */

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -14,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -53,6 +55,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private final String targetColumnContainingTable;
 	private final String targetColumnExpression;
 	private final JdbcMapping jdbcMapping;
+	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
 			String keyColumnContainingTable,
@@ -286,18 +289,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public String getReferringTableExpression() {
-		return keyColumnContainingTable;
-	}
-
-	@Override
 	public void visitReferringColumns(ColumnConsumer consumer) {
 		consumer.accept( keyColumnContainingTable, keyColumnExpression, jdbcMapping );
-	}
-
-	@Override
-	public String getTargetTableExpression() {
-		return targetColumnContainingTable;
 	}
 
 	@Override
@@ -306,11 +299,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public boolean areTargetColumnNamesEqualsTo(String[] columnNames) {
-		if ( columnNames.length != 1 ) {
-			return false;
+	public AssociationKey getAssociationKey() {
+		if ( associationKey == null ) {
+			final List<String> associationKeyColumns = Collections.singletonList( keyColumnExpression );
+			associationKey = new AssociationKey( keyColumnContainingTable, associationKeyColumns );
 		}
-		return targetColumnExpression.equals( columnNames[0] );
+		return associationKey;
 	}
 
 	@Override
@@ -393,11 +387,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return jdbcMapping;
 	}
 
-	public String getTargetColumnContainingTable() {
-		return targetColumnContainingTable;
-	}
-
-	public String getTargetColumnExpression() {
-		return targetColumnExpression;
+	@Override
+	public String toString() {
+		return "SimpleForeignKeyDescriptor : " + keyColumnContainingTable + "." + keyColumnExpression
+				+ " --> " + targetColumnContainingTable + "." + targetColumnExpression;
 	}
 }

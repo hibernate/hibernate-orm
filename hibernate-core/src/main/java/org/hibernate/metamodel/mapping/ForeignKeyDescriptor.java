@@ -51,10 +51,6 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 		return PART_NAME;
 	}
 
-	String getReferringTableExpression();
-
-	String getTargetTableExpression();
-
 	/**
 	 * Visits the FK "referring" columns
 	 */
@@ -67,6 +63,5 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	void visitTargetColumns(ColumnConsumer consumer);
 
-
-	boolean areTargetColumnNamesEqualsTo(String[] columnNames);
+	AssociationKey getAssociationKey();
 }

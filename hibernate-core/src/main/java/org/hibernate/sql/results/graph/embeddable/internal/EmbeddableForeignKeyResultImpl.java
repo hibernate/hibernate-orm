@@ -29,7 +29,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.entity.internal.EntityFetchDelayedImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 
 /**
@@ -76,11 +76,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 			);
 			Fetch fetch;
 			if ( toOneAttributeMapping.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
-				fetch = new EntityFetchDelayedImpl(
+				fetch = new EntityDelayedFetchImpl(
 						this,
 						toOneAttributeMapping,
-						null,
-						false,
 						navigablePath.append( fetchable.getFetchableName() ),
 						domainResult
 				);
@@ -89,10 +87,10 @@ public class EmbeddableForeignKeyResultImpl<T>
 				fetch = new EntityFetchSelectImpl(
 						this,
 						toOneAttributeMapping,
-						null,
 						false,
 						navigablePath.append( fetchable.getFetchableName() ),
 						domainResult,
+						false,
 						creationState
 				);
 			}
@@ -127,6 +125,11 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 		//noinspection unchecked
 		return new EmbeddableAssembler( initializer );
+	}
+
+	@Override
+	public NavigablePath getNavigablePath() {
+		return super.getNavigablePath().append( "{fk}");
 	}
 
 	@Override

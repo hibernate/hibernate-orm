@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -23,7 +24,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess implements EntityInitializer {
+public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 	private final NavigablePath navigablePath;
 	private final EntityPersister concreteDescriptor;
@@ -32,7 +33,7 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 	private Object entityInstance;
 	private Object identifier;
 
-	protected EntityFetchDelayedInitializer(
+	public EntityDelayedFetchInitializer(
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler) {
@@ -145,6 +146,11 @@ public class EntityFetchDelayedInitializer extends AbstractFetchParentAccess imp
 		else {
 			super.registerResolutionListener( listener );
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "EntityDelayedFetchInitializer(" + LoggingHelper.toLoggableString( navigablePath ) + ")";
 	}
 
 }

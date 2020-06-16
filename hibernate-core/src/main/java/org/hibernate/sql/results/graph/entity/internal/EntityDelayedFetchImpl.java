@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -21,23 +20,16 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class EntityFetchDelayedImpl extends AbstractNonJoinedEntityFetch {
-	private final LockMode lockMode;
-	private final boolean nullable;
+public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 
 	private final DomainResult keyResult;
 
-	public EntityFetchDelayedImpl(
+	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
-			LockMode lockMode,
-			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResult keyResult) {
 		super( navigablePath, fetchedAttribute, fetchParent );
-		this.lockMode = lockMode;
-		this.nullable = nullable;
-
 		this.keyResult = keyResult;
 	}
 
@@ -57,7 +49,7 @@ public class EntityFetchDelayedImpl extends AbstractNonJoinedEntityFetch {
 			AssemblerCreationState creationState) {
 		final EntityInitializer entityInitializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
-				() -> new EntityFetchDelayedInitializer(
+				() -> new EntityDelayedFetchInitializer(
 						getNavigablePath(),
 						getEntityValuedModelPart().getEntityMappingType().getEntityPersister(),
 						keyResult.createResultAssembler( creationState )

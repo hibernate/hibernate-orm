@@ -121,7 +121,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 							for ( int i = 0; i < identifierInitializers.size(); i++ ) {
 								final Initializer existing = identifierInitializers.get( i );
 								if ( existing.getNavigablePath().equals( navigablePath ) ) {
-									identifierInitializers.add( existing );
 									return existing;
 								}
 							}
@@ -328,9 +327,24 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@SuppressWarnings("WeakerAccess")
 	protected void initializeIdentifier(RowProcessingState rowProcessingState) {
+		if ( EntityLoadingLogger.TRACE_ENABLED ) {
+			EntityLoadingLogger.LOGGER.tracef(
+					"(%s) Beginning Initializer#initializeIdentifier process for entity (%s) ",
+					StringHelper.collapse( this.getClass().getName() ),
+					getNavigablePath()
+			);
+		}
+
 		identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
 		identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
-		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
+
+		if ( EntityLoadingLogger.TRACE_ENABLED ) {
+			EntityLoadingLogger.LOGGER.tracef(
+					"(%s) Fiish Initializer#initializeIdentifier process for entity (%s) ",
+					StringHelper.collapse( this.getClass().getName() ),
+					getNavigablePath()
+			);
+		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -351,8 +365,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else {
 			id = identifierAssembler.assemble(
 					rowProcessingState,
-					jdbcValuesSourceProcessingState
-							.getProcessingOptions()
+					jdbcValuesSourceProcessingState.getProcessingOptions()
 			);
 		}
 
@@ -363,6 +376,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		//		2) build the EntityKey
 		this.entityKey = new EntityKey( id, concreteDescriptor );
+
+		if ( jdbcValuesSourceProcessingState.findInitializer( entityKey ) == null ) {
+			jdbcValuesSourceProcessingState.registerInitilaizer( entityKey, this );
+		}
 
 		//		3) schedule the EntityKey for batch loading, if possible
 		if ( concreteDescriptor.isBatchLoadable() ) {
@@ -377,6 +394,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
+		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
 
 		final Object entityIdentifier = entityKey.getIdentifier();
 
@@ -508,7 +526,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}
-
 
 		// todo (6.0): do we really need this check ?
 		if ( persistenceContext.containsEntity( entityKey ) ) {

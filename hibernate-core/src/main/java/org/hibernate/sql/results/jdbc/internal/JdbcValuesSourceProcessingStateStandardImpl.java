@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -41,6 +42,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryConsumer;
 
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
+	private Map<EntityKey, Initializer> initializerMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
 
@@ -103,6 +105,22 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		loadingEntityMap.put( entityKey, loadingEntry );
+	}
+
+	@Override
+	public void registerInitilaizer(
+			EntityKey entityKey,
+			Initializer initializer) {
+		if ( initializerMap == null ) {
+			initializerMap = new HashMap<>();
+		}
+		initializerMap.put( entityKey, initializer );
+
+	}
+
+	@Override
+	public Initializer findInitializer(EntityKey entityKey) {
+		return initializerMap == null ? null : initializerMap.get( entityKey );
 	}
 
 	@Override

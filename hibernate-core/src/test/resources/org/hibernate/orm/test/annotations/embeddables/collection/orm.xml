@@ -9,7 +9,7 @@
 <entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  version="2.0">
-    <package>org.hibernate.test.annotations.embeddables.collection.xml</package>
+    <package>org.hibernate.orm.test.annotations.embeddables.collection.xml</package>
     <entity class="Person">
         <attributes>
             <id name="id">

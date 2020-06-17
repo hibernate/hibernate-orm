@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.embeddables.collection;
+package org.hibernate.orm.test.annotations.embeddables.collection;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,52 +21,24 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.hibernate.AnnotationException;
+import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-11302")
-public class EmbeddableWithOneToMany_HHH_11302_Test
-		extends BaseCoreFunctionalTestCase {
+public class EmbeddableWithManyToMany_HHH_11302_Test
+		extends AbstractEmbeddableWithManyToManyTest {
 
-	// Add your entities here.
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				ContactType.class,
-				Person.class
-		};
-	}
-
-	protected void buildSessionFactory() {
-		try {
-			super.buildSessionFactory();
-			fail( "Should throw AnnotationException!" );
-		}
-		catch ( AnnotationException expected ) {
-			assertTrue( expected.getMessage().startsWith(
-					"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection"
-			) );
-		}
-		finally {
-			serviceRegistry().destroy();
-		}
-	}
-
-	@Test
-	public void test() {
+	protected void addAnnotatedClasses(MetadataSources metadataSources) {
+		metadataSources.addAnnotatedClasses( ContactType.class, Person.class );
 	}
 
 	@Entity
@@ -228,7 +200,7 @@ public class EmbeddableWithOneToMany_HHH_11302_Test
 		@Column(name = "name")
 		String name;
 
-		@OneToMany(cascade = CascadeType.ALL)
+		@ManyToMany(cascade = CascadeType.ALL)
 		@JoinTable(
 				name = "CONTACT_TYPE",
 				joinColumns = @JoinColumn(name = "id"),

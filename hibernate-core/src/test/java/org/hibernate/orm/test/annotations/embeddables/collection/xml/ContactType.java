@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.embeddables.collection.xml;
+package org.hibernate.orm.test.annotations.embeddables.collection.xml;
 
 import java.io.Serializable;
 

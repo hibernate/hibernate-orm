@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.embeddables.nested;
+package org.hibernate.orm.test.annotations.embeddables.nested.fieldaccess;
 
 import java.sql.Types;
 
@@ -12,7 +12,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -22,25 +21,24 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.CustomType;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
+public class FieldAccessedNestedEmbeddableMetadataTest {
+
 	@Test
+	@FailureExpected(jiraKey = "HHH-9089")
 	public void testEnumTypeInterpretation() {
-		final StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.enableAutoClose()
-				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.build();
+		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 
 		try {
-			final Metadata metadata = new MetadataSources( serviceRegistry )
+			final Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
 
@@ -60,7 +58,7 @@ public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
 			assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
 		}
 		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
 }

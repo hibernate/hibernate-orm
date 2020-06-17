@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.embeddables.collection;
+package org.hibernate.orm.test.annotations.embeddables.collection;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,47 +19,20 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
-import org.hibernate.AnnotationException;
+import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-8860")
 public class EmbeddableWithOneToMany_HHH_8860_Test
-		extends BaseCoreFunctionalTestCase {
+		extends AbstractEmbeddableWithManyToManyTest {
 
-	// Add your entities here.
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Data.class,
-		};
-	}
-
-	protected void buildSessionFactory() {
-		try {
-			super.buildSessionFactory();
-			fail( "Should throw AnnotationException!" );
-		}
-		catch ( AnnotationException expected ) {
-			assertTrue( expected.getMessage().startsWith(
-					"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection"
-			) );
-		}
-		finally {
-			serviceRegistry().destroy();
-		}
-	}
-
-	@Test
-	public void test() {
+	protected void addAnnotatedClasses(MetadataSources metadataSources) {
+		metadataSources.addAnnotatedClasses( Data.class );
 	}
 
 	@Entity(name = "Data")

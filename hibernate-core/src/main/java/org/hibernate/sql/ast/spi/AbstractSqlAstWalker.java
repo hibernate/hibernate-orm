@@ -29,6 +29,7 @@ import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -436,7 +437,11 @@ public abstract class AbstractSqlAstWalker
 		}
 		else {
 			appendSql( EMPTY_STRING );
-			appendSql( tableGroupJoin.getJoinType().getText() );
+			SqlAstJoinType joinType = tableGroupJoin.getJoinType();
+			if ( joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
+				joinType = SqlAstJoinType.LEFT;
+			}
+			appendSql( joinType.getText() );
 			appendSql( " join " );
 
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {

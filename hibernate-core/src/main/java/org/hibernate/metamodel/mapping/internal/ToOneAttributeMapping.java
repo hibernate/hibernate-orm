@@ -343,6 +343,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 							sqlAstJoinType = SqlAstJoinType.INNER;
 						}
 
+
 						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 								fetchablePath,
 								parentTableGroup,

@@ -6,9 +6,9 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
-import java.io.Serializable;
-import javax.persistence.ManyToOne;
+package org.hibernate.orm.test.annotations.fkcircularity;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 
 /**
  * Test entities ANN-722.
@@ -16,16 +16,16 @@ import javax.persistence.ManyToOne;
  * @author Hardy Ferentschik
  *
  */
-@SuppressWarnings("serial")
-public class D_PK implements Serializable{
-	private C c;
-	
-	@ManyToOne
-	public C getC() {
-		return c;
+@Entity
+public class A {
+	private A_PK id;
+
+	@EmbeddedId
+	public A_PK getId() {
+		return id;
 	}
 
-	public void setC(C c) {
-		this.c = c;
+	public void setId(A_PK id) {
+		this.id = id;
 	}
 }

@@ -7,59 +7,67 @@
 package org.hibernate.orm.test.annotations.cascade;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
-
-public class CascadeToEmbeddedManyToOneTest extends BaseCoreFunctionalTestCase {
-
-	@Test
-	public void testPersistCascadeToSetOfEmbedded() {
-		Session sess = openSession();
-		try {
-			final Transaction trx  = sess.beginTransaction();
-			try {
-				final Set<PersonPair> setOfPairs = new HashSet<PersonPair>();
-				setOfPairs.add(new PersonPair(new Person("PERSON NAME 1"), new Person("PERSON NAME 2")));
-				sess.persist( new CodedPairSetHolder( "CODE", setOfPairs ) );
-				sess.flush();
-			} finally {
-				trx.rollback();
-			}
-		} finally {
-			sess.close();
-		}
-	}
-
-	@Test
-	public void testPersistCascadeToEmbedded() {
-		Session sess = openSession();
-		try {
-			final Transaction trx  = sess.beginTransaction();
-			try {
-				PersonPair personPair = new PersonPair(new Person("PERSON NAME 1"), new Person("PERSON NAME 2"));
-				sess.persist( new CodedPairHolder( "CODE", personPair ) );
-				sess.flush();
-			} finally {
-				trx.rollback();
-			}
-		} finally {
-			sess.close();
-		}
-	}
-	
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+@DomainModel(
+		annotatedClasses = {
 				CodedPairSetHolder.class,
 				CodedPairHolder.class,
 				Person.class,
 				PersonPair.class
-		};
+		}
+)
+@SessionFactory
+public class CascadeToEmbeddedManyToOneTest {
+
+	@AfterEach
+	public void teaDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<CodedPairHolder> pairHolders = session.createQuery( "select p from CodedPairHolder p" ).list();
+					pairHolders.forEach(
+							pairHolder -> {
+								PersonPair pair = pairHolder.getPair();
+								session.delete( pairHolder );
+								session.delete(pair.getLeft());
+								session.delete(pair.getRight());
+							}
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testPersistCascadeToSetOfEmbedded(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Set<PersonPair> setOfPairs = new HashSet<>();
+					setOfPairs.add( new PersonPair( new Person( "PERSON NAME 1" ), new Person( "PERSON NAME 2" ) ) );
+					session.persist( new CodedPairSetHolder( "CODE", setOfPairs ) );
+					session.flush();
+				}
+		);
+	}
+
+	@Test
+	public void testPersistCascadeToEmbedded(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					PersonPair personPair = new PersonPair(
+							new Person( "PERSON NAME 1" ),
+							new Person( "PERSON NAME 2" )
+					);
+					session.persist( new CodedPairHolder( "CODE", personPair ) );
+					session.flush();
+				}
+		);
 	}
 }

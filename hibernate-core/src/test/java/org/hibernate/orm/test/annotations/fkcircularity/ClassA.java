@@ -5,35 +5,35 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id$
-package org.hibernate.test.annotations.backquotes;
+// $Id$
+package org.hibernate.orm.test.annotations.fkcircularity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.Table;
 
+/**
+ * Test entities ANN-730.
+ * 
+ * @author Hardy Ferentschik
+ * 
+ */
 @Entity
-public class Category 
-{
-	@Id
-	@Column(name="`cat_id`")
-	private int id;
-	
-	@Column(name="`title`")
-	private String title;
+@Table(name = "class_a")
+@Inheritance(strategy = InheritanceType.JOINED)
+public class ClassA {
 
+	private int id;
+
+	@Id
+	@Column(name = "id")
 	public int getId() {
 		return id;
 	}
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 }

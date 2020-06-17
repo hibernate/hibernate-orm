@@ -6,9 +6,11 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
-import javax.persistence.EmbeddedId;
+package org.hibernate.orm.test.annotations.fkcircularity;
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * Test entities ANN-722.
@@ -17,15 +19,16 @@ import javax.persistence.Entity;
  *
  */
 @Entity
-public class A {
-	private A_PK id;
+@Inheritance(strategy = InheritanceType.JOINED)
+public class B {
+	@Id
+	private int id;
 
-	@EmbeddedId
-	public A_PK getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(A_PK id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 }

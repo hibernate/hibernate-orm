@@ -5,20 +5,23 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-// $Id$
-package org.hibernate.test.annotations.fkcircularity;
+package org.hibernate.orm.test.annotations.backquotes;
 import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
-/**
- * Test entities ANN-730.
- * 
- * @author Hardy Ferentschik
- *
- */
+
 @Entity
-@Table(name = "class_1d")
-@PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
-public class ClassD extends ClassC {
+@Table(name="`Printer`")
+public class Printer {
+    private Long id;
+
+    @Id
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

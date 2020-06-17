@@ -6,66 +6,80 @@
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.nonjpa.identity;
 
-import junit.framework.Assert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * This test uses a complicated model that requires Hibernate to delay
  * inserts until non-nullable transient entity dependencies are resolved.
- *
+ * <p>
  * All IDs are generated from identity columns.
- *
+ * <p>
  * Hibernate cascade types are used (org.hibernate.annotations.CascadeType)..
- *
+ * <p>
  * This test uses the following model:
  *
  * <code>
- *     ------------------------------ N G
- *     |
- *     |                                1
- *     |                                |
- *     |                                |
- *     |                                N
- *     |
- *     |         E N--------------0,1 * F
- *     |
- *     |         1                      N
- *     |         |                      |
- *     |         |                      |
- *     1         N                      |
- *     *                                |
- *     B * N---1 D * 1------------------
- *     *
- *     N         N
- *     |         |
- *     |         |
- *     1         |
- *               |
- *     C * 1-----
- *</code>
- *
+ * ------------------------------ N G
+ * |
+ * |                                1
+ * |                                |
+ * |                                |
+ * |                                N
+ * |
+ * |         E N--------------0,1 * F
+ * |
+ * |         1                      N
+ * |         |                      |
+ * |         |                      |
+ * 1         N                      |
+ * *                                |
+ * B * N---1 D * 1------------------
+ * *
+ * N         N
+ * |         |
+ * |         |
+ * 1         |
+ * |
+ * C * 1-----
+ * </code>
+ * <p>
  * In the diagram, all associations are bidirectional;
  * assocations marked with '*' cascade persist, save, merge operations to the
  * associated entities (e.g., B cascades persist to D, but D does not cascade
  * persist to B);
- *
+ * <p>
  * b, c, d, e, f, and g are all transient unsaved that are associated with each other.
- *
+ * <p>
  * When saving b, the entities are added to the ActionQueue in the following order:
  * c, d (depends on e), f (depends on d, g), e, b, g.
- *
+ * <p>
  * Entities are inserted in the following order:
  * c, e, d, b, g, f.
  */
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(
+		annotatedClasses = {
+				EntityB.class,
+				EntityC.class,
+				EntityD.class,
+				EntityE.class,
+				EntityF.class,
+				EntityG.class
+		}
+)
+@SessionFactory
+public class MultiCircleNonJpaCascadeIdentityTest {
 	private EntityB b;
 	private EntityC c;
 	private EntityD d;
@@ -73,8 +87,8 @@ public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTest
 	private EntityF f;
 	private EntityG g;
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
 		b = new EntityB();
 		c = new EntityC();
 		d = new EntityD();
@@ -105,8 +119,8 @@ public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTest
 		g.getFCollection().add( f );
 	}
 
-	@After
-	public void cleanup() {
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
 		b.setC( null );
 		b.setD( null );
 		b.getGCollection().remove( g );
@@ -129,120 +143,101 @@ public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTest
 		g.setB( null );
 		g.getFCollection().remove( f );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		b = (EntityB) s.merge( b );
-		c = (EntityC) s.merge( c );
-		d = (EntityD) s.merge( d );
-		e = (EntityE) s.merge( e );
-		f = (EntityF) s.merge( f );
-		g = (EntityG) s.merge( g );
-		s.delete( f );
-		s.delete( g );
-		s.delete( b );
-		s.delete( d );
-		s.delete( e );
-		s.delete( c );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					b = (EntityB) session.merge( b );
+					c = (EntityC) session.merge( c );
+					d = (EntityD) session.merge( d );
+					e = (EntityE) session.merge( e );
+					f = (EntityF) session.merge( f );
+					g = (EntityG) session.merge( g );
+					session.delete( f );
+					session.delete( g );
+					session.delete( b );
+					session.delete( d );
+					session.delete( e );
+					session.delete( c );
+				}
+		);
 	}
 
 	@Test
-	public void testPersist() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( b );
-		s.getTransaction().commit();
-		s.close();
+	public void testPersist(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.persist( b )
+		);
 
-		check();
+		check( scope );
 	}
 
 	@Test
-	public void testSave() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.save( b );
-		s.getTransaction().commit();
-		s.close();
+	public void testSave(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.save( b )
+		);
 
-		check();
+		check( scope );
 	}
 
 	@Test
-	public void testSaveOrUpdate() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.saveOrUpdate( b );
-		s.getTransaction().commit();
-		s.close();
+	public void testSaveOrUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.saveOrUpdate( b )
+		);
 
-		check();
+		check( scope );
 	}
 
 	@Test
-	public void testMerge() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		b = ( EntityB ) s.merge( b );
-		c = b.getC();
-		d = b.getD();
-		e = d.getE();
-		f = e.getF();
-		g = f.getG();
-		s.getTransaction().commit();
-		s.close();
+	public void testMerge(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					b = (EntityB) session.merge( b );
+					c = b.getC();
+					d = b.getD();
+					e = d.getE();
+					f = e.getF();
+					g = f.getG();
+				}
+		);
 
-		check();
+		check( scope );
 	}
 
-	private void check() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		EntityB bRead = (EntityB) s.get( EntityB.class, b.getId() );
-		Assert.assertEquals( b, bRead );
+	private void check(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityB bRead = session.get( EntityB.class, b.getId() );
+					assertEquals( b, bRead );
 
-		EntityG gRead = bRead.getGCollection().iterator().next();
-		Assert.assertEquals( g, gRead );
-		EntityC cRead = bRead.getC();
-		Assert.assertEquals( c, cRead );
-		EntityD dRead = bRead.getD();
-		Assert.assertEquals( d, dRead );
+					EntityG gRead = bRead.getGCollection().iterator().next();
+					assertEquals( g, gRead );
+					EntityC cRead = bRead.getC();
+					assertEquals( c, cRead );
+					EntityD dRead = bRead.getD();
+					assertEquals( d, dRead );
 
-		Assert.assertSame( bRead, cRead.getBCollection().iterator().next() );
-		Assert.assertSame( dRead, cRead.getDCollection().iterator().next() );
+					assertSame( bRead, cRead.getBCollection().iterator().next() );
+					assertSame( dRead, cRead.getDCollection().iterator().next() );
 
-		Assert.assertSame( bRead, dRead.getBCollection().iterator().next() );
-		Assert.assertEquals( cRead, dRead.getC() );
-		EntityE eRead = dRead.getE();
-		Assert.assertEquals( e, eRead );
-		EntityF fRead = dRead.getFCollection().iterator().next();
-		Assert.assertEquals( f, fRead );
+					assertSame( bRead, dRead.getBCollection().iterator().next() );
+					assertEquals( cRead, dRead.getC() );
+					EntityE eRead = dRead.getE();
+					assertEquals( e, eRead );
+					EntityF fRead = dRead.getFCollection().iterator().next();
+					assertEquals( f, fRead );
 
-		Assert.assertSame( dRead, eRead.getDCollection().iterator().next() );
-		Assert.assertSame( fRead, eRead.getF() );
+					assertSame( dRead, eRead.getDCollection().iterator().next() );
+					assertSame( fRead, eRead.getF() );
 
-		Assert.assertSame( eRead, fRead.getECollection().iterator().next() );
-		Assert.assertSame( dRead, fRead.getD() );
-		Assert.assertSame( gRead, fRead.getG());
+					assertSame( eRead, fRead.getECollection().iterator().next() );
+					assertSame( dRead, fRead.getD() );
+					assertSame( gRead, fRead.getG() );
 
-		Assert.assertSame( bRead, gRead.getB() );
-		Assert.assertSame( fRead, gRead.getFCollection().iterator().next() );
+					assertSame( bRead, gRead.getB() );
+					assertSame( fRead, gRead.getFCollection().iterator().next() );
 
-		s.getTransaction().commit();
-		s.close();
+				}
+		);
 	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				EntityB.class,
-				EntityC.class,
-				EntityD.class,
-				EntityE.class,
-				EntityF.class,
-				EntityG.class
-		};
-	}
-
 }

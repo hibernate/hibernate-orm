@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.list;
+package org.hibernate.orm.test.annotations.list;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,15 +26,17 @@ import org.hibernate.mapping.Column;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Originally developed to help diagnose HHH-10099 which reports a problem with @OrderColumn
@@ -42,17 +44,17 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class ListMappingTest extends BaseUnitTestCase {
+public class ListMappingTest  {
 	private StandardServiceRegistry ssr;
 
-	@Before
+	@BeforeEach
 	public void before() {
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.FORMAT_SQL, false )
 				.build();
 	}
 
-	@After
+	@AfterEach
 	public void after() {
 		if ( ssr != null ) {
 			StandardServiceRegistryBuilder.destroy( ssr );

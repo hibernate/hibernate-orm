@@ -6,7 +6,7 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
+package org.hibernate.orm.test.annotations.fkcircularity;
 import java.io.Serializable;
 import javax.persistence.ManyToOne;
 

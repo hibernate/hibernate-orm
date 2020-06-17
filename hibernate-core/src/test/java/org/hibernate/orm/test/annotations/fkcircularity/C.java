@@ -6,8 +6,7 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
-import javax.persistence.EmbeddedId;
+package org.hibernate.orm.test.annotations.fkcircularity;
 import javax.persistence.Entity;
 
 /**
@@ -17,15 +16,5 @@ import javax.persistence.Entity;
  *
  */
 @Entity
-public class D {
-	private D_PK id;
-
-	@EmbeddedId
-	public D_PK getId() {
-		return id;
-	}
-
-	public void setId(D_PK id) {
-		this.id = id;
-	}
+public class C extends B {
 }

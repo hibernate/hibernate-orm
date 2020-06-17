@@ -6,22 +6,21 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
+package org.hibernate.orm.test.annotations.fkcircularity;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test case for ANN-722 and ANN-730.
  *
  * @author Hardy Ferentschik
  */
-public class FkCircularityTest extends BaseUnitTestCase {
+public class FkCircularityTest {
 
     @Test
 	public void testJoinedSublcassesInPK() {

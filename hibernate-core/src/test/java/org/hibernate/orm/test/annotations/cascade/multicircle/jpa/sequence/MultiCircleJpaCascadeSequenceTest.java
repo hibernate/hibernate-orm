@@ -6,63 +6,76 @@
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.sequence;
 
-import org.hibernate.Session;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import junit.framework.Assert;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * This test uses a complicated model that requires Hibernate to delay
  * inserts until non-nullable transient entity dependencies are resolved.
- *
+ * <p>
  * All IDs are generated from a sequence.
- *
+ * <p>
  * JPA cascade types are used (javax.persistence.CascadeType)..
- *
+ * <p>
  * This test uses the following model:
  *
  * <code>
- *     ------------------------------ N G
- *     |
- *     |                                1
- *     |                                |
- *     |                                |
- *     |                                N
- *     |
- *     |         E N--------------0,1 * F
- *     |
- *     |         1                      N
- *     |         |                      |
- *     |         |                      |
- *     1         N                      |
- *     *                                |
- *     B * N---1 D * 1------------------
- *     *
- *     N         N
- *     |         |
- *     |         |
- *     1         |
- *               |
- *     C * 1-----
- *</code>
- *
+ * ------------------------------ N G
+ * |
+ * |                                1
+ * |                                |
+ * |                                |
+ * |                                N
+ * |
+ * |         E N--------------0,1 * F
+ * |
+ * |         1                      N
+ * |         |                      |
+ * |         |                      |
+ * 1         N                      |
+ * *                                |
+ * B * N---1 D * 1------------------
+ * *
+ * N         N
+ * |         |
+ * |         |
+ * 1         |
+ * |
+ * C * 1-----
+ * </code>
+ * <p>
  * In the diagram, all associations are bidirectional;
  * assocations marked with '*' cascade persist, save, merge operations to the
  * associated entities (e.g., B cascades persist to D, but D does not cascade
  * persist to B);
- *
+ * <p>
  * b, c, d, e, f, and g are all transient unsaved that are associated with each other.
- *
+ * <p>
  * When saving b, the entities are added to the ActionQueue in the following order:
  * c, d (depends on e), f (depends on d, g), e, b, g.
- *
+ * <p>
  * Entities are inserted in the following order:
  * c, e, d, b, g, f.
  */
-public class MultiCircleJpaCascadeSequenceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				B.class,
+				C.class,
+				D.class,
+				E.class,
+				F.class,
+				G.class
+		}
+)
+@SessionFactory
+public class MultiCircleJpaCascadeSequenceTest {
 	private B b;
 	private C c;
 	private D d;
@@ -70,8 +83,8 @@ public class MultiCircleJpaCascadeSequenceTest extends BaseCoreFunctionalTestCas
 	private F f;
 	private G g;
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	public void setup(SessionFactoryScope scope) {
 		b = new B();
 		c = new C();
 		d = new D();
@@ -102,8 +115,8 @@ public class MultiCircleJpaCascadeSequenceTest extends BaseCoreFunctionalTestCas
 		g.getFCollection().add( f );
 	}
 
-	@After
-	public void cleanup() {
+	@AfterEach
+	public void cleanup(SessionFactoryScope scope) {
 		b.setC( null );
 		b.setD( null );
 		b.getGCollection().remove( g );
@@ -126,98 +139,83 @@ public class MultiCircleJpaCascadeSequenceTest extends BaseCoreFunctionalTestCas
 		g.setB( null );
 		g.getFCollection().remove( f );
 
-		Session s = openSession();
-		s.getTransaction().begin();
-		b = ( B ) s.merge( b );
-		c = ( C ) s.merge( c );
-		d = ( D ) s.merge( d );
-		e = ( E ) s.merge( e );
-		f = ( F ) s.merge( f );
-		g = ( G ) s.merge( g );
-		s.delete( f );
-		s.delete( g );
-		s.delete( b );
-		s.delete( d );
-		s.delete( e );
-		s.delete( c );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					b = (B) session.merge( b );
+					c = (C) session.merge( c );
+					d = (D) session.merge( d );
+					e = (E) session.merge( e );
+					f = (F) session.merge( f );
+					g = (G) session.merge( g );
+					session.delete( f );
+					session.delete( g );
+					session.delete( b );
+					session.delete( d );
+					session.delete( e );
+					session.delete( c );
+				}
+		);
 	}
 
 	@Test
-	public void testPersist() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( b );
-		s.getTransaction().commit();
-		s.close();
+	public void testPersist(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.persist( b )
+		);
 
-		check();
+		check( scope );
 	}
 
 	@Test
-	public void testMerge() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		b = ( B ) s.merge( b );
-		c = b.getC();
-		d = b.getD();
-		e = d.getE();
-		f = e.getF();
-		g = f.getG();
-		s.getTransaction().commit();
-		s.close();
+	public void testMerge(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					b = (B) session.merge( b );
+					c = b.getC();
+					d = b.getD();
+					e = d.getE();
+					f = e.getF();
+					g = f.getG();
+				}
+		);
 
-		check();
+		check( scope );
 	}
 
-	private void check() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		B bRead = ( B ) s.get( B.class, b.getId() );
-		Assert.assertEquals( b, bRead );
+	private void check(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					B bRead = session.get( B.class, b.getId() );
+					assertEquals( b, bRead );
 
-		G gRead = bRead.getGCollection().iterator().next();
-		Assert.assertEquals( g, gRead );
-		C cRead = bRead.getC();
-		Assert.assertEquals( c, cRead );
-		D dRead = bRead.getD();
-		Assert.assertEquals( d, dRead );
+					G gRead = bRead.getGCollection().iterator().next();
+					assertEquals( g, gRead );
+					C cRead = bRead.getC();
+					assertEquals( c, cRead );
+					D dRead = bRead.getD();
+					assertEquals( d, dRead );
 
-		Assert.assertSame( bRead, cRead.getBCollection().iterator().next() );
-		Assert.assertSame( dRead, cRead.getDCollection().iterator().next() );
+					assertSame( bRead, cRead.getBCollection().iterator().next() );
+					assertSame( dRead, cRead.getDCollection().iterator().next() );
 
-		Assert.assertSame( bRead, dRead.getBCollection().iterator().next() );
-		Assert.assertEquals( cRead, dRead.getC() );
-		E eRead = dRead.getE();
-		Assert.assertEquals( e, eRead );
-		F fRead = dRead.getFCollection().iterator().next();
-		Assert.assertEquals( f, fRead );
+					assertSame( bRead, dRead.getBCollection().iterator().next() );
+					assertEquals( cRead, dRead.getC() );
+					E eRead = dRead.getE();
+					assertEquals( e, eRead );
+					F fRead = dRead.getFCollection().iterator().next();
+					assertEquals( f, fRead );
 
-		Assert.assertSame( dRead, eRead.getDCollection().iterator().next() );
-		Assert.assertSame( fRead, eRead.getF() );
+					assertSame( dRead, eRead.getDCollection().iterator().next() );
+					assertSame( fRead, eRead.getF() );
 
-		Assert.assertSame( eRead, fRead.getECollection().iterator().next() );
-		Assert.assertSame( dRead, fRead.getD() );
-		Assert.assertSame( gRead, fRead.getG());
+					assertSame( eRead, fRead.getECollection().iterator().next() );
+					assertSame( dRead, fRead.getD() );
+					assertSame( gRead, fRead.getG() );
 
-		Assert.assertSame( bRead, gRead.getB() );
-		Assert.assertSame( fRead, gRead.getFCollection().iterator().next() );
-
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				B.class,
-				C.class,
-				D.class,
-				E.class,
-				F.class,
-				G.class
-		};
+					assertSame( bRead, gRead.getB() );
+					assertSame( fRead, gRead.getFCollection().iterator().next() );
+				}
+		);
 	}
 
 }

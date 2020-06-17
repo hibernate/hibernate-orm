@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.basic;
+package org.hibernate.orm.test.annotations.basic;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,13 +26,12 @@ import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionAsBasicTest extends BaseUnitTestCase {
+public class CollectionAsBasicTest {
 	@Test
 	public void testCollectionAsBasic() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();

@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.backquotes;
+package org.hibernate.orm.test.annotations.backquotes;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;

@@ -6,19 +6,33 @@
  */
 package org.hibernate.orm.test.annotations.cascade.circle.identity;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@DomainModel(
+		annotatedClasses = {
+				A.class,
+				B.class,
+				C.class,
+				D.class,
+				E.class,
+				F.class,
+				G.class,
+				H.class
+		}
+)
+@SessionFactory
+public class CascadeCircleIdentityIdTest {
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-5472" )
-	public void testCascade() {
+	@TestForIssue(jiraKey = "HHH-5472")
+	public void testCascade(SessionFactoryScope scope) {
 		A a = new A();
 		B b = new B();
 		C c = new C();
@@ -28,55 +42,37 @@ public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
 		G g = new G();
 		H h = new H();
 
-		a.getBCollection().add(b);
-		b.setA(a);
-		
-		a.getCCollection().add(c);
-		c.setA(a);
-		
-		b.getCCollection().add(c);
-		c.setB(b);
-		
-		a.getDCollection().add(d);
-		d.getACollection().add(a);
-		
-		d.getECollection().add(e);
-		e.setF(f);
-		
-		f.getBCollection().add(b);
-		b.setF(f);
-		
-		c.setG(g);
-		g.getCCollection().add(c);
-		
-		f.setH(h);
-		h.setG(g);
-		
-		Session s;
-		s = openSession();
-		s.getTransaction().begin();
-		try {
-			// Fails: says that C.b is null (even though it isn't). Doesn't fail if you persist c, g or h instead of a
-			s.persist(a);
-			s.flush();
-		} finally {
-			s.getTransaction().rollback();
-			s.close();
-		}
-	}
+		a.getBCollection().add( b );
+		b.setA( a );
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
-				A.class,
-				B.class,
-				C.class,
-				D.class,
-				E.class,
-				F.class,
-				G.class,
-				H.class
-		};
+		a.getCCollection().add( c );
+		c.setA( a );
+
+		b.getCCollection().add( c );
+		c.setB( b );
+
+		a.getDCollection().add( d );
+		d.getACollection().add( a );
+
+		d.getECollection().add( e );
+		e.setF( f );
+
+		f.getBCollection().add( b );
+		b.setF( f );
+
+		c.setG( g );
+		g.getCCollection().add( c );
+
+		f.setH( h );
+		h.setG( g );
+
+		scope.inTransaction(
+				session -> {
+					// Fails: says that C.b is null (even though it isn't). Doesn't fail if you persist c, g or h instead of a
+					session.persist( a );
+					session.flush();
+				}
+		);
 	}
 
 }

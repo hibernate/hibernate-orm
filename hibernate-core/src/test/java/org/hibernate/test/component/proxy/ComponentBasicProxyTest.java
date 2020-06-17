@@ -18,8 +18,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.annotations.basic.CollectionAsBasicTest.DelimitedStringsType;
 import org.hibernate.testing.TestForIssue;
+
+import org.hibernate.orm.test.annotations.basic.CollectionAsBasicTest;
 import org.hibernate.type.ComponentType;
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase
 
 		try {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( Person.class )
-					.getMetadataBuilder().applyBasicType( new DelimitedStringsType() )
+					.getMetadataBuilder().applyBasicType( new CollectionAsBasicTest.DelimitedStringsType() )
 					.build();
 			PersistentClass persistentClass = metadata.getEntityBinding( Person.class.getName() );
 

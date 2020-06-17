@@ -6,15 +6,19 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.fkcircularity;
+package org.hibernate.orm.test.annotations.fkcircularity;
 import javax.persistence.Entity;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.Table;
 
 /**
- * Test entities ANN-722.
+ * Test entities ANN-730.
  * 
  * @author Hardy Ferentschik
- *
+ * 
  */
 @Entity
-public class C extends B {
+@Table(name = "class_b")
+@PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
+public class ClassB extends ClassA {
 }

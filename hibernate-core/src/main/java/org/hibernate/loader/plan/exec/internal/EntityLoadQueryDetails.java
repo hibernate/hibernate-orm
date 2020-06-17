@@ -22,6 +22,7 @@ import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContex
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
@@ -58,6 +59,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
+	 * @param resultSetProcessorResolver The ResultSet resolver.
 	 */
 	protected EntityLoadQueryDetails(
 			LoadPlan loadPlan,
@@ -65,7 +67,9 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 			AliasResolutionContextImpl aliasResolutionContext,
 			EntityReturn rootReturn,
 			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
+
 		super(
 				loadPlan,
 				aliasResolutionContext,
@@ -82,20 +86,54 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 				new EntityReturnReader( rootReturn ),
 				new EntityReferenceInitializerImpl( rootReturn, entityReferenceAliases, true )
 		);
-		generate();
+		generate( resultSetProcessorResolver );
+	}
+
+	/**
+	 * Constructs a EntityLoadQueryDetails object from the given inputs.
+	 *
+	 * @param loadPlan The load plan
+	 * @param keyColumnNames The columns to load the entity by (the PK columns or some other unique set of columns)
+	 * @param buildingParameters Any influencers that would affect the generated SQL (mostly we are concerned with those
+	 * that add additional joins here)
+	 * @param factory The SessionFactory
+	 */
+	protected EntityLoadQueryDetails(
+			LoadPlan loadPlan,
+			String[] keyColumnNames,
+			AliasResolutionContextImpl aliasResolutionContext,
+			EntityReturn rootReturn,
+			QueryBuildingParameters buildingParameters,
+			SessionFactoryImplementor factory) {
+		this(
+				loadPlan,
+				keyColumnNames,
+				aliasResolutionContext,
+				rootReturn,
+				buildingParameters,
+				factory,
+				ResultSetProcessorResolver.DEFAULT
+		);
 	}
 
 	protected EntityLoadQueryDetails(
 			EntityLoadQueryDetails initialEntityLoadQueryDetails,
-			QueryBuildingParameters buildingParameters) {
+			QueryBuildingParameters buildingParameters,
+			ResultSetProcessorResolver resultSetProcessorResolver) {
 		this(
 				initialEntityLoadQueryDetails.getLoadPlan(),
 				initialEntityLoadQueryDetails.getKeyColumnNames(),
 				new AliasResolutionContextImpl( initialEntityLoadQueryDetails.getSessionFactory() ),
 				(EntityReturn) initialEntityLoadQueryDetails.getRootReturn(),
 				buildingParameters,
-				initialEntityLoadQueryDetails.getSessionFactory()
+				initialEntityLoadQueryDetails.getSessionFactory(),
+				resultSetProcessorResolver
 		);
+	}
+	protected EntityLoadQueryDetails(
+			EntityLoadQueryDetails initialEntityLoadQueryDetails,
+			QueryBuildingParameters buildingParameters) {
+		this( initialEntityLoadQueryDetails, buildingParameters, ResultSetProcessorResolver.DEFAULT );
 	}
 
 	public boolean hasCollectionInitializers() {

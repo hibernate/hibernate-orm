@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.ServiceContributor;
 
 /**
@@ -75,6 +76,8 @@ public @interface ServiceRegistry {
 	Class<? extends ServiceContributor>[] serviceContributors() default {};
 
 	Class<? extends StandardServiceInitiator>[] initiators() default {};
+
+	Class<? extends Integrator>[] integrators() default {};
 
 	Service[] services() default {};
 

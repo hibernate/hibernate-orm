@@ -85,7 +85,6 @@ public class SessionFactoryExtension
 				producer = model -> {
 					try {
 						final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-
 						if ( StringHelper.isNotEmpty( sessionFactoryConfig.sessionFactoryName() ) ) {
 							sessionFactoryBuilder.applyName( sessionFactoryConfig.sessionFactoryName() );
 						}
@@ -155,6 +154,7 @@ public class SessionFactoryExtension
 		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
+
 
 		SchemaManagementToolCoordinator.process(
 				model,

@@ -6,11 +6,15 @@
  */
 package org.hibernate.testing.orm.junit;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.ServiceContributor;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -51,9 +55,10 @@ public class ServiceRegistryExtension
 
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 
-		ServiceRegistryScopeImpl scope = (ServiceRegistryScopeImpl) store.get( REGISTRY_KEY );
+		ServiceRegistryScopeImpl existingScope = (ServiceRegistryScopeImpl) store.get( REGISTRY_KEY );
 
-		if ( scope == null ) {
+		if ( existingScope == null ) {
+			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl(  );
 			log.debugf( "Creating ServiceRegistryScope - %s", context.getDisplayName() );
 
 			final ServiceRegistryProducer producer;
@@ -75,22 +80,34 @@ public class ServiceRegistryExtension
 					if ( serviceRegistryAnnWrapper.isPresent() ) {
 						final ServiceRegistry serviceRegistryAnn = serviceRegistryAnnWrapper.get();
 						configureServices( serviceRegistryAnn, ssrb );
+						configureIntegrators(serviceRegistryAnn, scope);
 					}
 
 					return ssrb.build();
 				};
 			}
 
-			scope = new ServiceRegistryScopeImpl( producer );
+
+
+			scope.createRegistry(producer);
 
 			locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, scope );
 
 			if ( testInstance instanceof ServiceRegistryScopeAware ) {
 				( (ServiceRegistryScopeAware) testInstance ).injectServiceRegistryScope( scope );
 			}
+			return scope;
 		}
 
-		return scope;
+		return existingScope;
+	}
+
+	private static void configureIntegrators(
+			ServiceRegistry serviceRegistryAnn,
+			final ServiceRegistryScopeImpl serviceRegistryScope) {
+		for ( Class<? extends Integrator> integrator : serviceRegistryAnn.integrators() ) {
+			serviceRegistryScope.applyIntegrator( integrator );
+		}
 	}
 
 	private static void configureServices(ServiceRegistry serviceRegistryAnn, StandardServiceRegistryBuilder ssrb) {
@@ -154,21 +171,32 @@ public class ServiceRegistryExtension
 	}
 
 	private static class ServiceRegistryScopeImpl implements ServiceRegistryScope, ExtensionContext.Store.CloseableResource {
-		private final ServiceRegistryProducer producer;
+		private ServiceRegistryProducer producer;
 
 		private StandardServiceRegistry registry;
 		private boolean active = true;
+		private List<Class<? extends Integrator>> integrators = new ArrayList<>();
 
-		public ServiceRegistryScopeImpl(ServiceRegistryProducer producer) {
-			this.producer = producer;
+		public ServiceRegistryScopeImpl() {
 
-			this.registry = createRegistry();
 		}
 
-		private StandardServiceRegistry createRegistry() {
+		public StandardServiceRegistry createRegistry(ServiceRegistryProducer producer) {
+			this.producer = producer;
 			verifyActive();
+			BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder().enableAutoClose();
+			integrators.forEach(
+					integrator -> {
+						try {
+							bootstrapServiceRegistryBuilder.applyIntegrator( integrator.newInstance() );
+						}
+						catch (Exception e) {
+							throw new RuntimeException( "Could not configure BootstrapServiceRegistryBuilder", e );
+						}
+					}
+			);
 
-			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder(bootstrapServiceRegistryBuilder.build());
 			// we will close it ourselves explicitly.
 			ssrb.disableAutoClose();
 
@@ -181,12 +209,16 @@ public class ServiceRegistryExtension
 			}
 		}
 
+		public void applyIntegrator(Class<? extends Integrator> integrator) {
+			integrators.add( integrator );
+		}
+
 		@Override
 		public StandardServiceRegistry getRegistry() {
 			verifyActive();
 
 			if ( registry == null ) {
-				registry = createRegistry();
+				registry = createRegistry( producer );
 			}
 
 			return registry;

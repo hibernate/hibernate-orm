@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
  * Represents a reference to a table (derived or physical) in a query's from clause.
@@ -26,9 +23,6 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	private final String identificationVariable;
 
 	private final boolean isOptional;
-	private final SessionFactoryImplementor sessionFactory;
-
-	private final Map<String, ColumnReference> columnReferenceResolutionMap = new HashMap<>();
 
 	public TableReference(
 			String tableExpression,
@@ -38,7 +32,6 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 		this.tableExpression = tableExpression;
 		this.identificationVariable = identificationVariable;
 		this.isOptional = isOptional;
-		this.sessionFactory = sessionFactory;
 	}
 
 	public String getTableExpression() {
@@ -100,4 +93,5 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	public int hashCode() {
 		return Objects.hash( identificationVariable );
 	}
+
 }

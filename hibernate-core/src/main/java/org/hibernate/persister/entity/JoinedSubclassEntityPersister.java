@@ -157,6 +157,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isInverseTable;
 
 	private final Map<String, Object> discriminatorValuesByTableName;
+	private final Map<String, String> discriminatorColumnNameByTableName;
 	private final Map<String, String> subclassNameByTableName;
 
 	//INITIALIZATION:
@@ -525,17 +526,36 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
 		subclassClosure = new String[subclassSpan];
-		subclassClosure[subclassSpan - 1] = getEntityName();
+		int subclassSpanMinusOne = subclassSpan - 1;
+		subclassClosure[subclassSpanMinusOne] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 
-			discriminatorValuesByTableName = new LinkedHashMap<>( subclassSpan + 1 );
-			subclassNameByTableName = CollectionHelper.mapOfSize( subclassSpan + 1);
+			int initialCapacity = subclassSpan + 1;
+			discriminatorValuesByTableName = new LinkedHashMap<>( initialCapacity );
+			discriminatorColumnNameByTableName = new LinkedHashMap<>( initialCapacity );
+			subclassNameByTableName = CollectionHelper.mapOfSize( initialCapacity );
 			// We need to convert the `discriminatorSQLString` (which is a String read from boot-mapping) into
 			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
 			try {
+				Table table = persistentClass.getTable();
 				final Object convertedDiscriminatorValue = discriminatorType.stringToObject( discriminatorSQLString );
-				discriminatorValuesByTableName.put( persistentClass.getTable().getName(), convertedDiscriminatorValue );
+				discriminatorValues = new String[subclassSpan];
+				initDiscriminatorProperties( factory, jdbcEnvironment, subclassSpanMinusOne, table, convertedDiscriminatorValue
+				);
+
+				notNullColumnTableNumbers = new int[subclassSpan];
+				final int id = getTableId(
+						table.getQualifiedName(
+								factory.getDialect(),
+								factory.getSettings().getDefaultCatalogName(),
+								factory.getSettings().getDefaultSchemaName()
+						),
+						subclassTableNameClosure
+				);
+				notNullColumnTableNumbers[subclassSpanMinusOne] = id;
+				notNullColumnNames = new String[subclassSpan];
+				notNullColumnNames[subclassSpanMinusOne] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 			}
 			catch (HibernateException e) {
 				throw e;
@@ -547,24 +567,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 				);
 			}
-			discriminatorValues = new String[subclassSpan];
-			discriminatorValues[subclassSpan - 1] = discriminatorSQLString;
-			notNullColumnTableNumbers = new int[subclassSpan];
-			final int id = getTableId(
-					persistentClass.getTable().getQualifiedName(
-							factory.getDialect(),
-							factory.getSettings().getDefaultCatalogName(),
-							factory.getSettings().getDefaultSchemaName()
-					),
-					subclassTableNameClosure
-			);
-			notNullColumnTableNumbers[subclassSpan - 1] = id;
-			notNullColumnNames = new String[subclassSpan];
-			notNullColumnNames[subclassSpan - 1] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 		}
 		else {
 			subclassNameByTableName = Collections.EMPTY_MAP;
 			discriminatorValuesByTableName = Collections.EMPTY_MAP;
+			discriminatorColumnNameByTableName = Collections.EMPTY_MAP;
 			discriminatorValues = null;
 			notNullColumnTableNumbers = null;
 			notNullColumnNames = null;
@@ -575,7 +582,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( iter.hasNext() ) {
 			Subclass sc = (Subclass) iter.next();
 			subclassClosure[k] = sc.getEntityName();
-			subclassNameByTableName.put( sc.getTable().getName(), sc.getClassName() );
+			final Table table = sc.getTable();
+			subclassNameByTableName.put( table.getName(), sc.getClassName() );
 			try {
 				if ( persistentClass.isPolymorphic() ) {
 					final Object discriminatorValue;
@@ -604,11 +612,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						// "foo.class = Bar" works in HQL
 						discriminatorValue = sc.getSubclassId();
 					}
-					discriminatorValuesByTableName.put( sc.getTable().getName(),  discriminatorValue );
+					initDiscriminatorProperties( factory, jdbcEnvironment, k, table, discriminatorValue );
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
-					discriminatorValues[k] = discriminatorValue.toString();
 					int id = getTableId(
-							sc.getTable().getQualifiedName(
+							table.getQualifiedName(
 									factory.getDialect(),
 									factory.getSettings().getDefaultCatalogName(),
 									factory.getSettings().getDefaultSchemaName()
@@ -633,6 +640,19 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		postConstruct( creationContext.getMetadata() );
 
+	}
+
+	private void initDiscriminatorProperties(
+			SessionFactoryImplementor factory,
+			JdbcEnvironment jdbcEnvironment,
+			int k,
+			Table table,
+			Object discriminatorValue) {
+		final String tableName = determineTableName( table, jdbcEnvironment );
+		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( factory.getDialect() );
+		discriminatorValuesByTableName.put( tableName, discriminatorValue );
+		discriminatorColumnNameByTableName.put( tableName, columnName );
+		discriminatorValues[k] = discriminatorValue.toString();
 	}
 
 
@@ -1313,10 +1333,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private ColumnReference getIdentifierColumnReference(TableReference tableReference) {
 		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings( getFactory().getTypeConfiguration() );
-
 		return new ColumnReference(
 				tableReference.getIdentificationVariable(),
-				getIdentifierColumnNames()[0],
+				discriminatorColumnNameByTableName.get( tableReference.getTableExpression() ),
 				jdbcMappings.get( 0 ),
 				getFactory()
 		);

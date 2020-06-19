@@ -14,8 +14,11 @@ import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +26,7 @@ import org.junit.Test;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
+@TestForIssue( jiraKey = "HHH-14077")
 public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
@@ -56,6 +60,7 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 	}
 
 	@Test
+	@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() throws Exception {
 		doInJPA(
 				this::entityManagerFactory,

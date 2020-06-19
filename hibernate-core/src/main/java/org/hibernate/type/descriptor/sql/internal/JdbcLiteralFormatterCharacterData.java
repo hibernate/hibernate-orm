@@ -19,6 +19,8 @@ import org.hibernate.type.descriptor.sql.spi.BasicJdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter {
+	public static final String NATIONALIZED_PREFIX = "n";
+
 	private final boolean isNationalized;
 
 	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor javaTypeDescriptor) {
@@ -34,12 +36,13 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 	public String toJdbcLiteral(Object value, Dialect dialect, SharedSessionContractImplementor session) {
 		final String literalValue = unwrap( value, String.class, session );
 
+		final String inlineLiteral = dialect.inlineLiteral( literalValue );
+
 		if ( isNationalized ) {
 			// is there a standardized form for n-string literals?  This is the SQL Server syntax for sure
-			return String.format( Locale.ROOT, "n'%s'", literalValue );
+			return NATIONALIZED_PREFIX.concat( inlineLiteral );
 		}
-		else {
-			return String.format( Locale.ROOT, "'%s'", literalValue );
-		}
+
+		return inlineLiteral;
 	}
 }

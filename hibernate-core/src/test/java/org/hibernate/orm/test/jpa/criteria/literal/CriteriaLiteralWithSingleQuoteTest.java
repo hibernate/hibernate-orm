@@ -8,7 +8,10 @@ import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.dialect.PostgreSQLDialect;
+
 import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,6 +55,7 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() {
 		inTransaction(
 				entityManager -> {

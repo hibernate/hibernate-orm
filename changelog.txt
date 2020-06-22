@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.18.Final (June 22, 2020)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31861
+
+** Bug
+    * [HHH-14081] - CompositeIdFkGeneratedValueIdentityTest and CompositeIdFkGeneratedValueTest failures on Oracle db
+    * [HHH-14077] - CVE-2019-14900 SQL injection issue using JPA Criteria API
+
+** Improvement
+    * [HHH-14083] - Gradle, add task to automate the CI release process
+    * [HHH-14023] - H2: Adapt to sequence and column types changes in 1.4.201
+
+** Task
+    * [HHH-14075] - Changes to loaders and TwoPhaseLoad to allow "internal" loading to be reused by hibernate-reactive
+
+
 Changes in 5.4.17.Final (May 29, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

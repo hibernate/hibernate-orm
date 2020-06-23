@@ -289,6 +289,9 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		}
 
 		if ( modelPart instanceof EntityCollectionPart ) {
+			if ( parentOfParent.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+				parentOfParent = parentOfParent.getParent();
+			}
 			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).getMappedBy();
 		}
 

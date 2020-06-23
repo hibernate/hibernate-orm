@@ -53,6 +53,11 @@ public abstract class AbstractPathImpl<X>
 		super( criteriaBuilder, javaType );
 		this.pathSource = pathSource;
 		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType(), this );
+
+		if (pathSource != null)
+			this.alias(pathSource.getJavaType().getSimpleName());
+		else if (getAttribute() != null)
+			getAttribute().getJavaMember().getName();
 	}
 
 	public PathSource getPathSource() {

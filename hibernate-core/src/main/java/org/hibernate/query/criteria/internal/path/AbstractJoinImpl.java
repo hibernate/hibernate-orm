@@ -52,6 +52,11 @@ public abstract class AbstractJoinImpl<Z, X>
 		super( criteriaBuilder, javaType, pathSource );
 		this.joinAttribute = joinAttribute;
 		this.joinType = joinType;
+
+		if (pathSource != null)
+			this.alias(pathSource.getJavaType().getSimpleName());
+		else if (joinAttribute != null)
+			this.alias(joinAttribute.getJavaMember().getName());
 	}
 
 	@Override

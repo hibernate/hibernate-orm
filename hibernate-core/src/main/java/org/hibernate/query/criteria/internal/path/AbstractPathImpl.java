@@ -57,7 +57,7 @@ public abstract class AbstractPathImpl<X>
 		if (pathSource != null)
 			this.alias(pathSource.getJavaType().getSimpleName());
 		else if (getAttribute() != null)
-			getAttribute().getJavaMember().getName();
+			this.alias(getAttribute().getJavaMember().getName());
 	}
 
 	public PathSource getPathSource() {

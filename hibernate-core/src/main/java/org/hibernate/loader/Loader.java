@@ -62,12 +62,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -988,12 +986,48 @@ public abstract class Loader {
 			int maxRows,
 			List<AfterLoadAction> afterLoadActions) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
+		final boolean createSubselects = isSubselectLoadingEnabled();
+		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
+		final List<Object> hydratedObjects = entitySpan == 0 ? null : new ArrayList<>( entitySpan * 10 );
+
+		final List results = getRowsFromResultSet(
+				rs,
+				queryParameters,
+				session,
+				returnProxies,
+				forcedResultTransformer,
+				maxRows,
+				hydratedObjects,
+				subselectResultKeys
+		);
+
+		initializeEntitiesAndCollections(
+				hydratedObjects,
+				rs,
+				session,
+				queryParameters.isReadOnly( session ),
+				afterLoadActions
+		);
+		if ( createSubselects ) {
+			createSubselects( subselectResultKeys, queryParameters, session );
+		}
+		return results;
+	}
+
+	protected List<Object> getRowsFromResultSet(
+			ResultSet rs,
+			QueryParameters queryParameters,
+			SharedSessionContractImplementor session,
+			boolean returnProxies,
+			ResultTransformer forcedResultTransformer,
+			int maxRows,
+			List<Object> hydratedObjects,
+			List<EntityKey[]> subselectResultKeys) throws SQLException {
+		final int entitySpan = getEntityPersisters().length;
+		final boolean createSubselects = isSubselectLoadingEnabled();
 		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
-		final boolean createSubselects = isSubselectLoadingEnabled();
-		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
-		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
-		final List results = new ArrayList();
+		final List<Object> results = new ArrayList<>();
 
 		handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
@@ -1025,16 +1059,6 @@ public abstract class Loader {
 
 		LOG.tracev( "Done processing result set ({0} rows)", count );
 
-		initializeEntitiesAndCollections(
-				hydratedObjects,
-				rs,
-				session,
-				queryParameters.isReadOnly( session ),
-				afterLoadActions
-		);
-		if ( createSubselects ) {
-			createSubselects( subselectResultKeys, queryParameters, session );
-		}
 		return results;
 	}
 
@@ -1063,7 +1087,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	private void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
+	protected void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
 
 			Set[] keySets = transpose( keys );
@@ -1972,15 +1996,18 @@ public abstract class Loader {
 
 	private ScrollMode getScrollMode(
 			boolean scroll,
-			boolean hasFirstRow,
-			boolean useLimitOffSet,
+			LimitHandler limitHandler,
 			QueryParameters queryParameters) {
 		final boolean canScroll = getFactory().getSessionFactoryOptions().isScrollableResultSetsEnabled();
 		if ( canScroll ) {
 			if ( scroll ) {
 				return queryParameters.getScrollMode();
 			}
-			if ( hasFirstRow && !useLimitOffSet ) {
+			final RowSelection selection = queryParameters.getRowSelection();
+			final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
+			final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
+			final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
+			if ( hasFirstRow && !useLimitOffset ) {
 				return ScrollMode.SCROLL_INSENSITIVE;
 			}
 		}
@@ -2080,19 +2107,24 @@ public abstract class Loader {
 			final LimitHandler limitHandler,
 			final boolean scroll,
 			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
+		final PreparedStatement preparedStatement = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
+				sql,
+				queryParameters.isCallable(),
+				getScrollMode( scroll, limitHandler, queryParameters )
+		);
+		return bindPreparedStatement( preparedStatement, queryParameters, limitHandler, session );
+	}
+
+	protected final PreparedStatement bindPreparedStatement(
+			final PreparedStatement st,
+			final QueryParameters queryParameters,
+			final LimitHandler limitHandler,
+			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
+
 		final Dialect dialect = getFactory().getDialect();
 		final RowSelection selection = queryParameters.getRowSelection();
-		final boolean useLimit = LimitHelper.useLimit( limitHandler, selection );
-		final boolean hasFirstRow = LimitHelper.hasFirstRow( selection );
-		final boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
 		final boolean callable = queryParameters.isCallable();
-		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-
-		PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
-				sql,
-				callable,
-				scrollMode
-		);
 
 		try {
 
@@ -2278,7 +2310,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2299,7 +2331,7 @@ public abstract class Loader {
 		try {
 			ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
 
-			return processResultSet(rs, selection, limitHandler, autodiscovertypes, session);
+			return preprocessResultSet( rs, selection, limitHandler, autodiscovertypes, session );
 		}
 		catch (SQLException | HibernateException e) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
@@ -2308,7 +2340,7 @@ public abstract class Loader {
 		}
 	}
 
-	private ResultSet processResultSet(
+	protected ResultSet preprocessResultSet(
 			ResultSet rs,
 			final RowSelection selection,
 			final LimitHandler limitHandler,

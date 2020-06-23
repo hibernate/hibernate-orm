@@ -30,7 +30,7 @@ public class FilterPredicate implements Predicate {
 
 	@Override
 	public boolean isEmpty() {
-		return true;
+		return false;
 	}
 
 	@Override

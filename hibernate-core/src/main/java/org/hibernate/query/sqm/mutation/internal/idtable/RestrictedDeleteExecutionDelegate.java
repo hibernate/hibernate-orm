@@ -18,9 +18,11 @@ import java.util.function.Supplier;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.mapping.ColumnConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -36,6 +38,7 @@ import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstDeleteTranslator;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -44,6 +47,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -85,6 +89,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Supplier<IdTableExporter> idTableExporterAccess,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
 			QueryParameterBindings queryParameterBindings,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
@@ -100,8 +105,10 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		converter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
+				sqmDelete.getTarget().getExplicitAlias(),
 				domainParameterXref,
 				queryOptions,
+				loadQueryInfluencers,
 				queryParameterBindings,
 				sessionFactory
 		);
@@ -132,7 +139,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		//			table it comes from.  if all of the referenced columns (if any at all) are from the root table
 		//			we can perform all of the deletes without using an id-table
 		final AtomicBoolean needsIdTableWrapper = new AtomicBoolean( false );
-		final Predicate predicate = converter.visitWhereClause(
+		Predicate predicate = converter.visitWhereClause(
 				sqmDelete.getWhereClause(),
 				columnReference -> {
 					if ( ! hierarchyRootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
@@ -141,6 +148,15 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				},
 				parameterResolutions::put
 		);
+
+		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+				executionContext.getLoadQueryInfluencers(),
+				(Joinable) entityDescriptor
+		);
+		if ( filterPredicate != null ) {
+			needsIdTableWrapper.set( true );
+			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
+		}
 
 		boolean needsIdTable = needsIdTableWrapper.get();
 
@@ -322,6 +338,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				.getSqlAstTranslatorFactory()
 				.buildDeleteTranslator( factory );
 		final JdbcDelete jdbcDelete = sqlAstTranslator.translate( sqlAst );
+		jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcDelete,

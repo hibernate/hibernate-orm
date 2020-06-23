@@ -70,8 +70,8 @@ public class TableBasedDeleteHandler
 	}
 
 	private ExecutionDelegate resolveDelegate(ExecutionContext executionContext) {
-		if ( getSqmDeleteOrUpdateStatement().getWhereClause() == null
-				|| getSqmDeleteOrUpdateStatement().getWhereClause().getPredicate() == null ) {
+		if ( ( getSqmDeleteOrUpdateStatement().getWhereClause() == null || getSqmDeleteOrUpdateStatement().getWhereClause().getPredicate() == null )
+				&& ! getEntityDescriptor().isAffectedByEnabledFilters( executionContext.getLoadQueryInfluencers() ) ) {
 			return new UnrestrictedDeleteExecutionDelegate( getEntityDescriptor() );
 		}
 
@@ -86,6 +86,7 @@ public class TableBasedDeleteHandler
 				exporterSupplier,
 				sessionUidAccess,
 				executionContext.getQueryOptions(),
+				executionContext.getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				getSessionFactory()
 		);

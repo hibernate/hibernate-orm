@@ -130,6 +130,7 @@ public final class ExecuteWithIdTableHelper {
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 		final SqlAstInsertTranslator sqlAstTranslator = sqlAstTranslatorFactory.buildInsertTranslator( factory );
 		final JdbcInsert jdbcInsert = sqlAstTranslator.translate( idTableInsert );
+		jdbcInsert.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcInsert,

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.sql.ast.SqlAstInsertTranslator;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -100,6 +101,11 @@ public class StandardSqlAstInsertTranslator
 			public Set<String> getAffectedTableNames() {
 				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
 			}
+
+			@Override
+			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+				return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
+			}
 		};
 	}
 
@@ -145,6 +151,11 @@ public class StandardSqlAstInsertTranslator
 			@Override
 			public Set<String> getAffectedTableNames() {
 				return StandardSqlAstInsertTranslator.this.getAffectedTableNames();
+			}
+
+			@Override
+			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
+				return StandardSqlAstInsertTranslator.this.getFilterJdbcParameters();
 			}
 		};
 	}

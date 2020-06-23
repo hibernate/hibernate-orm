@@ -266,6 +266,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				.buildUpdateTranslator( sessionFactory );
 
 		final JdbcUpdate jdbcUpdate = sqlAstTranslator.translate( sqlAst );
+		jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcUpdate,

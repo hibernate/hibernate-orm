@@ -19,6 +19,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -206,6 +207,7 @@ public abstract class BaseSqmToSqlAstConverter
 
 	private final SqlAstCreationContext creationContext;
 	private final QueryOptions queryOptions;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
@@ -230,11 +232,13 @@ public abstract class BaseSqmToSqlAstConverter
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
 			QueryOptions queryOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings) {
 		super( creationContext.getServiceRegistry() );
 		this.creationContext = creationContext;
 		this.queryOptions = queryOptions;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainParameterXref = domainParameterXref;
 		this.domainParameterBindings = domainParameterBindings;
 		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
@@ -293,6 +297,10 @@ public abstract class BaseSqmToSqlAstConverter
 
 	public QueryOptions getQueryOptions() {
 		return queryOptions;
+	}
+
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 	public FromClauseIndex getFromClauseIndex() {

@@ -25,7 +25,7 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 	private final QueryResultsCache queryCache;
 	private final QueryKey queryKey;
 
-	private List<Object[]> dataToCache;
+	private final List<Object[]> dataToCache = new ArrayList<>();
 
 	public QueryCachePutManagerEnabledImpl(QueryResultsCache queryCache, QueryKey queryKey) {
 		this.queryCache = queryCache;
@@ -34,9 +34,6 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 
 	@Override
 	public void registerJdbcRow(Object[] values) {
-		if ( dataToCache == null ) {
-			dataToCache = new ArrayList<>();
-		}
 
 		// todo (6.0) : verify whether we really need to copy these..
 		//		`RowProcessingStateStandardImpl` (see `#finishRowProcessing`) already creates new array

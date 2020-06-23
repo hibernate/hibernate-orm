@@ -100,13 +100,13 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
 				executionContext.getSession()
 		);
+		jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		final boolean missingRestriction = sqmDelete.getWhereClause() == null
 				|| sqmDelete.getWhereClause().getPredicate() == null;
 		if ( missingRestriction ) {
 			assert domainParameterXref.getSqmParameterCount() == 0;
 			assert jdbcParamsXref.isEmpty();
-			assert jdbcParameterBindings.getBindings().size() == 0;
 		}
 
 		SqmMutationStrategyHelper.cleanUpCollectionTables(

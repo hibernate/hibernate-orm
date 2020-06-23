@@ -9,6 +9,9 @@ package org.hibernate.sql.exec.spi;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.internal.util.collections.CollectionHelper;
+
 /**
  * Unifying contract for any SQL statement we want to execute via JDBC.
  *
@@ -27,4 +30,14 @@ public interface JdbcOperation {
 	List<JdbcParameterBinder> getParameterBinders();
 
 	Set<String> getAffectedTableNames();
+
+	Set<FilterJdbcParameter> getFilterJdbcParameters();
+
+	default void bindFilterJdbcParameters(JdbcParameterBindings jdbcParameterBindings) {
+		if ( CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
+			for ( FilterJdbcParameter filterJdbcParameter : getFilterJdbcParameters() ) {
+				jdbcParameterBindings.addBinding( filterJdbcParameter.getParameter(), filterJdbcParameter.getBinding() );
+			}
+		}
+	}
 }

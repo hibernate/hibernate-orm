@@ -29,6 +29,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Collection persister for one-to-many associations.
@@ -568,5 +569,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return getElementPersister().getFilterAliasGenerator( rootAlias );
+	}
+
+	@Override
+	public FilterAliasGenerator getFilterAliasGenerator(TableGroup rootTableGroup) {
+		return getElementPersister().getFilterAliasGenerator( rootTableGroup );
 	}
 }

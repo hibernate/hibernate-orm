@@ -1,0 +1,180 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.orm.test.filter;
+
+import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.query.Query;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
+/**
+ * @author Andrea Boriero
+ */
+@DomainModel(
+		annotatedClasses = {
+				OneToManyWithDynamicFilterTest.ArticleRevision.class,
+				OneToManyWithDynamicFilterTest.ArticleTrading.class
+		}
+)
+@SessionFactory
+public class OneToManyWithDynamicFilterTest {
+
+	@BeforeEach
+	void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final ArticleTrading articleTrading = new ArticleTrading();
+			articleTrading.setClassifier( "no_classification" );
+			articleTrading.setPartyId( 2 );
+			articleTrading.setDeletionTimestamp( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
+			articleTrading.setDeleted( true );
+
+			final ArticleRevision revision = new ArticleRevision();
+			revision.addArticleTradings( articleTrading );
+			revision.setDeletionTimestamp( Timestamp.valueOf( "9999-12-31 00:00:00" ) );
+			revision.setDeleted( true );
+			session.save( revision );
+		} );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createQuery( "DELETE FROM ArticleTrading" ).executeUpdate();
+			session.createQuery( "DELETE FROM ArticleRevision" ).executeUpdate();
+		} );
+	}
+
+	@Test
+	void testForIssue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final org.hibernate.Filter enableFilter = session.enableFilter( "aliveOnly" );
+			enableFilter.setParameter( "aliveTimestamp", Timestamp.valueOf( "9999-12-31 00:00:00" ) );
+			enableFilter.setParameter( "deleted", true );
+			enableFilter.validate();
+
+			final Query<Long> query = session.createQuery( "select a.id from ArticleRevision as a " +
+															 "left join a.articleTradings as t " +
+															 "with ( (t.partyId = :p_0)  and  (t.classifier = :p_1) )", Long.class );
+			query.setParameter( "p_0", 1L );
+			query.setParameter( "p_1", "no_classification" );
+			final List<Long> list = query.getResultList();
+			assertThat( list.size(), is( 1 ) );
+
+		} );
+	}
+
+	@Entity(name = "ArticleRevision")
+	@Table(name = "REVISION")
+	@FilterDefs({
+			@FilterDef(
+					name = "aliveOnly",
+					parameters = {
+						@ParamDef(name = "aliveTimestamp", type = "timestamp"),
+						@ParamDef(name = "deleted", type = "boolean")
+					},
+					defaultCondition = "DELETION_TIMESTAMP = :aliveTimestamp and DELETED = :deleted")
+	})
+	@Filters( { @Filter(name = "aliveOnly", condition = "DELETION_TIMESTAMP = :aliveTimestamp and DELETED = :deleted") } )
+	public static class ArticleRevision {
+		@Id
+		@GeneratedValue
+		private long id;
+
+		@Column(name = "DELETION_TIMESTAMP")
+		private Timestamp deletionTimestamp;
+
+		@Column(name = "DELETED")
+		private boolean deleted;
+
+		@OneToMany(mappedBy = "articleRevision", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+		@Filter(name = "aliveOnly")
+		private Set<ArticleTrading> articleTradings = new HashSet<>();
+
+		public void setDeletionTimestamp(Timestamp deletionTimestamp) {
+			this.deletionTimestamp = deletionTimestamp;
+		}
+
+
+		public void setDeleted(boolean deleted) {
+			this.deleted = deleted;
+		}
+
+		public void addArticleTradings(ArticleTrading articleTrading) {
+			this.articleTradings.add( articleTrading );
+			articleTrading.setArticleRevision( this );
+		}
+	}
+
+	@Entity(name = "ArticleTrading")
+	@Table(name = "TRADING")
+	public static class ArticleTrading {
+		@Id
+		@GeneratedValue
+		private long id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "articleRevision", nullable = false)
+		private ArticleRevision articleRevision;
+
+		private long partyId;
+
+		private String classifier;
+
+		@Column(name = "DELETED")
+		private boolean deleted;
+
+		@Column(name = "DELETION_TIMESTAMP")
+		protected Timestamp deletionTimestamp;
+
+		public void setArticleRevision(ArticleRevision articleRevision) {
+			this.articleRevision = articleRevision;
+		}
+
+		public void setPartyId(long partyId) {
+			this.partyId = partyId;
+		}
+
+		public void setClassifier(String classifier) {
+			this.classifier = classifier;
+		}
+
+		public void setDeletionTimestamp(Timestamp deletionTimestamp) {
+			this.deletionTimestamp = deletionTimestamp;
+		}
+
+		public void setDeleted(boolean deleted) {
+			this.deleted = deleted;
+		}
+	}
+}

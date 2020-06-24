@@ -21,41 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.collection.dereferenced;
+package org.hibernate.orm.test.collection.dereferenced;
 
-import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
 
 /**
  * @author Gail Badner
  */
 @Entity
-public class UnversionedCascadeOne {
+public class Many {
 	@Id
 	@GeneratedValue
 	private long id;
 
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn
-	private Set<Many> manies;
-
 	public long getId() {
 		return id;
 	}
+
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public Set<Many> getManies() {
-		return manies;
-	}
-	public void setManies(Set<Many> manies) {
-		this.manies = manies;
 	}
 }

@@ -21,26 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.collection.dereferenced;
+package org.hibernate.orm.test.collection.dereferenced;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import org.hibernate.*;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SessionFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
  */
-@Entity
-public class Many {
-	@Id
-	@GeneratedValue
-	private long id;
+public abstract class AbstractDereferencedCollectionTest {
 
-	public long getId() {
-		return id;
+	protected EntityEntry getEntityEntry(Session s, Object entity) {
+		return ( (SessionImplementor) s ).getPersistenceContextInternal().getEntry( entity );
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	protected CollectionEntry getCollectionEntry(Session s, PersistentCollection collection) {
+		return ( (SessionImplementor) s ).getPersistenceContextInternal().getCollectionEntry( collection );
 	}
 }

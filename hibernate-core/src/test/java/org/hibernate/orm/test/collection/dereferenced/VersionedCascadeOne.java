@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.collection.dereferenced;
+package org.hibernate.orm.test.collection.dereferenced;
 
 import java.util.Set;
 import javax.persistence.CascadeType;

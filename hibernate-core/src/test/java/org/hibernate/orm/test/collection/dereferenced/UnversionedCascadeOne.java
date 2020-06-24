@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.collection.dereferenced;
+package org.hibernate.orm.test.collection.dereferenced;
 
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -30,23 +30,19 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.Version;
 
 /**
  * @author Gail Badner
  */
 @Entity
-public class VersionedNoCascadeOne {
+public class UnversionedCascadeOne {
 	@Id
 	@GeneratedValue
 	private long id;
 
-	@OneToMany
+	@OneToMany(cascade = CascadeType.ALL)
 	@JoinColumn
 	private Set<Many> manies;
-
-	@Version
-	private long version;
 
 	public long getId() {
 		return id;
@@ -60,13 +56,5 @@ public class VersionedNoCascadeOne {
 	}
 	public void setManies(Set<Many> manies) {
 		this.manies = manies;
-	}
-
-	public long getVersion() {
-		return version;
-	}
-
-	public void setVersion(long version) {
-		this.version = version;
 	}
 }

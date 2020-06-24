@@ -240,24 +240,9 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getSqlType(Dialect dialect, Mapping mapping) throws HibernateException {
 		if ( sqlType == null ) {
-			Size size = new Size( getPrecision(), getScale(), getLength(), null );
-			Type type = getValue().getType();
-			if ( size.getLength() == null && size.getScale() == null && size.getPrecision() == null ) {
-				if ( type instanceof EntityType ) {
-					while ( !( type instanceof JdbcMapping ) ) {
-						//ManyToOneType doesn't implement JdbcMapping
-						type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
-						if ( type instanceof ComponentType ) {
-							type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
-						}
-					}
-				}
-				size = dialect.getDefaultSizeStrategy().resolveDefaultSize(
-						( (JdbcMapping) type ).getSqlTypeDescriptor(),
-						( (JdbcMapping) type ).getJavaTypeDescriptor()
-				);
-			}
+			final Size defaultSize = getColumnDefaultSize( dialect, mapping );
 
+			final Size size = getColumnSize( defaultSize );
 			try {
 				sqlType = dialect.getTypeName( getSqlTypeCode( mapping ), size );
 			}
@@ -274,6 +259,49 @@ public class Column implements Selectable, Serializable, Cloneable {
 			}
 		}
 		return sqlType;
+	}
+
+	private Size getColumnSize(Size defaultSize) {
+		final Integer columnPrecision = precision != null ? precision : defaultSize.getPrecision();
+		final Integer columnScale = scale != null ? scale : defaultSize.getScale();
+		final Long columnLength = length != null ? length : defaultSize.getLength();
+
+		return new Size( columnPrecision, columnScale, columnLength, null );
+	}
+
+	private Size getColumnDefaultSize(Dialect dialect, Mapping mapping) {
+		Size defaultSize;
+		Type type = getValue().getType();
+		if ( type instanceof EntityType ) {
+			type = getTypeForEntityValue( mapping, type );
+		}
+		if ( type instanceof ComponentType ) {
+			type = getTypeForComponentValue( mapping, type );
+		}
+		defaultSize = dialect.getDefaultSizeStrategy().resolveDefaultSize(
+					( (JdbcMapping) type ).getSqlTypeDescriptor(),
+					( (JdbcMapping) type ).getJavaTypeDescriptor()
+			);
+		return defaultSize;
+	}
+
+	private Type getTypeForComponentValue(Mapping mapping, Type type) {
+		type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+		if ( type instanceof EntityType ) {
+			type = getTypeForEntityValue( mapping, type );
+		}
+		return type;
+	}
+
+	private Type getTypeForEntityValue(Mapping mapping, Type type) {
+		while ( !( type instanceof JdbcMapping ) ) {
+			//ManyToOneType doesn't implement JdbcMapping
+			type = mapping.getIdentifierType( ( (EntityType) type ).getAssociatedEntityName() );
+			if ( type instanceof ComponentType ) {
+				type = ( (ComponentType) type ).getSubtypes()[getTypeIndex()];
+			}
+		}
+		return type;
 	}
 
 	public String getSqlType() {

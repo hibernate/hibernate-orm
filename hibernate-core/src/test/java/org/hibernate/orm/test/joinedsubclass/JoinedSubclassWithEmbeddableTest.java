@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.joinedsubclass;
+package org.hibernate.orm.test.joinedsubclass;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -13,27 +13,31 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				JoinedSubclassWithEmbeddableTest.BaseEntity.class,
+				JoinedSubclassWithEmbeddableTest.ConcreteEntity.class
+		}
+)
+@SessionFactory
+public class JoinedSubclassWithEmbeddableTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {BaseEntity.class, ConcreteEntity.class};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			ConcreteEntity entity = new ConcreteEntity();
 			entity.setId( 1L );
 			entity.setField( "field_base" );
@@ -47,14 +51,15 @@ public class JoinedSubclassWithEmbeddableTest extends BaseCoreFunctionalTestCase
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10920")
-	public void testEmbeddedFieldIsNotNull() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testEmbeddedFieldIsNotNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final ConcreteEntity entity = session.get( ConcreteEntity.class, 1L );
 			assertThat( entity.getEmbedded().getField(), is( "field_embedded" ) );
 			assertThat( entity.getField(), is( "field_base" ) );
 			entity.getEmbedded().setField( "field_subclass" );
 		} );
-		doInHibernate( this::sessionFactory, session -> {
+
+		scope.inTransaction( session -> {
 			final ConcreteEntity entity = session.get( ConcreteEntity.class, 1L );
 			assertThat( entity.getEmbedded().getField(), is( "field_subclass" ) );
 			assertThat( entity.getField(), is( "field_base" ) );

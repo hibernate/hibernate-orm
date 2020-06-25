@@ -834,6 +834,17 @@ public final class StringHelper {
 		return isEmpty( value ) ? null : value;
 	}
 
+	public static String subStringNullIfEmpty(String value, Character startChar) {
+		if ( isEmpty( value ) ) {
+			return null;
+		}
+		int index = value.indexOf( startChar );
+		if ( index != -1 ) {
+			return value.substring( index + 1 );
+		}
+		return value;
+	}
+
 	public static List<String> parseCommaSeparatedString(String incomingString) {
 		return CommaSeparatedStringHelper.parseCommaSeparatedString( incomingString );
 	}

@@ -82,7 +82,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			}
 		}
 		else {
-			identifierResult = entityDescriptor.getIdentifierMapping().createDomainResult(
+			identifierResult = identifierMapping.createDomainResult(
 					navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
 					entityTableGroup,
 					null,

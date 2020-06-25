@@ -200,7 +200,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			if ( initializer.getInitializedInstance() == null ) {
 				initializer.resolveKey( rowProcessingState );
 				initializer.resolveInstance( rowProcessingState );
-				initializer.initializeInstance( rowProcessingState );
 			}
 			return initializer.getInitializedInstance();
 		}

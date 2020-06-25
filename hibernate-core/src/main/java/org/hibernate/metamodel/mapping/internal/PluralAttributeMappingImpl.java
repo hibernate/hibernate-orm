@@ -18,11 +18,11 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.List;
-import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -98,7 +98,7 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final FetchStyle fetchStyle;
 
 	private final CascadeStyle cascadeStyle;
-	private final String mappedBy;
+	private final String bidirectionalPropertyName;
 
 	private final CollectionPersister collectionDescriptor;
 	private final String separateCollectionTable;
@@ -174,7 +174,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.fetchStyle = fetchStyle;
 		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
-		this.mappedBy = bootDescriptor.getMappedByProperty();
+
+		this.bidirectionalPropertyName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
@@ -393,8 +394,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	}
 
 	@Override
-	public String getMappedBy() {
-		return mappedBy;
+	public String getBidirectionalPropertyName() {
+		return bidirectionalPropertyName;
 	}
 
 	@Override

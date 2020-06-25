@@ -76,7 +76,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	private final boolean referringPrimaryKey;
 
 	private final Cardinality cardinality;
-	private String mappedBy;
+	private String bidirectionalPropertyName;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ForeignKeyDirection foreignKeyDirection;
@@ -126,12 +126,61 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		else {
 			assert bootValue instanceof OneToOne;
 			cardinality = Cardinality.ONE_TO_ONE;
-			String mappedByProperty = ( (OneToOne) bootValue ).getMappedByProperty();
+
+			/*
+		 		The otherSidePropertyName value is used to determine bidirectionality based on the navigablePath string
+
+		 		e.g.
+
+				class Card{
+					@OneToMany( mappedBy = "card")
+					Set<CardField> fields;
+				}
+
+				class CardField{
+					@ManyToOne(optional = false)
+					Card card;
+
+					@ManyToOne(optional = false)
+					Card card1;
+				}
+
+				NavigablePath(CardField.card.fields)  fields is consideredBidirectional
+				NavigablePath(CardField.card1.fields) fields is NOT bidirectional
+
+				e.g. Embeddable case
+
+				class Card{
+					@OneToMany( mappedBy = "primaryKey.card")
+					Set<CardField> fields;
+				}
+
+				class CardField{
+					@EmbeddedId
+					PrimaryKey primaryKey;
+				}
+
+				@Embeddable
+				class PrimaryKey implements Serializable {
+					@ManyToOne(optional = false)
+					Card card;
+				}
+
+				in such case the mappedBy is "primaryKey.card"
+				the the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part
+				so in ored to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
+		 	*/
+
+			String mappedByProperty = StringHelper.subStringNullIfEmpty(
+					( (OneToOne) bootValue ).getMappedByProperty(),
+					'.'
+			);
+
 			if ( mappedByProperty == null ) {
-				mappedBy = StringHelper.nullIfEmpty( referencedPropertyName );
+				bidirectionalPropertyName = StringHelper.subStringNullIfEmpty( referencedPropertyName, '.' );
 			}
 			else {
-				mappedBy = mappedByProperty;
+				bidirectionalPropertyName = mappedByProperty;
 			}
 		}
 
@@ -193,7 +242,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 				modelPart = creationState.resolveModelPart( parent );
 			}
 
-			if ( this.mappedBy != null && parent.getFullPath().endsWith( this.mappedBy )  ) {
+			if ( this.bidirectionalPropertyName != null && parent.getFullPath().endsWith( this.bidirectionalPropertyName )  ) {
 				/*
 					class Child {
 						@OneToOne(mappedBy = "biologicalChild")
@@ -220,7 +269,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 			/*
 				check if mappedBy is on the other side of the association
 			 */
-			final String otherSideMappedBy = getOtherSideMappedBy( modelPart, parent.getParent(), creationState );
+			final String otherSideMappedBy = getOthrerSideMappedBy( modelPart, parent.getParent(), creationState );
 			if ( otherSideMappedBy != null ) {
 					/*
 						class Child {
@@ -280,26 +329,30 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		return null;
 	}
 
-	private String getOtherSideMappedBy(
+	private String getOthrerSideMappedBy(
 			ModelPart modelPart,
 			NavigablePath parentOfParent,
 			DomainResultCreationState creationState) {
 		if ( modelPart instanceof ToOneAttributeMapping ) {
-			return ( (ToOneAttributeMapping) modelPart ).getMappedBy();
+			return ( (ToOneAttributeMapping) modelPart ).getBidirectionalPropertyName();
+		}
+
+		if ( modelPart instanceof PluralAttributeMapping ) {
+			return ( (PluralAttributeMapping) modelPart ).getBidirectionalPropertyName();
 		}
 
 		if ( modelPart instanceof EntityCollectionPart ) {
 			if ( parentOfParent.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
 				parentOfParent = parentOfParent.getParent();
 			}
-			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).getMappedBy();
+			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).getBidirectionalPropertyName();
 		}
 
 		return null;
 	}
 
-	public String getMappedBy(){
-		return mappedBy;
+	public String getBidirectionalPropertyName(){
+		return bidirectionalPropertyName;
 	}
 
 	private Fetch createCircularBiDirectionalFetch(

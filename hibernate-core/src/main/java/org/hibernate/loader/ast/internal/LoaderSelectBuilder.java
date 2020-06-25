@@ -82,8 +82,6 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 public class LoaderSelectBuilder {
 	private static final Logger log = Logger.getLogger( LoaderSelectBuilder.class );
 
-	private HashMap<String, List<Fetch>> visitedNavigablePath = new HashMap<>();
-
 	/**
 	 * Create an SQL AST select-statement based on matching one-or-more keys
 	 *
@@ -435,10 +433,6 @@ public class LoaderSelectBuilder {
 
 		final List<Fetch> fetches = new ArrayList<>();
 		String fullPath = fetchParent.getNavigablePath().getFullPath();
-		final List<Fetch> fullPathFetches = visitedNavigablePath.get( fullPath );
-		if ( fullPathFetches != null ) {
-			return fullPathFetches;
-		}
 
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
 
@@ -449,7 +443,6 @@ public class LoaderSelectBuilder {
 		}
 		referencedMappingContainer.visitFetchables(
 				fetchable -> processor.accept( fetchable, false ), null );
-		visitedNavigablePath.put( fullPath, fetches );
 		return fetches;
 	}
 
@@ -459,11 +452,11 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			List<Fetch> fetches) {
 		return (fetchable, isKeyFetchable) -> {
-			NavigablePath navigablePath = fetchParent.getNavigablePath();
+			NavigablePath panrentNavigablePath = fetchParent.getNavigablePath();
 			if ( isKeyFetchable ) {
-				navigablePath = navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+				panrentNavigablePath = panrentNavigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 			}
-			final NavigablePath fetchablePath = navigablePath.append( fetchable.getFetchableName() );
+			final NavigablePath fetchablePath = panrentNavigablePath.append( fetchable.getFetchableName() );
 
 			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 					fetchablePath,

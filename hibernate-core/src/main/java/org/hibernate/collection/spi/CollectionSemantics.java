@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
@@ -65,5 +66,16 @@ public interface CollectionSemantics<C> {
 			boolean selected,
 			String resultVariable,
 			LockMode lockMode,
+			DomainResultCreationState creationState);
+
+	CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			LockMode lockMode,
+			Fetch indexFetch,
+			Fetch elementFetch,
 			DomainResultCreationState creationState);
 }

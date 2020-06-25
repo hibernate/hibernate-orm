@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.collection.internal.BagInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -95,4 +96,45 @@ public abstract class AbstractBagSemantics<B extends Collection<?>> implements C
 				)
 		);
 	}
+
+	@Override
+	public CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			LockMode lockMode,
+			Fetch indexFetch,
+			Fetch elementFetch,
+			DomainResultCreationState creationState){
+		if ( indexFetch == null ) {
+			indexFetch = attributeMapping.getIdentifierDescriptor() == null ? null : attributeMapping.getIdentifierDescriptor().generateFetch(
+					fetchParent,
+					navigablePath.append( CollectionPart.Nature.ID.getName() ),
+					FetchTiming.IMMEDIATE,
+					selected,
+					lockMode,
+					null,
+					creationState
+			);
+		}
+		if ( elementFetch == null ) {
+			elementFetch = attributeMapping.getElementDescriptor().generateFetch(
+					fetchParent,
+					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
+					FetchTiming.IMMEDIATE,
+					selected,
+					lockMode,
+					null,
+					creationState
+			);
+		}
+		return new BagInitializerProducer(
+				attributeMapping,
+				indexFetch,
+				elementFetch
+		);
+	}
+
 }

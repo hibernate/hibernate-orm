@@ -98,6 +98,8 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				null,
 				// todo (6.0) : we need to propagate these lock modes
 				LockMode.READ,
+				indexFetch,
+				elementFetch,
 				creationState
 		);
 	}

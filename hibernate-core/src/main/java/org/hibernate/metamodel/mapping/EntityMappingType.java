@@ -139,6 +139,8 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 
 	EntityRowIdMapping getRowIdMapping();
 
+	EntityDiscriminatorMapping getDiscriminatorMapping();
+
 	EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup);
 
 	NaturalIdMapping getNaturalIdMapping();

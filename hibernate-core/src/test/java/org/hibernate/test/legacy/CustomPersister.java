@@ -751,6 +751,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+		return null;
+	}
+
+	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		return null;
 	}

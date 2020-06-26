@@ -84,7 +84,12 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		this.mappedJtd = jtdRegistry.getDescriptor( mappedJavaType );
 
 		final Class<?> proxyJavaType = bootDescriptor.getProxyInterface();
-		this.proxyJtd = jtdRegistry.getDescriptor( proxyJavaType );
+		if ( proxyJavaType != null ) {
+			this.proxyJtd = jtdRegistry.getDescriptor( proxyJavaType );
+		}
+		else {
+			this.proxyJtd = null;
+		}
 
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
 		this.isBytecodeEnhanced = PersistentAttributeInterceptable.class.isAssignableFrom( mappedJavaType );
@@ -106,7 +111,12 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 //		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getBytecodeProvider();
 		final BytecodeProvider bytecodeProvider = Environment.getBytecodeProvider();
 
-		this.proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+		if ( proxyJtd != null ) {
+			this.proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+		}
+		else {
+			this.proxyFactory = null;
+		}
 
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
@@ -152,7 +162,13 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		final Set<Class> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		final Class mappedClass = mappedJtd.getJavaType();
-		final Class proxyInterface = proxyJtd.getJavaType();
+		Class proxyInterface;
+		if ( proxyJtd != null ) {
+			proxyInterface = proxyJtd.getJavaType();
+		}
+		else {
+			proxyInterface = null;
+		}
 
 		if ( proxyInterface != null && ! mappedClass.equals( proxyInterface ) ) {
 			if ( ! proxyInterface.isInterface() ) {

@@ -5808,6 +5808,7 @@ public abstract class AbstractEntityPersister
 			this.versionMapping = superMappingType.getVersionMapping();
 			this.rowIdMapping = superMappingType.getRowIdMapping();
 			this.naturalIdMapping = superMappingType.getNaturalIdMapping();
+			this.discriminatorMapping = superMappingType.getDiscriminatorMapping();
 		}
 		else {
 			identifierMapping = creationProcess.processSubPart(
@@ -6230,6 +6231,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return rowIdMapping;
+	}
+
+	@Override
+	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+		return discriminatorMapping;
 	}
 
 	@Override

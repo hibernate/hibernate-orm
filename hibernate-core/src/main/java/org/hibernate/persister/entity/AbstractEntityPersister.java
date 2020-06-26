@@ -1330,7 +1330,7 @@ public abstract class AbstractEntityPersister
 				);
 
 				return new TableReferenceJoin(
-						canUseInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+						determineSubclassTableJoinType( i, canUseInnerJoin, true, Collections.emptySet() ),
 						joinedTableReference,
 						generateJoinPredicate(
 								lhs,
@@ -6233,7 +6233,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityDiscriminatorMapping getDiscriminatorMapping() {
+	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		return discriminatorMapping;
 	}
 

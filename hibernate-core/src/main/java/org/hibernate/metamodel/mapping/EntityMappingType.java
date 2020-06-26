@@ -139,9 +139,7 @@ public interface EntityMappingType extends ManagedMappingType, Loadable {
 
 	EntityRowIdMapping getRowIdMapping();
 
-	default EntityDiscriminatorMapping getDiscriminatorMapping() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup);
 
 	NaturalIdMapping getNaturalIdMapping();
 

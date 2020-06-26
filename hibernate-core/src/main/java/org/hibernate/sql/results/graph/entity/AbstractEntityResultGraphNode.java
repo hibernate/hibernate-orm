@@ -162,7 +162,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	protected EntityDiscriminatorMapping getDiscriminatorMapping(
 			EntityMappingType entityDescriptor,
 			TableGroup entityTableGroup) {
-		return entityDescriptor.getDiscriminatorMapping();
+		return entityDescriptor.getDiscriminatorMapping( entityTableGroup );
 	}
 
 	@Override

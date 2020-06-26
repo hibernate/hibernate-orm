@@ -43,6 +43,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -634,6 +635,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public EntityRowIdMapping getRowIdMapping() {
+			return null;
+		}
+
+		@Override
+		public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 			return null;
 		}
 

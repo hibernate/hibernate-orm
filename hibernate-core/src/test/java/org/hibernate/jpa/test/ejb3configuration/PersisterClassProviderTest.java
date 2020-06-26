@@ -43,6 +43,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -59,6 +60,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -696,6 +698,11 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public EntityRowIdMapping getRowIdMapping() {
+			return null;
+		}
+
+		@Override
+		public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 			return null;
 		}
 

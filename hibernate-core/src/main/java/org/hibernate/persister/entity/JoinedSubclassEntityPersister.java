@@ -1215,6 +1215,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		);
 	}
 
+	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		if ( explicitDiscriminatorColumnName == null ) {
 			CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
@@ -1228,7 +1229,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			);
 		}
 		else {
-			return getDiscriminatorMapping();
+			return super.getDiscriminatorMapping( tableGroup );
 		}
 	}
 

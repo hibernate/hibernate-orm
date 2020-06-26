@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.relationship;
+package org.hibernate.orm.test.inheritance.relationship;
 
 import java.util.List;
 import javax.persistence.Column;
@@ -15,50 +15,51 @@ import javax.persistence.InheritanceType;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Christian Beikov
  */
-@TestForIssue( jiraKey = "HHH-7406")
-public class JoinedInheritancePropertyNameConflictTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Country.class,
-				Town.class,
-				Mountain.class,
-				Place.class
-		};
-	}
+@TestForIssue(jiraKey = "HHH-7406")
+@DomainModel(
+		annotatedClasses = {
+				JoinedInheritancePropertyNameConflictTest.Country.class,
+				JoinedInheritancePropertyNameConflictTest.Town.class,
+				JoinedInheritancePropertyNameConflictTest.Mountain.class,
+				JoinedInheritancePropertyNameConflictTest.Place.class
+		}
+)
+public class JoinedInheritancePropertyNameConflictTest {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-7406" )
-	public void testQueryConflictingPropertyName() {
-		doInHibernate( this::sessionFactory, session -> {
-			Town town = new Town( 1L, "London", 5000000 );
-			Country country = new Country( 2L, "Andorra", 10000 );
-			Mountain mountain = new Mountain( 3L, "Mont Blanc", 4810 );
-			session.persist( town );
-			session.persist( country );
-			session.persist( mountain );
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			List<Place> places = session.createQuery(
-				"select pl from " + Place.class.getName() + " pl " +
-				" where pl.population > 1000" )
-			.getResultList();
+	@FailureExpected(jiraKey = "HHH-7406")
+	public void testQueryConflictingPropertyName(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Town town = new Town( 1L, "London", 5000000 );
+					Country country = new Country( 2L, "Andorra", 10000 );
+					Mountain mountain = new Mountain( 3L, "Mont Blanc", 4810 );
+					session.persist( town );
+					session.persist( country );
+					session.persist( mountain );
+				} );
 
-			//Expected list of length 2. Expected London and Andorra
-			assertEquals( 2L, places.size() );
-		} );
+		scope.inTransaction(
+				session -> {
+					List<Place> places = session.createQuery(
+							"select pl from " + Place.class.getName() + " pl " +
+									" where pl.population > 1000" )
+							.getResultList();
+
+					//Expected list of length 2. Expected London and Andorra
+					assertEquals( 2L, places.size() );
+				} );
 	}
 
 	@Entity

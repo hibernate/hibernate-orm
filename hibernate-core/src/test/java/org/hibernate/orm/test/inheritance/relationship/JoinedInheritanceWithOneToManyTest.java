@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.relationship;
+package org.hibernate.orm.test.inheritance.relationship;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -29,34 +29,31 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.inheritance.singletable.Building;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class JoinedInheritanceWithOneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			BuildingList.class,
-			BuildingListEntry.class,
-			BLEHome.class,
-			BLENonLiving.class,
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				JoinedInheritanceWithOneToManyTest.BuildingList.class,
+				JoinedInheritanceWithOneToManyTest.BuildingListEntry.class,
+				JoinedInheritanceWithOneToManyTest.BLEHome.class,
+				JoinedInheritanceWithOneToManyTest.BLENonLiving.class,
+		}
+)
+@SessionFactory
+public class JoinedInheritanceWithOneToManyTest {
 
 	@Test
-	public void test() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			BuildingList buildingList = new BuildingList();
 			buildingList.setName( "ABC" );
 			session.persist( buildingList );
@@ -73,11 +70,12 @@ public class JoinedInheritanceWithOneToManyTest extends BaseNonConfigCoreFunctio
 			buildingList.getEntries().add( nonLiving );
 			session.persist( nonLiving );
 		} );
-		doInHibernate( this::sessionFactory, session -> {
+
+		scope.inTransaction( session -> {
 			List<BuildingList> buildingLists = session.createQuery( "from BuildingList" ).getResultList();
 			BuildingList buildingList = buildingLists.get( 0 );
-			assertEquals(2, buildingList.getEntries().size());
-		});
+			assertEquals( 2, buildingList.getEntries().size() );
+		} );
 	}
 
 	@MappedSuperclass

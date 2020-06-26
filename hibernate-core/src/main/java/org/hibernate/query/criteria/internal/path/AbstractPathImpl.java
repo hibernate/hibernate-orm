@@ -54,10 +54,10 @@ public abstract class AbstractPathImpl<X>
 		this.pathSource = pathSource;
 		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType(), this );
 
-		if (pathSource != null)
+		if (pathSource != null) {
 			this.alias(pathSource.getJavaType().getSimpleName());
-		else if (getAttribute() != null)
-			this.alias(getAttribute().getJavaMember().getName());
+			this.typeExpression.alias(pathSource.getJavaType().getSimpleName());
+		}
 	}
 
 	public PathSource getPathSource() {

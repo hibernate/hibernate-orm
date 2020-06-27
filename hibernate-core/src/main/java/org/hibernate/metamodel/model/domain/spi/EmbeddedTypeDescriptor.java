@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.spi;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.metamodel.model.domain.EmbeddedDomainType;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 
 /**
  * Hibernate extension to the JPA {@link EmbeddableType} descriptor
@@ -17,7 +17,7 @@ import org.hibernate.type.ComponentType;
  * @author Steve Ebersole
  */
 public interface EmbeddedTypeDescriptor<J> extends EmbeddedDomainType<J>, ManagedTypeDescriptor<J> {
-	ComponentType getHibernateType();
+	CompositeType getHibernateType();
 
 	ManagedTypeDescriptor<?> getParent();
 }

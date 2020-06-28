@@ -8,7 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,14 +19,18 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -187,14 +190,20 @@ public class LoaderSelectBuilder {
 		this.cachedDomainResult = cachedDomainResult;
 		this.numberOfKeysToLoad = numberOfKeysToLoad;
 		this.loadQueryInfluencers = loadQueryInfluencers;
-		if ( loadQueryInfluencers != null
-				&& loadQueryInfluencers.getEffectiveEntityGraph() != null
-				&& loadQueryInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
-			this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl( loadQueryInfluencers.getEffectiveEntityGraph() );
+
+		EntityGraphTraversalState entityGraphTraversalState = null;
+		if ( loadQueryInfluencers != null ) {
+			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+			if ( effectiveEntityGraph != null ) {
+				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
+				final RootGraphImplementor rootGraphImplementor = effectiveEntityGraph.getGraph();
+				if ( graphSemantic != null && rootGraphImplementor != null ) {
+					entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
+				}
+			}
 		}
-		else {
-			this.entityGraphTraversalState = null;
-		}
+		this.entityGraphTraversalState = entityGraphTraversalState;
+
 		this.lockOptions = lockOptions != null ? lockOptions : LockOptions.NONE;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
 	}
@@ -473,25 +482,30 @@ public class LoaderSelectBuilder {
 
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
-			// 'entity graph' takes precedence over 'fetch profile'
-			if ( entityGraphTraversalState != null) {
-				traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-				fetchTiming = traversalResult.getFetchStrategy();
-				joined = traversalResult.isJoined();
-			}
-			else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
-				if ( fetchParent instanceof EntityResultGraphNode ) {
-					final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-					final String fetchParentEntityName = entityMappingType.getEntityName();
-					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
+			if ( ! (fetchable instanceof CollectionPart ) ) {
+				// 'entity graph' takes precedence over 'fetch profile'
+				if ( entityGraphTraversalState != null ) {
+					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
+					fetchTiming = traversalResult.getFetchStrategy();
+					joined = traversalResult.isJoined();
+				}
+				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
+					if ( fetchParent instanceof EntityResultGraphNode ) {
+						final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
+						final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart()
+								.getEntityMappingType();
+						final String fetchParentEntityName = entityMappingType.getEntityName();
+						final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
 
-					for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-						final FetchProfile enabledFetchProfile = creationContext.getSessionFactory().getFetchProfile( enabledFetchProfileName );
-						final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
+						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
+							final FetchProfile enabledFetchProfile = creationContext.getSessionFactory()
+									.getFetchProfile( enabledFetchProfileName );
+							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
+									fetchableRole );
 
-						fetchTiming = FetchTiming.IMMEDIATE;
-						joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+							fetchTiming = FetchTiming.IMMEDIATE;
+							joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+						}
 					}
 				}
 			}
@@ -509,8 +523,12 @@ public class LoaderSelectBuilder {
 				}
 			}
 
+			boolean changeFetchDepth = !( fetchable instanceof BasicValuedModelPart )
+					&& !( fetchable instanceof EmbeddedAttributeMapping )
+					&& !( fetchable instanceof CollectionPart );
+
 			try {
-				if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+				if ( changeFetchDepth ) {
 					fetchDepth++;
 				}
 				final Fetch fetch = fetchable.generateFetch(
@@ -541,10 +559,10 @@ public class LoaderSelectBuilder {
 				}
 			}
 			finally {
-				if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+				if ( changeFetchDepth ) {
 					fetchDepth--;
 				}
-				if ( entityGraphTraversalState != null ) {
+				if ( entityGraphTraversalState != null && traversalResult != null ) {
 					entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
 				}
 			}

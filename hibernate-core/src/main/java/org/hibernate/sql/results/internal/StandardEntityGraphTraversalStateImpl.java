@@ -7,14 +7,15 @@
 package org.hibernate.sql.results.internal;
 
 import java.util.Map;
+import java.util.Objects;
 import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -34,13 +35,11 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	private final GraphSemantic graphSemantic;
 	private GraphImplementor currentGraphContext;
 
-	public StandardEntityGraphTraversalStateImpl(EffectiveEntityGraph effectiveEntityGraph) {
-		assert effectiveEntityGraph != null;
-		if ( effectiveEntityGraph.getSemantic() == null ) {
-			throw new IllegalArgumentException( "The graph has not defined semantic: " + effectiveEntityGraph );
-		}
-		this.graphSemantic = effectiveEntityGraph.getSemantic();
-		this.currentGraphContext = effectiveEntityGraph.getGraph();
+	public StandardEntityGraphTraversalStateImpl(GraphSemantic graphSemantic, RootGraphImplementor rootGraphImplementor) {
+		Objects.requireNonNull(graphSemantic, "graphSemantic cannot be null");
+		Objects.requireNonNull( rootGraphImplementor, "rootGraphImplementor cannot be null" );
+		this.graphSemantic = graphSemantic;
+		this.currentGraphContext = rootGraphImplementor;
 	}
 
 	@Override
@@ -50,6 +49,8 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 
 	@Override
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
+		assert !(fetchable instanceof CollectionPart);
+
 		final GraphImplementor previousContextRoot = currentGraphContext;
 		AttributeNodeImplementor attributeNode = null;
 		if ( appliesTo( fetchParent ) ) {

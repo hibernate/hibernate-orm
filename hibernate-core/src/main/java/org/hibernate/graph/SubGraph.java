@@ -9,7 +9,7 @@ package org.hibernate.graph;
 import java.util.List;
 import javax.persistence.metamodel.Attribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * Hibernate extension to the JPA entity-graph Subgraph contract.
@@ -43,53 +43,40 @@ public interface SubGraph<J> extends Graph<J>, javax.persistence.Subgraph<J> {
 		}
 
 		for ( Attribute<J, ?> node : attribute ) {
-//			addAttributeNode( node );
-			throw new NotYetImplementedFor6Exception( getClass() );
-
+			assert node instanceof PersistentAttribute;
+			addAttributeNode( (PersistentAttribute<J, ?>) node );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		return addSubGraph( attribute );
+		return addSubGraph( (PersistentAttribute<J, X>) attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-//		return addSubGraph( attribute, type );
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return addSubGraph( (PersistentAttribute<J, X>) attribute, type );
 	}
 
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addSubgraph(String name) {
 		return addSubGraph( name );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
 		return addSubGraph( name, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		return addKeySubGraph( attribute );
+		return addKeySubGraph( (PersistentAttribute<J, X>) attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-//		return addKeySubGraph( attribute, type );
-		throw new NotYetImplementedFor6Exception( getClass() );
-
+		return addKeySubGraph( (PersistentAttribute<J, X>) attribute, type );
 	}
 
 	@Override
@@ -98,13 +85,11 @@ public interface SubGraph<J> extends Graph<J>, javax.persistence.Subgraph<J> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default <X> SubGraph<X> addKeySubgraph(String name, Class<X> type) {
 		return addKeySubGraph( name, type );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	default Class<J> getClassType() {
 		return getGraphedType().getJavaType();
 	}

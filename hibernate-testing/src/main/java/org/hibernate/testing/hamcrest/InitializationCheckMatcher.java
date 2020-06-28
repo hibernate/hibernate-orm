@@ -42,12 +42,12 @@ public class InitializationCheckMatcher<T> extends BaseMatcher<T> {
 
 	@Override
 	public boolean matches(Object item) {
-		final boolean initialized = Hibernate.isInitialized( item );
-		return assertInitialized ? initialized : !initialized;
+		return assertInitialized == Hibernate.isInitialized( item );
 	}
 
 	@Override
 	public void describeTo(Description description) {
-		description.appendValue( "Hibernate#isInitialized == " + !assertInitialized );
+		description.appendValue( "Hibernate#isInitialized() returns " + assertInitialized );
 	}
+
 }

@@ -20,10 +20,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -106,10 +108,10 @@ public class StandardSqmSelectTranslator
 			SqlAstCreationContext creationContext) {
 		super( creationContext, queryOptions, fetchInfluencers, domainParameterXref, domainParameterBindings );
 
-		if ( fetchInfluencers != null
-				&& fetchInfluencers.getEffectiveEntityGraph() != null
-				&& fetchInfluencers.getEffectiveEntityGraph().getSemantic() != null ) {
-			this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl( fetchInfluencers.getEffectiveEntityGraph() );
+		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
+		if (  appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
+			this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
+					appliedGraph.getSemantic(), appliedGraph.getGraph() );
 		}
 		else {
 			this.entityGraphTraversalState = null;
@@ -331,24 +333,29 @@ public class StandardSqmSelectTranslator
 			// there was not an explicit fetch in the SQM
 			alias = null;
 
-			if ( entityGraphTraversalState != null ) {
-				traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-				fetchTiming = traversalResult.getFetchStrategy();
-				joined = traversalResult.isJoined();
-			}
-			else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
-				if ( fetchParent instanceof EntityResultGraphNode ) {
-					final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-					final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart().getEntityMappingType();
-					final String fetchParentEntityName = entityMappingType.getEntityName();
-					final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
+			if ( !( fetchable instanceof CollectionPart ) ) {
+				if ( entityGraphTraversalState != null ) {
+					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
+					fetchTiming = traversalResult.getFetchStrategy();
+					joined = traversalResult.isJoined();
+				}
+				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
+					if ( fetchParent instanceof EntityResultGraphNode ) {
+						final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
+						final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart()
+								.getEntityMappingType();
+						final String fetchParentEntityName = entityMappingType.getEntityName();
+						final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
 
-					for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
-						final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory().getFetchProfile( enabledFetchProfileName );
-						final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole( fetchableRole );
+						for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+							final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory()
+									.getFetchProfile( enabledFetchProfileName );
+							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
+									fetchableRole );
 
-						fetchTiming = FetchTiming.IMMEDIATE;
-						joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+							fetchTiming = FetchTiming.IMMEDIATE;
+							joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+						}
 					}
 				}
 			}

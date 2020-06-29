@@ -257,13 +257,22 @@ task updateChangeLogFile {
     group = "Release"
     description = "Updates the changelog.txt file and push the changes to github"
     doFirst{
-        logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
         ChangeLogFile.update( ormVersion.fullName );
 
-        logger.lifecycle( "Adding commit to update version to '${project.releaseVersion}'..." )
-        executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', project.ormVersion.fullName )
-        executeGitCommand( 'push', gitRemote )
+        executeGitCommand(
+                "git add .",
+                "An error occurred during the execution of git add for the changelog.txt and the release version changes."
+        )
+
+        executeGitCommand(
+                "git commit -m \"${project.ormVersion.fullName}\"",
+                "An error occurred during the execution of git commit for the changelog.txt and the release version changes."
+        )
+
+        executeGitCommand(
+                "git push ${gitRemote}",
+                "An error occurred during the execution git push for the changelog.txt and the release version changes."
+        )
     }
 }
 
@@ -282,15 +291,31 @@ task ciRelease() {
             if ( tag.endsWith( ".Final" ) ) {
                 tag = tag.replace( ".Final", "" )
             }
-            logger.lifecycle( "Tagging '${tag}'..." )
-            executeGitCommand( 'tag', tag )
-            executeGitCommand( 'push', gitRemote, tag )
+            executeGitCommand(
+                    "git tag ${tag}",
+                    "An error occurred during the execution of git tag"
+            )
+            executeGitCommand(
+                    "git push ${gitRemote} ${tag}",
+                    "An error occurred during the execution of git push od the tag"
+            )
 
-            logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )
-            project.ormVersionFile.text = "hibernateVersion=${project.developmentVersion}"
-            executeGitCommand( 'add', '.')
-            executeGitCommand( 'commit', '-m', project.developmentVersion )
-            executeGitCommand( 'push', gitRemote )
+            // the hibernate version is changed to the development one and the changes are pushed to github
+            project.ormVersionFile.text = "hibernateVersion=${project.property( 'developmentVersion' )}"
+            executeGitCommand(
+                    "git add .",
+                    "An error occurred during the execution of git add for the development version change."
+            )
+
+            executeGitCommand(
+                    "git commit -m \"${project.property( 'developmentVersion' )}\"",
+                    "An error occurred during the execution of git commit for the development version change."
+            )
+
+            executeGitCommand(
+                    "git push ${gitRemote}",
+                    "An error occurred during the execution git push for the development version change."
+            )
         }
     }
 }
@@ -298,15 +323,13 @@ task ciRelease() {
 ciRelease.dependsOn updateChangeLogFile, release
 release.mustRunAfter updateChangeLogFile
 
-static void executeGitCommand(Object ... subcommand){
-    List<Object> command = ['git']
-    Collections.addAll( command, subcommand )
+static void executeGitCommand(String command, String errorMessage){
     def proc = command.execute()
     def code = proc.waitFor()
     def stdout = inputStreamToString( proc.getInputStream() )
     def stderr = inputStreamToString( proc.getErrorStream() )
     if ( code != 0 ) {
-        throw new GradleException( "An error occurred while executing " + command + "\n\nstdout:\n" + stdout + "\n\nstderr:\n" + stderr )
+        throw new GradleException( errorMessage + "\n\nstdout:\n" + stdout + "\n\nstderr:\n" + stderr )
     }
 }
 

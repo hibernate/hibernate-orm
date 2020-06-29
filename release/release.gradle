@@ -45,7 +45,7 @@ task releaseChecks() {
         }
 
         logger.lifecycle( "Switching to branch '${project.gitBranch}'..." )
-        executeGitCommand( 'checkout', project.gitBranch )
+        executeGitCommand( 'switch', project.gitBranch )
 
         logger.lifecycle( "Checking that all commits are pushed..." )
         String diffWithUpstream = executeGitCommand( 'diff', '@{u}' )

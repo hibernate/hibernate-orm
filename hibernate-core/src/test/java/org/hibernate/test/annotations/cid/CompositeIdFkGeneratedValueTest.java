@@ -243,7 +243,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 		};
 	}
 
-	@Entity(name = "Head")
+	@Entity
 	public static class Head {
 
 		@Id
@@ -253,7 +253,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 		private String name;
 	}
 
-	@Entity(name = "Node")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.Node.PK.class)
 	public static class Node {
 
@@ -300,7 +300,8 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "HeadS")
+
+	@Entity
 	public static class HeadS {
 
 		@Id
@@ -310,7 +311,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 		private String name;
 	}
 
-	@Entity(name = "NodeS")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.NodeS.PK.class)
 	public static class NodeS {
 
@@ -358,7 +359,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "HeadA")
+	@Entity
 	public static class HeadA {
 
 		@Id
@@ -368,7 +369,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 		private String name;
 	}
 
-	@Entity(name = "NodeA")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.NodeA.PK.class)
 	public static class NodeA {
 
@@ -416,7 +417,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "HeadT")
+	@Entity
 	public static class HeadT {
 
 		@Id
@@ -426,7 +427,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 		private String name;
 	}
 
-	@Entity(name = "NodeT")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.NodeT.PK.class)
 	public static class NodeT {
 
@@ -474,7 +475,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "ComplexNodeS")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeS.PK.class)
 	public static class ComplexNodeS {
 
@@ -525,7 +526,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "ComplexNodeT")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeT.PK.class)
 	public static class ComplexNodeT {
 
@@ -576,7 +577,7 @@ public class CompositeIdFkGeneratedValueTest extends BaseCoreFunctionalTestCase 
 
 	}
 
-	@Entity(name = "ComplexNodeA")
+	@Entity
 	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeA.PK.class)
 	public static class ComplexNodeA {
 

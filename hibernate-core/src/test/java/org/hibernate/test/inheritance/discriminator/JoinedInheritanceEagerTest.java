@@ -23,43 +23,55 @@
  */
 package org.hibernate.test.inheritance.discriminator;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import org.hibernate.Hibernate;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test cases for joined inheritance with eager fetching.
  *
  * @author Christian Beikov
  */
-public class JoinedInheritanceEagerTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				JoinedInheritanceEagerTest.BaseEntity.class,
+				JoinedInheritanceEagerTest.EntityA.class,
+				JoinedInheritanceEagerTest.EntityB.class,
+				JoinedInheritanceEagerTest.EntityC.class,
+				JoinedInheritanceEagerTest.EntityD.class
+		}
+)
+@SessionFactory
+public class JoinedInheritanceEagerTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				BaseEntity.class,
-				EntityA.class,
-				EntityB.class,
-				EntityC.class,
-				EntityD.class
-		};
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			EntityC entityC = new EntityC( 1L );
 			EntityD entityD = new EntityD( 2L );
 
@@ -76,66 +88,81 @@ public class JoinedInheritanceEagerTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	public void cleanUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityA entityA = session.get( EntityA.class, 4L );
+					EntityB entityB = session.get( EntityB.class, 3L );
+					EntityD entityD = session.get( EntityD.class, 2L );
+					EntityC entityC = session.get( EntityC.class, 1L );
+
+					session.delete( entityD );
+					session.delete( entityC );
+					session.delete( entityA );
+					session.delete( entityB );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12375")
-	public void joinFindEntity() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void joinFindEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			EntityA entityA = session.get( EntityA.class, 4L );
-			Assert.assertTrue( Hibernate.isInitialized( entityA.getRelation() ) );
-			Assert.assertFalse( Hibernate.isInitialized( entityA.getAttributes() ) );
+			assertTrue( Hibernate.isInitialized( entityA.getRelation() ) );
+			assertFalse( Hibernate.isInitialized( entityA.getAttributes() ) );
 		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12375")
-	public void joinFindParenEntity() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void joinFindParenEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			BaseEntity baseEntity = session.get( BaseEntity.class, 4L );
-			Assert.assertThat( baseEntity, notNullValue() );
-			Assert.assertThat( baseEntity, instanceOf( EntityA.class ) );
-			Assert.assertTrue( Hibernate.isInitialized( ( (EntityA) baseEntity ).getRelation() ) );
-			Assert.assertFalse( Hibernate.isInitialized( ( (EntityA) baseEntity ).getAttributes() ) );
+			assertThat( baseEntity, notNullValue() );
+			assertThat( baseEntity, instanceOf( EntityA.class ) );
+			assertTrue( Hibernate.isInitialized( ( (EntityA) baseEntity ).getRelation() ) );
+			assertFalse( Hibernate.isInitialized( ( (EntityA) baseEntity ).getAttributes() ) );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			BaseEntity baseEntity = session.get( BaseEntity.class, 3L );
-			Assert.assertThat( baseEntity, notNullValue() );
-			Assert.assertThat( baseEntity, instanceOf( EntityB.class ) );
-			Assert.assertTrue( Hibernate.isInitialized( ( (EntityB) baseEntity ).getRelation() ) );
-			Assert.assertFalse( Hibernate.isInitialized( ( (EntityB) baseEntity ).getAttributes() ) );
+			assertThat( baseEntity, notNullValue() );
+			assertThat( baseEntity, instanceOf( EntityB.class ) );
+			assertTrue( Hibernate.isInitialized( ( (EntityB) baseEntity ).getRelation() ) );
+			assertFalse( Hibernate.isInitialized( ( (EntityB) baseEntity ).getAttributes() ) );
 		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12375")
-	public void joinUnrelatedCollectionOnBaseType() {
-		final Session s = openSession();
-		s.getTransaction().begin();
+	public void joinUnrelatedCollectionOnBaseType(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					session.getTransaction().begin();
 
-		try {
-			s.createQuery( "from BaseEntity b join b.attributes" ).list();
-			Assert.fail( "Expected a resolution exception for property 'attributes'!" );
-		}
-		catch (IllegalArgumentException ex) {
-			Assert.assertTrue( ex.getMessage().contains( "could not resolve property: attributes " ) );
-		}
-		finally {
-			s.getTransaction().commit();
-			s.close();
-		}
+					try {
+						session.createQuery( "from BaseEntity b join b.attributes" ).list();
+						fail( "Expected a resolution exception for property 'attributes'!" );
+					}
+					catch (IllegalArgumentException ex) {
+						assertTrue( ex.getMessage().contains( "could not resolve property: attributes " ) );
+					}
+					finally {
+						session.getTransaction().commit();
+					}
+				}
+		);
+
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12375")
-	public void selectBaseType() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void selectBaseType(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			List result = session.createQuery( "from BaseEntity" ).list();
-			Assert.assertEquals(result.size(), 2);
+			assertEquals( result.size(), 2 );
 		} );
 	}
 

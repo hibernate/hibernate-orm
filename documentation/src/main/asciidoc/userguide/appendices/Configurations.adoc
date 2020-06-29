@@ -832,7 +832,7 @@ See https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 +
 If no value is specified, a default is assumed as follows:
 +
-* if source scripts are specified (per `javax.persistence.schema-generation.drop-script-source`), then the `script` option is assumed
+* if source scripts are specified (per `javax.persistence.schema-generation.create-script-source`), then the `script` option is assumed
 * otherwise, `metadata` is assumed
 
 `*javax.persistence.schema-generation.create-script-source*`::

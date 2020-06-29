@@ -289,22 +289,15 @@ artifacts {
 
 task release( dependsOn: [releaseChecks, uploadDocumentation, uploadBundlesSourceForge] )
 
-task changeLogFile( dependsOn: [releaseChecks] ) {
+task addVersionCommit( dependsOn: [releaseChecks] ) {
     group = "Release"
-    description = "Updates the changelog.txt file"
-
-    doFirst {
-        logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
-        ChangeLogFile.update( ormVersion.fullName );
-    }
-}
-
-task addVersionCommit( dependsOn: [changeLogFile] ) {
-    group = "Release"
-    description = "Adds a commit for the released version and push the changes to github"
+    description = "Updates the changelog.txt file, adds a commit for the released version and push the changes to github"
     doFirst{
         logger.lifecycle( "Updating version to '${project.releaseVersion}'..." )
         project.ormVersionFile.text = "hibernateVersion=${project.releaseVersion}"
+
+        logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
+        ChangeLogFile.update( ormVersion.fullName );
 
         logger.lifecycle( "Adding commit to update version to '${project.releaseVersion}'..." )
         executeGitCommand( 'add', '.' )

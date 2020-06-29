@@ -308,7 +308,7 @@ task ciRelease() {
             )
 
             executeGitCommand(
-                    "git commit -m \"${project.property( 'developmentVersion' )}\"",
+                    "git commit -m \"${project.ormVersion.fullName}\"",
                     "An error occurred during the execution of git commit for the development version change."
             )
 

@@ -302,6 +302,7 @@ task addVersionCommit( dependsOn: [releaseChecks] ) {
         logger.lifecycle( "Adding commit to update version to '${project.releaseVersion}'..." )
         executeGitCommand( 'add', '.' )
         executeGitCommand( 'commit', '-m', project.ormVersion.fullName )
+        executeGitCommand( 'push', project.gitRemote )
     }
 }
 release.mustRunAfter addVersionCommit
@@ -310,29 +311,21 @@ task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
     group = "Release"
     description = "Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one."
     doLast {
-        String tag = null
         if ( !project.hasProperty( 'noTag' ) ) {
-            tag = project.ormVersion.fullName
+            String tag = project.ormVersion.fullName
             // the release is tagged and the tag is pushed to github
             if ( tag.endsWith( ".Final" ) ) {
                 tag = tag.replace( ".Final", "" )
             }
             logger.lifecycle( "Tagging '${tag}'..." )
             executeGitCommand( 'tag', tag )
-        }
+            executeGitCommand( 'push', project.gitRemote, tag )
 
-        logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )
-        project.ormVersionFile.text = "hibernateVersion=${project.developmentVersion}"
-        executeGitCommand( 'add', '.')
-        executeGitCommand( 'commit', '-m', project.developmentVersion )
-
-        if ( tag != null ) {
-            logger.lifecycle("Pushing branch and tag to remote '${project.gitRemote}'...")
-            executeGitCommand( 'push', '--atomic', project.gitRemote , project.gitBranch, tag )
-        }
-        else {
-            logger.lifecycle("Pushing branch to remote '${project.gitRemote}'...")
-            executeGitCommand( 'push', project.gitRemote , project.gitBranch )
+            logger.lifecycle( "Adding commit to update version to '${project.developmentVersion}'..." )
+            project.ormVersionFile.text = "hibernateVersion=${project.developmentVersion}"
+            executeGitCommand( 'add', '.')
+            executeGitCommand( 'commit', '-m', project.developmentVersion )
+            executeGitCommand( 'push', project.gitRemote )
         }
     }
 }

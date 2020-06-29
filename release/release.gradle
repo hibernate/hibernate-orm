@@ -253,19 +253,10 @@ if ( project.hasProperty( 'gitRemote' ) ) {
     gitRemote = project.property( 'gitRemote' )
 }
 
-task addVersionCommit {
+task updateChangeLogFile {
     group = "Release"
-    description = "Updates the changelog.txt file, adds a commit for the released version and push the changes to github"
+    description = "Updates the changelog.txt file and push the changes to github"
     doFirst{
-        if ( !project.hasProperty( 'releaseVersion' ) ) {
-            throw new GradleException(
-                    "The releaseVersion parameter is necessary to create the version commit."
-            )
-        }
-
-        logger.lifecycle( "Updating version to '${project.releaseVersion}'..." )
-        project.ormVersionFile.text = "hibernateVersion=${project.releaseVersion}"
-
         logger.lifecycle( "Appending version '${project.releaseVersion}' to changelog..." )
         ChangeLogFile.update( ormVersion.fullName );
 
@@ -304,8 +295,8 @@ task ciRelease() {
     }
 }
 
-ciRelease.dependsOn addVersionCommit, release
-release.mustRunAfter addVersionCommit
+ciRelease.dependsOn updateChangeLogFile, release
+release.mustRunAfter updateChangeLogFile
 
 static void executeGitCommand(Object ... subcommand){
     List<Object> command = ['git']

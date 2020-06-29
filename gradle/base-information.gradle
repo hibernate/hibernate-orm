@@ -9,13 +9,18 @@ apply plugin: 'base'
 
 File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
 
+if ( project.hasProperty( 'releaseVersion' ) ) {
+	if ( !project.hasProperty( 'developmentVersion' ) ) {
+		throw new GradleException(
+				"When the releaseVersion parameter is specified, the parameter developmentVersion is required as well."
+		)
+	}
+	versionFile.text = "hibernateVersion=${project.property( 'releaseVersion' )}"
+}
+
 ext {
 	ormVersionFile = versionFile
 	ormVersion = HibernateVersion.fromFile( versionFile, project )
-	// Override during releases
-	if ( project.hasProperty( 'releaseVersion' ) ) {
-		ormVersion = new HibernateVersion( project.releaseVersion, project )
-	}
 	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
 }

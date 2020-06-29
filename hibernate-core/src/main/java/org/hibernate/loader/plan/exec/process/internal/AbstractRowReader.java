@@ -224,7 +224,7 @@ public abstract class AbstractRowReader implements RowReader {
 		postLoad( postLoadEvent, context, hydratedEntityRegistrations, afterLoadActionList );
 	}
 
-	protected void finishLoadingArrays(ResultSetProcessingContextImpl context) {
+	private void finishLoadingArrays(ResultSetProcessingContextImpl context) {
 		for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
 			arrayReferenceInitializer.endLoading( context );
 		}
@@ -262,13 +262,13 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 	}
 
-	protected void finishLoadingCollections(ResultSetProcessingContextImpl context) {
+	private void finishLoadingCollections(ResultSetProcessingContextImpl context) {
 		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
 			collectionReferenceInitializer.endLoading( context );
 		}
 	}
 
-	protected void afterInitialize(ResultSetProcessingContextImpl context,
+	private void afterInitialize(ResultSetProcessingContextImpl context,
 			List<HydratedEntityRegistration> hydratedEntityRegistrations) {
 		if ( hydratedEntityRegistrations == null ) {
 			return;
@@ -279,7 +279,7 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 	}
 
-	protected void postLoad(
+	private void postLoad(
 			PostLoadEvent postLoadEvent,
 			ResultSetProcessingContextImpl context,
 			List<HydratedEntityRegistration> hydratedEntityRegistrations,

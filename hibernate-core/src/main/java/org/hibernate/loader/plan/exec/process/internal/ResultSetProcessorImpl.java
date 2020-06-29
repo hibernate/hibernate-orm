@@ -80,57 +80,11 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			ResultTransformer forcedResultTransformer,
 			List<AfterLoadAction> afterLoadActionList) throws SQLException {
 
-		handlePotentiallyEmptyCollectionRootReturns( queryParameters.getCollectionKeys(), resultSet, session );
-
-		final ResultSetProcessingContextImpl context = createResultSetProcessingContext(
-				resultSet,
-				session,
-				queryParameters,
-				namedParameterContext,
-				returnProxies,
-				readOnly
-		);
-
-		final List loadResults = extractRows( resultSet, queryParameters, context );
-
-		rowReader.finishUp( context, afterLoadActionList );
-		context.wrapUp();
-
-		session.getPersistenceContextInternal().initializeNonLazyCollections();
-
-		return loadResults;
-	}
-
-	protected ResultSetProcessingContextImpl createResultSetProcessingContext(
-			ResultSet resultSet,
-			final SharedSessionContractImplementor session,
-			QueryParameters queryParameters,
-			NamedParameterContext namedParameterContext,
-			boolean returnProxies,
-			boolean readOnly) {
-		return new ResultSetProcessingContextImpl(
-				resultSet,
-				session,
-				loadPlan,
-				aliasResolutionContext,
-				readOnly,
-				shouldUseOptionalEntityInstance,
-				returnProxies,
-				queryParameters,
-				namedParameterContext,
-				hadSubselectFetches
-		);
-	}
-
-	protected List<Object> extractRows(
-			ResultSet resultSet,
-			QueryParameters queryParameters,
-			final ResultSetProcessingContextImpl context) throws SQLException {
+		handlePotentiallyEmptyCollectionRootReturns( loadPlan, queryParameters.getCollectionKeys(), resultSet, session );
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		final int maxRows;
-		final List<Object> loadResults;
-
+		final List loadResults;
 		final RowSelection selection = queryParameters.getRowSelection();
 		if ( LimitHelper.hasMaxRows( selection ) ) {
 			maxRows = selection.getMaxRows();
@@ -144,6 +98,19 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			loadResults = new ArrayList();
 			maxRows = Integer.MAX_VALUE;
 		}
+
+		final ResultSetProcessingContextImpl context = new ResultSetProcessingContextImpl(
+				resultSet,
+				session,
+				loadPlan,
+				aliasResolutionContext,
+				readOnly,
+				shouldUseOptionalEntityInstance,
+				returnProxies,
+				queryParameters,
+				namedParameterContext,
+				hadSubselectFetches
+		);
 
 		if ( traceEnabled ) {
 			LOG.trace( "Processing result set" );
@@ -167,10 +134,17 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			LOG.tracev( "Done processing result set ({0} rows)", count );
 		}
 
+		rowReader.finishUp( context, afterLoadActionList );
+		context.wrapUp();
+
+		session.getPersistenceContextInternal().initializeNonLazyCollections();
+
 		return loadResults;
 	}
 
-	protected void handlePotentiallyEmptyCollectionRootReturns(
+
+	private void handlePotentiallyEmptyCollectionRootReturns(
+			LoadPlan loadPlan,
 			Serializable[] collectionKeys,
 			ResultSet resultSet,
 			SharedSessionContractImplementor session) {

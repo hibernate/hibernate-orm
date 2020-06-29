@@ -35,13 +35,13 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FastSessionServices;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -121,13 +121,18 @@ public final class TwoPhaseLoad {
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
+		if ( entityEntry == null ) {
+			throw new AssertionFailure( "possible non-threadsafe access to the session" );
+		}
 		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
 			.getFactory()
 			.getServiceRegistry()
 			.getService( EventListenerRegistry.class )
 			.getEventListenerGroup( EventType.PRE_LOAD );
 		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
-		initializeEntity( entity, readOnly, session, preLoadEvent, listeners, EntityResolver.DEFAULT );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, listeners );
 	}
 
 	/**
@@ -150,46 +155,22 @@ public final class TwoPhaseLoad {
 		final SharedSessionContractImplementor session,
 		final PreLoadEvent preLoadEvent,
 		final Iterable<PreLoadEventListener> preLoadEventListeners) {
-		initializeEntity( entity, readOnly, session, preLoadEvent, preLoadEventListeners, EntityResolver.DEFAULT );
-	}
-
-	/**
-	 * Perform the second step of 2-phase load. Fully initialize the entity
-	 * instance.
-	 * <p/>
-	 * After processing a JDBC result set, we "resolve" all the associations
-	 * between the entities which were instantiated and had their state
-	 * "hydrated" into an array
-	 *
-	 * @param entity The entity being loaded
-	 * @param readOnly Is the entity being loaded as read-only
-	 * @param session The Session
-	 * @param preLoadEvent The (re-used) pre-load event
-	 * @param preLoadEventListeners the pre-load event listeners
-	 * @param entityResolver the resolver used for to-one entity associations
-	 *                       (not used when an entity is a bytecode-enhanced lazy entity)
-	 */
-	public static void initializeEntity(
-			final Object entity,
-			final boolean readOnly,
-			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners,
-			final EntityResolver entityResolver) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
-		initializeEntityEntryLoadedState( entity, entityEntry, session, entityResolver );
-		initializeEntityFromEntityEntryLoadedState( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
+		doInitializeEntity( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
 	}
 
-	public static void initializeEntityEntryLoadedState(
+	private static void doInitializeEntity(
 			final Object entity,
 			final EntityEntry entityEntry,
+			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final EntityResolver entityResolver) throws HibernateException {
+			final PreLoadEvent preLoadEvent,
+			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
 		final Serializable id = entityEntry.getId();
 		final Object[] hydratedState = entityEntry.getLoadedState();
@@ -248,36 +229,18 @@ public final class TwoPhaseLoad {
 
 				// we know value != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				Boolean overridingEager = getOverridingEager( session, entityName, propertyNames[i], types[i], debugEnabled );
-				hydratedState[i] = types[i].isEntityType()
-						? entityResolver.resolve( (EntityType) types[i], value, session, entity, overridingEager )
-						: types[i].resolve( value, session, entity, overridingEager );
+				hydratedState[i] = types[i].resolve( value, session, entity, overridingEager );
 			}
 			else {
 				if ( debugEnabled ) {
 					LOG.debugf( "Skipping <unknown> attribute : `%s`", propertyNames[i] );
 				}
 			}
-
+			
 			if ( session.getFetchGraphLoadContext() != fetchGraphContext ) {
 				session.setFetchGraphLoadContext( fetchGraphContext );
 			}
 		}
-	}
-
-	public static void initializeEntityFromEntityEntryLoadedState(
-			final Object entity,
-			final EntityEntry entityEntry,
-			final boolean readOnly,
-			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityPersister persister = entityEntry.getPersister();
-		final Serializable id = entityEntry.getId();
-		final Object[] hydratedState = entityEntry.getLoadedState();
-
-		final boolean debugEnabled = LOG.isDebugEnabled();
 
 		//Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
@@ -636,24 +599,5 @@ public final class TwoPhaseLoad {
 				persister,
 				false
 		);
-	}
-
-	/**
-	 * Implementations determine how a to-one associations is resolved.
-	 *
-	 * @see #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable, EntityResolver)
-	 */
-	public interface EntityResolver {
-
-		Object resolve(
-				EntityType entityType,
-				Object value,
-				SharedSessionContractImplementor session,
-				Object owner,
-				Boolean overridingEager
-		);
-
-		EntityResolver DEFAULT = (entityType, value, session, owner, overridingEager) ->
-				entityType.resolve( value, session, owner, overridingEager );
 	}
 }

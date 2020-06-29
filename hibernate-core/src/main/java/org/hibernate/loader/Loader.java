@@ -986,48 +986,12 @@ public abstract class Loader {
 			int maxRows,
 			List<AfterLoadAction> afterLoadActions) throws SQLException {
 		final int entitySpan = getEntityPersisters().length;
-		final boolean createSubselects = isSubselectLoadingEnabled();
-		final List<EntityKey[]> subselectResultKeys = createSubselects ? new ArrayList<>() : null;
-		final List<Object> hydratedObjects = entitySpan == 0 ? null : new ArrayList<>( entitySpan * 10 );
-
-		final List results = getRowsFromResultSet(
-				rs,
-				queryParameters,
-				session,
-				returnProxies,
-				forcedResultTransformer,
-				maxRows,
-				hydratedObjects,
-				subselectResultKeys
-		);
-
-		initializeEntitiesAndCollections(
-				hydratedObjects,
-				rs,
-				session,
-				queryParameters.isReadOnly( session ),
-				afterLoadActions
-		);
-		if ( createSubselects ) {
-			createSubselects( subselectResultKeys, queryParameters, session );
-		}
-		return results;
-	}
-
-	protected List<Object> getRowsFromResultSet(
-			ResultSet rs,
-			QueryParameters queryParameters,
-			SharedSessionContractImplementor session,
-			boolean returnProxies,
-			ResultTransformer forcedResultTransformer,
-			int maxRows,
-			List<Object> hydratedObjects,
-			List<EntityKey[]> subselectResultKeys) throws SQLException {
-		final int entitySpan = getEntityPersisters().length;
-		final boolean createSubselects = isSubselectLoadingEnabled();
 		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 		final LockMode[] lockModesArray = getLockModes( queryParameters.getLockOptions() );
-		final List<Object> results = new ArrayList<>();
+		final boolean createSubselects = isSubselectLoadingEnabled();
+		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
+		final ArrayList hydratedObjects = entitySpan == 0 ? null : new ArrayList( entitySpan * 10 );
+		final List results = new ArrayList();
 
 		handleEmptyCollections( queryParameters.getCollectionKeys(), rs, session );
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
@@ -1059,6 +1023,16 @@ public abstract class Loader {
 
 		LOG.tracev( "Done processing result set ({0} rows)", count );
 
+		initializeEntitiesAndCollections(
+				hydratedObjects,
+				rs,
+				session,
+				queryParameters.isReadOnly( session ),
+				afterLoadActions
+		);
+		if ( createSubselects ) {
+			createSubselects( subselectResultKeys, queryParameters, session );
+		}
 		return results;
 	}
 
@@ -1087,7 +1061,7 @@ public abstract class Loader {
 		return result;
 	}
 
-	protected void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
+	private void createSubselects(List keys, QueryParameters queryParameters, SharedSessionContractImplementor session) {
 		if ( keys.size() > 1 ) { //if we only returned one entity, query by key is more efficient
 
 			Set[] keySets = transpose( keys );

@@ -471,18 +471,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return null;
 	}
 
-	/**
-	 * Would an entity be eagerly loaded given the value provided for {@code overridingEager}?
-	 *
-	 * @param overridingEager can override eager from the mapping.
-	 *
-	 * @return If {@code overridingEager} is null, then it does not override.
-	 *         If true or false then it overrides the mapping value.
-	 */
-	public boolean isEager(Boolean overridingEager) {
-		return overridingEager != null ? overridingEager : this.eager;
-	}
-
 	@Override
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return getAssociatedEntityPersister( factory ).getIdentifierType();
@@ -694,10 +682,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				getAssociatedEntityPersister( session.getFactory() )
 						.isInstrumented();
 
+		boolean eager = overridingEager != null ? overridingEager : this.eager;
+
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
 				id,
-				isEager( overridingEager ),
+				eager,
 				isNullable()
 		);
 

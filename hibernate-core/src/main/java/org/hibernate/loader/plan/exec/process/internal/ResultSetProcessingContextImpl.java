@@ -315,7 +315,10 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		return hydratedEntityRegistrationList;
 	}
 
-	public void wrapUp() {
+	/**
+	 * Package-protected
+	 */
+	void wrapUp() {
 		createSubselects();
 
 		if ( hydratedEntityRegistrationList != null ) {

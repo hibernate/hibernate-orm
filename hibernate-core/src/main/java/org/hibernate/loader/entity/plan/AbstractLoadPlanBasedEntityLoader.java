@@ -31,7 +31,6 @@ import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
-import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -59,8 +58,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			SessionFactoryImplementor factory,
 			String[] uniqueKeyColumnNames,
 			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters,
-			ResultSetProcessorResolver resultSetProcessorResolver) {
+			QueryBuildingParameters buildingParameters) {
 		super( factory );
 		this.entityPersister = entityPersister;
 		this.uniqueKeyType = uniqueKeyType;
@@ -98,23 +96,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 				plan,
 				uniqueKeyColumnNames,
 				buildingParameters,
-				factory,
-				resultSetProcessorResolver
-		);
-	}
-
-	public AbstractLoadPlanBasedEntityLoader(
-			OuterJoinLoadable entityPersister,
-			SessionFactoryImplementor factory,
-			String[] uniqueKeyColumnNames,
-			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
-		this(
-				entityPersister,
-				factory,
-				uniqueKeyColumnNames,
-				uniqueKeyType,
-				buildingParameters,ResultSetProcessorResolver.DEFAULT
+				factory
 		);
 	}
 
@@ -123,8 +105,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			SessionFactoryImplementor factory,
 			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
 			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters,
-			ResultSetProcessorResolver resultSetProcessorResolver) {
+			QueryBuildingParameters buildingParameters) {
 		super( factory );
 		this.entityPersister = entityPersister;
 		this.uniqueKeyType = uniqueKeyType;
@@ -132,24 +113,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 
 		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.INSTANCE.makeEntityLoadQueryDetails(
 				entityLoaderQueryDetailsTemplate,
-				buildingParameters,
-				resultSetProcessorResolver
-		);
-	}
-
-	protected AbstractLoadPlanBasedEntityLoader(
-			OuterJoinLoadable entityPersister,
-			SessionFactoryImplementor factory,
-			EntityLoadQueryDetails entityLoaderQueryDetailsTemplate,
-			Type uniqueKeyType,
-			QueryBuildingParameters buildingParameters) {
-		this(
-				entityPersister,
-				factory,
-				entityLoaderQueryDetailsTemplate,
-				uniqueKeyType,
-				buildingParameters,
-				ResultSetProcessorResolver.DEFAULT
+				buildingParameters
 		);
 	}
 

@@ -17,7 +17,6 @@ import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
-import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessorResolver;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
@@ -105,10 +104,6 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 	 *
 	 */
 	protected void generate() {
-		generate( ResultSetProcessorResolver.DEFAULT );
-	}
-
-	protected void generate(ResultSetProcessorResolver resultSetProcessorResolver) {
 		// There are 2 high-level requirements to perform here:
 		// 	1) Determine the SQL required to carry out the given LoadPlan (and fulfill
 		// 		{@code LoadQueryDetails#getSqlStatement()}).  SelectStatementBuilder collects the ongoing efforts to
@@ -195,10 +190,10 @@ public abstract class AbstractLoadQueryDetails implements LoadQueryDetails {
 		LoadPlanTreePrinter.INSTANCE.logTree( loadPlan, queryProcessor.getAliasResolutionContext() );
 
 		this.sqlStatement = select.toStatementString();
-		this.resultSetProcessor = resultSetProcessorResolver.resolveResultSetProcessor(
+		this.resultSetProcessor = new ResultSetProcessorImpl(
 				loadPlan,
 				queryProcessor.getAliasResolutionContext(),
-				getReaderCollector(),
+				getReaderCollector().buildRowReader(),
 				shouldUseOptionalEntityInstance(),
 				isSubselectLoadingEnabled( fetchStats )
 		);

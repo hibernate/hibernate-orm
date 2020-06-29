@@ -62,7 +62,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return sql;
 	}
 
-	public final Loadable[] getEntityPersisters() {
+	protected final Loadable[] getEntityPersisters() {
 		return persisters;
 	}
 
@@ -90,7 +90,7 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return aliases;
 	}
 
-	public final CollectionPersister[] getCollectionPersisters() {
+	protected final CollectionPersister[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 

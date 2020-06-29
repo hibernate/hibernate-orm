@@ -1,5 +1,3 @@
-import java.nio.charset.StandardCharsets
-
 import groovy.json.JsonSlurper
 
 /*
@@ -323,28 +321,13 @@ task ciRelease() {
 ciRelease.dependsOn updateChangeLogFile, release
 release.mustRunAfter updateChangeLogFile
 
-static void executeGitCommand(String command, String errorMessage){
+void executeGitCommand(String command, String errorMessage){
     def proc = command.execute()
-    def code = proc.waitFor()
-    def stdout = inputStreamToString( proc.getInputStream() )
-    def stderr = inputStreamToString( proc.getErrorStream() )
-    if ( code != 0 ) {
-        throw new GradleException( errorMessage + "\n\nstdout:\n" + stdout + "\n\nstderr:\n" + stderr )
-    }
-}
-
-static String inputStreamToString(InputStream inputStream) {
-    inputStream.withCloseable { ins ->
-        new BufferedInputStream(ins).withCloseable { bis ->
-            new ByteArrayOutputStream().withCloseable { buf ->
-                int result = bis.read();
-                while (result != -1) {
-                    buf.write((byte) result);
-                    result = bis.read();
-                }
-                return buf.toString( StandardCharsets.UTF_8.name());
-            }
-        }
+    def errorsStringBuffer = new StringBuffer()
+    proc.waitFor()
+    proc.consumeProcessErrorStream( errorsStringBuffer )
+    if ( errorsStringBuffer.toString(  ) != "" ) {
+        throw new GradleException( errorMessage + " " + b );
     }
 }
 

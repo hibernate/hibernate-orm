@@ -299,7 +299,13 @@ task changeLogFile( dependsOn: [releaseChecks] ) {
     }
 }
 
-
+rootProject.subprojects.each { Project subProject ->
+    if ( !this.name.equals( subProject.name ) ) {
+        if ( subProject.tasks.findByName( 'release' ) ) {
+            this.tasks.release.dependsOn( subProject.tasks.release )
+        }
+    }
+}
 
 task addVersionCommit( dependsOn: [changeLogFile] ) {
     group = "Release"
@@ -314,15 +320,6 @@ task addVersionCommit( dependsOn: [changeLogFile] ) {
     }
 }
 release.mustRunAfter addVersionCommit
-
-rootProject.subprojects.each { Project subProject ->
-    if ( !this.name.equals( subProject.name ) ) {
-        if ( subProject.tasks.findByName( 'release' ) ) {
-            this.tasks.release.dependsOn( subProject.tasks.release )
-            subProject.tasks.release.mustRunAfter( this.tasks.addVersionCommit )
-        }
-    }
-}
 
 task ciRelease( dependsOn: [releaseChecks, addVersionCommit, release] ) {
     group = "Release"

@@ -531,10 +531,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( persistentClass.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 
-			int initialCapacity = subclassSpan + 1;
+			final int initialCapacity = CollectionHelper.determineProperSizing( subclassSpan + 1 );
 			discriminatorValuesByTableName = new LinkedHashMap<>( initialCapacity );
 			discriminatorColumnNameByTableName = new LinkedHashMap<>( initialCapacity );
-			subclassNameByTableName = CollectionHelper.mapOfSize( initialCapacity );
+			subclassNameByTableName = new HashMap<>( initialCapacity );
 			// We need to convert the `discriminatorSQLString` (which is a String read from boot-mapping) into
 			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
 			try {

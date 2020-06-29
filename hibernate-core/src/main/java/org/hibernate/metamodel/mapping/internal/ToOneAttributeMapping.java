@@ -76,7 +76,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	private final boolean referringPrimaryKey;
 
 	private final Cardinality cardinality;
-	private String bidirectionalPropertyName;
+	private String bidirectionalAttributeName;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ForeignKeyDirection foreignKeyDirection;
@@ -170,18 +170,11 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 				the the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part
 				so in ored to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 		 	*/
-
-			String mappedByProperty = StringHelper.subStringNullIfEmpty(
+			// todo (6.0): find a better solution for the embeddable part name not in the NavigablePath
+			bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
 					( (OneToOne) bootValue ).getMappedByProperty(),
 					'.'
 			);
-
-			if ( mappedByProperty == null ) {
-				bidirectionalPropertyName = StringHelper.subStringNullIfEmpty( referencedPropertyName, '.' );
-			}
-			else {
-				bidirectionalPropertyName = mappedByProperty;
-			}
 		}
 
 		this.navigableRole = navigableRole;
@@ -230,19 +223,19 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 
 		if ( creationState.isAssociationKeyVisited( associationKey ) ) {
-			NavigablePath parent = fetchablePath.getParent();
-			ModelPart modelPart = creationState.resolveModelPart( parent );
+			NavigablePath parentNavigablePath = fetchablePath.getParent();
+			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
-				while ( parent.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
-					parent = parent.getParent();
+				while ( parentNavigablePath.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+					parentNavigablePath = parentNavigablePath.getParent();
 				}
 			}
 			while ( modelPart instanceof EmbeddableValuedFetchable ) {
-				parent = parent.getParent();
-				modelPart = creationState.resolveModelPart( parent );
+				parentNavigablePath = parentNavigablePath.getParent();
+				modelPart = creationState.resolveModelPart( parentNavigablePath );
 			}
 
-			if ( this.bidirectionalPropertyName != null && parent.getFullPath().endsWith( this.bidirectionalPropertyName )  ) {
+			if ( isBidirectionalAttributeName( parentNavigablePath ) ) {
 				/*
 					class Child {
 						@OneToOne(mappedBy = "biologicalChild")
@@ -261,7 +254,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 				return createCircularBiDirectionalFetch(
 						fetchablePath,
 						fetchParent,
-						parent.getParent(),
+						parentNavigablePath,
 						LockMode.READ
 				);
 			}
@@ -269,8 +262,13 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 			/*
 				check if mappedBy is on the other side of the association
 			 */
-			final String otherSideMappedBy = getOthrerSideMappedBy( modelPart, parent.getParent(), creationState );
-			if ( otherSideMappedBy != null ) {
+			final boolean isBiDirectional = isBidirectional(
+					modelPart,
+					parentNavigablePath.getParent(),
+					fetchablePath,
+					creationState
+			);
+			if ( isBiDirectional ) {
 					/*
 						class Child {
 							@OneToOne(mappedBy = "biologicalChild")
@@ -287,15 +285,12 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 						otherSideMappedBy = "biologicalChild"
 
 					 */
-
-				if ( fetchablePath.getFullPath().endsWith( otherSideMappedBy ) ) {
-					return createCircularBiDirectionalFetch(
-							fetchablePath,
-							fetchParent,
-							parent.getParent(),
-							LockMode.READ
-					);
-				}
+				return createCircularBiDirectionalFetch(
+						fetchablePath,
+						fetchParent,
+						parentNavigablePath,
+						LockMode.READ
+				);
 			}
 			/*
 						class Child {
@@ -329,37 +324,53 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		return null;
 	}
 
-	private String getOthrerSideMappedBy(
+	private boolean isBidirectional(
 			ModelPart modelPart,
 			NavigablePath parentOfParent,
+			NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
 		if ( modelPart instanceof ToOneAttributeMapping ) {
-			return ( (ToOneAttributeMapping) modelPart ).getBidirectionalPropertyName();
+			return ( (ToOneAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
 		}
 
 		if ( modelPart instanceof PluralAttributeMapping ) {
-			return ( (PluralAttributeMapping) modelPart ).getBidirectionalPropertyName();
+			return ( (PluralAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
 		}
 
 		if ( modelPart instanceof EntityCollectionPart ) {
 			if ( parentOfParent.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
 				parentOfParent = parentOfParent.getParent();
 			}
-			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).getBidirectionalPropertyName();
+			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).isBidirectionalAttributeName(
+					fetchablePath );
 		}
 
-		return null;
+		return false;
 	}
 
-	public String getBidirectionalPropertyName(){
-		return bidirectionalPropertyName;
+	protected boolean isBidirectionalAttributeName(NavigablePath fetchablePath) {
+		if ( bidirectionalAttributeName == null ) {
+			return false;
+		}
+		return fetchablePath.getFullPath().endsWith( bidirectionalAttributeName );
+	}
+
+	public String getBidirectionalAttributeName(){
+		return bidirectionalAttributeName;
 	}
 
 	private Fetch createCircularBiDirectionalFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
-			NavigablePath referencedNavigablePath,
+			NavigablePath parentNavigablePath,
 			LockMode lockMode) {
+		NavigablePath referencedNavigablePath;
+		if ( parentNavigablePath.getParent() == null ) {
+			referencedNavigablePath = parentNavigablePath;
+		}
+		else {
+			referencedNavigablePath = parentNavigablePath.getParent();
+		}
 		return new CircularBiDirectionalFetchImpl(
 				FetchTiming.IMMEDIATE,
 				fetchablePath,

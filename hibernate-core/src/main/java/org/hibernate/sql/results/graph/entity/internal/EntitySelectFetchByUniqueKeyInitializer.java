@@ -43,7 +43,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			return;
 		}
 		final String entityName = concreteDescriptor.getEntityName();
-		String uniqueKeyPropertyName = fetchedAttribute.getBidirectionalPropertyName();
+		String uniqueKeyPropertyName = fetchedAttribute.getBidirectionalAttributeName();
 
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 

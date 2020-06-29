@@ -98,7 +98,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	private final FetchStyle fetchStyle;
 
 	private final CascadeStyle cascadeStyle;
-	private final String bidirectionalPropertyName;
+	private final String bidirectionalAttributeName;
+	private final Boolean isInverse;
 
 	private final CollectionPersister collectionDescriptor;
 	private final String separateCollectionTable;
@@ -175,7 +176,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		this.cascadeStyle = cascadeStyle;
 		this.collectionDescriptor = collectionDescriptor;
 
-		this.bidirectionalPropertyName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+		this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
+
+		this.isInverse = bootDescriptor.isInverse();
 
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
@@ -220,6 +223,17 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 		if ( indexDescriptor instanceof Aware ) {
 			( (Aware) indexDescriptor ).injectAttributeMapping( this );
 		}
+	}
+
+	@Override
+	public boolean isBidirectionalAttributeName(NavigablePath fetchablePath) {
+		if ( isInverse ) {
+			return true;
+		}
+		if ( bidirectionalAttributeName == null ) {
+			return false;
+		}
+		return fetchablePath.getFullPath().endsWith( bidirectionalAttributeName );
 	}
 
 	@SuppressWarnings("unused")
@@ -391,11 +405,6 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 	@Override
 	public String getSeparateCollectionTable() {
 		return separateCollectionTable;
-	}
-
-	@Override
-	public String getBidirectionalPropertyName() {
-		return bidirectionalPropertyName;
 	}
 
 	@Override

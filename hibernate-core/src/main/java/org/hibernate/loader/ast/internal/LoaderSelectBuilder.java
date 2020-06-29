@@ -432,8 +432,6 @@ public class LoaderSelectBuilder {
 		}
 
 		final List<Fetch> fetches = new ArrayList<>();
-		String fullPath = fetchParent.getNavigablePath().getFullPath();
-
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();

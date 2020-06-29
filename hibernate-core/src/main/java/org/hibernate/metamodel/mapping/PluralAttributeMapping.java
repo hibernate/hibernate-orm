@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
@@ -56,5 +57,5 @@ public interface PluralAttributeMapping
 
 	String getSeparateCollectionTable();
 
-	String getBidirectionalPropertyName();
+	boolean isBidirectionalAttributeName(NavigablePath fetchablePath);
 }

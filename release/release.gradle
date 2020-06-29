@@ -299,14 +299,6 @@ task changeLogFile( dependsOn: [releaseChecks] ) {
     }
 }
 
-rootProject.subprojects.each { Project subProject ->
-    if ( !this.name.equals( subProject.name ) ) {
-        if ( subProject.tasks.findByName( 'release' ) ) {
-            this.tasks.release.dependsOn( subProject.tasks.release )
-        }
-    }
-}
-
 task addVersionCommit( dependsOn: [changeLogFile] ) {
     group = "Release"
     description = "Adds a commit for the released version and push the changes to github"

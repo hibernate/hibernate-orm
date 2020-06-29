@@ -7,20 +7,8 @@
 
 apply plugin: 'base'
 
-File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
-
-if ( project.hasProperty( 'releaseVersion' ) ) {
-	if ( !project.hasProperty( 'developmentVersion' ) ) {
-		throw new GradleException(
-				"When the releaseVersion parameter is specified, the parameter developmentVersion is required as well."
-		)
-	}
-	versionFile.text = "hibernateVersion=${project.property( 'releaseVersion' )}"
-}
-
 ext {
-	ormVersionFile = versionFile
-	ormVersion = HibernateVersion.fromFile( versionFile, project )
+	ormVersion = new HibernateVersion( '5.5.0-SNAPSHOT', project )
 	baselineJavaVersion = '1.8'
 	jpaVersion = new JpaVersion('2.2')
 }
@@ -64,22 +52,6 @@ class HibernateVersion {
 		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
 
 		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
-	}
-
-	static HibernateVersion fromFile(File file, Project project){
-		def fullName = readVersionProperties(file)
-		return new HibernateVersion(fullName, project)
-	}
-
-	private static String readVersionProperties(File file) {
-		if ( !file.exists() ) {
-			throw new GradleException( "Version file $file.canonicalPath does not exists" )
-		}
-		Properties versionProperties = new Properties()
-		file.withInputStream {
-			stream -> versionProperties.load( stream )
-		}
-		return versionProperties.hibernateVersion
 	}
 
 	@Override

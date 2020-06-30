@@ -1090,7 +1090,7 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testLocking() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

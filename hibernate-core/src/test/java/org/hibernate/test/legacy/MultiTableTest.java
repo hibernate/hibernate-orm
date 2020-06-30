@@ -8,10 +8,6 @@
 //$Id: MultiTableTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -22,7 +18,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
@@ -35,10 +30,12 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 
 public class MultiTableTest extends LegacyTestCase {
@@ -252,7 +249,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -396,7 +393,7 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
+	@SkipForDialect( value = CockroachDB192Dialect.class )
 	public void testMultiTableGeneratedId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

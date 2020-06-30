@@ -5,17 +5,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.MySQL8Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL95Dialect;
+import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.query.Query;
-
-import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -70,7 +68,6 @@ public abstract class AbstractSkipLockedTest
 
 	@Test
 	@RequiresDialect({ PostgreSQL95Dialect.class })
-	@RequiresDialectFeature(DialectChecks.SupportSkipLocked.class)
 	public void testPostgreSQLSkipLocked() {
 
 		doInHibernate( this::sessionFactory, session -> {

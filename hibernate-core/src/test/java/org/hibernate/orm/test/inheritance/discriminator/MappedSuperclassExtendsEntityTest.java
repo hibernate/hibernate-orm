@@ -21,43 +21,62 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.inheritance.discriminator;
+package org.hibernate.orm.test.inheritance.discriminator;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.ManyToMany;
+import javax.persistence.MappedSuperclass;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * Originally from https://github.com/mkaletka/hibernate-test-case-templates/commit/2b3c075cacd07474d5565fa3bd5a6d0a48683dc0
  *
  * @author Christian Beikov
  */
-public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MappedSuperclassExtendsEntityTest.TestEntity.class,
+				MappedSuperclassExtendsEntityTest.GrandParent.class,
+				MappedSuperclassExtendsEntityTest.Parent.class,
+				MappedSuperclassExtendsEntityTest.Child1.class,
+				MappedSuperclassExtendsEntityTest.Child2.class
+		}
+)
+@SessionFactory
+public class MappedSuperclassExtendsEntityTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				TestEntity.class,
-				GrandParent.class,
-				Parent.class,
-				Child1.class,
-				Child2.class
-		};
+	@Test
+	@TestForIssue(jiraKey = "HHH-12332")
+	public void testQueryingSingle(SessionFactoryScope scope) {
+		// Make sure that the produced query for th
+		scope.inTransaction(
+				s ->
+						s.createQuery(
+								"FROM TestEntity e JOIN e.parents p1 JOIN p1.entities JOIN p1.entities2 JOIN e.parents2 p2 JOIN p2.entities JOIN p2.entities2" )
+								.getResultList()
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12332")
-	public void testQueryingSingle() {
+	public void testHql(SessionFactoryScope scope) {
 		// Make sure that the produced query for th
-		doInHibernate( this::sessionFactory, s -> {
-			s.createQuery( "FROM TestEntity e JOIN e.parents p1 JOIN p1.entities JOIN p1.entities2 JOIN e.parents2 p2 JOIN p2.entities JOIN p2.entities2" ).getResultList();
-		} );
+		scope.inTransaction(
+				s ->
+						s.createQuery( "from TestEntity" ).list()
+		);
 	}
 
 	@Entity(name = "GrandParent")
@@ -66,9 +85,10 @@ public class MappedSuperclassExtendsEntityTest extends BaseCoreFunctionalTestCas
 	public static abstract class GrandParent implements Serializable {
 		private static final long serialVersionUID = 1L;
 
-        @Id
-        @GeneratedValue
+		@Id
+		@GeneratedValue
 		private Long id;
+
 		@ManyToMany(mappedBy = "parents2")
 		private List<TestEntity> entities2;
 

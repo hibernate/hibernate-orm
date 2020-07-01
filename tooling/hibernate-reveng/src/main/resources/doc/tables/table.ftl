@@ -61,13 +61,13 @@
 							${dochelper.getSQLTypeName(column)}
 						</td>
 						<td>
-							${column.length}
+							${dochelper.getLength(column)}
 						</td>
 						<td>
-							${column.precision}
+							${dochelper.getPrecision(column)}
 						</td>
 						<td>
-							${column.scale}
+							${dochelper.getScale(column)}
 						</td>
 						<td>
 							${column.nullable?string}
@@ -108,7 +108,7 @@
 							</#if>
 						</td>
 						<td>
-							<#list table.primaryKey.columnIterator() as column>
+							<#list dochelper.getPrimaryKeyColumnIterator(table) as column>
 								<a href="#column_detail_${column.name}">
 									${column.name}
 								</a>
@@ -257,13 +257,13 @@
 						<strong>Type:</strong> ${dochelper.getSQLTypeName(column)}
 					</li>
 					<li>
-						<strong>Length:</strong> ${column.length}
+						<strong>Length:</strong> ${dochelper.getLength(column)}
 					</li>
 					<li>
-						<strong>Precision:</strong> ${column.precision}
+						<strong>Precision:</strong> ${dochelper.getPrecision(column)}
 					</li>
 					<li>
-						<strong>Scale:</strong> ${column.scale}
+						<strong>Scale:</strong> ${dochelper.getScale(column)}
 					</li>
 					<li>
 						<strong>Nullable:</strong> ${column.nullable?string}

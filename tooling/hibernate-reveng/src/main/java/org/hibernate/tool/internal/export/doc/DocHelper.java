@@ -26,6 +26,7 @@ import org.hibernate.tool.internal.export.common.ConfigurationNavigator;
 import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.java.POJOClass;
+import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.Type;
 
 /**
@@ -412,6 +413,28 @@ public final class DocHelper {
 
 			return "N/D";
 		}
+	}
+	
+	public int getLength(Column column) {
+		return column.getLength() == null ? 
+				TypeUtils.DEFAULT_COLUMN_LENGTH : 
+					column.getLength().intValue();
+	}
+
+	public int getPrecision(Column column) {
+		return column.getPrecision() == null ? 
+				TypeUtils.DEFAULT_COLUMN_PRECISION : 
+					column.getPrecision().intValue();
+	}
+
+	public int getScale(Column column) {
+		return column.getScale() == null ? 
+				TypeUtils.DEFAULT_COLUMN_SCALE : 
+					column.getScale().intValue();
+	}
+	
+	public Iterator<Column> getPrimaryKeyColumnIterator(Table table) {
+		return table.getPrimaryKey().getColumnIterator();
 	}
 
 	/**

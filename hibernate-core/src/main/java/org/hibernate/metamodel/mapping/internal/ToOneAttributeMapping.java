@@ -49,6 +49,7 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.type.ForeignKeyDirection;
@@ -167,8 +168,8 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 				}
 
 				in such case the mappedBy is "primaryKey.card"
-				the the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part
-				so in ored to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
+				the navigable path is NavigablePath(Card.fields.{element}.{id}.card) and it does not contain the "primaryKey" part,
+				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 		 	*/
 			// todo (6.0): find a better solution for the embeddable part name not in the NavigablePath
 			bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
@@ -399,30 +400,23 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		);
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
-			fromClauseAccess.resolveTableGroup(
-					fetchablePath,
-					np -> {
-						final SqlAstJoinType sqlAstJoinType;
-						if ( isNullable ) {
-							sqlAstJoinType = SqlAstJoinType.LEFT;
-						}
-						else {
-							sqlAstJoinType = SqlAstJoinType.INNER;
-						}
-
-
-						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-								fetchablePath,
-								parentTableGroup,
-								null,
-								sqlAstJoinType,
-								lockMode,
-								creationState.getSqlAstCreationState()
-						);
-
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
+			if ( fetchParent instanceof EntityResultJoinedSubclassImpl &&
+					( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
+				final TableGroup tableGroupJoin = createTableGroupJoin(
+						fetchablePath,
+						lockMode,
+						creationState,
+						parentTableGroup
+				);
+				fromClauseAccess.registerTableGroup( fetchablePath, tableGroupJoin );
+			}
+			else {
+				fromClauseAccess.resolveTableGroup(
+						fetchablePath,
+						np ->
+								createTableGroupJoin( fetchablePath, lockMode, creationState, parentTableGroup )
+				);
+			}
 
 			creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
 			return new EntityFetchJoinedImpl(
@@ -494,6 +488,30 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 				fetchablePath,
 				keyResult
 		);
+	}
+
+	private TableGroup createTableGroupJoin(
+			NavigablePath fetchablePath,
+			LockMode lockMode,
+			DomainResultCreationState creationState, TableGroup parentTableGroup) {
+		final SqlAstJoinType sqlAstJoinType;
+		if ( isNullable ) {
+			sqlAstJoinType = SqlAstJoinType.LEFT;
+		}
+		else {
+			sqlAstJoinType = SqlAstJoinType.INNER;
+		}
+
+		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+				fetchablePath,
+				parentTableGroup,
+				null,
+				sqlAstJoinType,
+				lockMode,
+				creationState.getSqlAstCreationState()
+		);
+
+		return tableGroupJoin.getJoinedGroup();
 	}
 
 	@Override

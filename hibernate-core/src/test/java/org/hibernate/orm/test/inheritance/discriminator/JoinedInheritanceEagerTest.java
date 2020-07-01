@@ -21,8 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.inheritance.discriminator;
+package org.hibernate.orm.test.inheritance.discriminator;
 
+import java.util.List;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,7 +33,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.query.sqm.InterpretationException;
+import org.hibernate.Hibernate;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -42,8 +43,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test cases for joined inheritance with eager fetching.
@@ -100,24 +105,41 @@ public class JoinedInheritanceEagerTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12375")
-	public void joinUnrelatedCollectionOnBaseType(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					session.getTransaction().begin();
+	public void joinFindEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			EntityA entityA = session.get( EntityA.class, 4L );
+			assertTrue( Hibernate.isInitialized( entityA.getRelation() ) );
+			assertFalse( Hibernate.isInitialized( entityA.getAttributes() ) );
+		} );
+	}
 
-					try {
-						session.createQuery( "from BaseEntity b join b.attributes" ).list();
-						fail( "Expected a resolution exception for property 'attributes'!" );
-					}
-					catch (InterpretationException ex) {
-						assertTrue( ex.getMessage().contains( "could not resolve property: attributes " ) );
-					}
-					finally {
-						session.getTransaction().commit();
-					}
-				}
-		);
+	@Test
+	@TestForIssue(jiraKey = "HHH-12375")
+	public void joinFindParenEntity(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			BaseEntity baseEntity = session.get( BaseEntity.class, 4L );
+			assertThat( baseEntity, notNullValue() );
+			assertThat( baseEntity, instanceOf( EntityA.class ) );
+			assertTrue( Hibernate.isInitialized( ( (EntityA) baseEntity ).getRelation() ) );
+			assertFalse( Hibernate.isInitialized( ( (EntityA) baseEntity ).getAttributes() ) );
+		} );
 
+		scope.inTransaction( session -> {
+			BaseEntity baseEntity = session.get( BaseEntity.class, 3L );
+			assertThat( baseEntity, notNullValue() );
+			assertThat( baseEntity, instanceOf( EntityB.class ) );
+			assertTrue( Hibernate.isInitialized( ( (EntityB) baseEntity ).getRelation() ) );
+			assertFalse( Hibernate.isInitialized( ( (EntityB) baseEntity ).getAttributes() ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-12375")
+	public void selectBaseType(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List result = session.createQuery( "from BaseEntity" ).list();
+			assertEquals( 2, result.size() );
+		} );
 	}
 
 	@Entity(name = "BaseEntity")

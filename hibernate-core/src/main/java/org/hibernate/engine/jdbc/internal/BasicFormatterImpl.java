@@ -110,127 +110,43 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase(Locale.ROOT);
+				lcToken = token.toLowerCase( Locale.ROOT );
 
-				if ( "'".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
+				switch ( token ) {
+					case "'":
+						// cannot handle single quotes
+						concatUntil( "'" );
+						break;
+					case "\"": {
+						concatUntil( "\"" );
+						break;
 					}
-					// cannot handle single quotes
-					while ( !"'".equals( t ) && tokens.hasMoreTokens() );
-				}
-				else if ( "\"".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
+					// SQL Server uses "[" and "]" to escape reserved words
+					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
+					case "[": {
+						concatUntil( "]" );
+						break;
 					}
-					while ( !"\"".equals( t )  && tokens.hasMoreTokens() );
-				}
-				// SQL Server uses "[" and "]" to escape reserved words
-				// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
-				else if ( "[".equals( token ) ) {
-					String t;
-					do {
-						t = tokens.nextToken();
-						token += t;
-					}
-					while ( !"]".equals( t ) && tokens.hasMoreTokens());
 				}
 
-				if ( afterByOrSetOrFromOrSelect && ",".equals( token ) ) {
-					commaAfterByOrFromOrSelect();
-				}
-				else if ( afterOn && ",".equals( token ) ) {
-					commaAfterOn();
-				}
-
-				else if ( "(".equals( token ) ) {
-					openParen();
-				}
-				else if ( ")".equals( token ) ) {
-					closeParen();
-				}
-
-				else if ( BEGIN_CLAUSES.contains( lcToken ) ) {
-					beginNewClause();
-				}
-
-				else if ( END_CLAUSES.contains( lcToken ) ) {
-					endNewClause();
-				}
-
-				else if ( "select".equals( lcToken ) ) {
-					select();
-				}
-
-				else if ( DML.contains( lcToken ) ) {
-					updateOrInsertOrDelete();
-				}
-
-				else if ( "values".equals( lcToken ) ) {
-					values();
-				}
-
-				else if ( "on".equals( lcToken ) ) {
-					on();
-				}
-
-				else if ( afterBetween && lcToken.equals( "and" ) ) {
-					misc();
-					afterBetween = false;
-				}
-
-				else if ( LOGICAL.contains( lcToken ) ) {
-					logical();
-				}
-
-				else if ( isWhitespace( token ) ) {
-					white();
-				}
-
-				else {
-					misc();
-				}
+				ProcessEnum.start( this );
 
 				if ( !isWhitespace( token ) ) {
 					lastToken = lcToken;
 				}
-
 			}
 			return result.toString();
 		}
 
-		private void commaAfterOn() {
-			out();
-			indent--;
-			newline();
-			afterOn = false;
-			afterByOrSetOrFromOrSelect = true;
-		}
-
-		private void commaAfterByOrFromOrSelect() {
-			out();
-			newline();
-		}
-
-		private void logical() {
-			if ( "end".equals( lcToken ) ) {
-				indent--;
+		private void concatUntil(String closure) {
+			String t;
+			StringBuilder s = new StringBuilder( token );
+			do {
+				t = tokens.nextToken();
+				s.append( t );
 			}
-			newline();
-			out();
-			beginLine = false;
-		}
-
-		private void on() {
-			indent++;
-			afterOn = true;
-			newline();
-			out();
-			beginLine = false;
+			while ( !closure.equals( t ) && tokens.hasMoreTokens() );
+			token = s.toString();
 		}
 
 		private void misc() {
@@ -250,118 +166,8 @@ public class BasicFormatterImpl implements Formatter {
 			}
 		}
 
-		private void white() {
-			if ( !beginLine ) {
-				result.append( " " );
-			}
-		}
-
-		private void updateOrInsertOrDelete() {
-			out();
-			indent++;
-			beginLine = false;
-			if ( "update".equals( lcToken ) ) {
-				newline();
-			}
-			if ( "insert".equals( lcToken ) ) {
-				afterInsert = true;
-			}
-		}
-
-		private void select() {
-			out();
-			indent++;
-			newline();
-			parenCounts.addLast( parensSinceSelect );
-			afterByOrFromOrSelects.addLast( afterByOrSetOrFromOrSelect );
-			parensSinceSelect = 0;
-			afterByOrSetOrFromOrSelect = true;
-		}
-
 		private void out() {
 			result.append( token );
-		}
-
-		private void endNewClause() {
-			if ( !afterBeginBeforeEnd ) {
-				indent--;
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
-				}
-				newline();
-			}
-			out();
-			if ( !"union".equals( lcToken ) ) {
-				indent++;
-			}
-			newline();
-			afterBeginBeforeEnd = false;
-			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
-		}
-
-		private void beginNewClause() {
-			if ( !afterBeginBeforeEnd ) {
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
-				}
-				indent--;
-				newline();
-			}
-			out();
-			beginLine = false;
-			afterBeginBeforeEnd = true;
-		}
-
-		private void values() {
-			indent--;
-			newline();
-			out();
-			indent++;
-			newline();
-		}
-
-		private void closeParen() {
-			parensSinceSelect--;
-			if ( parensSinceSelect < 0 ) {
-				indent--;
-				parensSinceSelect = parenCounts.removeLast();
-				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast();
-			}
-			if ( inFunction > 0 ) {
-				inFunction--;
-				out();
-			}
-			else {
-				if ( !afterByOrSetOrFromOrSelect ) {
-					indent--;
-					newline();
-				}
-				out();
-			}
-			beginLine = false;
-		}
-
-		private void openParen() {
-			if ( isFunctionName( lastToken ) || inFunction > 0 ) {
-				inFunction++;
-			}
-			beginLine = false;
-			if ( inFunction > 0 ) {
-				out();
-			}
-			else {
-				out();
-				if ( !afterByOrSetOrFromOrSelect ) {
-					indent++;
-					newline();
-					beginLine = true;
-				}
-			}
-			parensSinceSelect++;
 		}
 
 		private static boolean isFunctionName(String tok) {
@@ -389,6 +195,268 @@ public class BasicFormatterImpl implements Formatter {
 				result.append( INDENT_STRING );
 			}
 			beginLine = true;
+		}
+
+		private enum ProcessEnum {
+
+			PROCESS_COMMA_AFTER_BY_FROM_SELECT {
+				@Override
+				public void process(FormatProcess p) {
+					if ( p.afterByOrSetOrFromOrSelect && ",".equals( p.token ) ) {
+						p.out();
+						p.newline();
+						return;
+					}
+					PROCESS_COMMA_AFTER_ON.process( p );
+				}
+			},
+
+			PROCESS_COMMA_AFTER_ON {
+				@Override
+				public void process(FormatProcess p) {
+					if ( p.afterOn && ",".equals( p.token ) ) {
+						p.out();
+						p.indent--;
+						p.newline();
+						p.afterOn = false;
+						p.afterByOrSetOrFromOrSelect = true;
+						return;
+					}
+					PROCESS_OPEN_PAREN.process( p );
+				}
+			},
+
+			PROCESS_OPEN_PAREN {
+				@Override
+				public void process(FormatProcess p) {
+					if ( "(".equals( p.token ) ) {
+						if ( isFunctionName( p.lastToken ) || p.inFunction > 0 ) {
+							p.inFunction++;
+						}
+						p.beginLine = false;
+						if ( p.inFunction > 0 ) {
+							p.out();
+						}
+						else {
+							p.out();
+							if ( !p.afterByOrSetOrFromOrSelect ) {
+								p.indent++;
+								p.newline();
+								p.beginLine = true;
+							}
+						}
+						p.parensSinceSelect++;
+						return;
+					}
+					PROCESS_CLOSE_PAREN.process( p );
+				}
+			},
+
+			PROCESS_CLOSE_PAREN {
+				@Override
+				public void process(FormatProcess p) {
+					if ( ")".equals( p.token ) ) {
+						p.parensSinceSelect--;
+						if ( p.parensSinceSelect < 0 ) {
+							p.indent--;
+							p.parensSinceSelect = p.parenCounts.removeLast();
+							p.afterByOrSetOrFromOrSelect = p.afterByOrFromOrSelects.removeLast();
+						}
+						if ( p.inFunction > 0 ) {
+							p.inFunction--;
+						}
+						else {
+							if ( !p.afterByOrSetOrFromOrSelect ) {
+								p.indent--;
+								p.newline();
+							}
+						}
+						p.out();
+						p.beginLine = false;
+						return;
+					}
+					PROCESS_BEGIN_NEW_CLAUSE.process( p );
+				}
+			},
+
+			PROCESS_BEGIN_NEW_CLAUSE {
+				@Override
+				public void process(FormatProcess p) {
+					if ( BEGIN_CLAUSES.contains( p.lcToken ) ) {
+						if ( !p.afterBeginBeforeEnd ) {
+							if ( p.afterOn ) {
+								p.indent--;
+								p.afterOn = false;
+							}
+							p.indent--;
+							p.newline();
+						}
+						p.out();
+						p.beginLine = false;
+						p.afterBeginBeforeEnd = true;
+						return;
+					}
+					PROCESS_END_NEW_CLAUSE.process( p );
+				}
+			},
+
+			PROCESS_END_NEW_CLAUSE {
+				@Override
+				public void process(FormatProcess p) {
+					if ( END_CLAUSES.contains( p.lcToken ) ) {
+						if ( !p.afterBeginBeforeEnd ) {
+							p.indent--;
+							if ( p.afterOn ) {
+								p.indent--;
+								p.afterOn = false;
+							}
+							p.newline();
+						}
+						p.out();
+						if ( !"union".equals( p.lcToken ) ) {
+							p.indent++;
+						}
+						p.newline();
+						p.afterBeginBeforeEnd = false;
+						p.afterByOrSetOrFromOrSelect = "by".equals( p.lcToken )
+								|| "set".equals( p.lcToken )
+								|| "from".equals( p.lcToken );
+						return;
+					}
+					PROCESS_SELECT.process( p );
+				}
+			},
+
+			PROCESS_SELECT {
+				@Override
+				public void process(FormatProcess p) {
+					if ( "select".equals( p.lcToken ) ) {
+						p.out();
+						p.indent++;
+						p.newline();
+						p.parenCounts.addLast( p.parensSinceSelect );
+						p.afterByOrFromOrSelects.addLast( p.afterByOrSetOrFromOrSelect );
+						p.parensSinceSelect = 0;
+						p.afterByOrSetOrFromOrSelect = true;
+						return;
+					}
+					PROCESS_UPDATE_INSERT_DELETE.process( p );
+				}
+			},
+
+			PROCESS_UPDATE_INSERT_DELETE {
+				@Override
+				public void process(FormatProcess p) {
+					if ( DML.contains( p.lcToken ) ) {
+						p.out();
+						p.indent++;
+						p.beginLine = false;
+						if ( "update".equals( p.lcToken ) ) {
+							p.newline();
+						}
+						if ( "insert".equals( p.lcToken ) ) {
+							p.afterInsert = true;
+						}
+						return;
+					}
+					PROCESS_VALUES.process( p );
+				}
+			},
+
+			PROCESS_VALUES {
+				@Override
+				public void process(FormatProcess p) {
+					if ( "values".equals( p.lcToken ) ) {
+						p.indent--;
+						p.newline();
+						p.out();
+						p.indent++;
+						p.newline();
+						return;
+					}
+					PROCESS_ON.process( p );
+				}
+			},
+
+			PROCESS_ON {
+				@Override
+				public void process(FormatProcess p) {
+					if ( "on".equals( p.lcToken ) ) {
+						p.indent++;
+						p.afterOn = true;
+						p.newline();
+						p.out();
+						p.beginLine = false;
+						return;
+					}
+					PROCESS_AFTER_BETWEEN_AND.process( p );
+				}
+			},
+
+			PROCESS_AFTER_BETWEEN_AND {
+				@Override
+				public void process(FormatProcess p) {
+					if ( p.afterBetween && "and".equals( p.lcToken ) ) {
+						p.misc();
+						p.afterBetween = false;
+						return;
+					}
+					PROCESS_LOGICAL.process( p );
+				}
+			},
+
+			PROCESS_LOGICAL {
+				@Override
+				public void process(FormatProcess p) {
+					if ( LOGICAL.contains( p.lcToken ) ) {
+						if ( "end".equals( p.lcToken ) ) {
+							p.indent--;
+						}
+						p.newline();
+						p.out();
+						p.beginLine = false;
+						return;
+					}
+					PROCESS_WHITE_SPACE.process( p );
+				}
+			},
+
+			PROCESS_WHITE_SPACE {
+				@Override
+				public void process(FormatProcess p) {
+					if ( isWhitespace( p.token ) ) {
+						if ( !p.beginLine ) {
+							p.result.append( " " );
+						}
+						return;
+					}
+					PROCESS_MISC.process( p );
+				}
+			},
+
+			PROCESS_MISC {
+				@Override
+				public void process(FormatProcess p) {
+					p.misc();
+				}
+			};
+
+			/**
+			 * Method that actually doing the process work.
+			 *
+			 * @param p current process
+			 */
+			abstract public void process(FormatProcess p);
+
+			/**
+			 * Start the process using the first ProcessEnum.
+			 * If it's not the right guy, will handover to the next...
+			 *
+			 * @param p current process
+			 */
+			public static void start(FormatProcess p) {
+				PROCESS_COMMA_AFTER_BY_FROM_SELECT.process( p );
+			}
 		}
 	}
 

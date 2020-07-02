@@ -4,13 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.discriminator;
+package org.hibernate.orm.test.inheritance.discriminator;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -19,29 +18,37 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Christian Beikov
  */
-public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				MultiSingleTableLoadTest.Holder.class,
+				MultiSingleTableLoadTest.A.class,
+				MultiSingleTableLoadTest.X.class,
+				MultiSingleTableLoadTest.B.class,
+				MultiSingleTableLoadTest.C.class,
+				MultiSingleTableLoadTest.Y.class,
+				MultiSingleTableLoadTest.Z.class
+		}
+)
+@SessionFactory
+public class MultiSingleTableLoadTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Holder.class, A.class, X.class,
-				B.class, C.class,
-				Y.class, Z.class
-		};
-	}
-
-	private void createTestData() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Holder holder1 = new Holder( 1, new B( 1, new Y( 1 ) ) );
 			Holder holder2 = new Holder( 2, new C( 2, new Z( 2 ) ) );
 
@@ -50,11 +57,22 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Holder" ).executeUpdate();
+					session.createQuery( "delete from A" ).executeUpdate();
+					session.createQuery( "delete from Y" ).executeUpdate();
+					session.createQuery( "delete from Z" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-5954")
-	public void testEagerLoadMultipleHoldersWithDifferentSubtypes() {
-		createTestData();
-		doInHibernate( this::sessionFactory, session -> {
+	public void testEagerLoadMultipleHoldersWithDifferentSubtypes(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Holder task1 = session.find( Holder.class, 1L );
 			Holder task2 = session.find( Holder.class, 2L );
 			assertNotNull( task1 );
@@ -63,9 +81,8 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFetchJoinLoadMultipleHoldersWithDifferentSubtypes() {
-		createTestData();
-		doInHibernate( this::sessionFactory, session -> {
+	public void testFetchJoinLoadMultipleHoldersWithDifferentSubtypes(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Holder task1 = session.createQuery( "FROM Holder h JOIN FETCH h.a WHERE h.id = :id", Holder.class )
 					.setParameter( "id", 1L ).getSingleResult();
 			Holder task2 = session.createQuery( "FROM Holder h JOIN FETCH h.a WHERE h.id = :id", Holder.class )
@@ -77,16 +94,12 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
 	@Entity(name = "Holder")
 	@Table(name = "holder")
 	public static class Holder implements Serializable {
 		@Id
 		private long id;
+
 		@ManyToOne(optional = false, cascade = CascadeType.ALL)
 		@JoinColumn(name = "a_id")
 		private A a;
@@ -100,7 +113,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "A")
 	@Table(name = "tbl_a")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static abstract class A implements Serializable {
@@ -115,7 +128,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "B")
 	@DiscriminatorValue("B")
 	public static class B extends A {
 		@ManyToOne(optional = true, cascade = CascadeType.ALL)
@@ -131,7 +144,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "C")
 	@DiscriminatorValue("C")
 	public static class C extends A {
 		@ManyToOne(optional = true, cascade = CascadeType.ALL)
@@ -147,7 +160,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "X")
 	@Table(name = "tbl_x")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static abstract class X implements Serializable {
@@ -162,7 +175,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Y")
 	@DiscriminatorValue("Y")
 	public static class Y extends X {
 		public Y() {
@@ -173,7 +186,7 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Z")
 	@DiscriminatorValue("Z")
 	public static class Z extends X {
 		public Z() {
@@ -183,6 +196,4 @@ public class MultiSingleTableLoadTest extends BaseCoreFunctionalTestCase {
 			super( id );
 		}
 	}
-
-
 }

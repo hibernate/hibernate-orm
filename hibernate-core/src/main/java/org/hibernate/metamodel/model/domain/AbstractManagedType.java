@@ -7,9 +7,11 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -45,6 +47,8 @@ public abstract class AbstractManagedType<J>
 	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new HashMap<>();
 	private final Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes = new HashMap<>();
 
+	private final List<ManagedDomainType> subTypes = new ArrayList<>();
+
 	protected AbstractManagedType(
 			String hibernateTypeName,
 			JavaTypeDescriptor<J> javaTypeDescriptor,
@@ -53,6 +57,9 @@ public abstract class AbstractManagedType<J>
 		super( javaTypeDescriptor, domainMetamodel );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
+		if ( superType != null ) {
+			superType.addSubType( this );
+		}
 
 		// todo (6.0) : need to handle RepresentationMode#MAP as well
 		this.representationMode = RepresentationMode.POJO;
@@ -67,6 +74,11 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public ManagedDomainType<? super J> getSuperType() {
 		return superType;
+	}
+
+	@Override
+	public void addSubType(ManagedDomainType subType){
+		subTypes.add( subType );
 	}
 
 	@Override
@@ -135,6 +147,13 @@ public abstract class AbstractManagedType<J>
 			//noinspection RedundantIfStatement
 			if ( attribute != null ) {
 				return attribute;
+			}
+		}
+
+		for ( ManagedDomainType subType : subTypes ) {
+			PersistentAttribute subTypeAttribute = subType.findAttribute( name );
+			if ( subTypeAttribute != null ) {
+				return subTypeAttribute;
 			}
 		}
 

@@ -34,12 +34,13 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final PersistentAttribute<?,?> attribute = getSqmPathType().findAttribute( name );
+		final EntityDomainType<J> sqmPathType = getSqmPathType();
+		final PersistentAttribute<?,?> attribute = sqmPathType.findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
 
-		final SingularPersistentAttribute<J, ?> idAttribute = getSqmPathType().findIdAttribute();
+		final SingularPersistentAttribute<J, ?> idAttribute = sqmPathType.findIdAttribute();
 		if ( idAttribute != null && idAttribute.getName().equals( name ) ) {
 			return idAttribute;
 		}

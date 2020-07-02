@@ -39,6 +39,8 @@ public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J
 	 */
 	ManagedDomainType<? super J> getSuperType();
 
+	void addSubType(ManagedDomainType subType);
+
 	void visitAttributes(Consumer<PersistentAttribute<J,?>> action);
 	void visitDeclaredAttributes(Consumer<PersistentAttribute<J,?>> action);
 

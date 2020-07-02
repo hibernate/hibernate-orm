@@ -26,6 +26,7 @@ public class SelectEagerCollectionAssembler extends AbstractCollectionAssembler 
 				fetchedMapping,
 				() -> (CollectionInitializer) creationState.resolveInitializer(
 						fetchPath,
+						fetchedMapping,
 						() -> new SelectEagerCollectionInitializer( fetchPath, fetchedMapping, parentAccess )
 				)
 		);

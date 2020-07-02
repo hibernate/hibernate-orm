@@ -55,7 +55,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		embeddableTypeDescriptor.visitStateArrayContributors(
 				stateArrayContributor -> {
-					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor.getFetchableName() );
+					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
 					final DomainResultAssembler stateAssembler = fetch == null
 							? new NullValueAssembler( stateArrayContributor.getJavaTypeDescriptor() )

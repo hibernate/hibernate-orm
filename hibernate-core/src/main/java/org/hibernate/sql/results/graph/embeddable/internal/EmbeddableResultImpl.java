@@ -87,6 +87,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
 		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> new EmbeddableResultInitializer(
 						this,
 						creationState

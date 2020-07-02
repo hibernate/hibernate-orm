@@ -33,6 +33,7 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> new EntityResultInitializer(
 						this,
 						getNavigablePath(),

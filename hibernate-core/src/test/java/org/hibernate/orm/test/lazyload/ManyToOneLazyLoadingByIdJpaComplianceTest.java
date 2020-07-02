@@ -4,23 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.lazyload;
-
-import java.util.Map;
+package org.hibernate.orm.test.lazyload;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
+@ServiceRegistry(
+		settings = @ServiceRegistry.Setting(name = AvailableSettings.JPA_PROXY_COMPLIANCE, value = "true")
+)
 public class ManyToOneLazyLoadingByIdJpaComplianceTest extends ManyToOneLazyLoadingByIdTest {
-
-	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.TRUE );
-	}
 
 	@Override
 	protected void assertProxyState(Continent continent) {

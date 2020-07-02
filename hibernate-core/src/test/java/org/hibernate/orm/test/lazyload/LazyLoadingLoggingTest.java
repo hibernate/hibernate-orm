@@ -4,12 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.lazyload;
+package org.hibernate.orm.test.lazyload;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
@@ -18,29 +17,32 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.internal.AbstractSharedSessionContract;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Vlad Mihalcea
  */
-public class LazyLoadingLoggingTest
-		extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LazyLoadingLoggingTest.Client.class,
+				LazyLoadingLoggingTest.Address.class
+		}
+)
+@SessionFactory
+public class LazyLoadingLoggingTest {
 
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Client.class,
-				Address.class
-		};
-	}
-
-	@Override
-	protected void afterSessionFactoryBuilt() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Address address = new Address();
 			address.setId( 1L );
 			address.setStreet( "Marea albastra" );
@@ -54,12 +56,23 @@ public class LazyLoadingLoggingTest
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Client" ).executeUpdate();
+					session.createQuery( "delete from Address" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-12484")
-	public void testNoSession() {
-		Address address = doInHibernate( this::sessionFactory, s -> {
-			return s.load( Address.class, 1L );
-		} );
+	public void testNoSession(SessionFactoryScope scope) {
+		Address address = scope.fromTransaction(
+				session ->
+						session.load( Address.class, 1L )
+		);
 
 		try {
 			address.getClient().getName();
@@ -68,7 +81,7 @@ public class LazyLoadingLoggingTest
 		catch (LazyInitializationException expected) {
 			assertEquals(
 					"could not initialize proxy " +
-							"[org.hibernate.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
+							"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
 							"- no Session",
 					expected.getMessage()
 			);
@@ -77,30 +90,27 @@ public class LazyLoadingLoggingTest
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12484")
-	public void testDisconnect() {
-		doInHibernate( this::sessionFactory, session -> {
-			Address address = session.load( Address.class, 1L );
-			AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
-			sessionContract.getJdbcCoordinator().close();
+	public void testDisconnect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Address address = session.load( Address.class, 1L );
+					AbstractSharedSessionContract sessionContract = (AbstractSharedSessionContract) session;
+					sessionContract.getJdbcCoordinator().close();
 
-			try {
-				address.getClient().getName();
-				fail( "Should throw LazyInitializationException" );
-			}
-			catch (LazyInitializationException expected) {
-				assertEquals(
-						"could not initialize proxy " +
-								"[org.hibernate.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
-								"- the owning Session is disconnected",
-						expected.getMessage()
-				);
-			}
-			session.getTransaction().markRollbackOnly();
-		} );
-	}
-
-	protected boolean rebuildSessionFactoryOnError() {
-		return false;
+					try {
+						address.getClient().getName();
+						fail( "Should throw LazyInitializationException" );
+					}
+					catch (LazyInitializationException expected) {
+						assertEquals(
+								"could not initialize proxy " +
+										"[org.hibernate.orm.test.lazyload.LazyLoadingLoggingTest$Address#1] " +
+										"- the owning Session is disconnected",
+								expected.getMessage()
+						);
+					}
+					session.getTransaction().markRollbackOnly();
+				} );
 	}
 
 	@Entity(name = "Address")

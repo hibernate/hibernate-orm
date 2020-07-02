@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.lazyload;
+package org.hibernate.orm.test.lazyload;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,45 +12,48 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManyToOneLazyLoadingByIdTest extends BaseEntityManagerFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ManyToOneLazyLoadingByIdTest.Continent.class,
+				ManyToOneLazyLoadingByIdTest.Country.class
+		}
+)
+@SessionFactory
+public class ManyToOneLazyLoadingByIdTest {
 
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Continent.class,
-				Country.class
-		};
-	}
 
 	@Test
-	public void testLazyLoadById() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLazyLoadById(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Continent continent = new Continent();
 			continent.setId( 1L );
 			continent.setName( "Europe" );
 
-			entityManager.persist( continent );
+			session.persist( continent );
 
 			Country country = new Country();
 			country.setId( 1L );
 			country.setName( "Romania" );
 			country.setContinent( continent );
 
-			entityManager.persist( country );
+			session.persist( country );
 		} );
 
-		Continent continent = doInJPA( this::entityManagerFactory, entityManager -> {
-			Country country = entityManager.find( Country.class, 1L );
+		Continent continent = scope.fromTransaction( session -> {
+			Country country = session.find( Country.class, 1L );
 
 			country.getContinent().getId();
 

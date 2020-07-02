@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
@@ -340,9 +341,20 @@ public class SessionFactoryExtension
 				action.accept( session );
 				log.trace( "Called action - in txn" );
 
-				log.trace( "Committing transaction" );
-				txn.commit();
-				log.trace( "Committed transaction" );
+				if ( !txn.getRollbackOnly() ) {
+					log.trace( "Committing transaction" );
+					txn.commit();
+					log.trace( "Committed transaction" );
+				}
+				else {
+					try {
+						log.trace( "Rollback transaction marked for rollback only" );
+						txn.rollback();
+					}
+					catch (Exception e) {
+						log.error( "Rollback failure", e );
+					}
+				}
 			}
 			catch (Exception e) {
 				log.tracef(

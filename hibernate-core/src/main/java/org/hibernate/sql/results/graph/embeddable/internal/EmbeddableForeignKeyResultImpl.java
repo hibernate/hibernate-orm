@@ -39,6 +39,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 		extends AbstractFetchParent
 		implements EmbeddableResultGraphNode, DomainResult<T> {
 
+	private static final String ROLE_LOCAL_NAME = "{fk}";
 	private final String resultVariable;
 
 	public EmbeddableForeignKeyResultImpl(
@@ -47,15 +48,15 @@ public class EmbeddableForeignKeyResultImpl<T>
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( embeddableValuedModelPart.getEmbeddableTypeDescriptor(), navigablePath.append( ROLE_LOCAL_NAME ) );
 		this.resultVariable = resultVariable;
 		fetches = new ArrayList<>();
 		MutableInteger index = new MutableInteger();
 
 		embeddableValuedModelPart.visitFetchables(
-				fetchable -> {
-					generateFetches( sqlSelections, navigablePath, creationState, index, fetchable );
-				},
+				fetchable ->
+						generateFetches( sqlSelections, navigablePath, creationState, index, fetchable )
+				,
 				null
 		);
 	}
@@ -120,6 +121,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
 		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> new EmbeddableResultInitializer(this, creationState )
 		);
 
@@ -128,18 +130,13 @@ public class EmbeddableForeignKeyResultImpl<T>
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return super.getNavigablePath().append( "{fk}");
-	}
-
-	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
 		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
 	}
 
 	@Override
-	public Fetch findFetch(String fetchableName) {
-		return super.findFetch( fetchableName );
+	public Fetch findFetch(Fetchable fetchable) {
+		return super.findFetch( fetchable );
 	}
 
 	@Override

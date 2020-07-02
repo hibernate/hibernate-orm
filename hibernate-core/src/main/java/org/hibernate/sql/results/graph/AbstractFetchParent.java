@@ -55,12 +55,12 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public Fetch findFetch(String fetchableName) {
+	public Fetch findFetch(Fetchable fetchable) {
 		if ( fetches != null ) {
 			for ( Fetch fetch : fetches ) {
 				final Fetchable fetchedMapping = fetch.getFetchedMapping();
-				if ( fetchedMapping != null && fetchedMapping
-						.getFetchableName().equals( fetchableName ) ) {
+				if ( fetchedMapping != null
+						&& fetchedMapping.getNavigableRole().equals( fetchable.getNavigableRole() ) ) {
 					return fetch;
 				}
 			}

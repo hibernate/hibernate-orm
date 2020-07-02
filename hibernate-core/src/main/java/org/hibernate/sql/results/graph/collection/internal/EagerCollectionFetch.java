@@ -25,6 +25,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -108,6 +109,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
 		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> {
 					final DomainResultAssembler keyContainerAssembler = keyContainerResult.createResultAssembler( creationState );
 
@@ -160,17 +162,17 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public Fetch findFetch(String fetchableName) {
-		if ( CollectionPart.Nature.ELEMENT.getName().equals( fetchableName ) ) {
+	public Fetch findFetch(Fetchable fetchable) {
+		if ( CollectionPart.Nature.ELEMENT.getName().equals( fetchable.getFetchableName() ) ) {
 			return elementFetch;
 		}
-		else if ( CollectionPart.Nature.INDEX.getName().equals( fetchableName ) ) {
+		else if ( CollectionPart.Nature.INDEX.getName().equals( fetchable.getFetchableName() ) ) {
 			return indexFetch;
 		}
 		else {
 			throw new IllegalArgumentException(
 					"Unknown fetchable [" + getFetchedMapping().getCollectionDescriptor().getRole() +
-							" -> " + fetchableName + "]"
+							" -> " + fetchable.getFetchableName() + "]"
 			);
 		}
 	}

@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -44,17 +45,22 @@ public class ResultsHelper {
 		//noinspection rawtypes
 		final List<DomainResultAssembler> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
 				new AssemblerCreationState() {
+
 					@Override
 					public Initializer resolveInitializer(
 							NavigablePath navigablePath,
+							ModelPart fetchedModelPart,
 							Supplier<Initializer> producer) {
 						final Initializer existing = initializerMap.get( navigablePath );
 						if ( existing != null ) {
-							ResultsLogger.LOGGER.debugf(
-									"Returning previously-registered initializer : %s",
-									existing
-							);
-							return existing;
+							if ( fetchedModelPart.getNavigableRole().equals(
+									existing.getInitializedPart().getNavigableRole() ) ) {
+								ResultsLogger.LOGGER.debugf(
+										"Returning previously-registered initializer : %s",
+										existing
+								);
+								return existing;
+							}
 						}
 
 						final Initializer initializer = producer.get();

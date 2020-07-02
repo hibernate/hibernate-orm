@@ -47,11 +47,13 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
+		final NavigablePath navigablePath = getNavigablePath();
 		final EntityInitializer entityInitializer = (EntityInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
+				navigablePath,
+				getEntityValuedModelPart(),
 				() -> new EntityDelayedFetchInitializer(
-						getNavigablePath(),
-						getEntityValuedModelPart().getEntityMappingType().getEntityPersister(),
+						navigablePath,
+						getEntityValuedModelPart(),
 						keyResult.createResultAssembler( creationState )
 				)
 		);

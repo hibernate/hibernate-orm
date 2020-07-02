@@ -12,6 +12,8 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
@@ -27,7 +29,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 	private final NavigablePath navigablePath;
-	private final EntityPersister concreteDescriptor;
+	private final EntityValuedModelPart referencedModelPart;
 	private final DomainResultAssembler identifierAssembler;
 
 	private Object entityInstance;
@@ -35,10 +37,10 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 	public EntityDelayedFetchInitializer(
 			NavigablePath fetchedNavigable,
-			EntityPersister concreteDescriptor,
+			EntityValuedModelPart referencedModelPart,
 			DomainResultAssembler identifierAssembler) {
 		this.navigablePath = fetchedNavigable;
-		this.concreteDescriptor = concreteDescriptor;
+		this.referencedModelPart = referencedModelPart;
 		this.identifierAssembler = identifierAssembler;
 	}
 
@@ -53,6 +55,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	}
 
 	@Override
+	public ModelPart getInitializedPart(){
+		return referencedModelPart;
+	}
+
+	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( entityInstance != null ) {
 			return;
@@ -64,6 +71,8 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			entityInstance = null;
 		}
 		else {
+			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
+
 			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 			PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
 			final Object entity = persistenceContext.getEntity( entityKey );
@@ -120,7 +129,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 	@Override
 	public EntityPersister getEntityDescriptor() {
-		return concreteDescriptor;
+		return referencedModelPart.getEntityMappingType().getEntityPersister();
 	}
 
 	@Override

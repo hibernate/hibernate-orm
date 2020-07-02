@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
@@ -22,6 +24,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -40,9 +43,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler identifierAssembler;
+	private final EntityValuedModelPart referencedModelPart;
+
 	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(
+			EntityValuedModelPart referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
@@ -51,7 +57,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
 		this.nullable = nullable;
+		this.referencedModelPart = referencedModelPart;
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+	}
+
+	public ModelPart getInitializedPart(){
+		return referencedModelPart;
 	}
 
 	@Override

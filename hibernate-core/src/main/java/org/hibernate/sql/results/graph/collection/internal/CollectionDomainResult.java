@@ -21,6 +21,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
@@ -81,6 +82,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
 		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> {
 					final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( creationState );
 
@@ -120,7 +122,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public Fetch findFetch(String fetchableName) {
+	public Fetch findFetch(Fetchable fetchable) {
 		return null;
 	}
 

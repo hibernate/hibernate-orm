@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -49,6 +50,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			AssemblerCreationState creationState) {
 		return (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getEntityValuedModelPart(),
 				() -> new EntityJoinedFetchInitializer(
 						entityResult,
 						getNavigablePath(),

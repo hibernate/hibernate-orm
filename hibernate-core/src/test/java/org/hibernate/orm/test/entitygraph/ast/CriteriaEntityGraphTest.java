@@ -6,7 +6,9 @@
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -27,9 +29,11 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -44,6 +48,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -183,8 +188,10 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 						expectedFetchClassByAttributeName.put( "pets", DelayedCollectionFetch.class );
 						expectedFetchClassByAttributeName.put( "company", EntityFetchJoinedImpl.class );
 						assertThat( fetchClassByAttributeName, is( expectedFetchClassByAttributeName ) );
+						Fetchable fetchable = getFetchable( "company", Person.class );
 
-						final Fetch companyFetch = ownerEntityResult.findFetch( "company" );
+						final Fetch companyFetch = ownerEntityResult.findFetch( fetchable );
+						List<Fetch> fetches = ownerEntityResult.getFetches();
 						assertThat( companyFetch, notNullValue() );
 
 						final EntityResult companyEntityResult = ( (EntityFetchJoinedImpl) companyFetch).getEntityResult();
@@ -196,6 +203,19 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 					} );
 				}
 		);
+	}
+
+	private Fetchable getFetchable(String attributeName, Class entityClass) {
+		EntityPersister person = scope.getSessionFactory().getDomainModel().findEntityDescriptor(
+				entityClass.getName() );
+		Collection<AttributeMapping> attributeMappings = person.getAttributeMappings();
+		Fetchable fetchable = null;
+		for(AttributeMapping mapping :attributeMappings){
+			if(mapping.getAttributeName().equals( attributeName  )){
+				fetchable = (Fetchable) mapping;
+			}
+		}
+		return fetchable;
 	}
 
 	@ParameterizedTest

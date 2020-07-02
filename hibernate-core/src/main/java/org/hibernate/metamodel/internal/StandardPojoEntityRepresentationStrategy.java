@@ -37,6 +37,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.Instantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessBasicImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
@@ -47,6 +48,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.ProxyFactoryHelper;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -75,6 +77,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 	public StandardPojoEntityRepresentationStrategy(
 			PersistentClass bootDescriptor,
+			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
@@ -111,12 +114,15 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 //		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getBytecodeProvider();
 		final BytecodeProvider bytecodeProvider = Environment.getBytecodeProvider();
 
-		if ( proxyJtd != null ) {
-			this.proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+		final EntityMetamodel entityMetamodel = runtimeDescriptor.getEntityMetamodel();
+		ProxyFactory proxyFactory = null;
+		if ( proxyJtd != null && entityMetamodel.isLazy() ) {
+			proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+			if ( proxyFactory == null ) {
+				entityMetamodel.setLazy( false );
+			}
 		}
-		else {
-			this.proxyFactory = null;
-		}
+		this.proxyFactory = proxyFactory;
 
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 

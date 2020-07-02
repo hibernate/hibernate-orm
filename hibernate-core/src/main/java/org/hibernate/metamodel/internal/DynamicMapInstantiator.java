@@ -85,6 +85,12 @@ public class DynamicMapInstantiator implements Instantiator<Map> {
 		}
 	}
 
+	@Override
+	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+		return isInstance( object, sessionFactory );
+	}
+
+
 	public static class BasicEntityNameResolver implements EntityNameResolver {
 		public static final BasicEntityNameResolver INSTANCE = new BasicEntityNameResolver();
 

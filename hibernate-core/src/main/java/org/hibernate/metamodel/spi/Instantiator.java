@@ -26,4 +26,7 @@ public interface Instantiator<J> {
 	 * instance of managed structure
 	 */
 	boolean isInstance(Object object, SessionFactoryImplementor sessionFactory);
+
+	boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory);
+
 }

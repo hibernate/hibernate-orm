@@ -34,4 +34,10 @@ public abstract class AbstractPojoInstantiator implements Instantiator {
 	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
 		return mappedPojoClass.isInstance( object );
 	}
+
+	@Override
+	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+		return object.getClass() == mappedPojoClass;
+	}
+
 }

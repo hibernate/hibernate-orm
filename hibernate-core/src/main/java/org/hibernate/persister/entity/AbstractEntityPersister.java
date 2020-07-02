@@ -5364,15 +5364,14 @@ public abstract class AbstractEntityPersister
 			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
 			//		- we may need something similar here...
 
-			if ( getRepresentationStrategy().getInstantiator().isInstance( instance, factory ) ) {
+			if ( getRepresentationStrategy().getInstantiator().isSameClass( instance, factory ) ) {
 				return this;
 			}
 
-			if ( hasSubclasses() ) {
-				for ( EntityMappingType sub : subclassMappingTypes.values() ) {
-					if ( sub.getEntityPersister().getRepresentationStrategy().getInstantiator().isInstance( instance, factory ) ) {
-						return sub.getEntityPersister();
-					}
+			for ( EntityMappingType sub : subclassMappingTypes.values() ) {
+				if ( sub.getEntityPersister().getRepresentationStrategy()
+						.getInstantiator().isSameClass( instance, factory ) ) {
+					return sub.getEntityPersister();
 				}
 			}
 

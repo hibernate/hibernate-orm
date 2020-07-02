@@ -306,7 +306,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 		);
 
-		final String concreteEntityName = ( (Loadable) entityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
+		final String concreteEntityName = ( (Loadable) rootEntityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
 
 		if ( concreteEntityName == null ) {
 			// oops - we got an instance of another class hierarchy branch
@@ -320,7 +320,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
 
 		// verify that the `entityDescriptor` is either == concreteType or its super-type
-		assert concreteType.isTypeOrSuperType( entityDescriptor );
+		assert concreteType.isTypeOrSuperType( rootEntityDescriptor );
 
 		return concreteType;
 	}

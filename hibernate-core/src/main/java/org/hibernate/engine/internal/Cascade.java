@@ -97,6 +97,7 @@ public final class Cascade {
 						hasUninitializedLazyProperties &&
 						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
 
+				Type type = types[i];
 				if ( style.doCascade( action ) ) {
 					final Object child;
 					if ( isUninitializedProperty  ) {
@@ -110,14 +111,14 @@ public final class Cascade {
 							// parent was not in the PersistenceContext
 							continue;
 						}
-						if ( types[ i ].isCollectionType() ) {
+						if ( type.isCollectionType() ) {
 							// CollectionType#getCollection gets the PersistentCollection
 							// that corresponds to the uninitialized collection from the
 							// PersistenceContext. If not present, an uninitialized
 							// PersistentCollection will be added to the PersistenceContext.
 							// The action may initialize it later, if necessary.
 							// This needs to be done even when action.performOnLazyProperty() returns false.
-							final CollectionType collectionType = (CollectionType) types[i];
+							final CollectionType collectionType = (CollectionType) type;
 							child = collectionType.getCollection(
 									collectionType.getKeyOfOwner( parent, eventSource ),
 									eventSource,
@@ -125,13 +126,13 @@ public final class Cascade {
 									null
 							);
 						}
-						else if ( types[ i ].isComponentType() ) {
+						else if ( type.isComponentType() ) {
 							// Hibernate does not support lazy embeddables, so this shouldn't happen.
 							throw new UnsupportedOperationException(
 									"Lazy components are not supported."
 							);
 						}
-						else if ( action.performOnLazyProperty() && types[ i ].isEntityType() ) {
+						else if ( action.performOnLazyProperty() && type.isEntityType() ) {
 							// Only need to initialize a lazy entity attribute when action.performOnLazyProperty()
 							// returns true.
 							LazyAttributeLoadingInterceptor interceptor = persister.getBytecodeEnhancementMetadata()
@@ -154,7 +155,7 @@ public final class Cascade {
 							componentPathStackDepth,
 							parent,
 							child,
-							types[ i ],
+							type,
 							style,
 							propertyName,
 							anything,
@@ -167,7 +168,7 @@ public final class Cascade {
 								eventSource,
 								parent,
 								persister,
-								types[i],
+								type,
 								i
 						);
 					}
@@ -179,7 +180,7 @@ public final class Cascade {
 								componentPathStackDepth,
 								parent,
 								persister.getPropertyValue( parent, i ),
-								types[ i ],
+								type,
 								style,
 								propertyName,
 								false

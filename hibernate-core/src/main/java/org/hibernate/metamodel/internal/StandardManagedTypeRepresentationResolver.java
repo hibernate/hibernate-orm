@@ -51,7 +51,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new StandardPojoEntityRepresentationStrategy( bootDescriptor, creationContext );
+			return new StandardPojoEntityRepresentationStrategy( bootDescriptor, runtimeDescriptor, creationContext );
 		}
 	}
 

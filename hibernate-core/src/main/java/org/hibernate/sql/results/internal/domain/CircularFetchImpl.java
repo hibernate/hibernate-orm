@@ -11,6 +11,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -39,6 +40,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	private DomainResult keyResult;
+	private EntityValuedModelPart referencedModelPart;
 	private final EntityMappingType entityMappingType;
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
@@ -48,6 +50,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	private final NavigablePath referencedNavigablePath;
 
 	public CircularFetchImpl(
+			EntityValuedModelPart referencedModelPart,
 			EntityMappingType entityMappingType,
 			FetchTiming timing,
 			NavigablePath navigablePath,
@@ -55,6 +58,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 			ToOneAttributeMapping fetchable,
 			NavigablePath referencedNavigablePath,
 			DomainResult keyResult) {
+		this.referencedModelPart = referencedModelPart;
 		this.entityMappingType = entityMappingType;
 		this.timing = timing;
 		this.fetchParent = fetchParent;
@@ -98,9 +102,11 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				referencedModelPart,
 				() -> {
 					if ( timing == FetchTiming.IMMEDIATE ) {
 						return new EntitySelectFetchInitializer(
+								referencedModelPart,
 								getReferencedPath(),
 								entityMappingType.getEntityPersister(),
 								resultAssembler,
@@ -110,7 +116,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 					else {
 						return new EntityDelayedFetchInitializer(
 								getReferencedPath(),
-								(EntityPersister) ( (AttributeMapping) fetchable ).getMappedTypeDescriptor(),
+								fetchable,
 								resultAssembler
 						);
 					}

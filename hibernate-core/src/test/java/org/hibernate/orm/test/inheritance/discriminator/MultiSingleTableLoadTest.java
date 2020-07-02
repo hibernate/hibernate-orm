@@ -10,12 +10,15 @@ import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import org.hibernate.Hibernate;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,8 +53,8 @@ public class MultiSingleTableLoadTest {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Holder holder1 = new Holder( 1, new B( 1, new Y( 1 ) ) );
-			Holder holder2 = new Holder( 2, new C( 2, new Z( 2 ) ) );
+			Holder holder1 = new Holder( 1, new B( 1, new Y( 1, "y" ) ) );
+			Holder holder2 = new Holder( 2, new C( 2, new Z( 2, "z" ) ) );
 
 			session.persist( holder1 );
 			session.persist( holder2 );
@@ -76,7 +80,22 @@ public class MultiSingleTableLoadTest {
 			Holder task1 = session.find( Holder.class, 1L );
 			Holder task2 = session.find( Holder.class, 2L );
 			assertNotNull( task1 );
+			A task1A = task1.getA();
+			assertTrue( task1A instanceof B );
+			B b = (B) task1A;
+			assertTrue( b.getX() instanceof Y );
+			assertTrue( Hibernate.isInitialized( b.getX() ) );
+			assertEquals( "y", b.getX().getTheString() );
+
 			assertNotNull( task2 );
+
+			A task2A = task2.getA();
+			assertTrue( task2A instanceof C );
+			C c = (C) task2A;
+			assertTrue( c.getX() instanceof Z );
+			assertTrue( Hibernate.isInitialized( c.getX() ) );
+			Z z = (Z) c.getX();
+			assertEquals( "z", z.getTheString() );
 		} );
 	}
 
@@ -111,6 +130,10 @@ public class MultiSingleTableLoadTest {
 			this.id = id;
 			this.a = a;
 		}
+
+		public A getA() {
+			return a;
+		}
 	}
 
 	@Entity(name = "A")
@@ -131,7 +154,7 @@ public class MultiSingleTableLoadTest {
 	@Entity(name = "B")
 	@DiscriminatorValue("B")
 	public static class B extends A {
-		@ManyToOne(optional = true, cascade = CascadeType.ALL)
+		@ManyToOne(optional = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		@JoinColumn(name = "x_id")
 		private Y x;
 
@@ -141,6 +164,10 @@ public class MultiSingleTableLoadTest {
 		public B(long id, Y x) {
 			super( id );
 			this.x = x;
+		}
+
+		public Y getX() {
+			return x;
 		}
 	}
 
@@ -157,6 +184,10 @@ public class MultiSingleTableLoadTest {
 		public C(long id, X x) {
 			super( id );
 			this.x = x;
+		}
+
+		public X getX() {
+			return x;
 		}
 	}
 
@@ -178,22 +209,36 @@ public class MultiSingleTableLoadTest {
 	@Entity(name = "Y")
 	@DiscriminatorValue("Y")
 	public static class Y extends X {
+		private String theString;
+
 		public Y() {
 		}
 
-		public Y(long id) {
+		public Y(long id, String theString) {
 			super( id );
+			this.theString = theString;
+		}
+
+		public String getTheString() {
+			return theString;
 		}
 	}
 
 	@Entity(name = "Z")
 	@DiscriminatorValue("Z")
 	public static class Z extends X {
+		private String theString;
+
 		public Z() {
 		}
 
-		public Z(long id) {
+		public Z(long id, String theString) {
 			super( id );
+			this.theString = theString;
+		}
+
+		public String getTheString() {
+			return theString;
 		}
 	}
 }

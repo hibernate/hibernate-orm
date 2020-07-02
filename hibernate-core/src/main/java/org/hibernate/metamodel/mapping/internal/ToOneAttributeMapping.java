@@ -312,6 +312,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 						.getFromClauseAccess()
 						.getTableGroup( fetchParent.getNavigablePath() );
 				return new CircularFetchImpl(
+						this,
 						getEntityMappingType(),
 						getTiming(),
 						fetchablePath,

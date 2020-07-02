@@ -63,5 +63,5 @@ public interface FetchParent extends DomainResultGraphNode {
 	 */
 	List<Fetch> getFetches();
 
-	Fetch findFetch(String fetchableName);
+	Fetch findFetch(Fetchable fetchable);
 }

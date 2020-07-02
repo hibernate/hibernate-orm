@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
@@ -59,7 +60,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch {
 	}
 
 	@Override
-	public Fetch findFetch(String fetchableName) {
+	public Fetch findFetch(Fetchable fetchable) {
 		return null;
 	}
 

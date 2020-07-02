@@ -28,6 +28,7 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 				fetchedMapping,
 				() -> (CollectionInitializer) creationState.resolveInitializer(
 						fetchPath,
+						fetchedMapping,
 						() -> new DelayedCollectionInitializer( fetchPath, fetchedMapping, parentAccess )
 				)
 

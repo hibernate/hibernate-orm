@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.discriminator;
+package org.hibernate.orm.test.inheritance.discriminator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,20 +22,31 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Davide D'Alto
  */
-@TestForIssue( jiraKey = "HHH-12332")
-public class SingleTableInheritancePersistTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12332")
+@DomainModel(
+		annotatedClasses = {
+				SingleTableInheritancePersistTest.Family.class,
+				SingleTableInheritancePersistTest.Person.class,
+				SingleTableInheritancePersistTest.Child.class,
+				SingleTableInheritancePersistTest.Man.class,
+				SingleTableInheritancePersistTest.Woman.class
+		}
+)
+@SessionFactory
+public class SingleTableInheritancePersistTest {
 	private final Man john = new Man( "John", "Riding Roller Coasters" );
 
 	private final Woman jane = new Woman( "Jane", "Hippotherapist" );
@@ -45,66 +56,57 @@ public class SingleTableInheritancePersistTest extends BaseCoreFunctionalTestCas
 	private final List<Child> children = new ArrayList<>( Arrays.asList( susan, mark ) );
 	private final List<Person> familyMembers = Arrays.asList( john, jane, susan, mark );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Family.class,
-				Person.class,
-				Child.class,
-				Man.class,
-				Woman.class
-		};
-	}
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					jane.setHusband( john );
+					jane.setChildren( children );
 
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			jane.setHusband( john );
-			jane.setChildren( children );
+					john.setWife( jane );
+					john.setChildren( children );
 
-			john.setWife( jane );
-			john.setChildren( children );
+					for ( Child child : children ) {
+						child.setFather( john );
+						child.setMother( jane );
+					}
 
-			for ( Child child : children ) {
-				child.setFather( john );
-				child.setMother( jane );
-			}
+					for ( Person person : familyMembers ) {
+						family.add( person );
+					}
 
-			for ( Person person : familyMembers ) {
-				family.add( person );
-			}
-
-			session.persist( family );
-		} );
+					session.persist( family );
+				} );
 
 	}
 
 	@Test
-	public void testPolymorphicAssociation() {
-		doInHibernate( this::sessionFactory, session1 -> {
-			Family family = session1.createQuery( "FROM Family f", Family.class ).getSingleResult();
-			List<Person> members = family.getMembers();
-			assertThat( members.size(), is( familyMembers.size() ) );
-			for ( Person person : members ) {
-				if ( person instanceof Man ) {
-					assertThat( ( (Man) person ).getHobby(), is( john.getHobby() ) );
-				}
-				else if ( person instanceof Woman ) {
-					assertThat( ( (Woman) person ).getJob(), is( jane.getJob() ) );
-				}
-				else if ( person instanceof Child ) {
-					if ( person.getName().equals( "Susan" ) ) {
-						assertThat( ( (Child) person ).getFavouriteToy(), is( susan.getFavouriteToy() ) );
+	public void testPolymorphicAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Family family = session.createQuery( "FROM Family f", Family.class ).getSingleResult();
+					List<Person> members = family.getMembers();
+					assertThat( members.size(), is( familyMembers.size() ) );
+					for ( Person person : members ) {
+						if ( person instanceof Man ) {
+							assertThat( ( (Man) person ).getHobby(), is( john.getHobby() ) );
+						}
+						else if ( person instanceof Woman ) {
+							assertThat( ( (Woman) person ).getJob(), is( jane.getJob() ) );
+						}
+						else if ( person instanceof Child ) {
+							if ( person.getName().equals( "Susan" ) ) {
+								assertThat( ( (Child) person ).getFavouriteToy(), is( susan.getFavouriteToy() ) );
+							}
+							else {
+								assertThat( ( (Child) person ).getFavouriteToy(), is( mark.getFavouriteToy() ) );
+							}
+						}
+						else {
+							fail( "Unexpected result: " + person );
+						}
 					}
-					else {
-						assertThat( ( (Child) person ).getFavouriteToy(), is( mark.getFavouriteToy() ) );
-					}
-				}
-				else {
-					fail( "Unexpected result: " + person );
-				}
-			}
-		} );
+				} );
 	}
 
 	@Entity(name = "Family")

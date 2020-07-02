@@ -34,6 +34,8 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
@@ -67,6 +69,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private final EntityPersister entityDescriptor;
 	private final EntityPersister rootEntityDescriptor;
+	private EntityPersister concreteDescriptor;
 	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
 
@@ -80,7 +83,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final Map<AttributeMapping, DomainResultAssembler> assemblerMap;
 
 	// per-row state
-	private EntityPersister concreteDescriptor;
+	private final EntityValuedModelPart referencedModelPart;
 	private EntityKey entityKey;
 	private Object entityInstance;
 	private boolean missing;
@@ -100,7 +103,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			AssemblerCreationState creationState) {
 		super( );
 
-		this.entityDescriptor = (EntityPersister) resultDescriptor.getEntityValuedModelPart().getEntityMappingType();
+		this.referencedModelPart = resultDescriptor.getEntityValuedModelPart();
+		this.entityDescriptor = (EntityPersister) referencedModelPart.getEntityMappingType();
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		if ( rootEntityName == null || rootEntityName.equals( entityDescriptor.getEntityName() ) ) {
@@ -117,10 +121,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.identifierAssembler = identifierResult.createResultAssembler(
 					new AssemblerCreationState() {
 						@Override
-						public Initializer resolveInitializer(NavigablePath navigablePath, Supplier<Initializer> producer) {
+						public Initializer resolveInitializer(
+								NavigablePath navigablePath,
+								ModelPart fetchedModelPart,
+								Supplier<Initializer> producer) {
 							for ( int i = 0; i < identifierInitializers.size(); i++ ) {
 								final Initializer existing = identifierInitializers.get( i );
-								if ( existing.getNavigablePath().equals( navigablePath ) ) {
+								if ( existing.getNavigablePath().equals( navigablePath )
+										&& fetchedModelPart.getNavigableRole().equals(
+										existing.getInitializedPart().getNavigableRole() ) ) {
 									return existing;
 								}
 							}
@@ -185,7 +194,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					//		note that lazy proxies or uninitialized collections count against
 					//		that in the affirmative
 
-					final Fetch fetch = resultDescriptor.findFetch( fetchable.getFetchableName() );
+					final Fetch fetch = resultDescriptor.findFetch( fetchable );
 
 					final DomainResultAssembler stateAssembler;
 					if ( fetch == null ) {
@@ -199,6 +208,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				},
 				null
 		);
+	}
+
+	@Override
+	public ModelPart getInitializedPart(){
+		return referencedModelPart;
 	}
 
 	protected abstract String getSimpleConcreteImplName();
@@ -268,6 +282,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState, session );
+		if ( concreteDescriptor == null ) {
+			missing = true;
+			return;
+		}
 
 		initializeIdentifier( rowProcessingState );
 		resolveEntityKey( rowProcessingState );
@@ -306,21 +324,22 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 		);
 
-		final String concreteEntityName = ( (Loadable) rootEntityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
+		final String concreteEntityName = ( (Loadable) entityDescriptor ).getSubclassForDiscriminatorValue( discriminatorValue );
 
 		if ( concreteEntityName == null ) {
 			// oops - we got an instance of another class hierarchy branch
-			throw new WrongClassException(
-					"Discriminator: " + discriminatorValue,
-					entityKey.getIdentifier(),
-					entityDescriptor.getEntityName()
-			);
+//			throw new WrongClassException(
+//					"Discriminator: " + discriminatorValue,
+//					entityKey.getIdentifier(),
+//					entityDescriptor.getEntityName()
+//			);
+			return null;
 		}
 
 		final EntityPersister concreteType = session.getFactory().getMetamodel().findEntityDescriptor( concreteEntityName );
 
 		// verify that the `entityDescriptor` is either == concreteType or its super-type
-		assert concreteType.isTypeOrSuperType( rootEntityDescriptor );
+		assert concreteType.isTypeOrSuperType( entityDescriptor );
 
 		return concreteType;
 	}

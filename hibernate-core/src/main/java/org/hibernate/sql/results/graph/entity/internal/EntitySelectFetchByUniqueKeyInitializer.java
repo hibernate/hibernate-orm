@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
@@ -23,12 +24,13 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	private final ToOneAttributeMapping fetchedAttribute;
 
 	public EntitySelectFetchByUniqueKeyInitializer(
+			EntityValuedModelPart referencedModelPart,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler identifierAssembler,
 			boolean nullable) {
-		super( fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
+		super( referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 

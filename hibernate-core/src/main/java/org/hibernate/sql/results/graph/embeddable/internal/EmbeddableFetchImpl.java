@@ -113,6 +113,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			AssemblerCreationState creationState) {
 		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
+				getReferencedModePart(),
 				() -> new EmbeddableFetchInitializer(
 						parentAccess,
 						this,

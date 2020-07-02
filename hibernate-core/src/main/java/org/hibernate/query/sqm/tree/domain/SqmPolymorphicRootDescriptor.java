@@ -463,4 +463,9 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	public ManagedDomainType<? super T> getSuperType() {
 		throw new UnsupportedOperationException(  );
 	}
+
+	@Override
+	public void addSubType(ManagedDomainType subType) {
+		throw new UnsupportedOperationException(  );
+	}
 }

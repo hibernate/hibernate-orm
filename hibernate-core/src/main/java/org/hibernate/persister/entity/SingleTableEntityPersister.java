@@ -626,7 +626,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			frag.addValues( fullDiscriminatorValues() );
 		}
 
-		return " and " + frag.toFragmentString();
+		return frag.toFragmentString();
 	}
 
 	private boolean needsDiscriminator() {

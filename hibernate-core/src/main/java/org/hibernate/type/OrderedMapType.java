@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import java.util.LinkedHashMap;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -21,8 +21,8 @@ public class OrderedMapType extends MapType {
 	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize > 0
-				? new LinkedHashMap( anticipatedSize )
-				: new LinkedHashMap();
+				? CollectionHelper.linkedMap()
+				: CollectionHelper.linkedMapOfSize( anticipatedSize );
 	}
 
 }

@@ -45,6 +45,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -105,7 +106,7 @@ public class ActionQueue {
 	 */
 	private static final LinkedHashMap<Class<? extends Executable>,ListProvider> EXECUTABLE_LISTS_MAP;
 	static {
-		EXECUTABLE_LISTS_MAP = new LinkedHashMap<>( 8 );
+		EXECUTABLE_LISTS_MAP = CollectionHelper.linkedMapOfSize( 8 );
 
 		EXECUTABLE_LISTS_MAP.put(
 				OrphanRemovalAction.class,

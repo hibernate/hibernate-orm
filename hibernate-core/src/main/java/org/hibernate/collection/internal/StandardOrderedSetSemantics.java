@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -36,7 +37,7 @@ public class StandardOrderedSetSemantics extends AbstractSetSemantics<LinkedHash
 	public LinkedHashSet<?> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return anticipatedSize < 1 ? new LinkedHashSet<>() : new LinkedHashSet<>( anticipatedSize );
+		return anticipatedSize < 1 ? CollectionHelper.linkedSet() : CollectionHelper.linkedSetOfSize( anticipatedSize );
 	}
 
 	@Override

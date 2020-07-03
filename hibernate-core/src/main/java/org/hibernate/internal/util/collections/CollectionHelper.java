@@ -11,7 +11,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * Various help for handling collections.
+ * Various helper util methods for handling collections.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -28,22 +29,6 @@ public final class CollectionHelper {
 	public static final int DEFAULT_LIST_CAPACITY = 10;
 	public static final int MINIMUM_INITIAL_CAPACITY = 16;
 	public static final float LOAD_FACTOR = 0.75f;
-
-	/**
-	 * @deprecated use  {@link java.util.Collections#EMPTY_LIST} or {@link java.util.Collections#emptyList()}  instead
-	 */
-	@Deprecated
-	public static final List EMPTY_LIST = Collections.EMPTY_LIST;
-	/**
-	 * @deprecated use {@link java.util.Collections#EMPTY_LIST} or {@link java.util.Collections#emptyList()}  instead
-	 */
-	@Deprecated
-	public static final Collection EMPTY_COLLECTION = Collections.EMPTY_LIST;
-	/**
-	 * @deprecated use {@link java.util.Collections#EMPTY_MAP} or {@link java.util.Collections#emptyMap()}  instead
-	 */
-	@Deprecated
-	public static final Map EMPTY_MAP = Collections.EMPTY_MAP;
 
 	private CollectionHelper() {
 	}
@@ -62,6 +47,37 @@ public final class CollectionHelper {
 	}
 
 	/**
+	 * Build a properly sized linked map, especially handling load size and load factor to prevent immediate resizing.
+	 * <p/>
+	 * Especially helpful for copy map contents.
+	 *
+	 * @param size The size to make the map.
+	 *
+	 * @return The sized linked map.
+	 */
+	public static <K, V> LinkedHashMap<K, V> linkedMapOfSize(int size) {
+		return new LinkedHashMap<>( determineProperSizing( size ), LOAD_FACTOR );
+	}
+
+	/**
+	 * Build a map whose size is unknown.
+	 *
+	 * @return The map.
+	 */
+	public static <K, V> HashMap<K, V> map() {
+		return new HashMap<>();
+	}
+
+	/**
+	 * Build a linked map whose size is unknown.
+	 *
+	 * @return The linked map.
+	 */
+	public static <K, V> LinkedHashMap<K, V> linkedMap() {
+		return new LinkedHashMap<>();
+	}
+
+	/**
 	 * Build a properly sized set, especially handling load size and load factor to prevent immediate resizing.
 	 * <p/>
 	 * Especially helpful for copy set contents.
@@ -72,6 +88,37 @@ public final class CollectionHelper {
 	 */
 	public static <K> HashSet<K> setOfSize(int size) {
 		return new HashSet<>( determineProperSizing( size ), LOAD_FACTOR );
+	}
+
+	/**
+	 * Build a set whose size is unknown.
+	 *
+	 * @return The set.
+	 */
+	public static <K> HashSet<K> set() {
+		return new HashSet<>();
+	}
+
+	/**
+	 * Build a properly sized linked set, especially handling load size and load factor to prevent immediate resizing.
+	 * <p/>
+	 * Especially helpful for copy set contents.
+	 *
+	 * @param size The size to make the set.
+	 *
+	 * @return The sized linked set.
+	 */
+	public static <K> LinkedHashSet<K> linkedSetOfSize(int size) {
+		return new LinkedHashSet<>( determineProperSizing( size ), LOAD_FACTOR );
+	}
+
+	/**
+	 * Build a linked set whose size is unknown.
+	 *
+	 * @return The linked set.
+	 */
+	public static <K> LinkedHashSet<K> linkedSet() {
+		return new LinkedHashSet<>();
 	}
 
 	/**

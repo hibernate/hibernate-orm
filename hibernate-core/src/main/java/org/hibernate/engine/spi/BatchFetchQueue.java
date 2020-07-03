@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -140,7 +139,7 @@ public class BatchFetchQueue {
 			}
 			final LinkedHashSet<EntityKey> keysForEntity = batchLoadableEntityKeys.computeIfAbsent(
 					key.getEntityName(),
-					k -> new LinkedHashSet<>( 8 )
+					k -> CollectionHelper.linkedSetOfSize( 8 )
 			);
 
 			keysForEntity.add( key );
@@ -260,7 +259,7 @@ public class BatchFetchQueue {
 
 		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.computeIfAbsent(
 				persister.getRole(),
-				k -> new LinkedHashMap<>( 16 )
+				k -> CollectionHelper.linkedMapOfSize( 16 )
 		);
 
 		map.put( ce, collection );

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -36,7 +37,7 @@ public class StandardOrderedMapSemantics extends AbstractMapSemantics<LinkedHash
 	public LinkedHashMap<?, ?> instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
-		return anticipatedSize < 1 ? new LinkedHashMap<>() : new LinkedHashMap<>( anticipatedSize );
+		return anticipatedSize < 1 ? CollectionHelper.linkedMap() : CollectionHelper.linkedMapOfSize( anticipatedSize );
 	}
 
 	@Override

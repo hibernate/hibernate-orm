@@ -6,8 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.util.HashSet;
-
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -39,7 +37,7 @@ public class SetType extends CollectionType {
 	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
-				? new HashSet()
+				? CollectionHelper.set()
 				: CollectionHelper.setOfSize( anticipatedSize );
 	}
 

@@ -7,25 +7,21 @@
 package org.hibernate.envers.configuration.internal;
 
 import org.dom4j.DocumentFactory;
-import org.dom4j.io.SAXReader;
-import org.hibernate.internal.util.xml.ErrorLogger;
-import org.xml.sax.EntityResolver;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 /**
- * Small helper class that lazily loads DOM and SAX reader and keep them for fast use afterwards.
+ * Small helper class that lazily loads DOM factory and keep them for fast use afterwards.
  *
- * This was part of Hibernate ORM core, but moved into the testsuite helpers to not expose
- * access to the dom4j types. It's also used by Hibernate Envers, so we will need two copies
- * until Envers is able to remove its reliance on dom4j.
+ * This was part of Hibernate ORM core, but is used exclusively by Hibernate Envers now:
+ * keep visibility lower so to not expose Dom4j to public API.
  * The rest of Hibernate uses StAX now for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}
  */
-public final class XMLHelper {
+final class XMLHelper {
 	private final DocumentFactory documentFactory;
 
-	public XMLHelper() {
+	XMLHelper() {
 		PrivilegedAction<DocumentFactory> action = new PrivilegedAction<DocumentFactory>() {
 			public DocumentFactory run() {
 				final ClassLoader originalTccl = Thread.currentThread().getContextClassLoader();
@@ -55,25 +51,8 @@ public final class XMLHelper {
 				: action.run();
 	}
 
-	public DocumentFactory getDocumentFactory() {
+	DocumentFactory getDocumentFactory() {
 		return documentFactory;
 	}
 
-	public SAXReader createSAXReader(ErrorLogger errorLogger, EntityResolver entityResolver) {
-		SAXReader saxReader = new SAXReader();
-		try {
-			saxReader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			saxReader.setFeature( "http://xml.org/sax/features/external-general-entities", false );
-			saxReader.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
-		}
-		catch (Exception e) {
-			throw new RuntimeException( e );
-		}
-		saxReader.setMergeAdjacentText( true );
-		saxReader.setValidation( true );
-		saxReader.setErrorHandler( errorLogger );
-		saxReader.setEntityResolver( entityResolver );
-
-		return saxReader;
-	}
 }

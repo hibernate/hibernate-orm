@@ -197,12 +197,13 @@ public abstract class AbstractSqlAstWalker
 			visitFromClause( fromClause );
 		}
 
-		if ( querySpec.getWhereClauseRestrictions() != null && !querySpec.getWhereClauseRestrictions().isEmpty() ) {
+		final Predicate whereClauseRestrictions = querySpec.getWhereClauseRestrictions();
+		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
 			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
 			try {
-				querySpec.getWhereClauseRestrictions().accept( this );
+				whereClauseRestrictions.accept( this );
 			}
 			finally {
 				clauseStack.pop();

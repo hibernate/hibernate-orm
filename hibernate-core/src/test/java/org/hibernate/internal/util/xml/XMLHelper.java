@@ -16,10 +16,11 @@ import org.xml.sax.EntityResolver;
 /**
  * Small helper class that lazy loads DOM and SAX reader and keep them for fast use afterwards.
  *
- * @deprecated Currently only used for integration with HCANN.  The rest of Hibernate uses StAX now
- * for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}
+ * This was part of Hibernate ORM core, but moved into the testsuite helpers to not expose
+ * access to the dom4j types. It's also used by Hibernate Envers, so we will need two copies
+ * until Envers is able to remove its reliance on dom4j.
+ * The rest of Hibernate uses StAX now for XML processing.  See {@link org.hibernate.boot.jaxb.internal.stax}
  */
-@Deprecated
 public final class XMLHelper {
 	private final DocumentFactory documentFactory;
 

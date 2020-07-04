@@ -223,10 +223,12 @@ public class ${declarationName}Home {
             throw re;
         }
     } 
-<#foreach query in md.namedQueryDefinitions>
-<#assign queryName = query.name>
+<#foreach query in daoHelper.getNamedHqlQueryDefinitions(md)>
+<#assign queryName = query.registrationName>
 <#if queryName.startsWith(clazz.entityName + ".")>
 <#assign methname = c2j.unqualify(queryName)>
+<#assign params = c2j.getParameterTypes(query)>
+<#assign argList = c2j.asFinderArgumentList(params, pojo)>
 <#if jdk5 && methname.startsWith("find")>
     public ${pojo.importType("java.util.List")}<${declarationName}> ${methname}(${argList}) {
 <#elseif methname.startsWith("count")>

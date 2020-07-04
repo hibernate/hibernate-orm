@@ -35,7 +35,8 @@ public class DaoExporter extends JavaExporter {
 
 	protected void setupContext() {
 		getProperties().put("sessionFactoryName", getSessionFactoryName());
-		super.setupContext();		
+		super.setupContext();
+		getTemplateHelper().putInContext("daoHelper", new DaoHelper());
 	}
 	
 	public String getName() {

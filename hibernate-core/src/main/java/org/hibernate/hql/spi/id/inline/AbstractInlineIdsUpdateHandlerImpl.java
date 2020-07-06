@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
@@ -48,7 +49,7 @@ public abstract class AbstractInlineIdsUpdateHandlerImpl
 	@Override
 	public String[] getSqlStatements() {
 		if ( updates == null ) {
-			return new String[0];
+			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 		return updates.values().toArray( new String[updates.values().size()] );
 	}

@@ -90,7 +90,7 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 		} );
 	}
 
-	@Entity
+	@Entity(name = "HeadI")
 	public static class HeadI {
 
 		@Id
@@ -100,7 +100,7 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 		private String name;
 	}
 
-	@Entity
+	@Entity(name = "NodeI")
 	@IdClass(NodeI.PK.class)
 	public static class NodeI {
 
@@ -148,7 +148,7 @@ public class CompositeIdFkGeneratedValueIdentityTest extends BaseCoreFunctionalT
 
 	}
 
-	@Entity
+	@Entity(name = "ComplexNodeI")
 	@IdClass(ComplexNodeI.PK.class)
 	public static class ComplexNodeI {
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
@@ -35,6 +37,8 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.jboss.logging.Logger;
 
@@ -54,6 +58,9 @@ public class H2Dialect extends Dialect {
 	private final LimitHandler limitHandler;
 
 	private final boolean cascadeConstraints;
+
+	private final SequenceInformationExtractor sequenceInformationExtractor;
+	private final String querySequenceString;
 
 	public H2Dialect() {
 		this(0, 0);
@@ -80,6 +87,18 @@ public class H2Dialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+
+		if ( buildId >= 32 ) {
+			this.sequenceInformationExtractor = buildId >= 201
+					? SequenceInformationExtractorLegacyImpl.INSTANCE
+					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+			registerColumnType( Types.DECIMAL,  "numeric($p,$s)" );
+		}
+		else {
+			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
+			this.querySequenceString = null;
+		}
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -215,12 +234,12 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select * from information_schema.sequences";
+		return querySequenceString;
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+		return sequenceInformationExtractor;
 	}
 
 	@Override

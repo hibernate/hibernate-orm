@@ -67,8 +67,7 @@ public class Expectations {
 					throw new StaleStateException(
 							"Batch update returned unexpected row count from update ["
 									+ batchPosition + "]; actual row count: " + rowCount
-									+ "; expected: " + expectedRowCount + "; statement executed: "
-									+ statement
+									+ "; expected: " + expectedRowCount + statementMessage(statement)
 					);
 				}
 				if ( expectedRowCount < rowCount ) {
@@ -83,8 +82,7 @@ public class Expectations {
 		private void checkNonBatched(int rowCount, PreparedStatement statement) {
 			if ( expectedRowCount > rowCount ) {
 				throw new StaleStateException(
-						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount
-						+ "; statement executed: " + statement
+						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount + statementMessage(statement)
 				);
 			}
 			if ( expectedRowCount < rowCount ) {
@@ -103,6 +101,12 @@ public class Expectations {
 
 		protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
 			return reportedRowCount;
+		}
+
+		private static String statementMessage(PreparedStatement statement) {
+			return true // TODO How to get hibernate.show_sql value?
+					? "; statement executed: " + statement
+					: "";
 		}
 	}
 

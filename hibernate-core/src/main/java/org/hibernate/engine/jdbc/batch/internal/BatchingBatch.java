@@ -112,7 +112,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 		final JdbcObserver observer = getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver();
 		try {
 			for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
-				String sql = entry.getKey();
+				final String sql = entry.getKey();
 				try {
 					final PreparedStatement statement = entry.getValue();
 					final int[] rowCounts;
@@ -123,7 +123,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 					finally {
 						observer.jdbcExecuteBatchEnd();
 					}
-					checkRowCounts( rowCounts, statement );
+					checkRowCounts( rowCounts, statement, sql );
 				}
 				catch ( SQLException e ) {
 					abortBatch();
@@ -142,13 +142,13 @@ public class BatchingBatch extends AbstractBatchImpl {
 		}
 	}
 
-	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
+	private void checkRowCounts(int[] rowCounts, PreparedStatement ps, String statementSQL) throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
 		if ( batchPosition != 0 && numberOfRowCounts != batchPosition / getStatements().size() ) {
 			LOG.unexpectedRowCounts();
 		}
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {
-			getKey().getExpectation().verifyOutcome( rowCounts[i], ps, i );
+			getKey().getExpectation().verifyOutcome( rowCounts[i], ps, i, statementSQL );
 		}
 	}
 }

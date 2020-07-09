@@ -61,7 +61,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 		if ( tableExpression.equals( getTableExpression() ) ) {
 			return this;
 		}
-		return null;
+		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 	}
 
 	@Override

@@ -51,6 +51,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -233,13 +234,20 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final TableReference tableReference = new TableReference(
+		final TableReference tableReference = resolvePrimaryTableReference(sqlAliasBase);
+
+		return new UnionTableGroup( navigablePath, tableReference, this );
+	}
+
+	@Override
+	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
+		return new UnionTableReference(
 				getTableName(),
+				subclassSpaces,
 				sqlAliasBase.generateNewAlias(),
 				false,
 				getFactory()
 		);
-		return new UnionTableGroup( navigablePath, tableReference, this );
 	}
 
 	@Override

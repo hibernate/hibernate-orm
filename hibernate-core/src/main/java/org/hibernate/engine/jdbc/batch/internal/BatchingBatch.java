@@ -15,6 +15,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 
+import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.jboss.logging.Logger;
 
 /**
@@ -108,6 +109,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private void performExecution() {
 		LOG.debugf( "Executing batch size: %s", batchPosition );
+		final JdbcObserver observer = getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver();
 		try {
 			for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
 				String sql = entry.getKey();
@@ -115,11 +117,11 @@ public class BatchingBatch extends AbstractBatchImpl {
 					final PreparedStatement statement = entry.getValue();
 					final int[] rowCounts;
 					try {
-						getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteBatchStart();
+						observer.jdbcExecuteBatchStart();
 						rowCounts = statement.executeBatch();
 					}
 					finally {
-						getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcExecuteBatchEnd();
+						observer.jdbcExecuteBatchEnd();
 					}
 					checkRowCounts( rowCounts, statement );
 				}

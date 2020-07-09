@@ -2591,9 +2591,10 @@ public abstract class AbstractEntityPersister
 			Serializable id,
 			int tableNumber,
 			Expectation expectation,
-			PreparedStatement statement) throws HibernateException {
+			PreparedStatement statement,
+			String statementSQL) throws HibernateException {
 		try {
-			expectation.verifyOutcome( rows, statement, -1 );
+			expectation.verifyOutcome( rows, statement, -1, statementSQL );
 		}
 		catch (StaleStateException e) {
 			if ( !isNullableTable( tableNumber ) ) {
@@ -3251,7 +3252,7 @@ public abstract class AbstractEntityPersister
 					expectation.verifyOutcome(
 							session.getJdbcCoordinator()
 									.getResultSetReturn()
-									.executeUpdate( insert ), insert, -1
+									.executeUpdate( insert ), insert, -1, sql
 					);
 				}
 			}
@@ -3450,7 +3451,8 @@ public abstract class AbstractEntityPersister
 							id,
 							j,
 							expectation,
-							update
+							update,
+							sql
 					);
 				}
 
@@ -3575,7 +3577,8 @@ public abstract class AbstractEntityPersister
 							id,
 							j,
 							expectation,
-							delete
+							delete,
+							sql
 					);
 				}
 

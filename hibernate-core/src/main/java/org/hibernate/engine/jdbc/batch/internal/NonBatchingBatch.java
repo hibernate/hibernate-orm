@@ -40,16 +40,17 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 	public void addToBatch() {
 		notifyObserversImplicitExecution();
 		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
+			final String statementSQL = entry.getKey();
 			try {
 				final PreparedStatement statement = entry.getValue();
 				final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( statement );
-				getKey().getExpectation().verifyOutcome( rowCount, statement, 0 );
+				getKey().getExpectation().verifyOutcome( rowCount, statement, 0, statementSQL );
 				jdbcCoordinator.getResourceRegistry().release( statement );
 				jdbcCoordinator.afterStatementExecution();
 			}
 			catch ( SQLException e ) {
 				abortBatch();
-				throw sqlExceptionHelper().convert( e, "could not execute non-batched batch statement", entry.getKey() );
+				throw sqlExceptionHelper().convert( e, "could not execute non-batched batch statement", statementSQL );
 			}
 			catch (JDBCException e) {
 				abortBatch();

@@ -1826,7 +1826,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private HashMap<String,List<Serializable>> insertedKeysMap;
+	private HashMap<String, HashSet<Serializable>> insertedKeysMap;
 
 	@Override
 	public void registerInsertedKey(EntityPersister persister, Serializable id) {
@@ -1836,11 +1836,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				insertedKeysMap = new HashMap<>();
 			}
 			final String rootEntityName = persister.getRootEntityName();
-			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
-			if ( insertedEntityIds == null ) {
-				insertedEntityIds = new ArrayList<>();
-				insertedKeysMap.put( rootEntityName, insertedEntityIds );
-			}
+			HashSet<Serializable> insertedEntityIds = insertedKeysMap.computeIfAbsent(
+					rootEntityName,
+					k -> new HashSet<>()
+			);
 			insertedEntityIds.add( id );
 		}
 	}
@@ -1850,7 +1849,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// again, we only really care if the entity is cached
 		if ( persister.canWriteToCache() ) {
 			if ( insertedKeysMap != null ) {
-				final List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				final HashSet<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
 				if ( insertedEntityIds != null ) {
 					return insertedEntityIds.contains( id );
 				}

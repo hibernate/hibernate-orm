@@ -94,8 +94,8 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReferenceInternal(String tableExpression) {
-		final TableReference tableReference = super.resolveTableReferenceInternal( tableExpression );
+	public TableReference getTableReferenceInternal(String tableExpression) {
+		final TableReference tableReference = super.getTableReferenceInternal( tableExpression );
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -105,7 +105,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 				for ( int i = 0; i < tableJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
-					if ( join.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
+					if ( join.getJoinedTableReference().getTableReference( tableExpression ) != null ) {
 						return join.getJoinedTableReference();
 					}
 				}
@@ -116,7 +116,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableExpression().equals( tableExpression ) ) {
+			if ( primaryTableReference.getTableReference( tableExpression ) != null ) {
 				return primaryTableReference;
 			}
 		}

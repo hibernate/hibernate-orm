@@ -617,7 +617,8 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final TableReference primaryTableReference = entityPartDescriptor.getEntityMappingType()
+		final EntityMappingType entityMappingType = entityPartDescriptor.getEntityMappingType();
+		final TableReference primaryTableReference = entityMappingType
 				.createPrimaryTableReference(
 						sqlAliasBase,
 						sqlExpressionResolver,
@@ -630,9 +631,9 @@ public class PluralAttributeMappingImpl extends AbstractAttributeMapping impleme
 				lockMode,
 				primaryTableReference,
 				sqlAliasBase,
-				(tableExpression) -> entityPartDescriptor.getEntityMappingType()
+				(tableExpression) -> entityMappingType
 						.containsTableReference( tableExpression ),
-				(tableExpression, tg) -> entityPartDescriptor.getEntityMappingType().createTableReferenceJoin(
+				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,

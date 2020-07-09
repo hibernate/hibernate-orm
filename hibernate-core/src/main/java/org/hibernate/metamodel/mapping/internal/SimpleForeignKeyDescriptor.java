@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -163,10 +162,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final String rhsTableExpression = rhs.getTableExpression();
-		final String lhsTableExpression = lhs.getTableExpression();
-		if ( lhsTableExpression.equals( keyColumnContainingTable ) ) {
-			assert rhsTableExpression.equals( targetColumnContainingTable );
+		if ( lhs.getTableReference( keyColumnContainingTable ) != null ) {
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
@@ -184,7 +180,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 		else {
-			assert rhsTableExpression.equals( keyColumnContainingTable );
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,

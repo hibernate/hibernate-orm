@@ -53,6 +53,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	void applyAffectedTableNames(Consumer<String> nameCollector);
 
 	TableReference getPrimaryTableReference();
+
 	List<TableReferenceJoin> getTableReferenceJoins();
 
 	@Override

@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -23,6 +24,7 @@ import org.hibernate.query.NavigablePath;
  */
 public class UnionTableGroup implements VirtualTableGroup {
 	private final NavigablePath navigablePath;
+	private Set<TableGroupJoin> tableGroupJoins;
 
 	private final UnionSubclassEntityPersister modelPart;
 	private final TableReference tableReference;
@@ -63,24 +65,32 @@ public class UnionTableGroup implements VirtualTableGroup {
 
 	@Override
 	public Set<TableGroupJoin> getTableGroupJoins() {
-		return Collections.emptySet();
+		return tableGroupJoins == null ? Collections.emptySet() : Collections.unmodifiableSet( tableGroupJoins );
 	}
 
 	@Override
 	public boolean hasTableGroupJoins() {
-		return false;
+		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
 	}
 
 	@Override
 	public void setTableGroupJoins(Set<TableGroupJoin> joins) {
+		tableGroupJoins = new HashSet<>( joins );
 	}
 
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
+		if ( tableGroupJoins == null ) {
+			tableGroupJoins = new HashSet<>();
+		}
+		tableGroupJoins.add( join );
 	}
 
 	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( tableGroupJoins != null ) {
+			tableGroupJoins.forEach( consumer );
+		}
 	}
 
 	@Override

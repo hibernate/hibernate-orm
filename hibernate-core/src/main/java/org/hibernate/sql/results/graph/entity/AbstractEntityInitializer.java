@@ -128,8 +128,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 							for ( int i = 0; i < identifierInitializers.size(); i++ ) {
 								final Initializer existing = identifierInitializers.get( i );
 								if ( existing.getNavigablePath().equals( navigablePath )
-										&& fetchedModelPart.getNavigableRole().equals(
-										existing.getInitializedPart().getNavigableRole() ) ) {
+										&& fetchedModelPart.getNavigableRole()
+										.equals( existing.getInitializedPart().getNavigableRole() ) ) {
 									return existing;
 								}
 							}

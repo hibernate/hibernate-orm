@@ -26,7 +26,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 
 	@Override
 	public TableReference resolveTableReference(String tableExpression, Supplier<TableReference> creator) {
-		final TableReference existing = resolveTableReferenceInternal( tableExpression );
+		final TableReference existing = getTableReferenceInternal( tableExpression );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -38,7 +38,7 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	public TableReference resolveTableReference(String tableExpression) {
 		assert tableExpression != null;
 
-		final TableReference tableReference = resolveTableReferenceInternal( tableExpression );
+		final TableReference tableReference = getTableReferenceInternal( tableExpression );
 		if ( tableReference == null ) {
 			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 		}
@@ -48,16 +48,16 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 
 	@Override
 	public TableReference getTableReference(String tableExpression) {
-		return resolveTableReferenceInternal( tableExpression );
+		return getTableReferenceInternal( tableExpression );
 	}
 
-	protected TableReference resolveTableReferenceInternal(String tableExpression) {
-		if ( getPrimaryTableReference().getTableExpression().equals( tableExpression ) ) {
+	protected TableReference getTableReferenceInternal(String tableExpression) {
+		if ( getPrimaryTableReference().getTableReference( tableExpression ) != null) {
 			return getPrimaryTableReference();
 		}
 
 		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( tableExpression ) ) {
+			if ( tableJoin.getJoinedTableReference().getTableReference( tableExpression ) != null) {
 				return tableJoin.getJoinedTableReference();
 			}
 		}

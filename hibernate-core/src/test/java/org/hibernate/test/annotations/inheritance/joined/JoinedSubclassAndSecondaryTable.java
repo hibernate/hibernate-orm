@@ -6,100 +6,121 @@
  */
 package org.hibernate.test.annotations.inheritance.joined;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Emmanuel Bernard
  */
-public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				Pool.class,
+				SwimmingPool.class
+		}
+)
+@SessionFactory
+public class JoinedSubclassAndSecondaryTable {
 
-	@Test
-	public void testSecondaryTableAndJoined() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		SwimmingPool sp = new SwimmingPool();
-		s.persist( sp );
-		s.flush();
-		s.clear();
-
-		long rowCount = getTableRowCount( s, "POOL_ADDRESS" );
-		assertEquals(
-				"The address table is marked as optional. For null values no database row should be created",
-				0,
-				rowCount
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				sesison ->
+						sesison.createQuery( "from Pool" ).list().forEach(
+								pool -> sesison.delete( pool )
+						)
 		);
-
-		SwimmingPool sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
-		assertNull( sp.getAddress() );
-
-		PoolAddress address = new PoolAddress();
-		address.setAddress( "Park Avenue" );
-		sp2.setAddress( address );
-
-		s.flush();
-		s.clear();
-
-		sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
-		rowCount = getTableRowCount( s, "POOL_ADDRESS" );
-		assertEquals(
-				"Now we should have a row in the pool address table ",
-				1,
-				rowCount
-		);
-		assertNotNull( sp2.getAddress() );
-		assertEquals( sp2.getAddress().getAddress(), "Park Avenue" );
-
-		tx.rollback();
-		s.close();
 	}
 
 	@Test
-	public void testSecondaryTableAndJoinedInverse() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		SwimmingPool sp = new SwimmingPool();
-		s.persist( sp );
-		s.flush();
-		s.clear();
+	public void testSecondaryTableAndJoined(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SwimmingPool sp = new SwimmingPool();
+					session.persist( sp );
+					session.flush();
+					session.clear();
 
-		long rowCount = getTableRowCount( s, "POOL_ADDRESS_2" );
-		assertEquals(
-				"The address table is marked as optional. For null values no database row should be created",
-				0,
-				rowCount
+					long rowCount = getTableRowCount( session, "POOL_ADDRESS" );
+					assertEquals(
+
+							0,
+							rowCount,
+							"The address table is marked as optional. For null values no database row should be created"
+					);
+
+					SwimmingPool sp2 = session.get( SwimmingPool.class, sp.getId() );
+					assertNull( sp.getAddress() );
+
+					PoolAddress address = new PoolAddress();
+					address.setAddress( "Park Avenue" );
+					sp2.setAddress( address );
+
+					session.flush();
+					session.clear();
+
+					sp2 = session.get( SwimmingPool.class, sp.getId() );
+					rowCount = getTableRowCount( session, "POOL_ADDRESS" );
+					assertEquals(
+
+							1,
+							rowCount,
+							"Now we should have a row in the pool address table "
+
+					);
+					assertNotNull( sp2.getAddress() );
+					assertEquals( sp2.getAddress().getAddress(), "Park Avenue" );
+				}
 		);
+	}
 
-		SwimmingPool sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
-		assertNull( sp.getSecondaryAddress() );
+	@Test
+	public void testSecondaryTableAndJoinedInverse(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					SwimmingPool sp = new SwimmingPool();
+					session.persist( sp );
+					session.flush();
+					session.clear();
 
-		PoolAddress address = new PoolAddress();
-		address.setAddress( "Park Avenue" );
-		sp2.setSecondaryAddress( address );
+					long rowCount = getTableRowCount( session, "POOL_ADDRESS_2" );
+					assertEquals(
+							0,
+							rowCount,
+							"The address table is marked as optional. For null values no database row should be created"
+					);
 
-		s.flush();
-		s.clear();
+					SwimmingPool sp2 = session.get( SwimmingPool.class, sp.getId() );
+					assertNull( sp.getSecondaryAddress() );
 
-		sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
-		rowCount = getTableRowCount( s, "POOL_ADDRESS_2" );
-		assertEquals(
-				"Now we should have a row in the pool address table ",
-				0,
-				rowCount
+					PoolAddress address = new PoolAddress();
+					address.setAddress( "Park Avenue" );
+					sp2.setSecondaryAddress( address );
+
+					session.flush();
+					session.clear();
+
+					sp2 = session.get( SwimmingPool.class, sp.getId() );
+					rowCount = getTableRowCount( session, "POOL_ADDRESS_2" );
+					assertEquals(
+
+							0,
+							rowCount,
+							"Now we should have a row in the pool address table "
+					);
+					assertNull( sp2.getSecondaryAddress() );
+				}
 		);
-		assertNull( sp2.getSecondaryAddress()  );
-
-		tx.rollback();
-		s.close();
 	}
 
 	private long getTableRowCount(Session s, String tableName) {
@@ -108,11 +129,6 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		// H2 returns Types.BIGINT, which is mapped to BigInteger;
 		Object retVal = s.createNativeQuery( "select count(*) from " + tableName ).uniqueResult();
 		assertTrue( Number.class.isInstance( retVal ) );
-		return ( ( Number ) retVal ).longValue();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Pool.class, SwimmingPool.class };
+		return ( (Number) retVal ).longValue();
 	}
 }

@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;

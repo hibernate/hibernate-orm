@@ -19,10 +19,10 @@ import org.hibernate.query.Query;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
-import org.hibernate.test.annotations.inheritance.singletable.Funk;
-import org.hibernate.test.annotations.inheritance.singletable.Music;
-import org.hibernate.test.annotations.inheritance.singletable.Noise;
-import org.hibernate.test.annotations.inheritance.singletable.Rock;
+import org.hibernate.orm.test.annotations.inheritance.singletable.Funk;
+import org.hibernate.orm.test.annotations.inheritance.singletable.Music;
+import org.hibernate.orm.test.annotations.inheritance.singletable.Noise;
+import org.hibernate.orm.test.annotations.inheritance.singletable.Rock;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

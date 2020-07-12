@@ -4,8 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
 package org.hibernate.test.annotations.inheritance.joined;
+
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -30,8 +30,6 @@ public class Client extends Person implements Serializable {
 			joinColumns = {@JoinColumn(name = "FK_CLIENT", referencedColumnName = "ID")},
 			inverseJoinColumns = {@JoinColumn(name = "FK_ACCOUNT", referencedColumnName = "ID")})
 	private Account account;
-		
-	
 
 	public Account getAccount() {
 		return account;

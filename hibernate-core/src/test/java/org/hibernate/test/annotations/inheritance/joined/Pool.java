@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
+
 import org.hibernate.annotations.Tables;
 
 import javax.persistence.AttributeOverride;

@@ -7,6 +7,7 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
+
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;

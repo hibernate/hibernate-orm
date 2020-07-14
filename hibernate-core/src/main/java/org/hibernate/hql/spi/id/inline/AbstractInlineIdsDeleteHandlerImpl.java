@@ -34,7 +34,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 		extends AbstractInlineIdsBulkIdHandler
 		implements MultiTableBulkIdStrategy.DeleteHandler {
 
-	private List<String> deletes = new ArrayList<>();
+	private List<String> deletes ;
 
 	public AbstractInlineIdsDeleteHandlerImpl(
 			SessionFactoryImplementor factory,
@@ -44,7 +44,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 
 	@Override
 	public String[] getSqlStatements() {
-		if ( deletes.isEmpty() ) {
+		if ( deletes == null || deletes.isEmpty() ) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 		return deletes.toArray( new String[deletes.size()] );
@@ -56,6 +56,7 @@ public abstract class AbstractInlineIdsDeleteHandlerImpl
 			QueryParameters queryParameters) {
 
 		IdsClauseBuilder values = prepareInlineStatement( session, queryParameters );
+		deletes = new ArrayList<>();
 
 		if ( !values.getIds().isEmpty() ) {
 			final String idSubselect = values.toStatement();

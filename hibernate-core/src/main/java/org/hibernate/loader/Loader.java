@@ -75,7 +75,6 @@ import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -116,14 +115,12 @@ public abstract class Loader {
 	private final SessionFactoryImplementor factory;
 	private volatile ColumnNameCache columnNameCache;
 
-	private final boolean referenceCachingEnabled;
 	private final boolean enhancementAsProxyEnabled;
 
 	private boolean isJdbc4 = true;
 
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
-		this.referenceCachingEnabled = factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled();
 		this.enhancementAsProxyEnabled = factory.getSessionFactoryOptions().isEnhancementAsProxyEnabled();
 	}
 
@@ -1666,38 +1663,34 @@ public abstract class Loader {
 			);
 		}
 
-		if ( persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() && enhancementAsProxyEnabled ) {
-			if ( "merge".equals( session.getLoadQueryInfluencers().getInternalFetchProfile() ) ) {
-				assert this instanceof CascadeEntityLoader;
-				// we are processing a merge and have found an existing "managed copy" in the
-				// session - we need to check if this copy is an enhanced-proxy and, if so,
-				// perform the hydration just as if it were "not yet loaded"
-				final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) object;
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					hydrateEntityState(
-							rs,
-							i,
-							persister,
-							getEntityAliases()[i].getRowIdAlias(),
-							key,
-							hydratedObjects,
-							session,
-							getInstanceClass(
-									rs,
-									i,
-									persister,
-									key.getIdentifier(),
-									session
-							),
-							object,
-							requestedLockMode
-					);
+		if ( enhancementAsProxyEnabled && persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+			// we have found an existing "managed copy" in the session
+			// we need to check if this copy is an enhanced-proxy and, if so,
+			// perform the hydration just as if it were "not yet loaded"
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) object ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				hydrateEntityState(
+						rs,
+						i,
+						persister,
+						getEntityAliases()[i].getRowIdAlias(),
+						key,
+						hydratedObjects,
+						session,
+						getInstanceClass(
+								rs,
+								i,
+								persister,
+								key.getIdentifier(),
+								session
+						),
+						object,
+						requestedLockMode
+				);
 
-					// EARLY EXIT!!!
-					//		- to skip the version check
-					return;
-				}
+				// EARLY EXIT!!!
+				//		- to skip the version check
+				return;
 			}
 		}
 

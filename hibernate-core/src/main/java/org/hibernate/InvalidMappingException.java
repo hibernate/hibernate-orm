@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.internal.util.xml.XmlDocument;
 
 /**
  * Thrown when a mapping is found to be invalid.

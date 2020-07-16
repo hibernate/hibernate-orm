@@ -1236,20 +1236,23 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
-		if ( explicitDiscriminatorColumnName == null ) {
-			CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
-			return new JoinedSubclassDiscriminatorMappingImpl(
-					this,
-					getRootTableName(),
-					getDiscriminatorColumnName(),
-					info.caseSearchedExpression,
-					info.columnReferences,
-					(BasicType) getDiscriminatorType()
-			);
+		if(hasSubclasses()) {
+			if ( explicitDiscriminatorColumnName == null ) {
+				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
+				return new JoinedSubclassDiscriminatorMappingImpl(
+						this,
+						getRootTableName(),
+						getDiscriminatorColumnName(),
+						info.caseSearchedExpression,
+						info.columnReferences,
+						(BasicType) getDiscriminatorType()
+				);
+			}
+			else {
+				return super.getDiscriminatorMapping( tableGroup );
+			}
 		}
-		else {
-			return super.getDiscriminatorMapping( tableGroup );
-		}
+		return null;
 	}
 
 	@Override

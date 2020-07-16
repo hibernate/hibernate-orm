@@ -2,6 +2,9 @@ dist: trusty
 language: java
 
 jobs:
+  fast_finish: true
+  allow_failures:
+    - arch: s390x
   include:
     - stage: Oracle JDK 8
       jdk: oraclejdk8

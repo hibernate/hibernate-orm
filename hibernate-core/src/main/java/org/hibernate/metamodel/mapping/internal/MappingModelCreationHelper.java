@@ -36,12 +36,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
@@ -275,13 +277,14 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final BasicValue.Resolution<?> resolution = ( (BasicValue) bootProperty.getValue() ).resolve();
+		final Value value = bootProperty.getValue();
+		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
 
 		final BasicValueConverter valueConverter = resolution.getValueConverter();
 
 		final StateArrayContributorMetadataAccess attributeMetadataAccess = entityMappingType -> new StateArrayContributorMetadata() {
 			private final MutabilityPlan mutabilityPlan = resolution.getMutabilityPlan();
-			private final boolean nullable = bootProperty.getValue().isNullable();
+			private final boolean nullable = value.isNullable();
 			private final boolean insertable = bootProperty.isInsertable();
 			private final boolean updateable = bootProperty.isUpdateable();
 			private final boolean includeInOptimisticLocking = bootProperty.isOptimisticLocked();

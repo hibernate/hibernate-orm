@@ -17,7 +17,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class DependantValue extends SimpleValue {
+public class DependantValue extends SimpleValue implements Resolvable {
 	private KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
@@ -31,12 +31,15 @@ public class DependantValue extends SimpleValue {
 		return wrappedValue.getType();
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName) {}
-	
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
 
+	@Override
 	public boolean isNullable() {
 		return nullable;
 	
@@ -45,7 +48,8 @@ public class DependantValue extends SimpleValue {
 	public void setNullable(boolean nullable) {
 		this.nullable = nullable;
 	}
-	
+
+	@Override
 	public boolean isUpdateable() {
 		return updateable;
 	}
@@ -62,6 +66,21 @@ public class DependantValue extends SimpleValue {
 	public boolean isSame(DependantValue other) {
 		return super.isSame( other )
 				&& isSame( wrappedValue, other.wrappedValue );
+	}
+
+	@Override
+	public boolean resolve(MetadataBuildingContext buildingContext) {
+		resolve();
+		return true;
+	}
+
+	@Override
+	public BasicValue.Resolution<?> resolve() {
+		if ( wrappedValue instanceof BasicValue ) {
+			return ( (BasicValue) wrappedValue ).resolve();
+		}
+		// not sure it is ever possible
+		throw new UnsupportedOperationException("Trying to resolve the wrapped value but it is non a BasicValue");
 	}
 
 }

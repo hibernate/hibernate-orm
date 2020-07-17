@@ -50,7 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicators {
+public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	private final MetadataBuildingContext buildingContext;
@@ -245,11 +245,13 @@ public class BasicValue extends SimpleValue implements SqlTypeDescriptorIndicato
 		return resolution;
 	}
 
+	@Override
 	public boolean resolve(MetadataBuildingContext buildingContext) {
 		resolve();
 		return true;
 	}
 
+	@Override
 	public Resolution<?> resolve() {
 		if ( resolution != null ) {
 			return resolution;

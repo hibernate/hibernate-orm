@@ -92,6 +92,29 @@ public class MaxInExpressionParameterPaddingTest extends BaseEntityManagerFuncti
 		assertTrue(sqlStatementInterceptor.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ));
 	}
 
+	@Test
+	public void testInClauseParameterPaddingToLimit() {
+		sqlStatementInterceptor.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			return entityManager.createQuery(
+					"select p " +
+							"from Person p " +
+							"where p.id in :ids" )
+					.setParameter( "ids", IntStream.range( 0, 10 ).boxed().collect(Collectors.toList()) )
+					.getResultList();
+		} );
+
+		StringBuilder expectedInClause = new StringBuilder();
+		expectedInClause.append( "in (?" );
+		for ( int i = 1; i < MAX_COUNT; i++ ) {
+			expectedInClause.append( " , ?" );
+		}
+		expectedInClause.append( ")" );
+
+		assertTrue(sqlStatementInterceptor.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ));
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 

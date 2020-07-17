@@ -17,7 +17,6 @@ buildscript {
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
 		classpath 'de.thetaphi:forbiddenapis:2.7'
-		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:4.2.0'
 	}
 }
 
@@ -25,6 +24,7 @@ plugins {
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 	id 'org.hibernate.build.maven-repo-auth' version '3.0.2' apply false
+	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 
 allprojects {

@@ -7,42 +7,53 @@
 package org.hibernate.test.annotations.inheritance;
 
 import java.util.List;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
-import org.junit.Test;
-
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
-
-import org.hibernate.test.annotations.A320;
-import org.hibernate.test.annotations.A320b;
-import org.hibernate.test.annotations.Plane;
+import org.hibernate.orm.test.annotations.inheritance.Apple;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Music;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Rock;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.query.Query;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.test.annotations.A320;
+import org.hibernate.test.annotations.A320b;
+import org.hibernate.test.annotations.Plane;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class SubclassTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
+@DomainModel(
+		annotatedClasses = {
+				A320b.class, //subclasses should be properly reordered
+				Plane.class,
+				A320.class,
+				Apple.class,
+				Music.class,
+				Rock.class,
+				Funk.class,
+				Noise.class
+		}
+)
+@SessionFactory
+public class SubclassTest {
 
 	@Test
-	public void testPolymorphism() {
-		inTransaction(
+	public void testPolymorphism(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Plane p = new Plane();
 					p.setNbrOfSeats( 10 );
@@ -54,7 +65,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Query q = s.createQuery( "from " + A320.class.getName() );
 					List a320s = q.list();
@@ -71,8 +82,8 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void test2ndLevelSubClass() {
-		inTransaction(
+	public void test2ndLevelSubClass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					A320b a = new A320b();
 					a.setJavaEmbeddedVersion( "Elephant" );
@@ -81,7 +92,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Query q = s.createQuery( "from " + A320.class.getName() + " as a where a.javaEmbeddedVersion = :version" );
 					q.setParameter( "version", "Elephant" );
@@ -94,9 +105,9 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testEmbeddedSuperclass() {
+	public void testEmbeddedSuperclass(SessionFactoryScope scope) {
 		Plane plane = new Plane();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					plane.setAlive( true ); //sic
 					plane.setAltitude( 10000 );
@@ -107,7 +118,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Plane p = s.get( Plane.class, plane.getId() );
 					assertNotNull( p );
@@ -123,8 +134,8 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testFormula() {
-		inTransaction(
+	public void testFormula(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Rock guns = new Rock();
 					guns.setAvgBeat( 90 );
@@ -138,7 +149,7 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					List result = createQueryForClass( s, Noise.class ).list();
 					assertNotNull( result );
@@ -162,21 +173,21 @@ public class SubclassTest extends BaseCoreFunctionalTestCase {
 		return session.createQuery( criteria );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				A320b.class, //subclasses should be properly reordered
-				Plane.class,
-				A320.class,
-				Fruit.class,
-				//FlyingObject.class, //had to declare embedded superclasses
-				//Thing.class,
-				Apple.class,
-				Music.class,
-				Rock.class,
-				Funk.class,
-				Noise.class
-		};
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from A320b" ).executeUpdate();
+					session.createQuery( "delete from Plane" ).executeUpdate();
+					session.createQuery( "delete from A320" ).executeUpdate();
+
+					session.createQuery( "delete from Noise" ).executeUpdate();
+					session.createQuery( "delete from Rock" ).executeUpdate();
+					session.createQuery( "delete from Apple" ).executeUpdate();
+					session.createQuery( "delete from Music" ).executeUpdate();
+					session.createQuery( "delete from Funk" ).executeUpdate();
+				}
+		);
 	}
 
 }

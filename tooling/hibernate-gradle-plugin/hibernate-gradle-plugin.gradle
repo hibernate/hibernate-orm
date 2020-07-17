@@ -21,3 +21,9 @@ dependencies {
 	compile gradleApi()
 	compile localGroovy()
 }
+
+tasks.withType( GroovyCompile ) {
+	options.encoding = 'UTF-8'
+	sourceCompatibility = project.baselineJavaVersion
+	targetCompatibility = project.baselineJavaVersion
+}

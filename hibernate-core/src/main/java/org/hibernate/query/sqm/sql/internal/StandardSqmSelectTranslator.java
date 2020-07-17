@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -98,7 +99,7 @@ public class StandardSqmSelectTranslator
 
 	private int fetchDepth;
 
-	private List<FilterPredicate> collectionFilterPredicates;
+	private Map<String,FilterPredicate> collectionFilterPredicates;
 
 	public StandardSqmSelectTranslator(
 			QueryOptions queryOptions,
@@ -210,7 +211,15 @@ public class StandardSqmSelectTranslator
 				sqlQuerySpec.applyPredicate( filterPredicate );
 			}
 			if ( CollectionHelper.isNotEmpty( collectionFilterPredicates ) ) {
-				collectionFilterPredicates.forEach( sqlQuerySpec::applyPredicate );
+				root.getTableGroupJoins().forEach(
+						tableGroupJoin -> {
+							collectionFilterPredicates.forEach( (alias, predicate) -> {
+								if ( tableGroupJoin.getJoinedGroup().getGroupAlias().equals( alias ) ) {
+									tableGroupJoin.applyPredicate( predicate );
+								}
+							} );
+						}
+				);
 			}
 		}
 
@@ -429,9 +438,9 @@ public class StandardSqmSelectTranslator
 				);
 				if ( collectionFieldFilterPredicate != null ) {
 					if ( collectionFilterPredicates == null ) {
-						collectionFilterPredicates = new ArrayList<>();
+						collectionFilterPredicates = new HashMap<>();
 					}
-					collectionFilterPredicates.add( collectionFieldFilterPredicate );
+					collectionFilterPredicates.put( tableGroup.getGroupAlias(),collectionFieldFilterPredicate );
 				}
 				if ( pluralAttributeMapping.getCollectionDescriptor().isManyToMany() ) {
 					assert joinable instanceof CollectionPersister;

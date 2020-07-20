@@ -97,7 +97,7 @@ public final class Cascade {
 						hasUninitializedLazyProperties &&
 						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
 
-				Type type = types[i];
+				final Type type = types[i];
 				if ( style.doCascade( action ) ) {
 					final Object child;
 					if ( isUninitializedProperty  ) {

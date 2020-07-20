@@ -44,9 +44,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -138,7 +138,7 @@ public class JoinedInheritanceEagerTest {
 	public void selectBaseType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List result = session.createQuery( "from BaseEntity" ).list();
-			assertEquals( 2, result.size() );
+			assertThat( result.size(), is( 2 ) );
 		} );
 	}
 

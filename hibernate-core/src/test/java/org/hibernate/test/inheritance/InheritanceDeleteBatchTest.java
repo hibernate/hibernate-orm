@@ -15,7 +15,7 @@ import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.hql.spi.id.inline.InlineIdsInClauseBulkIdStrategy;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.DialectChecks;
@@ -49,7 +49,7 @@ public class InheritanceDeleteBatchTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
 				AvailableSettings.HQL_BULK_ID_STRATEGY,
-				InlineIdsInClauseBulkIdStrategy.class.getName()
+				InlineStrategy.class.getName()
 		);
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 	}

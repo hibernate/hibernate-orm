@@ -1671,19 +1671,26 @@ public abstract class BaseSqmToSqlAstConverter
 				);
 			}
 			else {
-
 				return new BinaryArithmeticExpression(
-						toSqlExpression( leftOperand.accept(this) ),
+						toSqlExpression( leftOperand.accept( this ) ),
 						expression.getOperator(),
-						toSqlExpression( rightOperand.accept(this) ),
-						expression.getNodeType() instanceof BasicValuedMapping
-							? (BasicValuedMapping) expression.getNodeType()
-							: (BasicValuedMapping) expression.getLeftHandOperand().getNodeType()
+						toSqlExpression( rightOperand.accept( this ) ),
+						getExpressionType( expression )
 				);
 			}
 		}
 		finally {
 			shallownessStack.pop();
+		}
+	}
+
+	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic expression) {
+		SqmExpressable leftHandOperandType = expression.getLeftHandOperand().getNodeType();
+		if ( leftHandOperandType instanceof BasicValuedMapping ) {
+			return (BasicValuedMapping) leftHandOperandType;
+		}
+		else {
+			return (BasicValuedMapping) expression.getRightHandOperand().getNodeType();
 		}
 	}
 

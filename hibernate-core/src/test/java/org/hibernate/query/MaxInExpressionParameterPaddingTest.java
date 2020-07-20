@@ -92,6 +92,7 @@ public class MaxInExpressionParameterPaddingTest extends BaseEntityManagerFuncti
 		assertTrue(sqlStatementInterceptor.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ));
 	}
 
+	@TestForIssue( jiraKey = "HHH-14109" )
 	@Test
 	public void testInClauseParameterPaddingToLimit() {
 		sqlStatementInterceptor.clear();

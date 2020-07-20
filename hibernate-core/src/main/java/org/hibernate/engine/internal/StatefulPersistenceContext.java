@@ -1362,7 +1362,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private Object getParentsByChild(Object childEntity) {
 		if ( parentsByChild != null ) {
-			parentsByChild.get( childEntity );
+			return parentsByChild.get( childEntity );
 		}
 		return null;
 	}

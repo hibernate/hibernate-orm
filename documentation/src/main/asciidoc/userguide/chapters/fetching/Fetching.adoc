@@ -217,6 +217,14 @@ include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fet
 ----
 ====
 
+[NOTE]
+====
+When executing a JPQL query, if an EAGER association is omitted, Hibernate will issue a secondary select for every association needed to be fetched eagerly,
+which can lead to N+1 query issues.
+
+For this reason, it's better to use LAZY associations, and only fetch them eagerly on a per-query basis.
+====
+
 An EntityGraph is the root of a "load plan" and must correspond to an EntityType.
 
 

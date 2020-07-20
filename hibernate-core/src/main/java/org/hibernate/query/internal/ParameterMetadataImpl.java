@@ -96,15 +96,22 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		}
 		else {
 			this.queryParameters = new IdentitySet<>();
-			this.queryParameters.addAll( positionalQueryParameters.values() );
-			this.queryParameters.addAll( namedQueryParameters.values() );
-
-			this.names = namedQueryParameters.keySet();
-			this.labels = positionalQueryParameters.keySet();
-
-			verifyOrdinalParamLabels( labels );
+			if ( positionalQueryParameters != null ) {
+				this.queryParameters.addAll( positionalQueryParameters.values() );
+				this.labels = positionalQueryParameters.keySet();
+				verifyOrdinalParamLabels( labels );
+			}
+			else {
+				labels = null;
+			}
+			if ( namedQueryParameters != null ) {
+				this.queryParameters.addAll( namedQueryParameters.values() );
+				this.names = namedQueryParameters.keySet();
+			}
+			else {
+				this.names = null;
+			}
 		}
-
 	}
 
 	private static void verifyOrdinalParamLabels(Set<Integer> labels) {

@@ -51,6 +51,9 @@ public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J
 	PersistentAttribute<J,?> getDeclaredAttribute(String name);
 
 	PersistentAttribute<? super J,?> findAttribute(String name);
+
+	PersistentAttribute<? super J, ?> findSubTypesAttribute(String name);
+
 	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
 	PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);
 

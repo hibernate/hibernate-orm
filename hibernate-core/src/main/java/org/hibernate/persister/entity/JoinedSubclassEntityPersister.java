@@ -1022,6 +1022,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableKeyColumnReaderTemplates[0];
 	}
 
+	@Override
+	public String getRootTableName() {
+		return  naturalOrderTableNames[0];
+	}
+
 	public String[] getIdentifierColumnReaders() {
 		return tableKeyColumnReaders[0];
 	}
@@ -1241,7 +1246,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
 				return new JoinedSubclassDiscriminatorMappingImpl(
 						this,
-						getRootTableName(),
+						getTableName(),
 						getDiscriminatorColumnName(),
 						info.caseSearchedExpression,
 						info.columnReferences,

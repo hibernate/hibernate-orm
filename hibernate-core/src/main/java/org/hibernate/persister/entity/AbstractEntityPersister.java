@@ -1204,7 +1204,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		if ( getRootTableName().equals( tableExpression ) ) {
+		if ( getTableName().equals( tableExpression ) ) {
 			return true;
 		}
 
@@ -1347,7 +1347,7 @@ public abstract class AbstractEntityPersister
 
 	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
 		return new TableReference(
-				getRootTableName(),
+				getTableName(),
 				sqlAliasBase.generateNewAlias(),
 				false,
 				getFactory()
@@ -5839,7 +5839,7 @@ public abstract class AbstractEntityPersister
 			else {
 				rowIdMapping = creationProcess.processSubPart(
 						rowIdName,
-						(role, creationProcess1) -> new EntityRowIdMappingImpl( rowIdName, this.getRootTableName(), this)
+						(role, creationProcess1) -> new EntityRowIdMappingImpl( rowIdName, this.getTableName(), this)
 				);
 			}
 
@@ -5953,7 +5953,7 @@ public abstract class AbstractEntityPersister
 		else {
 			discriminatorMapping = new EntityDiscriminatorMappingImpl(
 					this,
-					getRootTableName(),
+					getTableName(),
 					getDiscriminatorColumnReaders(),
 					(BasicType) getDiscriminatorType()
 			);
@@ -6049,7 +6049,7 @@ public abstract class AbstractEntityPersister
 						this,
 						bootEntityDescriptor.getIdentifierProperty(),
 						bootEntityDescriptor.getIdentifierProperty().getName(),
-						getRootTableName(),
+						getTableName(),
 						rootTableKeyColumnNames,
 						cidType,
 						creationProcess
@@ -6062,7 +6062,7 @@ public abstract class AbstractEntityPersister
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
-				getRootTableName(),
+				getTableName(),
 				rootTableKeyColumnNames[0],
 				(BasicType) idType,
 				creationProcess
@@ -6077,7 +6077,7 @@ public abstract class AbstractEntityPersister
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
-				getRootTableName(),
+				getTableName(),
 				getRootTableKeyColumnNames(),
 				cidType,
 				bootEntityDescriptor,
@@ -6107,7 +6107,7 @@ public abstract class AbstractEntityPersister
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getVersion().getName(),
-				entityPersister.getRootTableName(),
+				entityPersister.getTableName(),
 				versionColumnName,
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister
@@ -6301,14 +6301,38 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		if ( subclassMappingTypes != null && ! subclassMappingTypes.isEmpty() ) {
+		if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
 			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-				final ModelPart subDefinedAttribute = subMappingType.findSubPart( name, treatTargetType );
+				final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
+
 				if ( subDefinedAttribute != null ) {
 					return subDefinedAttribute;
 				}
 			}
+		}
 
+		return null;
+	}
+
+	@Override
+	public ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+		if ( isIdentifierReference( name ) ) {
+			return identifierMapping;
+		}
+
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
+		if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
+			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+				final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
+
+				if ( subDefinedAttribute != null ) {
+					return subDefinedAttribute;
+				}
+			}
 		}
 
 		return null;

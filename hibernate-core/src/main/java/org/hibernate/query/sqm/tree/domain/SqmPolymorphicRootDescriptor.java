@@ -150,6 +150,10 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 		return commonAttributes.get( name );
 	}
 
+	public PersistentAttribute findSubTypesAttribute(String name) {
+		return commonAttributes.get( name );
+	}
+
 	@Override
 	public void visitAttributes(Consumer<PersistentAttribute<T, ?>> action) {
 		commonAttributes.values().forEach( (Consumer) action );

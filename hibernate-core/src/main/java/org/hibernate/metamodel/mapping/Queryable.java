@@ -34,6 +34,19 @@ public interface Queryable extends ModelPart {
 	ModelPart findSubPart(String name, EntityMappingType treatTargetType);
 
 	/**
+	 * For an entity, this form allows for Hibernate's "implicit treat" support -
+	 * meaning it should find a sub-part whether defined on the entity or one of its sub-types.
+	 *
+	 * @implNote Logically the implementation should consider
+	 * {@link org.hibernate.jpa.spi.JpaCompliance}.  Not passed in because it
+	 * is expected that implementors have access to the SessionFactory to access
+	 * the JpaCompliance.  See {@link SessionFactoryOptions#getJpaCompliance}
+	 */
+	default ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+		return findSubPart( name, treatTargetType );
+	}
+
+	/**
 	 * Like {@link #findSubPart}, this form visits all parts defined on the
 	 * entity, its super-types and its sub-types.
 	 */

@@ -151,6 +151,25 @@ public abstract class AbstractManagedType<J>
 		}
 
 		for ( ManagedDomainType subType : subTypes ) {
+			PersistentAttribute subTypeAttribute = subType.findSubTypesAttribute( name );
+			if ( subTypeAttribute != null ) {
+				return subTypeAttribute;
+			}
+		}
+
+		return null;
+	}
+
+
+	@Override
+	public PersistentAttribute<? super J, ?> findSubTypesAttribute(String name) {
+		// first look at declared attributes
+		PersistentAttribute attribute = findDeclaredAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
+		}
+
+		for ( ManagedDomainType subType : subTypes ) {
 			PersistentAttribute subTypeAttribute = subType.findAttribute( name );
 			if ( subTypeAttribute != null ) {
 				return subTypeAttribute;

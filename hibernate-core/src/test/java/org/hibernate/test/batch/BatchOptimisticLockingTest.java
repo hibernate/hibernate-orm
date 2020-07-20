@@ -92,6 +92,7 @@ public class BatchOptimisticLockingTest extends
 		}
 		catch (Exception expected) {
 			assertEquals( OptimisticLockException.class, expected.getClass());
+			assertEquals( "Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?, version=? where id=? and version=?", expected.getMessage() );
 		}
 	}
 

@@ -18,6 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -26,6 +27,7 @@ import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -271,6 +273,7 @@ public class StandardSqmSelectTranslator
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
+		final List<String> bagRoles = new ArrayList<>();
 
 		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
 				final NavigablePath fetchablePath = fetchParent.getNavigablePath().append( fetchable.getFetchableName() );
@@ -291,6 +294,12 @@ public class StandardSqmSelectTranslator
 					final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, isKeyFetchable );
 
 					if ( fetch != null ) {
+						if ( fetch.getTiming() == FetchTiming.IMMEDIATE &&
+								fetchable instanceof PluralAttributeMapping &&
+								( (PluralAttributeMapping) fetchable ).getMappedTypeDescriptor()
+										.getCollectionSemantics() instanceof BagSemantics ) {
+							bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
+						}
 						fetches.add( fetch );
 					}
 				}
@@ -304,7 +313,9 @@ public class StandardSqmSelectTranslator
 //		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableBiConsumer, treatTargetType );
 		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, true ), null );
 		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, false ), null );
-
+		if ( bagRoles.size() > 1 ) {
+			throw new MultipleBagFetchException( bagRoles );
+		}
 		return fetches;
 	}
 

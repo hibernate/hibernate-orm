@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -186,9 +187,14 @@ public class BasicValuedCollectionPart
 				nature.getName()
 		);
 
+		NavigablePath parentNavigablePath = fetchablePath.getParent();
+		if ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
+			parentNavigablePath = parentNavigablePath.getParent();
+		}
+
 		final TableGroup tableGroup = creationState.getSqlAstCreationState()
 				.getFromClauseAccess()
-				.findTableGroup( fetchablePath.getParent() );
+				.findTableGroup( parentNavigablePath );
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
 		return new BasicFetch(

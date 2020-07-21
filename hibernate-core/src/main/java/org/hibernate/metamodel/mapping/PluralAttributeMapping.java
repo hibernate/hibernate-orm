@@ -28,6 +28,9 @@ public interface PluralAttributeMapping
 
 	CollectionPart getIndexDescriptor();
 
+	@Override
+	CollectionMappingType getMappedTypeDescriptor();
+
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
 		int getListIndexBase();

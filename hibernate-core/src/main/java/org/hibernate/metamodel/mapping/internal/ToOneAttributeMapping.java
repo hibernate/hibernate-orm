@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -50,8 +51,8 @@ import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
-import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
+import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -227,7 +228,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
 			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
-				while ( parentNavigablePath.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+				while ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
 					parentNavigablePath = parentNavigablePath.getParent();
 				}
 			}
@@ -340,7 +341,7 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 		}
 
 		if ( modelPart instanceof EntityCollectionPart ) {
-			if ( parentOfParent.getFullPath().endsWith( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+			if ( parentOfParent instanceof EntityIdentifierNavigablePath ) {
 				parentOfParent = parentOfParent.getParent();
 			}
 			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).isBidirectionalAttributeName(

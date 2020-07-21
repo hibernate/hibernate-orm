@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  */
 public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
+	protected final SessionFactoryImplementor sessionFactory;
 
 	private DatabaseSnapshotExecutor databaseSnapshotExecutor;
 

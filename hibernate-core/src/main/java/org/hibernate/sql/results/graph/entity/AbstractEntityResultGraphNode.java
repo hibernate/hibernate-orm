@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -71,7 +72,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			identifierResult = null;
 			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
 				identifierMapping.createDomainResult(
-						navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+						new EntityIdentifierNavigablePath( navigablePath ),
 						entityTableGroup,
 						null,
 						creationState
@@ -83,7 +84,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 		else {
 			identifierResult = identifierMapping.createDomainResult(
-					navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+					new EntityIdentifierNavigablePath( navigablePath ),
 					entityTableGroup,
 					null,
 					creationState
@@ -141,7 +142,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 				attributeMapping -> {
 					if ( attributeMapping instanceof ToOneAttributeMapping ) {
 						( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
-								navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+								new EntityIdentifierNavigablePath( navigablePath ),
 								entityTableGroup,
 								null,
 								creationState
@@ -149,7 +150,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					}
 					else {
 						attributeMapping.createDomainResult(
-								navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+								new EntityIdentifierNavigablePath( navigablePath ),
 								entityTableGroup,
 								null,
 								creationState

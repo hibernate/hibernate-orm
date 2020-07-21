@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
@@ -27,6 +28,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -43,6 +45,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -443,7 +446,8 @@ public class LoaderSelectBuilder {
 		}
 
 		final List<Fetch> fetches = new ArrayList<>();
-		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches );
+		final List<String> bagRoles = new ArrayList<>();
+		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, querySpec, creationState, fetches, bagRoles );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
@@ -452,6 +456,9 @@ public class LoaderSelectBuilder {
 		}
 		referencedMappingContainer.visitFetchables(
 				fetchable -> processor.accept( fetchable, false ), null );
+		if ( bagRoles.size() > 1 ) {
+			throw new MultipleBagFetchException( bagRoles );
+		}
 		return fetches;
 	}
 
@@ -459,11 +466,12 @@ public class LoaderSelectBuilder {
 			FetchParent fetchParent,
 			QuerySpec querySpec,
 			LoaderSqlAstCreationState creationState,
-			List<Fetch> fetches) {
+			List<Fetch> fetches,
+			List<String> bagRoles) {
 		return (fetchable, isKeyFetchable) -> {
 			NavigablePath panrentNavigablePath = fetchParent.getNavigablePath();
 			if ( isKeyFetchable ) {
-				panrentNavigablePath = panrentNavigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+				panrentNavigablePath = new EntityIdentifierNavigablePath( panrentNavigablePath );
 			}
 			final NavigablePath fetchablePath = panrentNavigablePath.append( fetchable.getFetchableName() );
 
@@ -542,23 +550,31 @@ public class LoaderSelectBuilder {
 						null,
 						creationState
 				);
-				fetches.add( fetch );
 
-				if ( fetchable instanceof PluralAttributeMapping && fetchTiming == FetchTiming.IMMEDIATE && joined ) {
-					final TableGroup joinTableGroup = creationState.getFromClauseAccess().getTableGroup( fetchablePath );
+				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					applyFiltering(
-							querySpec,
-							joinTableGroup,
-							pluralAttributeMapping
-					);
-					applyOrdering(
-							querySpec,
-							fetchablePath,
-							pluralAttributeMapping,
-							creationState
-					);
+					if ( pluralAttributeMapping.getMappedTypeDescriptor()
+							.getCollectionSemantics() instanceof BagSemantics ) {
+						bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
+					}
+					if ( joined ) {
+						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
+								.getTableGroup( fetchablePath );
+						applyFiltering(
+								querySpec,
+								joinTableGroup,
+								pluralAttributeMapping
+						);
+						applyOrdering(
+								querySpec,
+								fetchablePath,
+								pluralAttributeMapping,
+								creationState
+						);
+					}
 				}
+
+				fetches.add( fetch );
 			}
 			finally {
 				if ( changeFetchDepth ) {

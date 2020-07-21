@@ -12,15 +12,14 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.collection.internal.BagInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -29,7 +28,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractBagSemantics<B extends Collection<?>> implements CollectionSemantics<B> {
+public abstract class AbstractBagSemantics<B extends Collection<?>> implements BagSemantics<B> {
 	@Override
 	public Class<B> getCollectionJavaType() {
 		//noinspection unchecked

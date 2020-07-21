@@ -168,8 +168,7 @@ public class OsgiIntegrationTest {
 //		// and use defined imports instead
 //		probe.setHeader(
 //				Constants.IMPORT_PACKAGE,
-//				"javassist.util.proxy"
-//						+ ",javax.persistence"
+//				"javax.persistence"
 //						+ ",javax.persistence.spi"
 //						+ ",org.h2"
 //						+ ",org.osgi.framework"

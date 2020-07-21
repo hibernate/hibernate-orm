@@ -238,29 +238,29 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		SharedSessionContractImplementor originalSession = null;
 		boolean isJTA = false;
 
-		if ( tempSession != null ) {
-			isTempSession = true;
-			originalSession = session;
-			session = tempSession;
-
-			isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
-
-			if ( !isJTA ) {
-				// Explicitly handle the transactions only if we're not in
-				// a JTA environment.  A lazy loading temporary session can
-				// be created even if a current session and transaction are
-				// open (ex: session.clear() was used).  We must prevent
-				// multiple transactions.
-				( (Session) session ).beginTransaction();
-			}
-
-			session.getPersistenceContextInternal().addUninitializedDetachedCollection(
-					session.getFactory().getCollectionPersister( getRole() ),
-					this
-			);
-		}
-
 		try {
+			if ( tempSession != null ) {
+				isTempSession = true;
+				originalSession = session;
+				session = tempSession;
+
+				isJTA = session.getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta();
+
+				if ( !isJTA ) {
+					// Explicitly handle the transactions only if we're not in
+					// a JTA environment.  A lazy loading temporary session can
+					// be created even if a current session and transaction are
+					// open (ex: session.clear() was used).  We must prevent
+					// multiple transactions.
+					( (Session) session ).beginTransaction();
+				}
+
+				session.getPersistenceContextInternal().addUninitializedDetachedCollection(
+						session.getFactory().getCollectionPersister( getRole() ),
+						this
+				);
+			}
+		
 			return lazyInitializationWork.doWork();
 		}
 		finally {

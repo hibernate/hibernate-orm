@@ -48,14 +48,14 @@ public class Expectations {
 		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String statementSQL) {
 			rowCount = determineRowCount( rowCount, statement );
 			if ( batchPosition < 0 ) {
-				checkNonBatched( rowCount, statement, statementSQL );
+				checkNonBatched( rowCount, statementSQL );
 			}
 			else {
-				checkBatched( rowCount, batchPosition, statement, statementSQL );
+				checkBatched( rowCount, batchPosition, statementSQL );
 			}
 		}
 
-		private void checkBatched(int rowCount, int batchPosition, PreparedStatement statement, String statementSQL) {
+		private void checkBatched(int rowCount, int batchPosition, String statementSQL) {
 			if ( rowCount == -2 ) {
 				LOG.debugf( "Success of batch update unknown: %s", batchPosition );
 			}
@@ -80,7 +80,7 @@ public class Expectations {
 			}
 		}
 
-		private void checkNonBatched(int rowCount, PreparedStatement statement, String statementSQL) {
+		private void checkNonBatched(int rowCount, String statementSQL) {
 			if ( expectedRowCount > rowCount ) {
 				throw new StaleStateException(
 						"Unexpected row count: " + rowCount + "; expected: " + expectedRowCount

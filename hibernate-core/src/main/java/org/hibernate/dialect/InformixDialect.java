@@ -48,10 +48,6 @@ public class InformixDialect extends Dialect {
 
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -105,6 +101,12 @@ public class InformixDialect extends Dialect {
 				: new SkipFirstLimitHandler( getVersion() >= 11 );
 	}
 
+	@Override
+	public int getVersion() {
+		return version;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//the maximum
 		return 32;

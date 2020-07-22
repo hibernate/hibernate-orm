@@ -68,5 +68,10 @@ public class CommentGenerationTest {
 		public boolean supportsCommentOn() {
 			return true;
 		}
+
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 }

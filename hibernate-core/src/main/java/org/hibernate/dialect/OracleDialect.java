@@ -68,10 +68,6 @@ public class OracleDialect extends Dialect {
 
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public OracleDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -110,6 +106,11 @@ public class OracleDialect extends Dialect {
 		limitHandler = getVersion() < 12
 				? new LegacyOracleLimitHandler( getVersion() )
 				: OffsetFetchLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

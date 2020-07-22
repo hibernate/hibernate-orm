@@ -97,6 +97,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	public int getVersion() {
+		return 0;
+	}
+
+	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}

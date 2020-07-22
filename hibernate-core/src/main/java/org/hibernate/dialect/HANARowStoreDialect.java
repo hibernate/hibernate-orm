@@ -57,6 +57,11 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
+	public int getVersion() {
+		return 0;
+	}
+
+	@Override
 	protected boolean supportsAsciiStringTypes() {
 		return true;
 	}

@@ -4,116 +4,118 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id;
+package org.hibernate.orm.test.id;
 
-import org.junit.Test;
+import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.id.IntegralDataTypeHolder;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
-public abstract class AbstractHolderTest extends BaseUnitTestCase {
+@SuppressWarnings({ "UnusedDeclaration" })
+public abstract class AbstractHolderTest extends BaseUnitTest {
 	protected abstract IntegralDataTypeHolder makeHolder();
 
 	@Test
-	@SuppressWarnings( {"EmptyCatchBlock"})
+	@SuppressWarnings({ "EmptyCatchBlock" })
 	public void testInitializationChecking() {
 		IntegralDataTypeHolder holder = makeHolder();
 		try {
 			holder.increment();
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.add( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.decrement();
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.subtract( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.multiplyBy( holder );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.multiplyBy( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.eq( holder );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.eq( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.lt( holder );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.lt( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.gt( holder );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.gt( 1 );
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 
 		try {
 			holder.makeValue();
 			fail();
 		}
-		catch ( IdentifierGenerationException expected ) {
+		catch (IdentifierGenerationException expected) {
 		}
 	}
 
@@ -126,7 +128,8 @@ public abstract class AbstractHolderTest extends BaseUnitTestCase {
 		}
 		assertEquals( holder.copy().initialize( i ), holder );
 	}
-    @Test
+
+	@Test
 	public void testBasicHiloAlgorithm() {
 		// mimic an initialValue of 1 and increment of 20
 		final long initialValue = 1;

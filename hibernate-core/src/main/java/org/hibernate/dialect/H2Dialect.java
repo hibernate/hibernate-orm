@@ -59,6 +59,8 @@ public class H2Dialect extends Dialect {
 
 	private final boolean cascadeConstraints;
 
+	private final int version;
+
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
@@ -68,7 +70,7 @@ public class H2Dialect extends Dialect {
 
 	public H2Dialect(int version, int buildId) {
 		super();
-
+		this.version = version;
 		//TODO: actually I think all builds of 1.4 support OFFSET FETCH
 		limitHandler = version > 140 || version == 140 && buildId >= 199
 				? OffsetFetchLimitHandler.INSTANCE
@@ -112,6 +114,11 @@ public class H2Dialect extends Dialect {
 						+ info.getDatabaseMinorVersion()*10,
 				parseBuildId( info )
 		);
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

@@ -39,4 +39,9 @@ public @interface RequiresDialect {
 	 * Should subtypes of {@link #value()} be matched?
 	 */
 	boolean matchSubTypes() default true;
+
+	/**
+	 * the Dialect version
+	 */
+	int version();
 }

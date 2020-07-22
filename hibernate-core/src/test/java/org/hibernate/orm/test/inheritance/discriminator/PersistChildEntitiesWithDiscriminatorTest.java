@@ -22,9 +22,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Pawel Stawicki
  */
-@RequiresDialects(value = {
-		@RequiresDialect(value = PostgreSQL81Dialect.class), @RequiresDialect(value = PostgreSQLDialect.class)
-})
+@RequiresDialect(value = PostgreSQLDialect.class, version = 800)
 @DomainModel(annotatedClasses = {
 		ParentEntity.class, InheritingEntity.class
 })

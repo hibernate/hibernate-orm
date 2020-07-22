@@ -89,6 +89,11 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 		public NameQualifierSupport getNameQualifierSupport() {
 			return NameQualifierSupport.BOTH;
 		}
+
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 
 	public static class MockedConnectionProvider implements ConnectionProvider {

@@ -11,6 +11,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
@@ -23,7 +24,15 @@ import java.sql.Types;
 public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect() {
-		super();
+		this(8);
+	}
+
+	public SybaseAnywhereDialect(DialectResolutionInfo info){
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
+	public SybaseAnywhereDialect(int version) {
+		super( version );
 
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.DATE, "date" );

@@ -13,7 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.RowId;
-import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertThat;
  */
 @DomainModel( annotatedClasses = RowIdTest.Product.class )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-@RequiresDialect( value = Oracle9iDialect.class )
+@RequiresDialect( value = OracleDialect.class, version = 9)
 public class RowIdTest {
 
 	@BeforeEach

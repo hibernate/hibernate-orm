@@ -43,10 +43,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public SQLServerDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -101,6 +97,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

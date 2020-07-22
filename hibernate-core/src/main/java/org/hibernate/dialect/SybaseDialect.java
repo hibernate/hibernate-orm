@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
@@ -23,14 +24,29 @@ import java.sql.Types;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
+	private final int version;
+
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
-	public SybaseDialect() {
-		super();
+	public SybaseDialect(){
+		this(1100);
+	}
 
+	public SybaseDialect(DialectResolutionInfo info){
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
+	public SybaseDialect(int version) {
+		super();
+		this.version = version;
 		//Sybase ASE didn't introduce bigint until version 15.0
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

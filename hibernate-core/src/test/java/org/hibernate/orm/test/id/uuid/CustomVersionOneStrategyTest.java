@@ -4,20 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.uuid;
+package org.hibernate.orm.test.id.uuid;
 
 import java.util.UUID;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.id.uuid.CustomVersionOneStrategy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 
 /**
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategyTest extends BaseUnitTestCase {
+public class CustomVersionOneStrategyTest extends BaseUnitTest {
+
 	@Test
 	public void testUniqueCounter() {
 		CustomVersionOneStrategy strategy = new CustomVersionOneStrategy();

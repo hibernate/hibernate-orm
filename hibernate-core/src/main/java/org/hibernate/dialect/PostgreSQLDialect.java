@@ -73,10 +73,6 @@ public class PostgreSQLDialect extends Dialect {
 
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public PostgreSQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -115,6 +111,11 @@ public class PostgreSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	/**

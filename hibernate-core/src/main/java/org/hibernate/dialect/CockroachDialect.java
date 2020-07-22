@@ -11,6 +11,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.type.StandardBasicTypes;
@@ -33,8 +34,20 @@ public class CockroachDialect extends Dialect {
 
 	// * no support for java.sql.Clob
 
+	private int version;
+
 	public CockroachDialect() {
+		this(192);
+	}
+
+	public CockroachDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+	}
+
+	public CockroachDialect(int version) {
 		super();
+
+		this.version = version;
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
@@ -55,6 +68,11 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "string" );
 
 		registerColumnType( Types.JAVA_OBJECT, "json" );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

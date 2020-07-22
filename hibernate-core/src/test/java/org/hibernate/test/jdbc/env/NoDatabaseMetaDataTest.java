@@ -85,6 +85,11 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 		public boolean supportsNamedParameters(java.sql.DatabaseMetaData databaseMetaData) {
 			return true;
 		}
+
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 
 }

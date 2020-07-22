@@ -484,10 +484,18 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	public static class PersistenceUnitDialect extends Dialect {
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	public static class IntegrationDialect extends Dialect {
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 
 	@Entity

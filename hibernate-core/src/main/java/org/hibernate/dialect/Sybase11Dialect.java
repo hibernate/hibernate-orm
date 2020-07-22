@@ -16,6 +16,6 @@ package org.hibernate.dialect;
 @Deprecated
 public class Sybase11Dialect extends SybaseASEDialect {
 	public Sybase11Dialect() {
-		super();
+		super(1100);
 	}
 }

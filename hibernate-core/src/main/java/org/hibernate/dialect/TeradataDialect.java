@@ -57,10 +57,6 @@ public class TeradataDialect extends Dialect {
 
 	private int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
@@ -116,6 +112,11 @@ public class TeradataDialect extends Dialect {
 			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		}
 
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

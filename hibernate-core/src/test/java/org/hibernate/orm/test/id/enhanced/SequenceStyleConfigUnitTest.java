@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.enhanced;
+package org.hibernate.orm.test.id.enhanced;
 
 import java.util.Properties;
 
@@ -17,21 +17,30 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.HiLoOptimizer;
+import org.hibernate.id.enhanced.NoopOptimizer;
+import org.hibernate.id.enhanced.PooledLoOptimizer;
+import org.hibernate.id.enhanced.PooledLoThreadLocalOptimizer;
+import org.hibernate.id.enhanced.PooledOptimizer;
+import org.hibernate.id.enhanced.SequenceStructure;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
+import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
+import static org.hibernate.testing.junit5.ExtraAssertions.assertClassAssignability;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected in various scenarios
  *
  * @author Steve Ebersole
  */
-public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
+public class SequenceStyleConfigUnitTest extends BaseUnitTest {
 
 	/**
 	 * Test all params defaulted with a dialect supporting sequences
@@ -310,18 +319,31 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 	}
 
 	public static class TableDialect extends Dialect {
+		@Override
+		public int getVersion() {
+			return 0;
+		}
+		@Override
 		public boolean supportsSequences() {
 			return false;
 		}
 	}
 
 	public static class SequenceDialect extends Dialect {
+		@Override
+		public int getVersion() {
+			return 0;
+		}
+
+		@Override
 		public boolean supportsSequences() {
 			return true;
 		}
+		@Override
 		public boolean supportsPooledSequences() {
 			return false;
 		}
+		@Override
 		public String getSequenceNextValString(String sequenceName) throws MappingException {
 			return "";
 		}

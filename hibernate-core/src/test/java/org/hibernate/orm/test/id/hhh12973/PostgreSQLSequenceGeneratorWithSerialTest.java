@@ -4,13 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.hhh12973;
+package org.hibernate.orm.test.id.hhh12973;
 
 import java.io.StringReader;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,32 +23,32 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialect(PostgreSQL82Dialect.class)
-public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(value = PostgreSQLDialect.class, version = 820)
+public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule( Logger.getMessageLogger( CoreMessageLogger.class,
@@ -69,7 +70,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManager
 	private static final String CREATE_TABLE = "CREATE TABLE application_configurations (id BIGSERIAL NOT NULL PRIMARY KEY)";
 
 	@Override
-	protected void addMappings(Map settings) {
+	protected void addConfigOptions(Map settings) {
 		triggerable.reset();
 		assertFalse( triggerable.wasTriggered() );
 
@@ -107,7 +108,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends BaseEntityManager
 	}
 
 	@Override
-	protected void afterEntityManagerFactoryBuilt() {
+	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
 		assertTrue( triggerable.wasTriggered() );
 	}
 

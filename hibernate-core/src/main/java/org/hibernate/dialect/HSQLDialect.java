@@ -78,10 +78,6 @@ public class HSQLDialect extends Dialect {
 	 */
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public HSQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
 	}
@@ -141,6 +137,11 @@ public class HSQLDialect extends Dialect {
 			// might be a very old version, or not accessible in class path
 			return version;
 		}
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

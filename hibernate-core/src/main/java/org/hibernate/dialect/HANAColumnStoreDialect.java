@@ -36,10 +36,6 @@ import org.hibernate.type.StandardBasicTypes;
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 	private int version;
 
-	public int getVersion(){
-		return version;
-	}
-
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -72,6 +68,11 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 			// register additional keywords
 			registerHanaCloudKeywords();
 		}
+	}
+
+	@Override
+	public int getVersion(){
+		return version;
 	}
 
 	private void registerHanaCloudKeywords() {

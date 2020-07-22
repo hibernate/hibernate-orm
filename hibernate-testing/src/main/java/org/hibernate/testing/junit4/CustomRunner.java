@@ -230,6 +230,10 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 		catch (Exception e) {
 			return new Dialect() {
+				@Override
+				public int getVersion() {
+					return 0;
+				}
 			};
 		}
 	}

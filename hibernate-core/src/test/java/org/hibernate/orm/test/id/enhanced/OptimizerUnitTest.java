@@ -4,23 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.enhanced;
-
-import org.junit.Ignore;
-import org.junit.Test;
+package org.hibernate.orm.test.id.enhanced;
 
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.id.enhanced.AccessCallback;
+import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * {@inheritDoc}
  *
  * @author Steve Ebersole
  */
-public class OptimizerUnitTest extends BaseUnitTestCase {
+public class OptimizerUnitTest extends BaseUnitTest {
 	@Test
 	public void testBasicNoOptimizerUsage() {
 		// test historic sequence behavior, where the initial values start at 1...
@@ -44,6 +47,7 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 		assertEquals( 10, sequence.getTimesCalled() ); // an extra time to get to 1 initially
 		assertEquals( 9, sequence.getCurrentValue() );
 	}
+
 	@Test
 	public void testBasicNoOptimizerUsageWithNegativeValues() {
 		// test historic sequence behavior, where the initial values start at 1...

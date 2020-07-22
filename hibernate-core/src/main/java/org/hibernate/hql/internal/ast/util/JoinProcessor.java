@@ -142,6 +142,14 @@ public class JoinProcessor implements SqlTokenTypes {
 			if ( role != null ) {
 				result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
 			}
+			final EntityPersister entityPersister = fromElement.getEntityPersister();
+			if ( entityPersister instanceof AbstractEntityPersister ) {
+				AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+				while ( !aep.filterFragment( "", Collections.emptyMap() ).isEmpty() && aep.getMappedSuperclass() != null ) {
+					Collections.addAll( result, aep.getTableNames() );
+					aep = (AbstractEntityPersister) walker.getSessionFactoryHelper().findEntityPersisterByName( aep.getMappedSuperclass() );
+				}
+			}
 			AST withClauseAst = fromElement.getWithClauseAst();
 			if ( withClauseAst != null ) {
 				collectReferencedTables( new ASTIterator( withClauseAst ), result );

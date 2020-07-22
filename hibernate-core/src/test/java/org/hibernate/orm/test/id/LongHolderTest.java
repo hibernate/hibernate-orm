@@ -4,14 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id;
-import java.math.BigDecimal;
+package org.hibernate.orm.test.id;
+
+
+import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.id.IntegralDataTypeHolder;
 
 /**
  * @author Steve Ebersole
  */
-public class BigDecimalHolderTest extends AbstractHolderTest {
+public class LongHolderTest extends AbstractHolderTest {
 	protected IntegralDataTypeHolder makeHolder() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( BigDecimal.class );
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( Long.class );
 	}
 }

@@ -57,6 +57,10 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 		catch (Exception e) {
 			return new Dialect() {
+				@Override
+				public int getVersion(){
+					return 0;
+				}
 			};
 		}
 	}

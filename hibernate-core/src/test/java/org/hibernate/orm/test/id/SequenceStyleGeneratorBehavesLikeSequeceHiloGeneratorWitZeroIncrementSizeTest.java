@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.id;
+package org.hibernate.orm.test.id;
 
 import java.util.Properties;
 
@@ -18,25 +18,26 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncrementSizeTest extends BaseUnitTestCase {
+@RequiresDialectFeature(feature = SupportsSequences.class)
+public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncrementSizeTest extends BaseUnitTest {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;
@@ -45,7 +46,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 	private SessionImplementor sessionImpl;
 	private SequenceValueExtractor sequenceValueExtractor;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()
@@ -77,7 +78,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if ( sessionImpl != null && !sessionImpl.isClosed() ) {
 			sessionImpl.close();

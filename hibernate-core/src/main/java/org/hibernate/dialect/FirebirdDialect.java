@@ -66,10 +66,6 @@ public class FirebirdDialect extends Dialect {
 
 	private final int version;
 
-	public int getVersion() {
-		return version;
-	}
-
 	public FirebirdDialect() {
 		this(250);
 	}
@@ -130,6 +126,11 @@ public class FirebirdDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "blob sub_type text" ); // Firebird doesn't have NCLOB, but Jaybird emulates NCLOB support
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

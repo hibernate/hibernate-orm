@@ -135,7 +135,6 @@ public abstract class Dialect implements ConversionContext {
 
 	private DefaultSizeStrategy defaultSizeStrategy;
 
-
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected Dialect() {
@@ -239,6 +238,8 @@ public abstract class Dialect implements ConversionContext {
 				? Size.precision( (int) Math.ceil( size.getPrecision() / 53.0 * 17.0 ) )
 				: size;
 	}
+
+	public abstract int getVersion();
 
 	/**
 	 * Initialize the given registry with any dialect-specific functions.

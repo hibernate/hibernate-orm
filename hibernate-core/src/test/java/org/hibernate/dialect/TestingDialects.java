@@ -15,22 +15,30 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
  */
 public class TestingDialects {
 
-	public static class MyDialect1 extends Dialect {
+	public static class MyDialect extends Dialect {
+		@Override
+		public int getVersion() {
+			return 0;
+		}
 	}
 
-	public static class MyDialect21 extends Dialect {
+	public static class MyDialect1 extends MyDialect {
+
 	}
 
-	public static class MyDialect22 extends Dialect {
+	public static class MyDialect21 extends MyDialect {
 	}
 
-	public static class MyDialect311 extends Dialect {
+	public static class MyDialect22 extends MyDialect {
 	}
 
-	public static class MyDialect312 extends Dialect {
+	public static class MyDialect311 extends MyDialect {
 	}
 
-	public static class MySpecialDB2Dialect extends Dialect {
+	public static class MyDialect312 extends MyDialect {
+	}
+
+	public static class MySpecialDB2Dialect extends MyDialect {
 	}
 
 	public static class MyDialectResolver1 implements DialectResolver {

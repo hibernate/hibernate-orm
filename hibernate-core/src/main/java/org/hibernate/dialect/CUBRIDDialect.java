@@ -32,6 +32,7 @@ import static org.hibernate.query.TemporalUnit.*;
  * @author Seok Jeong Il
  */
 public class CUBRIDDialect extends Dialect {
+
 	/**
 	 * Constructs a CUBRIDDialect
 	 */
@@ -85,6 +86,11 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "ATTRIBUTE" );
 		registerKeyword( "STRING" );
 		registerKeyword( "SEARCH" );
+	}
+
+	@Override
+	public int getVersion() {
+		return 0;
 	}
 
 	@Override

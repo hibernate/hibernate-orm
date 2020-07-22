@@ -59,10 +59,6 @@ public class MySQLDialect extends Dialect {
 	private MySQLStorageEngine storageEngine;
 	private int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -157,6 +153,11 @@ public class MySQLDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		uniqueDelegate = new MySQLUniqueDelegate( this );
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

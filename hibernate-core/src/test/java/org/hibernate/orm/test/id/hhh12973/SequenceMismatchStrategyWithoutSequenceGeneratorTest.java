@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.hhh12973;
+package org.hibernate.orm.test.id.hhh12973;
 
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,32 +22,31 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit5.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
+public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
@@ -62,20 +62,18 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends BaseEn
 	protected MetadataImplementor metadata;
 
 	@Override
-	public void buildEntityManagerFactory() {
+	public EntityManagerFactory produceEntityManagerFactory() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( ApplicationConfigurationHBM2DDL.class )
 				.buildMetadata();
 
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
-		super.buildEntityManagerFactory();
+		return super.produceEntityManagerFactory();
 	}
 
-	@Override
+	@AfterAll
 	public void releaseResources() {
-		super.releaseResources();
-
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}
@@ -88,13 +86,13 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends BaseEn
 	}
 
 	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 		triggerable.reset();
 	}
 
 	@Override
-	protected void afterEntityManagerFactoryBuilt() {
+	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
 		assertFalse( triggerable.wasTriggered() );
 	}
 
@@ -105,7 +103,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends BaseEn
 
 		final int ITERATIONS = 51;
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			for ( int i = 1; i <= ITERATIONS; i++ ) {
 				ApplicationConfiguration model = new ApplicationConfiguration();
 

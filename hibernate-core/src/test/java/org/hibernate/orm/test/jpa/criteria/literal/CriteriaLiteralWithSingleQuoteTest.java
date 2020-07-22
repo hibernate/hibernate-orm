@@ -55,7 +55,7 @@ public class CriteriaLiteralWithSingleQuoteTest extends EntityManagerFactoryBase
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL does not support literals in group by statement")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() {
 		inTransaction(
 				entityManager -> {

@@ -64,10 +64,6 @@ public class IngresDialect extends Dialect {
 
 	private final SequenceSupport sequenceSupport;
 
-	int getVersion() {
-		return version;
-	}
-
 	public IngresDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
@@ -149,6 +145,11 @@ public class IngresDialect extends Dialect {
 				return getVersion() >= 930;
 			}
 		};
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

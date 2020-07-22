@@ -70,10 +70,6 @@ public class DerbyDialect extends Dialect {
 
 	private final int version;
 
-	int getVersion() {
-		return version;
-	}
-
 	private final LimitHandler limitHandler;
 
 	public DerbyDialect(DialectResolutionInfo info) {
@@ -116,9 +112,15 @@ public class DerbyDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum allowed in Derby
 		return 31;
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

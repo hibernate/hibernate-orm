@@ -61,10 +61,6 @@ public class DB2Dialect extends Dialect {
 
 	private LimitHandler limitHandler;
 
-	int getVersion() {
-		return version;
-	}
-
 	private final UniqueDelegate uniqueDelegate;
 
 	public DB2Dialect(DialectResolutionInfo info) {
@@ -119,9 +115,15 @@ public class DB2Dialect extends Dialect {
 				: DB2LimitHandler.INSTANCE;
 	}
 
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//this is the maximum allowed in DB2
 		return 31;
+	}
+
+	@Override
+	public int getVersion() {
+		return version;
 	}
 
 	@Override

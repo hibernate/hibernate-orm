@@ -21,6 +21,6 @@ public interface EntityManagerFactoryAccess extends DialectAccess {
 
 	@Override
 	default Dialect getDialect() {
-		return getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
+		return Dialect.getDialect();
 	}
 }

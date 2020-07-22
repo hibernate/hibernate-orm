@@ -35,6 +35,10 @@ public class DefaultSchemaNameResolverTest {
 		String schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
 				connectionSupportsGetSchemaName,
 				new Dialect() {
+					@Override
+					public int getVersion() {
+						return 0;
+					}
 				}
 		);
 		assertEquals( SCHEMA_NAME, schemaName );
@@ -44,6 +48,12 @@ public class DefaultSchemaNameResolverTest {
 		schemaName = DefaultSchemaNameResolver.INSTANCE.resolveSchemaName(
 				connectionNotSupportGetSchemaName,
 				new Dialect() {
+
+					@Override
+					public int getVersion() {
+						return 0;
+					}
+
 					@Override
 					public String getCurrentSchemaCommand() {
 						return GET_CURRENT_SCHEMA_NAME_COMMAND ;

@@ -27,85 +27,10 @@ import org.hibernate.type.StandardBasicTypes;
  * @deprecated use HANAColumnStoreDialect(400)
  */
 @Deprecated
-public class HANACloudColumnStoreDialect extends AbstractHANADialect {
+public class HANACloudColumnStoreDialect extends HANAColumnStoreDialect {
 
 	public HANACloudColumnStoreDialect() {
-		super();
-
-		registerColumnType( Types.CHAR, "nvarchar(1)" );
-		registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-		registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
-
-		// for longer values map to clob/nclob
-		registerColumnType( Types.LONGVARCHAR, "nclob" );
-		registerColumnType( Types.VARCHAR, "nclob" );
-		registerColumnType( Types.CLOB, "nclob" );
-
-		registerHibernateType( Types.CLOB, StandardBasicTypes.MATERIALIZED_NCLOB.getName() );
-		registerHibernateType( Types.NCHAR, StandardBasicTypes.NSTRING.getName() );
-		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
-		registerHibernateType( Types.CHAR, 5000, StandardBasicTypes.NSTRING.getName() );
-		registerHibernateType( Types.VARCHAR, StandardBasicTypes.NSTRING.getName() );
-		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.NTEXT.getName() );
-
-		// register additional keywords
-		registerHanaCloudKeywords();
+		super( 400 );
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		// full-text search functions
-		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardBasicTypes.DOUBLE );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
-		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
-//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
-//		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
-//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
-	}
-
-	private void registerHanaCloudKeywords() {
-		registerKeyword( "array" );
-		registerKeyword( "at" );
-		registerKeyword( "authorization" );
-		registerKeyword( "between" );
-		registerKeyword( "by" );
-		registerKeyword( "collate" );
-		registerKeyword( "empty" );
-		registerKeyword( "filter" );
-		registerKeyword( "grouping" );
-		registerKeyword( "no" );
-		registerKeyword( "not" );
-		registerKeyword( "of" );
-		registerKeyword( "over" );
-		registerKeyword( "recursive" );
-		registerKeyword( "row" );
-		registerKeyword( "table" );
-		registerKeyword( "to" );
-		registerKeyword( "window" );
-		registerKeyword( "within" );
-	}
-
-	@Override
-	public String getCreateTableString() {
-		return "create column table";
-	}
-
-
-	@Override
-	protected boolean supportsAsciiStringTypes() {
-		return false;
-	}
-
-	@Override
-	protected Boolean useUnicodeStringTypesDefault() {
-		return Boolean.TRUE;
-	}
-
-	@Override
-	public boolean isUseUnicodeStringTypes() {
-		return true;
-	}
 }

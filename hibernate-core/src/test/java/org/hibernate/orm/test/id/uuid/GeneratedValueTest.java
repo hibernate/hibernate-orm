@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id.uuid;
+package org.hibernate.orm.test.id.uuid;
 
 import java.util.UUID;
 import javax.persistence.Column;
@@ -26,19 +26,19 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hibernate.testing.junit5.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests a UUID attribute annotated as a generated id value.
  *
  * @author Steve Ebersole
  */
-public class GeneratedValueTest extends BaseUnitTestCase {
+public class GeneratedValueTest extends BaseUnitTest {
 	@Test
 	public void testGeneratedUuidId() throws Exception {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
@@ -66,15 +66,16 @@ public class GeneratedValueTest extends BaseUnitTestCase {
 
 				Session s = sf.openSession();
 				s.beginTransaction();
-				s.save( theEntity );
-				s.getTransaction().commit();
-				s.close();
-
-				assertNotNull( theEntity.id );
-
-				s = sf.openSession();
-				s.beginTransaction();
 				try {
+					s.save( theEntity );
+					s.getTransaction().commit();
+					s.close();
+
+					assertNotNull( theEntity.id );
+
+					s = sf.openSession();
+					s.beginTransaction();
+
 					s.delete( theEntity );
 					s.getTransaction().commit();
 				}

@@ -4,34 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.id;
+package org.hibernate.orm.test.id;
 
 import java.util.Properties;
 
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.SequenceGenerator;
+import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit5.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -40,30 +41,28 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings({"deprecation"})
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
+@RequiresDialectFeature(feature = SupportsSequences.class)
+public class SequenceHiLoGeneratorTest extends BaseUnitTest {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
-	private SequenceGenerator generator;
+	private SequenceHiLoGenerator generator;
 	private SessionImplementor sessionImpl;
 	private SequenceValueExtractor sequenceValueExtractor;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.enableAutoClose()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
-
 		MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
-		// Build the properties used to configure the id generator
+
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
-		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
-
+		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "3" );
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				buildingContext.getObjectNameNormalizer()
@@ -72,18 +71,15 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 		generator = new SequenceHiLoGenerator();
 		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
 
-		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
+		Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
-		if ( sessionImpl != null && !sessionImpl.isClosed() ) {
-			sessionImpl.close();
-		}
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
@@ -95,24 +91,35 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	@Test
 	public void testHiLoAlgorithm() {
 		sessionImpl = (SessionImpl) sessionFactory.openSession();
+		try {
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// historically the hilo generators skipped the initial block of values;
+			// so the first generated id value is maxlo + 1, here be 4
+			assertEquals(4L, generateValue());
+			// which should also perform the first read on the sequence which should set it to its "start with" value (1)
+			assertEquals(1L, extractSequenceValue());
 
-		assertEquals( 1L, generateValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(5L, generateValue());
+			assertEquals(1L, extractSequenceValue());
 
-		assertEquals( 1L, extractSequenceValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(6L, generateValue());
+			assertEquals(1L, extractSequenceValue());
 
-		assertEquals( 2L, generateValue() );
-		assertEquals( 2L, extractSequenceValue() );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(7L, generateValue());
+			// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
+			// after a clock over
+			assertEquals(1L, extractSequenceValue());
 
-		assertEquals( 3L, generateValue() );
-		assertEquals( 3L, extractSequenceValue() );
-
-		assertEquals( 4L, generateValue() );
-		assertEquals( 4L, extractSequenceValue() );
-
-		assertEquals( 5L, generateValue() );
-		assertEquals( 5L, extractSequenceValue() );
-
-		sessionImpl.close();
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			assertEquals(8L, generateValue());
+			// this should force an increment in the sequence value
+			assertEquals(2L, extractSequenceValue());
+		} finally {
+			sessionImpl.close();
+		}
 	}
 
 	private long extractSequenceValue() {
@@ -120,10 +127,12 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	}
 
 	private long generateValue() {
-		Long generatedValue;
-		Transaction transaction = sessionImpl.beginTransaction();
-		generatedValue = (Long) generator.generate( sessionImpl, null );
-		transaction.commit();
-		return generatedValue.longValue();
+		Transaction transaction =  sessionImpl.beginTransaction();
+		try {
+			return  (Long) generator.generate( sessionImpl, null );
+		}
+		finally {
+			transaction.commit();
+		}
 	}
 }

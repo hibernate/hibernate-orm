@@ -136,11 +136,19 @@ public class JoinProcessor implements SqlTokenTypes {
 
 		// Find tables referenced by FromReferenceNodes
 		collectReferencedTables( new ASTIterator( query ), result );
-		for (FromElement fromElement : (List<FromElement>) query.getFromClause().getFromElements()) {
+		for ( FromElement fromElement : (List<FromElement>) query.getFromClause().getFromElements() ) {
 			// For joins, we want to add the table where the association key is mapped as well as that could be a supertype that we need to join
 			String role = fromElement.getRole();
 			if ( role != null ) {
 				result.add( fromElement.getOrigin().getPropertyTableName(role.substring(role.lastIndexOf('.') + 1)) );
+			}
+			EntityPersister entityPersister = fromElement.getEntityPersister();
+			if ( entityPersister != null && entityPersister instanceof AbstractEntityPersister ) {
+				AbstractEntityPersister aep = (AbstractEntityPersister) entityPersister;
+				while ( aep.hasWhere() && aep.getMappedSuperclass() != null ) {
+					Collections.addAll(result, aep.getTableNames());
+					aep = (AbstractEntityPersister) walker.getSessionFactoryHelper().findEntityPersisterByName( aep.getMappedSuperclass() );
+				}
 			}
 			AST withClauseAst = fromElement.getWithClauseAst();
 			if ( withClauseAst != null ) {

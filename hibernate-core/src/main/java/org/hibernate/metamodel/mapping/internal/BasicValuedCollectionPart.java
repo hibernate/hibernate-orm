@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -230,7 +232,13 @@ public class BasicValuedCollectionPart
 		return FetchTiming.IMMEDIATE;
 	}
 
-//
+	@Override
+	public void visitJdbcTypes(
+			Consumer<JdbcMapping> action, Clause clause, TypeConfiguration typeConfiguration) {
+		action.accept( getJdbcMapping() );
+	}
+
+	//
 //	@Override
 //	public BasicType getBasicType() {
 //		return mapper;

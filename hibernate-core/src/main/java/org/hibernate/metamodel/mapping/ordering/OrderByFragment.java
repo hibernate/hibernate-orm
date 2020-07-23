@@ -25,4 +25,5 @@ public interface OrderByFragment {
 	 * @param creationState The SQL AST creation state
 	 */
 	void apply(QuerySpec ast, TableGroup tableGroup, SqlAstCreationState creationState);
+
 }

@@ -14,6 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -495,9 +496,14 @@ public class ToOneAttributeMapping extends AbstractSingularAttributeMapping
 	private TableGroup createTableGroupJoin(
 			NavigablePath fetchablePath,
 			LockMode lockMode,
-			DomainResultCreationState creationState, TableGroup parentTableGroup) {
+			DomainResultCreationState creationState,
+			TableGroup parentTableGroup) {
 		final SqlAstJoinType sqlAstJoinType;
+
 		if ( isNullable ) {
+			sqlAstJoinType = SqlAstJoinType.LEFT;
+		}
+		else if ( parentTableGroup.getModelPart() instanceof EmbeddedCollectionPart ) {
 			sqlAstJoinType = SqlAstJoinType.LEFT;
 		}
 		else {

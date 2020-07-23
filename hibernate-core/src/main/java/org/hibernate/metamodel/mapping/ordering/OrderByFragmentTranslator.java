@@ -6,16 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
-import java.util.List;
-
 import org.hibernate.grammars.ordering.OrderingLexer;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 import org.jboss.logging.Logger;
 
@@ -31,10 +25,9 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * Responsible for performing the translation of the order-by fragment associated
  * with an order set or map.
  *
+ * @author Steve Ebersole
  * @see javax.persistence.OrderBy
  * @see org.hibernate.annotations.OrderBy
- *
- * @author Steve Ebersole
  */
 public class OrderByFragmentTranslator {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );
@@ -42,11 +35,11 @@ public class OrderByFragmentTranslator {
 	/**
 	 * Perform the translation of the user-supplied fragment, returning the translation.
 	 *
+	 * @return The translation.
+	 *
 	 * @apiNote The important distinction to this split between (1) translating and (2) resolving aliases is that
 	 * both happen at different times.  This is performed at boot-time while building the CollectionPersister
 	 * happens at runtime while loading the described collection
-	 *
-	 * @return The translation.
 	 */
 	public static OrderByFragment translate(
 			String fragment,
@@ -64,26 +57,7 @@ public class OrderByFragmentTranslator {
 
 		final ParseTreeVisitor visitor = new ParseTreeVisitor( pluralAttributeMapping, context );
 
-		final List<OrderingSpecification> specs = visitor.visitOrderByFragment( parseTree );
-
-		return new OrderByFragment() {
-			private final List<OrderingSpecification> fragmentSpecs = specs;
-
-			@Override
-			public void apply(QuerySpec ast, TableGroup tableGroup, SqlAstCreationState creationState) {
-				for ( int i = 0; i < fragmentSpecs.size(); i++ ) {
-					final OrderingSpecification orderingSpec = fragmentSpecs.get( i );
-
-					orderingSpec.getExpression().apply(
-							ast,
-							tableGroup,
-							orderingSpec.getCollation(),
-							orderingSpec.getSortOrder(),
-							creationState
-					);
-				}
-			}
-		};
+		return new OrderByFragmentImpl( visitor.visitOrderByFragment( parseTree ) );
 	}
 
 
@@ -100,7 +74,7 @@ public class OrderByFragmentTranslator {
 		try {
 			return parser.orderByFragment();
 		}
-		catch ( ParseCancellationException e) {
+		catch (ParseCancellationException e) {
 			// reset the input token stream and parser state
 			lexer.reset();
 			parser.reset();

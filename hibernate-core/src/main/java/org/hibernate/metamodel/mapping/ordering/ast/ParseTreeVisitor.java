@@ -105,9 +105,8 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 
 		for ( int i = 0; i < numberOfParts; i++ ) {
 			final TerminalNode partNode = ctx.dotIdentifier().IDENTIFIER().get( i );
-			partNode.getText();
 			pathConsumer.consumeIdentifier(
-					ctx.identifier().getText(),
+					partNode.getText(),
 					firstPass,
 					true
 			);

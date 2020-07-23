@@ -22,7 +22,13 @@ import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.QueryLiteralRendering;
 import org.hibernate.query.UnaryArithmeticOperator;
@@ -462,7 +468,21 @@ public abstract class AbstractSqlAstWalker
 		appendSql( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
 		appendSql( '.' );
 		//TODO: pretty sure the typecast to Loadable is quite wrong here
-		appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
+
+		ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof Loadable ) {
+			appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
+		}
+		else if ( modelPart instanceof PluralAttributeMapping ) {
+			CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
+			if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
+				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getMappedColumnExpression();
+				appendSql( mappedColumnExpression );
+			}
+		}
+		else {
+			throw new NotYetImplementedFor6Exception( getClass() );
+		}
 	}
 
 	@Override
